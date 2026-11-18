@@ -26,6 +26,7 @@ import { CULVERIN_ART, FIRE_ART, HARPOON_ART, SWIVEL_ART, TIER_ART, crewArt, fir
 // T33 (D049, proposed): the damaged and broken tower drawings, used only while the wave has tower health.
 import { TOWER_KINDS, towerStateFrame } from '../art/tower-states.js';
 import { towerLook } from './tower-health.js';
+import { MARK_IDS, buildingMarks } from '../art/path-marks.js';
 import { pixelGlsl, toScreen } from '../world/pixel-glsl.js';
 import { CHARACTER_SCALE } from './character-scale.js';
 
@@ -53,7 +54,7 @@ const LAYER_ORDER = { far: 76, near: 124, air: 940, fog: 900 };
 const CAPACITY = { far: 96, near: 96, air: 320 };
 const SINK_SECONDS = 1.8, WRECK_SECONDS = 9, SPLASH_SECONDS = .5, FLASH_SECONDS = .12, FIRE_SECONDS = .22;
 const TOWER_BAR_LIFT = 2.7;          // T33: drawn units above the ground for a tower's hp bar (a tower is taller than a captain)
-const BURST_SECONDS = .6, POSE_SECONDS = .6, POST_CAPACITY = 8;
+const BURST_SECONDS = .6, POSE_SECONDS = .6, POST_CAPACITY = 12; // sprite, smoke, 5 pips, crew and up to 3 path/skill marks
 // Boarders on land: one sprite layer per 2-unit band of z (renderOrder 100 + z like the island's art), so
 // they pass in front of and behind walls, buildings and the player; a band is drawn only while it has one.
 const BAND = 2, BAND_FROM = -26, BANDS = 26, BAND_CAPACITY = 96, STRIKE_SECONDS = .3, SWEEP_SECONDS = .5, FALL_SECONDS = .5;
@@ -122,6 +123,9 @@ export const CULVERIN_IDS = [...CULVERIN_ART.levels, ...CULVERIN_ART.fire, CULVE
 export const CULVERIN_STATE_IDS = [...CULVERIN_ART.damaged, ...CULVERIN_ART.broken];
 // The swivel-gun nest (D055), the same way: only in the atlas of a wave that fights with one (loadAtlas swivels).
 export const SWIVEL_IDS = [...SWIVEL_ART.levels, ...SWIVEL_ART.fire, SWIVEL_ART.shot];
+// D055/D051: the path plates and skill emblems over a post (src/art/path-marks.js), cartoon only and small; a pixel
+// atlas (tests) has none and simply draws no marks.
+export const MARK_ATLAS_IDS = MARK_IDS;
 export const SWIVEL_STATE_IDS = [...SWIVEL_ART.damaged, ...SWIVEL_ART.broken];
 /**
  * The frame of a cannon or mortar post: its level's art, or while it fires its level's firing frame (so a
@@ -163,7 +167,7 @@ export async function loadAtlas({ quality = 'high', colour = 0, towerStates = fa
   setPoseColour(colour); // your captain's musket and cutlass poses in your lobby colour
   const ids = [...new Set([...ATLAS_IDS.filter(id => !PIXEL_ONLY_IDS.includes(id)), ...CARTOON_EXTRA_IDS, ...TIER_IDS, ...FIRE_LEVEL_IDS, ...HARPOON_IDS, ...GUNBOAT_IDS,
     ...(towerStates ? TOWER_STATE_IDS : []), ...(culverins ? CULVERIN_IDS : []), ...(culverins && towerStates ? CULVERIN_STATE_IDS : []),
-    ...(swivels ? SWIVEL_IDS : []), ...(swivels && towerStates ? SWIVEL_STATE_IDS : [])])];
+    ...(swivels ? SWIVEL_IDS : []), ...(swivels && towerStates ? SWIVEL_STATE_IDS : []), ...MARK_ATLAS_IDS])];
   const atlas = await cartoonAtlas(ids, { quality, extra: [[WHITE, 8, 8]] });
   const white = atlas.rects[WHITE], context = atlas.image.getContext('2d');
   context.fillStyle = '#fff'; context.fillRect(white.x * atlas.density, white.y * atlas.density, white.w * atlas.density, white.h * atlas.density);
@@ -330,10 +334,18 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   const levelOf = item => (Number.isInteger(item.level) ? Math.max(1, Math.min(5, item.level)) : 1);
   // A level's art, or level 3's when the atlas has no tier frame (the pixel atlas).
   const levelFrame = (kind, level) => { const id = levelArt(kind, level); return rect[id] ? id : pirateLevels[kind][Math.min(3, level) - 1]; };
+  // D055/D051: which path plates and skill emblem a post wears (read-only from the defense's tree and spec, legacy
+  // {a, b} or the recovery snapshot's [a, b]); memoised, picked when the post is made or its defense changes.
+  const marksOf = post => buildingMarks(post.kind, post.level, post.tree, post.spec);
   const makePost = item => {
     const layer = createLayer(`defense:${item.id}`, POST_CAPACITY, material, 100 + item.z, owned); root.add(layer.mesh);
-    return { ...item, level: levelOf(item), layer, flip: false };
+    const post = { ...item, level: levelOf(item), layer, flip: false };
+    post.marks = marksOf(post);
+    return post;
   };
+  function drawMarks(layer, x, y, marks) {
+    for (const mark of marks) { const r = rect[mark.art]; if (r) layer.push(r, x + mark.dx, y + mark.dy, r.w, r.h, .5, r.anchor); }
+  }
   const posts = defenses.filter(hasPost).map(makePost);
   let cannonsList = defenses.filter(item => item.kind === 'cannon' || item.kind === 'mortar');
   const fogUniforms = { uCannons: { value: Array.from({ length: 8 }, (_, i) => new THREE.Vector2(cannonsList[i]?.x ?? 0, cannonsList[i]?.z ?? 0)) },
@@ -1079,9 +1091,9 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       } else if (visible) {
         let id;
         const level = post.level, suffix = level > 1 ? `-l${level}` : '';
-        let smoking = false, look = 'intact';
+        let smoking = false, look = 'intact', share = 1;
         if (post.kind === 'wall') {
-          const share = wallShare(post, walls.get(post.id));
+          share = wallShare(post, walls.get(post.id));
           id = share > .6 ? levelFrame('wall', level) : share > 0 ? pirateFrames.wall[1] : pirateFrames.wall[2];
           smoking = share <= .6;
         } else {
@@ -1099,6 +1111,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
           post.layer.push(puff, x, y + r.h - r.anchor, puff.w, puff.h, .5, puff.anchor, { a: .85 });
         }
         if ((level > 1 || post.kind !== 'wall') && look !== 'broken') drawPips(post.layer, x, y + (r.h - r.anchor) * grow + .2, level);
+        if (look !== 'broken' && share > 0 && post.marks.length) drawMarks(post.layer, x, y, post.marks);
         if (post.kind === 'wall' && walls.get(post.id)?.crew) drawCrew(post.layer, 'carpenter', x + (x > 0 ? -1.3 : 1.3), y - .3, true);
         if (post.kind !== 'wall' && towers.get(post.id)?.manned) drawCrew(post.layer, 'gunner', x + (post.flip ? 1.2 : -1.2), y - .15, (fire.get(post.id)?.until ?? -1) > clock);
       }
@@ -1148,7 +1161,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       for (const item of list ?? []) {
         if (!hasPost(item)) continue;
         let post = posts.find(entry => entry.id === item.id);
-        if (post) { post.level = levelOf(item); if (item.kind !== post.kind) Object.assign(post, {kind: item.kind}); }
+        if (post) { post.level = levelOf(item); post.tree = item.tree; post.spec = item.spec; if (item.kind !== post.kind) Object.assign(post, {kind: item.kind}); post.marks = marksOf(post); }
         else { post = makePost(item); posts.push(post); }
         // A wall repaired or rebuilt in the break (D039): draw its new health, not the one the wave ended with.
         if (post.kind === 'wall' && Number.isInteger(item.health)) post.rest = Math.max(0, Math.min(100, item.health)) / 100;
@@ -1159,6 +1172,8 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     },
     // Each post's level, for checks.
     levels() { return Object.fromEntries(posts.map(post => [post.id, post.level])); },
+    // Each post's path/skill marks (frame names), for checks.
+    marks() { return Object.fromEntries(posts.map(post => [post.id, post.marks.map(mark => mark.art)])); },
     // Each wall's drawn health share (0 broken, 1 whole), for checks.
     wallShares(state = null) { const walls = new Map((state?.walls ?? []).map(wall => [wall.id, wall])); return Object.fromEntries(posts.filter(post => post.kind === 'wall').map(post => [post.id, wallShare(post, walls.get(post.id))])); },
     // For the pooling test and the perf panel: what the renderer holds right now.
