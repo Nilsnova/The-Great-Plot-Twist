@@ -6,11 +6,11 @@ Responsible teammate: Ianno Hollensteiner (`Iannomh123456`), assisted by Codex. 
 
 Every `captain_fired` event used a musket body pose, including fire bombs. The captain now carries two short pistols, a flared blunderbuss, a long rifle, or a bomb in the matching firing/throwing pose. Bombs keep their existing flight and explosion and produce no firearm muzzle bloom or flash.
 
-The existing event's weapon chooses the pose; unknown or missing IDs keep the musket fallback. Firearm hands meet projected grip coordinates, with compact sleeves and the far arm behind the coat. Rifle/blunderbuss palms support the trigger and fore-end; one pistol aims while the second hangs down beside the rear hip. The blunderbuss has a smaller brass muzzle with a dark opening.
+The existing event's weapon chooses the pose; unknown or missing IDs keep the musket fallback. Firearm hands meet their grips, with compact sleeves and the far arm behind the coat. Rifle/blunderbuss palms support the trigger and fore-end; the larger, lighter active pistol aims while the lowered spare remains visible. The blunderbuss has a smaller brass muzzle with a dark opening.
 
-Bombs use authored body/screen-space poses: the ready/wind-up frame holds a large round bomb behind the head, and the release frame uses an empty rounded hand in a throwing follow-through. The sphere stays round in screen space at every aim direction instead of shrinking through the gun transform. This is drawing only; the existing two pose phases, projectile, firing cadence and network inputs remain unchanged. The approved musket painter remains separate and pixel-identical.
+Bombs use authored body/screen-space poses: the ready hand cradles the bomb beside the hip, and the same-side underhand release uses an open palm and a small lean. The sphere stays round in screen space instead of shrinking through the gun transform. Non-musket deferred shadows sit under the feet; downward weapon artwork stays inside the frame. This is drawing only; the existing two pose phases, projectile, firing cadence and network inputs remain unchanged. The approved musket painter remains separate and pixel-identical.
 
-The body remains upright while the arms and weapon follow the projected aim. The same pose feeds the local character and a teammate's presence figure, in each of the ten lobby colors. Pose expiry returns that body to walking. One dynamic texture per captain is repainted when weapon, aim, color or phase changes and released on disposal.
+Firearm bodies stay upright; the bomb pose adds a small throwing lean around the feet. The same pose feeds the local character and a teammate's presence figure, in each of the ten lobby colors. Pose expiry returns that body to walking. One dynamic texture per captain is repainted when weapon, aim, color or phase changes and released on disposal.
 
 Scope: `frontend/src/pirates/poses.js`, `shot-art.js`, `render.js`, the procedural painters in `src/art/people.js`, focused tests and the existing direction browser check. Shot cadence, balance, damage, prices, ownership, room messages and recovery journals are unchanged. No new dependency, external service or art source.
 
@@ -22,7 +22,15 @@ Scope: `frontend/src/pirates/poses.js`, `shot-art.js`, `render.js`, the procedur
 - Switching weapons at the same aim yields five different silhouettes; the existing dynamic texture is reused and disposed.
 - Before/after images and explicit fixture limits: [CW4 evidence](../docs/evidence/CW4-weapon-poses/README.md).
 
-## Revision 3 verification · 18 November 2026
+## Revision 4 verification · 18 November 2026
+
+[Current comparison and exact commands](../docs/evidence/CW4-weapon-poses/revision-4/README.md) use the published r3 candidate `0706a18c` as before, not live production. Current checks: **6 files / 63 focused tests passed**; full **400-view browser matrix and 220 approved-musket RGBA comparisons passed**; build/spoiler guard, budgets and text lint passed; integrated synthetic bomb-wave captures passed at 1280 × 720 and 375 × 812 with zero browser errors/external requests. Initial JavaScript is **18,899 / 21,080 bytes**, CSS **9,410 / 12,000 bytes**; text lint reports **4,429 candidates / 489 source files, zero errors**, eight existing report-only findings.
+
+Coordinator sweeps cover 1,448 joint-bound cases and 1,448 padded renders with no out-of-frame alpha above 8 at density 3/palette 2. Functional source was frozen at `328c234d…`; final `e7cddc22…` has only one comment correction, verified by restoring the prior comment and reproducing the tested hash. No tests, gameplay, network or persistence behavior changed.
+
+**R4 full-suite, accessibility and demo checks were not rerun.** The historical R3 combined run had 3,848 passes and two harness timeouts; quiet sequential reruns passed all three affected tests on both r3 and its immutable baseline. Those passes do not turn the original run green. The historical accessibility/demo limits below remain visible. No additional human quiz is requested; the existing three explain-back questions remain.
+
+## Revision 3 verification · historical at 0706a18c
 
 The revision-2 candidate at `d35efd92` was rejected, particularly its bomb gesture. [Current before/after evidence](../docs/evidence/CW4-weapon-poses/revision-3/README.md) compares that exact published candidate with the new authored wind-up/release and compact firearm poses. Older pictures and verification remain historical.
 
@@ -71,6 +79,6 @@ No production deployment, signed-in multiplayer match or live device check was p
 
 ## Explain-back questions
 
-1. Why do firearm hands follow projected grips while the bomb uses authored screen-space hand/ball positions, and how does the body stay upright?
+1. Why do firearm hands meet their grips while the bomb uses authored screen-space hand/ball positions, and how does the body stay anchored at the feet?
 2. How do the existing two drawing phases show a bomb wind-up and throwing follow-through without adding a charge or network state?
 3. How do the 220 RGBA checks protect the approved musket, and which angles, browsers or live behavior do those checks leave unverified?
