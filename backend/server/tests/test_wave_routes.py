@@ -9,6 +9,7 @@ weather modifier and every refusal. Nothing uses the network.
 Used by: pytest (cd backend && uv run pytest).
 """
 
+import re
 from dataclasses import replace
 
 import httpx
@@ -59,7 +60,10 @@ def test_the_bell_on_your_own_island_answers_the_wave_of_the_contract():
 
     assert response.status_code == 200
     assert response.headers["cache-control"] == "private, no-store"
-    assert response.json() == {
+    body = response.json()
+    # The server's clock as the answer leaves, UTC with milliseconds (for a browser's wrong clock).
+    assert re.fullmatch(r"\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z", body.pop("serverNow"))
+    assert body == {
         "waveId": WAVE_ID,
         "wave": 1,
         "seed": 123456789,
@@ -298,7 +302,7 @@ def test_a_finished_wave_answers_the_loot_the_coins_the_best_wave_and_the_flags(
         "p_loot_per_house": 10,
         "p_point_loot_base": 40,
         "p_boss_every": 5,
-        "p_boss_multiplier": 2,
+        "p_boss_multiplier": 3,
         "p_restart_back": 2,
     }
 

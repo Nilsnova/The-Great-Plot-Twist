@@ -81,6 +81,8 @@ class ScratchRecoveryAdmin(SupabaseAdmin):
             "where pronamespace = 'public'::regnamespace and proname = %s",
             (name,),
         ).fetchall()
+        # Like PostgREST: an overloaded function is chosen by the named arguments of the call.
+        signatures = [row for row in signatures if set(row[0] or []) == set(params)] or signatures
         if len(signatures) != 1:
             raise SupabaseRejected()
         names, types_text = signatures[0]

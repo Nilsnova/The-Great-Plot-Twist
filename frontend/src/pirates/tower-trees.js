@@ -50,6 +50,8 @@ const whole = value => (Number.isInteger(value) && value >= 0 && value <= TREE_T
 /** A tower's tree as {a, b} (0 to 3 each), or null for none: a kind without a tree, a missing or broken value,
  *  or one that breaks the Bloons rule (both paths past tier 1) is no tree. */
 export function readTree(kind, tree) {
+  // Recovery snapshots stored before fix/playtest-1117 carry the tree as [a, b]: read it the same.
+  if (Array.isArray(tree)) tree = tree.length === 2 ? {a: tree[0], b: tree[1]} : null;
   if (!TOWER_TREES[kind] || !tree || typeof tree !== 'object') return null;
   const a = whole(tree.a), b = whole(tree.b);
   if (Math.min(a, b) > TREE_OTHER_MAX || (a === 0 && b === 0)) return null;

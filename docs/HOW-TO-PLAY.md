@@ -68,7 +68,7 @@ The **harbor bell** stands near the south beach. Walk up to it and press **E** (
 - Towers fire on their own.
 - The wave bar at the top shows the wave, the ships left and the ♥ of the island.
 - **The weather is real.** A storm brings more ships. Fog hides them longer.
-- **Every 5th wave is a boss wave** with a warship. A boss wave pays double loot.
+- **Every 5th wave is a boss wave** with a warship. A boss wave pays three times the loot, the boss wave 40 five times. From wave 41 every island wave pays half as much again.
 - **Boss minigames get harder slowly after wave 10**: the target moves a little faster, the window is a little narrower and a little more must go right, up to a fixed limit at wave 100. Waves 5 and 10 play as before. The crew always shares one goal, and one captain alone can still win.
 - **Loot** for a won wave *n*: 🪙 25 + 10 × *n*, plus 🪙 10 for each house. From wave 30 it grows more slowly. A lost wave pays nothing.
 - A lost wave ends the run. You keep your buildings and coins. The next bell starts at your best wave minus 2.
@@ -99,16 +99,16 @@ Ships that reach the shore let **boarders** climb out. They walk to the heart of
 
 - A standing wall stops them until they break it.
 - **Legacy recovery v0:** press **E** at a damaged wall to repair it, and at a broken one to rebuild it.
-- **Legacy wall recovery v0:** a wall keeps its damage into the next wave. Between waves its card offers **Repair** or **Rebuild** for a few coins instead of Upgrade, or it mends by itself 10 minutes later. Upgrade it once it is whole. The versioned recovery v1 preview below describes the replacement behavior for an island served with that policy.
+- **Legacy wall recovery v0:** when a wave ends every wall is whole again (owner, 18 Nov); a wall damaged before that rule mends by itself 10 minutes later, or its card offers **Repair** or **Rebuild** for a few coins. The versioned recovery v1 preview below describes the replacement behavior for an island served with that policy.
 - Your gun and your cutlass beat them.
 
 ## Structure health · recovery v1 preview
 
 **Preview only, not a claim that recovery v1 is enabled or released.** When the server serves an island with recovery version 1, these are the intended player rules. Legacy recovery v0 remains described above.
 
-- Damaged **walls, cannons, mortars, harpoons, culverins and swivels** show a small health bar and exact HP in the structure card. Houses and watchtowers have no structure HP and are excluded. Full-health bars and repair offers are hidden. A destroyed structure shows an empty bar, a small **!** and its broken appearance; during a reserved wave it stays inactive until a paid repair succeeds. Between waves, free repair can bring it back from zero and it becomes active once HP is positive. Any positive HP can enter the next wave, but a partly damaged structure is fragile. Base level upgrades require full HP and are available between waves.
-- Between waves, eligible structures heal automatically from their actual missing HP, including while you are offline. The card offers **Repair now: pay N coins** or **Or wait about Y for free repair**. Waiting takes no action; healing continues while the card is open or ignored. The ETA uses current HP and current repair rate, so a new wave can pause it.
-- Free repair pauses as soon as the server accepts the bell, including preparation and countdown, and stays paused through combat. It resumes when the server confirms the wave has finished or expired. During that reserved wave the card shows the paused status and shared remaining paid uses, with no free-repair ETA.
+- Damaged **walls, cannons, mortars, harpoons, culverins and swivels** show a small health bar and exact HP in the structure card. Houses and watchtowers have no structure HP and are excluded. Full-health bars and repair offers are hidden. A destroyed structure shows an empty bar, a small **!** and its broken appearance; during a reserved wave it stays inactive until a paid repair succeeds. It is whole again the moment the wave ends. Base level upgrades are available between waves.
+- **When a wave ends, every wall and tower is repaired at once** (won or lost, finished or timed out; owner, 18 Nov). The break starts with everything whole: no waiting, nothing to pay between waves.
+- During a wave nothing heals by itself. The card shows **Repair now: pay N coins** (three uses a wave, shared by the crew) and that everything is repaired when the wave ends.
 - A successful **Repair now** restores one structure immediately. Its server-quoted price is the current level's catalogue price, independent of damage or who pays. The team shares three successful repairs per island and wave, including preparation/countdown; repairs outside the reserved wave are unlimited. Failed requests do not charge coins or use a slot.
 - Captain **E** repair/rebuild and repair-only Captain skills are removed in recovery v1. The hired Carpenters on the island owner's crew speed up free repair between waves: up to two count island-wide, even when the owner is offline. Nearby Workshops add a capped bonus. The selected wall's **Quick Mend** or **Bastion** spec and island **Mason Drill** research further affect wall repair; Quick Mend and Bastion are exclusive, and only the wall's equipped spec applies. These bonuses pause during a reserved wave. See [D059](DECISIONS.md#d059--shared-gradual-hp-recovery-and-paid-instant-repair--2026-11-16) for the full rules and figures.
 

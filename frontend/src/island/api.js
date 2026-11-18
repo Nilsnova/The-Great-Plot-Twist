@@ -193,16 +193,34 @@ export function wallHealthBody(walls) {
   for (const [id, value] of Object.entries(walls)) if (/^wall_[0-9]{1,2}$/.test(id) && Number.isInteger(value) && value >= 0 && value <= 100) out[id] = value;
   return Object.keys(out).length ? out : null;
 }
+const isWaveRow = data => !!data && isText(data.waveId) && Number.isSafeInteger(data.wave) && data.wave >= 1 && isCount(data.seed)
+  && typeof data.startsAt === 'string' && Number.isFinite(Date.parse(data.startsAt))
+  && !!data.weather && typeof data.weather.kind === 'string' && typeof data.flagship === 'boolean';
 export function isWave(data) {
-  const base = !!data && isText(data.waveId) && Number.isSafeInteger(data.wave) && data.wave >= 1 && isCount(data.seed)
-    && typeof data.startsAt === 'string' && Number.isFinite(Date.parse(data.startsAt))
-    && !!data.weather && typeof data.weather.kind === 'string' && typeof data.flagship === 'boolean';
-  if (!base) return false;
+  if (!isWaveRow(data)) return false;
   if (data.waveProtocol === undefined && (data.recoveryVersion === undefined || data.recoveryVersion === 0)) return true;
   if (data.waveProtocol === 1 && (data.recoveryVersion === undefined || data.recoveryVersion === 0)) return true;
   return data.waveProtocol === 2 && data.recoveryVersion === 1
     && readRecoverySnapshot(data.initialSnapshot, data.waveId) !== null && isParticipantToken(data.participantToken)
     && Number.isSafeInteger(data.lastActorCounter) && data.lastActorCounter >= 0;
+}
+// GET /api/waves/current of a recovery wave you may join but have not joined yet (a teammate's bell): the
+// public wave (recoveryVersion 1, waveProtocol 2) without snapshot, participant token or counter. Only a
+// join (POST /api/waves/join) answers those, so such a wave is shown and joined, never started from.
+export const isJoinableWave = data => isWaveRow(data) && data.recoveryVersion === 1 && data.waveProtocol === 2
+  && data.initialSnapshot == null && data.participantToken == null && data.lastActorCounter == null;
+// The wave's clock (legacy waves run from startsAt on every screen): a wave answer carries the server's time
+// (serverNow, ms). clockOffsetMs = server minus this browser, measured when the answer arrives, only when the
+// browser's clock is off by more than CLOCK_SLACK_MS (an input stamped for tick n then still lands before
+// tick n on a teammate's screen: the input lead is 200 ms). A clock off by seconds made the same wave
+// diverge between browsers; a well-set clock keeps its own time (the answer's travel time is no better).
+export const CLOCK_SLACK_MS = 250;
+const DAY_MS = 86_400_000;
+export function clockOffset(data, now) {
+  const server = typeof data?.serverNow === 'string' ? Date.parse(data.serverNow) : NaN;
+  if (!Number.isFinite(server)) return null;
+  const offset = Math.round(server - now);
+  return Math.abs(offset) >= CLOCK_SLACK_MS && Math.abs(offset) <= DAY_MS ? offset : null;
 }
 // Captain health (GAME-V3.md §3): what the revive cost you and your coins after it.
 export const isRevive = data => !!data && isCount(data.price) && isCount(data.coins) && typeof data.repeat === 'boolean';
@@ -248,7 +266,7 @@ export function readFailure(result) {
 // No answer, a timeout or a server-side failure: the write may or may not have happened.
 export const outcomeUnknown = failure => !failure.ok && (failure.status === 0 || failure.status >= 500);
 
-export function createIslandApi({transport, makeUid = makeActionUid, waveProtocol = () => 1} = {}) {
+export function createIslandApi({transport, makeUid = makeActionUid, waveProtocol = () => 1, now = () => Date.now()} = {}) {
   if (!transport || typeof transport.get !== 'function' || typeof transport.post !== 'function') {
     throw new TypeError('createIslandApi needs a transport with get and post.');
   }
@@ -293,6 +311,12 @@ export function createIslandApi({transport, makeUid = makeActionUid, waveProtoco
   const writeSpots = (key, send, accept) => write(key, send, accept).then(answer => (answer.ok ? {...answer, data: readSpots(answer.data)} : answer));
   const where = value => (value === 'own' || value === 'pirate_point' ? value : displayIslandCode(value) || null);
   const refuse = (status, code, message) => Promise.resolve({ok: false, status, code, message});
+  // A wave answer with the browser's clock offset (clockOffset above), stamped as it arrives.
+  const timed = answer => {
+    if (!answer.ok || !answer.data) return answer;
+    const offset = clockOffset(answer.data, now());
+    return offset === null ? answer : {...answer, data: {...answer.data, clockOffsetMs: offset}};
+  };
 
   return {
     // scope 'week' (T7) or 'all' (T45, all time). The answer must be the board that was asked for.
@@ -501,18 +525,18 @@ export function createIslandApi({transport, makeUid = makeActionUid, waveProtoco
       if (!target) return refuse(422, 'validation_error', MESSAGES.badCode);
       const version = askedProtocol === 2 ? 2 : protocolFor(target);
       return write(`start:${target}`, actionUid => transport.post(PATHS.start,
-        {where: target, actionUid, ...(version === 2 ? {waveProtocol: 2} : {})}), isWave);
+        {where: target, actionUid, ...(version === 2 ? {waveProtocol: 2} : {})}), isWave).then(timed);
     },
     joinWave({waveId, waveProtocol: askedProtocol = null} = {}) {
       if (!isText(waveId)) return refuse(404, 'no_such_wave', MESSAGES.badWave);
       const version = askedProtocol === 2 ? 2 : protocolFor();
-      return ask(() => transport.post(PATHS.join, {waveId, ...(version === 2 ? {waveProtocol: 2} : {})}), isWave);
+      return ask(() => transport.post(PATHS.join, {waveId, ...(version === 2 ? {waveProtocol: 2} : {})}), isWave).then(timed);
     },
     currentWave({where: place = 'own', waveProtocol: askedProtocol = null} = {}) {
       const target = where(place);
       if (!target) return refuse(422, 'validation_error', MESSAGES.badCode);
       const version = askedProtocol === 2 ? 2 : protocolFor(target);
-      return ask(() => transport.get(PATHS.current(target, version)), data => data === null || isWave(data));
+      return ask(() => transport.get(PATHS.current(target, version)), data => data === null || isWave(data) || isJoinableWave(data)).then(timed);
     },
     finishWave({waveId, survived, shipsSunk = 0, bonuses, rescued, walls} = {}) {
       if (!isText(waveId)) return refuse(404, 'no_such_wave', MESSAGES.badWave);

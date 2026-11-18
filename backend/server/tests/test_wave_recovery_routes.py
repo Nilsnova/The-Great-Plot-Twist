@@ -115,7 +115,7 @@ def test_event_page_requires_bounded_paired_frontier(query):
 def test_input_route_returns_accepted_events_as_direct_response(monkeypatch):
     world = World()
 
-    async def append(admin, player_id, wave_id, inputs):
+    async def append(admin, player_id, wave_id, inputs, *, arsenal=False):
         assert player_id
         assert wave_id == WAVE
         assert inputs[0].command == {"type": "captain_move", "x": 1, "z": 2}
@@ -228,3 +228,131 @@ def test_protocol2_finish_maps_the_rpc_balance_to_the_legacy_coins_field(monkeyp
     assert response.status_code == 200, response.text
     assert response.json()["coins"] == 115
     assert response.json()["recovery"]["closedHp"] == {"instance-1": 987654}
+
+
+def _current_v2(world):
+    return world.client.get(
+        "/api/waves/current", params={"where": "own", "waveProtocol": 2}, headers=PLAYER
+    )
+
+
+RUNNING = {
+    "status": "running",
+    "waveId": str(WAVE),
+    "wave": 3,
+    "seed": 123456789,
+    "startsAt": "2026-11-10T12:00:10+00:00",
+    "weatherKind": "calm",
+    "ships": 1.0,
+    "fog": 0,
+    "place": "island",
+}
+JOINABLE = {**RUNNING, "recoveryVersion": 1, "waveProtocol": 2, "joined": False}
+
+
+def test_a_member_who_has_not_joined_gets_the_joinable_recovery_wave_without_a_token():
+    world = World()
+    world.database.recovery_current_reply = JOINABLE
+
+    response = _current_v2(world)
+
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["waveId"] == str(WAVE) and body["wave"] == 3 and body["seed"] == 123456789
+    assert body["recoveryVersion"] == 1 and body["waveProtocol"] == 2
+    assert "participantToken" not in body
+    assert "initialSnapshot" not in body
+    assert "lastActorCounter" not in body
+
+
+def test_a_joinable_answer_still_needs_the_protocol2_client():
+    world = World()
+    world.database.recovery_current_reply = JOINABLE
+
+    assert_error(world.current(), 409, "client_update_required")
+
+
+def test_a_recovery_wave_without_snapshot_is_only_accepted_as_not_joined():
+    world = World()
+    world.database.recovery_current_reply = {
+        **JOINABLE,
+        "joined": True,
+        "participantToken": str(TOKEN),
+        "lastActorCounter": 0,
+    }
+
+    assert _current_v2(world).status_code == 502
+
+
+def test_a_participant_still_gets_their_token_and_snapshot():
+    world = World()
+    snapshot = {"recoveryVersion": 1, "waveProtocol": 2, "participants": []}
+    world.database.recovery_current_reply = {
+        **JOINABLE,
+        "joined": True,
+        "initialSnapshot": snapshot,
+        "participantToken": str(TOKEN),
+        "lastActorCounter": 4,
+    }
+
+    body = _current_v2(world).json()
+
+    assert body["participantToken"] == str(TOKEN)
+    assert body["initialSnapshot"] == snapshot
+    assert body["lastActorCounter"] == 4
+
+
+def test_an_outsider_is_still_refused_the_recovery_wave():
+    world = World()
+    world.database.recovery_current_reply = {"status": "refused", "reason": "not_in_wave"}
+
+    assert_error(_current_v2(world), 403, "not_in_wave")
+
+
+CHECKPOINT = {
+    "islandEpoch": "33333333-3333-4333-8333-333333333333",
+    "checkpointUid": "checkpoint_001",
+    "throughTick": 30,
+    "inputHeadSeq": 4,
+    "lastRepairSeq": 1,
+    "basisRepairSeq": {"33333333-3333-4333-8333-333333333333": 1},
+    "hpUnits": {"33333333-3333-4333-8333-333333333333": 987654},
+}
+
+
+def test_protocol2_finish_too_early_is_a_409_with_retry_after_not_a_502(monkeypatch):
+    # Finding 8: the recovery finish RPC answers too_early like the legacy one; it used to fall
+    # through to a 502, which the client retried every 250 ms until the bell budget ran out.
+    world = World()
+
+    async def refused(admin, function, arguments, *, statuses):
+        assert function == "recovery_wave_finish"
+        wave_recovery._refusal({"status": "refused", "reason": "too_early", "waitSeconds": 4})
+
+    monkeypatch.setattr(wave_recovery, "call_lifecycle_rpc", refused)
+    response = world.finish(waveProtocol=2, checkpoint=CHECKPOINT)
+    assert_error(response, 409, "wave_too_early")
+    assert response.headers["retry-after"] == "4"
+
+
+def test_too_early_without_a_usable_wait_still_asks_for_one_second():
+    with pytest.raises(wave_recovery.ApiError) as raised:
+        wave_recovery._refusal({"status": "refused", "reason": "too_early", "waitSeconds": True})
+    assert (raised.value.status_code, raised.value.code) == (409, "wave_too_early")
+    assert raised.value.headers == {"Retry-After": "1"}
+
+
+def test_event_page_passes_the_closed_flag_through_and_stays_without_it_on_older_sql():
+    # 20261118030000 adds closed to every page; the client ends a wave closed while it was away.
+    page = wave_recovery.RecoveryEventPage.model_validate(
+        {"headSeq": 3, "sealedThroughTick": 40, "through": None, "events": [], "closed": True}
+    )
+    assert page.model_dump(by_alias=True, exclude_none=True)["closed"] is True
+    older = wave_recovery.RecoveryEventPage.model_validate(
+        {"headSeq": 3, "sealedThroughTick": 40, "through": None, "events": []}
+    )
+    assert "closed" not in older.model_dump(by_alias=True, exclude_none=True)
+    with pytest.raises(ValueError):
+        wave_recovery.RecoveryEventPage.model_validate(
+            {"headSeq": 3, "sealedThroughTick": 40, "events": [], "closed": "yes"}
+        )

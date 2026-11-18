@@ -29,8 +29,23 @@ function buildPolicy(address){
   ].join('; ');
 }
 
+// Besides the security block, vercel.json may hold exactly this one cache block: Vite names every
+// file in /assets/ after its content hash, so a browser may keep it for a year without asking again.
+export const ASSET_CACHE_SOURCE='/assets/(.*)';
+export const ASSET_CACHE_CONTROL='public, max-age=31536000, immutable';
+function isAssetCacheBlock(block){
+  return block?.source===ASSET_CACHE_SOURCE&&Object.keys(block).length===2&&Array.isArray(block.headers)
+    &&block.headers.length===1&&block.headers[0]?.key==='Cache-Control'&&block.headers[0]?.value===ASSET_CACHE_CONTROL
+    &&Object.keys(block.headers[0]).length===2;
+}
+export function securityBlocks(blocks){
+  if(!Array.isArray(blocks))return blocks;
+  const cache=blocks.filter(isAssetCacheBlock);
+  if(cache.length>1)throw new TypeError('Duplicate asset cache block');
+  return blocks.filter(block=>!isAssetCacheBlock(block));
+}
 function readPlatformHeaders(config,address){
-  const blocks=config.headers;
+  const blocks=securityBlocks(config.headers);
   if(!Array.isArray(blocks)||blocks.length!==1||blocks[0]?.source!=='/(.*)'){
     throw new TypeError('Expected exactly one unconditional /(.*) platform header block');
   }

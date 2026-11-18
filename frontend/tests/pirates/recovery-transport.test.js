@@ -58,11 +58,11 @@ describe('recovery-v1 command transport', () => {
     expect(get).toHaveBeenCalledWith('/api/waves/wave-a/events?after=0&through=2&sealedThroughTick=-1');
   });
 
-  it('treats failed authenticated responses as uncertain outcomes', async () => {
+  it('treats failed authenticated responses as uncertain outcomes (refusals for the refusal policy)', async () => {
     const transport = createRecoveryTransport({ get: vi.fn(async () => ({ ok: false })), post: vi.fn(async () => { throw new Error('offline'); }) });
-    expect(await transport.readEvents({ waveId: 'wave-a' })).toBeNull();
+    expect(await transport.readEvents({ waveId: 'wave-a' })).toEqual({ refused: true, status: 0, code: 'network_error', retryAfterSeconds: null });
     expect(await transport.sendInputs({ waveId: 'wave-a', inputs: [{ inputUid: 'uid-1', actorCounter: 1, tick: 0,
-      command: { type: 'captain_move', x: 1, z: 2 } }] })).toBeNull();
+      command: { type: 'captain_move', x: 1, z: 2 } }] })).toEqual({ refused: true, status: 0, code: 'network_error', retryAfterSeconds: null });
   });
 
   it('posts a complete v2 terminal checkpoint through the injected authenticated client', async () => {

@@ -44,27 +44,32 @@ const log = (...args) => console.log(...args);
 
 // The front door's cards until the player stands on the island: Skip the lore and the pages, Got it on the
 // goal card, and on the games card Create a game (host) or Join a game with the code (join).
-async function openCaptain(name, playerId, visit = null, {create = false, join = null} = {}) {
-  const page = pages.length ? await context.newPage() : env.page, first = !pages.length;
-  if (!first) {
-    await stubOfflineApi(page); await stubWeather(page);
-    page.on('pageerror', error => env.errors.push(`${name}: ${error.message}`));
-    page.on('console', message => { if (message.type() === 'error') env.errors.push(`${name}: ${message.text()}`); });
+async function openCaptain(name, playerId, visit = null, {create = false, join = null, deferInvite = false, preparedCaptain = null} = {}) {
+  const first = !pages.length && !preparedCaptain;
+  const page = preparedCaptain?.page ?? (pages.length ? await context.newPage() : env.page);
+  let captain = preparedCaptain ?? pages.find(item => item.page === page);
+  if (!preparedCaptain) {
+    if (!first) {
+      await stubOfflineApi(page); await stubWeather(page);
+      page.on('pageerror', error => env.errors.push(`${name}: ${error.message}`));
+      page.on('console', message => { if (message.type() === 'error') env.errors.push(`${name}: ${message.text()}`); });
+    }
+    await page.setViewportSize({width: 960, height: 600});
+    // T50: ship_fire on (the wave rule of the fake server, kept per wave like the real one).
+    const query = `?islands=fake&fakeflags=ship_fire&fakeworld=${WORLD}&fakeplayer=${playerId}&fakename=${encodeURIComponent(name)}${visit ? `&visit=${visit}` : ''}`;
+    await page.goto(`${env.url}/${query}`);
+    if (first) { await page.evaluate(() => { localStorage.clear(); sessionStorage.clear(); }); await page.reload(); }
+    captain = {name, page, playerId};
+    if (!deferInvite) pages.push(captain);
   }
-  await page.setViewportSize({width: 960, height: 600});
-  // T50: ship_fire on (the wave rule of the fake server, kept per wave like the real one).
-  const query = `?islands=fake&fakeflags=ship_fire&fakeworld=${WORLD}&fakeplayer=${playerId}&fakename=${encodeURIComponent(name)}${visit ? `&visit=${visit}` : ''}`;
-  await page.goto(`${env.url}/${query}`);
-  if (first) { await page.evaluate(() => { localStorage.clear(); sessionStorage.clear(); }); await page.reload(); }
-  const captain = {name, page, playerId};
-  pages.push(captain);
   if (visit) {
     // The friend's landing (shell/invite.js) opens after the first paint; Join sails to the island.
-    const join = page.locator('button.invite-join');
-    await join.waitFor({timeout: 30000}); await page.waitForTimeout(500);
-    for (let i = 0; i < 5 && await join.isVisible().catch(() => false); i++) { await join.click().catch(() => {}); await page.waitForTimeout(1500); }
+    const invite = page.locator('button.invite-join');
+    await invite.waitFor({timeout: 30000}); await page.waitForTimeout(500);
+    if (deferInvite) return captain;
+    for (let i = 0; i < 5 && await invite.isVisible().catch(() => false); i++) { await invite.click().catch(() => {}); await page.waitForTimeout(1500); }
   }
-  else await page.locator('#play').click();
+  else if (!preparedCaptain) await page.locator('#play').click();
   // Done when the lobby is open, or (a visit link, whose lobby may close by itself) when the player stands on
   // the island with no card open. Create and Join always end in the lobby, after the arrival cutscene.
   const landed = () => page.evaluate(lobby => !!document.querySelector('.island-card-lobby[open]') || (!lobby
@@ -89,10 +94,11 @@ async function openCaptain(name, playerId, visit = null, {create = false, join =
   }
   // A visit link or a joined code: wait until the host's island has answered (the join's visit read).
   await page.waitForFunction(joined => window.__island.waves && (!(joined || new URLSearchParams(location.search).get('visit')) || window.__island.island.visiting?.ownerName), !!join, {timeout: 30000});
+  if (!pages.includes(captain)) pages.push(captain);
   // What every page heard: the sim's musket shots, the loot answers, and a ship list per frame.
   await page.evaluate(() => {
     const g = window.__island; g.settings.hour = 12;
-    window.__mp = {shots: [], loot: [], samples: [], heard: [], started: [], fell: [], revived: [], events: [], finishers: [], shipFire: [], heartHits: [], lifecycle: []};
+    window.__mp = {shots: [], loot: [], samples: [], heard: [], started: [], fell: [], revived: [], reviveInputs: [], events: [], finishers: [], shipFire: [], heartHits: [], lifecycle: []};
     // T50: every ship shot (when, which ship, at what) and every ball that landed on the heart, as this page's sim had them.
     g.on('ship_fired', event => window.__mp.shipFire.push(`${event.t}:${event.shipId}:${event.target}:${event.targetId ?? ''}`));
     g.on('island_damaged', event => { if (event.shipId && event.landed) window.__mp.heartHits.push(`${event.t}:${event.shipId}:${event.damage}:${event.hp}`); });
@@ -101,13 +107,26 @@ async function openCaptain(name, playerId, visit = null, {create = false, join =
     g.on('finisher_won', event => window.__mp.finishers.push({type: event.type, kind: event.kind, scores: event.scores, goals: event.goals}));
     g.on('finisher_failed', event => window.__mp.finishers.push({type: event.type, kind: event.kind, scores: event.scores, goals: event.goals, hp: event.hp}));
     g.on('captain_fell', event => window.__mp.fell.push({captainId: event.captainId, t: event.t}));
-    g.on('captain_revived', event => window.__mp.revived.push({captainId: event.captainId, by: event.by, t: event.t, hp: event.hp}));
+    g.on('captain_revived', event => {
+      const wave = g.waves.island.wave;
+      if (window.__mp.revived.length < 8) window.__mp.revived.push({captainId: event.captainId, by: event.by,
+        t: event.t, hp: event.hp, currentTick: wave?.ticks ?? null, scheduleLate: wave?.schedule?.late ?? null});
+    });
     g.on('game_started', event => window.__mp.started.push(event));
     g.on('wave_finished', event => window.__mp.lifecycle.push({at: performance.now(), type: 'wave_finished', waveId: event.waveId, survived: event.survived}));
     g.on('wave_controller_stopped', event => window.__mp.lifecycle.push({at: performance.now(), type: 'wave_controller_stopped', waveId: event.waveId}));
     // What crossed the island room from the other tabs (the raw BroadcastChannel of pirates/room.js).
     const channel = new BroadcastChannel('tgpt:live:place:isle_k7q2m:1');
-    channel.onmessage = event => window.__mp.heard.push(event.data?.type);
+    channel.onmessage = event => {
+      const message = event.data ?? {}, payload = message.payload?.data;
+      window.__mp.heard.push(message.type);
+      if (message.type === 'captain_revive' && window.__mp.reviveInputs.length < 8) {
+        const wave = g.waves.island.wave;
+        window.__mp.reviveInputs.push({by: payload?.by ?? null, seq: payload?.seq ?? null, t: payload?.t ?? null,
+          waveId: payload?.waveId ?? null, targetId: payload?.targetId ?? null,
+          currentTick: wave?.ticks ?? null, scheduleLate: wave?.schedule?.late ?? null});
+      }
+    };
     g.on('captain_fired', event => window.__mp.shots.push({by: event.by, targetId: event.targetId}));
     g.on('wave_finish_answered', event => window.__mp.loot.push({waveId: event.waveId, loot: event.loot}));
     let lastLifecycle = null;
@@ -238,17 +257,27 @@ async function compare(a, b, waveId) {
 
 // The musket fires from the captain's own body (owner, 12 Nov): the owner's character and, on the friend's
 // page, the owner's figure switch to the musket pose; no second captain is drawn where the shot was fired.
-// poseSeen answers where the pose mesh is on screen ({x, y} in px), or null when none showed within 3 s.
-const poseSeen = (page, figure) => page.waitForFunction(figure => { let at = null;
-  const g = window.__island, {innerWidth: w, innerHeight: h} = window;
-  g.scene.traverse(item => { if (at || item.name !== 'captain-pose' || !item.visible || (item.parent?.parent?.name === 'other-captains') !== figure) return;
+// Register before the shot attempt so the short pose cannot finish before observation begins.
+const poseSeen = (page, figure, shot, token) => page.waitForFunction(({figure, count, by, target, token}) => {
+  if (window.__mp.poseCancelled?.[token]) return {cancelled: true};
+  const fired = window.__mp.shots.slice(count).some(item => item.by === by && item.targetId === target);
+  if (!fired) return false;
+  let at = null; const g = window.__island, {innerWidth: w, innerHeight: h} = window;
+  g.scene.traverse(item => { if (at || item.name !== 'captain-pose' || !item.visible || !item.userData.pose?.includes('musket')
+      || (item.parent?.parent?.name === 'other-captains') !== figure) return;
     const p = item.getWorldPosition(item.position.clone()).project(g.camera); at = {x: (p.x + 1) / 2 * w, y: (1 - p.y) / 2 * h, frame: item.userData.pose}; });
-  return at; }, figure, {timeout: 3000, polling: 16}).then(handle => handle.jsonValue(), () => null);
+  return at; }, {figure, ...shot, token}, {timeout: 3000, polling: 'raf'}).then(handle => handle.jsonValue(), () => null);
 // A close crop around the pose (the screenshots' "zoomed in" view), as wide as a third of the page.
 const zoomClip = (page, at) => { const {width, height} = page.viewportSize(), w = Math.round(width / 3), h = Math.round(w * .7);
   return {x: Math.max(0, Math.min(width - w, at.x - w / 2)), y: Math.max(0, Math.min(height - h, at.y - h * .65)), width: w, height: h}; };
 async function musketPose(host, ben) {
-  const sizes = [[1280, 720], [375, 812]], seen = {own: [], figure: []};
+  const sizes = [[1280, 720], [375, 812]], seen = {own: [], figure: []}, attempts = [];
+  const shooter = await myCaptain(host), shooterId = shooter.id;
+  const presenceId = host.playerId;
+  const shooterColour = shooter.party.find(hero => hero.id === shooterId)?.colour;
+  assert.ok(Number.isInteger(shooterColour), `the shooter has a wave lobby colour (${shooterColour})`);
+  const resolvedPresenceColour = await ben.page.evaluate(id => window.__island.island.colourOf(id), presenceId);
+  assert.equal(resolvedPresenceColour, shooterColour, `the simulated presence resolves to the shooter's lobby colour (${presenceId})`);
   let probe = null;
   for (const [width, height] of sizes) {
     await host.page.setViewportSize({width, height}); await ben.page.setViewportSize({width, height});
@@ -261,17 +290,40 @@ async function musketPose(host, ben) {
       if (!spot) break;
       await stand(host, spot); await stand(ben, {x: spot.bx, z: spot.bz});
       // ?islands=fake has no live presence, so the friend's page draws no figure for the owner (a shooter
-      // without a figure shows only the flash, tracer and puff). Stand one in for it where the owner is,
-      // under his member id (his lobby colour), through the presence's own simulate().
-      await ben.page.evaluate(([x, z, id]) => { const g = window.__island, place = g.island.presencePlace('home_islet');
-        g.experience.simulate({status: 'live', place, others: [{id, name: 'Nils', x, y: z, facing: 'front', moving: false, place}], hiddenCount: 0, sampledAt: Date.now()}); },
-        [spot.x, spot.z, host.playerId]);
+      // without a figure shows only the flash, tracer and puff). Stand one in for it where the owner is.
+      // The figure color is resolved from the presence/member id; the combat actor id is distinct.
+      await ben.page.evaluate(([x, z, id, colour]) => { const g = window.__island, place = g.island.presencePlace('home_islet');
+        g.experience.simulate({status: 'live', place, others: [{id, name: 'Nils', x, y: z, facing: 'front', moving: false, place, colour}], hiddenCount: 0, sampledAt: Date.now()}); },
+        [spot.x, spot.z, presenceId, shooterColour]);
       await host.page.waitForTimeout(1500); // the friend's page hears where the owner stands
-      let fired = false;
+      const before = await Promise.all([host, ben].map(captain => captain.page.evaluate(() => window.__mp.shots.length)));
+      let fired = false, mine = null, theirs = null;
       // At the ship by its id: the gun, never the cutlass (with no id a boarder in reach gets the blade).
-      for (let i = 0; i < 20 && !fired; i++) { fired = await host.page.evaluate(id => window.__island.waves.island.shoot(id), spot.id); if (!fired) await host.page.waitForTimeout(300); }
+      for (let i = 0; i < 20 && !fired; i++) {
+        const targetState = await host.page.evaluate(({id, actorId}) => {
+          const waves = window.__island.waves.island, wave = waves.wave;
+          const target = wave?.state?.ships?.find(ship => ship.id === id), actor = wave?.state?.party?.find(hero => hero.id === actorId);
+          return {waveId: wave?.info.waveId ?? null, ticks: wave?.ticks ?? null, done: !!wave?.done,
+            target: target ? {id: target.id, hp: target.hp, boss: !!target.boss} : null,
+            actor: actor ? {id: actor.id, hp: actor.hp, down: !!actor.down} : null};
+        }, {id: spot.id, actorId: shooterId});
+        if (!targetState.target) { if (attempts.length < 8) attempts.push({size, attempt, try: i, fired: false, reason: 'named target no longer alive', ...targetState}); break; }
+        const token = `${width}x${height}-${attempt}-${i}-${Date.now()}`;
+        const watches = Promise.all([poseSeen(host.page, false, {count: before[0], by: shooterId, target: spot.id}, token),
+          poseSeen(ben.page, true, {count: before[1], by: shooterId, target: spot.id}, token)]);
+        fired = await host.page.evaluate(id => window.__island.waves.island.shoot(id), spot.id);
+        if (fired) {
+          [mine, theirs] = await watches;
+          if (mine?.cancelled) mine = null; if (theirs?.cancelled) theirs = null;
+        }
+        else {
+          await Promise.all([host, ben].map(captain => captain.page.evaluate(key => { window.__mp.poseCancelled ??= Object.create(null); window.__mp.poseCancelled[key] = true; }, token)));
+          await watches; await host.page.waitForTimeout(300);
+        }
+        if ((!fired || !mine || !theirs) && attempts.length < 8) attempts.push({size, attempt, try: i, fired, targetState, ownPose: !!mine, teammatePose: !!theirs,
+          newShots: await host.page.evaluate(count => window.__mp.shots.slice(count), before[0])});
+      }
       if (!fired) continue;
-      const [mine, theirs] = await Promise.all([poseSeen(host.page, false), poseSeen(ben.page, true)]);
       if (mine && !own) {
         await host.page.screenshot({path: `${out}/05b-musket-pose-own-zoom-${size}.png`, clip: zoomClip(host.page, mine)});
         await host.page.screenshot({path: `${out}/05b-musket-pose-own-${size}.png`});
@@ -289,7 +341,7 @@ async function musketPose(host, ben) {
   }
   await ben.page.evaluate(() => window.__island.experience.simulate(null));
   for (const captain of [host, ben]) await captain.page.setViewportSize({width: 960, height: 600});
-  return {seen, probe};
+  return {seen, probe, attempts};
 }
 const results = [];
 const captainShots = [];
@@ -365,14 +417,15 @@ async function captainHealth(host, ben, wave) {
     await host.page.evaluate(() => document.activeElement?.blur?.()); // E goes to the game, not a button
     await quiet(host);
     // Wait on the game's own progress, not on wall-clock time: on a busy machine frames stall, so a fixed wait
-    // read 0 (nothing drawn yet) or overshot into a finished revive. Let go as soon as the ring is a third full.
+    // read 0 (nothing drawn yet) or overshot into a finished revive. Observe each frame and let go at one third.
     await host.page.keyboard.down('KeyE');
     const share = await host.page.waitForFunction(() => { const s = window.__island.waves.island.revive?.share ?? 0;
-      return s >= .3 ? s : false; }, null, {timeout: 20000, polling: 30}).then(handle => handle.jsonValue()).catch(() => 0);
+      return s >= .3 ? s : false; }, null, {timeout: 20000, polling: 'raf'}).then(handle => handle.jsonValue()).catch(() => 0);
     await host.page.keyboard.up('KeyE');
     await host.page.screenshot({path: `${out}/09-revive-in-progress-${label}-${host.playerId}.png`});
     await host.page.waitForTimeout(300);
     assert.ok(share >= .3 && share < 1, `the hold fills (${share})`);
+    lines.push(`revive hold ${label}: observed ${share} share before release`);
   }
   await host.page.setViewportSize({width: 960, height: 600}); await host.page.waitForTimeout(250);
   assert.equal(await coins(), before, 'a hold that lets go pays nothing');
@@ -394,8 +447,69 @@ async function captainHealth(host, ben, wave) {
   assert.equal(paid, 20 + 5 * wave.wave, 'the helper paid 20 + 5 × wave');
   assert.equal((await myCaptain(ben)).down, false, 'the friend is back on his feet');
   await shot('10-revived');
-  await stand(ben, SAFE); await stand(host, SAFE);
+  // The deliberate no-blade override only exists to make the fall observable. Once the shared
+  // revive is asserted, restore normal play and leave both captains at the boarder front to defend.
+  await Promise.all([host, ben].map(captain => captain.page.evaluate(() => {
+    window.__island.waves.island.autoBlade = true;
+  })));
   return lines;
+}
+// After the fall/revive proof, each captain uses the normal named-target gun control against ships
+// until the wave ends. The player positions are set at the same firing-range radius used by musket().
+async function defendHeart(captains, waveId, {stopAtFinisher = false, requireEach = true, contextual = false, preferBoss = false} = {}) {
+  const fire = async captain => {
+    let attacks = 0;
+    const deadline = Date.now() + 220000;
+    while (Date.now() < deadline) {
+      const target = await captain.page.evaluate(({waveId, stopAtFinisher, preferBoss}) => {
+        const waves = window.__island.waves.island, wave = waves.wave;
+        if (!wave || wave.info.waveId !== waveId || wave.done || wave.pause || (stopAtFinisher && waves.state?.finisher)) return {ended: true};
+        const ships = wave.state.ships ?? [];
+        if (!ships.length) return {ended: false, target: null};
+        const ship = (preferBoss ? ships.find(item => item.boss) : null)
+          ?? ships.reduce((nearest, next) => Math.hypot(next.x, next.z) < Math.hypot(nearest.x, nearest.z) ? next : nearest);
+        const distance = Math.hypot(ship.x, ship.z) || 1;
+        return {ended: false, target: {id: ship.id, x: ship.x * 14 / distance, z: ship.z * 14 / distance}};
+      }, {waveId, stopAtFinisher, preferBoss});
+      if (target.ended) break;
+      if (target.target) {
+        await stand(captain, target.target);
+        // The normal contextual input leaves nearby boarders eligible for the captain's cutlass.
+        if (await captain.page.evaluate(({id, contextual}) => contextual
+          ? window.__island.waves.island.shoot() : window.__island.waves.island.shoot(id), {id: target.target.id, contextual})) attacks++;
+      }
+      await captain.page.waitForTimeout(200);
+    }
+    return attacks;
+  };
+  const counts = await Promise.all(captains.map(fire));
+  const action = contextual ? 'normal attacks' : 'named-target shots';
+  if (stopAtFinisher) assert.ok(counts.some(count => count > 0), `captains defended with ${action} before the boss finisher (${counts.join(', ')})`);
+  else if (requireEach) assert.ok(counts.every(count => count > 0), `each captain fired at a ship after the revive (${counts.join(', ')})`);
+  return counts;
+}
+// Keep the original 200 s boss-preparation bound while reporting an earlier wave loss directly.
+async function waitForBossPreparation(captains, waveId) {
+  const deadline = Date.now() + 200000;
+  let states = [];
+  while (Date.now() < deadline) {
+    states = await Promise.all(captains.map(captain => captain.page.evaluate(id => {
+      const waves = window.__island.waves.island, wave = waves.wave;
+      const finish = window.__mp.lifecycle.findLast(item => item.type === 'wave_finished' && item.waveId === id) ?? null;
+      return {playerId: waves.playerId, phase: waves.state?.finisher?.phase ?? null,
+        wave: wave ? {id: wave.info.waveId, done: wave.done, ticks: wave.ticks, ships: wave.state.ships.length,
+          heart: wave.state.islandHp, bosses: wave.state.ships.filter(ship => ship.boss).map(ship => ({id: ship.id, kind: ship.kind, hp: ship.hp, boss: ship.boss}))} : null,
+        party: (waves.state?.party ?? []).map(hero => ({id: hero.id, hp: hero.hp, down: hero.down, present: hero.present})),
+        finish: finish ? {survived: finish.survived, at: finish.at} : null,
+        lifecycle: window.__mp.lifecycle.slice(-8)};
+    }, waveId)));
+    if (states.every(state => state.phase === 'prepare')) return states;
+    const ended = states.find(state => state.finish);
+    if (ended) throw new Error(`boss wave ${waveId} ended before finisher preparation: ${JSON.stringify(states)}`);
+    await captains[0].page.waitForTimeout(100);
+  }
+  assert.ok(states.every(state => state.phase === 'prepare'), `boss wave ${waveId} reaches finisher preparation within 200 s: ${JSON.stringify(states)}`);
+  return states;
 }
 const lobbyOf = captain => captain.page.evaluate(() => ({open: window.__island.island.ui.open === 'lobby',
   rows: [...document.querySelectorAll('.island-card-lobby[open] .island-lobby-player')].map(row => `${row.querySelector('.island-lobby-name').textContent}:${row.classList.contains('is-online') ? 'online' : 'away'}`),
@@ -600,8 +714,11 @@ try {
   // 4b Captain health: the friend falls, the owner helps him up for coins, both pages agree.
   const health = await captainHealth(host, ben, first);
   results.push(...health);
+  const defending = defendHeart([host, ben], first.waveId);
   // 5 Pause the short break first. It lasts 8 seconds by design, so do setup work after the room hold.
   await until(host, state => state?.pause, 'the host\'s break', 240000);
+  const defenseShots = await defending;
+  results.push(`captains defended the heart after the revive with ${defenseShots.join(' and ')} post-revive ship shots`);
   const secondsBeforePause = await host.page.evaluate(() => {
     const pause = window.__island.waves.island.wave?.pause;
     return pause ? Math.max(0, Math.ceil((pause.until - Date.now()) / 1000 - 1e-9)) : null;
@@ -622,6 +739,13 @@ try {
   for (const captain of [host, ben]) await captain.page.waitForFunction(() => window.__island.waves.island.wave?.renderer?.levels?.().cannon_2 === 2, null, {timeout: 2500, polling: 100});
   results.push(`upgrade in the break: cannon_2 is level ${await postLevels(host)} / ${await postLevels(ben)} in the wave's drawing on both pages`);
   await shot('04-break-upgrade');
+  // Cold-load both visitor pages while the accepted break is paused, but keep them at the invite card so they
+  // are not game members yet. Their actual Join clicks below happen after wave 4 has started.
+  const lateJoinPages = await Promise.all([openCaptain('Ana', 'ana', 'ISLE-K7Q2M', {deferInvite: true}),
+    openCaptain('Max', 'max', 'ISLE-K7Q2M', {deferInvite: true})]);
+  const membersBeforeLateJoin = await host.page.evaluate(async () => (await window.__island.island.api.lobby('ISLE-K7Q2M')).data.members.map(member => member.name).sort());
+  assert.deepEqual(membersBeforeLateJoin, ['Ben', 'Nils'], 'preloaded invite pages remain outside the game until they join');
+  await stand(host, SAFE); await stand(ben, SAFE); // preserve the original safe-idle setup for wave 4
   await host.page.locator('.pirate-break:not([hidden]) .pirate-hold').click();
   await Promise.all([host, ben].map(captain => captain.page.waitForFunction(() =>
     !document.querySelector('.pirate-break.is-paused'), null, {timeout: 10000, polling: 100})));
@@ -663,10 +787,11 @@ try {
   const second = await until(host, state => state && state.waveId !== first.waveId && !state.pause, 'wave 2 on the owner\'s page', 30000);
   await until(ben, state => state?.waveId === second.waveId, 'the friend in the owner\'s wave 2 (both pressed Next wave)', 30000);
   results.push(`both pressed Next wave: one wave ${second.wave} (${second.waveId}) on both pages`);
-  // 6 Two more friends open the game link (?game=ISLE-K7Q2M) mid-wave and join it.
+  // 6 Two more friends join the game link mid-wave. Their browser pages were loaded during the paused break,
+  // but they remain outside the game until each late Join click below.
   await until(host, state => state?.ticks > 20, 'wave 2 under way', 60000);
-  // Both load at once (a page takes a while to load; the wave must still run when they land).
-  const [ana, max] = await Promise.all([openCaptain('Ana', 'ana', 'ISLE-K7Q2M'), openCaptain('Max', 'max', 'ISLE-K7Q2M')]);
+  const [ana, max] = await Promise.all([openCaptain('Ana', 'ana', 'ISLE-K7Q2M', {preparedCaptain: lateJoinPages[0]}),
+    openCaptain('Max', 'max', 'ISLE-K7Q2M', {preparedCaptain: lateJoinPages[1]})]);
   for (const captain of [ana, max]) {
     const joined = await until(captain, state => state?.waveId === second.waveId, `${captain.name} joining the running wave mid-wave`, 30000);
     results.push(`${captain.name} joined wave ${second.wave} mid-wave at tick ${joined.ticks}`);
@@ -681,9 +806,10 @@ try {
   await host.page.waitForTimeout(3000);
   await shot('05-four-captains-mid-wave');
   {
-    const {seen, probe} = await musketPose(host, ben);
+    const {seen, probe, attempts} = await musketPose(host, ben);
     results.push(`musket pose: the owner's own body posed at ${seen.own.join(', ') || 'no size'}, his figure on the friend's page at ${seen.figure.join(', ') || 'no size'}`);
     if (probe) results.push(`musket pose probe on the friend's page: ${JSON.stringify(probe)}`);
+    if (seen.own.length < 2 || seen.figure.length < 1) results.push(`musket pose failed attempts: ${JSON.stringify(attempts)}`);
     assert.equal(seen.own.length, 2, "the owner's own character takes the musket pose when he fires (both sizes)");
     assert.ok([...seen.own, ...seen.figure].every(item => /musket-[12](?:-(?:front|back))?$/.test(item)), `the poses are the musket's: ${[...seen.own, ...seen.figure]}`);
     assert.ok(seen.figure.length >= 1, "the owner's figure on the friend's page takes the musket pose");
@@ -693,7 +819,10 @@ try {
     results.push(`wave 2 sync owner/${captain.name}: ${sync.same}/${sync.checked} same ships, ${sync.sameBoarders}/${sync.checked} same boarders, worst count gap ${sync.worst} / ${sync.worstBoarders}`);
     assert.ok(sync.checked >= 3 && sync.worst <= 1 && sync.worstBoarders <= 1, `${captain.name} runs the owner's wave 2`);
   }
+  const waveFourDefense = defendHeart(pages, second.waveId, {requireEach: false, contextual: true});
   for (const captain of pages) await until(captain, state => !state || state.pause || state.done, 'the end of wave 2', 240000);
+  const waveFourShots = await waveFourDefense;
+  results.push(`wave 4 defense: four captains used ${waveFourShots.join(', ')} normal contextual attacks before the wave ended`);
   await shot('06-wave2-end');
   // 7 v3 waves (GAME-V3.md §4.3): the wave-5 boss finisher on four pages. Every captain plays the haul through real
   // key events; every page must hear every captain's samples and decide the same scores and the same outcome.
@@ -705,6 +834,13 @@ try {
   // "Next wave" together with the host in step 5, too (T22: that race once left his join marked in progress).
   for (const captain of pages) await until(captain, state => state?.waveId === boss.waveId, `${captain.name} joining the boss wave on their own`, 30000);
   results.push(`boss wave ${boss.wave} (${boss.waveId}): all ${pages.length} captains joined on their own`);
+  const bossDefensePending = defendHeart(pages, boss.waveId, {stopAtFinisher: true, contextual: true, preferBoss: true})
+    .then(value => ({value}), error => ({error}));
+  await waitForBossPreparation(pages, boss.waveId);
+  const bossDefenseResult = await bossDefensePending;
+  if (bossDefenseResult.error) throw bossDefenseResult.error;
+  const bossDefense = bossDefenseResult.value;
+  results.push(`boss defense: captains used ${bossDefense.join(', ')} contextual attacks before the finisher began`);
   for (const captain of pages) {
     await stand(captain, SAFE);
     await captain.page.evaluate(async () => {
@@ -724,7 +860,6 @@ try {
     return f ? {kind: f.kind, phase: f.phase, players: f.players, heard: f.heard, outcome: f.outcome, scores: f.tasks.map(t => t.players)} : null; });
   const ids = await Promise.all(pages.map(captain => captain.page.evaluate(() => window.__island.waves.island.playerId)));
   // T28: three captains skip; the fourth practices privately while every scored clock waits.
-  for (const captain of pages) await captain.page.waitForFunction(() => window.__island.waves.island.state?.finisher?.phase === 'prepare', null, {timeout: 200000, polling: 100});
   for (const captain of pages.slice(1)) await captain.page.getByRole('button', {name: 'Skip practice', exact: true}).click();
   await pages[0].page.getByRole('button', {name: 'Practice', exact: true}).click();
   await pages[0].page.waitForTimeout(1000);
@@ -738,10 +873,11 @@ try {
   await pages[0].page.getByRole('button', {name: 'Finish practice', exact: true}).click();
   for (const captain of pages) await captain.page.waitForFunction(() => window.__island.waves.island.state?.finisher?.phase === 'task', null, {timeout: 200000, polling: 200});
   await host.page.waitForTimeout(4000);
-  await shot('07-finisher-haul-mid-task');
   const midway = await Promise.all(pages.map(finisherOf));
+  assert.ok(midway[0], 'the host still has a live finisher task after 4 s');
   results.push(`finisher: ${midway[0].kind} for ${midway[0].players.join(', ')}; heard so far ${midway.map(item => item.heard.length).join(' / ')}`);
   for (const item of midway) assert.deepEqual([...item.players].sort(), [...ids].sort(), 'every captain in the wave is in the finisher');
+  await shot('07-finisher-haul-mid-task');
   for (const captain of pages) await captain.page.waitForFunction(() => window.__mp.finishers.length > 0, null, {timeout: 60000, polling: 100});
   const outcomes = await Promise.all(pages.map(captain => captain.page.evaluate(() => window.__mp.finishers[0])));
   results.push(`finisher outcome on the four pages: ${outcomes.map(item => `${item.type} ${item.scores}/${item.goals}`).join(' · ')}`);
@@ -776,6 +912,8 @@ try {
         breakPanel: panel ? {hidden: panel.hidden, visible: panel.getClientRects().length > 0,
           text: panel.innerText} : null,
         waveFinishAnswers: window.__mp?.loot ?? null,
+        reviveInputs: window.__mp?.reviveInputs ?? null,
+        revived: window.__mp?.revived ?? null,
         lifecycle: window.__mp?.lifecycle ?? null,
         waveStarted: window.__mp?.started ?? null,
         tailSamples: window.__mp?.samples?.slice(-3) ?? null,

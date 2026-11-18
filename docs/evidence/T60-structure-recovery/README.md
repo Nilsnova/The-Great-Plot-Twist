@@ -40,8 +40,8 @@ for `fake-wave-1` with `survived:false`, then a `done:true`/`ended` state and co
 `pause:true` or break state was observed. The smoke flow's unconditional wait for a break after that
 lost-wave outcome explains this timeout; it is not evidence of a recovery or break regression. The
 second page's `survived` value was not retained as a separate artifact, so no claim is made about
-its outcome. The multiplayer check remains failed, and the diagnostic does not establish why the
-host lost. No gameplay behavior, seed, timeout or test assertion was changed. Passive failure
+its outcome. At that checkpoint the multiplayer check remained failed, and the diagnostic did not establish why the
+host lost; the later browser follow-up below is a separate result. No gameplay behavior, seed, timeout or test assertion was changed. Passive failure
 logging was syntax-checked with `node --check scripts/check-multiplayer.js`; it is not included in
 the full frontend test result above.
 
@@ -233,3 +233,80 @@ join failure after a real v2 start. The schema test found the draft granted `ser
 The remaining finish test also refused the participant join. These were reported to the SQL
 owners; no assertion was changed. This draft probe is diagnostic evidence only and is not counted
 as a passing lifecycle check.
+
+## 2026-11-17 local multiplayer browser follow-up
+
+The historical multiplayer failure above describes the earlier integrated checkpoint on
+`dcc5a89b`; it is preserved as recorded. A later harness-only follow-up completed the documented
+multiplayer browser journey on source SHA-256
+`41e8df74dfb3db365dded59ef9166716d648040b2bc5e760ee7a07c80cf2152a` (harness source was reviewed
+and committed as `d48f1d4084d1d706a3e8216a9ab9ed3f61274c4d`). It used local fake room members and an
+ephemeral local Chromium launcher, not a real account or hosted protocol-2/database transport.
+
+From `frontend/`, with dependencies installed from the repository lockfile:
+
+```bash
+env -u TEST_URL CHROME_PATH=/tmp/t60-local-chromium npm run test:mp -- /tmp/t60-browser-final-41e8df74
+```
+
+The command exited 0; the [saved full output](browser-followup/full-run-output.txt) is copied unchanged from `/tmp/t60-browser-final-41e8df74.log`. The run retained
+the original seed, game rules, timeouts and assertions. It passed cooperative build/upgrade/research/
+demolish, captain fall/revive and shared health, a held eight-second break, cross-page loot and
+upgrade state, ship-fire/militia/event samples, mid-wave joins, own and teammate musket poses at
+1280×720 and 375×812, four-page boss practice/late-join checks, and shared finisher participation
+and outcome. The runner reported `check-multiplayer: OK (4 pages)`.
+
+The harness repairs the local fixture's defense and observation sequence using normal captain
+controls: it resumes auto-blade after the deliberate fall/revive assertion, defends the first wave,
+uses contextual fire during later ship encounters so close boarders still receive normal cutlass
+defense, and arms the existing pose observation before firing. It does not force simulation health,
+victory, clocks or acceptance. The pose observer retains the original three-second bound, exact mesh assertions and both viewport
+checks, and additionally requires a fresh event from the expected actor to the selected target. A separate focused
+four-page late-wave-4 pose run at the same source revision also passed, including the desktop/phone
+screenshot workloads. Pose success is established by the runtime event and mesh assertions; the
+screenshots are taken after observation and may miss the short-lived pose. Earlier failures at
+revisions `9ed5f06a`, `62b3b911` and `cec9164e` remain
+diagnostic failures and were not relabeled as passes.
+
+Selected full-run captures are in
+[`browser-followup/full-run/`](browser-followup/full-run/): paused break, four-member mid-wave
+game view after joining, own and teammate phone context following pose observation, finisher haul, and game view after the shared outcome. The focused
+four-page late-wave pose captures are in
+[`browser-followup/targeted-pose/four-page-late-wave4/`](browser-followup/targeted-pose/four-page-late-wave4/).
+These local browser screenshots and fake-room assertions do not prove hosted realtime delivery,
+authenticated protocol-2 transport, database persistence, physical-device behavior or release
+readiness. No feature flag was activated. The saved-v1 D060/culverin compatibility outcome is approved,
+but its implementation [PR #238](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/238) is closed
+without merging. Operating-budget/retention and release decisions remain open.
+
+
+### Review evidence and synchronization
+
+| Capture | What it shows |
+|---|---|
+| [Held break](browser-followup/full-run/04-paused-break-me.png) | The local host has paused the eight-second break. |
+| [Running wave](browser-followup/full-run/05-four-captains-mid-wave-me.png) | Wave 4 after the visitors join; roster membership is asserted in the output, not displayed in this image. |
+| [Phone context](browser-followup/full-run/05b-musket-pose-own-375x812.png) | Phone layout after the runtime musket observation; this image alone does not prove a short animation. |
+| [Finisher task](browser-followup/full-run/07-finisher-haul-mid-task-me.png) | The local haul task after the midpoint state was recorded. |
+| [After the finisher](browser-followup/full-run/07-finisher-outcome-me.png) | The game view after the task; the output records all four pages reporting `finisher_won`, 244/224. |
+
+After the full browser run, `main` at `2f81f276` was merged into this task branch. Its new Tab overview
+is inactive unless Tab is held; the browser harness, default camera path and recovery code were not
+changed by this synchronization. All committed STATUS lines from both parents were preserved.
+`node --check scripts/check-multiplayer.js` passed, and the incoming Tab/tutorial checks passed
+19 tests across three files in 7.43 seconds. The unchanged long browser journey was not rerun solely
+for that synchronization. No full-suite or settings-matrix rerun is claimed for this harness/docs follow-up.
+
+
+### Publication checkpoint
+
+Before publication, current `main` at `8759fc80` was merged into the task branch. It includes the
+merged T57/T58/T59 follow-ups, guest invite validation, and protocol-2 playout buffering. All committed
+STATUS entries from both parents were preserved, including a collaborator's insertion in an earlier
+section. The browser harness still has source SHA-256 `41e8df74dfb3db365dded59ef9166716d648040b2bc5e760ee7a07c80cf2152a`.
+
+The incoming recovery controller/playout, paid-tower replay, guest invite, card and recovery-model
+checks passed 74 tests across six files in 3.94 seconds. The full browser output above remains the
+recorded run before this later synchronization; it was not rerun. The new playout path is guarded by
+protocol-2 recovery and does not change this legacy fake-room journey. These focused checks do not
+close the separate authenticated two-browser recovery gate.

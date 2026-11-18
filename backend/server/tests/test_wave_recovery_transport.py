@@ -228,7 +228,7 @@ def test_snapshot_template_captures_server_sim_inputs_and_exact_hp_rate(monkeypa
     view = SimpleNamespace(
         spots=built,
         crew={"gunner": 0, "carpenter": 2, "lookout": 0, "guard": 0},
-        campaign=SimpleNamespace(tiers={"wall": ResearchTier(2, "mason_drill")}),
+        campaign=SimpleNamespace(tiers={"wall": ResearchTier(3, "mason_drill", "bastion")}),
     )
 
     async def read_view(*_):
@@ -259,6 +259,7 @@ def test_snapshot_template_captures_server_sim_inputs_and_exact_hp_rate(monkeypa
         "x": 0,
         "z": 0,
         "spec": "bastion",
+        "bonus": "mason_drill",  # fix/playtest-1117: the tier-2 pick, as the legacy client sends it
     }
     assert snapshot["createWave"]["defenses"][1]["spec"] == "workshop"
     assert snapshot["createWave"]["defenses"][2]["kind"] == "watchtower"
@@ -358,3 +359,60 @@ def test_stale_admission_rpc_revision_uses_retryable_conflict():
 
     assert error.value.status_code == 409
     assert error.value.code == "island_changed"
+
+
+def test_snapshot_defenses_have_the_legacy_shape_tree_bonus_and_capstone_rule(monkeypatch):
+    # fix/playtest-1117: a bought upgrade tree is {a, b} (it was [a, b], read as no tree), the
+    # tier-2 pick rides as bonus, and a capstone counts only while it is the island's tier-3
+    # pick, exactly like frontend island/spots.js defenses() builds the legacy wave's list.
+    world = World()
+    built = [
+        SimpleNamespace(
+            id="cannon_1",
+            kind="cannon",
+            level=5,
+            x=1.0,
+            z=2.0,
+            built=True,
+            spec="broadside",
+            tree=(2, 0),
+        ),
+        SimpleNamespace(
+            id="cannon_2",
+            kind="cannon",
+            level=5,
+            x=3.0,
+            z=2.0,
+            built=True,
+            spec="grapeshot",
+            tree=None,
+        ),
+    ]
+    view = SimpleNamespace(
+        spots=built,
+        crew={"gunner": 0, "carpenter": 0, "lookout": 0, "guard": 0},
+        campaign=SimpleNamespace(tiers={"cannon": ResearchTier(3, "long_guns", "broadside")}),
+    )
+
+    async def read_view(*_):
+        return view
+
+    async def read_revision(*_):
+        return 1
+
+    monkeypatch.setattr(wave_recovery.service, "look_open", read_view)
+    monkeypatch.setattr(wave_recovery, "read_recovery_revision", read_revision)
+    snapshot = asyncio.run(
+        wave_recovery.build_snapshot_template(
+            world.app.state.admin,
+            world.app.state.island,
+            Island("owner", "K7Q2M", 0, 0),
+            Weather("calm", "Calm sea", 1, 0),
+            42,
+            ["structure_recovery"],
+        )
+    )
+    first, second = snapshot["createWave"]["defenses"]
+    assert first["tree"] == {"a": 2, "b": 0}
+    assert first["spec"] == "broadside" and first["bonus"] == "long_guns"
+    assert "spec" not in second  # grapeshot is not the island's tier-3 pick

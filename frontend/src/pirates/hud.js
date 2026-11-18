@@ -23,7 +23,7 @@ export function goalChips({ wave, shipsLeft, islandHp, maxIslandHp, boardersLeft
 // The first-wave hint: three pictures, one word each: pirates land here → walls and towers block → protect the heart.
 export const GOAL_HINT = Object.freeze([['🏝️', 'Land'], ['🧱', 'Block'], ['❤️', 'Protect']]);
 
-export const runLootText = loot => `Loot this run: 🪙 ${Math.max(0, Math.round(loot) || 0)}`;
+export const runLootText = loot => `Loot this wave: 🪙 ${Math.max(0, Math.round(loot) || 0)}`;
 // What the bar shows of it (owner, 15 Nov: "less text"): the coin and the number only, nothing while it is 0;
 // runLootText stays its spoken label.
 export const runLootChip = loot => { const n = Math.max(0, Math.round(loot) || 0); return n > 0 ? `Loot 🪙 +${n}` : ''; };

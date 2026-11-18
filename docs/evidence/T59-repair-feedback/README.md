@@ -126,3 +126,10 @@ Both selected cases passed in 5.97 seconds; the other eight cases were excluded 
 ### Independent follow-up verification
 
 On 17 Nov 2026, `npm exec vitest -- run tests/island/structure-recovery-model.test.js tests/island/structure-recovery-card-dom.test.js --maxWorkers=1` from `frontend/` passed 25 tests across 2 files. `npm run build` passed in 1.12 seconds and the spoiler guard passed across 241 text files. The corrected desktop/phone captures were inspected: Wall level-2 upgrade is 20 coins and Harpoon level-2 upgrade is 80 coins, with the existing current-level repair prices unchanged. The bell-pause explanation wraps legibly. These remain offline fixture screenshots and do not prove API/payment/database/multiplayer behavior.
+
+
+### Health-loading Upgrade helper — 18 Nov
+
+Upgrade remains visible and disabled while canonical health is loading or unavailable, with the helper “Wait until building health has loaded.” When valid data arrives, normal full-health and between-wave eligibility applies. The updated desktop/phone component crops above show this state; capture source is `8ca34b18`.
+
+After synchronization with main `48aee0e7`, the nine-file policy/card/API/Captain check listed above passed **105 tests across 9 files in 28.31 seconds**. The production build and spoiler guard passed. Every committed STATUS line from both branch histories was preserved. No PR, migration, deployment or activation was performed; manual review and publication confirmation remain pending.
