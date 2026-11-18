@@ -76,7 +76,8 @@ The local fake uses the same client rules. The trusted quote and move paths use
 the Python validator, and positioned construction re-quotes before its atomic
 snapshot-fenced RPC. A separate normal-build follow-up, [VIS68 #454](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/454),
 is being implemented to close the original-wall purchase bypass; its final authority
-and local-fake checks are not established by the intermediate paid capture. Static scenery does not require a new migration. An exact paid receipt is
+and local-fake checks are not established by the intermediate paid capture. VIS62's positioned quote/Move guard needs no new migration; the separate regular-build
+follow-up owns any required atomic SQL change. An exact paid receipt is
 reconciled before revalidation: it remains the same receipt rather than charging
 again or reconstructing a demolished/reset piece. See
 [VIS62's authority and tests](../evidence/VIS-62-scenery-clearance/README.md).
@@ -102,8 +103,9 @@ buffer reuse and disposal checks.
 
 [`walls.js`](../../frontend/src/art/village/walls.js) uses tighter authored source
 rectangles and one common state fit per tier. The original source PNG bytes remain
-unchanged. Intact, damaged and broken states share their scale and real ground
-foot. The upright logical box changes from `48 × 32 / anchor 6` to
+unchanged. Intact, damaged and broken frames share their source normalization and real ground
+foot. The renderer retains its existing `0.75` width factor for connected intact
+junction posts; common fitting does not mean every state has identical geometry. The upright logical box changes from `48 × 32 / anchor 6` to
 `48 × 48 / anchor 6`; this is presentation, not a larger paid footprint.
 
 [`wall-batches.js`](../../frontend/src/island/wall-batches.js) uses five heights
