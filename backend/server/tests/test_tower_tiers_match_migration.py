@@ -18,6 +18,7 @@ MIGRATIONS = Path(__file__).resolve().parents[3] / "supabase" / "migrations"
 TIERS = MIGRATIONS / "20261112070000_tower_tiers.sql"
 TOWER_DEFENSE = MIGRATIONS / "20261111030000_tower_defense.sql"
 RECOVERY_MUTATIONS = MIGRATIONS / "20261117050000_structure_recovery_mutations.sql"
+SHARED_CONSTRUCTION = MIGRATIONS / "20261118050401_island_economy_construction_legacy_guards.sql"
 
 
 def function(text: str, name: str) -> str:
@@ -77,6 +78,7 @@ def test_the_migration_is_the_last_word_on_the_upgrade_functions():
     assert {name: found for name, found in later.items() if found} == {
         "20261112080000_demolish.sql": ["island_upgrade"] * 4,
         RECOVERY_MUTATIONS.name: ["island_upgrade"] * 3,
+        SHARED_CONSTRUCTION.name: ["island_upgrade"] * 4,
     }
     latest = re.search(
         r"create or replace function public\.island_upgrade\(.*?\n\$\$;",
@@ -89,3 +91,10 @@ def test_the_migration_is_the_last_word_on_the_upgrade_functions():
     assert (
         "p_prices is null or coalesce(array_length(p_prices, 1), 0) not between 1 and 5" in latest
     )
+    wrapper = re.search(
+        r"create or replace function public\.island_upgrade\(.*?\n\$\$;",
+        SHARED_CONSTRUCTION.read_text(),
+        re.DOTALL,
+    ).group(0)
+    assert wrapper.index("island_treasury_lock_scope") < wrapper.index("island_economy_state")
+    assert wrapper.index("island_economy_state") < wrapper.index("island_upgrade_legacy_personal")

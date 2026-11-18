@@ -21,6 +21,7 @@ TOWER_DEFENSE = MIGRATIONS / "20261111030000_tower_defense.sql"
 TIERS = MIGRATIONS / "20261112070000_tower_tiers.sql"
 MORE_TOWER_SPOTS = MIGRATIONS / "20261117010000_more_tower_spots.sql"
 RECOVERY_MUTATIONS = MIGRATIONS / "20261117050000_structure_recovery_mutations.sql"
+SHARED_CONSTRUCTION = MIGRATIONS / "20261118050401_island_economy_construction_legacy_guards.sql"
 
 REFUND_NOTE = (
     "  -- 20261112080000_demolish.sql: who paid for this {}, for a refund when it is torn down.\n"
@@ -81,8 +82,9 @@ def test_no_later_migration_changes_the_build_or_upgrade_functions_again():
         )
     ]
     # D060 widens the demolish spots; T55 then adds recovery settlement/identity handling while
-    # preserving the payment/refund rows and all supported plots.
-    assert later == [MORE_TOWER_SPOTS.name, RECOVERY_MUTATIONS.name]
+    # preserving the payment/refund rows and all supported plots. Shared-mode wrappers then
+    # retain those originals as private aliases while excluding admitted shared islands.
+    assert later == [MORE_TOWER_SPOTS.name, RECOVERY_MUTATIONS.name, SHARED_CONSTRUCTION.name]
 
 
 def test_recovery_replacements_preserve_build_upgrade_payments_and_demolish_refunds():
