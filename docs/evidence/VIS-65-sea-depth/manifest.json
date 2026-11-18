@@ -1,0 +1,35 @@
+{
+  "source": "01f0b1d13572695f7668135ab45f9e830a32b354",
+  "files": {
+    "focused.log": {
+      "bytes": 558,
+      "sha256": "874422c13a385a377e8f3a9276f9a6e01d2e06084d1fb690d8b53a1720117547"
+    },
+    "checks.json": {
+      "bytes": 969,
+      "sha256": "39cc5598dec000d6296fc488a8c2eea02e4b04e21a4a0eee3715a6ce9d4435bf"
+    },
+    "text-lint.log": {
+      "bytes": 1037,
+      "sha256": "0bd57d6d550948e699d856e152bbf467c4db241616037473b19f8625d782ba40"
+    },
+    "build.log": {
+      "bytes": 17686,
+      "sha256": "38d24a8976e39015d07c9d106af58685efd91fe98f8bec00f47322cfbba4d06a"
+    },
+    "source-boundaries.json": {
+      "bytes": 513,
+      "sha256": "157cc3dce94ba83dfff83b04f23cc1eda249caf73756fa702f8bab902c0a7efa"
+    },
+    "README.md": {
+      "bytes": 7239,
+      "sha256": "d39190837e3c65e6e6a83b7ae14a3c82ace6798a64467bb638621ab7b3e90000"
+    },
+    "budget.log": {
+      "bytes": 83682,
+      "sha256": "5a3ec16fded78811f6aca15e8fc0f70f52074f299e2a4eb8e7590049c1c54223"
+    }
+  },
+  "localLinksChecked": 8,
+  "scope": "Exact writer receipts. Native browser evidence is owned by the coordinator and pending."
+}
