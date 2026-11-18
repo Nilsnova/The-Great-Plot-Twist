@@ -16,7 +16,7 @@ it('puts the title card at the bottom on tall phones and leaves laptops and land
       await page.setViewportSize({width,height});
       results[`${width}x${height}`]=await page.evaluate(()=>{
         const title=document.querySelector('.shell-screen[data-mode=title]'),card=title.getBoundingClientRect();
-        const buttons=[...title.querySelectorAll('.shell-menu button')].map(button=>{
+        const buttons=[...title.querySelectorAll('.shell-menu button, .shell-more')].map(button=>{
           const rect=button.getBoundingClientRect();
           return {height:rect.height, hit:button.contains(document.elementFromPoint(rect.x+rect.width/2,rect.y+rect.height/2))};
         });
