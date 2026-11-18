@@ -5,6 +5,7 @@ import {getRasterFrame} from '../src/art/village-raster.js';
 import {loadWallAtlas, wallAtlasView} from '../src/art/wall-atlas.js';
 import {WALL_ATLAS_IDS} from '../src/art/village/walls.js';
 import {makeWallConnections} from '../src/island/wall-connections.js';
+import {makeSelectionBracket} from '../src/island/selection-bracket.js';
 import {projectGround} from '../src/world/projection.js';
 import {defenseCases, buildingCases, wallCases} from './visual-matrix-cases.js';
 
@@ -80,13 +81,17 @@ export async function renderWallMatrix(level) {
       const scene = new THREE.Scene(); scene.background = new THREE.Color(0x345f50); ground(scene);
       const halfHeight = 7 * height / width, camera = new THREE.OrthographicCamera(-7,7,halfHeight+.6,-halfHeight+.6,.1,20);
       camera.position.z = 10;
-      const drawing = makeWallConnections(scene), before = JSON.stringify(row.spots);
+      const drawing = makeWallConnections(scene), bracket = makeSelectionBracket(scene), before = JSON.stringify(row.spots);
       try {
         drawing.setArt(wallAtlasView(atlas)); drawing.show(row.spots); drawing.select(row.selected);
         check(JSON.stringify(row.spots) === before, 'rendering preserves every input coordinate and state');
         check(drawing.links.length === (row.label === 'broken' ? 13 : 15), 'actual wall topology retains the declared breach');
-        const selected = scene.getObjectByName('island-selected-wall');
-        check(row.selected ? selected?.userData.spotId === row.selected : !selected, 'selection uses the actual wall overlay');
+        const post = drawing.posts.find(item => item.id === row.selected);
+        bracket.show(post ? {spotId:post.id,x:post.x,z:post.z} : null);
+        const selected = scene.getObjectByName('island-selection-bracket');
+        check(row.selected ? selected.visible && selected.userData.spotId === row.selected : !selected.visible, 'selection brackets the actual paid tile');
+        check(!scene.getObjectByName('island-selected-wall'), 'selection never repaints opaque wall artwork in the foreground');
+        scene.traverse(mesh => check(mesh.material?.map !== atlas.texture || mesh.renderOrder < 150, 'wall artwork retains ordinary painter depth'));
         renderer.render(scene,camera); canvas.getContext('2d').drawImage(renderer.domElement,0,0);
         check(renderer.info.render.calls > 0 && renderer.info.render.triangles > 0, 'real WebGL wall geometry rendered');
         const calls = renderer.info.render.calls, triangles = renderer.info.render.triangles, gl = renderer.getContext();
@@ -101,7 +106,7 @@ export async function renderWallMatrix(level) {
         result.push({state:row.label,spots:row.spots,links:drawing.links,posts:drawing.posts,
           selected:row.selected,calls,triangles,visiblePixels,framebuffer:[width,height]});
       } finally {
-        drawing.dispose(); scene.traverse(mesh => {mesh.geometry?.dispose();mesh.material?.dispose();});
+        bracket.dispose(); drawing.dispose(); scene.traverse(mesh => {mesh.geometry?.dispose();mesh.material?.dispose();});
       }
     }
   } finally {renderer.dispose();atlas.texture.dispose();}
