@@ -163,7 +163,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       if (campaignTold.has(key)) continue;
       campaignTold.add(key);
       const line = answer?.recoveryVersion === 1 && step.ids.includes('crew:carpenter')
-        ? 'Raise the six walls around the heart. All walls and towers fully recover when the wave ends.' : step.line;
+        ? 'Raise walls around the heart. All walls and towers fully recover when the wave ends.' : step.line;
       ui.toast(step.title, 'success', firstTime(`campaign_${step.wave}`) ? line : '');
       emit({type: CAMPAIGN_UNLOCKED, wave: step.wave, ids: step.ids, code: displayIslandCode(code)});
     }

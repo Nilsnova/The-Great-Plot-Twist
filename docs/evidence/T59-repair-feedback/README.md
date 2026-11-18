@@ -123,3 +123,37 @@ The later local combined review candidate includes this UI branch, the saved-pol
 The UI branch was merged locally with `origin/main` at `37eb70fa`. The three textual conflicts were resolved by retaining both committed `docs/STATUS.md` histories in their original order, combining the health-ready checks with main's stale-level check in `card-model.js`, and retaining both reviewed vocabulary groups. The health-loading guard applies only to wall, cannon, mortar, harpoon, culverin and swivel; houses and watchtowers without health rows remain upgradeable. A focused card-model regression checks that a health row from a different building level keeps Upgrade visible but disabled with “Wait until building health has loaded.”
 
 From `frontend/`, the focused policy/card/tutorial/narrator command passed 8 files and 136 tests. `npm run build` passed, including the production spoiler check. From the repository root, `node scripts/text-lint/index.mjs` reported zero errors and eight report-only findings. `git diff --check` reports one incoming main warning: a new blank line at the end of `frontend/src/ui/styles.css`; no repair-UI conflict files have whitespace errors. No new browser capture was made during this sync; browser review and any new captures remain with the integration owner. Existing images and their offline-fixture limitations are unchanged.
+
+
+## Current-main screenshot review · 18 Nov
+
+Current screenshots are stored separately in `main-db573347/`; the earlier captures above remain unchanged. Source baseline is `fc305cda` (including main `db573347`), plus the capture script's optional `RECOVERY_CAPTURE_DIRECTORY` output path. The output-path option changes no game or fixture behavior. The subsequent unlock-toast wording removes an obsolete fixed wall count to match the current island layout.
+
+Run from `frontend/`:
+
+```sh
+RECOVERY_CAPTURE_DIRECTORY=captures/t59-main-db573347 node scripts/capture-structure-recovery-card.js
+```
+
+The eight output PNGs were moved unchanged into this evidence directory. For a repeat directly into the same evidence location, set `RECOVERY_CAPTURE_DIRECTORY=../docs/evidence/T59-repair-feedback/main-db573347`. Environment: Linux, Node.js `v24.22.1`, Chromium `156.0.8078.79`, headless `/usr/bin/chromium` with the script's existing no-sandbox/dev-shm settings. [Exact command output](main-db573347/capture.txt).
+
+| Viewport | Scenario | Screenshot |
+|---|---|---|
+| 1440 × 900 | Partial wall: current-level repair price and full wave-end recovery, no ETA | [Wall](main-db573347/t59-wave-end-20261118-between-desktop.png) |
+| 390 × 844 | Destroyed cannon during preparation: two shared paid uses remain | [Cannon](main-db573347/t59-wave-end-20261118-preparation-phone.png) |
+| 375 × 812 | Tiny positive harpoon HP: minimum one-pixel health fill | [Harpoon](main-db573347/t59-wave-end-20261118-tiny-phone.png) |
+| 390 × 844 | Health still loading: visible disabled Upgrade and wait helper | [Loading](main-db573347/t59-wave-end-20261118-upgrade-health-loading-phone.png) |
+| 1280 × 800 | Stored Workshop role is inactive; Barracks and Tavern remain | [House](main-db573347/t59-wave-end-20261118-house-roles-desktop.png) |
+| 390 × 844 | Stored Quick Mend identifier retained without an active repair effect | [Wall skill](main-db573347/t59-wave-end-20261118-stored-wall-skill-phone.png) |
+| 390 × 844 | Crew offers omit Carpenter while keeping other hires | [Crew](main-db573347/t59-wave-end-20261118-crew-phone.png) |
+| 1280 × 800 | Tech tree omits new Mason Drill purchases | [Tech](main-db573347/t59-wave-end-20261118-tech-desktop.png) |
+
+All eight images were visually reviewed. The command also checks the paid action's local intent, absent ETA, shared quota copy, 44-pixel phone repair target, viewport fit, tiny positive fill, disabled loading Upgrade, and retired choices. These are production DOM cards with offline DTO fixtures: no authenticated API request, real payment, live database, game session or second client is demonstrated.
+
+### Combined current-main verification
+
+Local candidate `35f91e0e` combines the four repair follow-ups with main `db573347`. Its 23-file frontend command passed 232 tests, including the changed policy/card/tutorial/replay cases and the latest village decode/shipping/raster contracts. Production build passed in 1.71 seconds; the spoiler guard checked 245 text files and 12 protected lines. Text lint reported zero errors and eight unchanged report-only findings. This is combined-source evidence, not an isolated-branch full-suite claim.
+
+The full disposable island SQL suite passed 398 tests in 52.66 seconds on the preceding combined candidate `d25242e1`. The backend and migration trees are byte-identical in `35f91e0e`; the later main update changes artwork delivery. No live migration, deployment or activation was performed.
+
+After the unlock-toast wording adjustment, the focused narrator/tutorial/host command passed 39 tests across three files in 8.95 seconds on this UI branch.

@@ -8,7 +8,9 @@ import { createServer } from 'vite';
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const frontendDirectory = path.resolve(scriptDirectory, '..');
-const captureDirectory = path.join(frontendDirectory, 'captures');
+const captureDirectory = process.env.RECOVERY_CAPTURE_DIRECTORY
+  ? path.resolve(frontendDirectory, process.env.RECOVERY_CAPTURE_DIRECTORY)
+  : path.join(frontendDirectory, 'captures');
 const server = await createServer({configFile: path.join(frontendDirectory, 'vite.config.js'),
   server: {host: '127.0.0.1', port: 0}});
 let browser;
