@@ -124,6 +124,16 @@ The branch includes actual personal Captain dependency `4005fb53` and published 
 
 The current nine-module PostgreSQL run (the previous command plus `server/tests/island_sql/test_personal_captain_operations_sql.py`) gives **152 passed in 37.26s**. The current twelve-module Python command gives **415 passed in 13.13s**. Backend-wide Ruff, **72 migration parses with 72 unique versions**, and own diff checks pass. No complete browser or authenticated shared-session acceptance was added; the canonical lifecycle and deletion integration gates remain unchanged.
 
+### Financial child-receipt consistency
+
+Before writing a successful closure or personal completion, settlement now proves that the treasury helper returned the exact first credit persisted for this wave. It checks the original account/epoch, initiating actor, system wave UID, credit kind, reward reason/reference, exact amount and zero reservation effect, then compares the returned receipt with the canonical stored receipt. A successful-looking reply alone cannot substitute an admission receipt, another actor or amount, or an altered receipt payload. Existing closure replay still returns before issuing another credit.
+
+Eight synthetic helper-contract regressions first produced **8 failed, 35 deselected in 2.84s** against the previous implementation; the corrected selection passed **8 tests in 2.79s**. They cover an existing unrelated receipt, wrong amount/reference/actor, altered action UID, missing/string repeat and an unexpected repeated-credit reply. Every rejected close preserves money/revision, both personal profiles, all closure/completion records and a normally retryable attempt. The temporary helper replacement and real credit path run only inside a rolled-back disposable-database test; no browser or service role receives a new SQL capability.
+
+The nine committed PostgreSQL suites in the preceding verification command, including the eight new cases, passed in one combined run with three additional isolated interleaving/rollback probes: **163 passed in 51.31s**, with the complete **75-migration chain applied twice**. The additional scenarios check delayed higher/lower personal wins and frozen loadouts, old free-respec replay after a new Engineer generation, and failure after the first of two personal completion effects. Focused personal/API Python checks passed **46 tests in 3.84s**; wave-accounting Python checks passed **29 tests in 0.34s**. Backend-wide Ruff, all **75 unique migration parses**, and scoped whitespace checks passed.
+
+Main `f606412f` is integrated without changing the existing personal prerequisite source. This correction changes no reward, price, membership or participation rule; canonical lifecycle/authority, conversion and authenticated shared-mode acceptance remain separate gates.
+
 ## Reviewer
 
-A different human teammate, to be named before publication. Last updated: 2026-11-18.
+A different human teammate must review the current change before merge. Last updated: 2026-11-18.

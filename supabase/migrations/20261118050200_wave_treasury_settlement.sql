@@ -353,7 +353,23 @@ begin
       v_attempt.run_epoch,public.island_economy_system_uid(p_wave_id,'wave_loot'),
       'pirate_loot','wave:'||p_wave_id::text,v_loot);
     if v_money->>'status' is distinct from 'done' then raise exception 'wave_treasury_credit_failed'; end if;
-    v_receipt_id := (v_money#>>'{receipt,id}')::uuid;
+    if v_money->'repeat' is distinct from 'false'::jsonb
+      or jsonb_typeof(v_money#>'{receipt,id}') is distinct from 'string'
+      or (v_money#>>'{receipt,id}') !~*
+        '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' then
+      raise exception 'wave_treasury_credit_failed';
+    end if;
+    -- Close only against the exact persisted credit for this originating attempt.
+    select id into v_receipt_id from public.island_treasury_transactions
+      where id=(v_money#>>'{receipt,id}')::uuid and account_id=v_attempt.account_id
+        and run_epoch=v_attempt.run_epoch and actor_id=v_attempt.started_by
+        and action_uid=public.island_economy_system_uid(p_wave_id,'wave_loot')
+        and kind='credit' and reason='pirate_loot' and reference='wave:'||p_wave_id::text
+        and balance_delta=v_loot and committed_delta=0 and source_reservation_id is null;
+    if not found or v_money->'receipt' is distinct from
+      (public.island_treasury_result(v_receipt_id,false)->'receipt') then
+      raise exception 'wave_treasury_credit_failed';
+    end if;
   end if;
   insert into public.island_wave_closures(wave_id,outcome,earned_bonuses,loot_coins,
     treasury_receipt_id,terminal_fingerprint)
