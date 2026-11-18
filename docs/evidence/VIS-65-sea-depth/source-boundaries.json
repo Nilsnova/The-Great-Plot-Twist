@@ -1,0 +1,12 @@
+{
+  "base": "1bce43099cc4e78781faa0b74051d331bfe85e24",
+  "codeSource": "01f0b1d13572695f7668135ab45f9e830a32b354",
+  "checks": {
+    "coastFieldAndSharedUniformDeclarations": true,
+    "foamWhitecapsGlintsAndRain": true,
+    "meshCoastBindingClockQualityAndDisposal": true,
+    "existingFocusedTestsUnchanged": true,
+    "publicBackendMigrationsDependenciesUnchanged": true
+  },
+  "scope": "Byte comparisons of unchanged source boundaries; these are not native shader compilation or performance measurements."
+}

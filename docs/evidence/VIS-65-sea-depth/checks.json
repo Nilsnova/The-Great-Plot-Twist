@@ -1,0 +1,52 @@
+{
+  "source": "01f0b1d13572695f7668135ab45f9e830a32b354",
+  "checks": [
+    {
+      "name": "build",
+      "command": [
+        "npm",
+        "run",
+        "build"
+      ],
+      "exitCode": 0,
+      "seconds": 2.68,
+      "log": "build.log"
+    },
+    {
+      "name": "budget",
+      "command": [
+        "node",
+        "scripts/report-budget.js",
+        "--check"
+      ],
+      "exitCode": 0,
+      "seconds": 0.4,
+      "log": "budget.log"
+    },
+    {
+      "name": "text-lint",
+      "command": [
+        "node",
+        "../scripts/text-lint/index.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 1.61,
+      "log": "text-lint.log"
+    }
+  ],
+  "focused": {
+    "command": [
+      "npm",
+      "test",
+      "--",
+      "tests/art/coast-water.test.js",
+      "tests/world/ground-transform.test.js",
+      "--maxWorkers=1"
+    ],
+    "exitCode": 0,
+    "testFilesPassed": 2,
+    "testsPassed": 11,
+    "vitestSeconds": 1.27,
+    "log": "focused.log"
+  }
+}
