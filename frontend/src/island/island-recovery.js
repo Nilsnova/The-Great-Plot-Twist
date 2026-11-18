@@ -143,10 +143,12 @@ export function createRecovery(isl) {
       return;
     }
     if (answer.ok) {
-      tookCoins(answer.data.coins);
+      if (answer.data.receipt?.origin?.mode !== 'island_shared') tookCoins(answer.data.coins);
       clearRecoveryError();
-      // The wave on screen draws the structure whole at once; its replayed repair event confirms it later.
-      if (quote.expectedWindow === 'reserved_wave') emit({type: 'structure_repair_paid', spot: spotId, waveId: quote.expectedWaveId});
+      // Shared HP changes come from the canonical journal, including on historical receipt replay.
+      if (answer.data.receipt?.origin?.mode !== 'island_shared' && quote.expectedWindow === 'reserved_wave') {
+        emit({type: 'structure_repair_paid', spot: spotId, waveId: quote.expectedWaveId});
+      }
     } else {
       await reloadOwn();
       await readStructureRecovery(spotId);
