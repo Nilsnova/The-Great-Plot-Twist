@@ -1,0 +1,19 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+______________________ test_migration_versions_are_unique ______________________
+
+    def test_migration_versions_are_unique():
+        migrations = Path(__file__).resolve().parents[3] / "supabase" / "migrations"
+        versions = {}
+        for migration in sorted(migrations.glob("*.sql")):
+            version = migration.name.split("_", 1)[0]
+>           assert version not in versions, (
+                f"Duplicate migration version {version}: {versions[version]} and {migration.name}"
+            )
+E           AssertionError: Duplicate migration version 20261118050000: 20261118050000_paid_revive_journal.sql and 20261118050000_retired_recovery_options.sql
+E           assert '20261118050000' not in {'20261106000000': '20261106000000_foundation.sql', '20261106010000': '20261106010000_island_exchange.sql', '20261106020000': '20261106020000_accounts.sql', '20261106030000': '20261106030000_entry_profiles.sql', ...}
+
+server/tests/test_migration_versions.py:14: AssertionError
+=========================== short test summary info ============================
+FAILED server/tests/test_migration_versions.py::test_migration_versions_are_unique
+1 failed in 0.06s

@@ -1,0 +1,8 @@
+{
+  "beforeCommit": "d35efd92a0637b63a94683c0385b0dffe3502e15",
+  "beforeMeaning": "Rejected revision-2 candidate; not live production. Before images copied unchanged from its committed revision-2/after artifacts.",
+  "afterPainterSha256": "0f05e2e0fff63f1a46464bfbc80712df18325cf09580eb20731480e6792dced0",
+  "afterMeaning": "Frozen revision-3 procedural artwork, local synthetic fixtures only.",
+  "musketReferenceCommit": "0f6b966eba8edc6f86856fa5a60b337f9483314b",
+  "noLiveAccounts": true
+}

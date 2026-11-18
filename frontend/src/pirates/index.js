@@ -5,7 +5,9 @@
 //     reducedMotion, quality: () => settings.quality, isBlocked: () => !active || outsideBlocked(), on, emit,
 //     getDefenses, finishWave, api, openRoom});           // and pirates.dispose() in dispose()
 //
-// It runs its own frame loop, so game.js needs no other change. What the other lanes hand in:
+// By default it runs its own frame loop. With loop:false the caller owns update(delta); game.js
+// uses that mode to sample combat after movement and apply poses before drawing the same frame.
+// What the other lanes hand in:
 //   getDefenses()   the island lane: [{id, kind, x, z}] of the built walls, cannons, watchtower and
 //                   houses on the island being defended, in home_islet world units
 //   finishWave(body) the island lane: POST /api/waves/finish and show the loot; may throw the API
@@ -72,7 +74,7 @@ export function mountPirates(ctx) {
     practiceIdentity: ctx.practiceIdentity, room: ctx.islandRoom ?? null, place: ctx.islandPlace ?? 'home_islet', simOptions: ctx.islandSimOptions ?? {},
     getCrew: ctx.getCrew ?? (() => null), startNextWave: ctx.startNextWave ?? null,
     holdBreak: ctx.holdBreak ?? null, toggleHold: ctx.toggleHold ?? null, guide: ctx.battleGuide !== false,
-    onEvents: ctx.onIslandEvents, recoveryTransport: ctx.recoveryTransport ?? null });
+    onEvents: ctx.onIslandEvents, recoveryTransport: ctx.recoveryTransport ?? null, inspectDefenses: ctx.inspectDefenses === true });
   const point = ctx.api ? createPiratePoint({ ...shared, api: ctx.api, openRoom: ctx.openRoom, input: ctx.input, getDefenses: ctx.getPointDefenses,
     rehearsal: ctx.rehearsal === true, host: ctx.host === true, notify: ctx.notify, beforeStart: ctx.beforePointWave ?? null }) : null;
   const update = dt => { island.update(dt); point?.update(dt); };

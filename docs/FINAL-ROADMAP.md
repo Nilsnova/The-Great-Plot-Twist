@@ -80,6 +80,8 @@ Approved U addition: Optional skill-aware comparison against the carried weapon,
 Approved U addition: Local inventory filters and grouped rack rows, implemented in draft [PR #98](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/98) with [evidence](evidence/U-arsenal-filters/README.md). This completes only the approved addition; author and independent human review remain.
 Approved U addition: Preparation and upcoming unlocks before ringing the bell, implemented in draft [PR #94](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/94) with [evidence](evidence/U-wave-preparation/README.md). This completes only the approved addition; author and independent human review remain.
 
+The village polish review covers selected building identity, between-wave range and the decorative southwest mooring. [Review captures](evidence/village-polish/README.md)
+
 ### C. Simplify the code base (helps criteria 5 and 6)
 
 | ID | Value | Size | Task | Done when |
@@ -141,6 +143,8 @@ T28 UX follow-up: [Learn boss minigames with optional first-time practice](../sp
 
 ## Expansion backlog · 14 Nov 2026
 
+[Fleet materials and combat effects](../specs/VIS-16-29-fleet-art.md) group VIS-16 and VIS-29 into one visual review, with Johannes as the responsible teammate. Playtest evidence and peer review determine readiness.
+
 The requested [defense and shared-island expansion](BUILD-PLAN.md#6-defense-and-shared-island-expansion) adds T29–T47, proposed by Ianno Hollensteiner. It preserves this grading/submission plan and the feature freeze. Start with investigation and reviewed contracts; schedule large implementation packages after the deadline unless the team explicitly revises the schedule. Existing T3/T5/T6/T7/T26 are extended, not replaced. Claiming, human review and merge rules above still apply.
 
 The unified-recovery follow-up T54–T60 is claimed by Ianno. The current 18 Nov revision uses full free restoration at canonical wave end, retaining paid combat repair and retiring obsolete repair-only choices in [T58 #456](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/456) / [T59 #457](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/457). [PR #135](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/135) merged the approved plan; [PR #203](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/203) merged the core implementation. [OPEN-TODOS section 11](OPEN-TODOS.md#11-unified-defense-recovery--unassigned-follow-ups-16-nov) lists the current follow-ups and review status; [BUILD-PLAN](BUILD-PLAN.md#t54-t60-unified-recovery-delivery-gates) lists delivery gates. The T60 local four-page browser check passes, with exact scope and remaining authenticated recovery, egress, balance and retention gaps in [D059](DECISIONS.md#d059--shared-gradual-hp-recovery-and-paid-instant-repair--2026-11-16). Human review and release gates remain; no live migration, activation or deployment is authorized. PR #127 remains superseded; PR #128 is the earlier approved gameplay baseline.
@@ -165,3 +169,6 @@ Not released or marked complete: focused evidence, Johannes's explain-back and
 independent human review remain. No change to the existing freeze or merge rules.
 
 COC-02 follow-up (Johannes, draft): current-base management fit view is a bounded implementation slice for issue #143 and depends on COC-49/PR #192. The parent camera task remains open; see [specification](../specs/COC-02-village-overview.md). No merge or full editor-camera completion is claimed.
+
+
+18 Nov / Johannes — VIS69 focused wall refinement: [parent #469](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/469), tasks [VIS70 #470](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/470), [VIS71 #471](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/471), [VIS72 #472](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/472), [VIS73 #473](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/473). [Draft #474](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/474) saves the local-Mac handover checkpoint. Tasks remain open: combined checks, feedback implementation, actual visual acceptance and different-human review are pending. Preserve the existing twelve-wall game; no merge or rollout.

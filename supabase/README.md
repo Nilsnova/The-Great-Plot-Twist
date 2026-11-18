@@ -3259,6 +3259,174 @@ Disposable verification must reapply the complete migration chain, exercise obso
 
 ### Recovery implementation migration order and rollback boundary
 
+The paid-revival migration uses version `20261118051000`: the merged retirement migration
+already owns `20261118050000`. Its SQL body is unchanged by this publication rename. Apply
+retirement → atomic revival → saved rewards → historical reconciliation in timestamp order.
+Historical evidence manifests retain the filenames used at their recorded commits.
+
+`migrations/20261118051000_paid_revive_journal.sql` fixes issue #466. The service-only
+`recovery_wave_revive` function charges the payer, keeps the fall receipt and appends one
+`captain_revive` journal event in the same transaction, after the sealed frontier. It locks the
+payer wallet, sorted islands, recovery state, wave and participant in that order. Paid repeats
+do not append or charge again, even after close/leave; a failed append rolls everything back.
+The original payment implementation is retained as service-only `wave_revive_charge`.
+`wave_revive` keeps protocol-1 behavior and refuses charge-only requests to saved recovery waves.
+All three functions deny `anon` and `authenticated`; table grants and policies are unchanged.
+Apply in timestamp order before the matching backend/client; old clients receive a safe reload
+refusal on recovery waves. Reapplication is supported. No live application, deployment or flag
+change is performed by this fix. Opt-in checks: `test_recovery_revive_sql.py` and
+`test_recovery_revive_http_pg.py` under `backend/server/tests/island_sql/`.
+
 For a backend/client candidate that contains T55/T60 recovery code, review and apply the required files in timestamp order: `20261117020000_structure_recovery.sql`, `20261117025000_legacy_wave_locks.sql`, `20261117030000_paid_structure_repair.sql`, `20261117040000_structure_recovery_api.sql`, then `20261117050000_structure_recovery_mutations.sql`. Include any earlier candidate prerequisite, such as `20261117010000_more_tower_spots.sql`, before this set. The integration tests only apply/reapply this chain in disposable Unix-socket PostgreSQL; no live application or activation is recorded here.
 
+A saved v1 island may retain already-built `cannon_8`–`cannon_11` plots and culverins after the `more_tower_spots` or `defenses_v2` availability flags are off. The application continues to expose and operate those existing buildings, includes their full catalogue repair prices, and freezes `defenses_v2` for a v1 wave containing a culverin. New builds remain gated. This compatibility is application behavior; it makes no migration or activation change.
+
 The recovery feature flag remains off by default and governs admission of new v1 waves on legacy islands. It does not make the migrations optional for a deployed server or protocol-2 client that can read or mutate a saved v1 island. If a release must stop admitting new v1 waves, turn the flag off and preserve saved v1 state. Admission off does not downgrade saved v1 policy, which persists between waves; no safe policy downgrade is implemented. Keep a v1-capable backend and protocol-2 client while any saved v1 island remains, even when no wave is active. Do not reverse the migrations or delete receipts to roll back. Fix forward with reviewed code and migrations; any future saved-policy data transition needs separate review. See the [release checklist](../docs/RELEASE-CHECKLIST.md#t55t60-structure-recovery-release-gate). No live migration, deployment or flag activation was performed by T60.
+
+## Shared island treasury foundation (MP-ECO-02)
+
+`20261118050050_island_treasury.sql` and `20261118050100_island_treasury_functions.sql` add exact
+island/run accounts and atomic financial primitives. They create no admission rows or automatic
+balance conversion. Existing personal wallets, ledger and HTTP routes remain unchanged. See
+[the interface contract](../docs/INTERFACES.md#shared-island-treasury-foundation-mp-eco-02)
+and [the package spec](../specs/MP-ECO-02-island-treasury.md).
+
+### Treasury rights and invariants
+
+| Object | `anon` / `authenticated` | `service_role` |
+|---|---|---|
+| `island_economy_state` | No reads/writes | Select only; persisted mode/current account/epoch and active/paused offers. |
+| `island_economy_accounts` | No reads/writes | Select only; exact finite integral numeric balance, committed principal and revision. |
+| `island_treasury_transactions` | No reads/writes | Select only; append-only immutable cash and commitment receipts. |
+| `island_economy_context`, `island_treasury_admit`, `island_treasury_spend`, `island_treasury_reserve`, `island_treasury_credit`, `island_treasury_settle` | No execute | Execute the checked public primitives. |
+| Treasury scope, validation, envelope, replay, result and record helpers | No execute | No direct execute; only enclosing function-owner SQL can call them. |
+
+All three tables enable RLS without browser policies. Security-definer financial RPCs use an
+empty search path and fully qualified tables. A separate checked API must authorize member reads.
+Balance includes held principal and cannot fall below committed principal. A ledger reserve has
+one uniquely linked settlement on the same account/epoch. Cash/commitment sums reconcile to account
+balances; actor/action UID and account/reason/reference keys prevent repeated payments. A trigger
+rejects update/delete even from an accidental privileged statement.
+
+Scope advisory locks precede account rows and prevent first-admission/reset races. New spending
+checks active membership and current active account/epoch under locks. Canonical credit/settlement
+uses its saved origin and does not require the original actor to remain a member. Pausing offers
+does not downgrade mode or stop valid settlement. Monetary helpers must share the asset mutation's
+SQL transaction; a preceding separate HTTP money call is insufficient.
+
+Accounts/state reference their original island with deletion restricted. Owner-account deletion,
+reset, old obligations and existing-save conversion need an explicit integrated policy before any
+runtime admission path is enabled. No live application/admission is recorded by this foundation.
+
+### Treasury verification
+
+On disposable PostgreSQL, run the existing full-chain fixture:
+
+```bash
+cd backend
+CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q server/tests/island_sql/test_island_treasury_sql.py
+uv run pytest -q server/tests/test_island_treasury.py server/tests/test_island_treasury_store.py
+```
+
+The SQL suite applies every migration twice and checks grants/RLS, immutable receipts, one-time
+bootstrap, no partial admission on UID conflict, exact large funds, same-event independent bets,
+spend/reserve races, duplicate settlements, retired-origin payouts and ledger/escrow reconciliation.
+The Python checks cover strict decimal-string/context parsing and fresh state versus immutable
+receipt values. These are local integration checks, not proof of deployed shared-mode gameplay.
+
+### Global operation registry
+
+`20261118050150_island_economy_operations.sql` adds immutable free/personal/paid intent identities
+and the treasury insertion guard. `island_economy_operations` has RLS, no anonymous/authenticated
+access and service-role select only. Claim/effect/system/parser/trigger helpers have no direct
+service-role execute grant; owner-defined domain functions call them inside the asset transaction.
+No public claim-only endpoint is introduced. Historical raw financial UIDs are opaque tombstones;
+checked children must match the original root actor, account and epoch.
+
+Apply this migration transactionally at `READ COMMITTED`. Before any DDL, it collects account,
+existing-operation and ledger relation barriers atomically using `NOWAIT`/savepoint retry. It releases
+partial locks before waiting and fails before changes after 30 seconds of contention. Unsupported
+isolation fails at entry. Do not replace this barrier with an account-scope inventory or account-only
+lock: concurrent new admissions and personal null-scope foreign keys are covered explicitly.
+The [registry spec](../specs/MP-ECO-02-operation-identities.md) documents exact lock modes and errors.
+
+Focused verification also runs `server/tests/test_economy_operations.py`,
+`server/tests/island_sql/test_economy_operations_sql.py` and
+`server/tests/island_sql/test_economy_operations_cutover_sql.py` with the disposable PostgreSQL tools
+above. Source settlement after departure/retirement keeps its original account; this extension does
+not grant current membership, convert saves, register routes or authorize a live migration.
+
+### Saved reward recovery after returning
+
+`migrations/20261118060000_reward_recovery.sql` adds the partial
+`wave_participants_pending_player_idx` and service-only closed-result functions:
+`recovery_wave_reward_is_closed(wave_id)`,
+`recovery_wave_recover_reward_locked(player_id,wave_id)` and
+`recovery_wave_recover_rewards(player_id)`. The unchanged `recovery_wave_finish` signature
+becomes a wrapper over the same exact-wave settlement helper and the retained
+`recovery_wave_finish_before_reward_recovery` implementation. All five function names allow
+only `service_role`; `anon` and `authenticated` receive no execute grant. No table, wallet
+reason or browser database privilege is added.
+
+The authenticated `POST /api/waves/recover` route takes no player, wave, amount or checkpoint
+input. It settles up to 20 retained unpaid, canonically closed protocol-2 participations using
+the saved first-close result and exact per-participant loot. Membership, current island,
+current epoch, later waves and feature admission do not erase a past entitlement. Ordinary
+late finish and return recovery share the existing `pirate_loot` reference and `finished_at`
+gate; neither repeats host flags, next-wave progress or structure restoration. Malformed,
+open and unsupported legacy results are excluded before the batch limit. An empty repeat
+still returns the current wallet and persisted personal win progress after a lost response.
+
+Apply the migration and refresh the PostgREST schema before deploying the API/client that uses
+it. Review in timestamp order after `20261118051000_paid_revive_journal.sql`; the historical
+reconciliation migration follows at `20261118070000`. These files were applied and reapplied
+only in disposable test databases. No live application, refund or feature activation is claimed.
+
+### Historical paid revival reconciliation
+
+`migrations/20261118070000_revive_reconciliation.sql` adds the service-only
+`recovery_revive_reconcile(payment_id bigint, apply boolean default false)` function. It
+classifies one original `captain_revive` ledger debit; the default uses only reads, takes no
+row locks and works in a read-only transaction. There is no public HTTP route, table, flag,
+wallet reason or automatic schedule. `anon` and `authenticated` cannot execute it.
+
+A confirmed refund requires the exact matching receipt/debit amount and payer, saved recovery
+version 1/protocol 2, retained wave and target identity, a complete readable contiguous journal from
+1 through its head, and consistent terminal records (`closed_at`, object `closed_hp`, and
+`wave_runs.finished_at`). Any potentially matching revival for that target blocks automatic
+refund, including an old unreferenced `captain_input` from another helper. At most 50,001 journal
+rows are inspected per call; larger histories remain unresolved. Late-join identity may come
+from the retained `participant_joined` event. UUID comparisons ignore letter case.
+
+| Classification | Meaning and action |
+|---|---|
+| `confirmed_missing` | Dry-run evidence permits a refund; no coins have moved. |
+| `refunded` / `already_refunded` | The original amount was returned / had already been returned once. |
+| `recorded` / `ambiguous_old_event` | An exact linked event / possibly matching old event exists; no refund. |
+| `pending_active` | The wave is still open; no invented revival or refund. |
+| `ambiguous_legacy` / `orphaned_debit` | Room-only delivery or a deleted receipt cannot establish non-delivery. |
+| `incomplete_history` / `history_too_large` / `missing_target_identity` | Retained evidence is missing, unreadable or inconsistent; no refund. |
+| `payment_mismatch` / `refund_conflict` | Receipt amount or existing compensation conflicts; no refund. |
+| `no_payment` / `not_revive_payment` / `no_wallet` / `missing_wave_history` | The requested original payment cannot be reconciled safely. |
+
+Explicit apply locks the payer wallet, sorted islands, recovery state and wave, then rechecks
+the evidence. It credits exactly the original paid amount through `apply_wallet_transaction`
+with existing reason `admin_adjust` and ref `revive_refund:<original debit id>`. The ledger's
+unique key and wallet lock enforce one refund across retries and concurrent calls. A repeated
+refund remains recognizable after reset deletes the old receipt. A failing ledger insert
+rolls back its balance change. Original receipts, events and closed history stay unchanged.
+
+Use [the operator runner](../docs/handoff/reconcile-historical-revives.sql): it defaults to no
+selected ids and `apply=false`, permits at most 100 explicit ids for dry-run inspection, and
+requires exactly one approved id for apply. One apply per transaction preserves lock order
+across payers. Read the result before any separately authorized production action.
+
+Historical receipts omit helper coordinates and skills; structure checkpoints omit captain
+fall state. Current simulator replay does not prove historical behavior because snapshots do
+not pin its source revision. The tool never invents a missing action. A verified original
+request may separately retry `recovery_wave_revive` with its original UID and valid captured
+position while still eligible; otherwise an active wave remains pending until it closes.
+Legacy/unlinked/reset-orphan cases remain explicitly unresolved. No live database was inspected,
+no migration was applied live and no refund was performed by this implementation. Opt-in checks:
+`CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q
+server/tests/island_sql/test_revive_reconciliation_sql.py` from `backend/`.

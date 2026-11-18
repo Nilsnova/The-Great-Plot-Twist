@@ -1,0 +1,204 @@
+{
+  "source": "37eb70fa plus the recorded task patch at this stage",
+  "trace": {
+    "started": 29609.200000001118,
+    "events": [
+      {
+        "at": 37933,
+        "event": {
+          "type": "captain_fired",
+          "by": "p-aqbynzrr",
+          "level": 1,
+          "weapon": "musket",
+          "mode": "single",
+          "damage": 6,
+          "reload": 1.2,
+          "x": 14,
+          "z": 0.13,
+          "t": 7.85,
+          "targetId": "ship_1",
+          "toX": 21.75,
+          "toZ": 0.2,
+          "impactAt": 8.02,
+          "targets": [
+            {
+              "id": "ship_1",
+              "toX": 21.75,
+              "toZ": 0.2,
+              "impactAt": 8.02
+            }
+          ]
+        },
+        "ticks": 173,
+        "afterNoteAt": 38177.300000000745,
+        "pose": {
+          "kind": "musket",
+          "flip": false,
+          "angle": 0.004162925699317514,
+          "age": 0.23799991607666016
+        }
+      }
+    ],
+    "reads": [
+      {
+        "at": 37950.800000000745,
+        "by": "p-aqbynzrr",
+        "value": {
+          "kind": "musket",
+          "flip": false,
+          "angle": 0.004162925699317514,
+          "age": 0.010999917984008789
+        }
+      },
+      {
+        "at": 38204.70000000112,
+        "by": "p-aqbynzrr",
+        "value": {
+          "kind": "musket",
+          "flip": false,
+          "angle": 0.004162925699317514,
+          "age": 0.2650001049041748
+        }
+      },
+      {
+        "at": 39241.800000000745,
+        "by": "p-aqbynzrr",
+        "value": null
+      },
+      {
+        "at": 40292.10000000149,
+        "by": "p-aqbynzrr",
+        "value": null
+      }
+    ],
+    "renders": [
+      {
+        "at": 37954.90000000037,
+        "meshes": [
+          {
+            "frame": "captain-1-musket-2",
+            "figure": false
+          }
+        ]
+      },
+      {
+        "at": 38208.10000000149,
+        "meshes": [
+          {
+            "frame": "captain-1-musket-1",
+            "figure": false
+          }
+        ]
+      },
+      {
+        "at": 39242.40000000037,
+        "meshes": []
+      },
+      {
+        "at": 40292.5,
+        "meshes": []
+      }
+    ],
+    "updates": [
+      {
+        "at": 37917.10000000149,
+        "end": 37950.800000000745,
+        "before": 153,
+        "after": 173
+      },
+      {
+        "at": 38200.40000000037,
+        "end": 38204.5,
+        "before": 173,
+        "after": 179
+      },
+      {
+        "at": 39239.20000000112,
+        "end": 39241.800000000745,
+        "before": 179,
+        "after": 200
+      },
+      {
+        "at": 40283.90000000037,
+        "end": 40292.10000000149,
+        "before": 200,
+        "after": 221
+      }
+    ],
+    "raf": [
+      {
+        "at": 30506,
+        "gap": 896.6999999992549,
+        "hidden": false
+      },
+      {
+        "at": 31511.60000000149,
+        "gap": 1005.6000000014901,
+        "hidden": false
+      },
+      {
+        "at": 32656.700000001118,
+        "gap": 1145.0999999996275,
+        "hidden": false
+      },
+      {
+        "at": 33693.20000000112,
+        "gap": 1036.5,
+        "hidden": false
+      },
+      {
+        "at": 34740.800000000745,
+        "gap": 1047.5999999996275,
+        "hidden": false
+      },
+      {
+        "at": 35843.40000000037,
+        "gap": 1102.5999999996275,
+        "hidden": false
+      },
+      {
+        "at": 36889.300000000745,
+        "gap": 1045.9000000003725,
+        "hidden": false
+      },
+      {
+        "at": 38177.5,
+        "gap": 1288.199999999255,
+        "hidden": false
+      },
+      {
+        "at": 38209.70000000112,
+        "gap": 32.20000000111759,
+        "hidden": false
+      },
+      {
+        "at": 39243.20000000112,
+        "gap": 1033.5,
+        "hidden": false
+      },
+      {
+        "at": 40293.70000000112,
+        "gap": 1050.5,
+        "hidden": false
+      }
+    ],
+    "eligible": {
+      "at": 37010.10000000149,
+      "waveId": "fake-wave-1",
+      "protocol": 1,
+      "recoveryVersion": 0,
+      "by": "p-aqbynzrr",
+      "targetId": "ship_1",
+      "targetHp": 24,
+      "actorHp": 100,
+      "down": false,
+      "distance": 7.750919520792677,
+      "range": 14,
+      "phase": "running"
+    },
+    "submitted": true,
+    "shotAt": 37010.10000000149
+  },
+  "errors": [],
+  "stage": "same-frame-candidate"
+}

@@ -1,0 +1,160 @@
+{
+  "baseline": "48aee0e7b34c879968c4bc606b543f911032adfa",
+  "options": {
+    "seed": 11,
+    "wave": 6,
+    "defenses": [],
+    "island": {
+      "hp": 1000000000
+    },
+    "recoveryVersion": 1,
+    "waveProtocol": 2,
+    "recoveryStructures": []
+  },
+  "before": {
+    "sourceSha256": "e19f09aed4a2e26fa5e205b86da16b3d932803d38f01ef545e9bad8b5cd8c451",
+    "input": {
+      "type": "captain_shot",
+      "by": "cw1-evidence",
+      "level": 1,
+      "skills": [],
+      "weapon": "blunderbuss",
+      "targetId": "ship_1",
+      "x": 47.336788491660485,
+      "z": 3.3907542768511085,
+      "ax": 38.69,
+      "az": 2.43,
+      "seen": 31
+    },
+    "observed": {
+      "id": "ship_1",
+      "kind": "brig",
+      "lane": "east",
+      "x": 38.69,
+      "z": 2.43,
+      "hp": 68,
+      "maxHp": 68,
+      "state": "sailing",
+      "crew": 3
+    },
+    "atResolution": {
+      "id": "ship_1",
+      "kind": "brig",
+      "lane": "east",
+      "x": 36.96,
+      "z": 2.32,
+      "hp": 68,
+      "maxHp": 68,
+      "state": "sailing",
+      "crew": 3
+    },
+    "effectiveTick": 51,
+    "selected": [],
+    "damage": 0,
+    "fired": {
+      "type": "captain_fired",
+      "by": "cw1-evidence",
+      "level": 1,
+      "weapon": "blunderbuss",
+      "mode": "cone",
+      "damage": 4.8,
+      "reload": 1.92,
+      "x": 47.34,
+      "z": 3.39,
+      "t": 2.55,
+      "targetId": null,
+      "toX": 38.39,
+      "toZ": 2.4,
+      "impactAt": 2.75,
+      "cone": 50,
+      "heading": -3.03,
+      "targets": []
+    },
+    "hits": []
+  },
+  "after": {
+    "sourceSha256": "ecdb09c85843ce1692759e9f515c41ed7b4bcb7b75c0462d11e7bad45a0f2a86",
+    "input": {
+      "type": "captain_shot",
+      "by": "cw1-evidence",
+      "level": 1,
+      "skills": [],
+      "weapon": "blunderbuss",
+      "targetId": "ship_1",
+      "x": 47.336788491660485,
+      "z": 3.3907542768511085,
+      "ax": 38.69,
+      "az": 2.43,
+      "seen": 31
+    },
+    "observed": {
+      "id": "ship_1",
+      "kind": "brig",
+      "lane": "east",
+      "x": 38.69,
+      "z": 2.43,
+      "hp": 68,
+      "maxHp": 68,
+      "state": "sailing",
+      "crew": 3
+    },
+    "atResolution": {
+      "id": "ship_1",
+      "kind": "brig",
+      "lane": "east",
+      "x": 36.96,
+      "z": 2.32,
+      "hp": 68,
+      "maxHp": 68,
+      "state": "sailing",
+      "crew": 3
+    },
+    "effectiveTick": 51,
+    "selected": [
+      "ship_1"
+    ],
+    "damage": 4.8,
+    "fired": {
+      "type": "captain_fired",
+      "by": "cw1-evidence",
+      "level": 1,
+      "weapon": "blunderbuss",
+      "mode": "cone",
+      "damage": 4.8,
+      "reload": 1.92,
+      "x": 47.34,
+      "z": 3.39,
+      "t": 2.55,
+      "targetId": "ship_1",
+      "toX": 36.96,
+      "toZ": 2.32,
+      "impactAt": 2.78,
+      "cone": 50,
+      "heading": -3.03,
+      "targets": [
+        {
+          "id": "ship_1",
+          "toX": 36.96,
+          "toZ": 2.32,
+          "impactAt": 2.78
+        }
+      ]
+    },
+    "hits": [
+      {
+        "type": "ship_hit",
+        "t": 2.8,
+        "shipId": "ship_1",
+        "kind": "brig",
+        "by": "captain:cw1-evidence",
+        "damage": 4.8,
+        "hp": 63.2,
+        "x": 36.53,
+        "z": 2.29,
+        "blocked": false,
+        "manual": true,
+        "captain": true
+      }
+    ]
+  }
+}
