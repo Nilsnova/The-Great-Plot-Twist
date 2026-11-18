@@ -89,3 +89,26 @@ The original static failures were reproduced as **2 failed, 5 passed** before up
 - Backend-wide Ruff and `git diff --check`: passed.
 
 This is a test-only compatibility follow-up; production code and migration contents are unchanged. The broad 261-case database run and 450-case Python run above remain the earlier baseline, not a claim that an exhaustive suite was rerun for this test update.
+
+## Current dependency verification
+
+Main `f606412f` and reviewed construction `58a66646` are integrated. The guard SQL and
+tests remain unchanged from the published component; construction now independently
+verifies each exact committed debit/refund child and its complete immutable receipt.
+
+Commands from `backend/`:
+
+```bash
+uv run --no-sync pytest -q server/tests/test_respec_wave_guards_match_migration.py server/tests/test_islet_routes.py server/tests/test_islet_store.py server/tests/test_entry_kits.py server/tests/test_entry_profiles_match_migration.py
+CASE_PG_SCRATCH=1 uv run --no-sync --with pgserver --with 'psycopg[binary]' --with pglast pytest -q server/tests/island_sql/test_economy_core_legacy_guards_sql.py server/tests/island_sql/test_economy_core_legacy_guard_races_sql.py server/tests/island_sql/test_shared_construction_sql.py server/tests/island_sql/test_shared_construction_grant_races_sql.py server/tests/island_sql/test_respec_and_wave_guards_sql.py server/tests/island_sql/test_captain_tree_sql.py server/tests/island_sql/test_island_fresh_start_sql.py --tb=short
+uv run --no-sync ruff check .
+```
+
+The focused Python selection passed **231 tests in 3.93 seconds**. The mixed PostgreSQL
+selection passed **133 tests in 16.87 seconds**, without skips, applying the full migration
+chain twice. It includes actual-connection adoption/grant/build ordering, original legacy
+behavior, exact child-proof refusal rollback and private alias execution checks. A separate
+initial source-review run of the two core PostgreSQL modules passed **35 tests in 6.66
+seconds**. No demonstrated guard defect was found in this review. These checks retain the
+same bounded scope; canonical session/HTTP integration, live schema and human approval
+remain separate.
