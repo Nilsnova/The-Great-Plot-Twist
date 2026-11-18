@@ -5,7 +5,9 @@ Responsible human: **Johannes Franz Lang (`frcola`)**. Documentation child
 [VIS31 acceptance #236](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/236);
 [documentation Draft #388](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/388).
 
-**Latest-main integration has a fresh stage-nine capture and closed mixed checks.**
+**18 Nov follow-up base:** [VIS57 / Draft #426](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/426) composes newer main `66d29ea9` while preserving this earlier visual checkpoint. Its [separate evidence](../evidence/VIS-57-playtest-base/README.md) records 236 focused frontend and 725 targeted route/unit/real-PostgreSQL passes, exact SQL retention and the unique 18050000 guard version. It has no new browser or full-suite pass; the next visual leaves and coordinator captures remain separate.
+
+**The previous latest-main integration has a stage-nine capture and closed mixed checks.**
 The included main cutoff is `ee5677ff`. The [latest actual package](../evidence/reference-village-latest-review/README.md)
 preserves twenty unchanged final game PNGs, six unchanged before PNGs and a
 twelve-image comparison with a Selected wall scene. Capture, final layout audit

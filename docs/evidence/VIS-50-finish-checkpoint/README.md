@@ -2,6 +2,8 @@
 
 Used by the VIS50 reviewer to inspect the confirmed refusal bypass and the narrow forward correction. Responsible human: Johannes Franz Lang (`frcola`); [issue #415](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/415), [Draft #416](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/416).
 
+**18 Nov integration note:** the unchanged SQL body now lives at [`20261118050000_recovery_finish_checkpoint_guard.sql`](../../../supabase/migrations/20261118050000_recovery_finish_checkpoint_guard.sql) in the VIS57 review base because newer main took version 18040000 for its playtest migration. The [new identity and test evidence](../VIS-57-playtest-base/README.md) records the composition. The source hashes, old filename and raw receipts below remain historical VIS50 evidence.
+
 ## Result and scope
 
 A first finish with missing, extra, foreign, fractional or healing structure health now returns the existing validator refusal. It cannot close from initial health or pay loot without any accepted checkpoint. A valid first finish and retry still pay once; older/divergent submissions can still close from an already accepted canonical checkpoint.

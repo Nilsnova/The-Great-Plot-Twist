@@ -1,0 +1,16 @@
+{
+  "reviewSource": "392e65b7bb6e5ac1398c66f792f790c107efc365",
+  "codeCheckpoint": "6c87b8dcd2d7a1bb5376c3b64bbede27a144479e",
+  "trees": {
+    "frontend/src": "16116fe9ad058eef1d4e27c98c288d637e07ee6c",
+    "frontend/public": "9306942db1050d728799cee2fbdc8e8960f14ad2",
+    "backend": "3956a73d76f537fd7c85259afa4bf9280a6e0ecd",
+    "supabase": "c3319eb968d7ac28624ecb8434909f37ca00edf2"
+  },
+  "codeCheckpointTrees": {
+    "frontend/src": "16116fe9ad058eef1d4e27c98c288d637e07ee6c",
+    "frontend/public": "9306942db1050d728799cee2fbdc8e8960f14ad2",
+    "backend": "3956a73d76f537fd7c85259afa4bf9280a6e0ecd",
+    "supabase": "c3319eb968d7ac28624ecb8434909f37ca00edf2"
+  }
+}

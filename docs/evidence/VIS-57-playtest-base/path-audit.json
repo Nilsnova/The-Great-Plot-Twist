@@ -1,0 +1,428 @@
+{
+  "main": "66d29ea9eeb6ac39523c6605c8379004277326fe",
+  "preview": "e636ae7578813d1aa45f05092fdacc8cfadcbfe5",
+  "commonBase": "ee5677ff4986b671c271c85a35abcee70aa8fe59",
+  "integrationCodeHead": "6c87b8dcd2d7a1bb5376c3b64bbede27a144479e",
+  "incomingPaths": 46,
+  "overlapPaths": 19,
+  "textualConflicts": [
+    "frontend/src/pirates/render.js"
+  ],
+  "conflictResolution": "Retain main smoother; pass its smoothed x and z through existing projected shipMeta signature.",
+  "paths": [
+    {
+      "path": "backend/content/islands.json",
+      "overlap": false,
+      "mainBlob": "bc45c4a9e5dc406d30819f45f94b6bb420fa56f5",
+      "previewBlob": "d648fc586eb74ecc137238d56ee7af87790f5e72",
+      "resultBlob": "bc45c4a9e5dc406d30819f45f94b6bb420fa56f5",
+      "mainExact": true,
+      "previewExact": false
+    },
+    {
+      "path": "backend/server/island/catalogue.py",
+      "overlap": true,
+      "mainBlob": "ab7ee716cf43f2065678365be794bdc34a35584e",
+      "previewBlob": "2ade6ebded84744b7852ade8b5de1399d2d028df",
+      "resultBlob": "950d8f6dd926cf9a11cbaeb6072d94e6a5164783",
+      "mainExact": false,
+      "previewExact": false
+    },
+    {
+      "path": "backend/server/island/rules.py",
+      "overlap": false,
+      "mainBlob": "9e142e26342e0a7047fd018847798f9b4f276de9",
+      "previewBlob": "dbbc28a96b2f5d678701ed45255482f593a7e61f",
+      "resultBlob": "9e142e26342e0a7047fd018847798f9b4f276de9",
+      "mainExact": true,
+      "previewExact": false
+    },
+    {
+      "path": "backend/server/island/wall_repair.py",
+      "overlap": true,
+      "mainBlob": "d67299994320af5dd22b8bc9e001cd6e3453727c",
+      "previewBlob": "61a72ba2fc39706495e5b58fd7a1f7636f37395f",
+      "resultBlob": "c6a8e80fb04daa835981016fe8296a054fb518e5",
+      "mainExact": false,
+      "previewExact": false
+    },
+    {
+      "path": "backend/server/island/wave_recovery.py",
+      "overlap": true,
+      "mainBlob": "d008189580a681fd6ac6259a4b40c07a14432545",
+      "previewBlob": "1f17f6f5f021843db45951a4d3d1e8c3218a7209",
+      "resultBlob": "ed3e784a5d056038f3455f4fc0e2ee2cdfa86433",
+      "mainExact": false,
+      "previewExact": false
+    },
+    {
+      "path": "backend/server/island/waves.py",
+      "overlap": true,
+      "mainBlob": "ab5f55a450fd225b9be4743f49e5949e6a80bc7a",
+      "previewBlob": "14c5ebdbb096f071ef908d5a2d735daadcfd8384",
+      "resultBlob": "a327566dd419c46b360f2eebccf09994695bd4ac",
+      "mainExact": false,
+      "previewExact": false
+    },
+    {
+      "path": "backend/server/routes/wave_recovery.py",
+      "overlap": false,
+      "mainBlob": "995c9ac1796f2f9021d6a86f360826d125fa8643",
+      "previewBlob": "6cf416902f00a163650160ff77f6337a77831794",
+      "resultBlob": "995c9ac1796f2f9021d6a86f360826d125fa8643",
+      "mainExact": true,
+      "previewExact": false
+    },
+    {
+      "path": "backend/server/routes/waves.py",
+      "overlap": true,
+      "mainBlob": "62d3077f50b42452dce88bb75c71322b6bf0a4d6",
+      "previewBlob": "da30c1704ff949ebcb46d27281adb10a4cd8d50d",
+      "resultBlob": "d178861fbfc3a5daf5b76a533340a42d07127aed",
+      "mainExact": false,
+      "previewExact": false
+    },
+    {
+      "path": "backend/server/tests/island_sql/test_boss_loot_sql.py",
+      "overlap": false,
+      "mainBlob": "9fac4dd9f6efc93a4152f8e6afd054fca67fbbf9",
+      "previewBlob": null,
+      "resultBlob": "9fac4dd9f6efc93a4152f8e6afd054fca67fbbf9",
+      "mainExact": true,
+      "previewExact": false
+    },
+    {
+      "path": "backend/server/tests/island_sql/test_recovery_input_weapon_sql.py",
+      "overlap": false,
+      "mainBlob": "2f2caa1896f8af79345f457060d36d271302dcea",
+      "previewBlob": null,
+      "resultBlob": "2f2caa1896f8af79345f457060d36d271302dcea",
+      "mainExact": true,
+      "previewExact": false
+    },
+    {
+      "path": "backend/server/tests/island_sql/test_structure_recovery_http_pg.py",
+      "overlap": false,
+      "mainBlob": "46f7059984e8386edd089d0a3ffa3ca1f89a0c01",
+      "previewBlob": "918aad643dff6e00a34598b770918ccee95f25c2",
+      "resultBlob": "46f7059984e8386edd089d0a3ffa3ca1f89a0c01",
+      "mainExact": true,
+      "previewExact": false
+    },
+    {
+      "path": "backend/server/tests/island_sql/test_structure_recovery_mutations_sql.py",
+      "overlap": false,
+      "mainBlob": "ea006668364f7a2114595c8bdd31516d79a189db",
+      "previewBlob": "7589675efe10c17bb8de20ee387f1e5da38af954",
+      "resultBlob": "ea006668364f7a2114595c8bdd31516d79a189db",
+      "mainExact": true,
+      "previewExact": false
+    },
+    {
+      "path": "backend/server/tests/island_sql/test_structure_recovery_schema_sql.py",
+      "overlap": false,
+      "mainBlob": "0a0ab98c24d05952c75d36112fc2ff62346c8c25",
+      "previewBlob": "4930ba58dbdaf062fadbf4ae5731672342abedc7",
+      "resultBlob": "0a0ab98c24d05952c75d36112fc2ff62346c8c25",
+      "mainExact": true,
+      "previewExact": false
+    },
+    {
+      "path": "backend/server/tests/island_sql/test_structure_repair_sql.py",
+      "overlap": false,
+      "mainBlob": "a43236324577c66f1c9f458c9aa22ef9081d0a64",
+      "previewBlob": "9b769b96736d85544015c8baac19197799c666e4",
+      "resultBlob": "a43236324577c66f1c9f458c9aa22ef9081d0a64",
+      "mainExact": true,
+      "previewExact": false
+    },
+    {
+      "path": "backend/server/tests/structure_recovery_pg.py",
+      "overlap": true,
+      "mainBlob": "7a23925f31f82783d9d5a086654d7dc4e9b08210",
+      "previewBlob": "57ba3fbb8ba2c47d912e657a4e0653513bfcde11",
+      "resultBlob": "396b269bd2d412e6fabab364019058ea03379908",
+      "mainExact": false,
+      "previewExact": false
+    },
+    {
+      "path": "backend/server/tests/test_boss_loot.py",
+      "overlap": false,
+      "mainBlob": "6c4368b66d03aea7b6c07a4c072ef122fcede7b9",
+      "previewBlob": null,
+      "resultBlob": "6c4368b66d03aea7b6c07a4c072ef122fcede7b9",
+      "mainExact": true,
+      "previewExact": false
+    },
+    {
+      "path": "backend/server/tests/test_island_rules.py",
+      "overlap": false,
+      "mainBlob": "bb53deb9c2ecc2ae0a16476d7ec925e9544d62bc",
+      "previewBlob": "be7a8cc86b216aea67bf128b960dce7fd3dc4e59",
+      "resultBlob": "bb53deb9c2ecc2ae0a16476d7ec925e9544d62bc",
+      "mainExact": true,
+      "previewExact": false
+    },
+    {
+      "path": "backend/server/tests/test_wall_recovery.py",
+      "overlap": false,
+      "mainBlob": "82422669cacdb9a27647c8cc2d44cbbf2d275da7",
+      "previewBlob": "5450e7e784c16b21c4353a57c5c58731ca72c5c7",
+      "resultBlob": "82422669cacdb9a27647c8cc2d44cbbf2d275da7",
+      "mainExact": true,
+      "previewExact": false
+    },
+    {
+      "path": "backend/server/tests/test_wave_recovery_routes.py",
+      "overlap": false,
+      "mainBlob": "7c7b472ccc3cc088cc0de3b1c0de10e9a1223081",
+      "previewBlob": "0fc3a3a5106ea8e6be77e46acd663f89e62903fd",
+      "resultBlob": "7c7b472ccc3cc088cc0de3b1c0de10e9a1223081",
+      "mainExact": true,
+      "previewExact": false
+    },
+    {
+      "path": "backend/server/tests/test_wave_recovery_transport.py",
+      "overlap": false,
+      "mainBlob": "10ff4356274ce0e1cdf82a81f405f105e0ebedbe",
+      "previewBlob": "67b76170ea3b3dfcfa8027fc282873e726c27d4c",
+      "resultBlob": "10ff4356274ce0e1cdf82a81f405f105e0ebedbe",
+      "mainExact": true,
+      "previewExact": false
+    },
+    {
+      "path": "backend/server/tests/test_wave_routes.py",
+      "overlap": false,
+      "mainBlob": "861c4e2394853ef54744200c7877bdc9cd5c4872",
+      "previewBlob": "2a3bd8fe3c3d38ab0e68f2afc8963f18a2878853",
+      "resultBlob": "861c4e2394853ef54744200c7877bdc9cd5c4872",
+      "mainExact": true,
+      "previewExact": false
+    },
+    {
+      "path": "docs/DECISIONS.md",
+      "overlap": true,
+      "mainBlob": "d9d1f565529f70cb9a91e79212d80c3725bef859",
+      "previewBlob": "ffb39a788ec0487c7b060319ac4084bcb11ba19a",
+      "resultBlob": "ce6820cdcb5e144040639530d4c5dc970d3fb01f",
+      "mainExact": false,
+      "previewExact": false
+    },
+    {
+      "path": "docs/GAME-V3.md",
+      "overlap": true,
+      "mainBlob": "c8d07de68c6792e9cd1e0fb5e5011ed6f92cce02",
+      "previewBlob": "492fd2658274dcc15b76b7766876dba7db4aafa3",
+      "resultBlob": "84496baef0e447cead6897e59d5c26e717527330",
+      "mainExact": false,
+      "previewExact": false
+    },
+    {
+      "path": "docs/HOW-TO-PLAY.md",
+      "overlap": false,
+      "mainBlob": "1724ab6b8a522e870c7a57fe9bed409e787f0fad",
+      "previewBlob": "e09825d93b0ddbaedb65703b0825a05927c8a49b",
+      "resultBlob": "1724ab6b8a522e870c7a57fe9bed409e787f0fad",
+      "mainExact": true,
+      "previewExact": false
+    },
+    {
+      "path": "docs/INTERFACES.md",
+      "overlap": true,
+      "mainBlob": "d13a06e57bce40c52bd90ec8dd19d67a92cebdea",
+      "previewBlob": "858e0cf3a6c71eb77ea87e66a1eea36db68fd1cf",
+      "resultBlob": "19e3b8662b4ef24d0711c0a6fd89f478f07acc24",
+      "mainExact": false,
+      "previewExact": false
+    },
+    {
+      "path": "docs/STATUS.md",
+      "overlap": true,
+      "mainBlob": "28c72bae3d3e28f1c6c2830cda8ce2d18716f97f",
+      "previewBlob": "5964a0a4a3ca9853b40d08ecfb52d20965daf5e7",
+      "resultBlob": "e9c35aebeb37490d5f5db7d7d54354aa9e6a033c",
+      "mainExact": false,
+      "previewExact": false
+    },
+    {
+      "path": "docs/TOWER-DEFENSE.md",
+      "overlap": false,
+      "mainBlob": "7595ac2fb67b05d8e9c55e8f8093f47e15c9f0d2",
+      "previewBlob": "0dc4aca601f16acbaee4fd138bdd7e097fa5dfef",
+      "resultBlob": "7595ac2fb67b05d8e9c55e8f8093f47e15c9f0d2",
+      "mainExact": true,
+      "previewExact": false
+    },
+    {
+      "path": "docs/handoff/apply-2026-11-18-playtest.sql",
+      "overlap": false,
+      "mainBlob": "2d33d84a73c89b229bc53927dee1d32b49cdd48e",
+      "previewBlob": null,
+      "resultBlob": "2d33d84a73c89b229bc53927dee1d32b49cdd48e",
+      "mainExact": true,
+      "previewExact": false
+    },
+    {
+      "path": "frontend/src/island/index.js",
+      "overlap": true,
+      "mainBlob": "cbc2d9bbed3f5cb6678ac8ba44314bd0ec798f4c",
+      "previewBlob": "6e0fe961c7eadffd5d89f430962e3ad786dbec28",
+      "resultBlob": "456633216bebe8610797bfcc1fca3dcb50b81074",
+      "mainExact": false,
+      "previewExact": false
+    },
+    {
+      "path": "frontend/src/island/structure-recovery-model.js",
+      "overlap": false,
+      "mainBlob": "d03dd659b31669cebc24d6142f7639e3862cb9af",
+      "previewBlob": "e4260a9ef54d593124c425c8d431778d88da7247",
+      "resultBlob": "d03dd659b31669cebc24d6142f7639e3862cb9af",
+      "mainExact": true,
+      "previewExact": false
+    },
+    {
+      "path": "frontend/src/pirates/controller.js",
+      "overlap": true,
+      "mainBlob": "f5c143579e60ac09918a9d5ddf76adc3a1a3460b",
+      "previewBlob": "0400376c2bfb9c8b8e4805f414555ce301eab0c5",
+      "resultBlob": "e09c483285c5716ac086e0b1b67f4438465a6ac2",
+      "mainExact": false,
+      "previewExact": false
+    },
+    {
+      "path": "frontend/src/pirates/fake-api.js",
+      "overlap": true,
+      "mainBlob": "499ce0c50e39082f9c43e2282c5d859c7b975c7c",
+      "previewBlob": "451d3cee491f50565aef6812d258549e96128493",
+      "resultBlob": "4df005359e34196abd29526dff313b074c77546f",
+      "mainExact": false,
+      "previewExact": false
+    },
+    {
+      "path": "frontend/src/pirates/game-wiring.js",
+      "overlap": true,
+      "mainBlob": "d7caccba2538ddf1111e8730971df3f6316e5050",
+      "previewBlob": "78afd0af117f973e71b2d74c50874c3481ecb6ec",
+      "resultBlob": "eeec0b24fb80ca5f490e7c08ba797dbf59cfdc40",
+      "mainExact": false,
+      "previewExact": false
+    },
+    {
+      "path": "frontend/src/pirates/hud.js",
+      "overlap": true,
+      "mainBlob": "3a8d9b1fa14d92db8492c64f780c3f852ccc4499",
+      "previewBlob": "e59bc06544690e60265b1b08f841327a91124c87",
+      "resultBlob": "691cf98d18c0adecaf0da035d26eb8129e4d37bf",
+      "mainExact": false,
+      "previewExact": false
+    },
+    {
+      "path": "frontend/src/pirates/recovery-transport.js",
+      "overlap": false,
+      "mainBlob": "7e73da2e886c235d5e9bfa98affdb9b390ba2ff7",
+      "previewBlob": "1705b1ab16658cb91406f674d6222979f0cf99c2",
+      "resultBlob": "7e73da2e886c235d5e9bfa98affdb9b390ba2ff7",
+      "mainExact": true,
+      "previewExact": false
+    },
+    {
+      "path": "frontend/src/pirates/render.js",
+      "overlap": true,
+      "mainBlob": "736a926f0f2df4b652bc29e625ccf7502a8f9495",
+      "previewBlob": "8ccb40deed742e939266403c1b4912ea58d5d664",
+      "resultBlob": "2ec81079c6f7462774dc012288777006b42d0c50",
+      "mainExact": false,
+      "previewExact": false
+    },
+    {
+      "path": "frontend/src/pirates/ship-fire.js",
+      "overlap": false,
+      "mainBlob": "e1301ac57aa303e2fd169d94b31aad5c1b78a2f9",
+      "previewBlob": "fdc174cd92584c13ff61af2e4adaac9aa9cf861f",
+      "resultBlob": "e1301ac57aa303e2fd169d94b31aad5c1b78a2f9",
+      "mainExact": true,
+      "previewExact": false
+    },
+    {
+      "path": "frontend/src/pirates/sim.js",
+      "overlap": true,
+      "mainBlob": "bc99af30aba214fd54837e0cc0773f08ddd0b7f4",
+      "previewBlob": "3f05c3d8320c53cac30cd1c2a08fff8d96325535",
+      "resultBlob": "62ab22cd0f54d8f0c7b5a4f1a798f86955373681",
+      "mainExact": false,
+      "previewExact": false
+    },
+    {
+      "path": "frontend/src/pirates/smoothing.js",
+      "overlap": false,
+      "mainBlob": "9a3fe4d851edaf16a69e2a5ea11c101a7ced0a51",
+      "previewBlob": null,
+      "resultBlob": "9a3fe4d851edaf16a69e2a5ea11c101a7ced0a51",
+      "mainExact": true,
+      "previewExact": false
+    },
+    {
+      "path": "frontend/src/pirates/tower-trees.js",
+      "overlap": false,
+      "mainBlob": "033ee50decd4a7f84565ee55d01a593b508d7cbb",
+      "previewBlob": "0db1bc68372d9d05f9191b69e7d4beb6498148bf",
+      "resultBlob": "033ee50decd4a7f84565ee55d01a593b508d7cbb",
+      "mainExact": true,
+      "previewExact": false
+    },
+    {
+      "path": "frontend/tests/island/structure-recovery-model.test.js",
+      "overlap": false,
+      "mainBlob": "2eba0f6987ccab8a0ff9625bba5bf7ed335160c2",
+      "previewBlob": "3243eed3d8552b253a1c82ed85a45a136f33bdd1",
+      "resultBlob": "2eba0f6987ccab8a0ff9625bba5bf7ed335160c2",
+      "mainExact": true,
+      "previewExact": false
+    },
+    {
+      "path": "frontend/tests/pirates/playtest-1117.test.js",
+      "overlap": false,
+      "mainBlob": "5d16941d31b19ebea4b0788c7100c9d8a10f726f",
+      "previewBlob": null,
+      "resultBlob": "5d16941d31b19ebea4b0788c7100c9d8a10f726f",
+      "mainExact": true,
+      "previewExact": false
+    },
+    {
+      "path": "frontend/tests/pirates/ship-fire.test.js",
+      "overlap": false,
+      "mainBlob": "62819898736e1ea165454d7b4c2051032e24fda3",
+      "previewBlob": "1e9cc30d54a6511a9cedb152b47e6ea2b3664458",
+      "resultBlob": "62819898736e1ea165454d7b4c2051032e24fda3",
+      "mainExact": true,
+      "previewExact": false
+    },
+    {
+      "path": "frontend/tests/pirates/td-flow.test.js",
+      "overlap": true,
+      "mainBlob": "881906d865d168ab1b7af43173a7b03daa9add0f",
+      "previewBlob": "5b0bf44fd53af4185fb1b61aced1834ada53951b",
+      "resultBlob": "098ca2b7df03f736eea606e81c81d4b9878de2d3",
+      "mainExact": false,
+      "previewExact": false
+    },
+    {
+      "path": "supabase/README.md",
+      "overlap": true,
+      "mainBlob": "3d49eb9b2cb297958b7f67afdd826a20761e224c",
+      "previewBlob": "b04090b3ce4dc7c3c291a4455afd7df4c1a697be",
+      "resultBlob": "c0489ad3b1ccef7f92edde422994dd039f1433f2",
+      "mainExact": false,
+      "previewExact": false
+    },
+    {
+      "path": "supabase/migrations/20261118040000_playtest.sql",
+      "overlap": false,
+      "mainBlob": "63eaefe31a984c3ab9a0a01c7b82a206895b3043",
+      "previewBlob": null,
+      "resultBlob": "63eaefe31a984c3ab9a0a01c7b82a206895b3043",
+      "mainExact": true,
+      "previewExact": false
+    }
+  ]
+}
