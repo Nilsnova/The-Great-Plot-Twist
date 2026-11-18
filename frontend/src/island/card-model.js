@@ -194,7 +194,8 @@ export function crewModel({crew = {}, coins = null, unlocks = null, busy = null,
     const sent = prices?.crew?.[id], owned = Number.isSafeInteger(crew?.[id]) ? crew[id] : 0;
     const info = {...CREW[id], ...(Number.isSafeInteger(sent?.max) ? {max: sent.max} : {})};
     const price = Number.isSafeInteger(sent?.price) ? sent.price : info.price;
-    if (unlocks && !unlocks.crew[id]) { soon.push(`${info.name}: ${opensText(lockedWave(unlocks, {crew: id}) ?? '?')}`); continue; }
+    const locked = unlocks && !unlocks.crew[id];
+    if (locked && owned === 0) { soon.push(`${info.name}: ${opensText(lockedWave(unlocks, {crew: id}) ?? '?')}`); continue; }
     const full = owned >= info.max;
     const row = {id, name: info.name, line: info.line, price: coinText(price), owned: info.icon ? `${owned}/${info.max}` : `${owned} of ${info.max}`,
       button: busy === id ? 'Hiring…' : full ? 'Full' : 'Hire', disabled: true, reason: '', ...(info.icon ? {icon: info.icon} : {})};
@@ -205,6 +206,7 @@ export function crewModel({crew = {}, coins = null, unlocks = null, busy = null,
     else if (coins === null) row.reason = funds.shared ? 'Island treasury unavailable. Reload the island.' : 'Your coins are still loading.';
     else if (!canAffordCoins(coins, price)) row.reason = `Not enough 🪙: you need ${coinText(missingCoins(coins, price))} more.`;
     else row.disabled = false;
+    if (locked) { row.disabled = true; row.reason = opensText(lockedWave(unlocks, {crew: id}) ?? '?'); }
     // Shared islands do not sell Carpenters; existing counts remain visible for save conversion.
     if (funds.shared && id === 'carpenter') { row.disabled = true; row.button = 'Unavailable'; row.line = ''; row.reason = ''; }
     rows.push(row);

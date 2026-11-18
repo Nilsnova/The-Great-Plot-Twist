@@ -27,17 +27,25 @@ it('reads personal adoption separately on a legacy island and keeps the island w
       menu: () => () => {}, settings: () => () => {}});
     await island.load(); island.openCaptain();
     const initial = {text: document.querySelector('.island-card[open]').textContent, code: island.island.code};
+    await island.build('wall_1', 'wall');
+    island.openCaptain();
+    const afterBuild = {text: document.querySelector('.island-card[open]').textContent,
+      captain: island.island.captain, known: island.island.skills?.known};
     island.openCaptain('skills'); await island.respecCaptain(); await island.respecCaptain();
     const after = {code: island.island.code, spots: island.island.spots.length, coins: island.island.coins,
       role: island.captainLoadout().skills.includes('engineer'), points: island.island.skills.points};
     absent = true; await island.load(); island.openCaptain();
     const unavailable = document.querySelector('.island-card[open]').textContent;
     island.dispose();
-    return {initial, after, writes, unavailable};
+    return {initial, afterBuild, after, writes, unavailable};
   });
   expect(result.initial.text).toContain('Skill points: 3');
   expect(result.initial.text).not.toContain('Upgrade');
-  expect(result.after).toMatchObject({code: result.initial.code, coins: 9000, role: true, points: 4});
+  expect(result.afterBuild.captain).toMatchObject({progressionVersion: 1, level: 3, revision: '1'});
+  expect(result.afterBuild.known).toEqual(['steady_aim']);
+  expect(result.afterBuild.text).toContain('Skill points: 3');
+  expect(result.afterBuild.text).not.toContain('Upgrade');
+  expect(result.after).toMatchObject({code: result.initial.code, coins: 8990, role: true, points: 4});
   expect(result.after.spots).toBeGreaterThan(0);
   expect(result.writes).toHaveLength(1);
   expect(Object.keys(result.writes[0].body).sort()).toEqual(['actionUid', 'expectedRevision', 'progressionVersion']);

@@ -43,6 +43,12 @@ describe('shared island purchase cards', () => {
     expect(crewModel({crew: {}, economy, unlocks: unlocksFor(9), battle: true}).rows.every(row => row.disabled)).toBe(true);
   });
 
+  it('shows preserved owned crew below the current unlock without allowing another hire', () => {
+    const model = crewModel({crew: {carpenter: 2, gunner: 1}, economy: funds('999'), unlocks: unlocksFor(0)});
+    expect(model.rows.find(row => row.id === 'carpenter')).toMatchObject({owned: '2 of 2', disabled: true, button: 'Unavailable', line: ''});
+    expect(model.rows.find(row => row.id === 'gunner')).toMatchObject({owned: '1 of 2', disabled: true});
+  });
+
   it('shows personal Captain points rather than a treasury-funded level purchase', () => {
     const captain = captainModel({captain: personalCaptain({level: 2}), economy: funds('999'), coins: 999, points: 3});
     expect(captain).toMatchObject({upgrade: null, button: '', disabled: true, coins: 'Skill points: 3'});
@@ -111,6 +117,18 @@ describe('selected island funding', () => {
     expect(funding.view(changed).coins).toBe('75');
   });
 
+  it('adopts an authoritative current run without allowing old responses to restore a retired run', () => {
+    const funding = createIslandFunding(), first = sharedIsland();
+    funding.view(first);
+    const changed = sharedIsland({economy: sharedEconomy({accountId: '44444444-4444-4444-8444-444444444444',
+      runEpoch: '55555555-5555-4555-8555-555555555555', treasury: {balanceCoins: '60', committedCoins: '0', availableCoins: '60'}})});
+    expect(funding.acceptRead(changed)).toBe(true);
+    expect(funding.view(changed).coins).toBe('60');
+    expect(funding.acceptRead(first)).toBe(false);
+    expect(funding.view(first).coins).toBe('60');
+    expect(funding.view(changed).context.runEpoch).toBe(changed.economy.runEpoch);
+  });
+
   it('orders personal progress independently of a newer or equal treasury snapshot', () => {
     const before = sharedIsland({captain: personalCaptain({revision: '9007199254740993'}), skills: {points: 4, known: ['steady_aim']}});
     const incoming = sharedIsland({economy: sharedEconomy({revision: '9999999999999999'}),
@@ -120,7 +138,11 @@ describe('selected island funding', () => {
     expect(merged.captain).toBe(before.captain); expect(merged.skills).toBe(before.skills);
     expect(readPersonalCaptain(personalCaptain({assignmentWaveId: '66666666-6666-4666-8666-666666666666', canRespec: true}))).toBe(null);
     const missing = preferPersonalSnapshot(before, sharedIsland({captain: {level: 3, nextPrice: 80}, coins: 9000}));
-    expect(missing.captain).toEqual({progressionVersion: 1});
+    expect(missing.captain).toBe(before.captain);
+    expect(missing.skills).toBe(before.skills);
+    const unavailable = preferPersonalSnapshot(before, {...missing, captain: {progressionVersion: 1}, skills: null}, {unavailable: true});
+    expect(unavailable.captain).toEqual({progressionVersion: 1});
+    expect(unavailable.skills).toBe(null);
     expect(captainModel({captain: missing.captain, coins: 9000})).toMatchObject({upgrade: null, button: ''});
     const other = sharedIsland({code: 'ISLE-FR3ND', captain: {progressionVersion: 0, level: 1}, coins: 200});
     expect(preferPersonalSnapshot(before, other)).toBe(other);

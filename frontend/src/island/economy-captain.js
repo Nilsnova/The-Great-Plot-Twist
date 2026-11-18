@@ -29,11 +29,11 @@ export const engineerCommitmentLine = captain => readPersonalCaptain(captain)?.e
   ? 'Stay Engineer for your next completed wave.' : '';
 
 // Personal revisions order Captain/skill snapshots independently of the treasury revision.
-export function preferPersonalSnapshot(previous, next) {
+export function preferPersonalSnapshot(previous, next, {unavailable = false} = {}) {
   if (previous?.code !== next?.code) return next;
   const before = readPersonalCaptain(previous?.captain), incoming = readPersonalCaptain(next?.captain);
-  if (declaresPersonalCaptain(previous?.captain) && !incoming) {
-    return {...next, captain: {progressionVersion: 1}, skills: null};
+  if (declaresPersonalCaptain(previous?.captain) && !incoming && !unavailable) {
+    return {...next, captain: previous.captain, skills: previous.skills};
   }
   if (before && incoming && BigInt(incoming.revision) < BigInt(before.revision)) {
     return {...next, captain: previous.captain, skills: previous.skills};

@@ -103,6 +103,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   // 15 s timer, the bell or a build card) reads it again instead of leaving the island empty for good.
   let disposed = false, own = null, ownMessage = '', ownRetry = false, visiting = null, visitCode = readVisit(visitStorage), busySpot = null, cardMessage = '';
   const personalPinned = new Set();
+  let selectionGeneration = 0;
   const funding = createIslandFunding();
   const currentFunds = () => funding.view(visiting ?? own, own?.coins ?? null);
   const sharedCard = () => { const source = currentFunds(); return source.shared ? {economy: source.economy} : {}; };
@@ -182,9 +183,10 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   }
   // A fresh island answer: coins and captain to the HUD, and the campaign of your own island (§4).
   const setOwn = (next, personalReadState = null) => {
+    if (personalReadState !== null && !funding.acceptRead(next)) return;
     const before = own;
     const profileKey = islandCode(next?.code ?? '');
-    if (personalReadState !== 'legacy' || personalPinned.has(profileKey)) next = preferPersonalSnapshot(before, next);
+    if (personalReadState !== 'legacy' || personalPinned.has(profileKey)) next = preferPersonalSnapshot(before, next, {unavailable: personalReadState === 'unavailable'});
     if (readPersonalCaptain(next?.captain)) {
       personalPinned.add(profileKey);
       if (next.skills) next = {...next, skills: {...next.skills, role: next.captain.role}};
@@ -221,8 +223,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   // never steps back a level.
   const turns = {own: {asked: 0, used: 0, wrote: 0}, visit: {asked: 0, used: 0, wrote: 0}, point: {asked: 0, used: 0, wrote: 0}};
   const reading = kind => {
-    const turn = turns[kind], mine = ++turn.asked, wrote = turn.wrote;
-    return () => { if (mine < turn.used || turn.wrote !== wrote) return false; turn.used = mine; return true; };
+    const turn = turns[kind], mine = ++turn.asked, wrote = turn.wrote, selection = selectionGeneration;
+    return () => { if (mine < turn.used || turn.wrote !== wrote || kind === 'visit' && selection !== selectionGeneration) return false; turn.used = mine; return true; };
   };
   const wrote = kind => { turns[kind].wrote++; };
   // The fake answers at once; the live transport is the signed-in session's, read at every call.
@@ -318,7 +320,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   // Leaving the island closes its card and ends a visit (the next landing is your own island).
   const stopTravel = on('travel', event => {
     village.leave();
-    coreTravelGeneration++; syncCoreContext();
+    selectionGeneration++; coreTravelGeneration++; syncCoreContext();
     ui.close(); flow.reset(); openSpot = null; moving.cancel();
     if (visiting && event.to !== ISLAND_PLACE) endVisit();
   });
@@ -347,7 +349,11 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       coreWorld?.setHealth(coreState.current);
     }
   }
-  function endVisit() { visiting = null; visitCode = null; forgetVisit(visitStorage); ui.visit(null); }
+  function endVisit(invalidateLoad = true) {
+    selectionGeneration++; if (invalidateLoad) loadTicket++;
+    moving.cancel(); demolishSpot = null; demolishQuote = null;
+    visiting = null; visitCode = null; forgetVisit(visitStorage); ui.visit(null);
+  }
   // The chip of a friend's game: the old "Visiting … · Sail home" only where travel still applies (one
   // island off); with one island the game itself and a way to its lobby (GAME-V3.md §2).
   const canTravel = () => { try { return travel() === true; } catch { return false; } };
@@ -388,7 +394,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     let loadedTarget = null;
     if (visitCode && !(await joinFirst(visitCode))) {
       if (disposed || ticket !== loadTicket) return {ok: false};
-      endVisit();
+      endVisit(false);
     }
     if (disposed || ticket !== loadTicket) return {ok: false};
     if (visitCode) {
@@ -396,10 +402,10 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       const answer = await api.visit(visitCode);
       if (disposed || ticket !== loadTicket) return answer;
       if (answer.ok) {
-        if (current() || !visiting) { visiting = {...answer.data, code: islandCode(answer.data.code)}; loadedTarget = visiting; noteCampaign(visiting); }
+        if (current() && funding.acceptRead(answer.data)) { visiting = {...answer.data, code: islandCode(answer.data.code)}; loadedTarget = visiting; noteCampaign(visiting); }
         showVisit();
       } else {
-        endVisit(); ui.toast(answer.message, 'error');
+        endVisit(false); ui.toast(answer.message, 'error');
       }
     }
     {
@@ -886,11 +892,18 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   // The answer of a write: the island, or (on Pirate Point) the shared spots plus your fresh coins.
   // Where a build goes: Pirate Point's shared spots, the friend's island you visit, or your own.
   const placeOf = spotId => (isPointSpot(spotId) ? 'point' : visiting ? 'visit' : 'own');
+  // Mutation replies belong to the selection/run at dispatch, even if the player sails away and back.
+  function islandRequest(place = visiting ? 'visit' : 'own') {
+    const selected = () => place === 'point' ? point : place === 'visit' ? visiting : own;
+    const selection = selectionGeneration, code = selected()?.code, funds = funding.view(selected(), own?.coins ?? null);
+    return {place, shared: funds.shared, current: () => !disposed && selection === selectionGeneration
+      && code === selected()?.code && funds.key === funding.view(selected(), own?.coins ?? null).key};
+  }
   const tookCoins = coins => { if (own && Number.isSafeInteger(coins)) setOwn({...own, coins}); else tellCoins(coins); };
   async function reloadVisit() {
     if (!visiting) return;
-    const current = reading('visit'), fresh = await api.visit(visiting.code);
-    if (!disposed && fresh.ok && visiting && current()) { visiting = {...visiting, ...fresh.data, code: islandCode(fresh.data.code)}; noteCampaign(visiting); }
+    const code = visiting.code, current = reading('visit'), fresh = await api.visit(code);
+    if (!disposed && fresh.ok && visiting?.code === code && current() && funding.acceptRead(fresh.data)) { visiting = {...visiting, ...fresh.data, code: islandCode(fresh.data.code)}; noteCampaign(visiting); }
   }
   async function reloadOwn() {
     const current = reading('own'), mine = await readOwn();
@@ -928,14 +941,16 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     const place = placeOf(spotId), spot = place === 'point' ? ppSpotById(spotId) : spotById(spotId);
     const choice = kind ?? spot?.kind;
     if (!spot || busySpot || !BUILDINGS[choice]) return;
+    const request = islandRequest(place);
     busySpot = spotId; busyKind = choice; cardMessage = ''; refreshCard();
     const answer = place === 'point' ? await api.pointBuild({spot: spotId, kind: choice})
       : await api.build({spot: spotId, kind: choice, ...(place === 'visit' ? {code: visiting.code} : {})});
     if (disposed) return;
     busySpot = null; busyKind = null;
+    if (!request.current()) { refreshCard(); return; }
     if (answer.ok) {
       await took(answer, place);
-      if (disposed) return;
+      if (!request.current()) return;
       if (place === 'own') emit({type: ISLAND_BUILT, kind: choice, spot: spotId});
       emit({type: SPOTS_CHANGED, place, spot: spotId});
       // Close the card so the new building and the toast can be seen.
@@ -978,14 +993,16 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   async function upgrade(spotId) {
     const place = placeOf(spotId);
     if (busySpot) return;
+    const request = islandRequest(place);
     busySpot = spotId; busyKind = 'upgrade'; cardMessage = ''; refreshCard();
     const answer = place === 'point' ? await api.pointUpgrade({spot: spotId})
       : await api.upgrade({spot: spotId, ...(place === 'visit' ? {code: visiting.code} : {})});
     if (disposed) return;
     busySpot = null; busyKind = null;
+    if (!request.current()) { refreshCard(); return; }
     if (answer.ok) {
       await took(answer, place);
-      if (disposed) return;
+      if (!request.current()) return;
       treePicked.delete(spotId); // the tree card moves on to the next step
       const now = (place === 'point' ? point : place === 'visit' ? visiting : own)?.spots?.find(item => item.id === spotId);
       const name = BUILDINGS[now?.kind]?.name ?? 'Building';
@@ -1000,28 +1017,31 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   // takes the building down (between waves), every payer gets half of what they paid, and the room hears it.
   async function askDemolish(spotId) {
     if (busySpot || busyDemolish || isPointSpot(spotId)) return;
+    const request = islandRequest();
     demolishSpot = spotId; demolishQuote = null; cardMessage = '';
     ui.demolishCard(demolishCardModel(), demolishHandlers);
     const answer = await api.demolishQuote({spot: spotId, ...placeCode()});
-    if (disposed || demolishSpot !== spotId) return;
+    if (!request.current() || demolishSpot !== spotId) return;
     if (answer.ok) demolishQuote = answer.data; else cardMessage = answer.message;
     if (ui.open === 'demolish') ui.demolishCard(demolishCardModel(), demolishHandlers);
   }
   async function confirmDemolish() {
     const spotId = demolishSpot;
     if (!spotId || !demolishQuote || busyDemolish) return;
+    const request = islandRequest();
     busyDemolish = true; cardMessage = ''; refreshCard();
     const answer = await api.demolish({spot: spotId, ...placeCode()});
     if (disposed) return;
     busyDemolish = false;
+    if (!request.current()) { refreshCard(); return; }
     if (!answer.ok) {
       cardMessage = answer.message; refreshCard();
       if (['not_built', 'wave_running', 'busy'].includes(answer.code)) await refreshDefended();
       return;
     }
-    const {demolished: done, ...island} = answer.data, place = visiting ? 'visit' : 'own';
+    const {demolished: done, ...island} = answer.data, place = request.place;
     await took({...answer, data: island}, place);
-    if (disposed) return;
+    if (!request.current()) return;
     const who = colours().me;
     emit({type: SPOTS_CHANGED, place, spot: spotId, demolished: {...(who ? {who} : {}), kind: done.kind, level: done.level,
       refunds: done.refunds.slice(0, 6).map(item => ({id: item.id, coins: item.coins}))}});
@@ -1049,21 +1069,23 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   // GAME-V3.md §5: a tower picks a skill (free); research a kind at the Tech hub; §4: coins into the wreck.
   // Each answer is the island; the room hears island_changed, so every screen reads it again.
   const placeCode = () => (visiting ? {code: visiting.code} : {});
-  async function landed(answer, spot) {
-    if (visiting) { wrote('visit'); wrote('own'); await Promise.all([reloadVisit(), reloadOwn()]); }
+  async function landed(answer, spot, request) {
+    if (request.place === 'visit') { wrote('visit'); wrote('own'); await Promise.all([reloadVisit(), reloadOwn()]); }
     else { wrote('own'); setOwn(answer.data); }
-    emit({type: SPOTS_CHANGED, place: visiting ? 'visit' : 'own', spot});
+    if (request.current()) emit({type: SPOTS_CHANGED, place: request.place, spot});
   }
   async function specialise(spotId, spec) {
     if (busySpot || (!SPECS[spec] && !ROLES[spec])) return;
     const role = !!ROLES[spec], first = role && !(target()?.spots ?? []).some(item => activeRole(item));
+    const request = islandRequest();
     busySpot = spotId; busyKind = `spec:${spec}`; cardMessage = ''; refreshCard();
     const answer = await api.specialise({spot: spotId, spec, ...placeCode()});
     if (disposed) return;
     busySpot = null; busyKind = null;
+    if (!request.current()) { refreshCard(); return; }
     if (answer.ok) {
-      await landed(answer, spotId);
-      if (disposed) return;
+      await landed(answer, spotId, request);
+      if (!request.current()) return;
       if (role) {
         emit({type: HOUSE_ROLE_PICKED, spot: spotId, role: spec, first});
         ui.toast(`${ROLES[spec].name}: this house works as one from the next wave.`, 'success');
@@ -1078,13 +1100,15 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   // hears island_changed, so every screen (and the next wave's sim) reads the tree again.
   async function buyTree(spotId, path, tier) {
     if (busySpot || isPointSpot(spotId)) return;
+    const request = islandRequest();
     busySpot = spotId; busyKind = `tree:${path}${tier}`; cardMessage = ''; refreshCard();
     const answer = await api.towerTree({spot: spotId, path, tier, ...placeCode()});
     if (disposed) return;
     busySpot = null; busyKind = null;
+    if (!request.current()) { refreshCard(); return; }
     if (answer.ok) {
-      await landed(answer, spotId);
-      if (disposed) return;
+      await landed(answer, spotId, request);
+      if (!request.current()) return;
       treePicked.delete(spotId);
       const kind = (target()?.spots ?? []).find(item => item.id === spotId)?.kind;
       emit({type: TOWER_TREE_BOUGHT, spot: spotId, kind, path, tier});
@@ -1125,13 +1149,15 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   async function research(step) {
     const {branch, tier = 1, choice = null, change = false} = typeof step === 'string' ? {branch: step} : step ?? {};
     if (busyResearch || !BRANCH_BY_ID[branch]) return;
+    const request = islandRequest();
     busyResearch = `${branch}:${tier}:${choice ?? ''}`; cardMessage = ''; refreshCard();
     const answer = await api.research({branch, tier, choice, change, ...placeCode()});
     if (disposed) return;
     busyResearch = null;
+    if (!request.current()) { refreshCard(); return; }
     if (answer.ok) {
-      await landed(answer, 'tech_hub');
-      if (disposed) return;
+      await landed(answer, 'tech_hub', request);
+      if (!request.current()) return;
       emit({type: 'tech_researched', branch, tier, choice});
       const kind = KINDS[branch].name.toLowerCase();
       ui.toast(tier === 1 ? `${BRANCH_BY_ID[branch].name} researched! Tap a ${kind} to pick its skill.`
@@ -1142,13 +1168,15 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   }
   async function giveWreck(amount) {
     if (busyGift) return;
+    const request = islandRequest();
     busyGift = amount; cardMessage = ''; refreshCard();
     const answer = await api.repairWreck({amount, ...placeCode()});
     if (disposed) return;
     busyGift = null;
+    if (!request.current()) { refreshCard(); return; }
     if (answer.ok) {
-      await landed(answer, 'wreck');
-      if (disposed) return;
+      await landed(answer, 'wreck', request);
+      if (!request.current()) return;
       const now = campaign()?.wreck;
       if (now && now.paid >= now.goal) void readBoat();
       ui.toast(now && now.paid >= now.goal ? (isOpen(campaign(), 'ship') ? 'The wreck is repaired! Your ship sails: tap her to play.' : `The wreck is repaired! She sails after wave ${waveOf('ship')}.`) : `Thanks! The wreck has ${coinText(now?.paid ?? 0)} of ${coinText(now?.goal ?? 0)}.`, 'success');
@@ -1158,14 +1186,16 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   async function hire(id) {
     if (busyCrew || !CREW[id]) return;
     busyCrew = id; cardMessage = ''; refreshCard();
-    const place = visiting ? 'visit' : 'own';
-    const answer = await api.hire({crew: id, ...(currentFunds().shared ? placeCode() : {})});
+    const request = islandRequest(), place = request.shared ? request.place : 'own';
+    const answer = await api.hire({crew: id, ...(request.shared ? placeCode() : {})});
     if (disposed) return;
     busyCrew = null;
+    if (!request.current()) { refreshCard(); return; }
     if (answer.ok) {
-      if (currentFunds().shared) await took(answer, place); else setOwn(answer.data);
+      if (request.shared) await took(answer, place); else setOwn(answer.data);
+      if (!request.current()) return;
       emit({type: CREW_HIRED, crew: id});
-      if (currentFunds().shared) emit({type: SPOTS_CHANGED, place, spot: 'cabin'});
+      if (request.shared) emit({type: SPOTS_CHANGED, place, spot: 'cabin'});
       ui.toast(`${CREW[id].name} hired · ${coinText(currentFunds().coins)}`, 'success');
     } else await refused(answer, false);
     refreshCard();
@@ -1340,6 +1370,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     const symbols = storeVisit(code, visitStorage);
     if (!symbols) return false;
     village.leave();
+    selectionGeneration++; loadTicket++;
+    moving.cancel(); demolishSpot = null; demolishQuote = null;
     visitCode = symbols; visiting = null; flow.reset(); ui.close();
     return true;
   }
