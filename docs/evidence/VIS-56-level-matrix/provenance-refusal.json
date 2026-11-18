@@ -1,0 +1,13 @@
+{
+  "command": [
+    "node",
+    "scripts/capture-visual-matrix.mjs",
+    "/workspace/reference-village-work/polish-verification/frontend/.vis56-provenance-5qoxtgdo",
+    "/workspace/reference-village-work/next-pass/VIS56-provenance-output"
+  ],
+  "expectedExit": "nonzero with explicit candidate mismatch",
+  "exitCode": 1,
+  "seconds": 0.78,
+  "reason": "executed capture helper must match the supplied candidate",
+  "outputCreated": false
+}
