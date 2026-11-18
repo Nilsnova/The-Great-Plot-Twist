@@ -6,7 +6,7 @@
 
 - **Status:** implementation contract draft; no runtime activation or release.
 - **Responsible teammate:** Ianno Hollensteiner (`Iannomh123456`).
-- **Branch:** `docs/mp-eco-01-contract`; updated against `origin/main` at `f0c64442`.
+- **Branch:** `docs/mp-eco-01-contract`; updated against `origin/main` at `77a9e34d`.
 - **Issue:** [MP-ECO-01 #493](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/493), under [epic #492](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/492).
 - **Rule source:** the 18 Nov shared-economy target in [planning PR #491](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/491), plus the explicit Engineer and owner-reset recovery choices recorded in the task. This spec selects implementation mechanics, not new balance values or Carpenter effects.
 
