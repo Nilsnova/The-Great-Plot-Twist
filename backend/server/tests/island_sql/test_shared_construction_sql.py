@@ -567,6 +567,88 @@ def test_late_failure_rolls_back_debit_payment_and_commitment(database, table):
     reconciles(database, keys(treasury)[0])
 
 
+@pytest.mark.parametrize("action", ["build", "demolish"])
+@pytest.mark.parametrize(
+    "malformed", ["missing_repeat", "string_repeat", "foreign_receipt", "wrong_action"]
+)
+def test_malformed_financial_success_cannot_change_construction(database, action, malformed):
+    owner, _, _, treasury, _ = initialized(database)
+    request = intent()
+    if action == "demolish":
+        request = target(construct(database, owner, treasury), "demolish", "4")
+    before_building = standing(database, owner)
+    before_captain = view(database, owner)
+    as_owner(database)
+    before = database.execute(
+        "select balance_coins,committed_coins,"
+        "(select count(*) from public.island_economy_operations where account_id=a.id),"
+        "(select count(*) from public.island_construction_receipts where account_id=a.id),"
+        "(select count(*) from public.island_construction_payments where account_id=a.id) "
+        "from public.island_economy_accounts a where id=%s",
+        (keys(treasury)[0],),
+    ).fetchone()
+    helper = "credit" if action == "demolish" else "spend"
+    with database.transaction(force_rollback=True):
+        # Inject only a malformed helper answer in a rollback-only local savepoint.
+        # The foreign receipt is a real same-account grant with no purchase effect;
+        # the other cases perform the real debit/refund before corrupting its reply.
+        original = database.execute(
+            "select pg_get_functiondef(to_regprocedure(%s))",
+            (f"public.island_treasury_{helper}(uuid,uuid,uuid,text,text,text,numeric)",),
+        ).fetchone()[0]
+        database.execute(
+            original.replace(
+                f"FUNCTION public.island_treasury_{helper}(",
+                "FUNCTION pg_temp.construction_original_finance(",
+                1,
+            )
+        )
+        database.execute(
+            f"create or replace function public.island_treasury_{helper}("
+            "p_actor_id uuid,p_account_id uuid,p_run_epoch uuid,p_action_uid text,"
+            "p_reason text,p_reference text,p_amount numeric) returns jsonb "
+            "language plpgsql security definer set search_path='' as $$ "
+            "declare v_result jsonb; begin "
+            "if current_setting('construction_test.malformed')='foreign_receipt' then "
+            "return public.island_treasury_result("
+            "current_setting('construction_test.receipt')::uuid,false); "
+            "end if; "
+            "v_result := pg_temp.construction_original_finance(p_actor_id,p_account_id,p_run_epoch,"
+            "p_action_uid,p_reason,p_reference,p_amount); "
+            "if current_setting('construction_test.malformed')='missing_repeat' then "
+            "return v_result - 'repeat'; "
+            "elsif current_setting('construction_test.malformed')='string_repeat' then "
+            "return jsonb_set(v_result,'{repeat}','\"false\"'::jsonb); "
+            "else return jsonb_set(v_result,'{receipt,actionUid}','\"another_action\"'::jsonb); "
+            "end if; end; $$"
+        )
+        database.execute("select set_config('construction_test.malformed',%s,true)", (malformed,))
+        database.execute(
+            "select set_config('construction_test.receipt',%s,true)", (treasury["receipt"]["id"],)
+        )
+        assert construct(database, owner, treasury, request, uid="malformed1") == {
+            "status": "refused",
+            "reason": "action_conflict",
+        }
+        assert standing(database, owner) == before_building
+        assert view(database, owner) == before_captain
+        as_owner(database)
+        assert (
+            database.execute(
+                "select balance_coins,committed_coins,"
+                "(select count(*) from public.island_economy_operations where account_id=a.id),"
+                "(select count(*) from public.island_construction_receipts where account_id=a.id),"
+                "(select count(*) from public.island_construction_payments where account_id=a.id) "
+                "from public.island_economy_accounts a where id=%s",
+                (keys(treasury)[0],),
+            ).fetchone()
+            == before
+        )
+        reconciles(database, keys(treasury)[0])
+    # The original helper is restored, and no failed claim consumes this intent.
+    assert construct(database, owner, treasury, request, uid="malformed1")["status"] == "done"
+
+
 def test_v1_health_and_layout_keep_the_same_instance_through_upgrade_and_demolition(database):
     owner, _, _, treasury, _ = initialized(database)
     epoch = uuid4()
