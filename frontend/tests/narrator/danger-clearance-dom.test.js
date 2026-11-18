@@ -137,15 +137,22 @@ it('keeps the live defense selector legible during a large caption on a short ph
   await withPhone(320, 568, async page => {
     await mount(page, true);
     await page.evaluate(() => {
+      battle.event({id: 'fog_bank', icon: '🌫️', title: 'Fog bank', line: 'Thick fog rolls in. Cannons have shorter range until it lifts.', open: true});
       const mortar = {id: 'cannon_1', kind: 'mortar', level: 2};
       battle.inspectDefense({options: [mortar], coverage: {...mortar, range: 21, minRange: 8, litRange: 34, targets: ['ships', 'boarders'], status: 'ready'}});
     });
-    await expect.poll(async () => (await measure(page)).drawn).toBe(false);
+    expect(await page.locator('.pirate-event').getAttribute('open')).toBeNull();
     const picker = page.getByRole('combobox', {name: 'Inspect a defense'});
     expect(await picker.evaluate(node => {
       const box = node.getBoundingClientRect();
       return document.elementFromPoint((box.left + box.right) / 2, (box.top + box.bottom) / 2) === node;
     })).toBe(true);
+    const clearance = await page.evaluate(() => {
+      const panel = document.querySelector('.pirate-defense-inspector').getBoundingClientRect();
+      const stick = document.querySelector('.touch-stick').getBoundingClientRect();
+      return stick.top - panel.bottom;
+    });
+    expect(clearance).toBeGreaterThanOrEqual(0);
     await page.evaluate(() => battle.inspectDefense(null));
     await expect.poll(async () => (await measure(page)).drawn).toBe(true);
     expect(await measure(page)).toMatchObject({sameLine: true, skipPresent: true});
