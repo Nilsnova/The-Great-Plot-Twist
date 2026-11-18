@@ -29,7 +29,8 @@ it('renders real structure cards and repair feedback at desktop and phone widths
       hpUnits: 750000, maxHP: 60, rateUnitsPerSecond: 1666.67, estimatedFreeSeconds: 150, fixedPrice: 10, repairSeq: 0};
     await draw(page, {width: 1440, height: 900}, wall, {...base, structures: [wall]});
     expect(await page.locator('.recovery-hp').textContent()).toBe('45 / 60 HP');
-    expect(await page.locator('.recovery-free').textContent()).toContain('2 min 30 sec');
+    expect(await page.locator('.recovery-free').count()).toBe(0);
+    expect(await page.locator('.recovery-helper').textContent()).toBe('All buildings are fully repaired when a wave ends.');
     expect(await page.locator('.recovery-repair').textContent()).toBe('Repair now: pay 10 coins');
     await page.locator('.recovery-repair').click();
     expect(await page.evaluate(() => window.repairIntent)).toMatchObject({spot: 'wall_1', quotedPrice: 10, expectedWindow: 'between_waves'});
@@ -42,7 +43,8 @@ it('renders real structure cards and repair feedback at desktop and phone widths
     expect(await page.locator('.recovery-hp').textContent()).toBe('0 / 80 HP');
     expect(await page.locator('.recovery-marker').textContent()).toBe('!');
     expect(await page.locator('.recovery-free').count()).toBe(0);
-    expect(await page.locator('.recovery-quota').textContent()).toBe('2 Repair now uses left this wave');
+    expect(await page.locator('.recovery-status').textContent()).toBe('No free repair during this wave. Full HP is restored when it ends.');
+    expect(await page.locator('.recovery-quota').textContent()).toBe('2 shared Repair now uses left this wave');
     expect(await page.evaluate(() => {
       const button = document.querySelector('.recovery-repair'), bar = document.querySelector('.recovery-bar');
       const buttonBox = button.getBoundingClientRect();
