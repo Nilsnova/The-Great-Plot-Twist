@@ -282,7 +282,6 @@ class FakeIslandDatabase:
         handlers = {
             "POST /rpc/island_economy_context": self.economy_context,
             "POST /rpc/island_open": self.open_island,
-            "POST /rpc/island_economy_context": self.economy_context,
             "GET /wallets": self.read_wallet,
             "GET /islet_buildings": self.read_buildings,
             "POST /rpc/islet_build": lambda _: self.answer(self.build_reply),
@@ -353,11 +352,6 @@ class FakeIslandDatabase:
         for name in ARSENAL_FUNCTIONS:
             handlers[f"POST /rpc/{name}"] = self.arsenal
         return handlers[route](request)
-
-    def economy_context(self, request: httpx.Request) -> httpx.Response:
-        """Existing worlds explicitly use legacy accounting; unknown RPCs still fail loudly."""
-        body = json.loads(request.content)
-        return self.answer({"status": "legacy", "islandOwner": body["p_island_owner"]})
 
     def arsenal(self, request: httpx.Request) -> httpx.Response:
         name = request.url.path.rsplit("/", 1)[-1]

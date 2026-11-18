@@ -5,8 +5,9 @@ Used by routes/island.py. Explicit legacy mode preserves its serializer; unknown
 
 from server.errors import ApiError
 from server.island.catalogue import IslandCatalogue
-from server.island.economy_http import persisted_context, target_owner
+from server.island.economy_http import persisted_context, require_economy_version, target_owner
 from server.island.shared_snapshot import read_shared_snapshot
+from server.island.treasury import identifier
 from server.supabase_admin import SupabaseAdmin
 
 
@@ -21,9 +22,18 @@ async def shared_read(
     context = await persisted_context(admin, actor_id, owner, allow_missing_own=code is None)
     if context is None or context.mode == "personal_legacy":
         return None
-    if version != "1":
-        raise ApiError(409, "economy_context_required", "This island requires economy version one.")
+    require_economy_version(version)
     return await read_shared_snapshot(admin, actor_id, owner, catalogue)
+
+
+def legacy_discovery(view: dict, island_owner: str, version: str | None) -> dict:
+    """Only a server-resolved legacy read may declare the personal accounting context."""
+    if version != "1":
+        return view
+    return {**view, "economy": {
+        "mode": "personal_legacy", "version": 0, "islandOwner": identifier(island_owner),
+        "accountId": None, "runEpoch": None, "revision": None, "treasury": None,
+    }}
 
 
 async def shared_demolish_quote(

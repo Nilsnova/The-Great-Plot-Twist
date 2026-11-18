@@ -118,3 +118,17 @@ guarded canonical reread, never a second account store.
 
 Review correctly spelled new shared-economy vocabulary through the existing
 player-copy linter; keep its spelling and other editable-copy gates enabled.
+
+## Integrated core compatibility
+
+Combine the quoted core HTTP adapters with the existing domain capability helper;
+neither import may remove the other's public functions. Every shared HTTP mutation
+requires the same version-one capability header before operation lookup or mutation.
+Missing and unsupported versions retain the common distinct refusal codes.
+
+Negotiated version-one discovery of a genuinely legacy island adds an explicit
+read-only context marker: `mode: personal_legacy`, `version: 0`, server-selected
+`islandOwner`, and null `accountId`, `runEpoch`, `revision` and `treasury`. Older
+discovery requests retain their original serializer. The marker conveys no new
+permission and cannot be selected by a browser body. Missing, malformed or stale
+live context never authorizes a personal-wallet fallback.
