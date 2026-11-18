@@ -289,7 +289,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     wavesLoad??=Promise.all([import('./pirates/game-wiring.js'),import('./net/wave-rooms.js'),!island||islandsMode==='fake'?import('./pirates/room.js'):null,
       island?null:import('./pirates/fake-api.js')]).then(([module,rooms,local,fake])=>{
       if(disposed)return null;
-      waves=module.wireWaves({scene,camera:view.camera,canvas:graphics.renderer.domElement,container,player:controller.player,world,input,audio,reducedMotion,
+      waves=module.wireWaves({scene,camera:view.camera,canvas:graphics.renderer.domElement,container,player:controller.player,world,input,audio,reducedMotion,loop:false,
         getPracticeToken:session.getToken,quality:()=>settings.quality,isBlocked:()=>!active||outsideBlocked(),on,emit,island,fakeApi:fake?fake.createFakeIslandApi():null,
         rehearsal:!island,host:!island,openRoom:local?topic=>local.createLocalRoom(topic):topic=>rooms.openRoom(topic),notify:text=>hud.message(text)});
       return waves;
@@ -344,6 +344,12 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   function applyPreferences(value){quality(value.quality);if(active&&!shell.blocked)view.start(reducedMotion());}
   const stopPreferences=onPreferences(applyPreferences),stopMotion=watchSystemMotion();applyPreferences(getPreferences());graphics.resize(view.camera);
   const resize = () => graphics.resize(view.camera); window.addEventListener('resize', resize);
+  let framePoses=null;
+  function combatAfterMove(delta){
+    waves?.update?.(delta);
+    controller.player.visible=!isCaptainDown();
+    framePoses=waves?.poses?.()??null;character.pose(framePoses?.own??null);
+  }
   const stop = startLoop((delta, time) => {
     gamepad.update();adapter?.tick?.(delta);perf?.update();
     if (!outsideBlocked()) {
@@ -355,10 +361,10 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     settings.hour = (settings.hour + (shell.blocked && !followLocalTime ? 0 : delta) * (settings.fastTime ? 0.8 : followLocalTime ? 1 / 3600 : 0.003)) % 24;
     mapTouch.update(delta);
     // Captain health (GAME-V3.md §3): a fallen captain cannot walk, and lies as the wave draws them.
-    const captainDown=isCaptainDown();controller.player.visible=!captainDown;
+    const captainDown=isCaptainDown();
     // A shot or a cutlass blow poses your own body (and a teammate's figure), never a second captain (pirates/poses.js).
-    const poses=waves?.poses?.()??null;character.pose(poses?.own??null);
-    const speed=captainDown?controller.update(delta,false):controller.update(delta, active && !captainBlocked());
+    const speed=controller.update(delta,!captainDown&&active&&!captainBlocked(),combatAfterMove);
+    const poses=framePoses;
     const state = weather.update(reducedMotion()?0:delta, controller.player.position, settings.quality);
     const night = sky.update(settings.hour, state, reducedMotion()?0:time); lightPools.update(reducedMotion()?0:time, night); pixelFx.update(delta);
     audio.update(delta,{weather:state,weatherAnswer,isletBuilt:isletState.getBuilt(),speed,night,active:active&&!isAppBlocked?.()&&!world.busy&&!(marketUi?.active||sportsUi.active)&&!chart.open,place:world.current?.id});
