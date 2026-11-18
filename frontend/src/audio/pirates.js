@@ -12,7 +12,6 @@ const CAPTIONS = {
   'pirate-victory': 'Victory: the island holds',
   'pirate-horn': 'A warship horn sounds',
   'pirate-defeat': 'The pirates took the island',
-  'pirate-danger': 'Danger nearby',
 };
 
 // `battle` (createBattleSounds) plays the punchy battle voices; `isMuted(bus)` ('effects' or 'music') lets a

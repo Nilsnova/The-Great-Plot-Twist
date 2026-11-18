@@ -1089,3 +1089,12 @@ The harpoon tower and the culverin have no skills, so no price. The numbers live
 - **Database:** the migration re-adds `islet_buildings_plot_fits_building` with the full list plus the 20 new pairs, widens `island_layout_plot_known`, and replaces `island_demolish_quote()` / `island_demolish()` with only their plot test widened (`cannon_([1-9]|1[01])`). Apply it first, then switch the flag on.
 - **Also (same playtest, "the orange flags do not really make sense"):** the battle guide no longer draws the orange 🪓 badge beside each wall the route hacks (§16); the wall's hp bar shows a wall under attack and a broken wall keeps its red gap and rubble badge.
 
+
+
+## D061 · Contextual captain range and immediate danger · 2026-11-18
+
+- **Responsible teammate:** Ianno (`Iannomh123456`), with Codex assistance; [CF1 / #453](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/453).
+- **Decision:** Ianno selected contextual range feedback, warnings for both the captain and the island heart, and visuals plus a brief sound when effects audio is enabled. Display current weapon/skill reach on fire-control hover/focus/hold and after firing attempts, including refusals. A manual slash displays melee reach; bomb reach describes throw distance. Hide inactive combat feedback and fade the range after 1.2 seconds plus a 0.4-second fade.
+- **Truth and priority:** firing, eligibility and damage are separate messages. Only fresh authoritative own hit events confirm damage; cosmetic prediction cannot. Actual captain targeting, incoming ship fire and recent captain/heart damage select one actionable warning. Critical captain danger precedes critical heart danger, recent heart damage, captain threats and near-heart pirates. Sound is limited to once every six seconds and uses the effects bus. The persistent visible warning supplies the words, avoiding a second sound-caption overlay.
+- **Scope:** presentation only, with cached world geometry and no combat input, balance, network, server, money or recovery change. [Spec](../specs/CF1-captain-combat-feedback.md).
+- **Review:** separate task branches, tests, actual-game desktop/phone evidence and independent agent review. Ianno manually reviews and answers three explain-back questions, one at a time, then explicitly confirms before a PR is opened. Human peer approval and merge remain separate.
