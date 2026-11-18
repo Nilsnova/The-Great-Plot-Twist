@@ -34,5 +34,6 @@ Branch: `fix/historical-revive-reconciliation`; combined review checkout `fix/wa
 The development branch names above identify preserved worktrees. Publication is based on main
 `db573347`: core draft [#485](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/485),
 reward draft [#486](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/486), followed by
+[historical draft #490](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/490) on
 `fix/historical-revive-reconciliation-review`. Review in that order and retarget each descendant
 onto main after its predecessor merges. No live database or deployment step has been performed.

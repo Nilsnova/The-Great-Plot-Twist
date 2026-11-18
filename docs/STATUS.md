@@ -1148,7 +1148,8 @@ Nilsnova (agent) / 2026-11-18 — Village art download cut on `perf/art-size` (o
 Ianno / 2026-11-18 — Co-op consistency publication: core fixes are in draft
 [#485](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/485), saved reward return in draft
 [#486](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/486), with historical reconciliation
-on the next stacked review branch `fix/historical-revive-reconciliation-review`. Main base is
+in draft [#490](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/490),
+on branch `fix/historical-revive-reconciliation-review`. Main base is
 `db573347`; merged VIS-41 and WebP changes remain intact. Core publication checks passed
 95 frontend / 552 backend-SQL tests; reward checks passed 125 frontend / 584 backend-SQL tests.
 Current-source synthetic Chromium reload checks pass at desktop/phone sizes, and build/budget

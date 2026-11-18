@@ -9,7 +9,8 @@ stack based on main `db573347`, preserving its visual, projection and WebP slimm
    `fix/coop-wave-consistency-review`, targets `main`.
 2. [Saved reward recovery #486](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/486),
    `fix/wave-return-recovery-review`, targets the core branch.
-3. Historical reconciliation, `fix/historical-revive-reconciliation-review`, targets the reward
+3. [Historical reconciliation #490](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/490),
+   `fix/historical-revive-reconciliation-review`, targets the reward
    branch. This final slice owns the shared full-stack handover and historical evidence.
 
 The publication worktree is `/workspace/wave-publish`. Prototype worktrees and development

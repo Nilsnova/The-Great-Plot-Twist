@@ -79,3 +79,5 @@ screenshots, exact commands and the unchanged-main Group3 test limitation are re
 [the final handover](../docs/handoff/return-recovery-2026-11-18.md#publication-verification-on-current-main).
 Different human approval and any authorized live operation remain outstanding. No production
 records were inspected, migrations applied live or compensation issued.
+
+Draft review: [#490](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/490), stacked on #486 and #485. Different human approval remains pending.
