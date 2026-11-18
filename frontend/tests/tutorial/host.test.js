@@ -32,7 +32,7 @@ it('keeps legacy repair help at version zero and selects wave-end repair help at
 
   expect(result.legacyAshore.text).toContain('press E at a damaged wall to repair it');
   expect(result.currentAshore.id).toBe('ashore');
-  expect(result.currentAshore.text).toContain('At wave end every wall and tower returns to full health.');
+  expect(result.currentAshore.text).toContain('After the bell, only paid Repair now heals buildings; wave end restores every wall and tower fully.');
   expect(result.currentAshore.text).not.toMatch(/mend between waves|repair rate|ETA/i);
   expect(result.recovery.id).toBe('repair');
   expect(result.recovery.text).toContain('Every wall and tower returns to full health as soon as a wave ends.');

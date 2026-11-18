@@ -92,7 +92,7 @@ export const ONE_ISLAND_PAGES = Object.freeze(TUTORIAL_PAGES.map(page => {
 const RECOVERY_COPY = Object.freeze({
   ashore: {
     text: ['Pirates that reach the shore climb out and attack on foot: the heart of the island and any captain nearby.',
-      'From the accepted bell through the wave ending, free repairs pause. At wave end every wall and tower returns to full health.',
+      'After the bell, only paid Repair now heals buildings; wave end restores every wall and tower fully.',
       'Walk up to a damaged or broken building to see its health and Repair now option.'],
   },
   crew: {
