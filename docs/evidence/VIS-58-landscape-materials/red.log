@@ -1,0 +1,79 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run --maxWorkers=1 tests/art/landscape-materials.test.js --reporter=verbose
+
+
+ RUN  v5.1.0 /workspace/reference-village-work/landscape-polish/frontend
+
+ ✓ tests/art/landscape-materials.test.js > landscape material follow-up > keeps the exact original four inset source crops without shipping a new texture 5ms
+ × tests/art/landscape-materials.test.js > landscape material follow-up > uses modestly larger pavers at stable world anchors, independent of the clipped region 13ms
+   → expected [ …(4) ] to deeply equal [ { x: +0, y: +0, width: 5.5, …(3) } ]
+ ✓ tests/art/landscape-materials.test.js > landscape material follow-up > retains every original cliff point and logical land value from the pinned base 5ms
+ ✓ tests/art/landscape-materials.test.js > landscape material follow-up > changes paver sampling without widening the existing path or its clearing 1ms
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 3 passed (4)
+   Start at  23:58:59
+   Duration  472ms (transform 56%, import 25%, tests 16%, worker 4%)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/art/landscape-materials.test.js > landscape material follow-up > uses modestly larger pavers at stable world anchors, independent of the clipped region
+AssertionError: expected [ …(4) ] to deeply equal [ { x: +0, y: +0, width: 5.5, …(3) } ]
+
+- Expected
++ Received
+
+  [
+    {
+      "flipX": false,
+      "flipY": false,
+-     "height": 3.96,
+-     "width": 5.5,
++     "height": 2.88,
++     "width": 4,
+      "x": 0,
++     "y": 0,
++   },
++   {
++     "flipX": false,
++     "flipY": false,
++     "height": 2.88,
++     "width": 4,
++     "x": 4,
+      "y": 0,
++   },
++   {
++     "flipX": false,
++     "flipY": false,
++     "height": 2.88,
++     "width": 4,
++     "x": 0,
++     "y": 2.88,
++   },
++   {
++     "flipX": false,
++     "flipY": false,
++     "height": 2.88,
++     "width": 4,
++     "x": 4,
++     "y": 2.88,
+    },
+  ]
+
+ ❯ tests/art/landscape-materials.test.js:19:20
+     17|     const expected = {x: 0, y: 0, width: 5.5, height: 3.96, flipX: fal…
+     18|     const whole = materialCells('path'), detail = materialCells('path'…
+     19|     expect(detail).toEqual([expected]);
+       |                    ^
+     20|     expect(whole).toContainEqual(expected);
+     21|     expect(materialCells('path', {left: -5.5, top: -3.96, right: 0, bo…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice

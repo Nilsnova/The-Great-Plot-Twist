@@ -1,0 +1,54 @@
+{
+  "source": "b0c63cf480ac739cfc46c6ed3b28aaca563bc5d8",
+  "frontendTree": "a95292ff190fb0d66009c5244d3825b44c91beac",
+  "checks": [
+    {
+      "name": "helper-syntax",
+      "command": [
+        "node",
+        "--check",
+        "scripts/capture-landscape-parity.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 0.03,
+      "log": "final-helper-syntax.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "build",
+      "command": [
+        "npm",
+        "run",
+        "build"
+      ],
+      "exitCode": 0,
+      "seconds": 2.1,
+      "log": "final-build.log",
+      "sha256": "65b828077c9a9624fbcc2e5c93b6e04abe9e3d1f13ff422363dd06d9f1c03b02"
+    },
+    {
+      "name": "budget",
+      "command": [
+        "node",
+        "scripts/report-budget.js",
+        "--check"
+      ],
+      "exitCode": 0,
+      "seconds": 0.25,
+      "log": "final-budget.log",
+      "sha256": "c24016baae67d5a3d4bba830e428de8a897ef47425b300e45cf99a895901d209"
+    },
+    {
+      "name": "text-lint",
+      "command": [
+        "node",
+        "../scripts/text-lint/index.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 1.36,
+      "log": "final-text-lint.log",
+      "sha256": "3a8fa9b0965a95c2e2776a043e0f8a4ac2c2bd8d0cb1601ec59bcb9fa623f266"
+    }
+  ],
+  "sourceUnchanged": true
+}
