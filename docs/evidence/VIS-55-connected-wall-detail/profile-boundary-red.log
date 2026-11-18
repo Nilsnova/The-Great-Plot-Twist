@@ -1,0 +1,304 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run --run tests/island/wall-tier-detail.test.js tests/island/wall-textured-batches.test.js --maxWorkers=1
+
+
+ RUN  v5.1.0 /workspace/reference-village-work/wall-polish/frontend
+
+ ❯ tests/island/wall-tier-detail.test.js (14 tests | 3 failed) 67ms
+   ❯ connected wall tier detail (14)
+     × keeps actual projected level 3 span and straight-cap vertices below the authored post top 7ms
+     × keeps actual projected level 4 span and straight-cap vertices below the authored post top 2ms
+     × keeps actual projected level 5 span and straight-cap vertices below the authored post top 1ms
+ ❯ tests/island/wall-textured-batches.test.js (11 tests | 3 failed) 59ms
+   ❯ dimensional wall artwork contract (11)
+     × draws level 3 spans with fixed projected feet, tier profile, upright trim and unchanged indices 10ms
+     × draws level 4 spans with fixed projected feet, tier profile, upright trim and unchanged indices 4ms
+     × draws level 5 spans with fixed projected feet, tier profile, upright trim and unchanged indices 3ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/island/wall-textured-batches.test.js > dimensional wall artwork contract > draws level 3 spans with fixed projected feet, tier profile, upright trim and unchanged indices
+AssertionError: expected [ -0.0560000017285347, …(47) ] to deeply equal [ -0.0560000017285347, …(47) ]
+
+- Expected
++ Received
+
+  [
+    -0.0560000017285347,
+-   1.4179999828338623,
++   1.5180000066757202,
+    0,
+    2.5439999103546143,
+-   1.4179999828338623,
++   1.5180000066757202,
+    0,
+    2.6559998989105225,
+-   1.0820000171661377,
++   1.1820000410079956,
+    0,
+    0.0560000017285347,
+-   1.0820000171661377,
++   1.1820000410079956,
+    0,
+    0.0560000017285347,
+    -0.1679999977350235,
+    0,
+    2.6559998989105225,
+    -0.1679999977350235,
+    0,
+    2.6559998989105225,
+-   1.0820000171661377,
++   1.1820000410079956,
+    0,
+    0.0560000017285347,
+-   1.0820000171661377,
++   1.1820000410079956,
+    0,
+    2.5439999103546143,
+    0.1679999977350235,
+    0,
+    2.6559998989105225,
+    -0.1679999977350235,
+    0,
+    2.6559998989105225,
+-   1.0820000171661377,
++   1.1820000410079956,
+    0,
+    2.5439999103546143,
+-   1.4179999828338623,
++   1.5180000066757202,
+    0,
+    0.0560000017285347,
+-   0.9419999718666077,
++   1.0420000553131104,
+    0,
+    2.6559998989105225,
+-   0.9419999718666077,
++   1.0420000553131104,
+    0,
+    2.6559998989105225,
+-   1.0920000076293945,
++   1.1920000314712524,
+    0,
+    0.0560000017285347,
+-   1.0920000076293945,
++   1.1920000314712524,
+    0,
+  ]
+
+ ❯ tests/island/wall-textured-batches.test.js:77:67
+     75|       const mesh = drawing.root.children.find(row => row.renderOrder =…
+     76|       const expected = Array.from(new Float32Array(points.flatMap(([px…
+     77|       expect(Array.from(mesh.geometry.attributes.position.array)).toEq…
+       |                                                                   ^
+     78|       expect(Array.from(mesh.geometry.index.array)).toEqual([0,1,2,0,2…
+     79|       expect(mesh.geometry.attributes.position.count).toBe(16);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  tests/island/wall-textured-batches.test.js > dimensional wall artwork contract > draws level 4 spans with fixed projected feet, tier profile, upright trim and unchanged indices
+AssertionError: expected [ -0.0560000017285347, …(47) ] to deeply equal [ -0.0560000017285347, …(47) ]
+
+- Expected
++ Received
+
+  [
+    -0.0560000017285347,
+-   1.5180000066757202,
++   1.6180000305175781,
+    0,
+    2.5439999103546143,
+-   1.5180000066757202,
++   1.6180000305175781,
+    0,
+    2.6559998989105225,
+-   1.1820000410079956,
++   1.281999945640564,
+    0,
+    0.0560000017285347,
+-   1.1820000410079956,
++   1.281999945640564,
+    0,
+    0.0560000017285347,
+    -0.1679999977350235,
+    0,
+    2.6559998989105225,
+    -0.1679999977350235,
+    0,
+    2.6559998989105225,
+-   1.1820000410079956,
++   1.281999945640564,
+    0,
+    0.0560000017285347,
+-   1.1820000410079956,
++   1.281999945640564,
+    0,
+    2.5439999103546143,
+    0.1679999977350235,
+    0,
+    2.6559998989105225,
+    -0.1679999977350235,
+    0,
+    2.6559998989105225,
+-   1.1820000410079956,
++   1.281999945640564,
+    0,
+    2.5439999103546143,
+-   1.5180000066757202,
++   1.6180000305175781,
+    0,
+    0.0560000017285347,
+-   1.0420000553131104,
++   1.1419999599456787,
+    0,
+    2.6559998989105225,
+-   1.0420000553131104,
++   1.1419999599456787,
+    0,
+    2.6559998989105225,
+-   1.1920000314712524,
++   1.2920000553131104,
+    0,
+    0.0560000017285347,
+-   1.1920000314712524,
++   1.2920000553131104,
+    0,
+  ]
+
+ ❯ tests/island/wall-textured-batches.test.js:77:67
+     75|       const mesh = drawing.root.children.find(row => row.renderOrder =…
+     76|       const expected = Array.from(new Float32Array(points.flatMap(([px…
+     77|       expect(Array.from(mesh.geometry.attributes.position.array)).toEq…
+       |                                                                   ^
+     78|       expect(Array.from(mesh.geometry.index.array)).toEqual([0,1,2,0,2…
+     79|       expect(mesh.geometry.attributes.position.count).toBe(16);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  tests/island/wall-textured-batches.test.js > dimensional wall artwork contract > draws level 5 spans with fixed projected feet, tier profile, upright trim and unchanged indices
+AssertionError: expected [ -0.0560000017285347, …(47) ] to deeply equal [ -0.0560000017285347, …(47) ]
+
+- Expected
++ Received
+
+  [
+    -0.0560000017285347,
+-   1.5980000495910645,
++   1.718000054359436,
+    0,
+    2.5439999103546143,
+-   1.5980000495910645,
++   1.718000054359436,
+    0,
+    2.6559998989105225,
+-   1.2619999647140503,
++   1.3819999694824219,
+    0,
+    0.0560000017285347,
+-   1.2619999647140503,
++   1.3819999694824219,
+    0,
+    0.0560000017285347,
+    -0.1679999977350235,
+    0,
+    2.6559998989105225,
+    -0.1679999977350235,
+    0,
+    2.6559998989105225,
+-   1.2619999647140503,
++   1.3819999694824219,
+    0,
+    0.0560000017285347,
+-   1.2619999647140503,
++   1.3819999694824219,
+    0,
+    2.5439999103546143,
+    0.1679999977350235,
+    0,
+    2.6559998989105225,
+    -0.1679999977350235,
+    0,
+    2.6559998989105225,
+-   1.2619999647140503,
++   1.3819999694824219,
+    0,
+    2.5439999103546143,
+-   1.5980000495910645,
++   1.718000054359436,
+    0,
+    0.0560000017285347,
+-   1.121999979019165,
++   1.2419999837875366,
+    0,
+    2.6559998989105225,
+-   1.121999979019165,
++   1.2419999837875366,
+    0,
+    2.6559998989105225,
+-   1.2719999551773071,
++   1.3919999599456787,
+    0,
+    0.0560000017285347,
+-   1.2719999551773071,
++   1.3919999599456787,
+    0,
+  ]
+
+ ❯ tests/island/wall-textured-batches.test.js:77:67
+     75|       const mesh = drawing.root.children.find(row => row.renderOrder =…
+     76|       const expected = Array.from(new Float32Array(points.flatMap(([px…
+     77|       expect(Array.from(mesh.geometry.attributes.position.array)).toEq…
+       |                                                                   ^
+     78|       expect(Array.from(mesh.geometry.index.array)).toEqual([0,1,2,0,2…
+     79|       expect(mesh.geometry.attributes.position.count).toBe(16);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  tests/island/wall-tier-detail.test.js > connected wall tier detail > keeps actual projected level 3 span and straight-cap vertices below the authored post top
+AssertionError: expected 1.518 to be close to 1.418, received difference is 0.10000000000000009, but expected 5e-11
+ ❯ tests/island/wall-tier-detail.test.js:42:27
+     40|       expect(cap).toHaveLength(1);
+     41|       expect(maxY(cap)-centreY).toBeLessThanOrEqual(1.625);
+     42|       expect(maxY(spans)).toBeCloseTo(vertical?verticalTop:horizontalT…
+       |                           ^
+     43|       expect(maxY(cap)-centreY).toBeCloseTo(capTop,10);
+     44|       const buttress=posts(layers,art,wallFrame(level)).find(({positio…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  tests/island/wall-tier-detail.test.js > connected wall tier detail > keeps actual projected level 4 span and straight-cap vertices below the authored post top
+AssertionError: expected 1.638 to be less than or equal to 1.625
+ ❯ tests/island/wall-tier-detail.test.js:41:33
+     39|         && Math.abs((p[0]+p[3]+p[6]+p[9])/4-centreX)<1e-10);
+     40|       expect(cap).toHaveLength(1);
+     41|       expect(maxY(cap)-centreY).toBeLessThanOrEqual(1.625);
+       |                                 ^
+     42|       expect(maxY(spans)).toBeCloseTo(vertical?verticalTop:horizontalT…
+     43|       expect(maxY(cap)-centreY).toBeCloseTo(capTop,10);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+ FAIL  tests/island/wall-tier-detail.test.js > connected wall tier detail > keeps actual projected level 5 span and straight-cap vertices below the authored post top
+AssertionError: expected 1.718 to be less than or equal to 1.625
+ ❯ tests/island/wall-tier-detail.test.js:35:27
+     33|       const links=wallTopology(rows).links;
+     34|       const spans=quads(texturedWallBatches([links[0]],[],art));
+     35|       expect(maxY(spans)).toBeLessThanOrEqual(1.625);
+       |                           ^
+     36|       const layers=draw(rows,art), centreX=vertical?.4:2.6, centreY=ve…
+     37|       const cap=quads(layers).filter(({positions:p,uvs})=>
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  6 failed | 19 passed (25)
+   Start at  00:08:03
+   Duration  954ms (import 54%, tests 24%, transform 20%, worker 2%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice

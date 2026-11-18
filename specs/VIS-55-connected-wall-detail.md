@@ -20,7 +20,7 @@ Likely files: `frontend/src/island/wall-batches.js`, focused wall drawing tests 
 
 - Keep full authored posts at ends, corners, branches, mixed tiers, damage and selection.
 - On uniform straight runs, retain a buttress every third two-unit segment, determined by the varying logical coordinate rather than array order or ID.
-- Use level-specific span heights `.95`, `1.15`, `1.35`, `1.45`, `1.55`. The highest cap stays below the existing upright post top, `1.625` units above its foot.
+- Use level-specific span heights `.95`, `1.15`, `1.25`, `1.35`, `1.43`. At shared standing joins and straight caps, include the rear cross-section's `.168` projected rise plus the `.02` cap lift: the highest drawn cap is `1.618`, below the upright post top `1.625`.
 - Replace the existing fourth thin top stripe with an upright cap on the long visible face, using the existing top material. Keep four quads per span.
 - Both village and combat continue using the same rendering function. No ordinary layer rises above foliage; selection retains its existing foreground layer.
 
