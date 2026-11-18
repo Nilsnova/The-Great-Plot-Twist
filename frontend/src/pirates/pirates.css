@@ -86,8 +86,8 @@ html:has(.pirate-hud:not([hidden]) .pirate-bar:not([hidden])) :is(.u-toasts,.u-t
 @media(max-width:760px) and (pointer:coarse){.pirate-bar{padding:4px 10px 6px;gap:3px}.pirate-prompt{bottom:232px}
 .pirate-hud>.pirate-musket{right:14px;bottom:300px;min-width:120px;min-height:56px;padding:6px 12px}
 .pirate-point-layer .lamp-status{bottom:232px}.pirate-point-prompt{bottom:294px}}
-/* Keep the touch attack control below the measured warning/weather bar on short portrait screens. */
-@media(max-width:600px) and (orientation:portrait) and (pointer:coarse){.pirate-hud>.pirate-musket{top:clamp(0px,max(calc(100% - 356px),var(--pirate-bar-bottom,150px)),calc(100% - 72px));bottom:auto}}
+/* Keep the touch attack control below warnings, with room left for the 104px joystick and its gutter. */
+@media(max-width:600px) and (orientation:portrait) and (pointer:coarse){.pirate-hud>.pirate-musket{top:clamp(0px,max(calc(100% - 356px),var(--pirate-bar-bottom,150px)),calc(100% - 72px));bottom:auto;max-width:calc(100% - 158px)}}
 /* While a wave runs: no goals panel, the toasts under the wave bar, the visiting chip out of the way. */
 html:has(.pirate-hud:not([hidden]) .pirate-bar:not([hidden])) .quest-strip{display:none}
 @media(min-width:901px){html:has(.pirate-hud:not([hidden]) .pirate-bar:not([hidden])) :is(.u-toasts,.u-toasts[popover]){inset:var(--pirate-bar-bottom,150px) 340px auto}}
