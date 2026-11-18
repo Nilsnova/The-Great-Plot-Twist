@@ -3315,3 +3315,25 @@ bootstrap, no partial admission on UID conflict, exact large funds, same-event i
 spend/reserve races, duplicate settlements, retired-origin payouts and ledger/escrow reconciliation.
 The Python checks cover strict decimal-string/context parsing and fresh state versus immutable
 receipt values. These are local integration checks, not proof of deployed shared-mode gameplay.
+
+### Global operation registry
+
+`20261118050150_island_economy_operations.sql` adds immutable free/personal/paid intent identities
+and the treasury insertion guard. `island_economy_operations` has RLS, no anonymous/authenticated
+access and service-role select only. Claim/effect/system/parser/trigger helpers have no direct
+service-role execute grant; owner-defined domain functions call them inside the asset transaction.
+No public claim-only endpoint is introduced. Historical raw financial UIDs are opaque tombstones;
+checked children must match the original root actor, account and epoch.
+
+Apply this migration transactionally at `READ COMMITTED`. Before any DDL, it collects account,
+existing-operation and ledger relation barriers atomically using `NOWAIT`/savepoint retry. It releases
+partial locks before waiting and fails before changes after 30 seconds of contention. Unsupported
+isolation fails at entry. Do not replace this barrier with an account-scope inventory or account-only
+lock: concurrent new admissions and personal null-scope foreign keys are covered explicitly.
+The [registry spec](../specs/MP-ECO-02-operation-identities.md) documents exact lock modes and errors.
+
+Focused verification also runs `server/tests/test_economy_operations.py`,
+`server/tests/island_sql/test_economy_operations_sql.py` and
+`server/tests/island_sql/test_economy_operations_cutover_sql.py` with the disposable PostgreSQL tools
+above. Source settlement after departure/retirement keeps its original account; this extension does
+not grant current membership, convert saves, register routes or authorize a live migration.
