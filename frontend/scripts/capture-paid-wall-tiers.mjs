@@ -15,12 +15,17 @@ const runtime = resolve(process.argv[2]), out = resolve(process.argv[3]);
 const treeBaseline = Number(process.argv[4]);
 assert.ok([.7, 1].includes(treeBaseline), 'declare the expected pre/post visual tree baseline');
 const git = value => execFileSync('git', ['rev-parse', value], {cwd: runtime, encoding: 'utf8'}).trim();
+const assertClean = () => assert.equal(execFileSync('git', ['status', '--porcelain', '--untracked-files=all', '--', 'src', 'public', 'tests/fixtures'],
+  {cwd: runtime, encoding: 'utf8'}).trim(), '', 'runtime source, artwork and fixtures match their committed snapshot');
+assertClean();
 const source = git('HEAD'), sourceTree = git('HEAD:frontend/src');
 const treesBefore = [[-15, 6], [-16, 0], [-13, -12], [-9, -17], [9, -17], [15, -8], [16, 2], [14, 11], [-12, 13]];
 const ring = JSON.parse(await readFile(join(runtime, 'tests/fixtures/perimeter-ring.json'), 'utf8')).cells;
 const court = JSON.parse(await readFile(join(runtime, 'tests/fixtures/reference-court.json'), 'utf8'));
 const sha = value => createHash('sha256').update(value).digest('hex');
 const helperHash = sha(await readFile(new URL(import.meta.url)));
+const fixtureHashes = {};
+for (const file of ['perimeter-ring.json', 'reference-court.json']) fixtureHashes[file] = sha(await readFile(join(runtime, 'tests/fixtures', file)));
 const helperSources = {};
 for (const file of ['api-browser-fixture.js', 'perimeter-game-ui.mjs']) {
   const actual = sha(await readFile(new URL(file, import.meta.url)));
@@ -40,9 +45,10 @@ try {
   for (const [width, height] of [[1280, 720], [375, 812]]) {
     const context = await browser.newContext({viewport: {width, height}});
     page = await context.newPage();
-    const errors = [], external = [], consoleErrors = [];
+    const errors = [], external = [], consoleErrors = [], responseErrors = [];
     page.on('pageerror', error => errors.push(error.message));
-    page.on('console', entry => { if (entry.type() === 'error') consoleErrors.push(entry.text()); });
+    page.on('console', entry => { if (entry.type() === 'error') consoleErrors.push({text: entry.text(), location: entry.location()}); });
+    page.on('response', response => { if (response.status() >= 400) responseErrors.push({status: response.status(), url: response.url()}); });
     await page.route('**/*', route => route.request().url().startsWith(base)
       ? route.continue() : (external.push(route.request().url()), route.abort()));
     await stubOfflineApi(page);
@@ -135,8 +141,12 @@ try {
       assert.deepEqual(current.walls.map(({id, x, z}) => ({id, x, z})), positions);
       assert.ok(current.walls.every(row => row.level === level));
       assert.equal(render.world.posts.length, 123);
+      assert.ok(render.world.posts.every(row => row.level === level), 'actual rendered posts show the paid tier');
+      assert.ok(render.world.links.length > 0 && render.world.links.every(row => row.level === level), 'actual rendered links show the paid tier');
+      const bufferHash = sha(JSON.stringify(render.world.meshes.map(row => ({order: row.order, sha256: row.bufferSha256}))));
+      if (level > 1) assert.notEqual(bufferHash, levels.at(-1).bufferHash, 'a paid tier changes actual geometry/UV buffers');
       if (level > 1) assert.equal(levels.at(-1).paid.coins - current.coins, 123 * [0, 0, 20, 40, 80, 160][level]);
-      levels.push({level, receipts, paid: current, render, capture: await screenshot(page, `paid-level-${level}-${width}x${height}.png`)});
+      levels.push({level, receipts, paid: current, render, bufferHash, capture: await screenshot(page, `paid-level-${level}-${width}x${height}.png`)});
     }
     assert.equal(levels.at(-1).paid.coins, 11570);
     const max = await page.evaluate(() => window.__island.island.api.upgrade({spot: 'wall_1'}));
@@ -154,11 +164,16 @@ try {
     assert.equal(await page.evaluate(() => window.__island.island.selection.spotId), paid.walls[0].id, 'pointer selects the exact intended wall');
     const selected = await screenshot(page, `paid-selected-level-5-${width}x${height}.png`);
     assert.deepEqual(errors, []); assert.deepEqual(external, []);
-    checks.push({width, height, trees, outer, moves, inner, levels, maxRefusal: {status: max.status, code: max.code}, selected, pageErrors: errors, externalRequests: external, consoleErrors});
+    for (const response of responseErrors) assert.ok(response.status === 503 && response.url.startsWith(`${base}/api/`), 'only the declared offline API can fail');
+    for (const entry of consoleErrors) assert.ok(entry.text.includes('Failed to load resource:') && entry.text.includes('503')
+      && responseErrors.some(row => row.status === 503 && row.url === entry.location.url), 'only a proven offline API 503 console error is expected');
+    checks.push({width, height, trees, outer, moves, inner, levels, maxRefusal: {status: max.status, code: max.code}, selected,
+      pageErrors: errors, externalRequests: external, consoleErrors, responseErrors});
     await context.close(); page = null;
   }
   assert.equal(git('HEAD'), source, 'runtime remained frozen');
-  await writeFile(join(out, 'report.json'), JSON.stringify({source, sourceTree, helperHash, helperSources, treeBaseline,
+  assertClean();
+  await writeFile(join(out, 'report.json'), JSON.stringify({source, sourceTree, helperHash, helperSources, fixtureHashes, treeBaseline,
     publicTree: git('HEAD:frontend/public'), backendTree: git('HEAD:backend'), migrationsTree: git('HEAD:supabase/migrations'),
     scope: 'actual local fake API progression, not production persistence or an art-only fixture',
     declaredSetup: '50000 coins and best wave40; all buildings/walls/upgrades/moves use existing actual actions; 123 level5 walls leave11570', checks}, null, 2));
@@ -213,9 +228,11 @@ async function screenshot(page, name) {
   const frame = await page.evaluate(() => {
     const g = window.__island;
     return {camera: g.camera.position.toArray(), zoom: g.camera.zoom, captain: g.player.position.toArray(),
-      drawCalls: g.renderer.info.render.calls, contextLost: g.renderer.getContext().isContextLost(), pixelRatio: g.renderer.getPixelRatio()};
+      drawCalls: g.renderer.info.render.calls, contextLost: g.renderer.getContext().isContextLost(),
+      quality: g.renderer.userData.quality, pixelRatio: g.renderer.getPixelRatio()};
   });
   assert.equal(frame.contextLost, false); assert.ok(frame.drawCalls > 0);
+  assert.equal(frame.quality, 'high', 'proof retains high graphics quality');
   await page.screenshot({path: join(out, name)});
   return {name, sha256: sha(await readFile(join(out, name))), ...frame};
 }
