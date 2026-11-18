@@ -327,7 +327,11 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     },
     owns: isIslandZone,
     label(zone) {
-      if (zone === BELL.id) return isl.flow.current && !isl.flow.current.joined ? 'Join the defense' : 'Ring the harbor bell';
+      if (zone === BELL.id) {
+        const wave = isl.flow.current;
+        if (!wave) return 'Ring the harbor bell';
+        return wave.joined ? 'View wave status' : 'Join the defense';
+      }
       if (zone === CABIN.id) return 'Players and invite';
       if (zone === ARSENAL.id) return 'Open the arsenal';
       const building = campaignBuilding(zone);
