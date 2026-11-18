@@ -1,0 +1,25 @@
+{
+  "scope": "In-memory immutable old/new rules comparison; no database or player state touched. Demonstrates the limit, not automatic save repair.",
+  "checks": [
+    {
+      "x": -12,
+      "z": 8.5,
+      "oldExplicitMove": "valid",
+      "newExplicitMove": "place_taken",
+      "savedCoordinatePreserved": [
+        -12,
+        8.5
+      ]
+    },
+    {
+      "x": -12,
+      "z": 9,
+      "oldExplicitMove": "valid",
+      "newExplicitMove": "place_taken",
+      "savedCoordinatePreserved": [
+        -12,
+        9
+      ]
+    }
+  ]
+}

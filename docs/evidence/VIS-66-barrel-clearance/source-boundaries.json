@@ -1,0 +1,24 @@
+{
+  "base": "81404e2b27b0d643d5fff418b7cd363ed86c0c24",
+  "source": "591eab2cfe82a9168489aca6df22c176135a351b",
+  "changedProductRows": [
+    "frontend/src/world/places/layouts.js",
+    "frontend/src/island/wall-obstacles.js",
+    "backend/content/island_layout.json"
+  ],
+  "allOtherBytesInThreeFilesUnchanged": true,
+  "unchangedPaths": [
+    "frontend/public",
+    "supabase/migrations",
+    "frontend/package.json",
+    "frontend/package-lock.json",
+    "backend/pyproject.toml",
+    "backend/uv.lock",
+    "frontend/src/island/placement.js",
+    "backend/server/island",
+    "frontend/src/world/places/settlement.js",
+    "frontend/tests/island/scenery-clearance.test.js",
+    "backend/server/tests/test_wall_scenery_clearance.py"
+  ],
+  "scope": "Exact source boundary proof, not native screenshot or live persistence verification."
+}

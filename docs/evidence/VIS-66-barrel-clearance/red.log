@@ -1,0 +1,101 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run tests/island/barrel-clearance.test.js --maxWorkers=1
+
+
+ RUN  v5.1.0 /workspace/reference-village-work/clearance-props/frontend
+
+ ❯ tests/island/barrel-clearance.test.js (5 tests | 4 failed) 34ms
+   ❯ western barrel clearance (5)
+     × draws the single barrel at its reserved foot without adding colliders or interaction zones 25ms
+     × matches client/server reserves while every other scenery reserve stays fixed 2ms
+     × admits the western wall corridor cell at -12.5,6 3ms
+     × admits the western wall corridor cell at -12.5,8 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/island/barrel-clearance.test.js > western barrel clearance > draws the single barrel at its reserved foot without adding colliders or interaction zones
+AssertionError: expected { x: -12, z: 7 } to deeply equal { x: -10.5, z: 8 }
+
+- Expected
++ Received
+
+  {
+-   "x": -10.5,
+-   "z": 8,
++   "x": -12,
++   "z": 7,
+  }
+
+ ❯ tests/island/barrel-clearance.test.js:26:42
+     24|       expect(barrels).toHaveLength(1);
+     25|       const foot = projectGround(-10.5, 8);
+     26|       expect(barrels[0].userData.ground).toEqual({x: -10.5, z: 8});
+       |                                          ^
+     27|       expect(barrels[0].position.toArray()).toEqual([foot.x, foot.y, 0…
+     28|       expect(barrels[0].renderOrder).toBe(108);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  tests/island/barrel-clearance.test.js > western barrel clearance > matches client/server reserves while every other scenery reserve stays fixed
+AssertionError: expected { id: 'barrel', …(5) } to deeply equal { id: 'barrel', …(5) }
+
+- Expected
++ Received
+
+  {
+    "d": 0.75,
+    "id": "barrel",
+    "name": "the barrel",
+    "w": 1.25,
+-   "x": -10.5,
+-   "z": 8,
++   "x": -12,
++   "z": 7,
+  }
+
+ ❯ tests/island/barrel-clearance.test.js:38:61
+     36|   it('matches client/server reserves while every other scenery reserve…
+     37|     expect(WALL_OBSTACLES).toEqual(server.wallObstacles);
+     38|     expect(WALL_OBSTACLES.find(row => row.id === 'barrel')).toEqual(ba…
+       |                                                             ^
+     39|     expect(WALL_OBSTACLES.filter(row => row.id !== 'barrel')).toEqual([
+     40|       ...trees.map(([x, z], index) => ({id: `tree_${index + 1}`, name:…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  tests/island/barrel-clearance.test.js > western barrel clearance > admits the western wall corridor cell at -12.5,6
+ FAIL  tests/island/barrel-clearance.test.js > western barrel clearance > admits the western wall corridor cell at -12.5,8
+AssertionError: expected { Object (ok, code, ...) } to deeply equal { ok: true }
+
+- Expected
++ Received
+
+  {
+-   "ok": true,
++   "code": "place_taken",
++   "message": "That is too close to the barrel.",
++   "ok": false,
+  }
+
+ ❯ tests/island/barrel-clearance.test.js:48:29
+     46|   });
+     47|   it.each([6, 8])('admits the western wall corridor cell at -12.5,%s',…
+     48|     expect(check(-12.5, z)).toEqual({ok: true});
+       |                             ^
+     49|   });
+     50|   it('still refuses a new wall through the relocated barrel base', () …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 1 passed (5)
+   Start at  10:08:12
+   Duration  995ms (transform 70%, import 24%, tests 4%, worker 1%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.3
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.3
+npm notice To update run: npm install -g npm@12.2.3
+npm notice

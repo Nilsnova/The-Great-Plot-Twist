@@ -1,0 +1,80 @@
+{
+  "source": "591eab2cfe82a9168489aca6df22c176135a351b",
+  "checks": [
+    {
+      "name": "frontend",
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "tests/island/barrel-clearance.test.js",
+        "tests/island/scenery-clearance.test.js",
+        "tests/world-anchor-projection.test.js",
+        "tests/places.test.js",
+        "--maxWorkers=1"
+      ],
+      "exitCode": 0,
+      "seconds": 4.44,
+      "log": "frontend-final.log"
+    },
+    {
+      "name": "backend",
+      "command": [
+        "/workspace/The-Great-Plot-Twist/backend/.venv/bin/python",
+        "-m",
+        "pytest",
+        "server/tests/test_barrel_clearance.py",
+        "server/tests/test_wall_scenery_clearance.py",
+        "-q"
+      ],
+      "exitCode": 0,
+      "seconds": 2.89,
+      "log": "backend-final.log"
+    },
+    {
+      "name": "ruff",
+      "command": [
+        "/workspace/The-Great-Plot-Twist/backend/.venv/bin/python",
+        "-m",
+        "ruff",
+        "check",
+        "."
+      ],
+      "exitCode": 0,
+      "seconds": 0.14,
+      "log": "ruff-final.log"
+    },
+    {
+      "name": "build",
+      "command": [
+        "npm",
+        "run",
+        "build"
+      ],
+      "exitCode": 0,
+      "seconds": 2.45,
+      "log": "build-final.log"
+    },
+    {
+      "name": "budget",
+      "command": [
+        "node",
+        "scripts/report-budget.js",
+        "--check"
+      ],
+      "exitCode": 0,
+      "seconds": 0.44,
+      "log": "budget-final.log"
+    },
+    {
+      "name": "text-lint",
+      "command": [
+        "node",
+        "../scripts/text-lint/index.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 2.29,
+      "log": "text-lint-final.log"
+    }
+  ]
+}

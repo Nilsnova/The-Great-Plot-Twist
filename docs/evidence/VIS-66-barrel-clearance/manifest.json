@@ -1,0 +1,64 @@
+{
+  "codeSource": "2200bd44",
+  "verificationSource": "591eab2c",
+  "localLinksChecked": 16,
+  "files": {
+    "legacy-limit.json": {
+      "bytes": 541,
+      "sha256": "0b61b4269652078565e944b7f8928298df69b5d525560f069f6995756ee0e40c"
+    },
+    "build-final.log": {
+      "bytes": 17686,
+      "sha256": "d0710e0f851bc1d94e55bd9fdf789d1a38edb7588f57614a86cc438fff9c5b09"
+    },
+    "red.log": {
+      "bytes": 3752,
+      "sha256": "2a0ffa72068e242f701dc90660e61bde0bf813f1f91f74f81755b57dd1a55c7f"
+    },
+    "frontend-final.log": {
+      "bytes": 828,
+      "sha256": "204ba4d9c2e4648ac1cc58454cd76ac305d6f49816a27a8f2e7211bd7a0dce94"
+    },
+    "ruff-final.log": {
+      "bytes": 19,
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    "backend-final.log": {
+      "bytes": 99,
+      "sha256": "655bbce5ce1d176243602c2bf8766acc212951b98e242e88eef1e4361a7f9f1e"
+    },
+    "budget-final.log": {
+      "bytes": 83682,
+      "sha256": "fa41df150369414beab02ba2480e172f2bfdb85047e20915a26ba6dfd2cb50e4"
+    },
+    "checks.json": {
+      "bytes": 1696,
+      "sha256": "825257f8a558bec840ab6489df560e4351289c6fcbfc33ce4378dfdadb6d754e"
+    },
+    "source-boundaries.json": {
+      "bytes": 841,
+      "sha256": "243e77025b69252dc2e703cefacd65652b7b15a486877209d117df866cdd83e0"
+    },
+    "README.md": {
+      "bytes": 7373,
+      "sha256": "378342cf0e9a390e75691bf47e3b80b63d7468f15e694f378fc7afcaef2c1357"
+    },
+    "green.log": {
+      "bytes": 529,
+      "sha256": "967f4882ab546d584925890364da4fc43a4ff2cb6910b49fe7338e0c8dca6771"
+    },
+    "setup-error.log": {
+      "bytes": 542,
+      "sha256": "839f2e77d525166f5608fd0a8488f5fef808efea4da1f3dcfb29d15b7be2b058"
+    },
+    "backend.log": {
+      "bytes": 98,
+      "sha256": "497a48836ebe8250efd6a2be95e6a182ee7675b4430e9b23644291fbc0f99632"
+    },
+    "text-lint-final.log": {
+      "bytes": 1037,
+      "sha256": "7fe27caee71c54b373f8af978e6be352a9f5382d6a28ce800ce089d11a391c8a"
+    }
+  },
+  "scope": "Exact writer receipts; coordinator owns native screenshots and combined application evidence."
+}
