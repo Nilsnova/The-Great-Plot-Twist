@@ -4,9 +4,10 @@
 >
 > **Who uses it:** Johannes Franz Lang and the visual component reviewers.
 
-- **Status:** in progress; Draft only.
+- **Status:** integration and targeted checks complete; human/browser acceptance pending; Draft only.
 - **Branch:** `chore/vis-57-playtest-base`
 - **Issue:** [#425](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/425)
+- **Pull request:** [Draft #426](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/426)
 - **Responsible teammate:** Johannes Franz Lang (`frcola`).
 
 ## Goal and scope
@@ -29,6 +30,10 @@ Reconcile the one expected textual conflict in `frontend/src/pirates/render.js`:
 No new API, event, dependency, game rule or recovery design is introduced. Current-main behavior and the existing unmerged perimeter/visual contracts are composed together. Do not apply live migrations, change flags, deploy, push main, force-push or merge a GitHub PR. This aggregate is not suitable for wholesale merge before dependency and human review.
 
 The coordinator owns full-game/browser verification after this checkpoint; this task does not claim those checks. Existing unresolved native input timing and multiplayer pose evidence remains open until fresh proof says otherwise.
+
+## Result
+
+Both histories are ancestors at code checkpoint `6c87b8dc`. Main's SQL and the relocated guard are byte-identical to their sources; all 71 migration versions are unique. Final focused frontend: **19 files / 236 tests passed** (27.09 s). Targeted route/unit and actual disposable PostgreSQL: **725 passed, zero skips** (66.95 s); Ruff passed. The initial obsolete zero-elapsed-time boarder fixture failure is retained in the [exact evidence](../docs/evidence/VIS-57-playtest-base/README.md), along with its stronger 0/30/60 ms replacement and the independent read-only review. No Chrome or full-suite result is claimed by this task.
 
 ## Explain-back
 

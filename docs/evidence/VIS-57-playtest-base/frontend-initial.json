@@ -1,0 +1,33 @@
+{
+  "started": "2026-11-17T23:55:34.236982+00:00",
+  "source": "6c87b8dcd2d7a1bb5376c3b64bbede27a144479e",
+  "command": [
+    "npm",
+    "test",
+    "--",
+    "--maxWorkers=1",
+    "--reporter=verbose",
+    "tests/pirates/playtest-1117.test.js",
+    "tests/pirates/combat-projection.test.js",
+    "tests/pirates/render.test.js",
+    "tests/pirates/recovery-controller.test.js",
+    "tests/pirates/recovery-wave-end.test.js",
+    "tests/pirates/core-display.test.js",
+    "tests/pirates/core-controller.test.js",
+    "tests/pirates/perimeter-demo.test.js",
+    "tests/pirates/perimeter-landing.test.js",
+    "tests/pirates/recovery-transport.test.js",
+    "tests/pirates/recovery-snapshot.test.js",
+    "tests/pirates/ship-fire.test.js",
+    "tests/pirates/td-flow.test.js",
+    "tests/island/wave-flow-races.test.js",
+    "tests/island/perimeter-wave-flow.test.js",
+    "tests/island/core-state.test.js",
+    "tests/island/core-rejoin-load.test.js",
+    "tests/island/structure-recovery-model.test.js",
+    "tests/world/projection.test.js"
+  ],
+  "exitCode": 1,
+  "seconds": 18.16,
+  "finished": "2026-11-17T23:55:52.405216+00:00"
+}
