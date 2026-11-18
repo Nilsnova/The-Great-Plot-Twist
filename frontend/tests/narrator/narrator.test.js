@@ -14,6 +14,9 @@ const LINES = [
   {id: 'wave_5', trigger: 'wave_start:5', covers: ['boss_first'], text: 'A warship.'},
   {id: 'unlock_captain', trigger: 'wave_unlock:1', text: 'Captain upgrades.'},
   {id: 'unlock_houses', trigger: 'wave_unlock:1', text: 'Houses.'},
+  {id: 'unlock_inner_walls', trigger: 'wave_unlock:5', text: 'Raise the inner wall ring.'},
+  {id: 'unlock_carpenter', trigger: 'wave_unlock:5', text: 'Hire a carpenter to mend during a wave.'},
+  {id: 'house_role', trigger: 'house_role', text: 'A Workshop keeps the walls standing.'},
   {id: 'wave_won_1', trigger: 'wave_won', text: 'Won one.'},
   {id: 'wave_won_2', trigger: 'wave_won', text: 'Won two.'},
   {id: 'wave_lost_1', trigger: 'wave_lost', text: 'Lost.'},
@@ -136,6 +139,31 @@ describe('the narrator on the bus', () => {
     events.emit({type: 'player_fell', playerId: 'a'});
     await flush(0);
     expect(narrator.speaking).toBe('fell_1');
+    narrator.dispose();
+  });
+  it('removes v1 Carpenter and Workshop narrator promises while legacy lines remain available', async () => {
+    game = {...game, recoveryVersion: 1};
+    const {narrator, events} = make();
+    events.emit({type: 'campaign_unlocked', wave: 5, code: game.code});
+    events.emit({type: 'house_role_picked', spot: 'house_1', role: 'tavern'});
+    await flush(20000);
+    expect(card.shown).toEqual(['unlock_inner_walls', 'house_role_recovery']);
+    expect(narrator.queued).toEqual([]);
+    narrator.dispose();
+    expect(LINES.find(line => line.id === 'unlock_carpenter').text).toBe('Hire a carpenter to mend during a wave.');
+    expect(LINES.find(line => line.id === 'house_role').text).toBe('A Workshop keeps the walls standing.');
+  });
+
+  it('keeps narrating the current battle when an older wave result arrives', async () => {
+    const {narrator, events} = make();
+    events.emit({type: 'wave_started_server', waveId: 'old', wave: 2, where: 'own'});
+    events.emit({type: 'wave_started_server', waveId: 'new', wave: 3, where: 'own'});
+    events.emit({type: 'wave_finished', waveId: 'old', wave: 2, survived: false});
+    await flush(10000);
+    expect(card.shown).toEqual([]);
+    events.emit({type: 'wave_finished', waveId: 'new', wave: 3, survived: false});
+    await flush(0);
+    expect(narrator.speaking).toBe('wave_lost_1');
     narrator.dispose();
   });
 

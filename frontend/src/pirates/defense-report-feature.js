@@ -5,6 +5,9 @@ import {node} from '../ui/kit/dom.js';
 
 const NAMES = {wall: 'Wall', cannon: 'Cannon', mortar: 'Mortar', harpoon: 'Harpoon tower', culverin: 'Culverin', swivel: 'Swivel-gun nest'};
 const ENDINGS = {all_sunk: 'All ships sunk', island_lost: 'The island fell', captains_fallen: 'All captains fell', timeout: 'Time ran out'};
+export const reportEnding = report => typeof report.survived === 'boolean'
+  ? (report.survived ? 'Wave won' : 'Wave lost')
+  : report.recovery ? 'Result awaiting confirmation' : ENDINGS[report.reason] ?? 'Wave ended';
 const paidLine = payout => payout.status === 'confirmed' ? `Loot confirmed: ${payout.coins} coins.`
   : payout.status === 'refused' ? 'Loot was not confirmed. Check the wave message.'
     : payout.status === 'unknown' ? 'Loot confirmation is not available.' : 'Loot: waiting for confirmation.';
@@ -19,7 +22,7 @@ export function mountDefenseReport({on, container, context, defenses, menu = add
     if (!value || !container) { close(); return; }
     const body = node('section', 'defense-report');
     body.setAttribute('aria-label', 'Last defense report');
-    body.append(node('p', '', `Wave ${value.wave} · ${ENDINGS[value.reason] ?? 'Wave ended'}`),
+    body.append(node('p', '', `Wave ${value.wave} · ${reportEnding(value)}`),
       node('p', '', 'Local report. Earlier actions may be missing.'),
       node('p', '', 'Hit damage may be greater than health lost.'),
       node('p', '', `Heart damage: ${value.heartDamage}`), node('p', '', paidLine(value.payout)));
@@ -43,7 +46,11 @@ export function mountDefenseReport({on, container, context, defenses, menu = add
   stops.push(menu(() => !runningWave && report.read(context()) ? [{label: 'Last defense report', onSelect: draw}] : []));
   return {
     events(batch = []) { report.events(batch); if (batch.some(event => event?.type === 'wave_ended')) runningWave = null; if (modal) draw(); },
-    confirmed(waveId, coins) { report.payout(waveId, {status: 'confirmed', coins}); if (modal) draw(); },
+    confirmed(waveId, coins, survived) {
+      report.payout(waveId, {status: 'confirmed', coins, survived});
+      if (typeof survived === 'boolean' && runningWave === waveId) runningWave = null;
+      if (modal) draw();
+    },
     refused(waveId, error) {
       if (error?.code === 'wave_too_early') return;
       report.payout(waveId, {status: error?.status >= 400 && error?.status < 500 ? 'refused' : 'unknown'});

@@ -8,14 +8,18 @@ vi.mock('../../src/island/building-portrait.js', () => ({createBuildingPortrait:
 })}));
 vi.mock('../../src/ui/kit/modal.js', () => ({createModal: ({onCancel}) => {
   const element = document.createElement('dialog'); element.cancel = onCancel;
-  return {element, setTitle() {}, setContent: body => element.replaceChildren(body),
+  const header = document.createElement('header'); header.className = 'kit-modal-header';
+  const heading = document.createElement('h2'); heading.className = 'kit-heading'; header.append(heading); element.append(header);
+  return {element, setTitle() {}, setContent: body => element.replaceChildren(header, body),
     open(parent, target) { element.open = true; parent.append(element); target?.focus(); },
     dispose() { element.open = false; element.remove(); }};
 }}));
 class Element {
   constructor(tag) { this.tagName = tag; this.children = []; this.dataset = {}; this.style = {}; this.className = ''; this.events = {};
     this.classList = {add: (...names) => { this.className += ` ${names.join(' ')}`; }, toggle: (name, on) => { if (on) this.className += ` ${name}`; }}; }
-  append(...children) { children.forEach(child => { child.parent = this; this.children.push(child); }); }
+  append(...children) { children.forEach(child => { child.remove(); child.parent = this; this.children.push(child); }); }
+  before(child) { child.remove(); child.parent = this.parent; this.parent.children.splice(this.parent.children.indexOf(this), 0, child); }
+  get parentElement() { return this.parent; }
   replaceChildren(...children) { this.children = []; this.append(...children); }
   remove() { if (this.parent) this.parent.children = this.parent.children.filter(child => child !== this); }
   setAttribute(key, value) { this[key] = String(value); }
@@ -23,7 +27,10 @@ class Element {
   addEventListener(name, callback) { this.events[name] = callback; }
   focus() { document.activeElement = this; }
   contains(element) { return all(this).includes(element); }
-  querySelector(selector) { return all(this).find(item => item.dataset.focus === selector.match(/data-focus="([^"]+)"/)?.[1]); }
+  querySelector(selector) {
+    if (selector.startsWith('.')) return all(this).find(item => item.className.split(/\s+/).includes(selector.slice(1)));
+    return all(this).find(item => item.dataset.focus === selector.match(/data-focus="([^"]+)"/)?.[1]);
+  }
   click() { if (!this.disabled) this.events.click?.(); }
 }
 const all = node => [node, ...node.children.flatMap(all)];
@@ -34,16 +41,43 @@ const wall = (id = 'wall_1') => buildCardModel({spotId: id, slot: 'wall', coins:
 beforeEach(() => vi.stubGlobal('document', {createElement: tag => new Element(tag), activeElement: null}));
 afterEach(() => vi.unstubAllGlobals());
 
-describe('management wall dock', () => {
-  it('keeps only simple walls compact and makes other pending actions a visible hold', () => {
+describe('village selection dock', () => {
+  it('opens built structures, keeps wall repair in its existing card and holds pending actions', () => {
     const model = wall(); expect(canDockSelection(model)).toBe(true); expect(model.upgradePrice).toBe('🪙 37');
-    for (const change of [{built: false}, {kind: 'cannon'}, {tree: {}}, {mode: 'repair'}, {recovery: {visible: true}}, {recovery: {actionPending: true}}])
+    for (const change of [{built: false}, {tree: {}}, {mode: 'repair'}, {recovery: {visible: true}}, {recovery: {actionPending: true}}])
       expect(canDockSelection({...model, ...change})).toBe(false);
+    for (const kind of ['cannon', 'harpoon', 'watchtower', 'house']) expect(canDockSelection({...model, kind})).toBe(true);
     const held = holdOtherBuildingAction(model, 'wall_2');
     expect(held).toMatchObject({disabled: true, reason: 'Another building action is in progress.', move: {disabled: true}, demolish: {disabled: true}});
     expect(holdOtherBuildingAction(model, model.spotId)).toBe(model); expect(model.disabled).toBe(false);
     const complex = holdOtherBuildingAction({...model, choices: [{disabled: false}], skills: {choices: [{disabled: false}]}, tree: {detail: {disabled: false}}}, 'wall_2');
     expect([complex.choices[0].disabled, complex.skills.choices[0].disabled, complex.tree.detail.disabled]).toEqual([true, true, true]);
+  });
+  it('shows the installed role and toggles a single defense range for the current selection', () => {
+    const ui = createIslandUi({container: new Element('div')});
+    const model = buildCardModel({spotId: 'cannon_1', coins: 1000, slot: 'tower',
+      spot: {id: 'cannon_1', built: true, kind: 'mortar', level: 2}});
+    const coverage = {id: 'cannon_1', kind: 'mortar', level: 2, x: 1, z: 2, range: 35, minRange: 8, targets: ['ships', 'boarders']};
+    const upgrade = vi.fn();
+    ui.buildCard({...model, coverage}, {upgrade}, {dock: true});
+    const first = ui.selectionElement, range = button(first, 'range');
+    expect(button(first, 'upgrade').hidden).toBe(true);
+    expect(range['aria-pressed']).toBe('false');
+    expect(ui.selectionRange).toBeNull();
+    range.click();
+    expect(ui.selectionRange).toBe(coverage);
+    expect(range['aria-pressed']).toBe('true');
+    expect(text(first)).toContain('Clear-weather range 35 units · ships and boarders · Starts at 8 units');
+    ui.buildCard({...model, coverage: {...coverage, range: 36}}, {upgrade}, {dock: true});
+    expect(ui.selectionRange.range).toBe(36);
+    const house = buildCardModel({spotId: 'house_1', spot: {id: 'house_1', built: true, kind: 'house', level: 3, spec: 'barracks'}});
+    ui.buildCard(house, {}, {dock: true});
+    expect(ui.selectionElement).toBe(first);
+    expect(text(first)).toContain('Level 3 Barracks');
+    expect(range.hidden).toBe(true);
+    expect(ui.selectionRange).toBeNull();
+    expect(upgrade).not.toHaveBeenCalled();
+    ui.dispose();
   });
   it('uses actual health and price, allows A→B selection, preserves errors and calls only current handlers', () => {
     const container = new Element('div'), handlers = {move: vi.fn(), upgrade: vi.fn()}, ui = createIslandUi({container});
@@ -51,7 +85,8 @@ describe('management wall dock', () => {
     ui.buildCard(a, handlers, {dock: true}); expect(ui.active).toBe(false); expect(ui.open).toBe('build');
     expect(text(ui.selectionElement)).toContain('60 / 60 HP'); expect(button(ui.selectionElement, 'upgrade').textContent).toBe('Upgrade · 🪙 37');
     const first = ui.selectionElement; ui.buildCard({...wall('wall_2'), message: 'Payment could not be checked.'}, handlers, {dock: true});
-    expect(ui.selectionElement).toBe(first); expect(text(first)).toContain('Health is unavailable.'); expect(text(first)).toContain('Payment could not be checked.');
+    expect(ui.selectionElement).toBe(first); expect(text(first)).toContain(wall('wall_2').stats); expect(text(first)).toContain('Payment could not be checked.');
+    expect(all(first).find(node => node.role === 'meter')?.hidden).toBe(true);
     button(first, 'move').click(); button(first, 'upgrade').click();
     expect(handlers.move).toHaveBeenCalledWith('wall_2'); expect(handlers.upgrade).toHaveBeenCalledWith('wall_2');
     ui.buildCard({...wall('wall_2'), recovery: {status: 'error', message: 'Building health could not be loaded.'}}, handlers, {dock: true});
@@ -60,7 +95,7 @@ describe('management wall dock', () => {
   it('does not label a new level with a previous level health read or enable another upgrade on it', () => {
     const recoveryState = {recoveryVersion: 1, structures: [{spot: 'wall_1', kind: 'wall', level: 1, hpUnits: 1000000, maxHP: 60}]};
     const model = buildCardModel({spotId: 'wall_1', coins: 1000, spot: {id: 'wall_1', kind: 'wall', built: true, level: 2}, recoveryState, recoveryStatus: 'ready'});
-    expect(model).toMatchObject({recoveryLevel: 1, disabled: true, reason: 'Building health is unavailable. Try again.'});
+    expect(model).toMatchObject({recoveryLevel: 1, disabled: true, reason: 'Wait until building health has loaded.'});
     const ui = createIslandUi({container: new Element('div')}); ui.buildCard(model, {}, {dock: true});
     expect(text(ui.selectionElement)).toContain('Loading building health…');
     expect(text(ui.selectionElement)).not.toContain('60 / 60 HP'); ui.dispose();

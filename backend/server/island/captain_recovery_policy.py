@@ -18,6 +18,17 @@ RETIRED_RECOVERY_SKILLS = frozenset(
     }
 )
 
+# These recovery-v1 progression choices no longer grant an effect. Existing saved
+# IDs remain valid history; this list only blocks a new transition into one.
+RETIRED_RECOVERY_OPTIONS = frozenset(
+    {
+        "carpenter",
+        "workshop",
+        "quick_mend",
+        "mason_drill",
+    }
+)
+
 
 def is_retired_recovery_skill(skill_id: str) -> bool:
     """Whether a skill is retired only for recovery-version-1 wave behavior."""

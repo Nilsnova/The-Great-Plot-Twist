@@ -71,6 +71,56 @@ def test_a_repeated_click_answers_the_first_price_and_says_so():
     assert world.revive().json() == {"price": 35, "coins": 65, "repeat": True}
 
 
+def test_recovery_revive_pays_and_journals_in_one_rpc():
+    world = World()
+    world.database.revive_reply = {**REVIVED, "journaled": True}
+    target = "22222222-2222-4222-8222-222222222222"
+
+    answer = world.revive(waveProtocol=2, fallen=target, x=1.25, z=-2)
+
+    assert answer.status_code == 200
+    assert answer.json() == {"price": 35, "coins": 65, "repeat": False, "journaled": True}
+    assert world.database.calls("wave_revive") == []
+    assert world.database.calls("recovery_wave_revive") == [
+        {
+            "p_player_id": PLAYER_ID,
+            "p_wave_id": WAVE_ID,
+            "p_fallen": target,
+            "p_down_at": 412,
+            "p_action_uid": "help-0001",
+            "p_base": 20,
+            "p_per_wave": 5,
+            "p_x": 1.25,
+            "p_z": -2,
+        }
+    ]
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        {},
+        {"x": 1},
+        {"x": True, "z": 1},
+        {"x": 500, "z": 1},
+        {"x": 1, "z": -500},
+        {"x": 1, "z": 2, "fallen": "not-a-token"},
+    ],
+)
+def test_recovery_revive_requires_a_gameplay_token_and_bounded_helper_position(body):
+    world = World()
+    answer = world.revive(
+        **{
+            "waveProtocol": 2,
+            "fallen": "22222222-2222-4222-8222-222222222222",
+            **body,
+        }
+    )
+    assert answer.status_code == 422
+    assert world.database.calls("wave_revive") == []
+    assert world.database.calls("recovery_wave_revive") == []
+
+
 @pytest.mark.parametrize(
     ("reply", "status", "code"),
     [

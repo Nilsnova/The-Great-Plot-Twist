@@ -1,5 +1,6 @@
 import {describe, expect, it} from 'vitest';
 import {createDefenseReport, REPORT_STRUCTURE_LIMIT} from '../../src/pirates/defense-report.js';
+import {reportEnding} from '../../src/pirates/defense-report-feature.js';
 import {mountPirates} from '../../src/pirates/index.js';
 import {wireWaves} from '../../src/pirates/game-wiring.js';
 import {menuExtras} from '../../src/shell/menu-extras.js';
@@ -57,6 +58,34 @@ describe('local defense report', () => {
     report.events([{type: 'island_damaged', damage: NaN}, {type: 'island_damaged', damage: -1}, {type: 'ship_hit', by: 'unknown', damage: 100}]); end(report);
     expect(report.read('A').structures).toHaveLength(REPORT_STRUCTURE_LIMIT); expect(report.read('A').heartDamage).toBe(0);
     report.clear(); expect(report.read('A')).toBe(null);
+  });
+  it('shows the saved result instead of a conflicting local end reason', () => {
+    const report = createDefenseReport(); start(report); end(report);
+    report.payout('w1', {status: 'confirmed', coins: 15, survived: true});
+    expect(reportEnding(report.read('A'))).toBe('Wave won');
+    expect(report.read('A').reason).toBe('island_lost'); // Local observations keep their source.
+    start(report, 'w2'); report.events([{type: 'wave_ended', reason: 'all_sunk'}]);
+    report.payout('w2', {status: 'confirmed', coins: 0, survived: false});
+    expect(reportEnding(report.read('A'))).toBe('Wave lost');
+  });
+  it('keeps an unconfirmed recovery result neutral while preserving legacy end reasons', () => {
+    const report = createDefenseReport();
+    report.begin({waveId: 'r1', wave: 1, context: 'A', recovery: true}, defenses); end(report);
+    expect(reportEnding(report.read('A'))).toBe('Result awaiting confirmation');
+    report.payout('r1', {status: 'confirmed', coins: 15, survived: true});
+    expect(reportEnding(report.read('A'))).toBe('Wave won');
+    start(report, 'legacy'); end(report);
+    expect(reportEnding(report.read('A'))).toBe('The island fell');
+  });
+  it('keeps an unfinished replaced wave for its later receipt without changing the current report', () => {
+    const report = createDefenseReport(); start(report);
+    report.events([{type: 'island_damaged', damage: 7}]);
+    start(report, 'w2');
+    report.payout('w1', {status: 'confirmed', coins: 15, survived: true});
+    expect(report.read('A')).toMatchObject({waveId: 'w1', survived: true, heartDamage: 7});
+    report.events([{type: 'island_damaged', damage: 3}]); end(report);
+    expect(report.read('A')).toMatchObject({waveId: 'w2', heartDamage: 3, payout: {status: 'pending'}});
+    expect(reportEnding(report.read('A'))).toBe('The island fell');
   });
 });
 
