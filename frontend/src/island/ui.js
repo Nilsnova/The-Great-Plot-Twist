@@ -45,6 +45,13 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
   const boatNotice = node('p', 'island-boat-notice');boatNotice.hidden = true;
   boatNotice.setAttribute('role', 'status');boatNotice.setAttribute('aria-live', 'polite');boatNotice.setAttribute('aria-atomic', 'true');
   container.append(banner, visit, boatNotice);
+  // The real wave countdown follows this measured slot, including wrapped text and viewport changes.
+  function measureBoatNotice() {
+    const height = boatNotice.hidden ? 0 : boatNotice.offsetHeight;
+    document.documentElement?.style.setProperty('--boat-notice-space', height > 0 ? `${height + 10}px` : '0px');
+  }
+  const boatNoticeSize = typeof ResizeObserver === 'function' ? new ResizeObserver(measureBoatNotice) : null;
+  boatNoticeSize?.observe(boatNotice);
 
   function close(restore = false) {
     if (!modal && !selection) return false;
@@ -586,7 +593,8 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
       clearTimeout(boatNoticeTimer);
       boatNotice.replaceChildren(node('strong', '', 'Wave starting. Back to the island.'), node('span', '', details));
       boatNotice.hidden = false;
-      boatNoticeTimer = setTimeout(() => { boatNotice.hidden = true; }, 7000);
+      measureBoatNotice();
+      boatNoticeTimer = setTimeout(() => { boatNotice.hidden = true; measureBoatNotice(); }, 7000);
     },
     toast(text, tone = 'info', next = '') {
       if (disposed || !text) return;
@@ -598,7 +606,8 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
       if (disposed) return; disposed = true;
       returnToDock = null; selection?.dispose(); selection = null;
       if (modal) { const current = modal; modal = null; current.dispose(); }
-      clearTimeout(boatNoticeTimer);boatNotice.remove();banner.remove(); visit.remove();
+      clearTimeout(boatNoticeTimer);boatNoticeSize?.disconnect();boatNotice.remove();banner.remove(); visit.remove();
+      document.documentElement?.style.removeProperty('--boat-notice-space');
     },
   };
 }

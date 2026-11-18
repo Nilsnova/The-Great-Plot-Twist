@@ -104,3 +104,64 @@ it('keeps a completed round payout that arrives after the countdown interruption
     await page.evaluate(()=>window.boatIsland.dispose());
   });
 });
+
+for (const [width,height] of [[320,568],[844,390]]) {
+  it(`keeps the interruption clear of the real wave HUD at ${width} by ${height}`, async () => {
+    await browser.withPage(async page => {
+      await page.setViewportSize({width,height});
+      await page.evaluate(async()=>{
+        for(const path of ['/src/ui/base.css','/src/ui/kit/kit.css','/src/ui/styles.css']) await window.g20Import(path);
+        const {createHud}=await window.g20Import('/src/ui/hud.js');
+        const {createWaveHud}=await window.g20Import('/src/pirates/hud.js');
+        window.playHud=createHud(document.body,{hasIsland:()=>true,travel:()=>false});
+        window.waveHud=createWaveHud({container:document.body});
+      });
+      await mount(page);await page.waitForSelector('.boat-game');
+      await page.evaluate(()=>{
+        window.waveHud.bar({wave:31,shipsLeft:3,islandHp:100,maxIslandHp:100});
+        window.waveHud.health({hp:100,maxHp:100,down:false});window.waveHud.countdown(9);
+        window.boatToasts.showToast({text:'Existing connection error',tone:'error'});
+        window.emitBoatEvent({type:'wave_started_server',waveId:'layout-wave',wave:31});
+      });
+      // Real ResizeObservers settle the bar, status and countdown dimensions.
+      await page.evaluate(async()=>{for(let i=0;i<4;i++)await new Promise(requestAnimationFrame);});
+      const layout=await page.evaluate(()=>{
+        const bounds=selector=>{
+          const box=document.querySelector(selector).getBoundingClientRect();
+          return {left:box.left,right:box.right,top:box.top,bottom:box.bottom};
+        };
+        const notice=bounds('.island-boat-notice');
+        const overlaps=selector=>{const box=bounds(selector);return notice.left<box.right&&notice.right>box.left&&notice.top<box.bottom&&notice.bottom>box.top;};
+        return {notice,countdown:bounds('.pirate-countdown'),number:bounds('.pirate-countdown-number'),overlaps:['.pirate-bar','.pirate-countdown','.u-toasts'].filter(overlaps),
+          overflow:document.documentElement.scrollWidth>innerWidth};
+      });
+      expect(layout.overlaps).toEqual([]);expect(layout.overflow).toBe(false);
+      expect(layout.notice.top).toBeGreaterThanOrEqual(0);expect(layout.notice.bottom).toBeLessThanOrEqual(height);
+      expect(layout.countdown.bottom).toBeLessThanOrEqual(height);
+      expect(layout.number.bottom).toBeLessThanOrEqual(height);
+      if(width>=600){
+        await page.evaluate(()=>{
+          window.waveHud.event({id:'storm',title:'Storm',line:'Rough seas',open:true});
+          window.waveHud.boss('Boss warship');
+        });
+        await page.evaluate(async()=>{for(let i=0;i<4;i++)await new Promise(requestAnimationFrame);});
+        const gap=await page.evaluate(()=>{
+          const box=selector=>document.querySelector(selector).getBoundingClientRect();
+          return box('.pirate-boss').top-Math.max(box('.island-boat-notice').bottom,box('.pirate-countdown').bottom);
+        });
+        expect(gap).toBeGreaterThanOrEqual(0);expect(gap).toBeLessThanOrEqual(12);
+      }
+      await page.evaluate(()=>{window.waveHud.event(null);window.waveHud.boss(null);});
+      await page.setViewportSize(width===320?{width:844,height:390}:{width:320,height:568});
+      await page.evaluate(async()=>{for(let i=0;i<4;i++)await new Promise(requestAnimationFrame);});
+      const rotated=await page.evaluate(()=>{
+        const notice=document.querySelector('.island-boat-notice').getBoundingClientRect();
+        const toast=document.querySelector('.u-toasts').getBoundingClientRect();
+        return {overlap:notice.top<toast.bottom&&notice.bottom>toast.top&&notice.left<toast.right&&notice.right>toast.left,
+          countdownBottom:document.querySelector('.pirate-countdown-number').getBoundingClientRect().bottom,height:innerHeight};
+      });
+      expect(rotated.overlap).toBe(false);expect(rotated.countdownBottom).toBeLessThanOrEqual(rotated.height);
+      await page.evaluate(()=>{window.boatIsland.dispose();window.waveHud.dispose();window.playHud.dispose();});
+    });
+  });
+}

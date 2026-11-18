@@ -142,7 +142,7 @@ html:has(.pirate-hud:not([hidden]) .pirate-bar:not([hidden])) .quest-strip{displ
 @media(max-width:760px),(max-height:500px){.pirate-goal-hint{gap:8px;padding:6px 12px}.pirate-goal-hint-icon{font-size:28px}.pirate-goal-hint-arrow{font-size:20px}}
 @media(max-height:500px){.pirate-goal-hint-step{flex-direction:row;gap:6px}.pirate-goal-hint-icon{font-size:22px}}
 /* Announcement lane (playtest 16 Nov, "speech bubbles, announcements and the life bar on top of each other"):
-   under the wave bar come the toasts (--pirate-bar-bottom), then the countdown, then the boss warning.
-   Each one starts where the ones above it end (--toast-stack-height from src/ui/toasts.js, --pirate-count-space from hud.js). */
-.pirate-countdown{top:calc(var(--pirate-bar-bottom,150px) + var(--toast-stack-height,0px))}
-.pirate-hud .pirate-boss,.pirate-hud:has(.pirate-event.is-open) .pirate-boss{top:calc(var(--pirate-bar-bottom,150px) + var(--toast-stack-height,0px) + var(--pirate-count-space,0px));bottom:auto}
+   under the wave bar come the toasts, a boat interruption if present, then the countdown and boss warning.
+   Each reserves its measured height: toasts.js, island/ui.js and this HUD's measureCount. */
+.pirate-countdown{top:calc(var(--pirate-bar-bottom,150px) + var(--toast-stack-height,0px) + var(--boat-notice-space,0px))}
+.pirate-hud .pirate-boss,.pirate-hud:has(.pirate-event.is-open) .pirate-boss{top:calc(var(--pirate-bar-bottom,150px) + var(--toast-stack-height,0px) + var(--boat-notice-space,0px) + var(--pirate-count-space,0px));bottom:auto}
