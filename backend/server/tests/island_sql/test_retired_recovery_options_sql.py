@@ -2,6 +2,7 @@
 
 import threading
 import time
+from uuid import UUID
 
 import pytest
 
@@ -31,10 +32,18 @@ def assert_retired(database, sql, *arguments):
 
 
 def seed_v0(database):
-    add_players(database, OWNER)
+    seed_player(database, OWNER, "Q7R3S")
+
+
+def seed_player(database, player, code):
+    add_players(database, player)
     as_server(database)
-    call(database, "select public.island_open(%s,'Q7R3S',300)", OWNER)
-    call(database, "select public.islet_build(%s,'wall_1','wall',10,0,0,'seed-wall-01')", OWNER)
+    call(database, "select public.island_open(%s,%s,300)", player, code)
+    call(
+        database,
+        "select public.islet_build(%s,'wall_1','wall',10,0,0,'seed-wall-01')",
+        player,
+    )
 
 
 def admit_v1(database):
@@ -201,13 +210,11 @@ def test_existing_retired_values_and_unrelated_updates_remain_legal(database):
 
 
 def test_wave_admission_lock_serializes_a_stale_carpenter_request(database, scratch_server):
-    seed_v0(database)
+    race_owner = UUID(int=2_000_001)
+    seed_player(database, race_owner, "RAC32")
     database.commit()
 
     owner_lock = psycopg.connect(scratch_server.get_uri())
-    owner_lock.execute(
-        "select player_id from public.islands where player_id=%s for update", (OWNER,)
-    )
     attempting = threading.Event()
     results = []
     worker_pid = []
@@ -222,38 +229,55 @@ def test_wave_admission_lock_serializes_a_stale_carpenter_request(database, scra
                 call(
                     connection,
                     "select public.island_hire(%s,'carpenter','race-hire-01',10,10)",
-                    OWNER,
+                    race_owner,
                 )
             except psycopg.errors.RaiseException as error:
                 results.append((pid, error.diag.message_primary))
 
     worker = threading.Thread(target=hire)
-    worker.start()
-    assert attempting.wait(timeout=5)
-    deadline = time.monotonic() + 5
-    blocked_pid = None
-    while time.monotonic() < deadline:
-        if results:
-            break
-        blockers = database.execute("select pg_blocking_pids(%s)", (worker_pid[0],)).fetchone()[0]
-        if blockers:
-            blocked_pid = worker_pid[0]
-            break
-        time.sleep(0.01)
-    assert blocked_pid is not None
+    try:
+        owner_lock.execute(
+            "select player_id from public.islands where player_id=%s for update", (race_owner,)
+        )
+        worker.start()
+        assert attempting.wait(timeout=5)
+        deadline = time.monotonic() + 5
+        blocked_pid = None
+        while time.monotonic() < deadline:
+            if results:
+                break
+            blockers = database.execute(
+                "select pg_blocking_pids(%s)", (worker_pid[0],)
+            ).fetchone()[0]
+            if owner_lock.info.backend_pid in blockers:
+                blocked_pid = worker_pid[0]
+                break
+            time.sleep(0.01)
+        assert blocked_pid is not None
 
-    owner_lock.execute(
-        "update public.island_recovery_state set recovery_version=1,wave_protocol=2 "
-        "where island_owner=%s",
-        (OWNER,),
-    )
-    owner_lock.commit()
-    owner_lock.close()
-    worker.join(timeout=5)
-    assert not worker.is_alive()
-    assert len(results) == 1
-    assert results[0][1] == "recovery_option_retired"
-    assert (
-        call(database, "select crew_carpenter from public.islands where player_id=%s", OWNER) == 0
-    )
-    assert ledger(database, OWNER, "crew_hire") == []
+        owner_lock.execute(
+            "update public.island_recovery_state set recovery_version=1,wave_protocol=2 "
+            "where island_owner=%s",
+            (race_owner,),
+        )
+        owner_lock.commit()
+        worker.join(timeout=5)
+        assert not worker.is_alive()
+        assert len(results) == 1
+        assert results[0][1] == "recovery_option_retired"
+        assert (
+            call(
+                database,
+                "select crew_carpenter from public.islands where player_id=%s",
+                race_owner,
+            )
+            == 0
+        )
+        assert ledger(database, race_owner, "crew_hire") == []
+    finally:
+        if not owner_lock.closed:
+            owner_lock.rollback()
+            owner_lock.close()
+        worker.join(timeout=5)
+        with psycopg.connect(scratch_server.get_uri(), autocommit=True) as cleanup:
+            cleanup.execute("delete from auth.users where id=%s", (race_owner,))
