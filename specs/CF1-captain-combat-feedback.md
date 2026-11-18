@@ -27,6 +27,13 @@ Bomb reach means landing distance; blast and rifle pierce can extend beyond it.
 Prioritize one actionable warning from current enemy targeting or fresh captain
 and heart damage. Pair its words with a marker pointing toward the danger.
 Limit warning sounds globally; repeated frames must not repeat announcements.
+Ianno's final audio rule is one sound attempt per continuous warning episode,
+followed by visuals only. Track captain and heart separately so changes in
+priority, wording or critical HP cannot repeat an ongoing warning. Observing
+that threat clear during active play starts a new episode when it returns.
+Temporarily hiding feedback or unmuting audio does not restart an episode.
+The audio cue's existing six-second guard only suppresses rapid new episodes;
+it never schedules another sound for the same episode.
 Hide combat feedback during menus, countdown, falling, finishers, catch-up,
 after wave end and on island changes. Reduced motion keeps static information.
 

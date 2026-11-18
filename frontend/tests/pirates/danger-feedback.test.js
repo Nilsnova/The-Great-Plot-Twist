@@ -1,10 +1,11 @@
-// Immediate danger selection and sound limits for the wave controller, without a browser or clock.
+// Immediate danger selection and once-per-episode audio for the wave controller, without a browser or clock.
 import { describe, expect, it, vi } from 'vitest';
 import { createDangerFeedback } from '../../src/pirates/danger-feedback.js';
 import { createPirateSound } from '../../src/audio/pirates.js';
 
 const captain = { id: 'participant-own', x: 8, z: 6, hp: 100, maxHp: 100, down: false, present: true };
 const boarder = { id: 'boarder_1', x: 9, z: 6, hp: 20, state: 'fighting', foe: captain.id };
+const heartBoarder = { ...boarder, id: 'boarder_heart', x: 1, z: 2, foe: null, state: 'walking' };
 const state = changes => ({ phase: 'running', time: 10, party: [{ ...captain }], boarders: [], ships: [],
   heart: { x: 0, z: 2 }, islandHp: 100, maxIslandHp: 100, ...changes });
 const input = (changes = {}) => ({ state: state(), player: captain, actorId: captain.id, nowMs: 0, active: true, ...changes });
@@ -97,22 +98,56 @@ describe('immediate battle dangers', () => {
     expect(result.warning).toMatchObject({ key: 'heart-threat', title: 'Heart under fire', x: 0, z: 2 });
   });
 
-  it('limits sustained and switching warning sounds to one every six seconds', () => {
+  it('sounds once for a sustained warning and keeps its visuals after six seconds', () => {
     const feedback = createDangerFeedback(), current = state({ boarders: [boarder] });
     expect(feedback.update(input({ state: current })).sound).toBe(true);
-    expect(feedback.update(input({ state: current, nowMs: 5999 })).sound).toBe(false);
-    feedback.note([{ type: 'island_damaged', damage: 5 }], captain.id, 5999);
-    expect(feedback.update(input({ nowMs: 5999 })).sound).toBe(false);
-    expect(feedback.update(input({ nowMs: 6000 })).sound).toBe(true);
+    expect(feedback.update(input({ state: current, nowMs: 6000 })))
+      .toMatchObject({ warning: { key: 'captain-threat' }, sound: false });
+    expect(feedback.update(input({ state: current, nowMs: 60000 })))
+      .toMatchObject({ warning: { key: 'captain-threat' }, sound: false });
   });
 
-  it('hides and clears stale damage during inactive phases while retaining the sound limit', () => {
+  it('does not sound again when an ongoing captain warning becomes critical or changes wording', () => {
     const feedback = createDangerFeedback();
-    feedback.note([hit], captain.id, 0);
-    expect(feedback.update(input()).sound).toBe(true);
+    feedback.update(input({ state: state({ boarders: [boarder] }) }));
+    expect(feedback.update(input({ state: state({ boarders: [boarder], party: [{ ...captain, hp: 20 }] }), nowMs: 6000 })))
+      .toMatchObject({ warning: { key: 'captain-critical' }, sound: false });
+    feedback.note([hit], captain.id, 7000);
+    expect(feedback.update(input({ nowMs: 7000 })))
+      .toMatchObject({ warning: { title: 'You are taking damage' }, sound: false });
+  });
+
+  it('does not replay a warning when captain and heart priority switches while both threats continue', () => {
+    const feedback = createDangerFeedback(), current = state({ boarders: [boarder, heartBoarder] });
+    expect(feedback.update(input({ state: current })).sound).toBe(true);
+    expect(feedback.update(input({ state: { ...current, islandHp: 20 }, nowMs: 7000 })))
+      .toMatchObject({ warning: { key: 'heart-critical' }, sound: true });
+    expect(feedback.update(input({ state: { ...current, islandHp: 20, party: [{ ...captain, hp: 20 }] }, nowMs: 8000 })))
+      .toMatchObject({ warning: { key: 'captain-critical' }, sound: false });
+    expect(feedback.update(input({ state: { ...current, islandHp: 20 }, nowMs: 15000 })))
+      .toMatchObject({ warning: { key: 'heart-critical' }, sound: false });
+  });
+
+  it('starts a new warning after that threat has actually cleared during active play', () => {
+    const feedback = createDangerFeedback(), current = state({ boarders: [boarder] });
+    feedback.update(input({ state: current }));
+    expect(feedback.update(input({ nowMs: 1000 }))).toEqual({ warning: null, sound: false });
+    expect(feedback.update(input({ state: current, nowMs: 7000 })).sound).toBe(true);
+  });
+
+  it('rearms a cleared captain threat independently while the heart remains threatened', () => {
+    const feedback = createDangerFeedback(), current = state({ boarders: [boarder, heartBoarder], party: [{ ...captain, hp: 20 }] });
+    expect(feedback.update(input({ state: current })).sound).toBe(true);
+    expect(feedback.update(input({ state: state({ boarders: [heartBoarder] }), nowMs: 7000 })).sound).toBe(true);
+    expect(feedback.update(input({ state: current, nowMs: 14000 })).sound).toBe(true);
+  });
+
+  it('hides inactive feedback without replaying an ongoing warning when the menu closes', () => {
+    const feedback = createDangerFeedback(), current = state({ boarders: [boarder] });
+    expect(feedback.update(input({ state: current })).sound).toBe(true);
     expect(feedback.update(input({ active: false, nowMs: 100 }))).toEqual({ warning: null, sound: false });
-    expect(feedback.update(input({ nowMs: 200 })).warning).toBeNull();
-    expect(feedback.update(input({ state: state({ boarders: [boarder] }), nowMs: 300 })).sound).toBe(false);
+    expect(feedback.update(input({ state: current, nowMs: 10000 })))
+      .toMatchObject({ warning: { key: 'captain-threat' }, sound: false });
   });
 
   it('never shows damage during countdown or when the own captain has fallen', () => {
@@ -122,7 +157,7 @@ describe('immediate battle dangers', () => {
     expect(feedback.update(input({ state: state({ party: [{ ...captain, down: true }], boarders: [boarder] }) })).warning).toBeNull();
   });
 
-  it('reset starts a new wave without old damage or an old sound cooldown', () => {
+  it('reset starts a new wave without old damage or an old warning episode', () => {
     const feedback = createDangerFeedback();
     feedback.note([hit], captain.id, 0);
     feedback.update(input());
@@ -133,7 +168,22 @@ describe('immediate battle dangers', () => {
 });
 
 describe('brief danger sound', () => {
-  it('plays two brief tones on effects and limits repetitions', () => {
+  it('does not defer an ongoing warning until effects are unmuted', () => {
+    const feedback = createDangerFeedback(), current = state({ boarders: [boarder] });
+    const synth = { tone: vi.fn() };
+    let muted = true;
+    const cue = createPirateSound({ synth, isMuted: () => muted });
+    const first = feedback.update(input({ state: current }));
+    expect(first.sound).toBe(true);
+    cue('pirate-danger');
+    expect(synth.tone).not.toHaveBeenCalled();
+    muted = false;
+    const later = feedback.update(input({ state: current, nowMs: 10000 }));
+    expect(later.warning).not.toBeNull();
+    expect(later.sound).toBe(false);
+    expect(synth.tone).not.toHaveBeenCalled();
+  });
+  it('plays two brief tones and suppresses rapid independent cue requests', () => {
     const synth = { tone: vi.fn(), noise: vi.fn() }, effects = {}, caption = vi.fn();
     let time = 0;
     const cue = createPirateSound({ synth, effects, caption, now: () => time });

@@ -3,7 +3,7 @@
 What this is: the proposed pull-request description, including screenshots.
 Who uses it: Ianno for manual review and the publishing agent after explicit confirmation.
 
-**Not published.** Explain-back 1/3 is completed; visual review, the two remaining answers and publication confirmation are pending.
+**Not published.** All three explain-back questions are completed; manual review and publication confirmation are pending.
 
 ## What changes and why?
 
@@ -13,7 +13,10 @@ weapon/skill reach while using or focusing fire and briefly after attempts,
 including refusals. Use sparse parchment arcs and a short direction cap at the real boundary.
 Explain reloads and out-of-range aims; use existing bullets and impact flashes for
 shot feedback, without a written confirmation or damage numbers. Immediate captain/heart threats get one actionable
-warning, a direction marker and a muted-aware sound limited to once per six seconds.
+warning, a direction marker and a muted-aware sound attempted once per continuous warning.
+After that onset, only visuals remain. Captain/heart priority changes, critical
+status, menus and unmuting do not replay the sound. A threat that clears during
+active play and later returns can start a new warning episode.
 
 ## Screenshots
 
@@ -35,7 +38,8 @@ Position setup is scripted; the bell, F attacks and simulation remain real.
 
 ## Checks and evidence
 
-- Current focused suite: **100 tests pass across 11 files**.
+- Latest audio/core-wave regression suite: **77 tests pass across 6 files**. Build/spoiler/budget and text checks pass. Existing screenshots are preserved because this revision changes only sound triggering.
+- Earlier range redesign suite: **100 tests pass across 11 files**.
 - Native feedback: **14 checks pass**, six current captures; overlap audit: **24 checks pass**.
 - Build, spoiler guard and budget pass; text lint reports **0 errors**.
 - Prior full run: **3,864 passed / 5 failed**. Three tutorial-copy failures were corrected, and all failed cases pass in the recorded follow-up run under the original time limits. The entire full suite was not repeated for this bounded presentation revision.
@@ -46,7 +50,7 @@ Position setup is scripted; the bell, F attacks and simulation remain real.
 - Responsible teammate: Ianno (`Iannomh123456`). Agent assistance: Codex, with isolated danger-helper work and independent read-only review.
 - Decision: D061; one task branch from current main, separate helper branch, no main writes.
 - Scope: frontend presentation; existing attack inputs, simulation, balance, money, recovery and network authority remain unchanged.
-- Next step: Ianno manually reviews the screenshots/diff, answers the remaining explain-back questions and explicitly confirms publication. A different human reviews the published change before merge.
+- Next step: Ianno manually reviews the screenshots/diff and explicitly confirms publication. All three explain-back questions are completed. A different human reviews the published change before merge.
 
 ## Ready for peer review
 

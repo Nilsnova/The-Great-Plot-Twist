@@ -6,7 +6,7 @@ Who uses it: Ianno and the human peer reviewer, before publication and merge.
 Branch: `feat/captain-combat-feedback`. Current screenshot source: `72446cdd`.
 This revision follows Ianno's request for a quieter radius and visual-only shot confirmation.
 The original blue design, its reports and logs remain below as historical evidence.
-Explain-back 1/3 is completed; questions 2/3 and 3/3, manual review and explicit
+All three explain-back questions are completed. Manual review and explicit
 publication confirmation remain pending. No PR has been opened.
 
 ## What the player sees
@@ -27,7 +27,12 @@ so it stays accurate when aiming diagonally or moving the camera.
 One warning beneath the wave bar names immediate danger. An arrow beside the
 captain points toward it. Captain/heart critical danger, recent heart damage,
 captain attacks and pirates near the heart are prioritized. A short two-tone
-sound respects effects mute/volume and repeats at most every six seconds.
+sound respects effects mute/volume and is attempted once per continuous warning,
+then visuals continue alone. Captain and heart episodes are tracked independently:
+changing priority, critical status, wording, opening/closing menus or unmuting cannot
+replay an ongoing warning. An actively observed clear ends that episode; its
+return can start a new one. The existing six-second audio guard only suppresses
+rapid new alerts and never schedules a repeat.
 Its warning already supplies the text, so it adds no duplicate sound-caption box.
 Menus, falling, finishers, countdown, catch-up, leaving and wave end clear feedback.
 
@@ -81,7 +86,8 @@ is retained only as superseded review history; it is absent from the current gam
 
 ## Verification of the current revision
 
-- [Focused suite](redesign/focused-tests.txt): **100 tests pass across 11 files**. Coverage includes genuine angular gaps, exact outer radius, diagonal/cardinal direction projection, cached resources/disposal, aim expiry, no written damage feedback, preserved firing/impact events, controller behavior, native keyboard/layout, sound and tutorial limits.
+- [Once-per-warning tests](warning-audio/focused-tests.txt): **77 tests pass across 6 files**, covering sustained warnings, critical/wording changes, priority switches, independent clearing, new episodes, menu hiding, mute/unmute and wave reset. [Tests before the fix](warning-audio/tests-before.txt) record five expected failures. [Build](warning-audio/build.txt), [budget summary](warning-audio/budget-summary.json) and [reviewed text](warning-audio/reviewed-text.txt) record the audio revision. This change has no visual effect, so the existing redesign screenshots are retained.
+- [Earlier range redesign suite](redesign/focused-tests.txt): **100 tests pass across 11 files**. Coverage includes genuine angular gaps, exact outer radius, diagonal/cardinal direction projection, cached resources/disposal, aim expiry, no written damage feedback, preserved firing/impact events, controller behavior, native keyboard/layout, sound and tutorial limits.
 - [Native game check](redesign/native-feedback.txt): **14 checks pass**, with six current screenshots. Existing simulation HP/counters confirm attacks still work, and the fire control contains no confirmation label or damage number.
 - [Overlap audit](redesign/overlaps.txt): **24 state/viewport checks pass**.
 - [Build/spoiler guard](redesign/build.txt), [budget](redesign/budget.json) and [reviewed text](redesign/reviewed-text.txt) pass; text lint has **0 errors and 8 report-only findings**.
@@ -119,7 +125,7 @@ recovery, balance or transport rule changed. No deployment or agent merge.
 
 ## Explain-back and next step
 
-Question 1 is already answered correctly; do not restart it. Ask the remaining questions one at a time, after visual review:
+All three questions are completed; do not restart the quiz. The walkthrough questions were:
 
 1. If F finds no enemy in reach, why does the ring still appear, and where does its radius come from?
 2. Why should the range marker move and scale with the island when the captain moves or the camera zooms?

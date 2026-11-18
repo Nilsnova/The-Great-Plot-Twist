@@ -2,7 +2,7 @@
 // Used by the wave controller; presentation only, with caller-supplied time and no combat mutations.
 import { SHIP_FIRE } from './ship-fire.js';
 
-const HIT_MS = 3000, SOUND_MS = 6000, INCOMING_SECONDS = 1.5, HEART_NEAR = 5, CRITICAL_SHARE = .3;
+const HIT_MS = 3000, INCOMING_SECONDS = 1.5, HEART_NEAR = 5, CRITICAL_SHARE = .3;
 const distance = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
 const critical = (hp, maxHp) => maxHp > 0 && hp / maxHp <= CRITICAL_SHARE;
 
@@ -52,10 +52,7 @@ function warningFor(key, threat, isCritical = false) {
     line: threat.line, x: threat.point.x, z: threat.point.z, critical: isCritical };
 }
 
-function chooseWarning(state, player, actorId, captainHit, heartHit) {
-  const shots = incomingShots(state), own = state.party?.find(item => item.id === actorId);
-  const captain = player ? captainThreat(state, player, actorId, captainHit, shots) : null;
-  const heart = heartThreat(state, heartHit, shots);
+function chooseWarning(state, own, captain, heart) {
   if (captain && critical(own?.hp, own?.maxHp)) return warningFor('captain-critical', captain, true);
   if (heart && critical(state.islandHp, state.maxIslandHp)) return warningFor('heart-critical', heart, true);
   if (heart?.hit) return warningFor('heart-hit', heart);
@@ -64,7 +61,8 @@ function chooseWarning(state, player, actorId, captainHit, heartHit) {
 }
 
 export function createDangerFeedback() {
-  let captainHit = null, heartHit = null, lastSound = -Infinity;
+  let captainHit = null, heartHit = null;
+  const heard = new Set();
   const clearHits = () => { captainHit = null; heartHit = null; };
   return {
     // Only the controller's fresh events belong here; historical catch-up and predicted art are excluded.
@@ -83,11 +81,19 @@ export function createDangerFeedback() {
       }
       if (captainHit && (captainHit.until <= nowMs || captainHit.actorId !== actorId)) captainHit = null;
       if (heartHit && heartHit.until <= nowMs) heartHit = null;
-      const warning = chooseWarning(state, player, actorId, captainHit, heartHit);
-      const sound = !!warning && nowMs - lastSound >= SOUND_MS;
-      if (sound) lastSound = nowMs;
+      const shots = incomingShots(state);
+      const captain = player ? captainThreat(state, player, actorId, captainHit, shots) : null;
+      const heart = heartThreat(state, heartHit, shots);
+      // Hidden feedback does not end an episode. Only an active observation of a cleared threat does.
+      if (!captain) heard.delete('captain');
+      if (!heart) heard.delete('heart');
+      const warning = chooseWarning(state, own, captain, heart);
+      const family = warning?.key.startsWith('captain-') ? 'captain' : 'heart';
+      const sound = !!warning && !heard.has(family);
+      // Consume the episode even if audio is muted/locked or the anti-burst guard suppresses this cue.
+      if (warning) heard.add(family);
       return { warning, sound };
     },
-    reset() { clearHits(); lastSound = -Infinity; },
+    reset() { clearHits(); heard.clear(); },
   };
 }

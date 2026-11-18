@@ -66,7 +66,7 @@ describe('battle sounds', () => {
 });
 
 describe('pirate cues with the battle voices', () => {
-  it('plays danger once per six seconds on the effects bus without a duplicate caption overlay', () => {
+  it('limits rapid danger cue requests on the effects bus without a duplicate caption overlay', () => {
     let time = 0, muted = false;
     const effects = {}, tone = vi.fn(), caption = vi.fn();
     const cue = createPirateSound({ synth: { tone }, effects, caption,

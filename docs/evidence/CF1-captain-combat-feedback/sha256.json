@@ -1,5 +1,5 @@
 {
-  "README.md": "fcf599e328d9b7717d010549eaa6ecffc0322d90ea76c8854df4fdb2522419e5",
+  "README.md": "5dd895a9dfea95b6d03c73df7c526b1620aa480d45005b60f4b9ba25eb889bda",
   "accessibility-summary.json": "b696683eeb81861d1174ed35e8232792b45c45ddc04b4fc983a40f5c7661eae2",
   "after-danger-1280x720.png": "ee8b6ba128b37784d2568e8496dce8f9eb03f9c0ed2bfd5e2ededfc1c2151357",
   "after-danger-375x812.png": "1127cbafc6175f8c418487d596d369e0f6c7a446f05e0635d25ee0bf293bd754",
@@ -44,5 +44,10 @@
   "redesign/tests-before.txt": "fe79d503ecbe84be83740f813736a0d68e7af9d16b729401d72deeda7993dcd7",
   "redesign/transform-followup.txt": "7801eaebc4407cd390635cb5dd968934b9eb2841e8217b6f2255e2063001ba5d",
   "report-isolated.txt": "e82e0318673b574f5c29e757c8e5894d4a5cb75d1acaf86eab77e5a93a285c60",
-  "reviewed-text.txt": "6c50d1b851f0409bf2efdb5ba0397f8d073f572df85ae42febbb940286cecdea"
+  "reviewed-text.txt": "6c50d1b851f0409bf2efdb5ba0397f8d073f572df85ae42febbb940286cecdea",
+  "warning-audio/budget-summary.json": "05ccf70079ec74973e6a3213df8c9f510971b2c203aae096d80b14d02e1f5960",
+  "warning-audio/build.txt": "fd3a2821e373b1563620c7b6a7ae94fa2de3aaaa093bce7780e3204f7d98296d",
+  "warning-audio/focused-tests.txt": "21c5363c921bd9ce4264eac2b01e730e692d3145fddfd9080b9ecf1133a4dd54",
+  "warning-audio/reviewed-text.txt": "930ac5e544a2530f5661d4b5d0b4eba9aff54d98bb53ca9c7ada024b98fe393f",
+  "warning-audio/tests-before.txt": "db1ec26724c2745b102d9733d41b3c710649d5f6ab134679d7fa2f63b270553b"
 }
