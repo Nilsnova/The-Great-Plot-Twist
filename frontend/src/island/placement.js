@@ -10,6 +10,8 @@
 import {ALL_SPOTS, offeredSpots, spotById, ISLAND_PLACE} from './spots.js';
 import {surfaceClass} from '../world/places/surfaces.js';
 import {WALL_LANE_ROWS} from './wall-lanes.js';
+import {WALL_OBSTACLES} from './wall-obstacles.js';
+export {WALL_OBSTACLES};
 
 export const GRID = 0.5;
 export const MAX_UNITS = 30;
@@ -66,6 +68,12 @@ export function checkMove(spotId, x, z, positions = positionsOf()) {
   const moved = boxOf(spotId, {x, z});
   const fixed = KEEP_OUT.find(item => overlaps(moved, item));
   if (fixed) return refuse('place_taken', `That is too close to ${fixed.name}.`);
+  if (spotById(spotId).slot === 'wall') {
+    const scenery = WALL_OBSTACLES.find(item => item.radius
+      ? Math.hypot(Math.max(Math.abs(x - item.x) - moved.w / 2, 0), Math.max(Math.abs(z - item.z) - moved.d / 2, 0)) < item.radius
+      : overlaps(moved, item));
+    if (scenery) return refuse('place_taken', `That is too close to ${scenery.name}.`);
+  }
   const other = Object.entries(positions).find(([id, where]) => id !== spotId && overlaps(moved, boxOf(id, where)));
   if (other) return refuse('place_taken', 'Another building stands there.');
   if (!routeOpen({...positions, [spotId]: {x, z}})) return refuse('blocks_route', 'That would wall the heart in. Leave the pirates a way through.');
