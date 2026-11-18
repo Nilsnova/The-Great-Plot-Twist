@@ -47,6 +47,16 @@ def test_large_whole_coin_balances_have_no_legacy_ceiling():
     validate_treasury(treasury(value, value, "0"))
 
 
+def test_foundation_scale_snapshots_have_no_python_decimal_conversion_ceiling():
+    value = "1" + "0" * 5000
+    assert validate_treasury(treasury(value, "0", value)) == (10**5000, 0)
+
+
+def test_foundation_scale_signed_ledger_deltas_reconcile_exactly():
+    value = "1" + "0" * 5000
+    reconcile_treasury(treasury(value, "0", value), treasury("0", "0", "0"), [("-" + value, "0")])
+
+
 @pytest.mark.parametrize("value", [1, True, None, "-1", "-0", "+1", "01", "1.0", " 1", "1e3"])
 def test_noncanonical_treasury_amounts_are_rejected(value):
     with pytest.raises(ValueError, match="canonical"):
@@ -172,9 +182,10 @@ def test_artifacts_outside_the_evidence_directory_are_refused(tmp_path):
 def test_the_command_line_fails_for_an_unexecuted_template(tmp_path):
     manifest = tmp_path / "evidence.json"
     manifest.write_text(json.dumps(evidence_template(SOURCE)))
-    script = Path(__file__).resolve().parents[2] / "tools" / "economy_acceptance.py"
+    backend = Path(__file__).resolve().parents[2]
     result = subprocess.run(
-        [sys.executable, "-I", str(script), "--source", SOURCE, str(manifest)],
+        [sys.executable, "-m", "tools.economy_acceptance", "--source", SOURCE, str(manifest)],
+        cwd=backend,
         capture_output=True,
         text=True,
         check=False,
