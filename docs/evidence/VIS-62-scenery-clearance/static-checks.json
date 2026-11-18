@@ -1,0 +1,15 @@
+{
+  "authoredWhitespace": "passed",
+  "originalReporterWhitespace": {
+    "diagnosticCount": 21,
+    "files": [
+      "raw/backend-focused.log",
+      "raw/backend-red.log"
+    ],
+    "preserved": "Original reporter trace whitespace is retained byte-for-byte, not reformatted."
+  },
+  "relativeTargetsChecked": 8,
+  "originalArtifactsByteVerified": 20,
+  "backendReadRouteSettlementProceduresUnchanged": 5,
+  "noBrowserByWriter": true
+}

@@ -1,0 +1,31 @@
+E501 Line too long (106 > 100)
+  --> server/tests/test_wall_scenery_clearance.py:27:101
+   |
+25 | def test_clear_half_grid_cells_and_touching_wall_edges_still_work():
+26 |     rules = layout.island_layout(True)
+27 |     placed = layout.positions_of(rules, {"wall_14": (-11, -10.5)}, wall_rule_version=1, wall_capacity=128)
+   |                                                                                                     ^^^^^^
+28 |     layout.check_move(rules, placed, "wall_13", -13, -10.5, wall_rule_version=1, wall_capacity=128)
+29 |     with pytest.raises(layout.MoveRefused):
+   |
+
+E501 Line too long (101 > 100)
+  --> server/tests/test_wall_scenery_clearance.py:30:101
+   |
+28 |     layout.check_move(rules, placed, "wall_13", -13, -10.5, wall_rule_version=1, wall_capacity=128)
+29 |     with pytest.raises(layout.MoveRefused):
+30 |         layout.check_move(rules, placed, "wall_13", -13, -11, wall_rule_version=1, wall_capacity=128)
+   |                                                                                                     ^
+
+E501 Line too long (111 > 100)
+  --> server/tests/test_wall_scenery_clearance.py:67:101
+   |
+65 |     game = ready()
+66 |     original = layout.island_layout
+67 |     monkeypatch.setattr(layout, "island_layout", lambda more=False: replace(original(more), wall_obstacles=()))
+   |                                                                                                     ^^^^^^^^^^^
+68 |     quoted = post(game, "quote", cells=[{"x": -13, "z": -12}])
+69 |     assert quoted.status_code == 200
+   |
+
+Found 3 errors.

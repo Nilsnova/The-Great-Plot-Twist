@@ -1,0 +1,67 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run --maxWorkers=1 tests/island/scenery-clearance.test.js tests/island/placement.test.js tests/island/move-mode.test.js tests/island/wall-cohort.test.js tests/island/wall-policy-preview.test.js tests/island/wall-runs-fake.test.js tests/island/wall-builder.test.js tests/island/wall-builder-preview.test.js tests/island/perimeter-wave-flow.test.js
+
+
+ RUN  v5.1.0 /workspace/reference-village-work/clearance-placement/frontend
+
+ ❯ tests/island/perimeter-wave-flow.test.js (7 tests | 1 failed) 202ms
+   ❯ frozen perimeter inputs across normal bell events (7)
+     × pays for102walls, rings through the real API/flow/bus/controller and rejoins the same frozen simulation 186ms
+ ❯ tests/island/wall-runs-fake.test.js (18 tests | 1 failed) 305ms
+   × builds the independently measured 102-piece full perimeter in four bounded paid runs 49ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/island/perimeter-wave-flow.test.js > frozen perimeter inputs across normal bell events > pays for102walls, rings through the real API/flow/bus/controller and rejoins the same frozen simulation
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/island/perimeter-wave-flow.test.js:32:112
+     30|     const cells=JSON.parse(readFileSync(new URL('../fixtures/perimeter…
+     31|     for(let start=0;start<cells.length;start+=32){
+     32|       const q=await transport.post('/api/island/walls/quote',{cells:ce…
+       |                                                                                                                ^
+     33|       const built=await transport.post('/api/island/walls/build',{plac…
+     34|       expect(built.ok).toBe(true);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/island/wall-runs-fake.test.js > builds the independently measured 102-piece full perimeter in four bounded paid runs
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/island/wall-runs-fake.test.js:111:68
+    109|   const ring=fixture.cells.map(([x,z])=>({x,z})),t=await setup();expec…
+    110|   for(let start=0;start<ring.length;start+=32){
+    111|     const q=await quote(t,ring.slice(start,start+32));expect(q.ok).toB…
+       |                                                                    ^
+    112|     const built=await t.post('/api/island/walls/build',body(q.data,`pe…
+    113|   }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  2 failed | 7 passed (9)
+      Tests  2 failed | 162 passed (164)
+   Start at  10:01:20
+   Duration  4.43s (transform 35%, tests 34%, import 29%, worker 2%)
+
+    Isolate  9 workers spawned · ~149ms startup each (spawn + environment, per file)
+             at least ~1.19s faster with isolate: false — reuses workers across files instead of one per file
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.3
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.3
+npm notice To update run: npm install -g npm@12.2.3
+npm notice
