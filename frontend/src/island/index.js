@@ -252,7 +252,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   });
   const villageKeys = event => {
     if (event.defaultPrevented || isTextEntry(event.target)) return;
-    const gameFocus = event.target?.tagName === 'CANVAS' || event.target === globalThis.document?.body;
+    const gameFocus = event.target?.matches?.('canvas') || event.target === globalThis.document?.body;
     if (gameFocus && !ui.active && !moving.active && event.code === 'KeyE'
       && !event.altKey && !event.ctrlKey && !event.metaKey && villageBar.focusBuildings()) {
       event.preventDefault(); event.stopPropagation(); return;
@@ -578,7 +578,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   const handlers = {build: (spotId, kind) => void build(spotId, kind), upgrade: spotId => void upgrade(spotId), repair: spotId => void repairWall(spotId),
     repairStructure: (spotId, quote) => void repairStructure(spotId, quote), hire: () => openCrew(),
     specialise: (spotId, spec) => void specialise(spotId, spec), demolish: spotId => void askDemolish(spotId), move: spotId => startMove(spotId),
-    camera: villageCamera,
+    camera: action => villageCamera(action, action === 'work' ? selectedAnchor() : null),
     treeSelect: (spotId, id) => { treePicked.set(spotId, id); cardMessage = ''; refreshCard(); }, tree: (spotId, path, tier) => void buyTree(spotId, path, tier)};
   const demolishHandlers = {confirm: () => void confirmDemolish(), keep: () => { const spot = demolishSpot; demolishSpot = null; if (spot) openBuild(spot); }};
   const demolishCardModel = () => demolishModel({quote: demolishQuote, busy: busyDemolish, message: cardMessage});

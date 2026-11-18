@@ -46,7 +46,7 @@ export function createSelectionDock({container, onClose, onDetails, loadPortrait
     range.setAttribute('aria-pressed', String(rangeShown));
     coverageRow.hidden = !rangeShown;
     views.hidden = !handlers.camera;
-    coverageCopy.textContent = rangeShown ? `Clear-weather range ${coverage.range} units · ${coverage.targets.map(key => TARGET_NAMES[key]).join(' and ')}${coverage.minRange ? ` · ${coverage.minRange}-unit inner gap` : ''}` : '';
+    coverageCopy.textContent = rangeShown ? `Clear-weather range ${coverage.range} units · ${coverage.targets.map(key => TARGET_NAMES[key]).join(' and ')}${coverage.minRange ? ` · Starts at ${coverage.minRange} units` : ''}` : '';
   };
   const make = (label, key, quiet, callback) => {
     const button = node('button', `kit-button${quiet ? ' kit-quiet' : ''}`, label); button.type = 'button'; button.dataset.focus = key;

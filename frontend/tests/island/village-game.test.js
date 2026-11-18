@@ -66,8 +66,9 @@ it.each([false, true])('explicit management selects remotely, holds captain inpu
       await page.keyboard.press('KeyE');
       const finder = page.getByRole('combobox', {name: 'Find building'});
       expect(await finder.evaluate(node => document.activeElement === node)).toBe(true);
-      await page.keyboard.press('ArrowDown');
       const close = page.getByRole('region', {name: 'Selected building'}).getByRole('button', {name: 'Close', exact: true});
+      await page.keyboard.press('c');
+      if (!await close.count()) await page.keyboard.press('Enter');
       await close.waitFor();
       await page.keyboard.press('Enter');
       await finder.waitFor();

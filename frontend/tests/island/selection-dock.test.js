@@ -67,7 +67,7 @@ describe('village selection dock', () => {
     range.click();
     expect(ui.selectionRange).toBe(coverage);
     expect(range['aria-pressed']).toBe('true');
-    expect(text(first)).toContain('Clear-weather range 35 units · ships and boarders · 8-unit inner gap');
+    expect(text(first)).toContain('Clear-weather range 35 units · ships and boarders · Starts at 8 units');
     ui.buildCard({...model, coverage: {...coverage, range: 36}}, {upgrade}, {dock: true});
     expect(ui.selectionRange.range).toBe(36);
     const house = buildCardModel({spotId: 'house_1', spot: {id: 'house_1', built: true, kind: 'house', level: 3, spec: 'barracks'}});

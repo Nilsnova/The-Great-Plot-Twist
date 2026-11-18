@@ -39,7 +39,7 @@ export function createVillageBar({container, onLeave, onPick, onCamera = () => {
       const placeholder = node('option', '', 'Find building'); placeholder.value = '';
       buildings.replaceChildren(placeholder);
       for (const spot of picks) {
-        const index = spot.id.split('_').slice(1).join('–');
+        const index = spot.id.split('_').slice(1).join('-');
         const label = [BUILDINGS[spot.kind].name, index].filter(Boolean).join(' ');
         const option = node('option', '', `${label} · Level ${spot.level}`);
         option.value = spot.id; buildings.append(option);
