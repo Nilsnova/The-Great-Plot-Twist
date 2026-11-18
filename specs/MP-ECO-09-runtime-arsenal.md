@@ -46,6 +46,10 @@ only for an explicit `personal_legacy`/version `0` context; null or unknown
 contexts refuse mutations before transport. Read discovery still negotiates
 persisted mode, and a selected shared context never accepts a private snapshot.
 Regression checks cover explicit legacy success and supplied-null refusal.
+Reauthentication refusal (`401`) retains pending intents just like an unknown
+outcome or rate limit: it cannot establish whether an earlier attempt committed.
+The same restored actor retries the saved UID and body in the original account
+and epoch; another actor cannot consume that durable record.
 
 ## Shared boundaries
 
@@ -78,6 +82,8 @@ retry, scope, filter, comparison and Chromium component suites pass: 70 tests
 across ten files. Desktop 1280×720 and phone 375×812 fixture-based card checks
 exercise keyboard return, disabled full-inventory purchases and viewport fit.
 These captures do not claim an authenticated shared-island session.
+The reauthentication retry follow-up passes 44 focused API/controller tests,
+including reload persistence and separation between authenticated actors.
 
 Disposable PostgreSQL checks pass across the runtime arsenal, shared arsenal,
 legacy arsenal and treasury suites: 89 tests. They use a marked test-only
