@@ -19,18 +19,20 @@ const sources = async root => Object.fromEntries(await Promise.all(files.map(asy
 const report = {scope: 'isolated native painter; not a full-game or gameplay check',
   helperSha256: hash(await readFile(new URL(import.meta.url))), density: 28, started: new Date().toISOString(), checks: []};
 let browser;
-
-async function capture(root, label) {
-  git(root, 'diff', '--exit-code', 'HEAD', '--', ...files);
-  const source = git(root, 'rev-parse', 'HEAD'), sourceFiles = await sources(root);
-  const assetSha256 = hash(await readFile(join(root, 'public/village/terrain-materials-v1.png')));
-  const server = await createServer({root, configFile: false, envDir: false, logLevel: 'error',
-    cacheDir: await mkdtemp(join(tmpdir(), 'landscape-parity-')), server: {host: '127.0.0.1', port: 0, hmr: false}});
+const proofPage = {name: 'landscape-proof-page', configureServer(server) {
   server.middlewares.use((request, response, next) => {
     if (request.url !== '/__landscape-proof__') return next();
     response.setHeader('content-type', 'text/html');
     response.end('<!doctype html><html><head><title>Native terrain proof</title><style>body{margin:0}canvas{display:block}</style></head><body></body></html>');
   });
+}};
+
+async function capture(root, label) {
+  git(root, 'diff', '--exit-code', 'HEAD', '--', ...files);
+  const source = git(root, 'rev-parse', 'HEAD'), sourceFiles = await sources(root);
+  const assetSha256 = hash(await readFile(join(root, 'public/village/terrain-materials-v1.png')));
+  const server = await createServer({root, configFile: false, envDir: false, logLevel: 'error', plugins: [proofPage],
+    cacheDir: await mkdtemp(join(tmpdir(), 'landscape-parity-')), server: {host: '127.0.0.1', port: 0, hmr: false}});
   let context;
   try {
     await server.listen();
