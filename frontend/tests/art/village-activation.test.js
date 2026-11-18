@@ -9,7 +9,7 @@ describe('approved village family activation', () => {
     expect(villageFamilies).toHaveLength(1);
     for (const id of ['cabin', 'island-house', 'oak', 'island-watchtower', 'island-cannon',
       'island-wall', 'island_core', 'island_record', 'island-techhub', 'island-arsenal', 'island-mortar']) {
-      expect(getRasterFrame(id)?.sheet.file, id).toMatch(/^village\/compiled\/[a-z]+-4x-\d+-[a-f0-9]{12}\.png$/);
+      expect(getRasterFrame(id)?.sheet.file, id).toMatch(/^village\/shipped\/[a-z]+-4x-\d+-[a-f0-9]{12}\.webp$/);
     }
   });
 

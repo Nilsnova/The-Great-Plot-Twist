@@ -1,5 +1,10 @@
 // Original world-only material atlas. Sampled into the existing backdrop, never a new land mask.
-export const TERRAIN_SHEET = Object.freeze({file: 'village/terrain-materials-v1.png', width: 1254, height: 1254});
+import {shippedTerrain} from './shipped.js';
+export const TERRAIN_SOURCE_SHEET = Object.freeze({file: 'village/terrain-materials-v1.png', width: 1254, height: 1254});
+// The ground is painted at most 32 texels per world unit; the shipped atlas (scripts/ship-village-art.mjs)
+// resamples each authored crop to at least 39 texels per unit, with its own repeated one-texel border.
+export const TERRAIN_SHEET = Object.freeze(shippedTerrain
+  ? {file: shippedTerrain.file, width: shippedTerrain.width, height: shippedTerrain.height} : TERRAIN_SOURCE_SHEET);
 export const TERRAIN_MATERIALS = Object.freeze({
   // One-pixel insets prevent bilinear sampling from bleeding into a neighboring material.
   grass: {rect: [1, 1, 625, 625], period: [8, 5.76], mirror: true},
@@ -26,7 +31,9 @@ export function materialCells(name, bounds = BACKDROP) {
 
 /** The caller owns clipping. No full-size intermediate canvas or retained decoded image. */
 export function paintMaterial(context, image, name, {bounds = BACKDROP, alpha = 1} = {}) {
-  const {rect} = TERRAIN_MATERIALS[name];
+  // A caller may still hand over the authored original (evidence scripts); its crops are the authored rects.
+  const rect = shippedTerrain && image?.width === shippedTerrain.width && image?.height === shippedTerrain.height
+    ? shippedTerrain.rects[name] : TERRAIN_MATERIALS[name].rect;
   context.save(); context.globalAlpha *= alpha;
   for (const cell of materialCells(name, bounds)) {
     context.save();
