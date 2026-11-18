@@ -65,6 +65,22 @@ def test_a_house_of_level_two_picks_a_role_with_no_research():
     }
 
 
+def test_recovery_v1_refuses_a_new_workshop_role_but_allows_an_existing_one():
+    world = world_at(3)
+    world.database.recovery_policy_version = 1
+    world.database.buildings[PLAYER_ID] = [
+        {"plot": "house_1", "building_type": "house", "level": 2, "spec": None}
+    ]
+
+    retired = pick(world, spec="workshop")
+    assert_error(retired, 409, "recovery_option_retired")
+    assert world.database.calls("island_specialise") == []
+
+    world.database.buildings[PLAYER_ID][0]["spec"] = "workshop"
+    assert pick(world, spec="workshop").status_code == 200
+    assert world.database.calls("island_specialise") == []
+
+
 def test_a_role_needs_a_house_of_level_two():
     world = world_at(3)
     world.database.buildings[PLAYER_ID] = [

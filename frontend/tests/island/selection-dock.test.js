@@ -60,7 +60,7 @@ describe('management wall dock', () => {
   it('does not label a new level with a previous level health read or enable another upgrade on it', () => {
     const recoveryState = {recoveryVersion: 1, structures: [{spot: 'wall_1', kind: 'wall', level: 1, hpUnits: 1000000, maxHP: 60}]};
     const model = buildCardModel({spotId: 'wall_1', coins: 1000, spot: {id: 'wall_1', kind: 'wall', built: true, level: 2}, recoveryState, recoveryStatus: 'ready'});
-    expect(model).toMatchObject({recoveryLevel: 1, disabled: true, reason: 'Building health is unavailable. Try again.'});
+    expect(model).toMatchObject({recoveryLevel: 1, disabled: true, reason: 'Wait until building health has loaded.'});
     const ui = createIslandUi({container: new Element('div')}); ui.buildCard(model, {}, {dock: true});
     expect(text(ui.selectionElement)).toContain('Loading building health…');
     expect(text(ui.selectionElement)).not.toContain('60 / 60 HP'); ui.dispose();
