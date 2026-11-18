@@ -87,3 +87,52 @@ describe('actual multiplayer map observer', () => {
     invalid(state); state.walls.dispose();
   });
 });
+
+// These cases name the presentation contract, not the renderer's shape-selection helper.
+const profiles = [1, 2, 3, 4, 5].flatMap(level => ['horizontal', 'vertical'].flatMap(axis =>
+  ['cap', 'buttress'].map(form => ({level, axis, form}))));
+function straightRows({level, axis, form}, offset = 0) {
+  const along = (form === 'buttress' ? 6 : 4) + offset;
+  const center = axis === 'horizontal' ? [along, 3] : [4, along];
+  return [-2, 0, 2].map((step, i) => wall(['a', 'wall_2', 'c'][i],
+    center[0] + (axis === 'horizontal' ? step : 0), center[1] + (axis === 'vertical' ? step : 0), level));
+}
+
+describe('independent current cap and buttress contract', () => {
+  it.each(profiles)('observes tier $level $axis $form across positive, negative and half-grid positions', profile => {
+    for (const offset of [0, -12, .5]) {
+      const state = drawing(straightRows(profile, offset));
+      expect(read(state)).toEqual({level: profile.level, pips: 0, mode: 'wall-batch'});
+      state.walls.dispose();
+    }
+  });
+
+  it.each(profiles)('rejects fresh tier diagnostics over stale tier $level $axis $form buffers', profile => {
+    const rows = straightRows(profile), state = drawing(rows);
+    expect(read(state)).toEqual({level: profile.level, pips: 0, mode: 'wall-batch'});
+    for (const row of rows) row.level = profile.level === 5 ? 1 : profile.level + 1;
+    invalid(state);
+    state.walls.show(rows);
+    expect(read(state)).toEqual({level: rows[1].level, pips: 0, mode: 'wall-batch'});
+    state.walls.dispose();
+  });
+
+  const corruptions = profiles.flatMap(profile => ['position', 'uv', 'index'].map(attribute => ({...profile, attribute})));
+  it.each(corruptions)('rejects corrupted $attribute on a tier $level $axis $form', ({attribute, ...profile}) => {
+    const state = drawing(straightRows(profile)), geometry = state.mesh.geometry;
+    expect(read(state)).toEqual({level: profile.level, pips: 0, mode: 'wall-batch'});
+    if (attribute === 'index') geometry.index.array[geometry.index.array.length - 1] = 0;
+    else geometry.getAttribute(attribute).array[geometry.getAttribute(attribute).array.length - 1] += .25;
+    invalid(state); state.walls.dispose();
+  });
+
+  it.each(profiles)('rejects stale teardown quads for tier $level $axis $form', profile => {
+    const rows = straightRows(profile), state = drawing(rows);
+    expect(read(state)).toEqual({level: profile.level, pips: 0, mode: 'wall-batch'});
+    rows.splice(1, 1);
+    invalid(state);
+    state.walls.show(rows);
+    expect(read(state)).toEqual({level: 0, pips: 0, mode: 'none'});
+    state.walls.dispose();
+  });
+});
