@@ -75,10 +75,10 @@ Exact grants/functions must be summarized in `supabase/README.md` and the common
 
 ## Verification
 
-Commands ran from `backend/` with a writable UV cache and the locked project dependencies:
+Verified with `origin/main` at `f0c64442` integrated. Commands ran from `backend/` with a writable UV cache and the locked project dependencies:
 
-- `uv run pytest -q server/tests/test_wave_economy.py`: **29 passed in 0.58s**.
-- `CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' --with pglast pytest -q server/tests/island_sql/test_wave_treasury_settlement_sql.py server/tests/island_sql/test_island_treasury_sql.py server/tests/island_sql/test_personal_captain_sql.py server/tests/island_sql/test_economy_operations_sql.py server/tests/island_sql/test_wave_crews_sql.py server/tests/island_sql/test_recovery_wave_end_sql.py`: **113 passed in 5.64s**. Includes 31 package-specific SQL cases and actual prerequisite hooks; the complete 70-migration chain is executed twice on a disposable Unix-socket PostgreSQL server.
+- `uv run pytest -q server/tests/test_wave_economy.py`: **29 passed in 0.38s**.
+- `CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' --with pglast pytest -q server/tests/island_sql/test_wave_treasury_settlement_sql.py server/tests/island_sql/test_island_treasury_sql.py server/tests/island_sql/test_personal_captain_sql.py server/tests/island_sql/test_economy_operations_sql.py server/tests/island_sql/test_wave_crews_sql.py server/tests/island_sql/test_recovery_wave_end_sql.py`: **113 passed in 5.19s**. Includes 31 package-specific SQL cases and actual prerequisite hooks; the complete 70-migration chain is executed twice on a disposable Unix-socket PostgreSQL server.
 - `uv run pytest -q --ignore=server/tests/correctness/test_settings_contract.py`: **12622 passed, 308 skipped in 183.16s**. This is the documented faster backend regression run, excluding the exhaustive settings matrix; opt-in suites remain separate from the explicit PostgreSQL run above.
 - The documented `uv run --with pglast` parser: **SQL parses: 70 file(s)**.
 - `uv run ruff check .`: **All checks passed**.
