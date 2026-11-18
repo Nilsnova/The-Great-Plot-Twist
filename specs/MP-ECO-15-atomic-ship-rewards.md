@@ -52,8 +52,9 @@ as one unit. They are not separate network calls.
 Tests precede implementation. Use opt-in disposable PostgreSQL with private Unix sockets,
 explicit migration chain, and test-only fixture authority. Cover ten concurrent members,
 parallel score improvements, lost-response retries, changed-UID payload conflicts, single
-round completion, stale epoch/reset/island changes, record advancement, authorization and
-reservation failures, free repeat scores, rollback injection, grants and immutable history.
+round completion, scoped account-retirement/epoch switches, island changes, record advancement,
+authorization and reservation failures, free repeat scores, rollback injection, grants
+and immutable history.
 Fixture authority and committed PostgreSQL races are separate from authenticated runtime
 acceptance; the latter remains unavailable until the persisted authority integration lands.
 
@@ -76,6 +77,10 @@ common account envelope separately. No current money projection is inferred from
 
 All database checks used disposable PostgreSQL on private Unix sockets with explicit
 TEST-ONLY authority. No configured database or authenticated user session was used.
+Account-retirement and epoch-switch fixtures directly update account/state rows under the
+documented scope/account lock boundary; the actual island reset RPC was **not exercised**.
+These checks establish that old ship claims cannot credit a new account, rather than
+acceptance of the complete reset workflow.
 From `backend/`, with writable `UV_CACHE_DIR` configured:
 
 - `CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q server/tests/island_sql/test_shared_ship_rewards_sql.py server/tests/test_shared_boat_adapters.py`: **51 passed in 6.07s** on the final start/claim receipt projection.
