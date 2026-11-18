@@ -1,0 +1,773 @@
+
+ RUN  v5.1.0 /workspace/reference-village-work/clearance-wall-qa/frontend
+
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > observes tier 1 in real indexed wall buffers without inventing pips 7ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > observes tier 2 in real indexed wall buffers without inventing pips 2ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > observes tier 3 in real indexed wall buffers without inventing pips 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > observes tier 4 in real indexed wall buffers without inventing pips 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > observes tier 5 in real indexed wall buffers without inventing pips 2ms
+ × tests/multiplayer-map-observer.test.js > actual multiplayer map observer > observes the actual cap of a straight same-level wall, and changed level after repaint 18ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 3, pips: +0, …(1) }
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > does not trust a fresh diagnostic level over stale drawn UVs 2ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects a corrupted actual position buffer 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects a corrupted actual uv buffer 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects a corrupted actual index buffer 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects missing mesh 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects hidden mesh 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects hidden ancestor 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects moved mesh 0ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects moved scene 0ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects manual matrix 0ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects scaled group 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects empty draw range 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects excluded post 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects no texture 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects transparent material 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects wrong texture size 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects placeholder receipt 2ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects empty metrics 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects missing receipt 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > does not report a torn-down row from another wall in the same layer 9ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > refuses teardown success when fresh rows disappear but the last observed quad is still drawn 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects a stale teardown remnant despite wrong UV 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects a stale teardown remnant despite no texture 0ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects a stale teardown remnant despite moved ancestor 0ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > preserves legacy walls, towers and real pip counts, refusing duplicate renderers 0ms
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > observes tier 1 horizontal cap across positive, negative and half-grid positions 2ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 1, pips: +0, …(1) }
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > observes tier 1 horizontal buttress across positive, negative and half-grid positions 4ms
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > observes tier 1 vertical cap across positive, negative and half-grid positions 2ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 1, pips: +0, …(1) }
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > observes tier 1 vertical buttress across positive, negative and half-grid positions 1ms
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > observes tier 2 horizontal cap across positive, negative and half-grid positions 1ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 2, pips: +0, …(1) }
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > observes tier 2 horizontal buttress across positive, negative and half-grid positions 1ms
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > observes tier 2 vertical cap across positive, negative and half-grid positions 1ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 2, pips: +0, …(1) }
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > observes tier 2 vertical buttress across positive, negative and half-grid positions 1ms
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > observes tier 3 horizontal cap across positive, negative and half-grid positions 1ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 3, pips: +0, …(1) }
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > observes tier 3 horizontal buttress across positive, negative and half-grid positions 1ms
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > observes tier 3 vertical cap across positive, negative and half-grid positions 1ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 3, pips: +0, …(1) }
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > observes tier 3 vertical buttress across positive, negative and half-grid positions 1ms
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > observes tier 4 horizontal cap across positive, negative and half-grid positions 1ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 4, pips: +0, …(1) }
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > observes tier 4 horizontal buttress across positive, negative and half-grid positions 1ms
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > observes tier 4 vertical cap across positive, negative and half-grid positions 2ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 4, pips: +0, …(1) }
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > observes tier 4 vertical buttress across positive, negative and half-grid positions 1ms
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > observes tier 5 horizontal cap across positive, negative and half-grid positions 1ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 5, pips: +0, …(1) }
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > observes tier 5 horizontal buttress across positive, negative and half-grid positions 1ms
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > observes tier 5 vertical cap across positive, negative and half-grid positions 1ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 5, pips: +0, …(1) }
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > observes tier 5 vertical buttress across positive, negative and half-grid positions 1ms
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects fresh tier diagnostics over stale tier 1 horizontal cap buffers 1ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 1, pips: +0, …(1) }
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects fresh tier diagnostics over stale tier 1 horizontal buttress buffers 2ms
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects fresh tier diagnostics over stale tier 1 vertical cap buffers 1ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 1, pips: +0, …(1) }
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects fresh tier diagnostics over stale tier 1 vertical buttress buffers 1ms
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects fresh tier diagnostics over stale tier 2 horizontal cap buffers 1ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 2, pips: +0, …(1) }
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects fresh tier diagnostics over stale tier 2 horizontal buttress buffers 1ms
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects fresh tier diagnostics over stale tier 2 vertical cap buffers 2ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 2, pips: +0, …(1) }
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects fresh tier diagnostics over stale tier 2 vertical buttress buffers 2ms
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects fresh tier diagnostics over stale tier 3 horizontal cap buffers 1ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 3, pips: +0, …(1) }
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects fresh tier diagnostics over stale tier 3 horizontal buttress buffers 1ms
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects fresh tier diagnostics over stale tier 3 vertical cap buffers 1ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 3, pips: +0, …(1) }
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects fresh tier diagnostics over stale tier 3 vertical buttress buffers 1ms
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects fresh tier diagnostics over stale tier 4 horizontal cap buffers 1ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 4, pips: +0, …(1) }
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects fresh tier diagnostics over stale tier 4 horizontal buttress buffers 1ms
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects fresh tier diagnostics over stale tier 4 vertical cap buffers 1ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 4, pips: +0, …(1) }
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects fresh tier diagnostics over stale tier 4 vertical buttress buffers 1ms
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects fresh tier diagnostics over stale tier 5 horizontal cap buffers 1ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 5, pips: +0, …(1) }
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects fresh tier diagnostics over stale tier 5 horizontal buttress buffers 1ms
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects fresh tier diagnostics over stale tier 5 vertical cap buffers 1ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 5, pips: +0, …(1) }
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects fresh tier diagnostics over stale tier 5 vertical buttress buffers 2ms
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted position on a tier 1 horizontal cap 2ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 1, pips: +0, …(1) }
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted uv on a tier 1 horizontal cap 2ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 1, pips: +0, …(1) }
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted index on a tier 1 horizontal cap 2ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 1, pips: +0, …(1) }
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted position on a tier 1 horizontal buttress 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted uv on a tier 1 horizontal buttress 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted index on a tier 1 horizontal buttress 1ms
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted position on a tier 1 vertical cap 1ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 1, pips: +0, …(1) }
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted uv on a tier 1 vertical cap 1ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 1, pips: +0, …(1) }
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted index on a tier 1 vertical cap 2ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 1, pips: +0, …(1) }
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted position on a tier 1 vertical buttress 2ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted uv on a tier 1 vertical buttress 2ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted index on a tier 1 vertical buttress 0ms
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted position on a tier 2 horizontal cap 1ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 2, pips: +0, …(1) }
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted uv on a tier 2 horizontal cap 1ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 2, pips: +0, …(1) }
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted index on a tier 2 horizontal cap 1ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 2, pips: +0, …(1) }
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted position on a tier 2 horizontal buttress 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted uv on a tier 2 horizontal buttress 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted index on a tier 2 horizontal buttress 1ms
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted position on a tier 2 vertical cap 1ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 2, pips: +0, …(1) }
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted uv on a tier 2 vertical cap 1ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 2, pips: +0, …(1) }
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted index on a tier 2 vertical cap 1ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 2, pips: +0, …(1) }
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted position on a tier 2 vertical buttress 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted uv on a tier 2 vertical buttress 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted index on a tier 2 vertical buttress 1ms
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted position on a tier 3 horizontal cap 1ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 3, pips: +0, …(1) }
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted uv on a tier 3 horizontal cap 1ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 3, pips: +0, …(1) }
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted index on a tier 3 horizontal cap 1ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 3, pips: +0, …(1) }
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted position on a tier 3 horizontal buttress 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted uv on a tier 3 horizontal buttress 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted index on a tier 3 horizontal buttress 1ms
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted position on a tier 3 vertical cap 1ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 3, pips: +0, …(1) }
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted uv on a tier 3 vertical cap 1ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 3, pips: +0, …(1) }
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted index on a tier 3 vertical cap 1ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 3, pips: +0, …(1) }
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted position on a tier 3 vertical buttress 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted uv on a tier 3 vertical buttress 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted index on a tier 3 vertical buttress 0ms
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted position on a tier 4 horizontal cap 1ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 4, pips: +0, …(1) }
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted uv on a tier 4 horizontal cap 1ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 4, pips: +0, …(1) }
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted index on a tier 4 horizontal cap 1ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 4, pips: +0, …(1) }
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted position on a tier 4 horizontal buttress 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted uv on a tier 4 horizontal buttress 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted index on a tier 4 horizontal buttress 1ms
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted position on a tier 4 vertical cap 1ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 4, pips: +0, …(1) }
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted uv on a tier 4 vertical cap 1ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 4, pips: +0, …(1) }
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted index on a tier 4 vertical cap 1ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 4, pips: +0, …(1) }
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted position on a tier 4 vertical buttress 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted uv on a tier 4 vertical buttress 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted index on a tier 4 vertical buttress 0ms
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted position on a tier 5 horizontal cap 1ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 5, pips: +0, …(1) }
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted uv on a tier 5 horizontal cap 1ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 5, pips: +0, …(1) }
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted index on a tier 5 horizontal cap 1ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 5, pips: +0, …(1) }
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted position on a tier 5 horizontal buttress 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted uv on a tier 5 horizontal buttress 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted index on a tier 5 horizontal buttress 1ms
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted position on a tier 5 vertical cap 1ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 5, pips: +0, …(1) }
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted uv on a tier 5 vertical cap 1ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 5, pips: +0, …(1) }
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted index on a tier 5 vertical cap 1ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 5, pips: +0, …(1) }
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted position on a tier 5 vertical buttress 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted uv on a tier 5 vertical buttress 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted index on a tier 5 vertical buttress 1ms
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects stale teardown quads for tier 1 horizontal cap 3ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 1, pips: +0, …(1) }
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects stale teardown quads for tier 1 horizontal buttress 1ms
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects stale teardown quads for tier 1 vertical cap 1ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 1, pips: +0, …(1) }
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects stale teardown quads for tier 1 vertical buttress 1ms
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects stale teardown quads for tier 2 horizontal cap 1ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 2, pips: +0, …(1) }
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects stale teardown quads for tier 2 horizontal buttress 1ms
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects stale teardown quads for tier 2 vertical cap 1ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 2, pips: +0, …(1) }
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects stale teardown quads for tier 2 vertical buttress 1ms
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects stale teardown quads for tier 3 horizontal cap 1ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 3, pips: +0, …(1) }
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects stale teardown quads for tier 3 horizontal buttress 1ms
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects stale teardown quads for tier 3 vertical cap 1ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 3, pips: +0, …(1) }
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects stale teardown quads for tier 3 vertical buttress 1ms
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects stale teardown quads for tier 4 horizontal cap 1ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 4, pips: +0, …(1) }
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects stale teardown quads for tier 4 horizontal buttress 1ms
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects stale teardown quads for tier 4 vertical cap 1ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 4, pips: +0, …(1) }
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects stale teardown quads for tier 4 vertical buttress 3ms
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects stale teardown quads for tier 5 horizontal cap 1ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 5, pips: +0, …(1) }
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects stale teardown quads for tier 5 horizontal buttress 0ms
+ × tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects stale teardown quads for tier 5 vertical cap 1ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 5, pips: +0, …(1) }
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects stale teardown quads for tier 5 vertical buttress 1ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 61 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/multiplayer-map-observer.test.js > actual multiplayer map observer > observes the actual cap of a straight same-level wall, and changed level after repaint
+AssertionError: expected { level: +0, pips: +0, …(1) } to deeply equal { level: 3, pips: +0, …(1) }
+
+- Expected
++ Received
+
+  {
+-   "level": 3,
+-   "mode": "wall-batch",
++   "level": 0,
++   "mode": "invalid-wall-batch",
+    "pips": 0,
+  }
+
+ ❯ tests/multiplayer-map-observer.test.js:26:25
+     24|   it('observes the actual cap of a straight same-level wall, and chang…
+     25|     const rows = [wall('a', 2, 3, 3), wall('wall_2', 4, 3, 3), wall('c…
+     26|     expect(read(state)).toEqual({level: 3, pips: 0, mode: 'wall-batch'…
+       |                         ^
+     27|     state.walls.show(rows.map(row => row.id === 'wall_2' ? {...row, le…
+     28|     expect(read(state)).toEqual({level: 4, pips: 0, mode: 'wall-batch'…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/61]⎯
+
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > observes tier 1 horizontal cap across positive, negative and half-grid positions
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > observes tier 1 vertical cap across positive, negative and half-grid positions
+AssertionError: expected { level: +0, pips: +0, …(1) } to deeply equal { level: 1, pips: +0, …(1) }
+
+- Expected
++ Received
+
+  {
+-   "level": 1,
+-   "mode": "wall-batch",
++   "level": 0,
++   "mode": "invalid-wall-batch",
+    "pips": 0,
+  }
+
+ ❯ tests/multiplayer-map-observer.test.js:105:27
+    103|     for (const offset of [0, -12, .5]) {
+    104|       const state = drawing(straightRows(profile, offset));
+    105|       expect(read(state)).toEqual({level: profile.level, pips: 0, mode…
+       |                           ^
+    106|       state.walls.dispose();
+    107|     }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/61]⎯
+
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > observes tier 2 horizontal cap across positive, negative and half-grid positions
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > observes tier 2 vertical cap across positive, negative and half-grid positions
+AssertionError: expected { level: +0, pips: +0, …(1) } to deeply equal { level: 2, pips: +0, …(1) }
+
+- Expected
++ Received
+
+  {
+-   "level": 2,
+-   "mode": "wall-batch",
++   "level": 0,
++   "mode": "invalid-wall-batch",
+    "pips": 0,
+  }
+
+ ❯ tests/multiplayer-map-observer.test.js:105:27
+    103|     for (const offset of [0, -12, .5]) {
+    104|       const state = drawing(straightRows(profile, offset));
+    105|       expect(read(state)).toEqual({level: profile.level, pips: 0, mode…
+       |                           ^
+    106|       state.walls.dispose();
+    107|     }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/61]⎯
+
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > observes tier 3 horizontal cap across positive, negative and half-grid positions
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > observes tier 3 vertical cap across positive, negative and half-grid positions
+AssertionError: expected { level: +0, pips: +0, …(1) } to deeply equal { level: 3, pips: +0, …(1) }
+
+- Expected
++ Received
+
+  {
+-   "level": 3,
+-   "mode": "wall-batch",
++   "level": 0,
++   "mode": "invalid-wall-batch",
+    "pips": 0,
+  }
+
+ ❯ tests/multiplayer-map-observer.test.js:105:27
+    103|     for (const offset of [0, -12, .5]) {
+    104|       const state = drawing(straightRows(profile, offset));
+    105|       expect(read(state)).toEqual({level: profile.level, pips: 0, mode…
+       |                           ^
+    106|       state.walls.dispose();
+    107|     }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/61]⎯
+
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > observes tier 4 horizontal cap across positive, negative and half-grid positions
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > observes tier 4 vertical cap across positive, negative and half-grid positions
+AssertionError: expected { level: +0, pips: +0, …(1) } to deeply equal { level: 4, pips: +0, …(1) }
+
+- Expected
++ Received
+
+  {
+-   "level": 4,
+-   "mode": "wall-batch",
++   "level": 0,
++   "mode": "invalid-wall-batch",
+    "pips": 0,
+  }
+
+ ❯ tests/multiplayer-map-observer.test.js:105:27
+    103|     for (const offset of [0, -12, .5]) {
+    104|       const state = drawing(straightRows(profile, offset));
+    105|       expect(read(state)).toEqual({level: profile.level, pips: 0, mode…
+       |                           ^
+    106|       state.walls.dispose();
+    107|     }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/61]⎯
+
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > observes tier 5 horizontal cap across positive, negative and half-grid positions
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > observes tier 5 vertical cap across positive, negative and half-grid positions
+AssertionError: expected { level: +0, pips: +0, …(1) } to deeply equal { level: 5, pips: +0, …(1) }
+
+- Expected
++ Received
+
+  {
+-   "level": 5,
+-   "mode": "wall-batch",
++   "level": 0,
++   "mode": "invalid-wall-batch",
+    "pips": 0,
+  }
+
+ ❯ tests/multiplayer-map-observer.test.js:105:27
+    103|     for (const offset of [0, -12, .5]) {
+    104|       const state = drawing(straightRows(profile, offset));
+    105|       expect(read(state)).toEqual({level: profile.level, pips: 0, mode…
+       |                           ^
+    106|       state.walls.dispose();
+    107|     }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/61]⎯
+
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects fresh tier diagnostics over stale tier 1 horizontal cap buffers
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects fresh tier diagnostics over stale tier 1 vertical cap buffers
+AssertionError: expected { level: +0, pips: +0, …(1) } to deeply equal { level: 1, pips: +0, …(1) }
+
+- Expected
++ Received
+
+  {
+-   "level": 1,
+-   "mode": "wall-batch",
++   "level": 0,
++   "mode": "invalid-wall-batch",
+    "pips": 0,
+  }
+
+ ❯ tests/multiplayer-map-observer.test.js:112:25
+    110|   it.each(profiles)('rejects fresh tier diagnostics over stale tier $l…
+    111|     const rows = straightRows(profile), state = drawing(rows);
+    112|     expect(read(state)).toEqual({level: profile.level, pips: 0, mode: …
+       |                         ^
+    113|     for (const row of rows) row.level = profile.level === 5 ? 1 : prof…
+    114|     invalid(state);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/61]⎯
+
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects fresh tier diagnostics over stale tier 2 horizontal cap buffers
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects fresh tier diagnostics over stale tier 2 vertical cap buffers
+AssertionError: expected { level: +0, pips: +0, …(1) } to deeply equal { level: 2, pips: +0, …(1) }
+
+- Expected
++ Received
+
+  {
+-   "level": 2,
+-   "mode": "wall-batch",
++   "level": 0,
++   "mode": "invalid-wall-batch",
+    "pips": 0,
+  }
+
+ ❯ tests/multiplayer-map-observer.test.js:112:25
+    110|   it.each(profiles)('rejects fresh tier diagnostics over stale tier $l…
+    111|     const rows = straightRows(profile), state = drawing(rows);
+    112|     expect(read(state)).toEqual({level: profile.level, pips: 0, mode: …
+       |                         ^
+    113|     for (const row of rows) row.level = profile.level === 5 ? 1 : prof…
+    114|     invalid(state);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/61]⎯
+
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects fresh tier diagnostics over stale tier 3 horizontal cap buffers
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects fresh tier diagnostics over stale tier 3 vertical cap buffers
+AssertionError: expected { level: +0, pips: +0, …(1) } to deeply equal { level: 3, pips: +0, …(1) }
+
+- Expected
++ Received
+
+  {
+-   "level": 3,
+-   "mode": "wall-batch",
++   "level": 0,
++   "mode": "invalid-wall-batch",
+    "pips": 0,
+  }
+
+ ❯ tests/multiplayer-map-observer.test.js:112:25
+    110|   it.each(profiles)('rejects fresh tier diagnostics over stale tier $l…
+    111|     const rows = straightRows(profile), state = drawing(rows);
+    112|     expect(read(state)).toEqual({level: profile.level, pips: 0, mode: …
+       |                         ^
+    113|     for (const row of rows) row.level = profile.level === 5 ? 1 : prof…
+    114|     invalid(state);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/61]⎯
+
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects fresh tier diagnostics over stale tier 4 horizontal cap buffers
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects fresh tier diagnostics over stale tier 4 vertical cap buffers
+AssertionError: expected { level: +0, pips: +0, …(1) } to deeply equal { level: 4, pips: +0, …(1) }
+
+- Expected
++ Received
+
+  {
+-   "level": 4,
+-   "mode": "wall-batch",
++   "level": 0,
++   "mode": "invalid-wall-batch",
+    "pips": 0,
+  }
+
+ ❯ tests/multiplayer-map-observer.test.js:112:25
+    110|   it.each(profiles)('rejects fresh tier diagnostics over stale tier $l…
+    111|     const rows = straightRows(profile), state = drawing(rows);
+    112|     expect(read(state)).toEqual({level: profile.level, pips: 0, mode: …
+       |                         ^
+    113|     for (const row of rows) row.level = profile.level === 5 ? 1 : prof…
+    114|     invalid(state);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/61]⎯
+
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects fresh tier diagnostics over stale tier 5 horizontal cap buffers
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects fresh tier diagnostics over stale tier 5 vertical cap buffers
+AssertionError: expected { level: +0, pips: +0, …(1) } to deeply equal { level: 5, pips: +0, …(1) }
+
+- Expected
++ Received
+
+  {
+-   "level": 5,
+-   "mode": "wall-batch",
++   "level": 0,
++   "mode": "invalid-wall-batch",
+    "pips": 0,
+  }
+
+ ❯ tests/multiplayer-map-observer.test.js:112:25
+    110|   it.each(profiles)('rejects fresh tier diagnostics over stale tier $l…
+    111|     const rows = straightRows(profile), state = drawing(rows);
+    112|     expect(read(state)).toEqual({level: profile.level, pips: 0, mode: …
+       |                         ^
+    113|     for (const row of rows) row.level = profile.level === 5 ? 1 : prof…
+    114|     invalid(state);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/61]⎯
+
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted position on a tier 1 horizontal cap
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted uv on a tier 1 horizontal cap
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted index on a tier 1 horizontal cap
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted position on a tier 1 vertical cap
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted uv on a tier 1 vertical cap
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted index on a tier 1 vertical cap
+AssertionError: expected { level: +0, pips: +0, …(1) } to deeply equal { level: 1, pips: +0, …(1) }
+
+- Expected
++ Received
+
+  {
+-   "level": 1,
+-   "mode": "wall-batch",
++   "level": 0,
++   "mode": "invalid-wall-batch",
+    "pips": 0,
+  }
+
+ ❯ tests/multiplayer-map-observer.test.js:123:25
+    121|   it.each(corruptions)('rejects corrupted $attribute on a tier $level …
+    122|     const state = drawing(straightRows(profile)), geometry = state.mes…
+    123|     expect(read(state)).toEqual({level: profile.level, pips: 0, mode: …
+       |                         ^
+    124|     if (attribute === 'index') geometry.index.array[geometry.index.arr…
+    125|     else geometry.getAttribute(attribute).array[geometry.getAttribute(…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/61]⎯
+
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted position on a tier 2 horizontal cap
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted uv on a tier 2 horizontal cap
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted index on a tier 2 horizontal cap
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted position on a tier 2 vertical cap
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted uv on a tier 2 vertical cap
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted index on a tier 2 vertical cap
+AssertionError: expected { level: +0, pips: +0, …(1) } to deeply equal { level: 2, pips: +0, …(1) }
+
+- Expected
++ Received
+
+  {
+-   "level": 2,
+-   "mode": "wall-batch",
++   "level": 0,
++   "mode": "invalid-wall-batch",
+    "pips": 0,
+  }
+
+ ❯ tests/multiplayer-map-observer.test.js:123:25
+    121|   it.each(corruptions)('rejects corrupted $attribute on a tier $level …
+    122|     const state = drawing(straightRows(profile)), geometry = state.mes…
+    123|     expect(read(state)).toEqual({level: profile.level, pips: 0, mode: …
+       |                         ^
+    124|     if (attribute === 'index') geometry.index.array[geometry.index.arr…
+    125|     else geometry.getAttribute(attribute).array[geometry.getAttribute(…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/61]⎯
+
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted position on a tier 3 horizontal cap
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted uv on a tier 3 horizontal cap
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted index on a tier 3 horizontal cap
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted position on a tier 3 vertical cap
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted uv on a tier 3 vertical cap
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted index on a tier 3 vertical cap
+AssertionError: expected { level: +0, pips: +0, …(1) } to deeply equal { level: 3, pips: +0, …(1) }
+
+- Expected
++ Received
+
+  {
+-   "level": 3,
+-   "mode": "wall-batch",
++   "level": 0,
++   "mode": "invalid-wall-batch",
+    "pips": 0,
+  }
+
+ ❯ tests/multiplayer-map-observer.test.js:123:25
+    121|   it.each(corruptions)('rejects corrupted $attribute on a tier $level …
+    122|     const state = drawing(straightRows(profile)), geometry = state.mes…
+    123|     expect(read(state)).toEqual({level: profile.level, pips: 0, mode: …
+       |                         ^
+    124|     if (attribute === 'index') geometry.index.array[geometry.index.arr…
+    125|     else geometry.getAttribute(attribute).array[geometry.getAttribute(…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/61]⎯
+
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted position on a tier 4 horizontal cap
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted uv on a tier 4 horizontal cap
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted index on a tier 4 horizontal cap
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted position on a tier 4 vertical cap
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted uv on a tier 4 vertical cap
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted index on a tier 4 vertical cap
+AssertionError: expected { level: +0, pips: +0, …(1) } to deeply equal { level: 4, pips: +0, …(1) }
+
+- Expected
++ Received
+
+  {
+-   "level": 4,
+-   "mode": "wall-batch",
++   "level": 0,
++   "mode": "invalid-wall-batch",
+    "pips": 0,
+  }
+
+ ❯ tests/multiplayer-map-observer.test.js:123:25
+    121|   it.each(corruptions)('rejects corrupted $attribute on a tier $level …
+    122|     const state = drawing(straightRows(profile)), geometry = state.mes…
+    123|     expect(read(state)).toEqual({level: profile.level, pips: 0, mode: …
+       |                         ^
+    124|     if (attribute === 'index') geometry.index.array[geometry.index.arr…
+    125|     else geometry.getAttribute(attribute).array[geometry.getAttribute(…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/61]⎯
+
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted position on a tier 5 horizontal cap
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted uv on a tier 5 horizontal cap
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted index on a tier 5 horizontal cap
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted position on a tier 5 vertical cap
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted uv on a tier 5 vertical cap
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted index on a tier 5 vertical cap
+AssertionError: expected { level: +0, pips: +0, …(1) } to deeply equal { level: 5, pips: +0, …(1) }
+
+- Expected
++ Received
+
+  {
+-   "level": 5,
+-   "mode": "wall-batch",
++   "level": 0,
++   "mode": "invalid-wall-batch",
+    "pips": 0,
+  }
+
+ ❯ tests/multiplayer-map-observer.test.js:123:25
+    121|   it.each(corruptions)('rejects corrupted $attribute on a tier $level …
+    122|     const state = drawing(straightRows(profile)), geometry = state.mes…
+    123|     expect(read(state)).toEqual({level: profile.level, pips: 0, mode: …
+       |                         ^
+    124|     if (attribute === 'index') geometry.index.array[geometry.index.arr…
+    125|     else geometry.getAttribute(attribute).array[geometry.getAttribute(…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/61]⎯
+
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects stale teardown quads for tier 1 horizontal cap
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects stale teardown quads for tier 1 vertical cap
+AssertionError: expected { level: +0, pips: +0, …(1) } to deeply equal { level: 1, pips: +0, …(1) }
+
+- Expected
++ Received
+
+  {
+-   "level": 1,
+-   "mode": "wall-batch",
++   "level": 0,
++   "mode": "invalid-wall-batch",
+    "pips": 0,
+  }
+
+ ❯ tests/multiplayer-map-observer.test.js:131:25
+    129|   it.each(profiles)('rejects stale teardown quads for tier $level $axi…
+    130|     const rows = straightRows(profile), state = drawing(rows);
+    131|     expect(read(state)).toEqual({level: profile.level, pips: 0, mode: …
+       |                         ^
+    132|     rows.splice(1, 1);
+    133|     invalid(state);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/61]⎯
+
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects stale teardown quads for tier 2 horizontal cap
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects stale teardown quads for tier 2 vertical cap
+AssertionError: expected { level: +0, pips: +0, …(1) } to deeply equal { level: 2, pips: +0, …(1) }
+
+- Expected
++ Received
+
+  {
+-   "level": 2,
+-   "mode": "wall-batch",
++   "level": 0,
++   "mode": "invalid-wall-batch",
+    "pips": 0,
+  }
+
+ ❯ tests/multiplayer-map-observer.test.js:131:25
+    129|   it.each(profiles)('rejects stale teardown quads for tier $level $axi…
+    130|     const rows = straightRows(profile), state = drawing(rows);
+    131|     expect(read(state)).toEqual({level: profile.level, pips: 0, mode: …
+       |                         ^
+    132|     rows.splice(1, 1);
+    133|     invalid(state);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[18/61]⎯
+
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects stale teardown quads for tier 3 horizontal cap
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects stale teardown quads for tier 3 vertical cap
+AssertionError: expected { level: +0, pips: +0, …(1) } to deeply equal { level: 3, pips: +0, …(1) }
+
+- Expected
++ Received
+
+  {
+-   "level": 3,
+-   "mode": "wall-batch",
++   "level": 0,
++   "mode": "invalid-wall-batch",
+    "pips": 0,
+  }
+
+ ❯ tests/multiplayer-map-observer.test.js:131:25
+    129|   it.each(profiles)('rejects stale teardown quads for tier $level $axi…
+    130|     const rows = straightRows(profile), state = drawing(rows);
+    131|     expect(read(state)).toEqual({level: profile.level, pips: 0, mode: …
+       |                         ^
+    132|     rows.splice(1, 1);
+    133|     invalid(state);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[19/61]⎯
+
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects stale teardown quads for tier 4 horizontal cap
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects stale teardown quads for tier 4 vertical cap
+AssertionError: expected { level: +0, pips: +0, …(1) } to deeply equal { level: 4, pips: +0, …(1) }
+
+- Expected
++ Received
+
+  {
+-   "level": 4,
+-   "mode": "wall-batch",
++   "level": 0,
++   "mode": "invalid-wall-batch",
+    "pips": 0,
+  }
+
+ ❯ tests/multiplayer-map-observer.test.js:131:25
+    129|   it.each(profiles)('rejects stale teardown quads for tier $level $axi…
+    130|     const rows = straightRows(profile), state = drawing(rows);
+    131|     expect(read(state)).toEqual({level: profile.level, pips: 0, mode: …
+       |                         ^
+    132|     rows.splice(1, 1);
+    133|     invalid(state);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[20/61]⎯
+
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects stale teardown quads for tier 5 horizontal cap
+ FAIL  tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects stale teardown quads for tier 5 vertical cap
+AssertionError: expected { level: +0, pips: +0, …(1) } to deeply equal { level: 5, pips: +0, …(1) }
+
+- Expected
++ Received
+
+  {
+-   "level": 5,
+-   "mode": "wall-batch",
++   "level": 0,
++   "mode": "invalid-wall-batch",
+    "pips": 0,
+  }
+
+ ❯ tests/multiplayer-map-observer.test.js:131:25
+    129|   it.each(profiles)('rejects stale teardown quads for tier $level $axi…
+    130|     const rows = straightRows(profile), state = drawing(rows);
+    131|     expect(read(state)).toEqual({level: profile.level, pips: 0, mode: …
+       |                         ^
+    132|     rows.splice(1, 1);
+    133|     invalid(state);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[21/61]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  61 failed | 90 passed (151)
+   Start at  10:06:58
+   Duration  1.42s (transform 63%, tests 20%, import 17%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.3
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.3
+npm notice To update run: npm install -g npm@12.2.3
+npm notice

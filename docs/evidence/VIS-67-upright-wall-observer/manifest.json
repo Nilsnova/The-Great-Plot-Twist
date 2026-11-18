@@ -1,0 +1,37 @@
+{
+  "scope": "Unchanged original test logs and QA-only review documentation; no browser evidence",
+  "files": {
+    "README.md": {
+      "bytes": 6312,
+      "sha256": "84065a8158aa54338caf5b96a33480e70028316f8d99a9906bbe6d30dbc2c03a"
+    },
+    "before-sha256.txt": {
+      "bytes": 207,
+      "sha256": "d630852e309f830ba18a2770d0a05cd451ce219087d9d818f0716b62cd9a14c1"
+    },
+    "checks.json": {
+      "bytes": 2951,
+      "sha256": "0078a213e1e1378904258147417a4ad1c38fe5a661e3c11a8905e743fe32a04b"
+    },
+    "green-existing.log": {
+      "bytes": 23550,
+      "sha256": "cd47eef825bce53275886d8596281babc1dfbd691e4c37ba7fc1cd47683e940c"
+    },
+    "green-expanded.log": {
+      "bytes": 26379,
+      "sha256": "62c60d666e46662d5996936619ed9ac8cde1d662ef6842604683f8e4406965d6"
+    },
+    "green-final.log": {
+      "bytes": 40112,
+      "sha256": "bbed2ba7a1b845223941d875cc764c4f16a56995b2740e116ac4f3ced117ebc0"
+    },
+    "red-selected.log": {
+      "bytes": 41569,
+      "sha256": "98a27aed80d949c0aefeefb00282461d739885053e4241c44b303113e19fd590"
+    },
+    "red.log": {
+      "bytes": 54447,
+      "sha256": "3221220d48dad46da9eed9657f3bb4f772fec25438a419af62987d75509c66ab"
+    }
+  }
+}
