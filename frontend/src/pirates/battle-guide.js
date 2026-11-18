@@ -25,8 +25,9 @@ import { towerMaxHp } from './tower-health.js';
 import { blocksAsTower } from './tower-obstacles.js';
 import { toScreen } from '../world/pixel-glsl.js';
 import { WALL_LANE_ROWS } from '../island/wall-lanes.js';
+import {projectGround, LEGACY_DEPTH, groundProjectionGlsl} from '../world/projection.js';
 
-const Y = .72; // drawn y per world z (the island's tilt)
+const Y = LEGACY_DEPTH; // existing ground instance geometry is converted together in the vertex shader
 export const GUIDE = Object.freeze({
   routeLimit: 400,     // at most this many steps per route (a route never visits a cell twice)
   heartReach: CONFIG.boarding.heartRadius,
@@ -168,13 +169,17 @@ const SHAPE = { disc: 0, ring: 1, chevron: 2, icon: 3, box: 4, dashed: 5 };
 const ICONS = ['skull', 'heart', 'rubble'];
 const ICON_PX = 64;
 const vertex = /* glsl */`
+${groundProjectionGlsl}
+uniform bool uGround;
 attribute vec4 iPos;attribute vec2 iSize;attribute vec4 iColor;attribute vec4 iUv;
 varying vec2 vLocal;varying vec4 vColor;varying vec2 vUv;varying float vShape;
 void main(){
   vec2 corner=position.xy;vLocal=corner*2.0-1.0;vShape=iPos.w;vColor=iColor;vUv=mix(iUv.xy,iUv.zw,corner);
   vec2 local=(corner-.5)*iSize;float c=cos(iPos.z),s=sin(iPos.z);
   local=vec2(local.x*c-local.y*s,local.x*s+local.y*c);
-  gl_Position=projectionMatrix*viewMatrix*vec4(iPos.xy+local,0.0,1.0);
+  vec2 at=iPos.xy+local;
+  if(uGround)at=projectGround(vec2(at.x,-at.y/${LEGACY_DEPTH.toFixed(8)}));
+  gl_Position=projectionMatrix*viewMatrix*vec4(at,0.0,1.0);
 }`;
 const fragment = /* glsl */`
 uniform sampler2D uIcons;varying vec2 vLocal;varying vec4 vColor;varying vec2 vUv;varying float vShape;
@@ -286,11 +291,13 @@ export function createBattleGuide({ scene, reducedMotion = () => false, characte
   const owned = [], root = new THREE.Group(); root.name = 'battle-guide'; scene.add(root);
   const icons = paintIcons(), blank = icons ? null : new THREE.DataTexture(new Uint8Array([255, 255, 255, 255]), 1, 1);
   if (blank) blank.needsUpdate = true;
-  const material = new THREE.ShaderMaterial({ vertexShader: vertex, fragmentShader: fragment, uniforms: { uIcons: { value: icons ?? blank } },
+  const material = new THREE.ShaderMaterial({ vertexShader: vertex, fragmentShader: fragment, uniforms: { uIcons: { value: icons ?? blank }, uGround: {value: false} },
     transparent: true, premultipliedAlpha: true, depthTest: false, depthWrite: false, toneMapped: false });
-  owned.push(material, icons ?? blank);
+  const groundMaterial = material.clone(); groundMaterial.uniforms.uGround.value = true;
+  groundMaterial.uniforms.uIcons.value = material.uniforms.uIcons.value; // one owned icon texture for both layers
+  owned.push(material, groundMaterial, icons ?? blank);
   // On the ground (over the terrain, under every building and character) and in the air (badges and bars).
-  const ground = createInstances('ground', 1600, material, 9, owned), air = createInstances('air', 160, material, 936, owned);
+  const ground = createInstances('ground', 1600, groundMaterial, 9, owned), air = createInstances('air', 160, material, 936, owned);
   root.add(ground.mesh, air.mesh);
   let clock = 0, disposed = false, key = null, routes = [];
   const still = () => !!reducedMotion();
@@ -334,7 +341,8 @@ export function createBattleGuide({ scene, reducedMotion = () => false, characte
     // A shore wall on the landing would hide under the badge (and its hp bar collide with it): the badge then
     // moves seaward, still inside the ring.
     const [sx, sz] = skullAt(landing, heart, walls, k);
-    air.push(SHAPE.icon, sx, drawnY(sz) + 1.5 * k, 1.8 * k, 1.8 * k, { ...WHITE, a: Math.min(1, alpha + .3) }, { icon: 'skull' });
+    const badge = projectGround(sx, sz);
+    air.push(SHAPE.icon, badge.x, badge.y + 1.5 * k, 1.8 * k, 1.8 * k, { ...WHITE, a: Math.min(1, alpha + .3) }, { icon: 'skull' });
   }
   // D056: one box per run of a wall lane row (every half unit from x0 to x1 on row z, one grid cell round each).
   let laneBoxes = 0;
@@ -350,10 +358,11 @@ export function createBattleGuide({ scene, reducedMotion = () => false, characte
     const pulse = still() ? 1 : 1 + (live ? .08 : .04) * Math.sin(clock * 3), y = drawnY(heart.z), r = 4 * k * pulse;
     ground.push(SHAPE.ring, heart.x, y, r + .3 * k, (r + .3 * k) * Y, { ...DARK, a: .55 });
     ground.push(SHAPE.ring, heart.x, y, r, r * Y, { ...GOLD, a: live ? .95 : .75 });
-    air.push(SHAPE.icon, heart.x, y + 2.4 * k, 2 * k * pulse, 2 * k * pulse, { ...WHITE, a: 1 }, { icon: 'heart' });
+    const badge = projectGround(heart.x, heart.z);
+    air.push(SHAPE.icon, badge.x, badge.y + 2.4 * k, 2 * k * pulse, 2 * k * pulse, { ...WHITE, a: 1 }, { icon: 'heart' });
   }
   function drawWall(wall, attacked) {
-    const y = drawnY(wall.z), half = WALL_FOOTPRINT / 2;
+    const at = projectGround(wall.x, wall.z), half = WALL_FOOTPRINT / 2;
     if (!(wall.hp > 0)) {
       // The gap: the footprint outlined in red dashes on the ground, and the rubble badge over it.
       for (let i = 0; i < 8; i += 2) {
@@ -362,14 +371,14 @@ export function createBattleGuide({ scene, reducedMotion = () => false, characte
           ground.push(SHAPE.box, x, drawnY(z), .36, .3, { ...RED, a: .9 });
         }
       }
-      air.push(SHAPE.icon, wall.x, y + 1.3 * k, 1.5 * k, 1.5 * k, { ...WHITE, a: .95 }, { icon: 'rubble' });
+      air.push(SHAPE.icon, at.x, at.y + 1.3 * k, 1.5 * k, 1.5 * k, { ...WHITE, a: .95 }, { icon: 'rubble' });
       return;
     }
     const bar = wallBar(wall, attacked);
     if (!bar) return;
-    const w = 1.6 * k, h = .22 * k, top = y + 1.45 * k;
-    air.push(SHAPE.box, wall.x, top, w + .14 * k, h + .14 * k, { ...DARK, a: .9 });
-    air.push(SHAPE.box, wall.x - w / 2 * (1 - bar.share), top, w * bar.share, h, { ...BAR[bar.level], a: 1 });
+    const w = 1.6 * k, h = .22 * k, top = at.y + 2.9 * k;
+    air.push(SHAPE.box, at.x, top, w + .14 * k, h + .14 * k, { ...DARK, a: .9 });
+    air.push(SHAPE.box, at.x - w / 2 * (1 - bar.share), top, w * bar.share, h, { ...BAR[bar.level], a: 1 });
   }
 
   return {
@@ -381,6 +390,8 @@ export function createBattleGuide({ scene, reducedMotion = () => false, characte
         thin = !!sparse();
         clock += Math.max(0, Math.min(.1, view.dt || 0));
         const live = view.mode === 'wave', alpha = live ? .95 : GUIDE.previewAlpha;
+        // Village management already shows its precise grid. Combat still draws useful live guidance.
+        if (!live && view.managing === true) { laneBoxes = 0; ground.end(); air.end(); return; }
         if (!live && view.wallLanes !== false) drawLanes(); else laneBoxes = 0; // D056: under everything else
         k = live ? Math.max(1, Math.min(2, Number(characterScale()) || 1)) : 1;
         const landings = view.lanes?.length ? waveLandings(view.lanes) : laneLandings();

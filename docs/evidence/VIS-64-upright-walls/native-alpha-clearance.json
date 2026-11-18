@@ -1,0 +1,382 @@
+{
+  "scope": "Read-only native PNG alpha audit; no image modification or gameplay test. Alpha below16 outside the authored crops is excluded; all alpha>=16 pixels are retained.",
+  "sourceSha256": "38347e0c44d75b59a3fc07748e90bc6d2df769e10de34d2a1376ded6187dc18a",
+  "cropSourceCommit": "15d8362f5e1d93699fcc96074450c2387d5f291b",
+  "rows": [
+    {
+      "level": 1,
+      "states": [
+        {
+          "id": "island-wall",
+          "alpha16NativeBounds": [
+            82,
+            58,
+            250,
+            350
+          ],
+          "newCrop": [
+            78,
+            54,
+            176,
+            300
+          ],
+          "sourceFoot": [
+            88,
+            296
+          ],
+          "retainedAllPixelsAtAlpha16OrAbove": true
+        },
+        {
+          "id": "island-wall-l1-damaged",
+          "alpha16NativeBounds": [
+            55,
+            429,
+            270,
+            728
+          ],
+          "newCrop": [
+            51,
+            425,
+            223,
+            313
+          ],
+          "sourceFoot": [
+            115,
+            309
+          ],
+          "retainedAllPixelsAtAlpha16OrAbove": true
+        },
+        {
+          "id": "island-wall-l1-broken",
+          "alpha16NativeBounds": [
+            49,
+            873,
+            274,
+            981
+          ],
+          "newCrop": [
+            45,
+            869,
+            233,
+            117
+          ],
+          "sourceFoot": [
+            121,
+            113
+          ],
+          "retainedAllPixelsAtAlpha16OrAbove": true
+        }
+      ],
+      "fitBounds": [
+        121,
+        309,
+        112,
+        4
+      ],
+      "nativeToLogicalScale": 0.13592233009708737,
+      "alpha128PostPeakAboveFoot": 2.4720873786407767,
+      "maximumProjectedCapAboveFoot": 1.71,
+      "clearance": 0.7620873786407767
+    },
+    {
+      "level": 2,
+      "states": [
+        {
+          "id": "island-wall-l2",
+          "alpha16NativeBounds": [
+            368,
+            97,
+            556,
+            347
+          ],
+          "newCrop": [
+            364,
+            93,
+            196,
+            261
+          ],
+          "sourceFoot": [
+            97,
+            257
+          ],
+          "retainedAllPixelsAtAlpha16OrAbove": true
+        },
+        {
+          "id": "island-wall-l2-damaged",
+          "alpha16NativeBounds": [
+            358,
+            466,
+            563,
+            733
+          ],
+          "newCrop": [
+            354,
+            462,
+            213,
+            276
+          ],
+          "sourceFoot": [
+            107,
+            272
+          ],
+          "retainedAllPixelsAtAlpha16OrAbove": true
+        },
+        {
+          "id": "island-wall-l2-broken",
+          "alpha16NativeBounds": [
+            355,
+            879,
+            563,
+            980
+          ],
+          "newCrop": [
+            351,
+            875,
+            216,
+            111
+          ],
+          "sourceFoot": [
+            110,
+            107
+          ],
+          "retainedAllPixelsAtAlpha16OrAbove": true
+        }
+      ],
+      "fitBounds": [
+        110,
+        272,
+        106,
+        4
+      ],
+      "nativeToLogicalScale": 0.15441176470588236,
+      "alpha128PostPeakAboveFoot": 2.431985294117647,
+      "maximumProjectedCapAboveFoot": 1.96,
+      "clearance": 0.4719852941176472
+    },
+    {
+      "level": 3,
+      "states": [
+        {
+          "id": "island-wall-l3",
+          "alpha16NativeBounds": [
+            674,
+            43,
+            855,
+            348
+          ],
+          "newCrop": [
+            670,
+            39,
+            189,
+            315
+          ],
+          "sourceFoot": [
+            94,
+            311
+          ],
+          "retainedAllPixelsAtAlpha16OrAbove": true
+        },
+        {
+          "id": "island-wall-l3-damaged",
+          "alpha16NativeBounds": [
+            650,
+            411,
+            874,
+            733
+          ],
+          "newCrop": [
+            646,
+            407,
+            232,
+            331
+          ],
+          "sourceFoot": [
+            118,
+            327
+          ],
+          "retainedAllPixelsAtAlpha16OrAbove": true
+        },
+        {
+          "id": "island-wall-l3-broken",
+          "alpha16NativeBounds": [
+            644,
+            858,
+            875,
+            980
+          ],
+          "newCrop": [
+            640,
+            854,
+            239,
+            132
+          ],
+          "sourceFoot": [
+            124,
+            128
+          ],
+          "retainedAllPixelsAtAlpha16OrAbove": true
+        }
+      ],
+      "fitBounds": [
+        124,
+        327,
+        115,
+        4
+      ],
+      "nativeToLogicalScale": 0.12844036697247707,
+      "alpha128PostPeakAboveFoot": 2.456422018348624,
+      "maximumProjectedCapAboveFoot": 2.21,
+      "clearance": 0.24642201834862387
+    },
+    {
+      "level": 4,
+      "states": [
+        {
+          "id": "island-wall-l4",
+          "alpha16NativeBounds": [
+            977,
+            54,
+            1151,
+            348
+          ],
+          "newCrop": [
+            973,
+            50,
+            182,
+            304
+          ],
+          "sourceFoot": [
+            91,
+            300
+          ],
+          "retainedAllPixelsAtAlpha16OrAbove": true
+        },
+        {
+          "id": "island-wall-l4-damaged",
+          "alpha16NativeBounds": [
+            952,
+            423,
+            1168,
+            731
+          ],
+          "newCrop": [
+            948,
+            419,
+            224,
+            319
+          ],
+          "sourceFoot": [
+            116,
+            315
+          ],
+          "retainedAllPixelsAtAlpha16OrAbove": true
+        },
+        {
+          "id": "island-wall-l4-broken",
+          "alpha16NativeBounds": [
+            948,
+            864,
+            1176,
+            980
+          ],
+          "newCrop": [
+            944,
+            860,
+            236,
+            126
+          ],
+          "sourceFoot": [
+            120,
+            122
+          ],
+          "retainedAllPixelsAtAlpha16OrAbove": true
+        }
+      ],
+      "fitBounds": [
+        120,
+        315,
+        116,
+        4
+      ],
+      "nativeToLogicalScale": 0.13333333333333333,
+      "alpha128PostPeakAboveFoot": 2.4583333333333335,
+      "maximumProjectedCapAboveFoot": 2.36,
+      "clearance": 0.0983333333333336
+    },
+    {
+      "level": 5,
+      "states": [
+        {
+          "id": "island-wall-l5",
+          "alpha16NativeBounds": [
+            1262,
+            31,
+            1454,
+            349
+          ],
+          "newCrop": [
+            1258,
+            27,
+            200,
+            327
+          ],
+          "sourceFoot": [
+            100,
+            323
+          ],
+          "retainedAllPixelsAtAlpha16OrAbove": true
+        },
+        {
+          "id": "island-wall-l5-damaged",
+          "alpha16NativeBounds": [
+            1241,
+            401,
+            1474,
+            731
+          ],
+          "newCrop": [
+            1237,
+            397,
+            241,
+            341
+          ],
+          "sourceFoot": [
+            121,
+            337
+          ],
+          "retainedAllPixelsAtAlpha16OrAbove": true
+        },
+        {
+          "id": "island-wall-l5-broken",
+          "alpha16NativeBounds": [
+            1237,
+            845,
+            1471,
+            981
+          ],
+          "newCrop": [
+            1233,
+            841,
+            242,
+            145
+          ],
+          "sourceFoot": [
+            125,
+            141
+          ],
+          "retainedAllPixelsAtAlpha16OrAbove": true
+        }
+      ],
+      "fitBounds": [
+        125,
+        337,
+        120,
+        4
+      ],
+      "nativeToLogicalScale": 0.12462908011869436,
+      "alpha128PostPeakAboveFoot": 2.4770029673590503,
+      "maximumProjectedCapAboveFoot": 2.4600000000000004,
+      "clearance": 0.017002967359049936
+    }
+  ]
+}

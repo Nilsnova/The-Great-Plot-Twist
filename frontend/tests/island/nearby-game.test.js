@@ -11,6 +11,8 @@ async function openGame(page, base, phone) {
     if (phone) Object.defineProperty(navigator, 'maxTouchPoints', {get: () => 1});
   }, phone);
   await page.goto(`${base}/?islands=fake&fakeplayer=t19-test`);
+  await page.addScriptTag({type: 'module', content: 'window.g20Import = path => import(path);'});
+  await page.waitForFunction(() => typeof window.g20Import === 'function');
   await page.locator('#play').click();
   await page.locator('.games-card[open]').getByRole('button', {name: 'Create a game', exact: true}).click();
   await page.locator('.island-card-lobby[open]').getByRole('button', {name: 'Start', exact: true}).click();
@@ -24,9 +26,12 @@ async function openGame(page, base, phone) {
 }
 
 async function clickBuilding(page) {
-  const at = await page.evaluate(() => {
+  const at = await page.evaluate(async () => {
     const g = window.__island, box = g.renderer.domElement.getBoundingClientRect();
-    const point = g.player.position.clone().set(15.5, -14 * .72, 0).project(g.camera);
+    const {projectGround} = await window.g20Import('/src/world/projection.js');
+    const {placedSpot} = await window.g20Import('/src/island/spots.js');
+    const spot = placedSpot('cannon_3', g.island.island.spots), foot = projectGround(spot.x, spot.z);
+    const point = g.player.position.clone().set(foot.x, foot.y, 0).project(g.camera);
     return {x: box.left + (point.x + 1) * box.width / 2, y: box.top + (1 - point.y) * box.height / 2};
   });
   await page.mouse.click(at.x, at.y);

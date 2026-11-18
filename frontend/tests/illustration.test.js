@@ -9,8 +9,9 @@ import { cameraAnchors } from '../src/world/lighthouse.js';
 
 describe('illustrated world contracts', () => {
   it('projects world X/Z consistently and never uses terrain elevation', () => {
-    expect(projectPoint(3, 10).x).toBe(3);
-    expect(projectPoint(3, 10).y).toBeCloseTo(-7.2);
+    // Independent D064 example: 1.3*3 + 0.2*10 = 5.9; -0.6*10 = -6.
+    expect(projectPoint(3, 10).x).toBe(5.9);
+    expect(projectPoint(3, 10).y).toBeCloseTo(-6);
     const art = Object.fromEntries(Object.keys(artSizes).map(name => [name, new THREE.MeshBasicMaterial()]));
     const character = createCharacter(art);
     character.group.position.set(3, 2, 10); character.animate(0, 0);

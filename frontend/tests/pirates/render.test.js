@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { CONFIG, coastPoint, createWave } from '../../src/pirates/sim.js';
 import { ATLAS_IDS, BOARDER_BANDS, MUSKET, createWaveRenderer, packAtlas } from '../../src/pirates/render.js';
 import { pirateDimensions } from '../../src/pixel/pirate-catalog.js';
+import {projectGround} from '../../src/world/projection.js';
 
 const at = (id, kind, bearing, radius) => {
   const p = coastPoint(bearing * Math.PI / 180, radius);
@@ -146,8 +147,8 @@ describe('pirate wave renderer', () => {
     })();
     expect(flashX()).not.toBeNull();
     expect(xs).toHaveLength(2);
-    expect(xs[0]).toBeGreaterThan(3); expect(xs[0]).toBeLessThan(6);   // your muzzle, beside you at x 3
-    expect(xs[1]).toBeGreaterThan(10); expect(xs[1]).toBeLessThan(13); // Ben's, beside his figure at x 10
+    expect(xs[0]).toBeCloseTo(projectGround(3, 0).x + MUSKET.muzzleX * 1.4 + .3);
+    expect(xs[1]).toBeCloseTo(projectGround(10, 5).x + MUSKET.muzzleX * 1.4 + .3);
     renderer.dispose();
   });
   it("puts the muzzle bloom and the cutlass ring at the shooter's body now, else where the sim had them", () => {
@@ -159,9 +160,9 @@ describe('pirate wave renderer', () => {
       { type: 'captain_struck', t: 1, by: 'ben', x: 0, z: 5, toX: 1, toZ: 5 },
       { type: 'captain_struck', t: 1, by: 'nobody', x: -4, z: 5, toX: -5, toZ: 5 }]);
     const [bloom, benRing, loneRing] = calls;
-    expect(bloom[0]).toBe('bloom'); expect(bloom[1]).toBeGreaterThan(3); expect(bloom[1]).toBeLessThan(6);
-    expect(benRing).toEqual(['ring', 10]);
-    expect(loneRing).toEqual(['ring', -4]); // no figure: the sweep ring round where the sim had the captain, and no body
+    expect(bloom[0]).toBe('bloom'); expect(bloom[1]).toBeCloseTo(projectGround(3, 0).x + MUSKET.muzzleX * 1.4);
+    expect(benRing).toEqual(['ring', projectGround(10, 5).x]);
+    expect(loneRing).toEqual(['ring', projectGround(-4, 5).x]); // no figure: same logical captain, projected feet
     renderer.dispose();
   });
 });
