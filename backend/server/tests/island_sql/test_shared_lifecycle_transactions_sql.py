@@ -28,6 +28,10 @@ from server.tests.island_sql.test_islands_and_waves_sql import (  # noqa: E402
 
 @pytest.fixture
 def prepared(database):
+    return prepare(database)
+
+
+def prepare(database):
     owner, member, outsider, treasury = ready(database, 100)
     as_owner(database)
     database.execute(
