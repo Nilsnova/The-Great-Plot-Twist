@@ -7,10 +7,11 @@ import { paintedBlob } from '../primitives.js';
 import { swayMaterial, updateSway } from '../wind.js';
 import { createBeam } from '../beam.js';
 import { places } from './registry.js';
-import { layouts, edgeTrees } from './layouts.js';
+import { layouts, edgeTrees, homeMooring } from './layouts.js';
 import { placeGround } from './surfaces.js';
 import { backdrop, createLifetime, loadBackdrop } from './resources.js';
 import { makeSelectedCanopy } from './selected-canopy.js';
+import { makeMooringRope } from './mooring.js';
 import {projectGround} from '../projection.js';
 
 // Compose all art, colliders and cleanup under one place root for predictable travel disposal.
@@ -18,6 +19,7 @@ export async function createSettlement(ctx) {
   const { id } = ctx;
   const data = places[id];
   const placements = [...(layouts[id] ?? []), ...(ctx.placements ?? [])];
+  const mooring = id === 'home_islet' ? homeMooring : [];
   const trees = edgeTrees[id] ?? [];
   const extraArtIds = [
     ...(id === 'saltreach_harbor' ? ['harbour-office-glow'] : []),
@@ -27,6 +29,7 @@ export async function createSettlement(ctx) {
   ];
   const artIds = [...new Set([
     ...placements.map(placement => placement.asset),
+    ...mooring.map(placement => placement.asset),
     'oak', 'pine', 'birch', 'rock', 'flowers', 'grass-tuft',
     ...extraArtIds,
   ])];
@@ -42,6 +45,14 @@ export async function createSettlement(ctx) {
       if (item.asset === 'ferry-pier') mesh.renderOrder = 6;
       if (item.asset === 'fog-bank') mesh.renderOrder = 920;
     });
+    const [bollard, skiff] = mooring.map(({asset, x, z}) => {
+      const mesh = placeArt(group, art, asset, x, z);
+      mesh.name = asset;
+      mesh.renderOrder = 16;
+      mesh.raycast = () => {};
+      return mesh;
+    });
+    const mooringRope = skiff ? makeMooringRope(group, bollard, skiff) : null;
     const foliage = trees.map(([x, z], i) => {
       const mesh = placeArt(group, art, ['oak', 'pine', 'birch'][i % 3], x, z);
       // Smaller home canopies reveal walls; house growth multiplies this visual baseline.
@@ -107,6 +118,10 @@ export async function createSettlement(ctx) {
         if (stormFlag) stormFlag.visible = stormFlagShouldShow(state);
       }, dispose,
     };
+    if (mooringRope) {
+      // The southwest wave approach crosses the skiff; the beach post stays on the sand.
+      place.setMooringBattle = active => { skiff.visible = mooringRope.visible = !active; };
+    }
     ctx.decorate?.(place, art, cleanups);
     if (id === 'home_islet' || id === 'saltreach_harbor') {
       const life = createHarborLife({ place, art, ctx });

@@ -359,6 +359,7 @@ export function decorateIsland(place, ctx = {}) {
     if (disposed) return;
     if (battle || feedbackScope !== state.feedbackScope) clearWallFeedback();
     state = {spots, visitor, battle, unlocks, crew, campaign, arsenal: arsenal === true, feedbackScope};
+    place.setMooringBattle?.(battle);
     if (battle || visitor) {
       defenseRange?.show(null);
       place.setSelectedCanopy?.(null);
@@ -609,6 +610,7 @@ export function decorateIsland(place, ctx = {}) {
       defenseRange?.dispose();
       place.setSelectedCanopy?.(null);
       wallFeedback?.dispose();
+      place.setMooringBattle?.(false);
       for (const id of [...shown.keys()]) clear(id);
       for (const item of lockTextures.values()) item.texture.dispose(); // the padlocks a spot no longer shows
       if (art) Object.values(art).forEach(material => { material.map?.dispose(); material.dispose(); });
