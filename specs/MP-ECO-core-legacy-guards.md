@@ -44,6 +44,12 @@ Private aliases are captured only if absent; a wrapper must never be captured as
 
 Use the current MP-ECO-02 treasury/scope primitives and MP-ECO-07 global personal guard. The tested dependency cut is published treasury `feca459f` (schema migration version `20261118050050`), personal Captain `4005fb53`, construction `42f1b880` with its grant protection in `6646a842`, and main `3482c281`. MP-ECO-04 provides its self-contained `20261118050401` construction/kit guards and actor/target ordering protection; this migration does not define a kit wrapper or kit alias. This migration does not rewrite those functions or install the separate coherent snapshot migration.
 
+The current review base also includes [MP-ECO-05 progression](MP-ECO-05-island-progression.md).
+Its research wrapper and this component's respec wrapper share the historical migration
+contract tests, so both final definitions must be checked together. The latest research
+definition is exactly `20261118050501`; the latest checked respec is exactly `20261118050701`.
+The current combined dependency verification is recorded below.
+
 No wave, arsenal, paid-repair, deletion or historical completion API is invented. Their canonical session, frozen loadout, source settlement and retention integrations remain explicit gates. Unsupported legacy personal/reset actions may refuse after adoption while their stored historical receipts remain unchanged. Kit grants are ordinary original private-origin rewards and never transfer into a treasury.
 
 ## Acceptance and first tests
@@ -111,4 +117,29 @@ behavior, exact child-proof refusal rollback and private alias execution checks.
 initial source-review run of the two core PostgreSQL modules passed **35 tests in 6.66
 seconds**. No demonstrated guard defect was found in this review. These checks retain the
 same bounded scope; canonical session/HTTP integration, live schema and human approval
+remain separate.
+
+## Progression prerequisite verification
+
+The review base is `feat/mp-eco-05-research` at `b9723adc`, including construction
+`58a66646` and main `f606412f`. Production core-guard SQL is unchanged. The shared historical
+contract test retains every respec pricing/body/alias assertion and the original research
+recovery checks, and adds the progression wrapper's scope, refusal, private capture and
+delegation checks. It pins both latest wrappers without skipped or conditional assertions.
+
+Commands from `backend/`:
+
+```bash
+uv run --no-sync pytest -q server/tests/test_respec_wave_guards_match_migration.py server/tests/test_economy_progression.py server/tests/test_house_roles_match_migration.py server/tests/test_migration_versions.py server/tests/test_islet_routes.py server/tests/test_islet_store.py server/tests/test_entry_kits.py server/tests/test_entry_profiles_match_migration.py
+CASE_PG_SCRATCH=1 uv run --no-sync --with pgserver --with 'psycopg[binary]' --with pglast pytest -q server/tests/island_sql/test_economy_core_legacy_guards_sql.py server/tests/island_sql/test_economy_core_legacy_guard_races_sql.py server/tests/island_sql/test_economy_progression_sql.py server/tests/island_sql/test_shared_construction_sql.py server/tests/island_sql/test_shared_construction_grant_races_sql.py server/tests/island_sql/test_respec_and_wave_guards_sql.py server/tests/island_sql/test_captain_tree_sql.py server/tests/island_sql/test_island_fresh_start_sql.py --tb=short
+uv run --no-sync ruff check .
+```
+
+The Python selection passed **265 tests in 6.28 seconds**. The mixed PostgreSQL selection
+passed **196 tests in 30.84 seconds**, without skips, applying the full migration chain
+twice. This checks progression, legacy aliases, construction child-proof rollback and real
+admission/grant/build ordering in one process. Backend-wide Ruff passed; **79 migration
+files** parsed with unique versions. The complete comparison against the progression
+prerequisite contains only the five core component paths. Full backend/browser acceptance,
+registered shared HTTP/canonical lifecycle integration, live migration and human approval
 remain separate.
