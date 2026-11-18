@@ -31,7 +31,6 @@ ALIASES = {
     "island_respec_at_level": "uuid,text,integer",
     "island_open": "uuid,text,bigint",
     "island_fresh_start": "uuid,text,text,integer",
-    "grant_entry_kit": "uuid,text,text,boolean,text,text,bigint,integer,text",
 }
 
 
@@ -220,6 +219,20 @@ def test_kit_grant_and_first_ending_replay_preserve_an_already_managed_captain(d
 def test_removed_unchecked_respec_is_not_resurrected(database):
     assert database.execute(
         "select to_regprocedure('public.island_respec(uuid,text,integer)')"
+    ).fetchone() == (None,)
+
+
+def test_required_construction_kit_alias_is_private_without_a_core_kit_wrapper(database):
+    arguments = "uuid,text,text,boolean,text,text,bigint,integer,text"
+    alias = f"public.grant_entry_kit_legacy_personal({arguments})"
+    assert database.execute("select to_regprocedure(%s) is not null", (alias,)).fetchone() == (
+        True,
+    )
+    assert database.execute(
+        "select has_function_privilege('service_role',%s,'execute')", (alias,)
+    ).fetchone() == (False,)
+    assert database.execute(
+        "select to_regprocedure(%s)", (f"public.grant_entry_kit_core_legacy_personal({arguments})",)
     ).fetchone() == (None,)
 
 

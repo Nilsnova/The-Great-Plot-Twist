@@ -1,6 +1,6 @@
 # MP-ECO core: atomic legacy entry guards
 
-> **What this is:** database fences for legacy own-islet, Captain, open and reset entry points, plus ordering-only protection for kit grants.
+> **What this is:** database fences for legacy own-islet, Captain, open and reset entry points, using the existing construction/kit ordering protection.
 >
 > **Who uses it:** the core API integration and the reviewer checking legacy compatibility before personal-v1 routing.
 
@@ -16,7 +16,7 @@
 
 Legacy `islet_build` writes the same asset family as island construction but has no persisted shared-economy fence. Old Captain buttons and reset can modify legacy mirrors or charge private coins after global personal-v1 adoption. `island_open` can grant private starting money even when an island already exists. HTTP preflight cannot protect calls already inside old SQL.
 
-The additive migration `20261118050701_island_economy_legacy_guards.sql` preserves each supported original body once as a private alias, revokes direct alias access including `service_role`, and replaces only these existing entry points:
+The additive migration `20261118050701_island_economy_legacy_guards.sql` preserves each supported original body once as a private alias, revokes direct alias access including `service_role`, and replaces only these seven existing entry points:
 
 | Function and exact arguments | Handling |
 |---|---|
@@ -27,7 +27,6 @@ The additive migration `20261118050701_island_economy_legacy_guards.sql` preserv
 | `island_respec_at_level(uuid,text,integer)` | Same guard; no paid legacy respec or role clearing for managed actors. |
 | `island_open(uuid,text,bigint)` | Shared owner refuses; managed existing legacy island returns the original read-only open shape with `created:false,paid:0`; managed absent island refuses. Truly unadopted legacy creation/grant is preserved. |
 | `island_fresh_start(uuid,text,text,integer)` | Shared/managed unsupported reset refuses. Previously stored receipts/history are retained; this increment invents no historical acknowledgement. |
-| `grant_entry_kit(uuid,text,text,boolean,text,text,bigint,integer,text)` | Ordering-only actor scope before its original profile/wallet body. Original grants, first-ending result and exact repeat behavior stay intact. |
 
 `island_respec(uuid,text,integer)` was dropped by `20261113010000_respec_and_wave_guards.sql`; this migration does not recreate it. Every active overload is verified against the disposable database.
 
@@ -35,7 +34,7 @@ The additive migration `20261118050701_island_economy_legacy_guards.sql` preserv
 
 The mode/profile guard takes the actor's class-zero island-economy advisory scope before legacy wallet/profile/island locks. It reads persisted admission, including paused admission, rather than a flag or request envelope. Unknown/unavailable schema fails closed. Global personal checks use the existing MP-ECO-07 anchor guard. Missing legacy setup retains the original body’s refusal; it never authorizes a new grant.
 
-Kit and demo use the same `grant_entry_kit` RPC through `game/entry_profile_store.py` and `demo/guests.py`. No other SQL body calls that function. Its original body changes `entry_profiles` and the personal wallet only, not canonical personal-v1 state or Engineer commitment. `demo_guest_admit(uuid)` inserts membership metadata and performs no profile/wallet grant, so it is unchanged. Other observed profile-first crew/demo-record functions move no money.
+The required MP-ECO-04 `20261118050401` migration wraps `grant_entry_kit(uuid,text,text,boolean,text,text,bigint,integer,text)` with ordering-only actor scope, in the same transaction as its construction guards. This protection is required before any wallet/profile legacy guard is active; it cannot wait for later HTTP integration. Original grants, first-ending results and exact repeats remain intact. Kit and demo use that same RPC through `game/entry_profile_store.py` and `demo/guests.py`. No other SQL body calls that function. Its original body changes `entry_profiles` and the personal wallet only, not canonical personal-v1 state or Engineer commitment. `demo_guest_admit(uuid)` inserts membership metadata and performs no profile/wallet grant, so it is unchanged. Other observed profile-first crew/demo-record functions move no money.
 
 Legacy co-op build/upgrade is covered by MP-ECO-04. Its visitor actor and target scopes must be acquired together, sorted by the **distinct signed advisory hash key**, before any old wallet/profile lock. An actor-only grant scope cannot serialize a target-only visitor build. No later actor-scope acquisition after a target lock is accepted as a substitute. Real mixed grant/demo/build and adoption races must verify this dependency.
 
@@ -43,7 +42,7 @@ Private aliases are captured only if absent; a wrapper must never be captured as
 
 ## Dependencies and boundaries
 
-Use the current MP-ECO-02 treasury/scope primitives and MP-ECO-07 global personal guard. The tested dependency cut is treasury `c12407e9`, personal Captain `ba351aa3`, construction `860b7964` and main `03e660fe`. MP-ECO-04 owns its existing `20261118050401` construction guards and actor/target ordering correction. This migration does not rewrite those functions or install the separate coherent snapshot migration.
+Use the current MP-ECO-02 treasury/scope primitives and MP-ECO-07 global personal guard. The tested dependency cut is published treasury `feca459f` (schema migration version `20261118050050`), personal Captain `ba351aa3`, construction `c6f9a47b` with its grant protection in `6646a842`, and main `3482c281`. MP-ECO-04 provides its self-contained `20261118050401` construction/kit guards and actor/target ordering protection; this migration does not define a kit wrapper or kit alias. This migration does not rewrite those functions or install the separate coherent snapshot migration.
 
 No wave, arsenal, paid-repair, deletion or historical completion API is invented. Their canonical session, frozen loadout, source settlement and retention integrations remain explicit gates. Unsupported legacy personal/reset actions may refuse after adoption while their stored historical receipts remain unchanged. Kit grants are ordinary original private-origin rewards and never transfer into a treasury.
 
@@ -58,27 +57,29 @@ No wave, arsenal, paid-repair, deletion or historical completion API is invented
 
 ## Verification
 
-The direct negative regression selection was first observed as **10 failed** against the unguarded database, then **34 core PostgreSQL cases passed in 4.58s** with the real treasury, Captain and construction dependencies. Races observe actual PostgreSQL advisory/transaction lock waits on separate connections; a timed future alone is not counted as proof of entering the gate. No test-only replacement grant, profile hook or construction function is installed.
+The direct negative regression selection was first observed as **10 failed** against the unguarded database. The current **34 core PostgreSQL cases** pass within the combined checks below, including the required private construction-kit alias and absence of a core-kit alias. That dependency check was also observed failing before the construction grant protection was present. Races observe actual PostgreSQL advisory/transaction lock waits on separate connections; a timed future alone is not counted as proof of entering the gate. No test-only replacement grant, profile hook or construction function is installed.
 
 Commands below ran from `backend/` with locked dependencies and a writable UV cache:
 
 ```bash
-CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' --with pglast pytest -q server/tests/island_sql/test_economy_core_legacy_guards_sql.py server/tests/island_sql/test_economy_core_legacy_guard_races_sql.py server/tests/island_sql/test_island_treasury_sql.py server/tests/island_sql/test_economy_operations_sql.py server/tests/island_sql/test_economy_operations_cutover_sql.py server/tests/island_sql/test_personal_captain_sql.py server/tests/island_sql/test_personal_captain_operations_sql.py server/tests/island_sql/test_shared_construction_sql.py
+CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' --with pglast pytest -q server/tests/island_sql/test_economy_core_legacy_guards_sql.py server/tests/island_sql/test_economy_core_legacy_guard_races_sql.py server/tests/island_sql/test_island_treasury_sql.py server/tests/island_sql/test_economy_operations_sql.py server/tests/island_sql/test_economy_operations_cutover_sql.py server/tests/island_sql/test_personal_captain_sql.py server/tests/island_sql/test_personal_captain_operations_sql.py server/tests/island_sql/test_shared_construction_sql.py server/tests/island_sql/test_shared_construction_grant_races_sql.py
 ```
 
-**175 passed in 31.66s.**
+**182 passed in 38.72s.**
 
 ```bash
 CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' --with pglast pytest -q server/tests/island_sql/test_tower_defense_sql.py server/tests/island_sql/test_captain_skills_sql.py server/tests/island_sql/test_captain_tree_sql.py server/tests/island_sql/test_respec_and_wave_guards_sql.py server/tests/island_sql/test_island_fresh_start_sql.py server/tests/island_sql/test_islands_and_waves_sql.py
 ```
 
-**79 passed in 4.24s.** These two invocations deliberately use fresh disposable processes. A combined run produced 252 passes and two legacy global-count failures because existing Captain race fixtures retain committed synthetic rows in the shared cluster. Running the unchanged legacy assertions in their clean process passed; no production guard or assertion was weakened. Both new core modules register their own isolated race fixture.
+**79 passed in 4.89s.** These two invocations deliberately use fresh disposable processes. An earlier combined run produced 252 passes and two legacy global-count failures because existing Captain race fixtures retain committed synthetic rows in the shared cluster. Running the unchanged legacy assertions in their clean process passed; no production guard or assertion was weakened. Both new core modules register their own isolated race fixture.
+
+The construction dependency was also independently checked with `20261118050701` absent: `CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q server/tests/island_sql/test_shared_construction_grant_races_sql.py` gave **7 passed in 5.31s**. These real intro/demo grant versus visiting build/upgrade cases, reverse ordering, first-ending replay and alias permissions establish that construction does not depend on a later core migration for its grant ordering.
 
 ```bash
-uv run pytest -q server/tests/test_island_routes.py server/tests/test_personal_captain.py server/tests/test_captain_progression_routes.py server/tests/test_referee.py server/tests/test_entry_kits.py server/tests/test_entry_profiles_match_migration.py server/tests/test_demo_join.py server/tests/test_demo_gate.py server/tests/test_islet_routes.py server/tests/test_islet_store.py
+uv run pytest -q server/tests/test_island_routes.py server/tests/test_personal_captain.py server/tests/test_captain_progression_routes.py server/tests/test_referee.py server/tests/test_entry_kits.py server/tests/test_entry_profiles_match_migration.py server/tests/test_demo_join.py server/tests/test_demo_gate.py server/tests/test_islet_routes.py server/tests/test_islet_store.py server/tests/test_migration_versions.py
 uv run ruff check .
 ```
 
-**449 passed in 15.35s; backend-wide Ruff passed.** The documented PostgreSQL parser accepted all **74 migration files**. The scratch runner executes the complete chain twice. Own new files pass `git diff --check`; unrelated incoming evidence whitespace was not edited.
+**450 passed in 15.72s; backend-wide Ruff passed.** The documented PostgreSQL parser accepted all **74 migration files with 74 unique versions**. The scratch runner executes the complete chain twice. Own new files pass `git diff --check`; unrelated incoming evidence whitespace was not edited.
 
 No live credentials/database, Supabase migration-history application, complete browser suite or exhaustive unrelated backend matrix was used. Migration-version allocation and deployment readiness still require the release checks; direct execution of SQL files is not a test of Supabase migration-history bookkeeping. Core HTTP dispatch, canonical sessions/arsenal/repair/settlements and authenticated multi-client acceptance remain outside this guard foundation.
