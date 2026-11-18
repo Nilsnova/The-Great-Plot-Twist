@@ -145,3 +145,9 @@ has no service/browser execute right after complete migration reapplication.
 The construction, entry-profile, intro and demo Python checks passed **257 cases** in
 11.61 seconds; full backend Ruff passed. No later core migration was present in this
 standalone verification worktree.
+
+After integration of treasury schema version `20261118050050`, the standalone construction
+and grant suites passed **57 PostgreSQL cases** in 17.52 seconds. Construction, migration
+version, entry, intro and demo Python checks passed **258 cases** in 23.63 seconds. Full
+Ruff passed, and all **72 migration versions** were unique and parsed successfully. The
+owned runtime source was unchanged by this dependency merge.
