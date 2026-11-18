@@ -16,12 +16,18 @@ it('shows the Use button only when something is in reach, and presses E with it'
     controls.update('cannon_1', true, 'Upgrade Cannon');
     const near = {hidden: use().hidden, disabled: use().disabled, text: use().textContent, label: use().getAttribute('aria-label')};
     use().click();
+    controls.update('cannon_1', true, 'Upgrade Cannon', true);
+    const during = {text: use().textContent, label: use().getAttribute('aria-label')};
+    use().click();
+    controls.update('cannon_1', true, 'Upgrade Cannon');
+    const restored = use().textContent;
     controls.update(null, true);
     const away = use().hidden;
     controls.dispose();
-    return {none, near, presses, away};
+    return {none, near, during, restored, presses, away};
   });
-  expect(result).toEqual({none: {hidden: true, disabled: true}, near: {hidden: false, disabled: false, text: 'Use', label: 'Use: Upgrade Cannon'}, presses: ['KeyE'], away: true});
+  expect(result).toEqual({none: {hidden: true, disabled: true}, near: {hidden: false, disabled: false, text: 'Use', label: 'Use: Upgrade Cannon'},
+    during: {text: 'Upgrade Cannon', label: 'Use: Upgrade Cannon'}, restored: 'Use', presses: ['KeyE', 'KeyE'], away: true});
 });
 
 it('hangs the prompt over the building and says "Walk closer" next to a far click', async () => {

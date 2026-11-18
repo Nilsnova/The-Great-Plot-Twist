@@ -38,6 +38,10 @@
 .hud.hud-play .interact.floating{bottom:auto;transform:translate(-50%,-100%);pointer-events:none;white-space:nowrap}
 .hud-play .interact-nudge{position:absolute;transform:translate(-50%,-100%);padding:7px 14px;font:700 16px/1.3 var(--u-font);color:var(--u-text,#fff0c5);background:var(--u-sea);box-shadow:var(--u-frame);border-radius:var(--u-radius-sm);pointer-events:none;white-space:nowrap}
 .hud-play .interact strong{font:600 17px/1.35 var(--u-font)}
+.hud-play .interact.combat-context{gap:6px;padding:4px 8px 4px 4px}
+.hud-play .interact.combat-context kbd{min-width:24px;height:24px;padding:0 4px;font-size:14px}
+.hud-play .interact.combat-context strong{font-size:14px}
+@media(pointer:coarse){.hud-play .interact.combat-context{display:none}}
 .hud-play .presence-hud{display:none}
 
 /* The pause menu's status line (place · weather · time), moved here from the HUD. */
