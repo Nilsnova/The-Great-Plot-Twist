@@ -295,7 +295,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   startNextWave = null, breakSeconds = BREAK_SECONDS, recoveryPlayoutMs = RECOVERY_PLAYOUT_MS,
   loadAuto = readAuto, saveAuto = writeAuto, holdBreak = null, toggleHold = null, reviveCaptain = null,
   createEventArt = defaultEventArt, createFinisherScene = defaultFinisherScene, easyFinishers = readEasy, practiceIdentity = () => null,
-  guide: guideOn = false, createGuide = defaultGuide, recoveryTransport = null } = {}) {
+  guide: guideOn = false, createGuide = defaultGuide, recoveryTransport = null, inspectDefenses = false } = {}) {
   // The captains' poses (src/pirates/poses.js): your character and the teammates' figures fire in their own body.
   const poses = createPoses({ now: () => now() / 1000 });
   const rangeFeedback = createRangeFeedback(), dangerFeedback = createDangerFeedback();
@@ -320,7 +320,34 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   // No place on screen (null: the front door's open water) is not here; a world without place() always is.
   const here = () => !place || (world.place ? world.place() : place) === place;
   const blocked = () => !!world.isBlocked?.();
+  const canInspect = current => inspectDefenses && current?.shown && here() && !current.done
+    && current.state.phase === 'running' && !isDown(current) && !finishing(current)
+    && !current.catchingUp && !current.recoveryInvalid && current.state.towers.length > 0;
+  const focusCanvas = () => world.canvas?.focus?.({preventScroll: true});
+  function closeDefenseInspection(current, restoreFocus = false) {
+    if (!current?.defenseSelection) return false;
+    current.defenseSelection = null;
+    current.hud?.inspectDefense?.(null);
+    if (restoreFocus) focusCanvas();
+    return true;
+  }
+  function openDefenseInspection() {
+    const current = wave;
+    if (!canInspect(current)) return false;
+    const options = current.state.towers.map(({id,kind,level}) => ({id,kind,level}));
+    current.defenseSelection = {id: options[0].id, options};
+    return true;
+  }
+  function updateDefenseInspection(current, active, danger) {
+    const selected = current.defenseSelection;
+    if (!selected) return null;
+    const coverage = active && !danger?.critical && canInspect(current) ? current.sim.attackCoverage(selected.id) : null;
+    if (!coverage) { closeDefenseInspection(current); return null; }
+    current.hud?.inspectDefense?.({options: selected.options, coverage});
+    return coverage;
+  }
   function clearLiveFeedback(){
+    closeDefenseInspection(wave);
     if(wave){wave.liveFeedback.clear();wave.feedbackReady=false;}
     poses.clear();
   }
@@ -468,6 +495,15 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
         onHold: () => { try { toggleHold?.(); } catch (error) { console.error(error); } },
         onShoot: held => { shootHeld = held === true; if (held) shootPressed = true; },
         onRangePreview: value => { rangePreview = value === true; },
+        ...(inspectDefenses ? {inspectDefenses: {
+          onSelect: id => {
+            const selected = current.defenseSelection;
+            if (wave !== current || !selected?.options.some(option => option.id === id)) return;
+            selected.id = id;
+            focusCanvas();
+          },
+          onClose: () => { if (wave === current) closeDefenseInspection(current, true); },
+        }} : {}),
         reducedMotion })).then(hud => {
         if (disposed || wave !== current || current.finished) hud?.dispose(); else current.hud = hud;
       }).catch(error => console.error(error));
@@ -1556,6 +1592,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
       actorId: actorId(current), nowMs: now() });
     current.hud?.rangeFeedback?.(range);
     current.hud?.danger?.(danger.warning);
+    const defenseCoverage = updateDefenseInspection(current, activeFeedback, danger.warning);
     if (danger.sound) cue('pirate-danger');
     current.hud?.health?.(me && !current.done && current.shown ? { hp: me.hp, maxHp: me.maxHp, down: me.down } : null);
     current.hud?.down?.(fallen && current.shown ? { seconds: Math.max(0, Math.floor(current.state.time - (me.downAt ?? current.state.time))),
@@ -1564,6 +1601,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     const captain = player && current.shown && !current.done ? { id: actorId(current), x: player.x, z: player.z, share: captainShare(current), down: fallen } : null;
     current.renderer?.update({ state: drawnState(current), simTime, dt, captain, figures,
       combatFeedback: { range, danger: danger.warning, player },
+      defenseCoverage,
       revive: current.revive && !current.revive.paying ? { targetId: current.revive.targetId, share: current.revive.share } : null });
     if (shake > 0 && world.camera) {
       const t = now() / 1000;
@@ -1719,6 +1757,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     if (!current) return;
     if (!disposed && current.recoveryFinishPending && !current.recoveryDetached) handOffRecoveryFinish(current);
     wave = null; current.finished = true;
+    closeDefenseInspection(current);
     rangeFeedback.reset(); dangerFeedback.reset(); rangePreview = false;
     if (world.camera?.userData) { delete world.camera.userData.battleZoom; delete world.camera.userData.battleFocus; }
     current.renderer?.dispose(); current.hud?.dispose(); current.schedule.clear(); current.liveFeedback.clear(); poses.clear();
@@ -1728,6 +1767,9 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
 
   return {
     start, update,
+    openDefenseInspection,
+    closeDefenseInspection: () => closeDefenseInspection(wave, true),
+    get canInspectDefense() { return !!canInspect(wave); },
     get wave() { return wave; },
     get state() { return wave?.state ?? null; },
     get recoveryCombatState() {

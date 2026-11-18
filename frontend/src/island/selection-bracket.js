@@ -1,9 +1,9 @@
-// Selected tile corners are screen-facing strips, independent of paid Move state and collision.
+// Brass corners on the selected building's ground footprint.
 import * as THREE from 'three';
 import {projectGround} from '../world/projection.js';
 
 function cornerGeometry(padding = 0) {
-  const positions = [], indices = [], half = 1, arm = .64, width = .16;
+  const positions = [], indices = [], half = 1, arm = .56, width = .13;
   for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
     const x = sx * half, z = sz * half;
     for (const [ax, az, bx, bz] of [[x - sx * arm, z - sz * width, x, z], [x - sx * width, z - sz * arm, x, z]]) {
@@ -23,21 +23,33 @@ function cornerGeometry(padding = 0) {
 
 export function makeSelectionBracket(root) {
   const group = new THREE.Group(); group.name = 'island-selection-bracket'; group.visible = false; root.add(group);
-  const meshes = [[.055, 0x143b20, 200], [0, 0x78ff43, 201]].map(([padding, color, order]) => {
-    const material = new THREE.MeshBasicMaterial({color, depthTest: false, depthWrite: false, toneMapped: false, transparent: true});
+  // Draw before the buildings, so the back corners can tuck behind their bases.
+  const meshes = [[.043, 0x51351d, 94], [0, 0xf9de95, 95]].map(([padding, color, order]) => {
+    const material = new THREE.MeshBasicMaterial({color, depthTest: false, depthWrite: false,
+      toneMapped: false, transparent: true, opacity: padding ? .86 : .98});
     const mesh = new THREE.Mesh(cornerGeometry(padding), material);
-    mesh.name = padding ? 'selection-corner-outline' : 'selection-corner-green';
+    mesh.name = padding ? 'selection-corner-outline' : 'selection-corner-brass';
     mesh.renderOrder = order; mesh.frustumCulled = false; mesh.raycast = () => {}; group.add(mesh); return mesh;
   });
-  let disposed = false, lastX = null, lastZ = null;
+  let disposed = false, lastX = null, lastZ = null, lastSize = 2, structure = false;
   return {show(anchor) {
     if (disposed) return;
     group.visible = !!anchor && Number.isFinite(anchor.x) && Number.isFinite(anchor.z);
-    if (!group.visible) return;
+    if (!group.visible) { group.userData.spotId = null; group.userData.level = null; return; }
     if (anchor.x !== lastX || anchor.z !== lastZ) {
       const p = projectGround(anchor.x, anchor.z); group.position.set(p.x, p.y, 0); lastX = anchor.x; lastZ = anchor.z;
     }
+    const nextStructure = typeof anchor.kind === 'string' && anchor.kind !== 'wall';
+    const size = nextStructure && Number.isFinite(anchor.size) && anchor.size > 0 ? anchor.size : 2;
+    if (size !== lastSize) { group.scale.set(size / 2, size / 2, 1); lastSize = size; }
+    if (nextStructure !== structure) {
+      structure = nextStructure;
+      // Deep foliage and the structure's own base still draw in front of its ground marker.
+      meshes[0].renderOrder = structure ? 69 : 94; meshes[0].material.opacity = structure ? .74 : .86;
+      meshes[1].renderOrder = structure ? 70 : 95; meshes[1].material.opacity = structure ? .88 : .98;
+    }
     group.userData.spotId = anchor.spotId;
+    group.userData.level = Number.isSafeInteger(anchor.level) && anchor.level > 0 ? anchor.level : null;
   }, dispose() {
     if (disposed) return; disposed = true; group.visible = false; group.removeFromParent();
     for (const mesh of meshes) { mesh.geometry.dispose(); mesh.material.dispose(); }

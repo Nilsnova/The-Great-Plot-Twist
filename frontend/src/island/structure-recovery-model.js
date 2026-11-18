@@ -26,21 +26,6 @@ function formatHp(value) {
   return value.toFixed(12).replace(/0+$/, '').replace(/\.$/, '');
 }
 
-function formatRecoveryDuration(seconds) {
-  if (!Number.isFinite(seconds) || seconds < 0) return null;
-  if (seconds < 1) return 'less than 1 sec';
-
-  const total = Math.ceil(seconds);
-  const hours = Math.floor(total / 3600);
-  const minutes = Math.floor((total % 3600) / 60);
-  const remainder = total % 60;
-  const parts = [];
-  if (hours > 0) parts.push(`${hours} hr${hours === 1 ? '' : 's'}`);
-  if (minutes > 0) parts.push(`${minutes} min`);
-  if (remainder > 0 && hours === 0) parts.push(`${remainder} sec`);
-  return parts.join(' ');
-}
-
 function getStructureHealthBarModel(hpUnits, maxHP) {
   if (!Number.isInteger(hpUnits) || hpUnits < 0 || hpUnits > FULL_HP_UNITS
       || !Number.isFinite(maxHP) || maxHP <= 0) {
@@ -98,17 +83,12 @@ function buildStructureRecoveryView(state, structure, options = {}) {
     && state.remainingPaidUses >= 0 && state.remainingPaidUses <= 3
     ? state.remainingPaidUses
     : null;
-  const freeSeconds = reserved ? null : structure.estimatedFreeSeconds;
   const errorMessage = ERROR_LABELS[options.errorCode] ?? null;
   const actionPending = options.status === 'submitting';
   const coinsKnown = Number.isSafeInteger(options.coins) && options.coins >= 0;
   const canAfford = coinsKnown && fixedPrice !== null && options.coins >= fixedPrice;
   const fundsReason = !coinsKnown ? 'Coins are still loading.'
     : fixedPrice !== null && !canAfford ? `Need ${fixedPrice - options.coins} more coins.` : null;
-  const freeRepairLabel = Number.isFinite(freeSeconds) && freeSeconds >= 0
-    ? `Or wait about ${formatRecoveryDuration(freeSeconds)} for free repair`
-    : null;
-
   return {
     visible: true,
     status: options.status === 'submitting' ? 'submitting' : 'ready',
@@ -124,13 +104,11 @@ function buildStructureRecoveryView(state, structure, options = {}) {
     repairLabel: canQuote ? `Repair now: pay ${fixedPrice} coins` : null,
     repairReasonLabel: fundsReason,
     quotedPrice: fixedPrice,
-    freeRepairLabel,
-    helperLabel: reserved ? null : 'Every building is repaired when a wave ends.',
-    automaticRepairPaused: reserved,
-    statusLabel: reserved ? 'Repaired for free when the wave ends' : null,
+    helperLabel: null,
+    statusLabel: null,
     remainingPaidUses: remainingUses,
     remainingUsesLabel: reserved && remainingUses !== null
-      ? `${remainingUses === 0 ? 'No' : remainingUses} Repair now use${remainingUses === 1 ? '' : 's'} left this wave`
+      ? `${remainingUses === 0 ? 'No' : remainingUses} shared Repair now use${remainingUses === 1 ? '' : 's'} left this wave`
       : null,
     errorMessage,
     actionPending,
@@ -163,7 +141,6 @@ function isCurrentStructureRecoveryResponse(request, response) {
 
 export {
   buildStructureRecoveryView,
-  formatRecoveryDuration,
   getStructureHealthBarModel,
   isCurrentStructureRecoveryResponse,
 };
