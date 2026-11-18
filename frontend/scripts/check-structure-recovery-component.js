@@ -9,7 +9,9 @@ import { fileURLToPath } from 'node:url';
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const frontendDirectory = path.resolve(scriptDirectory, '..');
-const captureDirectory = path.join(frontendDirectory, 'captures');
+const captureDirectory = process.env.RECOVERY_CAPTURE_DIRECTORY
+  ? path.resolve(frontendDirectory, process.env.RECOVERY_CAPTURE_DIRECTORY)
+  : path.join(frontendDirectory, 'captures');
 const server = await createServer({
   configFile: path.join(frontendDirectory, 'vite.config.js'),
   server: { host: '127.0.0.1', port: 0 },
@@ -31,7 +33,8 @@ try {
   await page.goto(baseUrl + '/tests/fixtures/structure-recovery-preview.html');
   await page.locator('.recovery-card').first().waitFor();
   await page.getByText('45 / 60 HP').waitFor();
-  await page.getByText('Or wait about 2 min 30 sec for free repair').waitFor();
+  await page.locator('#wall-recovery').getByText('All buildings are fully repaired when a wave ends.').waitFor();
+  if (await page.locator('.recovery-free').count() !== 0) throw new Error('Wave-end recovery must not show a gradual-repair estimate');
   await page.getByRole('button', { name: 'Repair now: pay 10 coins' }).click();
   await page.getByText('Preview emitted an intent only; no API call was made.').waitFor();
 
@@ -39,10 +42,12 @@ try {
   if (counts !== 3) throw new Error('Expected three standalone recovery examples, got ' + counts);
   await page.getByText('0 / 80 HP').waitFor();
   await page.getByRole('button', { name: 'Repair now: pay 30 coins' }).waitFor();
-  await page.getByText('2 Repair now uses left this wave').waitFor();
+  await page.getByText('No free repair during this wave. Full HP is restored when it ends.').waitFor();
+  await page.getByText('2 shared Repair now uses left this wave').waitFor();
   await page.getByText('0.00006 / 60 HP').waitFor();
   await page.getByRole('button', { name: 'Repair now: pay 40 coins' }).waitFor();
-  await page.getByText('Or wait about 10 min for free repair').waitFor();
+  await page.locator('#harpoon-recovery').getByText('All buildings are fully repaired when a wave ends.').waitFor();
+  if (await page.locator('.recovery-free').count() !== 0) throw new Error('Tiny-positive HP card must not show a gradual-repair estimate');
   const bar = page.locator('#harpoon-recovery .health-fill');
   const barWidth = await bar.evaluate(element => element.getBoundingClientRect().width);
   if (barWidth < 1) throw new Error('Tiny positive HP did not render at least one visible pixel');

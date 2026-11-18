@@ -9,7 +9,9 @@ import {createServer} from 'vite';
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const frontendDirectory = path.resolve(scriptDirectory, '..');
-const captureDirectory = path.join(frontendDirectory, 'captures');
+const captureDirectory = process.env.RECOVERY_CAPTURE_DIRECTORY
+  ? path.resolve(frontendDirectory, process.env.RECOVERY_CAPTURE_DIRECTORY)
+  : path.join(frontendDirectory, 'captures');
 const server = await createServer({configFile: path.join(frontendDirectory, 'vite.config.js'),
   server: {host: '127.0.0.1', port: 0}});
 let browser;
@@ -40,7 +42,8 @@ try {
 
   await pick('wall_1');
   await page.getByText('45 / 60 HP').waitFor();
-  await page.getByText('Or wait about 2 min 30 sec for free repair').waitFor();
+  await page.getByText('All buildings are fully repaired when a wave ends.').waitFor();
+  assert.equal(await page.locator('.recovery-free').count(), 0, 'between-wave card must not show a gradual-repair estimate');
   await page.getByRole('button', {name: 'Repair now: pay 10 coins'}).waitFor();
   const desktopCardStyle = await page.locator('.island-card').evaluate(element => {
     const style = getComputedStyle(element), button = getComputedStyle(element.querySelector('.kit-button'));
@@ -104,7 +107,9 @@ try {
   await page.waitForFunction(() => window.recoveryFixture.getState().phase === 'preparing');
   await pick('wall_2', {width: 390, height: 844});
   await page.getByText('0 / 60 HP').waitFor();
-  await page.getByText('3 Repair now uses left this wave').waitFor();
+  await page.getByText('No free repair during this wave. Full HP is restored when it ends.').waitFor();
+  await page.getByText('3 shared Repair now uses left this wave').waitFor();
+  await page.getByRole('button', {name: 'Repair now: pay 10 coins'}).waitFor();
   const preparationButton = await page.locator('.recovery-repair').evaluate(element => ({disabled: element.disabled,
     label: element.textContent, card: element.closest('.island-card-build')?.innerText ?? element.parentElement?.parentElement?.innerText ?? '',
     html: element.outerHTML, phase: window.recoveryFixture.getState().phase}));
@@ -121,12 +126,15 @@ try {
     repairCalls: window.recoveryFixture.getCalls().filter(call => call.path === '/api/island/structures/repair')}));
   assert.equal(preparationRepair.state.remainingPaidUses, 2,
     `preparation repair did not advance quota: ${JSON.stringify(preparationRepair)}`);
+  const preparationPaidCall = preparationRepair.repairCalls.at(-1);
+  assert.equal(preparationPaidCall.body.spot, 'wall_2');
+  assert.equal(preparationPaidCall.body.quotedPrice, 10, 'preparation repair must submit the displayed fixed price');
   assert.equal(await page.evaluate(() => window.recoveryFixture.getCalls().filter(call => call.path.endsWith('/health')).length), callsBeforePreparation,
     'preparation paid repair must not submit a combat-health checkpoint');
   await pick('cannon_2');
   await page.getByText('28 / 70 HP').waitFor();
-  await page.getByText('2 Repair now uses left this wave').waitFor();
-  await page.getByText('Automatic repair paused during waves').first().waitFor();
+  await page.getByText('2 shared Repair now uses left this wave').waitFor();
+  await page.getByText('No free repair during this wave. Full HP is restored when it ends.').first().waitFor();
   await page.locator('.island-card').evaluate(element => { element.scrollTop = element.scrollHeight; });
   await save('t59-integrated-preparation-phone.png');
 
@@ -134,7 +142,7 @@ try {
   assert.equal(combat, true, 'controller enters recovery combat from its frozen wave snapshot');
   await pick('cannon_2', {width: 1440, height: 900});
   await page.getByText('28 / 70 HP').waitFor();
-  await page.getByText('Automatic repair paused during waves').first().waitFor();
+  await page.getByText('No free repair during this wave. Full HP is restored when it ends.').first().waitFor();
   await save('t59-integrated-combat-desktop.png');
 
   await page.evaluate(() => window.recoveryFixture.holdEvents());
