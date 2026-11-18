@@ -5,7 +5,7 @@ import {artSizes,projectPoint} from '../art.js';
 import {PRESENCE_LIMITS,captainVariant,placePresenceLabels,resolveActorAsset,samplePosition,selectNearby,shouldSnapSample} from './logic.js';
 import {poseFrame} from '../../pirates/poses.js';
 import {createShotArt} from '../../pirates/shot-art.js';
-import {clamp} from '../../core/math.js';
+const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
 const materialFor=(art,id)=>art[id]??art.explorer;
 function makeMesh(name,material,asset){
   const fallback=asset.startsWith('emote-')?[1.5,1.5,.5]:artSizes.explorer;

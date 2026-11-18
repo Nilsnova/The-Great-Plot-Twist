@@ -15,7 +15,6 @@
 // paid by the server once per player, island and best won wave (backend/server/island/boat.py, boat.json).
 import table from './boat.json';
 import { difficultyFor } from '../finisher/difficulty.js';
-import { clamp } from '../../core/math.js';
 
 export const BOAT = Object.freeze({
   sampleMs: 100,
@@ -27,11 +26,13 @@ export const BOAT = Object.freeze({
   broadside: Object.freeze({ cross: 27, gap: 4, cooldown: 8, bull: 1 / 3, stars: Object.freeze([.25, .5, .75]) }),
   dash: Object.freeze({ fall: 26, ballCost: 2, shelter: 8, ballReach: .8, steer: 115, stars: Object.freeze([.4, .65, .85]) }),
 });
+export const BOAT_GAMES = BOAT.games;
 // The few words of each game (the pictures on the stage say the rest).
 export const GAME_TEXT = Object.freeze({
   broadside: Object.freeze({ title: 'Broadside duel', icon: '💥', hint: 'Fire when a ship is in the gold band' }),
   dash: Object.freeze({ title: 'Treasure dash', icon: '🪙', hint: 'Steer: grab coins, dodge cannonballs' }),
 });
+export const isBoatGame = game => BOAT.games.includes(game);
 
 // A small seeded dice (mulberry32): the same salt, the same sea.
 export function dice(seed) {
@@ -52,6 +53,7 @@ export function boatSalt(code, wave, game) {
 }
 /** The round's numbers at this wave (the boat's two curves in difficulty.js). */
 export const boatDifficulty = (game, wave) => difficultyFor(game, wave);
+const clamp = (value, low, high) => Math.max(low, Math.min(high, value));
 const sortedOf = samples => [...samples].filter(([s]) => Number.isInteger(s) && s >= 0 && s < BOAT.samples).sort((a, b) => a[0] - b[0]);
 
 // ---- Broadside duel ----------------------------------------------------------------------------------
