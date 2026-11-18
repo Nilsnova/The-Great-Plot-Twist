@@ -96,6 +96,13 @@ The broader legacy `npm run test:mp` did not pass: it reached the four-player mu
 
 A response-ordering follow-up adds pure regression checks and real-DOM journeys for an ordinary legacy build preserving an adopted Captain, a remote reset on both owned and visited islands, delayed old GET/POST responses, and late crew/research replies after sailing home. The original code failed the new regressions before the fix. Preserved owned crew below current island unlocks stays visible while hiring remains disabled.
 
+Final response-ordering verification after merging main `f0c64442`:
+
+- The eight pure/API test files listed above, all three economy DOM files plus `economy-ordering-dom.test.js`, the four legacy island DOM/read suites (`first-read-retry`, `visit-and-mode`, `fresh-start-dom`, `demolish-dom`), and the `core-rejoin-load`, `arsenal-context`, `arsenal-dom`, `arsenal`, `captain-card`, `weapon-comparison-dom` and HUD suites passed together: **22 files, 225 tests**.
+- `npm run build` passed with the spoiler guard (250 text files, 12 protected lines).
+- Main's removed legacy weapon shop, stable island rejoin identity and arsenal coin freshness handling are retained.
+- `git diff --check origin/main...HEAD` passed. The previously failed broad multiplayer pose check was not rerun; its limitation above still applies. No authenticated shared-backend execution is claimed.
+
 ## Integration limits
 
 Shared API/event rollout and the remaining card groups are dependencies before activation. Keep personal and island account sources explicit; this bounded projection does not complete all MP-ECO-18 behavior or the economy epic.
