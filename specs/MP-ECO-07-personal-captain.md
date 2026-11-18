@@ -54,7 +54,7 @@ An attached commitment may refer to a historical wave after withdrawal while `as
 
 ### Personal HTTP contract
 
-`backend/server/routes/captain_progression.py` provides GET `/api/captain` and POST `/api/captain/role`, `/skill`, `/respec` as an unregistered router. Application registration is a separate integration step. GET never initializes/imports. Every route uses authenticated `PlayerDep`; no island, payer or client-selected profile owner is accepted.
+`backend/server/routes/captain_progression.py` provides GET `/api/captain` and POST `/api/captain/role`, `/skill`, `/respec` as an unregistered router. Application registration is a separate integration step. GET never initializes/imports; an uninitialized personal profile returns `409 captain_not_initialized`. Every route uses authenticated `PlayerDep`; no island, payer or client-selected profile owner is accepted.
 
 POST requires strict `progressionVersion:1`, canonical decimal-string `expectedRevision`, `actionUid`, and the role/skill for that action. Missing personal version/adoption returns `409 captain_context_required`; a new request with a stale revision returns `409 captain_revision_mismatch`. Malformed/extra fields return the standard validation error. Successful answers are `{captain,skills}` with private no-store caching. There is no coin-based level purchase endpoint.
 
@@ -104,3 +104,7 @@ After merging main `f0c64442` and adding the operation registry dependency:
 The new SQL regressions first reproduced sequential and concurrent cross-domain duplicate execution. They cover refusal rollback, historical mapping refusal, reserved namespaces, exact replay linkage, missing adoption and an injected failure after profile mutation while writing its receipt. Existing Engineer-generation, global assignment and legacy-finish/profile-freeze tests remain in the same SQL run. No router registration, live conversion, production migration or authenticated end-to-end activation is claimed.
 
 The corrected registry cutover (`8a35a58e`) is integrated. Rerunning the four PostgreSQL suites above together with `server/tests/island_sql/test_economy_operations_cutover_sql.py` passed **91 tests**, including populated first-apply/reapply writer-drain races. The same **108 Python tests**, full Ruff and **70-migration** parser check passed again. This proves local dependency compatibility, not migration-tool behavior or live cutover.
+
+The absent-profile GET error matches the canonical MP-ECO-01 contract: `409 captain_not_initialized`. POST context failures remain `captain_context_required`; no router registration or legacy-route wiring is added by this correction.
+
+For that GET correction, `uv run --no-sync pytest -q server/tests/test_captain_progression_routes.py server/tests/test_personal_captain.py` passed **46 tests**; full Ruff and whitespace checks passed. The absent-GET regression failed against the old error code before the correction. Existing POST context/version guards remain covered.

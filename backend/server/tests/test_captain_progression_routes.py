@@ -35,9 +35,9 @@ def test_read_authenticates_personal_owner_and_does_not_import_or_resolve_an_isl
     assert seen[0].url.path.endswith("/personal_captain_context")
 
 
-def test_read_without_adoption_requires_personal_context_and_never_initializes():
+def test_read_without_adoption_returns_not_initialized_and_never_initializes():
     client, seen = client_for({"personal_captain_context": lambda params: {"status": "legacy"}})
-    assert_error(client.get("/api/captain", headers=RIGHT_HEADER), 409, "captain_context_required")
+    assert_error(client.get("/api/captain", headers=RIGHT_HEADER), 409, "captain_not_initialized")
     assert len(seen) == 1 and seen[0].url.path.endswith("/personal_captain_context")
 
 
