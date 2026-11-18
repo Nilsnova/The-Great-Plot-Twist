@@ -98,3 +98,8 @@ Full combined suites, build and reload evidence are recorded with the final stac
 review. No live database audit, migration, payment or deployment has been performed.
 
 Draft review: [#486](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/486), based on #485. Different human approval remains pending.
+
+Final stacked publication evidence: [combined handover](../docs/handoff/return-recovery-2026-11-18.md#publication-verification-on-current-main).
+It records 4,659 passing frontend tests, 13,236 passing backend tests and one reproduced
+unchanged-main Group3 failure, plus the excluded exhaustive settings suite, build and synthetic
+reload captures. Different human approval remains pending.

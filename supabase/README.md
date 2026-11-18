@@ -3289,3 +3289,52 @@ Apply the migration and refresh the PostgREST schema before deploying the API/cl
 it. Review in timestamp order after `20261118050000_paid_revive_journal.sql`; the historical
 reconciliation migration follows at `20261118070000`. These files were applied and reapplied
 only in disposable test databases. No live application, refund or feature activation is claimed.
+
+### Historical paid revival reconciliation
+
+`migrations/20261118070000_revive_reconciliation.sql` adds the service-only
+`recovery_revive_reconcile(payment_id bigint, apply boolean default false)` function. It
+classifies one original `captain_revive` ledger debit; the default uses only reads, takes no
+row locks and works in a read-only transaction. There is no public HTTP route, table, flag,
+wallet reason or automatic schedule. `anon` and `authenticated` cannot execute it.
+
+A confirmed refund requires the exact matching receipt/debit amount and payer, saved recovery
+version 1/protocol 2, retained wave and target identity, a complete readable contiguous journal from
+1 through its head, and consistent terminal records (`closed_at`, object `closed_hp`, and
+`wave_runs.finished_at`). Any potentially matching revival for that target blocks automatic
+refund, including an old unreferenced `captain_input` from another helper. At most 50,001 journal
+rows are inspected per call; larger histories remain unresolved. Late-join identity may come
+from the retained `participant_joined` event. UUID comparisons ignore letter case.
+
+| Classification | Meaning and action |
+|---|---|
+| `confirmed_missing` | Dry-run evidence permits a refund; no coins have moved. |
+| `refunded` / `already_refunded` | The original amount was returned / had already been returned once. |
+| `recorded` / `ambiguous_old_event` | An exact linked event / possibly matching old event exists; no refund. |
+| `pending_active` | The wave is still open; no invented revival or refund. |
+| `ambiguous_legacy` / `orphaned_debit` | Room-only delivery or a deleted receipt cannot establish non-delivery. |
+| `incomplete_history` / `history_too_large` / `missing_target_identity` | Retained evidence is missing, unreadable or inconsistent; no refund. |
+| `payment_mismatch` / `refund_conflict` | Receipt amount or existing compensation conflicts; no refund. |
+| `no_payment` / `not_revive_payment` / `no_wallet` / `missing_wave_history` | The requested original payment cannot be reconciled safely. |
+
+Explicit apply locks the payer wallet, sorted islands, recovery state and wave, then rechecks
+the evidence. It credits exactly the original paid amount through `apply_wallet_transaction`
+with existing reason `admin_adjust` and ref `revive_refund:<original debit id>`. The ledger's
+unique key and wallet lock enforce one refund across retries and concurrent calls. A repeated
+refund remains recognizable after reset deletes the old receipt. A failing ledger insert
+rolls back its balance change. Original receipts, events and closed history stay unchanged.
+
+Use [the operator runner](../docs/handoff/reconcile-historical-revives.sql): it defaults to no
+selected ids and `apply=false`, permits at most 100 explicit ids for dry-run inspection, and
+requires exactly one approved id for apply. One apply per transaction preserves lock order
+across payers. Read the result before any separately authorized production action.
+
+Historical receipts omit helper coordinates and skills; structure checkpoints omit captain
+fall state. Current simulator replay does not prove historical behavior because snapshots do
+not pin its source revision. The tool never invents a missing action. A verified original
+request may separately retry `recovery_wave_revive` with its original UID and valid captured
+position while still eligible; otherwise an active wave remains pending until it closes.
+Legacy/unlinked/reset-orphan cases remain explicitly unresolved. No live database was inspected,
+no migration was applied live and no refund was performed by this implementation. Opt-in checks:
+`CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q
+server/tests/island_sql/test_revive_reconciliation_sql.py` from `backend/`.
