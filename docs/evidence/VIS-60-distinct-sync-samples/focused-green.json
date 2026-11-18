@@ -1,0 +1,16 @@
+{
+  "headBeforeImplementationCommit": "9fb415249e22bee602bab4b8b53ef181b94ff7ce",
+  "helperSha256": "7d080e48790d653f49dbee78c53e5e9560a134dcd2d2cf8aa338bc7e8c31f5f0",
+  "testsSha256": "a6fe842b6c8673e5bb1d90651aed663c6de643ea2683ed47e38c3d43ba2786eb",
+  "command": [
+    "npm",
+    "test",
+    "--",
+    "--maxWorkers=1",
+    "--reporter=verbose",
+    "tests/multiplayer-sync-samples.test.js"
+  ],
+  "started": "2026-11-18T01:16:07.760810+00:00",
+  "exitCode": 0,
+  "seconds": 1.31
+}

@@ -1,0 +1,19 @@
+{
+  "source": "ab78a10a33e84c06dae3b211f0e112509272d61b",
+  "helperSha256": "7d080e48790d653f49dbee78c53e5e9560a134dcd2d2cf8aa338bc7e8c31f5f0",
+  "nativeEntrySha256": "72e389d9205cf1f37f16de130fc044cd2bff2be6663ad734e6ce328e00708e15",
+  "command": [
+    "npm",
+    "test",
+    "--",
+    "--maxWorkers=1",
+    "--reporter=verbose",
+    "tests/multiplayer-sync-samples.test.js",
+    "tests/multiplayer-sync-wrapper.test.js",
+    "tests/multiplayer-map-observer.test.js",
+    "tests/island/capture-wall-buffers.test.js"
+  ],
+  "started": "2026-11-18T01:21:03.372264+00:00",
+  "exitCode": 0,
+  "seconds": 2.72
+}

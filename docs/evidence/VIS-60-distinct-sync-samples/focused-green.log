@@ -1,0 +1,44 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run --maxWorkers=1 --reporter=verbose tests/multiplayer-sync-samples.test.js
+
+
+ RUN  v5.1.0 /workspace/reference-village-work/sync-sample-observer/frontend
+
+ ✓ tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > uses collected offset-cadence observations discarded by an index stride 4ms
+ ✓ tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > compares only the available late-join overlap without requiring earlier history 1ms
+ ✓ tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > reserves exact matches globally before any nearby tick can consume them 0ms
+ ✓ tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > retains the existing -1 before +1 preference when no exact match exists 1ms
+ ✓ tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > counts repeated paused frames once on both sides 0ms
+ ✓ tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > cannot reuse one right observation as three nearby comparisons 0ms
+ ✓ tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > keeps insufficient and absent observations insufficient 1ms
+ ✓ tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > keeps all mismatch metrics and the original count tolerance 1ms
+ ✓ tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > reports equal-count ID mismatches rather than declaring those IDs equal 1ms
+ ✓ tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > does not mutate inputs and produces stable chronological pairs for reordered histories 1ms
+ ✓ tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > rejects conflicting duplicate ticks on the left 1ms
+ ✓ tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > rejects conflicting duplicate ticks on the right 0ms
+ ✓ tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > rejects malformed left history null 0ms
+ ✓ tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > rejects malformed left history {} 0ms
+ ✓ tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > rejects malformed left history null 0ms
+ ✓ tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > rejects malformed left history {"ticks":-1,"ships":"ship_a","boarders":""} 0ms
+ ✓ tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > rejects malformed left history {"ticks":1.5,"ships":"ship_a","boarders":""} 0ms
+ ✓ tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > rejects malformed left history {"ticks":null,"ships":"ship_a","boarders":""} 1ms
+ ✓ tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > rejects malformed left history {"ticks":"1","ships":"ship_a","boarders":""} 0ms
+ ✓ tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > rejects malformed left history {"ticks":1,"ships":null,"boarders":""} 0ms
+ ✓ tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > rejects malformed left history {"ticks":1,"ships":"ship_a,,ship_b","boarders":""} 0ms
+ ✓ tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > rejects malformed left history {"ticks":1,"ships":"ship_a,ship_a","boarders":""} 0ms
+ ✓ tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > rejects malformed left history {"ticks":1,"ships":"ship_b,ship_a","boarders":""} 0ms
+ ✓ tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > rejects malformed left history {"ticks":1,"ships":" ship_a","boarders":""} 0ms
+ ✓ tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > rejects malformed left history {"ticks":1,"ships":"ship_a","boarders":[]} 0ms
+ ✓ tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > validates unmatched right records too instead of silently ignoring malformed data 0ms
+
+ Test Files  1 passed (1)
+      Tests  26 passed (26)
+   Start at  01:16:08
+   Duration  268ms (transform 38%, tests 26%, import 26%, worker 9%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.3
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.3
+npm notice To update run: npm install -g npm@12.2.3
+npm notice

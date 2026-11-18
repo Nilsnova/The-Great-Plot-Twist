@@ -1,0 +1,22 @@
+{
+  "source": "8b901604be03076a70802f7140c80871aa742293",
+  "base": "1d979f005e77392dba9a439e508badbedc3469e2",
+  "unchangedProductAndDependencyTrees": {
+    "frontend/src": "e191d9290088908ee27e82e03a15847d4a73a38e",
+    "frontend/public": "9306942db1050d728799cee2fbdc8e8960f14ad2",
+    "backend": "3956a73d76f537fd7c85259afa4bf9280a6e0ecd",
+    "supabase": "5dfb7a3d506568b2e344c795360a562580854c33",
+    "frontend/package.json": "9666ba96eafa20d8cfb64d11862e57f3c238bb1f",
+    "frontend/package-lock.json": "b37c781f13fa933c454a99f1c8c06db732546596"
+  },
+  "nativeAssertionLinesUnchanged": 72,
+  "assertionLinesSha256": "982e7bdbaa0dfd1f6440ebd0412540a756c7c0500c8e2a239d8127c2b9a95a2b",
+  "waveFilterUnchanged": true,
+  "exactHeartMilitiaBlockSha256": "8b654389803eb41421232802109487625955facef25003b323d753a19d013d24",
+  "collectorBlockSha256": "f7707d9c96f8fe85371ef93c2567aca8c486663f1334451bbe9611a13e462bbc",
+  "nativeActionsAndTimingBlockSha256": "e35735f8cfcabb956785a9fbd3218b774695190041dceedad49c4264da290d97",
+  "failureDiagnosticsAndCleanupSha256": "ffef970a74476c4bd83b50be7e8f81c5cb23d30b0fc2995930134b6309937c45",
+  "comparisonDoesNoDiskIO": true,
+  "terminalWriteSites": 2,
+  "helperLines": 50
+}

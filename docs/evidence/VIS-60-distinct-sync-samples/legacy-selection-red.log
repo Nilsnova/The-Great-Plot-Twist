@@ -1,0 +1,309 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run --maxWorkers=1 --reporter=verbose tests/multiplayer-sync-samples.test.js
+
+
+ RUN  v5.1.0 /workspace/reference-village-work/sync-sample-observer/frontend
+
+ × tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > uses collected offset-cadence observations discarded by an index stride 13ms
+   → expected { checked: +0, same: +0, …(5) } to match object { Object (checked, same, ...) }
+(2 matching properties omitted from actual)
+ × tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > compares only the available late-join overlap without requiring earlier history 2ms
+   → expected [] to deeply equal [ { left: 101, right: 101 }, …(2) ]
+ × tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > reserves exact matches globally before any nearby tick can consume them 2ms
+   → expected [ { left: 9, right: 10 } ] to deeply equal [ { left: 10, right: 10 }, …(1) ]
+ ✓ tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > retains the existing -1 before +1 preference when no exact match exists 1ms
+ ✓ tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > counts repeated paused frames once on both sides 1ms
+ × tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > cannot reuse one right observation as three nearby comparisons 1ms
+   → expected [ { left: 9, right: 10 } ] to deeply equal [ { left: 10, right: 10 } ]
+ × tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > keeps insufficient and absent observations insufficient 1ms
+   → expected 1 to be 2 // Object.is equality
+ × tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > keeps all mismatch metrics and the original count tolerance 1ms
+   → expected { Object (checked, same, ...) } to match object { checked: 3, same: 2, worst: 2, …(3) }
+(1 matching property omitted from actual)
+ ✓ tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > reports equal-count ID mismatches rather than declaring those IDs equal 0ms
+ × tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > does not mutate inputs and produces stable chronological pairs for reordered histories 1ms
+   → expected [ { left: 3, right: 3 } ] to deeply equal [ { left: 1, right: 1 }, …(2) ]
+ × tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > rejects conflicting duplicate ticks on the left 2ms
+   → expected [Function] to throw an error
+ × tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > rejects conflicting duplicate ticks on the right 1ms
+   → expected [Function] to throw an error
+ ✓ tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > rejects malformed left history null 1ms
+ ✓ tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > rejects malformed left history {} 0ms
+ ✓ tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > rejects malformed left history null 0ms
+ × tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > rejects malformed left history {"ticks":-1,"ships":"ship_a","boarders":""} 0ms
+   → expected [Function] to throw an error
+ × tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > rejects malformed left history {"ticks":1.5,"ships":"ship_a","boarders":""} 1ms
+   → expected [Function] to throw an error
+ × tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > rejects malformed left history {"ticks":null,"ships":"ship_a","boarders":""} 0ms
+   → expected [Function] to throw an error
+ × tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > rejects malformed left history {"ticks":"1","ships":"ship_a","boarders":""} 1ms
+   → expected [Function] to throw an error
+ ✓ tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > rejects malformed left history {"ticks":1,"ships":null,"boarders":""} 0ms
+ × tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > rejects malformed left history {"ticks":1,"ships":"ship_a,,ship_b","boarders":""} 0ms
+   → expected [Function] to throw an error
+ × tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > rejects malformed left history {"ticks":1,"ships":"ship_a,ship_a","boarders":""} 2ms
+   → expected [Function] to throw an error
+ × tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > rejects malformed left history {"ticks":1,"ships":"ship_b,ship_a","boarders":""} 0ms
+   → expected [Function] to throw an error
+ × tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > rejects malformed left history {"ticks":1,"ships":" ship_a","boarders":""} 0ms
+   → expected [Function] to throw an error
+ ✓ tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > rejects malformed left history {"ticks":1,"ships":"ship_a","boarders":[]} 1ms
+ × tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > validates unmatched right records too instead of silently ignoring malformed data 1ms
+   → expected [Function] to throw an error
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 18 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > uses collected offset-cadence observations discarded by an index stride
+AssertionError: expected { checked: +0, same: +0, …(5) } to match object { Object (checked, same, ...) }
+(2 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "checked": 3,
+-   "same": 3,
+-   "sameBoarders": 3,
++   "checked": 0,
++   "same": 0,
++   "sameBoarders": 0,
+    "worst": 0,
+    "worstBoarders": 0,
+  }
+
+ ❯ tests/multiplayer-sync-samples.test.js:16:20
+     14|     expect(left.filter((_, i) => i % 10 === 0).map(row => row.ticks)).…
+     15|     const result = compareSyncSamples(left, right);
+     16|     expect(result).toMatchObject({checked: 3, same: 3, worst: 0, sameB…
+       |                    ^
+     17|     expect(result.pairs).toEqual([{left: 104, right: 104}, {left: 108,…
+     18|     expect(qualifies(result)).toBe(true);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/18]⎯
+
+ FAIL  tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > compares only the available late-join overlap without requiring earlier history
+AssertionError: expected [] to deeply equal [ { left: 101, right: 101 }, …(2) ]
+
+- Expected
++ Received
+
+- [
+-   {
+-     "left": 101,
+-     "right": 101,
+-   },
+-   {
+-     "left": 102,
+-     "right": 102,
+-   },
+-   {
+-     "left": 103,
+-     "right": 103,
+-   },
+- ]
++ []
+
+ ❯ tests/multiplayer-sync-samples.test.js:23:26
+     21|   it('compares only the available late-join overlap without requiring …
+     22|     const result = compareSyncSamples(samples([1, 20, 40, 100, 101, 10…
+     23|     expect(result.pairs).toEqual([{left: 101, right: 101}, {left: 102,…
+       |                          ^
+     24|     expect(result.checked).toBe(3);
+     25|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/18]⎯
+
+ FAIL  tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > reserves exact matches globally before any nearby tick can consume them
+AssertionError: expected [ { left: 9, right: 10 } ] to deeply equal [ { left: 10, right: 10 }, …(1) ]
+
+- Expected
++ Received
+
+  [
+    {
+-     "left": 10,
++     "left": 9,
+      "right": 10,
+-   },
+-   {
+-     "left": 11,
+-     "right": 11,
+    },
+  ]
+
+ ❯ tests/multiplayer-sync-samples.test.js:29:26
+     27|   it('reserves exact matches globally before any nearby tick can consu…
+     28|     const result = compareSyncSamples(samples([9, 10, 11]), samples([1…
+     29|     expect(result.pairs).toEqual([{left: 10, right: 10}, {left: 11, ri…
+       |                          ^
+     30|     expect(qualifies(result)).toBe(false);
+     31|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/18]⎯
+
+ FAIL  tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > cannot reuse one right observation as three nearby comparisons
+AssertionError: expected [ { left: 9, right: 10 } ] to deeply equal [ { left: 10, right: 10 } ]
+
+- Expected
++ Received
+
+  [
+    {
+-     "left": 10,
++     "left": 9,
+      "right": 10,
+    },
+  ]
+
+ ❯ tests/multiplayer-sync-samples.test.js:47:26
+     45|   it('cannot reuse one right observation as three nearby comparisons',…
+     46|     const result = compareSyncSamples(samples([9, 10, 11]), samples([1…
+     47|     expect(result.pairs).toEqual([{left: 10, right: 10}]);
+       |                          ^
+     48|     expect(result.checked).toBe(1);
+     49|     expect(qualifies(result)).toBe(false);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/18]⎯
+
+ FAIL  tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > keeps insufficient and absent observations insufficient
+AssertionError: expected 1 to be 2 // Object.is equality
+
+- Expected
++ Received
+
+- 2
++ 1
+
+ ❯ tests/multiplayer-sync-samples.test.js:55:30
+     53|     for (const [left, right, count] of [[[], [], 0], [samples([1, 3]),…
+     54|       const result = compareSyncSamples(left, right);
+     55|       expect(result.checked).toBe(count); expect(qualifies(result)).to…
+       |                              ^
+     56|     }
+     57|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/18]⎯
+
+ FAIL  tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > keeps all mismatch metrics and the original count tolerance
+AssertionError: expected { Object (checked, same, ...) } to match object { checked: 3, same: 2, worst: 2, …(3) }
+(1 matching property omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "checked": 3,
+-   "same": 2,
+-   "sameBoarders": 2,
++   "checked": 1,
++   "same": 0,
++   "sameBoarders": 0,
+    "withBoarders": 1,
+    "worst": 2,
+    "worstBoarders": 2,
+  }
+
+ ❯ tests/multiplayer-sync-samples.test.js:63:20
+     61|     const right = [sample(1, 'ship_a', 'boarder_a'), sample(2), sample…
+     62|     const result = compareSyncSamples(left, right);
+     63|     expect(result).toMatchObject({checked: 3, same: 2, worst: 2, sameB…
+       |                    ^
+     64|     expect(qualifies(result)).toBe(false);
+     65|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/18]⎯
+
+ FAIL  tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > does not mutate inputs and produces stable chronological pairs for reordered histories
+AssertionError: expected [ { left: 3, right: 3 } ] to deeply equal [ { left: 1, right: 1 }, …(2) ]
+
+- Expected
++ Received
+
+  [
+    {
+-     "left": 1,
+-     "right": 1,
+-   },
+-   {
+-     "left": 2,
+-     "right": 2,
+-   },
+-   {
+      "left": 3,
+      "right": 3,
+    },
+  ]
+
+ ❯ tests/multiplayer-sync-samples.test.js:75:26
+     73|     const left = samples([3, 1, 2]), right = samples([2, 3, 1]), befor…
+     74|     const result = compareSyncSamples(left, right);
+     75|     expect(result.pairs).toEqual([{left: 1, right: 1}, {left: 2, right…
+       |                          ^
+     76|     expect(JSON.stringify([left, right])).toBe(before);
+     77|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/18]⎯
+
+ FAIL  tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > rejects conflicting duplicate ticks on the left
+ FAIL  tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > rejects conflicting duplicate ticks on the right
+AssertionError: expected [Function] to throw an error
+
+- Expected:
+null
+
++ Received:
+undefined
+
+ ❯ tests/multiplayer-sync-samples.test.js:81:99
+     79|   it.each(['left', 'right'])('rejects conflicting duplicate ticks on t…
+     80|     const bad = [sample(10), sample(10, 'ship_b')], good = samples([10…
+     81|     expect(() => compareSyncSamples(side === 'left' ? bad : good, side…
+       |                                                                                                   ^
+     82|   });
+     83|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/18]⎯
+
+ FAIL  tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > rejects malformed left history {"ticks":-1,"ships":"ship_a","boarders":""}
+ FAIL  tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > rejects malformed left history {"ticks":1.5,"ships":"ship_a","boarders":""}
+ FAIL  tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > rejects malformed left history {"ticks":null,"ships":"ship_a","boarders":""}
+ FAIL  tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > rejects malformed left history {"ticks":"1","ships":"ship_a","boarders":""}
+ FAIL  tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > rejects malformed left history {"ticks":1,"ships":"ship_a,,ship_b","boarders":""}
+ FAIL  tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > rejects malformed left history {"ticks":1,"ships":"ship_a,ship_a","boarders":""}
+ FAIL  tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > rejects malformed left history {"ticks":1,"ships":"ship_b,ship_a","boarders":""}
+ FAIL  tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > rejects malformed left history {"ticks":1,"ships":" ship_a","boarders":""}
+AssertionError: expected [Function] to throw an error
+ ❯ tests/multiplayer-sync-samples.test.js:87:57
+     85|     [sample(1, null)], [sample(1, 'ship_a,,ship_b')], [sample(1, 'ship…
+     86|     [sample(1, 'ship_b,ship_a')], [sample(1, ' ship_a')], [sample(1, '…
+     87|     expect(() => compareSyncSamples(bad, samples([1]))).toThrow();
+       |                                                         ^
+     88|   });
+     89|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/18]⎯
+
+ FAIL  tests/multiplayer-sync-samples.test.js > all distinct ship and boarder observations > validates unmatched right records too instead of silently ignoring malformed data
+AssertionError: expected [Function] to throw an error
+ ❯ tests/multiplayer-sync-samples.test.js:91:79
+     89|
+     90|   it('validates unmatched right records too instead of silently ignori…
+     91|     expect(() => compareSyncSamples(samples([1]), [sample(500, 'bad,,i…
+       |                                                                               ^
+     92|   });
+     93| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/18]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  18 failed | 8 passed (26)
+   Start at  01:14:54
+   Duration  378ms (transform 40%, tests 40%, import 15%, worker 5%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.3
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.3
+npm notice To update run: npm install -g npm@12.2.3
+npm notice
