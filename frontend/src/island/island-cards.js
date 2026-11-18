@@ -17,8 +17,7 @@ import {withWallRecovery} from './wall-recovery.js';
 import {preparationModel} from './preparation-model.js';
 
 export function createCards(isl) {
-  const {emit, on, focus, resetInput, reducedMotion, preferences, loadBoatScene, openHarborStall, villageCamera,
-    } = isl;
+  const {emit, on, focus, resetInput, reducedMotion, preferences, loadBoatScene, openHarborStall, villageCamera} = isl;
   // From the other parts (island-*.js), linked once every part exists.
   let clearRecoveryError, recoveryPolicyOn, recoveryControlsOn, recoveryModelVersion, readStructureRecovery,
     repairStructure, tellCoins, unlocks, islandUnlocks, campaign, target, where, applyWorld, freshOwn, reloadOwn,
@@ -65,12 +64,12 @@ export function createCards(isl) {
         && recoveryRow.hpUnits === 1_000_000 && recoveryView.repairWindow !== 'reserved_wave'))) {
       model.upgradeComparison = previewDefenseUpgrade({defenses: defenses(island.spots, campaign()?.research?.tiers),
         selectedId: spotId, currentLevel: model.level, gunnerCount: island.crew?.gunner,
-        defensesV2: recoveryPolicyOn() || defensesV2On()});
+        defensesV2: true});
     }
     if (recoveryEnabled && isl.recoveryState?.displayPhase === 'combat' && !live) {
       model.recovery = {visible: false, status: 'error', message: 'Battle health is still loading.'};
     }
-    // D039: a damaged or destroyed wall shows Repair or Rebuild instead of Upgrade (flag wall_recovery).
+    // D039: a damaged or destroyed legacy wall shows Repair or Rebuild instead of Upgrade.
     const shown = isl.wallsFor !== null && isl.wallsFor === island?.code ? isl.walls.get(spotId) ?? null : null;
     return holdOtherBuildingAction(recoveryControlsOn() ? model : withWallRecovery(model, {wall: shown, coins: isl.own?.coins ?? null,
       busy: isl.busySpot === spotId ? isl.busyKind : false, battle: isl.battle && !isl.waveOver}), isl.busySpot);
