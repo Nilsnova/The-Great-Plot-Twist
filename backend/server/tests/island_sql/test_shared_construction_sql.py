@@ -6,7 +6,10 @@ Uses the complete migration chain twice, synthetic members, and real Captain hoo
 import json
 from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
+from pathlib import Path
+from queue import Queue
 from threading import Barrier
+from time import monotonic, sleep
 from uuid import UUID, uuid4
 
 import pytest
@@ -18,6 +21,7 @@ from psycopg.types.json import Jsonb  # noqa: E402
 from server.island.catalogue import CAMPAIGN_FILE, CONTENT_FILE, load_island  # noqa: E402
 from server.island.construction_rules import catalogue_manifest  # noqa: E402
 from server.island.economy_operations import system_uid  # noqa: E402
+from server.tests.case_sql import conftest as postgres_fixture  # noqa: E402
 from server.tests.island_sql.test_island_treasury_sql import (  # noqa: E402
     keys,
     money,
@@ -30,6 +34,7 @@ from server.tests.island_sql.test_islands_and_waves_sql import (  # noqa: E402
     as_owner,
     as_server,
     balance,
+    open_island,
 )
 from server.tests.island_sql.test_personal_captain_sql import (  # noqa: E402
     RULES,
@@ -42,6 +47,23 @@ from server.tests.island_sql.test_structure_recovery_mutations_sql import (  # n
 )
 
 MANIFEST = catalogue_manifest(load_island())
+
+
+@pytest.fixture
+def isolated_transition(scratch_server, tmp_path):
+    """Run committed adoption races without leaving records in other SQL fixtures."""
+    pgserver = pytest.importorskip("pgserver")
+    assert psycopg.conninfo.conninfo_to_dict(scratch_server.get_uri())["host"].startswith("/")
+    with pgserver.get_server(
+        tmp_path / "construction-transition-pg", cleanup_mode="delete"
+    ) as server:
+        with psycopg.connect(server.get_uri(), autocommit=True) as connection:
+            connection.execute(Path(postgres_fixture.__file__).with_name("stub.sql").read_text())
+            for _ in range(2):
+                for migration in sorted(postgres_fixture.MIGRATIONS.glob("*.sql")):
+                    connection.execute(migration.read_text())
+        with psycopg.connect(server.get_uri()) as connection:
+            yield connection, server
 
 
 def intent(action="build", *, spot="wall_1", kind="wall", instance=None, level=0, coins="9"):
@@ -765,8 +787,103 @@ def test_history_and_private_legacy_aliases_have_no_write_or_execute_capability(
         "island_demolish_legacy_personal(uuid,uuid,text,text,jsonb)",
         "island_demolish_quote_legacy_personal(uuid,uuid,text,jsonb)",
         "island_economy_require_idle_locked(uuid)",
+        "island_construction_legacy_actor_allowed_locked(uuid)",
     ):
         for role in ("anon", "authenticated", "service_role"):
             assert database.execute(
                 "select has_function_privilege(%s,%s,'execute')", (role, "public." + signature)
             ).fetchone() == (False,)
+
+
+@pytest.mark.parametrize("action", ["build", "upgrade"])
+def test_managed_actor_cannot_bypass_engineer_binding_on_a_legacy_target(database, action):
+    actor, _, _, _, _ = initialized(database)
+    owner, _, _, _ = ready(database, admitted=False)
+    rpc(database, "game_join", actor, owner, 10)
+    assert (
+        rpc(database, "island_build", owner, owner, "wall_1", "wall", "seedwall1", 10)["status"]
+        == "done"
+    )
+    wallet = balance(database, actor)
+    captain = view(database, actor)
+    if action == "build":
+        result = rpc(database, "island_build", actor, owner, "wall_2", "wall", "legacy001", 9)
+    else:
+        result = rpc(
+            database, "island_upgrade", actor, owner, "wall_1", "legacy001", [9, 18, 36, 72, 144], 5
+        )
+    assert result == {"status": "refused", "reason": "captain_context_required"}
+    assert balance(database, actor) == wallet and view(database, actor) == captain
+    assert standing(database, owner)[1] == 1 and standing(database, owner, "wall_2") is None
+
+
+def test_unadopted_actor_keeps_legacy_build_and_upgrade_behavior(database):
+    actor, _, _, _ = ready(database, admitted=False)
+    first = rpc(database, "island_build", actor, actor, "wall_1", "wall", "legacy001", 10)
+    second = rpc(
+        database, "island_upgrade", actor, actor, "wall_1", "legacy002", [10, 20, 40, 80, 160], 5
+    )
+    assert first["status"] == second["status"] == "done"
+    assert balance(database, actor) == 70 and standing(database, actor)[1] == 2
+    as_server(database)
+    assert rpc(database, "personal_captain_context", actor) == {"status": "legacy"}
+
+
+@pytest.mark.parametrize("transition", ["adoption", "respec"])
+def test_legacy_build_rechecks_global_personal_mode_after_waiting_for_transition(
+    isolated_transition, transition
+):
+    database, server = isolated_transition
+    owner, actor, _, treasury, _ = initialized(database)
+    alphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
+    code = "".join(alphabet[(actor.int >> (5 * index)) % len(alphabet)] for index in range(5))
+    open_island(database, actor, code)
+    as_owner(database)
+    database.execute(
+        "update public.islands set captain_level=4,won_wave_best=4,"
+        "captain_role='engineer',captain_skills=array['steady_aim'] where player_id=%s",
+        (actor,),
+    )
+    if transition == "respec":
+        initialize_member(database, actor, owner, treasury)
+    database.commit()
+    as_server(database)
+    if transition == "adoption":
+        result = rpc(
+            database, "personal_captain_initialize", actor, owner, keys(treasury)[1], Jsonb(RULES)
+        )
+        assert result["status"] == "ok"
+    else:
+        revision = view(database, actor)["captain"]["revision"]
+        result = rpc(
+            database, "personal_captain_change", actor, "respec001", "respec", None, revision
+        )
+        assert result["status"] == "done"
+    started = Queue()
+
+    def buy():
+        with psycopg.connect(server.get_uri()) as connection:
+            connection.execute("set lock_timeout='5s'")
+            as_server(connection)
+            started.put(connection.info.backend_pid)
+            return rpc(connection, "island_build", actor, actor, "wall_1", "wall", "waiting01", 9)
+
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        future = pool.submit(buy)
+        worker = started.get(timeout=5)
+        as_owner(database)
+        deadline = monotonic() + 3
+        blocked = False
+        while monotonic() < deadline:
+            blocked = database.execute(
+                "select %s = any(pg_blocking_pids(%s))", (database.info.backend_pid, worker)
+            ).fetchone()[0]
+            if blocked:
+                break
+            sleep(0.01)
+        assert blocked, "The legacy mutation must wait for the personal-state transition."
+        database.commit()
+        answer = future.result(timeout=5)
+    assert answer == {"status": "refused", "reason": "captain_context_required"}
+    assert balance(database, actor) == 100 and standing(database, actor) is None
+    assert view(database, actor)["captain"]["engineerCommitment"] is None
