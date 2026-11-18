@@ -113,7 +113,7 @@ Ships that reach the shore let **boarders** climb out. They walk to the heart of
 - **When a wave ends, every wall and tower is repaired at once** (won or lost, finished or timed out; owner, 18 Nov). The break starts with everything whole: no waiting, nothing to pay between waves.
 - During a wave nothing heals by itself. The card shows **Repair now: pay N coins** (three uses a wave, shared by the crew) and that everything is repaired when the wave ends.
 - A successful **Repair now** restores one structure immediately. Its server-quoted price is the current level's catalogue price, independent of damage or who pays. The team shares three successful repairs per island and wave, including preparation/countdown; repairs outside the reserved wave are unlimited. Failed requests do not charge coins or use a slot.
-- Captain **E** repair/rebuild and repair-only Captain skills are removed in recovery v1. The hired Carpenters on the island owner's crew speed up free repair between waves: up to two count island-wide, even when the owner is offline. Nearby Workshops add a capped bonus. The selected wall's **Quick Mend** or **Bastion** spec and island **Mason Drill** research further affect wall repair; Quick Mend and Bastion are exclusive, and only the wall's equipped spec applies. These bonuses pause during a reserved wave. See [D059](DECISIONS.md#d059--shared-gradual-hp-recovery-and-paid-instant-repair--2026-11-16) for the full rules and figures.
+- In recovery v1, Captain **E** structure repair/rebuild and repair-only Captain skills are removed. Carpenter hiring, the Workshop house role, **Quick Mend** and **Mason Drill** are being retired because there is no gradual repair to speed up. **Bastion** keeps +50% maximum wall HP; **Engineer** keeps the 10% construction/upgrade discount. Other crew/house abilities and Captain/Tavern healing remain. See [current implementation tasks](OPEN-TODOS.md#11-unified-defense-recovery--unassigned-follow-ups-16-nov) for review/release status.
 
 ## The heart of the island
 
@@ -132,7 +132,7 @@ The heart stands in the middle of the island. Its ♥ shows in the wave bar. Boa
 Open **Menu**, then **Crew**. You hire crew once and keep them.
 
 - **Gunner** (🪙 40, up to 2): your strongest tower reloads faster. After wave 3.
-- **Carpenter** (🪙 30, up to 2): under legacy recovery v0, repairs your most damaged wall during a wave. In recovery v1, Carpenters instead add to the island-wide between-wave free-repair rate; see the recovery v1 preview above. After wave 5.
+- **Carpenter** (legacy recovery v0 only; 🪙 30, up to 2): repairs your most damaged wall during a wave, unlocked after wave 5. New recovery-v1 hiring is being retired; full recovery happens at wave end without workers.
 - **Lookout** (🪙 25, one): sees further in fog. Ships show 3 seconds earlier. After wave 8.
 
 ## What opens when
@@ -146,7 +146,7 @@ New things open when your game first **wins** a wave. A toast and the narrator s
 | 2 | Level 2, the mortar |
 | 3 | The watchtower, the gunner |
 | 4 | **The Harbor** and its market stall |
-| 5 | Level 3, the inner ring of walls, the carpenter |
+| 5 | Level 3, the inner ring of walls; Carpenter in legacy recovery v0 only |
 | 6 | **A wreck washes ashore.** Anyone can pay into her repair. |
 | 7 | The football match board at the Harbor |
 | 8 | **The Tech hub**, the lookout, captain levels 4 and 5 |

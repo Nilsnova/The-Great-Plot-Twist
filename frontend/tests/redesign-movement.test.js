@@ -35,6 +35,15 @@ describe('higher framebuffer density with stable logical framing',()=>{
   });
 });
 describe('responsive continuous explorer',()=>{
+  it('samples combat after movement and before drawing the same frame, including blocked movement',()=>{
+    const {controller,character}=walker(),order=[];
+    character.animate.mockImplementation(()=>order.push('draw'));
+    controller.update(.1,true,()=>{expect(controller.player.position.x).toBeCloseTo(WALK_SPEED*.1);order.push('combat');});
+    expect(order).toEqual(['combat','draw']);
+    order.length=0;
+    controller.update(.1,false,()=>{expect(controller.player.position.x).toBeCloseTo(WALK_SPEED*.1);order.push('combat');});
+    expect(order).toEqual(['combat','draw']);
+  });
   it('starts on the first frame and stops on release or blocking',()=>{
     const {controller,character,input}=walker();expect(controller.update(1/60,true)).toBeCloseTo(WALK_SPEED);
     expect(controller.player.position.x).toBeCloseTo(WALK_SPEED/60);

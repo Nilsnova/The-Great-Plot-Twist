@@ -28,7 +28,7 @@ The published PR was reconciled with main through `db573347` after GitHub report
 This retains the upstream WebP art-shipping update. Latest range-visibility runtime: `203c696a`; fresh screenshots use that source.
 The overlay now uses the shared ground projection; the danger row spans the new HUD
 and compacts in landscape. Short landscape toasts also reserve the expanded fire-control column (`21440b26`). Main's renderer pooling, wall connections and native HUD
-behavior are retained. CF1 is D066 because main already owns D061–D065. Ianno reviewed
+behavior are retained. CF1 is D068 because main already owns D061–D065. Ianno reviewed
 runtime `79bb6762` before publication; the later integration and visibility changes need current
 human peer review. The PR remains unmerged.
 
@@ -73,7 +73,7 @@ Earlier verification, retained with its original scope:
 ## Responsibility and handover
 
 - Responsible teammate: Ianno (`Iannomh123456`). Agent assistance: Codex, with isolated danger-helper work and independent read-only review.
-- Decision: D066; one task branch from current main, separate helper branch, no main writes.
+- Decision: D068; one task branch from current main, separate helper branch, no main writes.
 - Scope: frontend presentation; existing attack inputs, simulation, balance, money, recovery and network authority remain unchanged.
 - Ianno completed the explain-back questions, manually reviewed the screenshots/diff and explicitly confirmed publication. Next step: a different human reviews the published change before merge.
 

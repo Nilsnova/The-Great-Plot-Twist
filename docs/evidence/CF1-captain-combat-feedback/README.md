@@ -9,7 +9,7 @@ Landscape control-column follow-up: `21440b26`; this affects neither desktop nor
 This revision follows Ianno's request to make the parchment range slightly easier to see.
 The earlier request for a quieter radius and visual-only shot confirmation still applies.
 After publication, main introduced a new village projection and HUD; the task branch
-was reconciled with those changes. CF1's decision is D066 (main already owns D061–D065).
+was reconciled with those changes. CF1's decision is D068 (main already owns D061–D065).
 The new village artwork and WebP shipping update come from main; this feature changes only combat feedback.
 The original blue design and previous parchment captures remain as historical evidence.
 The latest arcs have thicker warm parchment strokes with a darker backing so they remain legible over grass and paths.
@@ -168,7 +168,7 @@ No fresh full-suite, broad accessibility/demo, live multiplayer or physical-devi
 - [Native feedback](native-feedback.txt): **13 checks pass**, five actual-game after captures.
 - [Accessibility summary](accessibility-summary.json): **33 screens**, eight market/lobby findings, no audit exceptions. [Demo CF1](demo-after.txt) and [demo main](demo-before.txt) retain the same hidden lamp-control timeout.
 
-Historical failed runs are retained and are not represented as passes. [Initial full run](initial-full-tests.txt), [initial caption overlaps](initial-caption-overlaps.txt), and [new caption regression before the fix](caption-regression-before.txt) show the failures that led to the scoped corrections. The test expectation for the old extra caption changed only after D066 explicitly selected the persistent warning as the accessible text.
+Historical failed runs are retained and are not represented as passes. [Initial full run](initial-full-tests.txt), [initial caption overlaps](initial-caption-overlaps.txt), and [new caption regression before the fix](caption-regression-before.txt) show the failures that led to the scoped corrections. The test expectation for the old extra caption changed only after D068 explicitly selected the persistent warning as the accessible text.
 
 The native feedback check passes **13 checks**, with five after screenshots;
 baseline capture passes two setup/error checks and records four before screenshots.

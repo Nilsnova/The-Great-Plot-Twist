@@ -17,7 +17,7 @@ it.each([{width:1280,height:720},{width:375,height:812}])('comparison is optiona
       await base.api.arsenalBuy({weapon:'long_rifle',actionUid:'compare-setup-2'});
       window.comparisonWrites = [];
       const transport = {...base,post:(path,body)=>{ window.comparisonWrites.push(path); return base.post(path,body); }};
-      window.compareIsland = createIsland({container:document.body,emit,on,mode:'fake',transport,arsenalOn:()=>true,
+      window.compareIsland = createIsland({container:document.body,emit,on,mode:'fake',transport,
         storage:null,menu:()=>()=>{}});
       await window.compareIsland.load(); await window.compareIsland.learnSkill('steady_aim');
       window.compareIsland.pick(ARSENAL.id);

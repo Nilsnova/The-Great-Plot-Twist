@@ -6,15 +6,26 @@ Plot Twist game expansion for Nova SBE’s Introduction to Programming group pro
 
 ## Run and test
 
-```bash
-# Backend (Python API)
-cd backend && uv sync && uv run pytest -q
+Requirements: Node.js 22+ with npm, Python 3.12+ with [uv](https://docs.astral.sh/uv/). Run every line from the repository root.
 
-# Frontend (the game)
-cd frontend && npm install && npm test && npm run build && npm run test:mp
+```bash
+# Install
+(cd frontend && npm install)
+(cd backend && uv sync)
+
+# Run the game on your laptop (offline: an in-memory island and waves, no account needed)
+(cd frontend && npm run dev)
+# then open the address Vite prints, adding ?islands=fake
+
+# Run the API on your laptop (optional; copy .env.example to .env in the repository root and fill in the Supabase values)
+(cd backend && uv run --env-file ../.env uvicorn main:app --reload --port 8000)
+
+# Tests
+(cd frontend && npm test && npm run build)    # game: unit tests and production build
+(cd backend && uv run ruff check . && uv run pytest -q)   # API: style check and tests (about 10 minutes)
 ```
 
-`npm run test:mp` drives an installed Chrome. Run locally: `cd frontend && npm run dev` (with `?islands=fake` for an in-memory island and waves). Details: [ENGINEERING.md, section 3](docs/ENGINEERING.md#3-commands).
+A quicker backend run skips the exhaustive settings matrix (about 5 of the 10 minutes): `cd backend && uv run pytest -q --ignore=server/tests/correctness/test_settings_contract.py`. Browser checks such as the two-player journey (`npm run test:mp`) need an installed Chrome. More commands: [ENGINEERING.md, section 3](docs/ENGINEERING.md#3-commands).
 
 ## Members
 
@@ -63,14 +74,10 @@ We are four equal teammates building with coding agents. Everyone can propose fe
 
 ## Project status
 
-*Last updated: Wed 11 Nov 2026.*
+*Last updated: Wed 18 Nov 2026.*
 
 - A multiplayer pixel-art tower defense in the browser: build and upgrade towers, walls, crew and your captain on your own island; hold pirate waves up to 100 with boss warships ([TOWER-DEFENSE.md](docs/TOWER-DEFENSE.md)).
 - Up to four players defend one island via a `?visit=ISLE-…` link; every browser runs the same seeded simulation ([walkthrough, part 12](docs/WALKTHROUGH.md#12-how-four-players-see-the-same-battle)).
 - Pirate Point: the class joins from the projector QR, builds together and lights three lamps to sink the flagship.
 - The Harbor: up-or-down market calls, a football match board, a weather board and duels; play money only, no prediction market (D035).
 - Live on `main` since 11 Nov evening; known small issues in [OPEN-TODOS.md, section 7](docs/OPEN-TODOS.md).
-
-### What the final README must contain
-
-By the submission on Mon 23 Nov: the exact install, run and test commands, the deployed URL (both at the top) and every member's name and student number in the [members table](#members), with real values only.
