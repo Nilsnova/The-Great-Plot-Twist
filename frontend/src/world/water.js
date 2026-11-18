@@ -90,28 +90,35 @@ void main(){
   vec2 p=vWorld;float t=uSeaTime;
   float d=coastDistance(p)/16.0; // world units to the nearest land (16 = open sea)
   if(d < .02)discard; // land: the place's ground covers it
-  // Depth: shallows hug the coast, the open sea deepens with a slow large-scale variation.
-  float swell=sin(p.y*.55+sin(p.x*.13+t*.18)*1.4-t*(.35+uWind*.6))*.5+.5;
-  float far=pxNoise(p*.045+vec2(t*.01,0.0));
-  vec3 colour=mix(uMid,uDeep,smoothstep(.35,.9,far)*.85);
-  colour=mix(colour,uLight,swell*.22);
+  // Broad depth pockets and crossing swells give the sea mass beneath the smaller ripples.
+  // The same real coast distance still defines the shallows; none of these colours add land.
+  float swell=sin(p.y*.38+p.x*.12+sin(p.x*.13+t*.18)*1.4-t*(.35+uWind*.6))*.5+.5;
+  float far=pxNoise(p*.055+vec2(t*.01,0.0))*.7+pxNoise(p*.12+vec2(7.0,3.0))*.3;
+  float depth=smoothstep(1.0,11.0,d);
+  vec3 colour=mix(uMid,uDeep,clamp(depth*.58+smoothstep(.25,.85,far)*.4,0.0,1.0));
+  colour=mix(colour,uLight,smoothstep(.3,.9,swell)*(.09+(1.0-depth)*.11));
   float shallow=1.0-smoothstep(.0,4.2,d+sin(p.x*.8+p.y*.5+t*.6)*.25);
   colour=mix(colour,uShallow,shallow*.85);
   colour=mix(colour,uShallow2,(1.0-smoothstep(.0,1.3,d))*.9);
-  // Domain-warped, broken ripples avoid a regular grid of standing highlights.
+  // Two broad, broken reflection directions replace the repeating fine parallel strokes.
   // The entire extra material branch is disabled by the existing low-quality uniform.
   if(uDetail>.5){
     vec2 drift=vec2(t*(.06+uWind*.06),-t*.045);
-    float broad=pxNoise(p*.72+drift);
-    float ripple=sin(p.y*4.0+p.x*.15+broad*5.0-t*(.4+uWind*.2));
-    float broken=smoothstep(.35,.75,pxNoise(p*vec2(1.7,.65)-drift));
-    float crest=(1.0-band(abs(ripple),.15))*broken*smoothstep(.5,2.0,d);
-    colour=mix(colour,uDeep,(1.0-broad)*.065);
-    colour=mix(colour,uStroke,crest*.24);
-    vec2 q=p*2.6+vec2(broad,pxNoise(p*.8-drift))*.7;
+    float broad=pxNoise(p*.42+drift)*.6+pxNoise(p*.19-drift)*.4;
+    float ripple=sin(p.y*2.4+p.x*.42+broad*5.0-t*(.4+uWind*.2));
+    float crossing=sin(p.x*1.4-p.y*1.15+broad*2.0+t*.26);
+    float broken=smoothstep(.25,.8,pxNoise(p*vec2(.95,.38)-drift));
+    float offshore=smoothstep(.5,2.0,d);
+    float crest=(1.0-band(abs(ripple),.12))*broken*offshore;
+    float crossCrest=(1.0-band(abs(crossing),.1))*smoothstep(.55,.8,broad)*offshore;
+    float sheen=smoothstep(.2,.9,ripple*.5+.5)*smoothstep(.1,.8,crossing*.5+.5);
+    colour=mix(colour,uDeep,(1.0-broad)*.09);
+    colour=mix(colour,uLight,sheen*.07);
+    colour=mix(colour,uStroke,crest*.28+crossCrest*.13);
+    vec2 q=p*2.2+vec2(broad,pxNoise(p*.65-drift))*.8;
     float cells=pxNoise(q+drift)+pxNoise(q*1.95-drift)*.2;
     float caustic=(1.0-band(abs(cells-.6),.02))*smoothstep(.6,1.2,d)*(1.0-smoothstep(1.5,3.0,d));
-    colour=mix(colour,uShallow2,caustic*.055);
+    colour=mix(colour,uShallow2,caustic*.12);
   }
   // The close edge is still in low quality; its extra movement and broken surf are high-only.
   float foamTime=uDetail>.5?t:0.0;
@@ -150,7 +157,7 @@ void main(){
 }`;
 
 export function createWater(scene) {
-  const colours = { uDeep: '#08677e', uMid: '#078f9d', uLight: '#35b7c1', uShallow: '#38c9bc', uShallow2: '#9be3cb', uFoam: '#f4fffa', uGlint: '#e6fff5', uStroke: '#72d8d4' };
+  const colours = { uDeep: '#07566e', uMid: '#087f96', uLight: '#3dbdc9', uShallow: '#38c9b5', uShallow2: '#8be2c5', uFoam: '#f4fffa', uGlint: '#e6fff5', uStroke: '#63cfd6' };
   const uniforms = { ...seaUniforms };
   for (const [key, value] of Object.entries(colours)) uniforms[key] = { value: new THREE.Color(value) };
   const material = new THREE.ShaderMaterial({ uniforms, vertexShader: worldVertex, fragmentShader: fragment,
