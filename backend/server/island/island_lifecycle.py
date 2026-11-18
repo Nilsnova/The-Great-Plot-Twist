@@ -18,6 +18,7 @@ from pydantic import (
 )
 
 from server.island.treasury import EconomyContext
+from server.island.treasury_models import decimal_integer
 from server.island.treasury_store import EnvelopeRow, MoneyRow, Unsigned, account_from_row
 from server.supabase_admin import SupabaseRejected
 
@@ -40,7 +41,9 @@ class RetiredTreasury(MoneyRow):
 
     @model_validator(mode="after")
     def conserve(self) -> Self:
-        if int(self.balanceCoins) - int(self.committedCoins) != int(self.availableCoins):
+        balance = decimal_integer(self.balanceCoins)
+        committed = decimal_integer(self.committedCoins)
+        if balance - committed != decimal_integer(self.availableCoins):
             raise ValueError("Retired cash and principal do not reconcile.")
         return self
 
@@ -111,7 +114,7 @@ def read_result(value: object, context: EconomyContext, action_uid: str) -> dict
             ):
                 raise ValueError("The current projection belongs to another replacement.")
             if not row.repeat and (
-                current.balance_coins != int(effect.startingCoins)
+                current.balance_coins != decimal_integer(effect.startingCoins)
                 or current.committed_coins != 0
                 or current.revision != 1
             ):

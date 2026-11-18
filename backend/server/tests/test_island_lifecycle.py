@@ -83,6 +83,33 @@ def test_reset_money_remains_exact_above_javascript_and_bigint_ranges():
     assert read_result(value, context(), UID)["receipt"]["result"]["startingCoins"] == huge
 
 
+@pytest.mark.parametrize("digits", [4301, 5001])
+def test_retired_cash_and_holds_have_no_python_decimal_digit_ceiling(digits):
+    value = result()
+    retired = value["receipt"]["result"]["retiredTreasury"]
+    retired.update(
+        balanceCoins="9" + "0" * (digits - 1),
+        committedCoins="4" + "0" * (digits - 1),
+        availableCoins="5" + "0" * (digits - 1),
+    )
+    assert read_result(value, context(), UID)["receipt"]["result"]["retiredTreasury"] == retired
+    retired["availableCoins"] = "6" + "0" * (digits - 1)
+    with pytest.raises(SupabaseRejected):
+        read_result(value, context(), UID)
+
+
+@pytest.mark.parametrize("digits", [4301, 5001])
+def test_configured_capital_has_no_python_decimal_digit_ceiling(digits):
+    value = result()
+    huge = "1" + "0" * (digits - 1)
+    value["receipt"]["result"]["startingCoins"] = huge
+    value["currentEconomy"]["treasury"].update(balanceCoins=huge, availableCoins=huge)
+    assert read_result(value, context(), UID)["receipt"]["result"]["startingCoins"] == huge
+    value["receipt"]["result"]["startingCoins"] = "2" + "0" * (digits - 1)
+    with pytest.raises(SupabaseRejected):
+        read_result(value, context(), UID)
+
+
 def test_later_reset_replay_keeps_its_original_effect_without_current_projection():
     value = result()
     value.update(repeat=True, currentEconomy=None)
