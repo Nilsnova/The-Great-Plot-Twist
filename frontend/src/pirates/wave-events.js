@@ -107,7 +107,6 @@ export const EVENT_SHIPS = Object.freeze({
   longboat: Object.freeze({ hp: 16, speed: 2.3, damage: 2, interval: 2, crew: 3 }),
   tentacle: Object.freeze({ hp: 40, speed: 0, damage: 0, interval: 4, crew: 0 }),
 });
-export const EVENT_SHIP_KINDS = Object.freeze(Object.keys(EVENT_SHIPS));
 export const countFor = ({ count: [low, high], perWaves }, wave) => Math.min(high, low + Math.floor(wave / perWaves));
 const round2 = value => Math.round(value * 100) / 100;
 const distance = (ax, az, bx, bz) => Math.hypot(ax - bx, az - bz);

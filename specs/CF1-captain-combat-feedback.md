@@ -74,3 +74,8 @@ merge, main edits or deployment. Verification results will be recorded in
 `docs/evidence/CF1-captain-combat-feedback/README.md`.
 
 Publication gate completed: Ianno stated "i reviewed, open PR" on 18 November 2026. Task #453 records the PR link and current peer-review state. No merge authorization was given.
+
+
+## Current-main integration for PR #475
+
+Main `37eb70fa` introduced D064's shared ground projection, native combat HUD updates, wall connections and renderer pooling after CF1's original base. Use `projectGround`, `projectGroundVector` and cached `groundShapeMatrix()` for all range origins, arc/cap transforms and danger directions. Tests invert actual transformed geometry back to logical XZ to verify true range. The danger row spans the new HUD grid. Preserve all newer main renderer, HUD, input and performance changes. CF1's decision is now D066 because main already owns D061–D065. PR #475 remains unmerged; the integration changes and refreshed screenshots require current human peer review.

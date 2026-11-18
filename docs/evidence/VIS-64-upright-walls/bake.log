@@ -1,0 +1,2 @@
+walls: 32 frames, 1 bounded PNG sheet(s),4× pixel proof passed.
+{"frames":32,"unchangedTerrainBytes":2683357,"rawPlusTerrainBytes":7176778,"compiledPlusTerrainBytes":3730313,"targetBytes":8388608,"targetMet":true,"originalDecoded":12582912,"compiledDecoded":4032000,"errors":[],"externalRequests":[]}

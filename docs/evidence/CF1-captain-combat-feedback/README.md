@@ -22,7 +22,7 @@ The fire panel explains reload, no target and out-of-range aims. Written Hit/dam
 confirmation is removed from visible and spoken feedback. The existing bullets and
 impact flashes show successful shots. A short brighter cap marks the true range
 boundary in the last firing direction; it disappears when that attempt expires.
-The cap rotates in logical world coordinates before the 0.72 flat projection,
+The cap rotates in logical world coordinates before the shared ground projection,
 so it stays accurate when aiming diagonally or moving the camera.
 
 One warning beneath the wave bar names immediate danger. An arrow beside the
@@ -80,7 +80,7 @@ is retained only as superseded review history; it is absent from the current gam
   range status plus an alert for danger. Repeated identical danger frames do not
   rebuild announcement text. Reduced motion preserves static text.
 - `combat-overlay.js` caches four meshes. It uses the game's existing flat projection
-  (`y = -z × 0.72`) for exact world reach, using cached sparse arcs and a directional cap;
+  (`projectGround` and cached `groundShapeMatrix()`) for exact world reach, using sparse arcs and a directional cap;
   it disposes all geometry/materials on stop.
 - `audio/pirates.js` plays the alert on the existing effects bus. It does not add
   another caption over the warning or change other audio preferences.
@@ -104,7 +104,7 @@ is retained only as superseded review history; it is absent from the current gam
 - [Native feedback](native-feedback.txt): **13 checks pass**, five actual-game after captures.
 - [Accessibility summary](accessibility-summary.json): **33 screens**, eight market/lobby findings, no audit exceptions. [Demo CF1](demo-after.txt) and [demo main](demo-before.txt) retain the same hidden lamp-control timeout.
 
-Historical failed runs are retained and are not represented as passes. [Initial full run](initial-full-tests.txt), [initial caption overlaps](initial-caption-overlaps.txt), and [new caption regression before the fix](caption-regression-before.txt) show the failures that led to the scoped corrections. The test expectation for the old extra caption changed only after D061 explicitly selected the persistent warning as the accessible text.
+Historical failed runs are retained and are not represented as passes. [Initial full run](initial-full-tests.txt), [initial caption overlaps](initial-caption-overlaps.txt), and [new caption regression before the fix](caption-regression-before.txt) show the failures that led to the scoped corrections. The test expectation for the old extra caption changed only after D066 explicitly selected the persistent warning as the accessible text.
 
 The native feedback check passes **13 checks**, with five after screenshots;
 baseline capture passes two setup/error checks and records four before screenshots.

@@ -64,6 +64,19 @@ class Box:
 
 
 @dataclass(frozen=True)
+class WallObstacle:
+    """Placement-only scenery reserve; never a route/collision/settlement obstacle."""
+
+    id: str
+    name: str
+    x: float
+    z: float
+    w: float = 0
+    d: float = 0
+    radius: float = 0
+
+
+@dataclass(frozen=True)
 class LayoutRules:
     version: int
     grid: float
@@ -78,6 +91,7 @@ class LayoutRules:
     wall_lanes: dict[float, tuple[tuple[float, float], ...]]
     # D060: the extra tower spots ("extraSpots"); part of `spots` only in island_layout(more=True).
     extra_spots: tuple[LayoutSpot, ...] = ()
+    wall_obstacles: tuple[WallObstacle, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -123,6 +137,7 @@ def load_layout(path: Path = CONTENT_FILE) -> LayoutRules:
             keep_out=tuple(read_box(row) for row in data["keepOut"]),
             wall_lanes=read_lanes(data["wallLanes"]["rows"]),
             extra_spots=tuple(read_spot(row) for row in data.get("extraSpots", {}).get("rows", [])),
+            wall_obstacles=tuple(WallObstacle(**row) for row in data["wallObstacles"]),
         )
     except (OSError, ValueError, KeyError, TypeError) as error:
         raise LayoutFileError(f"{path.name} cannot be read: {error}") from error
@@ -279,7 +294,7 @@ def surface_class(rules: LayoutRules, x: float, z: float) -> int:
     return 2 if distance < 0.85 else BEACH if distance < 1 else SEA
 
 
-def overlaps(a: Box, b: Box) -> bool:
+def overlaps(a: Box, b: Box | WallObstacle) -> bool:
     """True when two footprints share ground. Touching edges do not count: walls form lines."""
     return abs(a.x - b.x) < (a.w + b.w) / 2 and abs(a.z - b.z) < (a.d + b.d) / 2
 
@@ -302,6 +317,19 @@ def check_move(
     for other in rules.keep_out:
         if overlaps(moved, other):
             raise MoveRefused(409, "place_taken", f"That is too close to {other.name}.")
+    if spot_named(rules, spot_id).slot == WALL_SLOT:
+        for other in rules.wall_obstacles:
+            hit = (
+                math.hypot(
+                    max(abs(x - other.x) - moved.w / 2, 0),
+                    max(abs(z - other.z) - moved.d / 2, 0),
+                )
+                < other.radius
+                if other.radius
+                else overlaps(moved, other)
+            )
+            if hit:
+                raise MoveRefused(409, "place_taken", f"That is too close to {other.name}.")
     for other_id, where in positions.items():
         if other_id != spot_id and overlaps(moved, box_of(rules, other_id, where)):
             raise MoveRefused(409, "place_taken", "Another building stands there.")

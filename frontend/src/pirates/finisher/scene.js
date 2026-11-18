@@ -11,6 +11,7 @@
 //   const scene = createFinisherScene({container, me, easy, reducedMotion, recorder});
 //   scene.update({finisher, dt, boss: {x, y} | null}); scene.dispose()
 import './finisher.css';
+import { node as el } from '../../ui/kit/dom.js';
 import lines from '../../narrator/lines.json';
 import { ARROWS, FINISHER, holdsNeedle, promptAt, promptLength, spotAt, zoneAt } from './rules.js';
 import { difficultyFor } from './difficulty.js';
@@ -43,7 +44,6 @@ export const captionFor = (kind, phase) => {
 };
 const resultText = (kind, outcome) => (kind === 'rescue' ? RESCUE_TEXT : RESULT_TEXT)[outcome];
 
-const el = (tag, className, text) => { const node = document.createElement(tag); if (className) node.className = className; if (text !== undefined) node.textContent = text; return node; };
 const button = (className, text, label) => { const node = el('button', `kit-button ${className}`, text); node.type = 'button'; if (label) node.setAttribute('aria-label', label); return node; };
 
 export function createFinisherScene({ container, me = null, easy = () => false, reducedMotion = () => false, recorder = null } = {}) {

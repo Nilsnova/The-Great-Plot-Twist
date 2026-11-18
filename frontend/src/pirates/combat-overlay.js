@@ -1,7 +1,9 @@
 // Quiet cached range arcs and a danger pointer in the game's flat world projection. Used by render.js.
 import * as THREE from 'three';
+import { projectGround, projectGroundVector } from '../world/projection.js';
+import { groundShapeMatrix } from '../world/ground-transform.js';
 
-const Y = .72, ARC_COUNT = 12, ARC_ANGLE = Math.PI / 18, ARC_STEPS = 4;
+const ARC_COUNT = 12, ARC_ANGLE = Math.PI / 18, ARC_STEPS = 4;
 
 // Separate short strips leave real gaps; every outer vertex still marks exactly one unit of range.
 function rangeArcs(innerRadius) {
@@ -35,30 +37,35 @@ export function createCombatOverlay(parent) {
   const ring = make('captain-range-arcs', ringGeometry, 0xd1c3a6, 93);
   const target = make('captain-range-direction', markerGeometry, 0xede1c8, 94);
   const pointer = make('captain-danger-pointer', arrowGeometry, 0xff765e, 936);
-  const rotation = new THREE.Matrix4(); target.matrixAutoUpdate = false;
+  const rotation = new THREE.Matrix4(), projection = groundShapeMatrix(), scale = new THREE.Vector3();
+  const rangeMeshes = [shadow, ring];
+  for (const mesh of [shadow, ring, target]) mesh.matrixAutoUpdate = false;
   return {
     update({ range = null, danger = null, player = null } = {}) {
       for (const mesh of root.children) mesh.visible = false;
       if (range) {
-        for (const mesh of [shadow, ring]) {
-          mesh.visible = true; mesh.position.set(range.x, -range.z * Y, 0);
-          mesh.scale.set(range.radius, range.radius * Y, 1);
+        const at = projectGround(range.x, range.z); scale.set(range.radius, range.radius, 1);
+        for (const mesh of rangeMeshes) {
+          mesh.visible = true;
+          mesh.matrix.copy(projection).scale(scale).setPosition(at.x, at.y, 0);
+          mesh.matrixWorldNeedsUpdate = true;
           mesh.material.opacity = range.alpha * (mesh === shadow ? .32 : .66);
         }
         if (range.point && !range.melee) {
           const dx = range.point.x - range.x, dz = range.point.z - range.z;
           target.visible = Math.hypot(dx, dz) > .01;
-          // Rotate before flattening, so a diagonal cap keeps the true world radius.
-          target.matrix.makeScale(range.radius, range.radius * Y, 1)
-            .multiply(rotation.makeRotationZ(Math.atan2(-dz, dx))).setPosition(range.x, -range.z * Y, 0);
+          // Rotate in logical ground coordinates before projecting, keeping the true world radius.
+          target.matrix.copy(projection).scale(scale)
+            .multiply(rotation.makeRotationZ(Math.atan2(-dz, dx))).setPosition(at.x, at.y, 0);
           target.matrixWorldNeedsUpdate = true; target.material.opacity = range.alpha * .9;
         }
       }
       if (danger && player) {
-        const dx = danger.x - player.x, dy = -(danger.z - player.z) * Y;
+        const at = projectGround(player.x, player.z), direction = projectGroundVector(danger.x - player.x, danger.z - player.z);
+        const dx = direction.x, dy = direction.y;
         const length = Math.hypot(dx, dy);
         pointer.visible = length > .1;
-        pointer.position.set(player.x + dx / (length || 1) * 2.8, -player.z * Y + dy / (length || 1) * 2.8 + .5, 0);
+        pointer.position.set(at.x + dx / (length || 1) * 2.8, at.y + dy / (length || 1) * 2.8 + .5, 0);
         pointer.rotation.z = Math.atan2(dy, dx);
         pointer.material.color.setHex(danger.critical ? 0xff6653 : 0xffbc66);
       }

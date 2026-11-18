@@ -2,23 +2,33 @@
 // logical geometry the cartoon art reuses, and the bounded framebuffer.
 import { readFileSync, readdirSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { pixelArt, pixelArtIds, snapPixel } from '../src/pixel/catalog.js';
+import { pixelArt, pixelArtIds, pixelSizes, snapPixel } from '../src/pixel/catalog.js';
 import { artSizes, loadArt, placeArt } from '../src/world/art.js';
-import { islandFrame } from '../src/art/registry.js';
+import { islandSizes } from '../src/art/registry.js';
+import { frames as registeredFrames } from '../src/art/village/baked.js';
+import { getRasterFrame } from '../src/art/village-raster.js';
 import { pixelViewport } from '../src/pixel/display.js';
 
 describe('active pixel artwork', () => {
   it('registers every native PNG once and agrees with each file header', () => {
     expect([...pixelArt.map(item => item.file), 'ground.png'].sort()).toEqual(readdirSync('public/pixel').filter(name => name.endsWith('.png')).sort());
     expect(new Set(pixelArt.map(item => item.id)).size).toBe(pixelArt.length);
-    // Every catalogued sprite keeps its box; the extra names are cartoon-only frames (ten captains, boarders…).
+    // Native files keep their catalogue dimensions; D063/D064 explicitly revise some rendered boxes.
     expect(pixelArt.every(item => Object.hasOwn(artSizes, item.id))).toBe(true);
-    expect(Object.keys(artSizes).filter(id => !Object.hasOwn(Object.fromEntries(pixelArt.map(item => [item.id, 1])), id)).every(id => islandFrame(id))).toBe(true);
+    const declared = new Set([...pixelArt.map(item => item.id), ...Object.keys(islandSizes()), ...Object.keys(registeredFrames)]);
+    expect(Object.keys(artSizes).sort()).toEqual([...declared].sort());
     for (const item of pixelArt) {
       const bytes = readFileSync(`public/pixel/${item.file}`);
       expect(bytes.subarray(1, 4).toString()).toBe('PNG');
       expect(bytes.readUInt32BE(16)).toBe(item.width); expect(bytes.readUInt32BE(20)).toBe(item.height);
-      expect(artSizes[item.id][0] * 16).toBe(item.width); expect(artSizes[item.id][1] * 16).toBe(item.height);
+      const raster = getRasterFrame(item.id);
+      if (raster) {
+        const [width, height, anchor] = raster.logical;
+        expect(artSizes[item.id]).toEqual([width / 16, height / 16, anchor / height]);
+      } else {
+        expect(artSizes[item.id][0] * 16).toBe(item.width); expect(artSizes[item.id][1] * 16).toBe(item.height);
+        expect(artSizes[item.id]).toEqual(pixelSizes[item.id]);
+      }
     }
   });
   it('keeps future harbour/mystery art out of the default island preload', () => {

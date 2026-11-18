@@ -72,7 +72,7 @@ export function createStructureRecoveryIndicators({root, locate = () => null} = 
       item.mesh.visible = !!row && !!point && Number.isFinite(point.x) && Number.isFinite(point.z);
       if (!item.mesh.visible) continue;
       const ground = projectPoint(point.x, point.z);
-      const lift = row.kind === 'wall' ? 2.2 : 4.0;
+      const lift = row.kind === 'wall' ? 3.2 : 4.0;
       item.mesh.position.set(ground.x, ground.y + lift, .08);
     }
   }

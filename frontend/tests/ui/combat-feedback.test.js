@@ -48,7 +48,7 @@ it('keeps long weapon and danger text within the fire control and wave bar', asy
       hud.rangeFeedback({ label: 'Fire bombs throw range', radius: 18, status: 'Throw limited to ring', alpha: .2 });
       hud.danger({ key: 'captain-critical', title: 'Captain in danger!', line: 'Slash nearby pirates or move away.', critical: true });
     });
-    for (const [width, height] of [[1280, 720], [375, 812]]) {
+    for (const [width, height] of [[1280, 720], [375, 812], [844, 390]]) {
       await page.setViewportSize({ width, height });
       const clipped = await page.evaluate(() => [...document.querySelectorAll('.pirate-musket,.pirate-range-feedback,.pirate-danger')].some(node => {
         const box = node.getBoundingClientRect();

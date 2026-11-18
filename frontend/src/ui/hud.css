@@ -2,7 +2,9 @@
    Small frames use the same rounded brass rim and soft shadow as the panels (kit.css tokens). */
 .hud-play{font-family:var(--u-font);color:var(--u-ink)}
 .hud-play .hud-coins,.hud-play .hud-menu,.hud-play .quest-strip,.hud-play .interact,.hud-arrival{box-shadow:var(--u-frame);border-radius:var(--u-radius-sm)}
-.hud-play .hud-coins{position:absolute;top:18px;left:20px;display:flex;align-items:center;min-height:44px;padding:6px 16px;background:var(--u-sea);font:800 22px/1 var(--u-font);color:var(--u-gold);font-variant-numeric:tabular-nums;letter-spacing:.5px;pointer-events:auto}
+.hud-play .hud-coins{position:absolute;top:18px;left:20px;display:flex;align-items:center;gap:12px;min-height:44px;padding:6px 16px;box-sizing:border-box;background:var(--u-sea);font:800 22px/1 var(--u-font);color:var(--u-gold);font-variant-numeric:tabular-nums;letter-spacing:.5px;pointer-events:auto}
+.hud-play .hud-wave{display:inline-flex;align-items:center;gap:8px;padding-left:12px;border-left:1px solid var(--u-gold);color:var(--u-ink);font:700 18px/1.2 var(--u-font);letter-spacing:0;white-space:nowrap}
+.hud-play .hud-wave[hidden]{display:none}
 .hud-play .hud-right{position:absolute;top:18px;right:20px;width:min(310px,calc(100vw - 40px));display:grid;justify-items:end;gap:14px}
 .hud-play .hud-menu{display:inline-flex;align-items:center;gap:10px;min-height:44px;padding:8px 16px;border:0;background:var(--u-sea);color:var(--u-ink);font:700 17px/1 var(--u-font);cursor:pointer;pointer-events:auto}
 .hud-play .hud-menu:hover{background:var(--u-raise)}.hud-play .hud-menu:focus-visible{outline:3px solid var(--u-gold);outline-offset:6px}
@@ -11,7 +13,7 @@
 /* The quest strip: only the current goal shows (owner, 15 Nov: "limit the visual overload"); the title's
    "1 of 10" says how many there are, and a tap on the goal shows its hint. */
 .quest-strip li:not(:has([data-current=true])){display:none}
-.hud-play .quest-strip{width:100%;box-sizing:border-box;padding:10px 12px 12px;background:#123238f0;pointer-events:auto}
+.hud-play .quest-strip{width:100%;box-sizing:border-box;margin-top:var(--hud-quest-offset,0px);padding:10px 12px 12px;background:#123238f0;pointer-events:auto}
 .quest-strip h2{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:0 0 8px;font:700 18px/1.2 var(--u-serif);color:var(--u-gold)}
 .quest-strip .quest-progress{font:600 16px/1 var(--u-font);color:var(--u-mute);margin-left:auto}
 .quest-fold{flex:0 0 auto;min-width:44px;min-height:44px;margin:-12px -8px -12px 0;border:0;background:none;color:var(--u-gold);font:700 20px/1 var(--u-font);cursor:pointer}
@@ -43,7 +45,9 @@
 
 /* Phones and narrow windows: coins and Menu share the top row. */
 @media(max-width:900px){
-  .hud-play .hud-coins{top:12px;left:12px;font-size:20px;padding:6px 12px}
+  .hud-play .hud-coins{top:12px;left:12px;display:grid;gap:7px;max-width:calc(100vw - 150px);font-size:clamp(17px,4.8vw,20px);padding:8px 12px}
+  .hud-play .hud-coins-value{overflow-wrap:anywhere}
+  .hud-play .hud-wave{padding:7px 0 0;border-left:0;border-top:1px solid #ba963c80;font-size:17px}
   .hud-play .hud-right{top:12px;right:12px;left:12px;width:auto;gap:12px}
   .hud-play .quest-strip{padding:8px 10px 10px}
   .quest-strip h2{font-size:16px;margin-bottom:6px}
@@ -52,8 +56,6 @@
 }
 @media(prefers-reduced-motion:reduce){.hud-arrival{animation:none}}
 html[data-reduced-motion=true] .hud-arrival{animation:none}
-.hud-play .hud-captain{margin-left:12px;padding-left:12px;border-left:2px solid var(--u-line);color:var(--u-ink);font-size:18px}
-.hud-play .hud-captain[hidden]{display:none}
 .quest-item,.quest-hint{border-radius:var(--u-radius-xs)}.quest-check{border-radius:8px}
 
 /* T51: no goals before the player is on a game's island (open water behind the front door). */

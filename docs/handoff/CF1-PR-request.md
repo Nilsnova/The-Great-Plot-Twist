@@ -48,7 +48,7 @@ Position setup is scripted; the bell, F attacks and simulation remain real.
 ## Responsibility and handover
 
 - Responsible teammate: Ianno (`Iannomh123456`). Agent assistance: Codex, with isolated danger-helper work and independent read-only review.
-- Decision: D061; one task branch from current main, separate helper branch, no main writes.
+- Decision: D066; one task branch from current main, separate helper branch, no main writes.
 - Scope: frontend presentation; existing attack inputs, simulation, balance, money, recovery and network authority remain unchanged.
 - Ianno completed the explain-back questions, manually reviewed the screenshots/diff and explicitly confirmed publication. Next step: a different human reviews the published change before merge.
 
