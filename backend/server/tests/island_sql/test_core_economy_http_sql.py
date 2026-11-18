@@ -23,6 +23,11 @@ from server.island.treasury import EconomyContext  # noqa: E402
 from server.supabase_admin import SupabaseRejected  # noqa: E402
 from server.tests.case_sql.conftest import scratch_server as scratch_server  # noqa: E402
 from server.tests.island_sql.test_core_snapshot_sql import snapshot  # noqa: E402
+from server.tests.island_sql.test_economy_progression_sql import (  # noqa: E402
+    add_building,
+    set_v1_policy,
+    setup,
+)
 from server.tests.island_sql.test_island_treasury_sql import keys, rpc  # noqa: E402
 from server.tests.island_sql.test_islands_and_waves_sql import as_server  # noqa: E402
 from server.tests.island_sql.test_personal_captain_sql import initialized  # noqa: E402
@@ -200,3 +205,41 @@ def test_departed_crew_buyer_replays_original_http_receipt_without_current_count
     assert replay["repeat"] is True and replay["receipt"] == first["receipt"]
     assert replay["currentEconomy"] is replay["currentCrew"] is replay["currentWaveBest"] is None
     assert admin.calls == ["island_economy_operation_origin", "island_economy_hire"]
+
+
+@pytest.mark.parametrize(
+    "kind,spot,action",
+    [
+        ("cannon", "cannon_8", "specialise"),
+        ("cannon", "cannon_8", "tower_tree"),
+        ("culverin", "cannon_1", "tower_tree"),
+        ("culverin", "cannon_8", "tower_tree"),
+    ],
+)
+def test_saved_gated_tower_quotes_execute_with_new_offers_disabled(database, kind, spot, action):
+    owner, _, _, initial = setup(database)
+    expected = add_building(database, owner, kind, 5, spot)
+    if action == "specialise":
+        database.execute(
+            "insert into public.island_research"
+            "(island_owner,branch,researched_by,coins_paid,ref) "
+            "values(%s,'cannon',%s,180,'research:quote-gate')",
+            (owner, owner),
+        )
+    set_v1_policy(database, owner, more=True)
+    projected = prepared(database, owner)
+    group = "towerSkill" if action == "specialise" else "towerTree"
+    selector = (
+        {"spot": spot, "spec": "rapid"}
+        if action == "specialise"
+        else {"spot": spot, "path": "a", "tier": 1}
+    )
+    intent = select_quote(projected, group, **selector)
+    assert intent["expected"] == expected
+    context = EconomyContext("island_shared", 1, str(owner), str(owner), *keys(initial), None)
+    result = asyncio.run(
+        economy_progression.mutate(
+            DatabaseAdmin(database), CATALOGUE, context, uuid4().hex, {"action": action, **intent}
+        )
+    )
+    assert result.receipt.result.chargedCoins == intent["quotedCoins"]

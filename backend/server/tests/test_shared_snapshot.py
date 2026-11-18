@@ -196,3 +196,18 @@ def test_saved_gated_structure_keeps_identity_and_refund_but_respects_its_island
         for offer in result["quotes"]["towerTree"]
         if offer["target"]["spot"] == "cannon_8"
     )
+
+
+@pytest.mark.parametrize(
+    "kind,spot", [("cannon", "cannon_8"), ("culverin", "cannon_1"), ("culverin", "cannon_8")]
+)
+def test_saved_gated_tower_keeps_its_existing_tree_offer_when_new_purchases_are_off(kind, spot):
+    row = raw_snapshot()
+    row["economy"]["treasury"].update(balanceCoins="10000", availableCoins="10000")
+    row["buildings"][0].update(kind=kind, spot=spot, level=5)
+    result = project(row)
+    tree = quote(result, "towerTree", spot=spot, path="a", tier=1)
+    assert tree["available"] and tree["intent"]["expected"]["instanceId"] == INSTANCE
+    assert tree["intent"]["quotedCoins"] != "0"
+    build = quote(result, "build", spot=spot, kind=kind)
+    assert not build["available"]

@@ -53,6 +53,8 @@ The client copies the complete prepared intent and adds one root `actionUid`, op
 
 Unavailable offers retain exact intent when its price/target is known. Missing personal pricing state, missing actual refund lineage or an inapplicable target produces no invented intent. Paused admission and other domain restrictions keep offers unavailable. Never infer an actual refund or eligible price from bundled client data. GET `/api/island/demolish` returns `{quoteVersion: 1, actorId, economy, quote}` for shared mode; missing eligible basis remains `construction_basis_missing`.
 
+Stored gated defenses retain their known existing tower-skill/tree offers through the same existing-only catalogue used by the final progression adapter. SQL still checks the exact instance, kind, level and revision. This does not reopen new gated building purchases, waive unlocks or invent a missing construction refund basis.
+
 ## Historical replay and receipt responses
 
 Before current epoch/membership/phase preflight, resolve an existing authenticated actor/root UID read-only to its immutable original account/epoch/domain. Opaque financial identities, changed origin or another domain conflict. The lookup inserts no claim and grants no mutation authority. Existing domain RPCs still validate the complete exact intent/fingerprint and original receipt. New roots resolve current state and require the actual authority provider.
@@ -73,9 +75,9 @@ No admission/create/conversion, generic public money mutation, guessed session/a
 
 ## Verification
 
-- Focused Python: **93 passed** across `test_core_economy_routes.py`, `test_economy_http.py`, `test_economy_http_models.py`, `test_shared_snapshot.py` and `test_captain_progression_routes.py`.
-- Disposable PostgreSQL: **50 passed**, comprising 16 new snapshot/HTTP cases and 34 existing core legacy-guard cases, with the complete migration chain applied twice. Tests cover real lock waits, atomic purchase/pointer-rotation reads, preserved stale reservations, actual quote execution, missing real authority with no financial claim, and original construction/crew replay after departure without current economy/count projections.
-- Full backend: **537186 passed, 321 skipped, 2 failed**. Both failures are exact legacy respec definition assumptions in `test_respec_wave_guards_match_migration.py` after adding the guarded wrapper. Historical pricing assertions and current wrapper delegation must both remain covered; the narrow test-only compatibility correction is pending.
+- Focused Python: **108 passed** across the core route/dispatch/body/snapshot, personal-route, respec migration-contract and migration-version files.
+- Disposable PostgreSQL: **207 passed**, including 20 new snapshot/HTTP cases and the existing core legacy-guard/race, construction/grant, personal/operation and progression suites, with the complete migration chain applied twice. Tests cover real lock waits, atomic purchase/pointer-rotation reads, preserved stale reservations, actual quote execution, saved gated progression, missing real authority with no financial claim, and original construction/crew replay after departure without current economy/count projections.
+- Full backend after final guard integration: **537205 passed, 323 skipped**. The initial two respec text failures were corrected narrowly while retaining historical locked-price assertions, exact current wrapper checks and real alias/reapplication/ACL tests. This full run preceded the final saved-defense quote alignment; that follow-up passed the focused checks above and its final full rerun is pending.
 - Full Ruff passed. All **82** SQL migrations parsed, with **82** unique Supabase versions. Whitespace and relative documentation links are checked before the local commit.
 - The serialized synthetic server-prepared snapshot was accepted unchanged by the strict client parser through Vite SSR: 22 spots, seven quote groups and seven explicit unsupported capabilities. This verifies wire compatibility, not authenticated live gameplay.
 

@@ -82,22 +82,16 @@ def tower_quotes(facts: SnapshotFacts, catalogue: IslandCatalogue) -> dict:
         for row in facts.research
         if row.tier
     }
-    active = {spot.id: spot for spot in catalogue.spots}
     existing = catalogue_for_existing_structures(catalogue, built)
     offers = {"towerSkill": [], "towerTree": []}
     for row in facts.buildings:
-        spot = active.get(row.spot)
-        gated = spot is None or row.kind not in spot.kinds
         specs = sorted(HOUSE_ROLES) if row.kind == "house" else rules.tower_specs(row.kind)
         for spec in specs:
             target = {"spot": row.spot, "spec": spec}
-            if gated:
-                offers["towerSkill"].append(quote(facts, target, None, "economy_path_unavailable"))
-                continue
             if row.spec == spec:
                 offers["towerSkill"].append(quote(facts, target, None, "known"))
                 continue
-            price = 0 if row.kind == "house" else rules.tower_skill_price(catalogue, row.kind, spec)
+            price = 0 if row.kind == "house" else rules.tower_skill_price(existing, row.kind, spec)
             intent = {
                 **target,
                 "expected": building_expected(row),
@@ -105,11 +99,11 @@ def tower_quotes(facts: SnapshotFacts, catalogue: IslandCatalogue) -> dict:
             }
             reason = refusal(
                 lambda row=row, spec=spec: rules.check_specialise(
-                    catalogue, row.spot, spec, built, done
+                    existing, row.spot, spec, built, done
                 )
             )
             reason = reason or progression_rule_reason(
-                catalogue, {"action": "specialise", **intent}, facts.waveBest
+                existing, {"action": "specialise", **intent}, facts.waveBest
             )
             if (
                 reason is None
@@ -125,11 +119,6 @@ def tower_quotes(facts: SnapshotFacts, catalogue: IslandCatalogue) -> dict:
         for path in ("a", "b"):
             for tier in (1, 2, 3):
                 target = {"spot": row.spot, "path": path, "tier": tier}
-                if gated:
-                    offers["towerTree"].append(
-                        quote(facts, target, None, "economy_path_unavailable")
-                    )
-                    continue
                 price = tree.prices[tier - 1]
                 intent = {
                     **target,
@@ -138,11 +127,11 @@ def tower_quotes(facts: SnapshotFacts, catalogue: IslandCatalogue) -> dict:
                 }
                 reason = refusal(
                     lambda row=row, path=path, tier=tier: rules.check_tree(
-                        catalogue, row.spot, path, tier, built, facts.waveBest
+                        existing, row.spot, path, tier, built, facts.waveBest
                     )
                 )
                 reason = reason or progression_rule_reason(
-                    catalogue, {"action": "tower_tree", **intent}, facts.waveBest
+                    existing, {"action": "tower_tree", **intent}, facts.waveBest
                 )
                 offers["towerTree"].append(quote(facts, target, intent, reason, charge=price))
     return offers
