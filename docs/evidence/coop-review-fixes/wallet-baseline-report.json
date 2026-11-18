@@ -1,0 +1,242 @@
+{
+  "label": "baseline",
+  "source": "/workspace/wave-publish",
+  "sourceHead": "4f28c039a5546b2b557ab7a9af9c22a4b6b76195",
+  "trackedDiffSha256": "23410425872c1524c5b7fcd35908af0a7aa0b9a7899bf16049cebdee3e828c0d",
+  "scriptSha256": "a475e3dc1fcc91268c3a0a2e80f711a1d09166cd10f7842fff4ed5ecd3c09102",
+  "moduleSha256": {
+    "frontend/src/island/index.js": "7211a0fcff84f3d1b3a3e98b4c185d9759f807497af0e9562dcbfdc02601b98e",
+    "frontend/src/island/arsenal.js": "be6e511194b80dde1ea1b5c482ce44e4d6c353d5bbb52158fb9b215bf136f6ab",
+    "frontend/src/island/arsenal-api.js": "34f75c277673c40f11b22a3b60740a4a5586ea559496dd882a4cc99f7af19792",
+    "frontend/src/island/api.js": "0aa99b0e7ad22c9686ac25d33e9e44f3f03562445e5048c30801bb670e929ba9",
+    "frontend/src/ui/hud.js": "600492568bfbc62d1de88caef68512a3261d0cc22db01cfe2c62617c9ec24975",
+    "frontend/src/pirates/fake-api.js": "0e62346aaf6221ea8b6f528da6e2b19f5e0d74710b166a5c3163ac3fc6579250"
+  },
+  "browser": "156.0.8078.79",
+  "comparison": "The baseline and fixed labels run the same deferred two-read scenario; screenshots capture the balance after both old answers. Fresh-120 screenshots capture the preceding correction within the same run.",
+  "limits": "Real createIsland, main HUD, island/arsenal API adapters and the project in-memory fake transport. No live account, real wallet payment/refund SQL, persistent database, 3D game or physical-device claim.",
+  "reports": [
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "fresh": {
+        "stage": "Fresh wallet: 120 coins; both old reads pending",
+        "hudCoins": 120,
+        "islandCoins": null,
+        "requests": 2,
+        "arsenalCalls": 0,
+        "domCoins": "🪙 120"
+      },
+      "first": {
+        "stage": "First old response accepted; balance stays 120",
+        "hudCoins": 120,
+        "islandCoins": 120,
+        "requests": 2,
+        "arsenalCalls": 1,
+        "domCoins": "🪙 120"
+      },
+      "second": {
+        "stage": "Both old responses accepted",
+        "hudCoins": 100,
+        "islandCoins": 100,
+        "requests": 2,
+        "arsenalCalls": 1,
+        "domCoins": "🪙 100"
+      },
+      "newer": {
+        "stage": "A genuinely newer read may lower the balance to 80",
+        "hudCoins": 80,
+        "islandCoins": 80,
+        "requests": 2,
+        "arsenalCalls": 2,
+        "domCoins": "🪙 80"
+      },
+      "result": {
+        "samples": [
+          {
+            "stage": "Fresh wallet: 120 coins; both old reads pending",
+            "hudCoins": 120,
+            "islandCoins": null,
+            "requests": 2,
+            "arsenalCalls": 0,
+            "domCoins": "🪙 120"
+          },
+          {
+            "stage": "First old response accepted; balance stays 120",
+            "hudCoins": 120,
+            "islandCoins": 120,
+            "requests": 2,
+            "arsenalCalls": 1,
+            "domCoins": "🪙 120"
+          },
+          {
+            "stage": "Both old responses accepted",
+            "hudCoins": 100,
+            "islandCoins": 100,
+            "requests": 2,
+            "arsenalCalls": 1,
+            "domCoins": "🪙 100"
+          },
+          {
+            "stage": "A genuinely newer read may lower the balance to 80",
+            "hudCoins": 80,
+            "islandCoins": 80,
+            "requests": 2,
+            "arsenalCalls": 2,
+            "domCoins": "🪙 80"
+          }
+        ],
+        "calls": [
+          {
+            "method": "GET",
+            "path": "/api/island"
+          },
+          {
+            "method": "GET",
+            "path": "/api/island"
+          },
+          {
+            "method": "GET",
+            "path": "/api/island/structures"
+          },
+          {
+            "method": "GET",
+            "path": "/api/games/ISLE-K7Q2M"
+          },
+          {
+            "method": "GET",
+            "path": "/api/island/arsenal"
+          },
+          {
+            "method": "GET",
+            "path": "/api/waves/current?where=own&waveProtocol=2"
+          },
+          {
+            "method": "GET",
+            "path": "/api/island"
+          },
+          {
+            "method": "GET",
+            "path": "/api/island/arsenal"
+          }
+        ],
+        "finishEvents": [],
+        "hudText": "🪙 80\nMenu\nGoals\n0 of 10\n▾\n1\nBuild a cannon\n\nYour island"
+      },
+      "pageErrors": []
+    },
+    {
+      "viewport": {
+        "width": 375,
+        "height": 812
+      },
+      "fresh": {
+        "stage": "Fresh wallet: 120 coins; both old reads pending",
+        "hudCoins": 120,
+        "islandCoins": null,
+        "requests": 2,
+        "arsenalCalls": 0,
+        "domCoins": "🪙 120"
+      },
+      "first": {
+        "stage": "First old response accepted; balance stays 120",
+        "hudCoins": 120,
+        "islandCoins": 120,
+        "requests": 2,
+        "arsenalCalls": 1,
+        "domCoins": "🪙 120"
+      },
+      "second": {
+        "stage": "Both old responses accepted",
+        "hudCoins": 100,
+        "islandCoins": 100,
+        "requests": 2,
+        "arsenalCalls": 1,
+        "domCoins": "🪙 100"
+      },
+      "newer": {
+        "stage": "A genuinely newer read may lower the balance to 80",
+        "hudCoins": 80,
+        "islandCoins": 80,
+        "requests": 2,
+        "arsenalCalls": 2,
+        "domCoins": "🪙 80"
+      },
+      "result": {
+        "samples": [
+          {
+            "stage": "Fresh wallet: 120 coins; both old reads pending",
+            "hudCoins": 120,
+            "islandCoins": null,
+            "requests": 2,
+            "arsenalCalls": 0,
+            "domCoins": "🪙 120"
+          },
+          {
+            "stage": "First old response accepted; balance stays 120",
+            "hudCoins": 120,
+            "islandCoins": 120,
+            "requests": 2,
+            "arsenalCalls": 1,
+            "domCoins": "🪙 120"
+          },
+          {
+            "stage": "Both old responses accepted",
+            "hudCoins": 100,
+            "islandCoins": 100,
+            "requests": 2,
+            "arsenalCalls": 1,
+            "domCoins": "🪙 100"
+          },
+          {
+            "stage": "A genuinely newer read may lower the balance to 80",
+            "hudCoins": 80,
+            "islandCoins": 80,
+            "requests": 2,
+            "arsenalCalls": 2,
+            "domCoins": "🪙 80"
+          }
+        ],
+        "calls": [
+          {
+            "method": "GET",
+            "path": "/api/island"
+          },
+          {
+            "method": "GET",
+            "path": "/api/island"
+          },
+          {
+            "method": "GET",
+            "path": "/api/island/structures"
+          },
+          {
+            "method": "GET",
+            "path": "/api/games/ISLE-K7Q2M"
+          },
+          {
+            "method": "GET",
+            "path": "/api/island/arsenal"
+          },
+          {
+            "method": "GET",
+            "path": "/api/waves/current?where=own&waveProtocol=2"
+          },
+          {
+            "method": "GET",
+            "path": "/api/island"
+          },
+          {
+            "method": "GET",
+            "path": "/api/island/arsenal"
+          }
+        ],
+        "finishEvents": [],
+        "hudText": "🪙 80\nMenu\nGoals\n0 of 10\n▾\n1\nBuild a cannon\n\nYour island"
+      },
+      "pageErrors": []
+    }
+  ]
+}
