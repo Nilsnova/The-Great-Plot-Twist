@@ -18,7 +18,7 @@ Used by: routes/island_layout.py.
 
 from server.errors import ApiError
 from server.island import layout, layout_store, permissions, service
-from server.island.catalogue import IslandCatalogue
+from server.island.catalogue import IslandCatalogue, catalogue_for_existing_structures
 from server.island.service import IslandView
 from server.island.store import Island, Refusal
 from server.supabase_admin import SupabaseAdmin
@@ -80,10 +80,17 @@ async def move(
     if not catalogue.placement:
         raise ApiError(404, "feature_off", "Moving buildings is not open yet.")
     island, payer = await service.target_island(admin, catalogue, player_id, code, permissions.MOVE)
+    runtime_catalogue = catalogue
+    if (
+        await service.read_recovery_version(admin, island.owner)
+        == service.STRUCTURE_RECOVERY_VERSION
+    ):
+        built = await service.store.read_built_spots(admin, island.owner)
+        runtime_catalogue = catalogue_for_existing_structures(catalogue, built)
     refusal = None
     for _ in range(TRIES):
         refusal = await try_move(
-            admin, island, player_id, spot_id, (x, z), catalogue.more_tower_spots
+            admin, island, player_id, spot_id, (x, z), runtime_catalogue.more_tower_spots
         )
         if refusal is None or refusal.reason != "busy":
             break
