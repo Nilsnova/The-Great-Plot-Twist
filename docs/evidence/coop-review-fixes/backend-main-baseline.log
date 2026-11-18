@@ -1,0 +1,106 @@
+Using CPython 3.12.14 interpreter at: /opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3.12
+Creating virtual environment at: .venv
+Installed 26 packages in 30ms
+FFF                                                                      [100%]
+=================================== FAILURES ===================================
+________ test_the_database_wallet_reasons_equal_the_exact_python_pairs _________
+
+group3_database = <psycopg.Connection [IDLE] (database=postgres) at 0x7f85b6325d30>
+
+    def test_the_database_wallet_reasons_equal_the_exact_python_pairs(group3_database):
+        database = group3_database
+        rows = database.execute("select reason, direction from public.wallet_reasons").fetchall()
+        assert len(rows) == 17
+>       assert dict(rows) == dict(WALLET_REASONS)
+E       AssertionError: assert {'kit_grant':...: 'earn', ...} == {'kit_grant':...: 'earn', ...}
+E
+E         Omitting 17 identical items, use -vv to show
+E         Right contains 16 more items:
+E         {'boat_game': 'earn'}
+E         {'building_refund': 'earn'}
+E         {'captain_respec': 'spend'}
+E         {'captain_revive': 'spend'}...
+E
+E         ...Full output truncated, use '-vv' to show
+
+server/tests/group3_sql/test_group3_chain.py:42: AssertionError
+_____ test_owned_structure_state_uses_canonical_wire_fields_without_wallet _____
+
+    def test_owned_structure_state_uses_canonical_wire_fields_without_wallet() -> None:
+        world = World()
+        world.database.islands["K7Q2M"] = {
+            "player_id": PLAYER_ID,
+            "code": "K7Q2M",
+            "wave_best": 0,
+            "flags": 0,
+        }
+        world.database.recovery_state_reply = VIEW
+
+        response = world.client.get("/api/island/structures", headers=PLAYER)
+
+        assert response.status_code == 200
+        assert response.headers["cache-control"] == "private, no-store"
+        body = response.json()
+        assert list(body) == [
+            "serverNow",
+            "islandEpoch",
+            "revision",
+            "recoveryVersion",
+            "waveProtocol",
+            "displayPhase",
+            "repairWindow",
+            "waveId",
+            "remainingPaidUses",
+            "structures",
+        ]
+        assert body["structures"][0] == {key: value for key, value in VIEW["structures"][0].items()}
+        assert "coins" not in body
+>       assert world.database.calls("structure_recovery_read_state") == [
+            {"p_island_owner": PLAYER_ID, "p_prices": rules.price_table(world.app.state.island)}
+        ]
+E       AssertionError: assert [{'p_island_o..., 640], ...}}] == [{'p_island_o..., 640], ...}}]
+E
+E         At index 0 diff: {'p_island_owner': '11111111-2222-4333-8444-555555555555', 'p_prices': {'wall': [10, 20, 40, 80, 160], 'cannon': [30, 60, 120, 240, 480], 'mortar': [60, 120, 240, 480, 960], 'harpoon': [40, 80, 160, 320, 640], 'swivel': [50, 100, 200, 400, 800], 'culverin': [80, 160, 320, 640, 1280]}} != {'p_island_owner': '11111111-2222-4333-8444-555555555555', 'p_prices': {'wall': [10, 20, 40, 80, 160], 'cannon': [30, 60, 120, 240, 480], 'mortar': [60, 120, 240, 480, 960], 'harpoon': [40, 80, 160, 320, 640], 'swivel': [50, 100, 200, 400, 800], 'watchtower': [40, 80, 1...
+E
+E         ...Full output truncated, use '-vv' to show
+
+server/tests/test_structure_recovery_routes.py:74: AssertionError
+------------------------------ Captured log call -------------------------------
+INFO     uvicorn.error.requests:request_policy.py:56 {"route": "/api/island/structures", "status": 200, "duration_ms": 27.138}
+___________ test_member_can_read_a_shared_island_but_outsider_cannot ___________
+
+    def test_member_can_read_a_shared_island_but_outsider_cannot() -> None:
+        world = World()
+        world.database.islands["K7Q2M"] = {
+            "player_id": FRIEND_ID,
+            "code": "K7Q2M",
+            "wave_best": 0,
+            "flags": 0,
+        }
+        world.database.recovery_state_reply = VIEW
+        world.database.games.add(FRIEND_ID, PLAYER_ID)
+
+        allowed = world.client.get("/api/island/structures?code=ISLE-K7Q2M", headers=PLAYER)
+        outsider = World(settings=replace(ISLAND_SETTINGS, flags=parse_flags("islands,demo")))
+        outsider.database.islands["K7Q2M"] = world.database.islands["K7Q2M"]
+        denied = outsider.client.get("/api/island/structures?code=ISLE-K7Q2M", headers=GUEST)
+
+        assert allowed.status_code == 200, allowed.text
+>       assert world.database.calls("structure_recovery_read_state") == [
+            {"p_island_owner": FRIEND_ID, "p_prices": rules.price_table(world.app.state.island)}
+        ]
+E       AssertionError: assert [{'p_island_o..., 640], ...}}] == [{'p_island_o..., 640], ...}}]
+E
+E         At index 0 diff: {'p_island_owner': '66666666-7777-4888-9999-000000000000', 'p_prices': {'wall': [10, 20, 40, 80, 160], 'cannon': [30, 60, 120, 240, 480], 'mortar': [60, 120, 240, 480, 960], 'harpoon': [40, 80, 160, 320, 640], 'swivel': [50, 100, 200, 400, 800], 'culverin': [80, 160, 320, 640, 1280]}} != {'p_island_owner': '66666666-7777-4888-9999-000000000000', 'p_prices': {'wall': [10, 20, 40, 80, 160], 'cannon': [30, 60, 120, 240, 480], 'mortar': [60, 120, 240, 480, 960], 'harpoon': [40, 80, 160, 320, 640], 'swivel': [50, 100, 200, 400, 800], 'watchtower': [40, 80, 1...
+E
+E         ...Full output truncated, use '-vv' to show
+
+server/tests/test_structure_recovery_routes.py:96: AssertionError
+------------------------------ Captured log call -------------------------------
+INFO     uvicorn.error.requests:request_policy.py:56 {"route": "/api/island/structures", "status": 200, "duration_ms": 155.144}
+INFO     uvicorn.error.requests:request_policy.py:56 {"route": "/api/island/structures", "status": 403, "duration_ms": 23.382}
+=========================== short test summary info ============================
+FAILED server/tests/group3_sql/test_group3_chain.py::test_the_database_wallet_reasons_equal_the_exact_python_pairs
+FAILED server/tests/test_structure_recovery_routes.py::test_owned_structure_state_uses_canonical_wire_fields_without_wallet
+FAILED server/tests/test_structure_recovery_routes.py::test_member_can_read_a_shared_island_but_outsider_cannot
+3 failed in 3.05s

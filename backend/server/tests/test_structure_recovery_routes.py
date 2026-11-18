@@ -3,7 +3,6 @@
 from dataclasses import replace
 
 from server.flags import parse_flags
-from server.island import rules
 from server.tests.helpers import assert_error
 from server.tests.island_helpers import (
     FRIEND_ID,
@@ -42,6 +41,17 @@ VIEW = {
 }
 
 
+# The fixture's six recoverable defense schedules include saved culverins with purchase flags off.
+RECOVERY_PRICES = {
+    "wall": [10, 20, 40, 80, 160],
+    "cannon": [30, 60, 120, 240, 480],
+    "mortar": [60, 120, 240, 480, 960],
+    "harpoon": [40, 80, 160, 320, 640],
+    "swivel": [50, 100, 200, 400, 800],
+    "culverin": [80, 160, 320, 640, 1280],
+}
+
+
 def test_owned_structure_state_uses_canonical_wire_fields_without_wallet() -> None:
     world = World()
     world.database.islands["K7Q2M"] = {
@@ -72,7 +82,7 @@ def test_owned_structure_state_uses_canonical_wire_fields_without_wallet() -> No
     assert body["structures"][0] == {key: value for key, value in VIEW["structures"][0].items()}
     assert "coins" not in body
     assert world.database.calls("structure_recovery_read_state") == [
-        {"p_island_owner": PLAYER_ID, "p_prices": rules.price_table(world.app.state.island)}
+        {"p_island_owner": PLAYER_ID, "p_prices": RECOVERY_PRICES}
     ]
 
 
@@ -94,7 +104,7 @@ def test_member_can_read_a_shared_island_but_outsider_cannot() -> None:
 
     assert allowed.status_code == 200, allowed.text
     assert world.database.calls("structure_recovery_read_state") == [
-        {"p_island_owner": FRIEND_ID, "p_prices": rules.price_table(world.app.state.island)}
+        {"p_island_owner": FRIEND_ID, "p_prices": RECOVERY_PRICES}
     ]
     assert_error(denied, 403, "not_member")
     assert outsider.database.calls("structure_recovery_read_state") == []

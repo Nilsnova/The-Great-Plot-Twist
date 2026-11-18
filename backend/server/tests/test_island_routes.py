@@ -65,7 +65,7 @@ def test_a_new_player_sees_the_code_the_coins_and_sixteen_empty_spots():
     assert response.headers["cache-control"] == "private, no-store"
     body = response.json()
     assert list(body) == [
-        "code", "coins", "waveBest", "nextWave", "flags", "spots",
+        "code", "coins", "waveBest", "nextWave", "flags", "recoveryVersion", "spots",
         "crew", "captain", "prices", "unlocks", "skills", "weapons", "campaign", "layout",
     ]  # fmt: skip
     assert (body["code"], body["coins"], body["waveBest"], body["flags"]) == (
@@ -81,6 +81,14 @@ def test_a_new_player_sees_the_code_the_coins_and_sixteen_empty_spots():
         "x": -18.5, "z": -1.0, "tree": None,
     }  # fmt: skip
     assert body["nextWave"] == 1
+    assert body["recoveryVersion"] == 0
+
+
+def test_the_island_serializes_its_persisted_recovery_version():
+    world = World()
+    world.database.recovery_policy_version = 1
+
+    assert world.island().json()["recoveryVersion"] == 1
 
 
 def test_the_prices_are_the_economy_table():
@@ -362,9 +370,24 @@ def test_a_friend_visits_an_island_by_its_code(code):
 
     assert response.status_code == 200
     body = response.json()
-    assert list(body) == ["code", "ownerName", "waveBest", "spots", "crew", "campaign", "layout"]
+    assert list(body) == [
+        "code", "ownerName", "waveBest", "recoveryVersion", "spots", "crew", "campaign", "layout"
+    ]  # fmt: skip
     assert (body["code"], body["ownerName"], body["waveBest"]) == ("ISLE-K7Q2M", "Captain Gull", 3)
+    assert body["recoveryVersion"] == 0
     assert [spot["id"] for spot in body["spots"] if spot["built"]] == ["wall_2"]
+
+
+def test_a_visit_serializes_the_target_owners_persisted_policy():
+    world = World()
+    friend_island(world)
+    world.database.recovery_policy_versions[FRIEND_ID] = 1
+    world.database.recovery_policy_versions[PLAYER_ID] = 0
+
+    response = world.visit("ISLE-K7Q2M")
+
+    assert response.status_code == 200
+    assert response.json()["recoveryVersion"] == 1
 
 
 @pytest.mark.parametrize("code", ["ISLE-ZZZZZ", "HARBOR-K7Q2M", "K7Q20", "x"])
