@@ -85,6 +85,7 @@ describe('the hp bar of a teammate sits over their presence figure', () => {
   it('draws the bar at the figure when one is drawn, else where the sim has the captain', async () => {
     const { createWave } = await import('../../src/pirates/sim.js');
     const { createWaveRenderer, packAtlas } = await import('../../src/pirates/render.js');
+    const {projectGround} = await import('../../src/world/projection.js');
     const scene = new THREE.Scene();
     const renderer = createWaveRenderer({ scene, atlas: { texture: new THREE.Texture(), ...packAtlas() }, defenses: [], fx: () => null });
     const state = { ...createWave({ seed: 1, wave: 1, weather: { ships: 1, fog: 0 }, defenses: [] }).state(),
@@ -97,9 +98,9 @@ describe('the hp bar of a teammate sits over their presence figure', () => {
       return starts;
     };
     renderer.update({ state, simTime: 0, dt: 0 });
-    expect(barStarts()).toEqual([5]);
-    renderer.update({ state, simTime: 0, dt: 0, figures: new Map([['p-ben', { x: 7.5, z: 0 }]]) });
-    expect(barStarts()).toEqual([7.5]);
+    expect(barStarts()).toEqual([projectGround(5, 0).x]);
+    renderer.update({ state, simTime: 0, dt: 0, figures: new Map([['p-ben', { x: 7.5, z: 2 }]]) });
+    expect(barStarts()).toEqual([projectGround(7.5, 2).x]);
     renderer.dispose();
   });
 });

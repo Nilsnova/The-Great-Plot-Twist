@@ -216,20 +216,29 @@ async def start_health(admin: SupabaseAdmin, wave_id: UUID) -> tuple[str, dict[s
 
 
 async def record(
-    admin: SupabaseAdmin, player_id: str, wave_id: UUID, walls: dict[str, int] | None
+    admin: SupabaseAdmin,
+    player_id: str,
+    wave_id: UUID,
+    walls: dict[str, int] | None,
+    *,
+    whole: bool = False,
 ) -> None:
     """Keep the wall health a finishing player's simulation ended the wave with. Only the first
     finish of an island wave counts (island_walls_record() keeps one record per wave); Pirate
     Point and a finish without walls are left alone. The browser's numbers cannot be proven,
     like its `survived`, so they are bounded: 0..100, only walls that stand on that island, and
     never above the health each wall started the wave with (cap_to_start), so a finish can
-    never heal a wall for free."""
-    if not walls:
+    never heal a wall for free. whole (the owner's rule of 18 Nov, fix/playtest-1117): the wave's
+    end leaves every wall of the island at 100 whatever the report says."""
+    if not walls and not whole:
         return
     started = await start_health(admin, wave_id)
     if started is None:
         return
-    capped = wall_health.cap_to_start(walls, started[1])
+    if whole:
+        capped = {spot: 100 for spot in started[1]}
+    else:
+        capped = wall_health.cap_to_start(walls, started[1])
     if not capped:
         return
     arguments = {"p_player_id": player_id, "p_wave_id": str(wave_id), "p_walls": capped}
@@ -239,13 +248,18 @@ async def record(
 
 
 async def record_after_finish(
-    admin: SupabaseAdmin, player_id: str, wave_id: UUID, walls: dict[str, int] | None
+    admin: SupabaseAdmin,
+    player_id: str,
+    wave_id: UUID,
+    walls: dict[str, int] | None,
+    *,
+    whole: bool = False,
 ) -> None:
     """record() after a finish that is already settled (coins paid): best effort. A database
     problem here is logged and swallowed, so the player still gets the answer of their paid
     finish instead of an error; the walls then simply keep their state from before the wave."""
     try:
-        await record(admin, player_id, wave_id, walls)
+        await record(admin, player_id, wave_id, walls, whole=whole)
     except ApiError as error:
         logger.warning("Wall health of a finished wave not recorded: %s", type(error).__name__)
 

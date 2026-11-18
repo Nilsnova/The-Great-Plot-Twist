@@ -5,7 +5,9 @@
 //     reducedMotion, quality: () => settings.quality, isBlocked: () => !active || outsideBlocked(), on, emit,
 //     getDefenses, finishWave, api, openRoom});           // and pirates.dispose() in dispose()
 //
-// It runs its own frame loop, so game.js needs no other change. What the other lanes hand in:
+// By default it runs its own frame loop. With loop:false the caller owns update(delta); game.js
+// uses that mode to sample combat after movement and apply poses before drawing the same frame.
+// What the other lanes hand in:
 //   getDefenses()   the island lane: [{id, kind, x, z}] of the built walls, cannons, watchtower and
 //                   houses on the island being defended, in home_islet world units
 //   finishWave(body) the island lane: POST /api/waves/finish and show the loot; may throw the API
@@ -29,40 +31,50 @@ import { createWaveController } from './controller.js';
 import { createPiratePoint } from './pirate-point.js';
 import { startLoop } from '../core/loop.js';
 import * as THREE from 'three';
+import {projectGround, unprojectGround} from '../world/projection.js';
 
-export function mountPirates(ctx) {
-  const { scene, camera, canvas, container, player, world: places, audio, on, emit } = ctx;
-  const bus = ctx.bus ?? { on, emit };
+/** Combat input and overlay projection share the ground inverse; lift stays in display units. */
+export function createCombatProjection({camera, canvas, container}) {
   const projected = new THREE.Vector3();
-  const world = {
-    scene, camera, canvas, container, player,
-    place: () => places?.current?.id ?? null,
-    isBlocked: () => !!ctx.isBlocked?.(),
+  return {
     unproject(clientX, clientY) {
       if (!canvas || !camera) return null;
       const rect = canvas.getBoundingClientRect();
       if (!rect.width || !rect.height) return null;
       projected.set((clientX - rect.left) / rect.width * 2 - 1, 1 - (clientY - rect.top) / rect.height * 2, 0).unproject(camera);
-      return { x: projected.x, z: -projected.y / .72 };
+      return unprojectGround(projected.x, projected.y);
     },
     // The other way: island units (lifted `lift` drawn units) to px inside the container, or null.
     project(x, z, lift = 0) {
       if (!canvas || !camera) return null;
       const rect = canvas.getBoundingClientRect(), box = container?.getBoundingClientRect?.() ?? rect;
       if (!rect.width || !rect.height) return null;
-      projected.set(x, -z * .72 + lift, 0).project(camera);
+      const at = projectGround(x, z);
+      projected.set(at.x, at.y + lift, 0).project(camera);
       return { x: rect.left - box.left + (projected.x + 1) / 2 * rect.width, y: rect.top - box.top + (1 - projected.y) / 2 * rect.height };
     },
+  };
+}
+
+export function mountPirates(ctx) {
+  const { scene, camera, canvas, container, player, world: places, audio, on, emit } = ctx;
+  const bus = ctx.bus ?? { on, emit };
+  const world = {
+    scene, camera, canvas, container, player,
+    place: () => places?.current?.id ?? null,
+    isBlocked: () => !!ctx.isBlocked?.(),
+    ...createCombatProjection({camera, canvas, container}),
   };
   const shared = { bus, world, sound: audio, reducedMotion: ctx.reducedMotion ?? (() => false), quality: ctx.quality ?? (() => 'high'),
     playerId: ctx.playerId, captainLevel: ctx.captainLevel ?? (() => 1), captainSkills: ctx.captainSkills ?? (() => []),
     captainWeapon: ctx.captainWeapon ?? (() => 'musket'), captainColour: ctx.captainColour ?? (() => 0),
     reviveCaptain: ctx.reviveCaptain ?? null };
-  const island = createWaveController({ ...shared, getDefenses: ctx.getDefenses ?? (() => []), finishWave: ctx.finishWave,
+  const island = createWaveController({ ...shared, getDefenses: ctx.getDefenses ?? (() => []),
+    getManaging: ctx.getManaging ?? (() => false), finishWave: ctx.finishWave,
     practiceIdentity: ctx.practiceIdentity, room: ctx.islandRoom ?? null, place: ctx.islandPlace ?? 'home_islet', simOptions: ctx.islandSimOptions ?? {},
     getCrew: ctx.getCrew ?? (() => null), startNextWave: ctx.startNextWave ?? null,
     holdBreak: ctx.holdBreak ?? null, toggleHold: ctx.toggleHold ?? null, guide: ctx.battleGuide !== false,
-    onEvents: ctx.onIslandEvents, recoveryTransport: ctx.recoveryTransport ?? null });
+    onEvents: ctx.onIslandEvents, recoveryTransport: ctx.recoveryTransport ?? null, inspectDefenses: ctx.inspectDefenses === true });
   const point = ctx.api ? createPiratePoint({ ...shared, api: ctx.api, openRoom: ctx.openRoom, input: ctx.input, getDefenses: ctx.getPointDefenses,
     rehearsal: ctx.rehearsal === true, host: ctx.host === true, notify: ctx.notify, beforeStart: ctx.beforePointWave ?? null }) : null;
   const update = dt => { island.update(dt); point?.update(dt); };

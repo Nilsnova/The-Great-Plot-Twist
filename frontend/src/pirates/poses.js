@@ -6,15 +6,23 @@
 //   createPoses({now})            -> {note(events), get(by), clear()}: the poses of the wave's captains
 //   poseFrame(pose, colour)       -> the art id for {kind, age} in lobby colour 0-9, or null when over
 //   figurePoses(poses, matches)   -> Map(presence figure id -> pose) for the figures of src/pirates/figures.js
+import {WEAPON_IDS, readWeapon} from './captain-ids.js';
+import {projectGroundVector} from '../world/projection.js';
 
-// Musket: the firing frame (flash) for `fire` seconds, then the aiming frame; the cutlass blow one frame.
+// Firearms use a firing frame then an aiming frame; the bomb holds/releases, the cutlass uses one frame.
 export const POSES = Object.freeze({
   musket: Object.freeze({seconds: .6, fire: .25}),
+  pistols: Object.freeze({seconds: .32, fire: .12}),
+  blunderbuss: Object.freeze({seconds: .6, fire: .25}),
+  long_rifle: Object.freeze({seconds: .6, fire: .25}),
+  fire_bombs: Object.freeze({seconds: .6, fire: .25}),
   cutlass: Object.freeze({seconds: .3}),
 });
 const COLOURS = 10;
 // Every pose frame, for the art lists (painted on first use).
-export const POSE_IDS = Object.freeze(Array.from({length: COLOURS}, (_, i) => [`captain-${i + 1}-musket-1`, `captain-${i + 1}-musket-2`, `captain-${i + 1}-cutlass`]).flat());
+export const POSE_IDS = Object.freeze(Array.from({length: COLOURS}, (_, i) => [
+  ...WEAPON_IDS.flatMap(id => [1, 2].map(frame => `captain-${i + 1}-${id}-${frame}`)), `captain-${i + 1}-cutlass`,
+]).flat());
 
 const finite = value => Number.isFinite(value);
 // A wave event -> the pose it starts ({kind, flip}), or null.
@@ -24,10 +32,12 @@ export function poseOf(event) {
     if (![event.x, event.z, event.toX, event.toZ].every(finite)) return null;
     const dx = event.toX - event.x, dz = event.toZ - event.z;
     if (dx === 0 && dz === 0) return null;
-    // Screen depth is compressed by .72 (world/art.js). The sprite mirrors left shots.
-    return {kind: 'musket', flip: dx < 0, angle: Math.atan2(dz * .72, Math.abs(dx))};
+    const direction = projectGroundVector(dx, dz);
+    // Sprite-local y points down; displayed ground y points up. Mirror after projection.
+    return {kind: readWeapon(event.weapon), flip: direction.x < 0, angle: Math.atan2(-direction.y, Math.abs(direction.x))};
   }
-  if (event.type === 'captain_struck' && finite(event.x) && finite(event.toX)) return {kind: 'cutlass', flip: event.toX < event.x};
+  if (event.type === 'captain_struck' && [event.x, event.z, event.toX, event.toZ].every(finite))
+    return {kind: 'cutlass', flip: projectGroundVector(event.toX - event.x, event.toZ - event.z).x < 0};
   return null;
 }
 
@@ -36,7 +46,7 @@ export function poseFrame(pose, colour) {
   if (!spec || !finite(pose.age) || pose.age < 0 || pose.age >= spec.seconds) return null;
   const n = Number.isInteger(colour) && colour >= 0 && colour < COLOURS ? colour + 1 : 1;
   if (pose.kind === 'cutlass') return `captain-${n}-cutlass`;
-  return `captain-${n}-musket-${pose.age < spec.fire ? 2 : 1}`;
+  return `captain-${n}-${pose.kind}-${pose.age < spec.fire ? 2 : 1}`;
 }
 
 // now(): seconds. One pose per captain (the latest wins); get(by) answers {kind, flip, angle, age} while it lasts.

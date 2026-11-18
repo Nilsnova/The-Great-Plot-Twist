@@ -43,7 +43,8 @@ describe('house level art', () => {
       let wanted = [];
       const drawing = decorateIsland(place, {layout: {spots: [{id: 'house_1', slot: 'house', x: 3, z: 4}], zones: () => [], cabin: false, bell: false},
         loadArt: async names => { wanted = names; return Object.fromEntries(names.map(id => [id, new THREE.MeshBasicMaterial()])); }});
-      await Promise.resolve();
+      // Join actual preparation; one microtask can still leave the procedural stand-in visible.
+      await drawing.retryArt();
       const group = place.group.children.find(child => child.name === 'island');
       const spot = {id: 'house_1', kind: 'house', built: true, level: 2, spec: 'tavern'};
       drawing.apply({spots: [spot]});

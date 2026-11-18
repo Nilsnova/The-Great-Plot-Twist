@@ -1,0 +1,54 @@
+{
+  "featureParent": "15a59eaef20db34fb4b0e6541b18473a9e06a69d",
+  "mainParent": "db57334748fb90d4139bdc0395c3c1cc9eb42ac1",
+  "focused": {
+    "files": 10,
+    "testsPassed": 95,
+    "seconds": 4.69
+  },
+  "browser": {
+    "posedViews": 400,
+    "musketPixelMatches": 220,
+    "passed": true
+  },
+  "build": {
+    "passed": true,
+    "spoilerFiles": 245,
+    "protectedLines": 12
+  },
+  "budget": {
+    "passed": true,
+    "initial": {
+      "javaScript": 18959,
+      "javaScriptGzip": 8920,
+      "css": 9248,
+      "cssGzip": 3451,
+      "titleImage": null
+    },
+    "limits": {
+      "titleJavaScript": 21080,
+      "titleCss": 12000,
+      "titleImage": 0
+    }
+  },
+  "textLint": {
+    "candidates": 4477,
+    "files": 524,
+    "errors": 0,
+    "reportOnly": 8
+  },
+  "notRun": [
+    "full frontend suite",
+    "accessibility",
+    "demo journey",
+    "live multiplayer"
+  ],
+  "hashes": {
+    "frontend/src/art/people.js": "e7cddc225867012e86dd27a3478aa016611e089fe81b40cf57c8fd2bb7e16722",
+    "frontend/src/pirates/poses.js": "1289224564dba0b25adda2e841c1dec4222c2f265551f7c2779f1f4121731762",
+    "frontend/src/pirates/render.js": "e1bc1d951fc60d452fb3a7523a1d5ead0b0ecde69c13039c320fd30f6bfd9b3f",
+    "frontend/scripts/check-shooting-direction.js": "44289f8e35d19634551da519b2afac240c9bad3afb842ac2f7e2f9a434b96ad1",
+    "frontend/tests/pirates/poses.test.js": "c176e310faf6461f0a219500886e6c69f10becb82d4624ac98f245f96c57f456",
+    "frontend/tests/pirates/render.test.js": "028b54f5160515704fa1f442e28280add603b0fd4c7a5cdb6e4084e29970d9a1"
+  }
+}

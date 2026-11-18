@@ -12,6 +12,8 @@
 >
 > Last updated: Tue 10 Nov 2026.
 
+**18 Nov multiplayer planning addition:** the accepted shared-island economy target is recorded in the [decision log](DECISIONS.md#shared-island-economy-2026-11-18). Its [delivery milestones](BUILD-PLAN.md#7-shared-island-economy-roadmap) and [MP-ECO task board](OPEN-TODOS.md#12-shared-island-economy-and-multiplayer-rules) extend the existing plan without renumbering or completing previous tasks. This is planning before implementation; the freeze and submission dates below are unchanged. Schedule the cross-system work explicitly rather than promising it before submission. Implementation and release remain separate from this planning update.
+
 ## Where we stand against the grading criteria
 
 | Criterion (weight) | Today | What "excellent" means for us |
@@ -78,6 +80,8 @@ Approved U addition: Optional skill-aware comparison against the carried weapon,
 Approved U addition: Local inventory filters and grouped rack rows, implemented in draft [PR #98](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/98) with [evidence](evidence/U-arsenal-filters/README.md). This completes only the approved addition; author and independent human review remain.
 Approved U addition: Preparation and upcoming unlocks before ringing the bell, implemented in draft [PR #94](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/94) with [evidence](evidence/U-wave-preparation/README.md). This completes only the approved addition; author and independent human review remain.
 
+The village polish review covers selected building identity, between-wave range and the decorative southwest mooring. [Review captures](evidence/village-polish/README.md)
+
 ### C. Simplify the code base (helps criteria 5 and 6)
 
 | ID | Value | Size | Task | Done when |
@@ -139,9 +143,11 @@ T28 UX follow-up: [Learn boss minigames with optional first-time practice](../sp
 
 ## Expansion backlog · 14 Nov 2026
 
+[Fleet materials and combat effects](../specs/VIS-16-29-fleet-art.md) group VIS-16 and VIS-29 into one visual review, with Johannes as the responsible teammate. Playtest evidence and peer review determine readiness.
+
 The requested [defense and shared-island expansion](BUILD-PLAN.md#6-defense-and-shared-island-expansion) adds T29–T47, proposed by Ianno Hollensteiner. It preserves this grading/submission plan and the feature freeze. Start with investigation and reviewed contracts; schedule large implementation packages after the deadline unless the team explicitly revises the schedule. Existing T3/T5/T6/T7/T26 are extended, not replaced. Claiming, human review and merge rules above still apply.
 
-The unified-recovery follow-up T54–T60 is claimed by Ianno. [PR #135](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/135) merged the approved technical plan; Ianno confirmed approval and authorized implementation. T55–T60 code and integration harness are present on open drafts [PR #136](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/136), [PR #137](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/137), [PR #138](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/138), [PR #139](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/139), [PR #140](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/140), [PR #201](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/201) and T55 sub-drafts [PR #197](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/197), [PR #199](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/199) and [PR #200](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/200). Current integrated verification and its browser-check limitation are summarized in [D059](DECISIONS.md#d059--shared-gradual-hp-recovery-and-paid-instant-repair--2026-11-16) and [T60 integration evidence](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/201). The saved-v1 D060/culverin flag-off availability decision remains open. The feature flag remains off; no migration has been applied live and no deployment is authorized. [OPEN-TODOS section 11](OPEN-TODOS.md#11-unified-defense-recovery--unassigned-follow-ups-16-nov) is the detailed task board; [BUILD-PLAN section 6](BUILD-PLAN.md#t54-t60-unified-recovery-delivery-gates) records the delivery gates. PR #127 remains superseded; PR #128 is the earlier gameplay baseline. The feature freeze, human review and release gates remain.
+The unified-recovery follow-up T54–T60 is claimed by Ianno. The current 18 Nov revision uses full free restoration at canonical wave end, retaining paid combat repair and retiring obsolete repair-only choices in [T58 #456](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/456) / [T59 #457](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/457). [PR #135](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/135) merged the approved plan; [PR #203](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/203) merged the core implementation. [OPEN-TODOS section 11](OPEN-TODOS.md#11-unified-defense-recovery--unassigned-follow-ups-16-nov) lists the current follow-ups and review status; [BUILD-PLAN](BUILD-PLAN.md#t54-t60-unified-recovery-delivery-gates) lists delivery gates. The T60 local four-page browser check passes, with exact scope and remaining authenticated recovery, egress, balance and retention gaps in [D059](DECISIONS.md#d059--shared-gradual-hp-recovery-and-paid-instant-repair--2026-11-16). Human review and release gates remain; no live migration, activation or deployment is authorized. PR #127 remains superseded; PR #128 is the earlier approved gameplay baseline.
 
 Planning handover (14 Nov): roadmap/task expansion drafted by Ianno Hollensteiner; documentation checks completed. Implementation tasks remain proposed, not done. Peer review and explain-back are pending.
 
@@ -164,5 +170,7 @@ independent human review remain. No change to the existing freeze or merge rules
 
 COC-02 follow-up (Johannes, draft): current-base management fit view is a bounded implementation slice for issue #143 and depends on COC-49/PR #192. The parent camera task remains open; see [specification](../specs/COC-02-village-overview.md). No merge or full editor-camera completion is claimed.
 
+
+18 Nov / Johannes — VIS69 focused wall refinement: [parent #469](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/469), tasks [VIS70 #470](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/470), [VIS71 #471](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/471), [VIS72 #472](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/472), [VIS73 #473](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/473). [Draft #474](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/474) saves the local-Mac handover checkpoint. Tasks remain open: combined checks, feedback implementation, actual visual acceptance and different-human review are pending. Preserve the existing twelve-wall game; no merge or rollout.
 
 WALL-19 perimeter follow-up (Johannes): [Draft PR #275](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/275) adds bounded database identities and positioned-build/lifecycle guards for the 128-piece target. [Scope, dependencies and evidence](../specs/WALL-19-cohort-constraints.md). This is one required slice; it does not complete the perimeter wall feature, apply a migration or authorize release.

@@ -1,5 +1,5 @@
 /* G29 class demo (the quest strip itself is the HUD's, src/ui/hud.css): demo prompts, the Keeper's Lock, the duel spotlight and the projector. */
-.demo-path .island-label,.demo-path .chapter-number,.demo-path .journal-toggle,.demo-path .case-toolbar,.demo-path .tonight-chip,.demo-path .bulletin-toggle,.demo-path .onboarding,.demo-path .onboarding-hint{display:none!important}
+.demo-path .island-label{display:none!important}
 .demo-prompt{position:absolute;left:50%;bottom:120px;transform:translateX(-50%);z-index:40;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;max-width:calc(100vw - 24px);background:var(--u-sea);padding:10px 14px;font:600 17px/1.35 var(--u-font);color:var(--u-ink);box-shadow:0 -2px var(--u-brass),0 2px var(--u-brass),-2px 0 var(--u-brass),2px 0 var(--u-brass),0 -4px var(--u-deep),0 4px var(--u-deep),-4px 0 var(--u-deep),4px 0 var(--u-deep),0 8px #0006}
 .demo-prompt p{margin:0;width:100%;text-align:center}.demo-prompt kbd{display:inline-grid;place-items:center;min-width:26px;margin-right:8px;padding:0 5px;font:800 16px/26px var(--u-font);color:#2b1d06;background:var(--u-gold);border:2px solid var(--u-deep)}
 .demo-splash{position:absolute;inset:0;z-index:60;display:grid;place-items:center;pointer-events:none}

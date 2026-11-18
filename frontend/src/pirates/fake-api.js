@@ -17,8 +17,6 @@
 //   await api.captain({actionUid});              // POST /api/island/captain      (§10)
 //   await api.learnSkill({skill, actionUid});    // POST /api/island/skill        (§14)
 //   await api.pickRole({role}); await api.respec({actionUid}); // POST /api/island/role, /respec (GAME-V3.md, Captain tree and roles)
-//   await api.buyWeapon({weapon, actionUid});    // POST /api/island/weapon/buy   (§15)
-//   await api.equipWeapon({weapon});             // POST /api/island/weapon/equip
 //   await api.demolishQuote({spot, code?});      // GET  /api/island/demolish     (GAME-V3.md §4.2: half back to each payer)
 //   await api.demolish({spot, actionUid, code?}); // POST /api/island/demolish    (between waves, any member; not the heart)
 //   await api.move({spot, x, z, code?});           // POST /api/island/move        (T36: a spot to a grid cell, between waves, free)
@@ -37,7 +35,7 @@
 //   await api.leaveGame({code});                 // POST /api/games/leave          (409 host_cannot_leave)
 // In a fresh world your captain ("me") is already a member of the friends' games (ISLE-FR3ND), so Continue
 // shows two games; another captain joins first, as on the server.
-// Waves (§1, §4): numbers to 100, every 5th a boss wave (`boss: true`, loot × 2), houses pay by level, and the
+// Waves (§1, §4): numbers to 100, every 5th a boss wave (`boss: true`, loot × 3, wave 40 × 5), houses pay by level, and the
 // next bell carries on after a win and restarts at best − 2 (at least 1) after a loss (`nextWave`).
 // Spot ids: the island's tower spots are cannon_1…cannon_7; tower_s1…tower_s7 are accepted as the same spots.
 // The locks of §9 (409 locked) follow your best wave (your island or a Pirate Point wave you fought in):
@@ -54,7 +52,7 @@ import { bonusLoot, eventFor } from './wave-events.js';
 import { rescueAllowed } from './finisher/rescue.js'; // T38: which lost waves a rescue can soften
 import { createRandom, hasTavern, revivePrice } from './sim.js';
 import { BUILDINGS, CREW, CAPTAIN, readUnlocks, unlockWave, SLOT_KINDS } from '../island/td-rules.js';
-import { ROLES, ROLE_BY_ID, ROLE_LEVEL, SKILLS, SKILL_BY_ID, WEAPONS, WEAPON_BY_ID, isRole, respecPrice, pointsEarned, pointsSpent, readSkills, readWeapon, skillNeeds } from './captain-ids.js';
+import { ROLES, ROLE_BY_ID, ROLE_LEVEL, SKILLS, SKILL_BY_ID, WEAPONS, isRole, respecPrice, pointsEarned, pointsSpent, readSkills, readWeapon, skillNeeds } from './captain-ids.js';
 import { STEPS as CAMPAIGN_STEPS, spotWave, waveOf } from '../campaign/index.js';
 import { BRANCHES, BRANCH_BY_ID, SPECS, TOP_TIER, isCapstone, optionName, optionsOf, readSpec, skillPrice } from '../campaign/tech.js';
 import { TOWER_TREES, TREE_LEVEL, TREE_STEPS, treeStep } from './tower-trees.js';
@@ -72,7 +70,10 @@ export const ISLAND_RULES = Object.freeze({
     'cannon_5', 'cannon_6', 'cannon_7', 'tower_1', 'house_1', 'house_2', 'wall_7', 'wall_8', 'wall_9', 'wall_10', 'wall_11', 'wall_12']),
   pointSpots: Object.freeze(['pp_wall_1', 'pp_wall_2', 'pp_wall_3', 'pp_wall_4', 'pp_tower_1', 'pp_tower_2', 'pp_tower_3', 'pp_tower_4', 'pp_tower_5', 'pp_tower_6']),
   // lateFrom, latePerWave: from wave lateFrom on, each wave adds latePerWave instead of perWave (islands.json).
-  loot: Object.freeze({ base: 10, perWave: 5, perHouse: 5, piratePointBase: 20, lateFrom: 30, latePerWave: 2 }),
+  // bossMultiplier, bossMultiplierByWave, raiseFrom, raiseTimes: the server's named loot values (islands.json,
+  // fix/playtest-1117): a boss wave 3 times, the boss wave 40 5 times, island waves above 40 half again.
+  loot: Object.freeze({ base: 10, perWave: 5, perHouse: 5, piratePointBase: 20, lateFrom: 30, latePerWave: 2,
+    bossMultiplier: 3, bossMultiplierByWave: Object.freeze({ 40: 5 }), raiseFrom: 40, raiseTimes: 1.5 }),
   waves: Object.freeze({ countdownSeconds: 10, minimumSeconds: 10, maximumSeconds: 900, highestWave: 100 }),
   // GAME-V3.md §4 and §5: the wreck's repair and the Tech hub's research (the server's numbers, islands.json).
   wreck: Object.freeze({ goal: 500, gifts: Object.freeze([25, 100]) }),
@@ -180,10 +181,13 @@ export function readIslandCode(text) {
 export const wantsFakeIslands = (search = '') => new URLSearchParams(search).get('islands') === 'fake';
 export const islandRoom = code => `live:place:isle_${readIslandCode(code)?.toLowerCase()}:1`;
 export function lootFor(wave, houses, piratePoint = false) {
-  const { base, perWave, perHouse, piratePointBase, lateFrom, latePerWave } = ISLAND_RULES.loot;
+  const { base, perWave, perHouse, piratePointBase, lateFrom, latePerWave, raiseFrom, raiseTimes } = ISLAND_RULES.loot;
   const waves = perWave * Math.min(wave, lateFrom) + latePerWave * Math.max(0, wave - lateFrom);
-  return piratePoint ? piratePointBase + waves : base + waves + perHouse * houses;
+  if (piratePoint) return piratePointBase + waves;
+  const normal = base + waves + perHouse * houses;
+  return wave > raiseFrom ? Math.floor(normal * raiseTimes) : normal;
 }
+export const bossMultiplierFor = wave => ISLAND_RULES.loot.bossMultiplierByWave[wave] ?? ISLAND_RULES.loot.bossMultiplier;
 // D039 (wall_health.py): the price of a whole rebuild (30% of the wall's levels, rounded up: 3, 9, 21, 45, 93) and of a
 // Repair (the missing share of it, rounded up, at least 1); the finish's walls body ({wall_N: 0..100}, at most 50).
 const WALL_RECOVERY_MS = 600 * 1000;
@@ -536,28 +540,6 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
       player.coins -= price; island.skills = []; island.role = null; player.actions.set(`respec:${actionUid}`, true);
       return view();
     },
-    async buyWeapon({ weapon, actionUid } = {}) {
-      if (!uid(actionUid)) invalid('Send the weapon and an action id.');
-      if (!Object.hasOwn(WEAPON_BY_ID, weapon ?? '')) refuse(400, 'bad_weapon', 'There is no such weapon.');
-      // D042, as backend/server/routes/island.py: with the flag "arsenal" on, weapons are bought at the arsenal.
-      if (flags?.arsenal === true) refuse(409, 'use_arsenal', 'Weapons are in the arsenal now. Walk to the arsenal.');
-      const player = me(), island = world.islands.get(player.code), info = WEAPON_BY_ID[weapon];
-      if (player.actions.has(`weapon:${actionUid}`)) return view();
-      if (weaponsOf(island).owned.includes(weapon)) refuse(409, 'owned', `You own the ${info.name.toLowerCase()} already.`);
-      const wave = unlocking ? Math.max(island.waveBest, player.pointBest ?? 0) : 99;
-      if (wave < info.unlockWave) refuse(409, 'locked', lockedMessage(info.unlockWave));
-      if (player.coins < info.price) refuse(409, 'insufficient_funds', `The ${info.name.toLowerCase()} costs ${info.price} coins. You need more coins.`);
-      player.coins -= info.price; island.weapons = [...(island.weapons ?? []), weapon]; island.equipped = weapon;
-      player.actions.set(`weapon:${actionUid}`, true);
-      return view();
-    },
-    async equipWeapon({ weapon } = {}) {
-      if (!Object.hasOwn(WEAPON_BY_ID, weapon ?? '')) refuse(400, 'bad_weapon', 'There is no such weapon.');
-      const player = me(), island = world.islands.get(player.code);
-      if (!weaponsOf(island).owned.includes(weapon)) refuse(409, 'not_owned', `Buy the ${WEAPON_BY_ID[weapon].name.toLowerCase()} first.`);
-      island.equipped = weapon;
-      return view();
-    },
     // GAME-V3.md §5, §5.1: one research step for the island (yours, or the game of `code`), with coins: tier 1 of
     // a branch, or one of the two options of tier 2 or 3 (change: true switches from the other one, at the tier's
     // price again; switching tier 3 takes the old capstone off every tower that picked it).
@@ -889,13 +871,13 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
         refuse(409, 'wave_too_early', `The wave is not over yet. Try again in ${wait} seconds.`, wait);
       }
       const late = elapsed > ISLAND_RULES.waves.maximumSeconds;
-      // §4: houses pay 5 a level (5, 10, 15), a boss wave pays double.
+      // §4: houses pay 5 a level (5, 10, 15), a boss wave pays bossMultiplierFor(wave) times (3; wave 40: 5).
       const houseBonus = run.island ? [...run.island.built].filter(id => id.startsWith('house_'))
         .reduce((sum, id) => sum + 5 * (run.island.levels?.get(id) ?? 1), 0) : 0;
       // v3 waves: the bonuses the wave allows (wave_events.py): the galleon on a galleon wave, a finisher on a boss wave.
       const allowed = run.island ? [...new Set(bonuses ?? [])].filter(kind => (kind === 'galleon' ? eventFor(run.wave, run.seed) === 'treasure_galleon' : isBoss(run))) : [];
       const extra = allowed.reduce((sum, kind) => sum + bonusLoot(kind, run.wave), 0);
-      const loot = survived && !late ? (lootFor(run.wave, 0, !run.island) + houseBonus + extra) * (isBoss(run) ? 2 : 1) : 0;
+      const loot = survived && !late ? (lootFor(run.wave, 0, !run.island) + houseBonus + extra) * (isBoss(run) ? bossMultiplierFor(run.wave) : 1) : 0;
       if (survived && !late && !run.island) player.pointBest = Math.max(player.pointBest ?? 0, run.wave);
       if (survived && !late) player.wonBest = Math.max(player.wonBest ?? 0, run.wave); // won_wave_best: any wave you fought and won
       if (!run.finishedAt) { run.finishedAt = nowMs(); run.expired = late; }
@@ -965,8 +947,6 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
         if (route === 'POST /api/island/role') return reply(200, await api.pickRole(body));
         if (route === 'POST /api/island/respec') return reply(200, await api.respec(body));
         if (route === 'POST /api/island/fresh-start') return reply(200, await api.freshStart(body));
-        if (route === 'POST /api/island/weapon/buy') return reply(200, await api.buyWeapon(body));
-        if (route === 'POST /api/island/weapon/equip') return reply(200, await api.equipWeapon(body));
         if (route === 'GET /api/island/arsenal') return reply(200, await api.arsenal({ code: searchParams.get('code') }));
         if (route === 'POST /api/island/arsenal/buy') return reply(200, await api.arsenalBuy(body));
         if (route === 'POST /api/island/arsenal/take') return reply(200, await api.arsenalTake(body));
@@ -1021,7 +1001,7 @@ const FAILURES = Object.freeze({
 });
 const BODY_KEYS = Object.freeze({ '/api/island/build': ['spot', 'kind', 'actionUid'], '/api/waves/start': ['where', 'actionUid'],
   '/api/island/upgrade': ['spot', 'actionUid'], '/api/island/hire': ['crew', 'actionUid'], '/api/island/captain': ['actionUid'],
-  '/api/island/skill': ['skill', 'actionUid'], '/api/island/weapon/buy': ['weapon', 'actionUid'], '/api/island/weapon/equip': ['weapon'],
+  '/api/island/skill': ['skill', 'actionUid'],
   '/api/island/invite/join': ['code', 'actionUid'], '/api/pirate-point/build': ['spot', 'kind', 'actionUid'], '/api/pirate-point/upgrade': ['spot', 'actionUid'],
   '/api/waves/join': ['waveId'], '/api/waves/finish': ['waveId', 'survived', 'shipsSunk'], '/api/waves/revive': ['waveId', 'fallen', 'downAt', 'actionUid'],
   '/api/games': [], '/api/games/join': ['code', 'actionUid'], '/api/games/leave': ['code'],
@@ -1142,8 +1122,6 @@ export function createFakeIslandTransport({ coins = ISLAND_RULES.startingCoins, 
       if (method === 'POST' && pathname === '/api/island/role') return ok(await api.pickRole(body));
       if (method === 'POST' && pathname === '/api/island/respec') return ok(await api.respec(body));
       if (method === 'POST' && pathname === '/api/island/fresh-start') return ok(await api.freshStart(body));
-      if (method === 'POST' && pathname === '/api/island/weapon/buy') return ok(await api.buyWeapon(body));
-      if (method === 'POST' && pathname === '/api/island/weapon/equip') return ok(await api.equipWeapon(body));
       if (method === 'GET' && pathname === '/api/island/arsenal') return ok(await api.arsenal({ code: new URLSearchParams(query).get('code') }));
       if (method === 'POST' && pathname === '/api/island/arsenal/buy') return ok(await api.arsenalBuy(body));
       if (method === 'POST' && pathname === '/api/island/arsenal/take') return ok(await api.arsenalTake(body));

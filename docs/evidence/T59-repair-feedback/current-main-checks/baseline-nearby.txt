@@ -1,0 +1,29 @@
+
+ RUN  v5.1.0 /workspace/repair-baseline-db573347/frontend
+
+ ❯ tests/island/nearby-game.test.js (2 tests | 2 failed) 41271ms
+   × nearby E/Use works and a reported revive blocks building input (phone=false) 20007ms
+   × nearby E/Use works and a reported revive blocks building input (phone=true) 20006ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/island/nearby-game.test.js > nearby E/Use works and a reported revive blocks building input (phone=false)
+ FAIL  tests/island/nearby-game.test.js > nearby E/Use works and a reported revive blocks building input (phone=true)
+Error: Test timed out in 20000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ tests/island/nearby-game.test.js:40:23
+     38| }
+     39|
+     40| it.each([false, true])('nearby E/Use works and a reported revive block…
+       |                       ^
+     41|   await evaluate.withPage(async (page, base) => {
+     42|     await openGame(page, base, phone);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  13:48:01
+   Duration  42.76s (tests 97%, import 3%)
+
