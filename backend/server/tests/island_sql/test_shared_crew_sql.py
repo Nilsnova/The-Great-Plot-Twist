@@ -318,6 +318,54 @@ def test_failure_after_charge_and_count_change_rolls_back_every_effect(database)
     reconciles(database, keys(treasury)[0])
 
 
+@pytest.mark.parametrize(
+    "malformed", ["missing_repeat", "string_repeat", "foreign_receipt", "wrong_action"]
+)
+def test_malformed_financial_success_cannot_grant_crew_or_keep_any_effect(database, malformed):
+    owner, member, _, treasury = setup(database)
+    as_owner(database)
+    with database.transaction(force_rollback=True):
+        # The private stub uses the real charge path, except the foreign-receipt
+        # case which returns an existing admission receipt without making a debit.
+        database.execute(
+            "create or replace function public.island_treasury_spend("
+            "p_actor_id uuid,p_account_id uuid,p_run_epoch uuid,p_action_uid text,"
+            "p_reason text,p_reference text,p_amount numeric) returns jsonb "
+            "language plpgsql security definer set search_path='' as $$ "
+            "declare v_result jsonb; begin "
+            "if current_setting('crew_test.malformed')='foreign_receipt' then "
+            "return public.island_treasury_result("
+            "current_setting('crew_test.receipt')::uuid,false); "
+            "end if; "
+            "v_result := public.island_treasury_member_change(p_actor_id,p_account_id,p_run_epoch,"
+            "p_action_uid,'spend',p_reason,p_reference,p_amount,0); "
+            "if current_setting('crew_test.malformed')='missing_repeat' then "
+            "return v_result - 'repeat'; "
+            "elsif current_setting('crew_test.malformed')='string_repeat' then "
+            "return jsonb_set(v_result,'{repeat}','\"false\"'::jsonb); "
+            "else return jsonb_set(v_result,'{receipt,actionUid}','\"another_action\"'::jsonb); "
+            "end if; end; $$"
+        )
+        database.execute("select set_config('crew_test.malformed',%s,true)", (malformed,))
+        database.execute(
+            "select set_config('crew_test.receipt',%s,true)", (treasury["receipt"]["id"],)
+        )
+        assert hire(database, member, treasury, uid="malformed1") == {
+            "status": "refused",
+            "reason": "action_conflict",
+        }
+        assert counts(database, owner) == (0, 0, 0, 0)
+        assert operation_count(database, member, "malformed1") == 0
+        assert database.execute(
+            "select count(*) from public.island_crew_receipts where account_id=%s",
+            (keys(treasury)[0],),
+        ).fetchone() == (0,)
+        assert money(snapshot(database, owner, treasury)) == (200, 0, 200)
+        reconciles(database, keys(treasury)[0])
+    # Rolling back the test-only replacement restores the real helper unchanged.
+    assert hire(database, member, treasury, uid="malformed1")["status"] == "done"
+
+
 def test_legacy_hire_keeps_old_behavior_and_cannot_bypass_shared_or_paused_admission(database):
     owner, member, _, treasury = setup(database)
     as_server(database)

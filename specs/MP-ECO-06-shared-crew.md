@@ -22,6 +22,8 @@ New modules `shared_crew_rules.py` and `shared_crew.py` provide trusted offers, 
 
 `island_economy_hire(actor, account, epoch, action_uid, crew, catalogue)` takes the shared scope/account locks first, claims the global actor/action identity before checking current crew, and locks the defended island and membership. It checks current admission, canonical idle phase, target progression, capacity and available funds under those locks. The charge uses a derived financial child UID. Root claim, charge, count increment and immutable crew receipt commit together or roll back together.
 
+A new hire requires an exact successful non-repeated charge reply and the canonical immutable receipt for that same actor/account/epoch, child UID, reason, reference and coin debit. An incomplete or mismatched success reply grants no crew and rolls back the root claim and any charge already made. Matching original domain retries still return before this new-charge validation.
+
 The immutable receipt uses the common actor/action/origin shape and records crew kind, previous/new count, actual charged coins and financial receipt identity. A retry returns that original effect. Current treasury and crew are separate, authorized snapshots from the same original account/epoch; a departed member or retired origin does not receive another island/run's state. Changed crew or reuse in another domain conflicts before mutable eligibility checks. Price changes do not invalidate a successful original intent.
 
 `island_economy_crew` reads the defended island's current four counts and progression with membership and epoch checks. The service adds current catalogue offers. Offer `available` is a catalogue/capacity/affordability hint, not permission to bypass admission or the canonical wave phase; the hire RPC checks those under locks. Unlocks use this island's `wave_best`, excluding the owner's personal wins elsewhere. This adds no per-player crew aggregation or online-presence dependency.
@@ -32,7 +34,7 @@ Migration `20261118050600_island_economy_crew.sql` adds private history and serv
 
 ## Dependencies and limits
 
-Requires MP-ECO-02 treasury accounts/child effects (`ba05448d`) and the global operation registry (`de6ac1b8`), plus MP-ECO-04's canonical `island_economy_require_idle_locked` helper (`bf557e6d`, with its MP-ECO-07 prerequisites). No expiry is inferred or settled by a crew purchase. MP-ECO-08 authority, wave snapshot adoption, HTTP route wiring, save conversion and simulation fixture/profile integration remain separate activation gates. This package does not apply live migrations or admit old saves.
+Requires MP-ECO-02 treasury accounts/child effects (`ba05448d`) and the global operation registry (`de6ac1b8` with cutover correction `8a35a58e`), plus MP-ECO-04's canonical `island_economy_require_idle_locked` helper (`bf557e6d`, with its MP-ECO-07 prerequisites). No expiry is inferred or settled by a crew purchase. MP-ECO-08 authority, wave snapshot adoption, HTTP route wiring, save conversion and simulation fixture/profile integration remain separate activation gates. This package does not apply live migrations or admit old saves.
 
 ## Acceptance checks
 
@@ -51,11 +53,24 @@ Run from `backend/`:
 uv run pytest -q server/tests/test_shared_crew.py server/tests/test_construction_rules.py server/tests/test_construction_store.py server/tests/test_island_treasury.py server/tests/test_island_treasury_store.py server/tests/test_economy_operations.py server/tests/test_island_rules.py
 # 191 passed, including 19 shared-crew tests.
 CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q server/tests/island_sql/test_shared_crew_sql.py server/tests/island_sql/test_shared_construction_sql.py server/tests/island_sql/test_economy_operations_sql.py server/tests/island_sql/test_island_treasury_sql.py server/tests/island_sql/test_guard_crew_sql.py
-# 95 passed, including 18 shared-crew tests; the complete 73-migration chain executes twice.
+# Initial implementation: 95 passed, including 18 shared-crew tests, before the four hardening cases below; the complete 73-migration chain executes twice.
 uv run ruff check .
 # All checks passed.
 ```
 
 The tests use synthetic users and a disposable Unix-socket PostgreSQL server. They verify same-island crew reads, full catalogue prices without Engineer discounts, retained old Carpenter payment history, an actual `game_leave` racing a blocked purchase, and atomic rollback after a forced failure following charge/count changes. Retries after departure or retirement return their immutable receipt with all current projections null. Migration reapplication preserves the original legacy function and its private execute grants. Diff and local documentation-link checks pass.
+
+The payment-reply hardening was checked with the corrected registry cutover dependency:
+
+```sh
+uv run pytest -q server/tests/test_shared_crew.py
+# 19 passed.
+CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q server/tests/island_sql/test_shared_crew_sql.py server/tests/island_sql/test_guard_crew_sql.py server/tests/island_sql/test_economy_operations_cutover_sql.py
+# 42 passed: 22 shared-crew, 7 legacy guard and 13 registry cutover cases.
+uv run ruff check .
+# All checks passed.
+```
+
+The four new cases replace the financial helper only inside a rolled-back private savepoint. They inject a missing repeat flag, a string repeat flag, another existing receipt and an altered action identity. Every malformed success leaves crew, root claims, domain receipts and treasury unchanged, including cases that made a real debit before the malformed reply. Rolling back the stub restores the original helper, and the same action then succeeds normally.
 
 No HTTP routes were registered, live migrations applied, old saves admitted or full multiplayer simulation activated. Backend tests outside the affected domain/dependency suites and browser journeys were not run for this backend-only package.
