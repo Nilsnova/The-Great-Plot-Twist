@@ -216,6 +216,12 @@ POST /api/island/invite/join  {"code": "ISLE-K7Q2M", "actionUid": "..."}
     {"admitted": true, "game": {...}, "island": {"code", "ownerName"}}.
 
 Used by: the island scene and the friends panel of the game client.
+
+Shared version one uses the same URLs with X-Island-Economy-Version: 1 on reads and strict
+economy/instance/CAS/decimal-quote bodies on writes (island/economy_http_models.py). Reads return
+the coherent snapshotVersion-one contract in specs/MP-ECO-CORE-API.md. Writes return unchanged
+domain receipts and require real persisted authority; missing authority stays unavailable.
+Old-shaped requests on persisted shared targets never select the legacy wallet path.
 """
 
 from typing import Annotated, Literal
@@ -227,9 +233,19 @@ from server.auth import Player, PlayerDep
 from server.clock import ClockDep
 from server.errors import ApiError
 from server.flags import is_enabled
-from server.island import leaderboard, rules, service, wall_repair
+from server.island import economy_http, economy_reads, leaderboard, rules, service, wall_repair
 from server.island.captain_recovery_policy import active_captain_skills
 from server.island.catalogue import IslandCatalogue
+from server.island.economy_http_models import (
+    BuildBody,
+    DemolishBody,
+    HireBody,
+    ResearchBody,
+    SpecialiseBody,
+    TreeBody,
+    UpgradeBody,
+    WreckBody,
+)
 from server.island.layout import LayoutInfo
 from server.island.rules import ResearchTier, SpotView
 from server.island.service import CampaignView, DemolishView, IslandCatalogueDep, IslandView
@@ -757,10 +773,15 @@ def island_out(view: IslandView, catalogue: IslandCatalogue) -> IslandResponse:
     )
 
 
-@router.get("/island")
+@router.get("/island", response_model=None)
 async def get_island(
-    player: IslandPlayerDep, catalogue: IslandCatalogueDep, admin: AdminDep
-) -> IslandResponse:
+    player: IslandPlayerDep, catalogue: IslandCatalogueDep, admin: AdminDep, request: Request,
+) -> IslandResponse | dict:
+    shared = await economy_reads.shared_read(
+        admin, player.id, catalogue, request.headers.get("X-Island-Economy-Version"),
+    )
+    if shared is not None:
+        return shared
     return island_out(await service.look(admin, catalogue, player.id), catalogue)
 
 
@@ -777,32 +798,38 @@ async def get_leaderboard(
     return await leaderboard.weekly(admin)
 
 
-@router.post("/island/build")
+@router.post("/island/build", response_model=None)
 async def post_build(
-    body: BuildRequest,
+    body: BuildRequest | BuildBody,
     player: IslandPlayerDep,
     catalogue: IslandCatalogueDep,
     admin: AdminDep,
     request: Request,
-) -> IslandResponse:
+) -> IslandResponse | dict:
     request.app.state.island_build_budget.spend(player.id)
+    shared = await economy_http.shared_write(admin, player.id, "build", body, catalogue)
+    if shared is not None:
+        return shared
     view = await service.build(
         admin, catalogue, player.id, body.spot, body.kind, body.actionUid, body.code
     )
     return island_out(view, catalogue)
 
 
-@router.post("/island/upgrade")
+@router.post("/island/upgrade", response_model=None)
 async def post_upgrade(
-    body: UpgradeRequest,
+    body: UpgradeRequest | UpgradeBody,
     player: IslandPlayerDep,
     catalogue: IslandCatalogueDep,
     admin: AdminDep,
     settings: SettingsDep,
     now: ClockDep,
     request: Request,
-) -> IslandResponse:
+) -> IslandResponse | dict:
     request.app.state.island_build_budget.spend(player.id)
+    shared = await economy_http.shared_write(admin, player.id, "upgrade", body, catalogue)
+    if shared is not None:
+        return shared
     if is_enabled("wall_recovery", settings.flags):
         # T47 (D039): a damaged or destroyed wall is repaired first; an upgrade never heals it.
         await wall_repair.check_upgrade(admin, catalogue, player.id, body.spot, now(), body.code)
@@ -810,15 +837,18 @@ async def post_upgrade(
     return island_out(view, catalogue)
 
 
-@router.post("/island/hire")
+@router.post("/island/hire", response_model=None)
 async def post_hire(
-    body: HireRequest,
+    body: HireRequest | HireBody,
     player: IslandPlayerDep,
     catalogue: IslandCatalogueDep,
     admin: AdminDep,
     request: Request,
-) -> IslandResponse:
+) -> IslandResponse | dict:
     request.app.state.island_build_budget.spend(player.id)
+    shared = await economy_http.shared_write(admin, player.id, "hire", body, catalogue)
+    if shared is not None:
+        return shared
     view = await service.hire(admin, catalogue, player.id, body.crew, body.actionUid)
     return island_out(view, catalogue)
 
@@ -832,6 +862,7 @@ async def post_captain(
     request: Request,
 ) -> IslandResponse:
     request.app.state.island_build_budget.spend(player.id)
+    await economy_http.require_legacy_target(admin, player.id)
     view = await service.captain(admin, catalogue, player.id, body.actionUid)
     return island_out(view, catalogue)
 
@@ -845,6 +876,7 @@ async def post_skill(
     request: Request,
 ) -> IslandResponse:
     request.app.state.island_build_budget.spend(player.id)
+    await economy_http.require_legacy_target(admin, player.id)
     view = await service.learn_skill(admin, catalogue, player.id, body.skill, body.actionUid)
     return island_out(view, catalogue)
 
@@ -858,6 +890,7 @@ async def post_role(
     request: Request,
 ) -> IslandResponse:
     request.app.state.island_build_budget.spend(player.id)
+    await economy_http.require_legacy_target(admin, player.id)
     view = await service.pick_role(admin, catalogue, player.id, body.role)
     return island_out(view, catalogue)
 
@@ -871,6 +904,7 @@ async def post_respec(
     request: Request,
 ) -> IslandResponse:
     request.app.state.island_build_budget.spend(player.id)
+    await economy_http.require_legacy_target(admin, player.id)
     view = await service.respec(admin, catalogue, player.id, body.actionUid)
     return island_out(view, catalogue)
 
@@ -885,6 +919,7 @@ async def post_weapon_buy(
     request: Request,
 ) -> IslandResponse:
     request.app.state.island_build_budget.spend(player.id)
+    await economy_http.require_legacy_target(admin, player.id)
     if is_enabled("arsenal", settings.flags):
         # D042: with the arsenal on, weapons are island copies bought at the arsenal building.
         raise ApiError(409, "use_arsenal", "Weapons are in the arsenal now. Walk to the arsenal.")
@@ -901,19 +936,23 @@ async def post_weapon_equip(
     request: Request,
 ) -> IslandResponse:
     request.app.state.island_build_budget.spend(player.id)
+    await economy_http.require_legacy_target(admin, player.id)
     view = await service.equip_weapon(admin, catalogue, player.id, body.weapon)
     return island_out(view, catalogue)
 
 
-@router.post("/island/research")
+@router.post("/island/research", response_model=None)
 async def post_research(
-    body: ResearchRequest,
+    body: ResearchRequest | ResearchBody,
     player: IslandPlayerDep,
     catalogue: IslandCatalogueDep,
     admin: AdminDep,
     request: Request,
-) -> IslandResponse:
+) -> IslandResponse | dict:
     request.app.state.island_build_budget.spend(player.id)
+    shared = await economy_http.shared_write(admin, player.id, "research", body, catalogue)
+    if shared is not None:
+        return shared
     view = await service.research(
         admin,
         catalogue,
@@ -928,52 +967,61 @@ async def post_research(
     return island_out(view, catalogue)
 
 
-@router.post("/island/tower-skill")
+@router.post("/island/tower-skill", response_model=None)
 async def post_specialise(
-    body: SpecialiseRequest,
+    body: SpecialiseRequest | SpecialiseBody,
     player: IslandPlayerDep,
     catalogue: IslandCatalogueDep,
     admin: AdminDep,
     request: Request,
-) -> IslandResponse:
+) -> IslandResponse | dict:
     request.app.state.island_build_budget.spend(player.id)
+    shared = await economy_http.shared_write(admin, player.id, "towerSkill", body, catalogue)
+    if shared is not None:
+        return shared
     view = await service.specialise(
         admin, catalogue, player.id, body.spot, body.spec, body.code, body.actionUid
     )
     return island_out(view, catalogue)
 
 
-@router.post("/island/tower-tree")
+@router.post("/island/tower-tree", response_model=None)
 async def post_tower_tree(
-    body: TowerTreeRequest,
+    body: TowerTreeRequest | TreeBody,
     player: IslandPlayerDep,
     catalogue: IslandCatalogueDep,
     admin: AdminDep,
     request: Request,
-) -> IslandResponse:
+) -> IslandResponse | dict:
     request.app.state.island_build_budget.spend(player.id)
+    shared = await economy_http.shared_write(admin, player.id, "towerTree", body, catalogue)
+    if shared is not None:
+        return shared
     view = await service.tower_tree(
         admin, catalogue, player.id, body.spot, body.path, body.tier, body.actionUid, body.code
     )
     return island_out(view, catalogue)
 
 
-@router.post("/island/wreck")
+@router.post("/island/wreck", response_model=None)
 async def post_wreck(
-    body: WreckRequest,
+    body: WreckRequest | WreckBody,
     player: IslandPlayerDep,
     catalogue: IslandCatalogueDep,
     admin: AdminDep,
     request: Request,
-) -> IslandResponse:
+) -> IslandResponse | dict:
     request.app.state.island_build_budget.spend(player.id)
+    shared = await economy_http.shared_write(admin, player.id, "wreck", body, catalogue)
+    if shared is not None:
+        return shared
     view = await service.repair_wreck(
         admin, catalogue, player.id, body.amount, body.actionUid, body.code
     )
     return island_out(view, catalogue)
 
 
-@router.get("/island/demolish")
+@router.get("/island/demolish", response_model=None)
 async def get_demolish(
     spot: Annotated[str, Query(pattern=ID_PATTERN)],
     player: IslandPlayerDep,
@@ -981,21 +1029,29 @@ async def get_demolish(
     admin: AdminDep,
     request: Request,
     code: Annotated[str | None, Query(max_length=CODE_MAX_LENGTH)] = None,
-) -> DemolishOut:
+) -> DemolishOut | dict:
     request.app.state.island_build_budget.spend(player.id)
+    shared = await economy_reads.shared_demolish_quote(
+        admin, player.id, catalogue, request.headers.get("X-Island-Economy-Version"), spot, code,
+    )
+    if shared is not None:
+        return shared
     view = await service.demolish_quote(admin, catalogue, player.id, spot, code)
     return demolish_out(view, player.id)
 
 
-@router.post("/island/demolish")
+@router.post("/island/demolish", response_model=None)
 async def post_demolish(
-    body: DemolishRequest,
+    body: DemolishRequest | DemolishBody,
     player: IslandPlayerDep,
     catalogue: IslandCatalogueDep,
     admin: AdminDep,
     request: Request,
-) -> DemolishResponse:
+) -> DemolishResponse | dict:
     request.app.state.island_build_budget.spend(player.id)
+    shared = await economy_http.shared_write(admin, player.id, "demolish", body, catalogue)
+    if shared is not None:
+        return shared
     island, done = await service.demolish(
         admin, catalogue, player.id, body.spot, body.actionUid, body.code
     )
@@ -1004,16 +1060,21 @@ async def post_demolish(
     )
 
 
-@router.get("/island/visit/{code}")
+@router.get("/island/visit/{code}", response_model=None)
 async def get_visit(
     code: Annotated[str, Path(max_length=CODE_MAX_LENGTH)],
     player: IslandPlayerDep,
     catalogue: IslandCatalogueDep,
     admin: AdminDep,
     request: Request,
-) -> VisitResponse:
+) -> VisitResponse | dict:
     # A budget, because a visit looks a code up: guessing codes stays slow.
     request.app.state.island_visit_budget.spend(player.id)
+    shared = await economy_reads.shared_read(
+        admin, player.id, catalogue, request.headers.get("X-Island-Economy-Version"), code,
+    )
+    if shared is not None:
+        return shared
     view = await service.visit(admin, catalogue, code, player.id)
     return VisitResponse(
         code=view.code,

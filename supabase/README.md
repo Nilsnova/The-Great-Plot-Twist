@@ -3430,3 +3430,28 @@ Focused verification also runs `server/tests/test_economy_operations.py`,
 `server/tests/island_sql/test_economy_operations_cutover_sql.py` with the disposable PostgreSQL tools
 above. Source settlement after departure/retirement keeps its original account; this extension does
 not grant current membership, convert saves, register routes or authorize a live migration.
+
+### Coherent shared member snapshots
+
+`20261118050700_island_economy_snapshot.sql` adds two service-only, security-definer functions
+with empty search paths. It creates no tables, admission path or money grant:
+
+| Function | Server purpose | Browser rights |
+|---|---|---|
+| `island_economy_snapshot(actor, owner)` | One locked current member snapshot, including paused reads and explicitly absent personal state | No execute |
+| `island_economy_operation_origin(actor, owner, epoch, uid, domain)` | Actor-owned immutable original account identity before current preflight; domain still validates the exact intent | No execute |
+
+The snapshot locks scope/account, sorted actor/owner profile anchors, existing personal state,
+target island/admission and ordered domain rows. It rechecks current account/epoch and active
+membership, captures one server time and returns actual shared refund lineage. Missing lineage
+remains explicit; private historical payments and catalogue prices cannot mint shared refunds.
+Reads do not initialize Captains, expire reservations or synthesize current session authority.
+Unfinished/reserved waves keep projected health unavailable rather than pretending the journal
+is an idle recovery clock. `20261118050701_island_economy_legacy_guards.sql` separately fences legacy
+entry points needed for global personal router integration.
+
+The [HTTP contract and verification](../specs/MP-ECO-CORE-API.md) keeps domain receipts separate
+from independently coherent refreshes. Existing treasury, construction, progression, crew and
+personal transactions remain the mutation boundaries. This read migration does not supply
+`island_economy_authority`; new HTTP writes remain unavailable without its actual persisted
+provider. It does not authorize shared admission, deployment or a live database migration.

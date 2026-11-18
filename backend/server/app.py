@@ -47,6 +47,7 @@ from server.routes import (
     board,
     bulletin,
     captain_name,
+    captain_progression,
     case,
     config,
     content,
@@ -303,6 +304,7 @@ def create_app(
     app.include_router(bulletin.router, prefix="/api")
     app.include_router(me.router, prefix="/api")
     app.include_router(captain_name.router, prefix="/api")
+    app.include_router(captain_progression.router, prefix="/api")
     app.include_router(save.router, prefix="/api")
     app.include_router(delete_me.router, prefix="/api")
     app.include_router(intro.router, prefix="/api")
