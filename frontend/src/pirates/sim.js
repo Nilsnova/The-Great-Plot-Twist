@@ -877,11 +877,12 @@ export function createWave(options = {}) {
       return;
     }
     if (stats.mode === 'cone') {
-      // A spray of shot: the nearest ships or boarders inside the cone towards the aim point, up to stats.targets.
+      // Select the nearest ships or boarders in the cone where the shooter saw them (bounded by seenPlace).
+      // Keep the living target objects: projectiles and damage still resolve at their current positions.
       const heading = Math.atan2(aimed.z - z, aimed.x - x), half = stats.cone / 2 * Math.PI / 180;
       const inCone = [...ships, ...boarders].map(item => {
-        const d = distance(x, z, item.x, item.z);
-        let turn = Math.abs(Math.atan2(item.z - z, item.x - x) - heading);
+        const at = seenPlace(input, item), d = distance(x, z, at.x, at.z);
+        let turn = Math.abs(Math.atan2(at.z - z, at.x - x) - heading);
         if (turn > Math.PI) turn = 2 * Math.PI - turn;
         return { item, d, turn };
       }).filter(entry => entry.d <= stats.range && entry.turn <= half + 1e-9)
@@ -994,6 +995,8 @@ export function createWave(options = {}) {
     if (!by || !finite(input.x) || !finite(input.z) || typeof input.targetId !== 'string') return;
     const helper = party.get(by), hero = party.get(input.targetId);
     if (!helper || helper.down || !hero || hero === helper || !hero.down) return;
+    // A delayed paid event belongs to exactly one fall; it cannot revive a later fall.
+    if (input.downAt !== undefined && input.downAt !== Math.round(hero.downAt / C.tick)) return;
     if (distance(input.x, input.z, hero.x, hero.z) > R.reach + R.slack) return;
     helper.seen = ticks * C.tick; helper.away = false; helper.x = input.x; helper.z = input.z;
     hero.down = false; hero.downAt = null; hero.hp = Math.max(1, Math.round(hero.maxHp * captainStatsFor(1, input.skills).reviveShare)); // a medic's help-up gives more hp (captain-stats.js)

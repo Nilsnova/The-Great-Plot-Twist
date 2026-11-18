@@ -196,6 +196,7 @@ export function createNarrator({container = globalThis.document?.body, on, audio
   function waveFinished(event) {
     const id = event?.waveId ?? null, info = id !== null ? started.get(id) : null;
     if (id !== null) { if (finished.has(id)) return; finished.add(id); }
+    if (fighting !== null && fighting !== id) return; // A late receipt must not end a newer battle's narration.
     fighting = null;
     const wave = Number.isSafeInteger(event?.wave) ? event.wave : info?.wave ?? null, game = info?.game ?? current();
     const survived = event?.survived === true;

@@ -25,6 +25,18 @@ function setup({signedIn = true, flags = {arena: true, sports: true, market: tru
 afterEach(() => { for (const lease of leases.splice(0)) lease.dispose(); });
 
 describe('private deferred panel services', () => {
+  it('a flag-independent fresh wallet capability cannot return a previous identity or provider result', async () => {
+    const held = deferred(), getWallet = vi.fn(() => held.promise), f = setup({flags: {}, getWallet});
+    const pending = f.lease.reconcileWallet();
+    f.session.clearToken(); f.session.setToken('new-account');
+    held.resolve({coins: 999, current: () => true});
+    expect(await pending).toBeNull();
+    getWallet.mockResolvedValue({coins: 120, current: () => true});
+    const wallet = await f.lease.reconcileWallet();
+    expect(wallet.coins).toBe(120); expect(wallet.current()).toBe(true);
+    const replacement = registerPanelServices(f.session, f.options); leases.push(replacement);
+    expect(wallet.current()).toBe(false);
+  });
   it('keeps two injected sessions and clients isolated', async () => {
     const first = setup(), second = setup();
     expect(findPanelServices(first.session)).toBe(first.lease);

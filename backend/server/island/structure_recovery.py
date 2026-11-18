@@ -11,9 +11,10 @@ from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, StrictInt, Str
 
 from server.errors import ApiError
 from server.game import islet_store
-from server.island import permissions, rules, service, store
+from server.island import permissions, service, store
 from server.island.catalogue import IslandCatalogue
 from server.island.store import Island
+from server.island.structure_repair_rules import catalogue_price_schedule
 from server.supabase_admin import SupabaseAdmin, SupabaseRejected
 
 
@@ -88,7 +89,7 @@ async def read_state(
         "structure_recovery_read_state",
         {
             "p_island_owner": island_owner,
-            "p_prices": rules.price_table(catalogue),
+            "p_prices": catalogue_price_schedule(catalogue),
         },
     )
     if not isinstance(reply, dict):
