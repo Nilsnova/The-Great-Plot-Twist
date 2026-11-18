@@ -1869,7 +1869,7 @@ Legacy body poses may also use accepted outcomes correlated to live local/valida
 
 The additive foundation in `backend/server/island/treasury.py`, `treasury_models.py` and
 `treasury_store.py` defines exact accounts per island/run. Contracts are in migrations
-`20261118050000_island_treasury.sql` / `20261118050100_island_treasury_functions.sql`,
+`20261118050050_island_treasury.sql` / `20261118050100_island_treasury_functions.sql`,
 [database rights and checks](../supabase/README.md#shared-island-treasury-foundation-mp-eco-02)
 and [the package spec](../specs/MP-ECO-02-island-treasury.md). Existing HTTP routes do not call
 admission or these money functions; personal-wallet runtime remains unchanged.

@@ -23,7 +23,7 @@ Personal wallets cannot fund a persistent shared island without conflating the a
 - Bind free, personal and paid request identities through the [operation registry](MP-ECO-02-operation-identities.md), with proven financial children and disjoint canonical system effects. Its cutover drains concurrent writers before DDL and rejects unsupported transaction isolation.
 - Keep original personal wallets, ledger and legacy runtime untouched. No route calls the new admission function in this change.
 
-**Likely files:** `backend/server/island/treasury*.py`, focused tests, and additive migrations `20261118050000_island_treasury.sql` / `20261118050100_island_treasury_functions.sql`.
+**Likely files:** `backend/server/island/treasury*.py`, focused tests, and additive migrations `20261118050050_island_treasury.sql` / `20261118050100_island_treasury_functions.sql`.
 
 ## Accounting and identity
 
@@ -86,3 +86,9 @@ integration prerequisites; this foundation alone must not enable existing-save a
 After integration of the operation registry and current main (`f0c64442`), the combined focused Python suite passed **62 tests in 2.25s**, the three disposable PostgreSQL suites passed **54 tests in 22.36s**, and full Ruff passed. The PostgreSQL checks include 13 isolated first/repeated cutover, admission, nullable-FK, contention rollback and isolation cases; a separate rerun of those 13 also passed. These final focused checks do not replace the qualified earlier full-backend result above.
 
 After updating to main `77a9e34d`, the focused Python suite passed **62 tests in 2.31s**, full Ruff passed, and the mixed-order PostgreSQL suite passed **89 tests in 25.59s** (54 treasury/registry/cutover plus 35 legacy cases). The documentation merge retains both the current Captain feedback contract and the treasury/operation sections.
+
+## Unique Supabase migration version
+
+The new treasury schema uses `20261118050050_island_treasury.sql`. Main already contains `20261118050000_retired_recovery_options.sql`; Supabase identifies migrations by timestamp, so different suffixes do not make that old version reusable. Only this unmerged treasury migration was renamed; the main retirement migration and treasury SQL contents are unchanged. No live migration was applied.
+
+The new repository check reproduced the duplicate-version failure before the rename. Final checks against main `03e660fe`: **63 Python tests in 2.50s**, **89 mixed-order PostgreSQL tests in 24.04s**, full Ruff, and **68 unique migration versions parsed**. The full-chain fixture applies migrations twice. Documentation references and whitespace checks pass.

@@ -1,17 +1,13 @@
-"""Keep migration versions unique for Supabase's timestamp-based migration ledger.
+"""Supabase identifies a migration by its timestamp, independent of its file suffix."""
 
-Used by the normal backend checks; applying SQL filenames alone misses version collisions.
-"""
-
+from collections import defaultdict
 from pathlib import Path
 
 
-def test_migration_versions_are_unique() -> None:
+def test_supabase_migration_versions_are_unique():
     migrations = Path(__file__).resolve().parents[3] / "supabase" / "migrations"
-    versions: dict[str, str] = {}
-    for migration in sorted(migrations.glob("*.sql")):
-        version = migration.name.split("_", 1)[0]
-        assert version not in versions, (
-            f"Duplicate migration version {version}: {versions[version]} and {migration.name}"
-        )
-        versions[version] = migration.name
+    versions = defaultdict(list)
+    for path in sorted(migrations.glob("*.sql")):
+        versions[path.name.split("_", 1)[0]].append(path.name)
+    duplicates = {version: names for version, names in versions.items() if len(names) > 1}
+    assert not duplicates, f"Supabase migration versions must be unique: {duplicates}"
