@@ -782,7 +782,10 @@ async def get_island(
     )
     if shared is not None:
         return shared
-    return island_out(await service.look(admin, catalogue, player.id), catalogue)
+    legacy = island_out(await service.look(admin, catalogue, player.id), catalogue)
+    return economy_reads.legacy_discovery(
+        legacy.model_dump(mode="json"), player.id, request.headers.get("X-Island-Economy-Version"),
+    )
 
 
 @router.get("/island/leaderboard")
@@ -807,6 +810,7 @@ async def post_build(
     request: Request,
 ) -> IslandResponse | dict:
     request.app.state.island_build_budget.spend(player.id)
+    economy_http.require_body_capability(request, body)
     shared = await economy_http.shared_write(admin, player.id, "build", body, catalogue)
     if shared is not None:
         return shared
@@ -827,6 +831,7 @@ async def post_upgrade(
     request: Request,
 ) -> IslandResponse | dict:
     request.app.state.island_build_budget.spend(player.id)
+    economy_http.require_body_capability(request, body)
     shared = await economy_http.shared_write(admin, player.id, "upgrade", body, catalogue)
     if shared is not None:
         return shared
@@ -846,6 +851,7 @@ async def post_hire(
     request: Request,
 ) -> IslandResponse | dict:
     request.app.state.island_build_budget.spend(player.id)
+    economy_http.require_body_capability(request, body)
     shared = await economy_http.shared_write(admin, player.id, "hire", body, catalogue)
     if shared is not None:
         return shared
@@ -950,6 +956,7 @@ async def post_research(
     request: Request,
 ) -> IslandResponse | dict:
     request.app.state.island_build_budget.spend(player.id)
+    economy_http.require_body_capability(request, body)
     shared = await economy_http.shared_write(admin, player.id, "research", body, catalogue)
     if shared is not None:
         return shared
@@ -976,6 +983,7 @@ async def post_specialise(
     request: Request,
 ) -> IslandResponse | dict:
     request.app.state.island_build_budget.spend(player.id)
+    economy_http.require_body_capability(request, body)
     shared = await economy_http.shared_write(admin, player.id, "towerSkill", body, catalogue)
     if shared is not None:
         return shared
@@ -994,6 +1002,7 @@ async def post_tower_tree(
     request: Request,
 ) -> IslandResponse | dict:
     request.app.state.island_build_budget.spend(player.id)
+    economy_http.require_body_capability(request, body)
     shared = await economy_http.shared_write(admin, player.id, "towerTree", body, catalogue)
     if shared is not None:
         return shared
@@ -1012,6 +1021,7 @@ async def post_wreck(
     request: Request,
 ) -> IslandResponse | dict:
     request.app.state.island_build_budget.spend(player.id)
+    economy_http.require_body_capability(request, body)
     shared = await economy_http.shared_write(admin, player.id, "wreck", body, catalogue)
     if shared is not None:
         return shared
@@ -1049,6 +1059,7 @@ async def post_demolish(
     request: Request,
 ) -> DemolishResponse | dict:
     request.app.state.island_build_budget.spend(player.id)
+    economy_http.require_body_capability(request, body)
     shared = await economy_http.shared_write(admin, player.id, "demolish", body, catalogue)
     if shared is not None:
         return shared
@@ -1076,7 +1087,7 @@ async def get_visit(
     if shared is not None:
         return shared
     view = await service.visit(admin, catalogue, code, player.id)
-    return VisitResponse(
+    legacy = VisitResponse(
         code=view.code,
         ownerName=view.owner_name,
         waveBest=view.wave_best,
@@ -1086,3 +1097,7 @@ async def get_visit(
         campaign=campaign_out(view.campaign, catalogue),
         layout=layout_out(view.layout),
     )
+    if request.headers.get("X-Island-Economy-Version") == "1":
+        owner = await economy_http.target_owner(admin, player.id, code)
+        return economy_reads.legacy_discovery(legacy.model_dump(mode="json"), owner, "1")
+    return legacy

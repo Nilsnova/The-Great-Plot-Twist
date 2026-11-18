@@ -177,9 +177,8 @@ async def shared_write(
 ECONOMY_CAPABILITY_HEADER = "X-Island-Economy-Version"
 
 
-def require_economy_capability(request: Request) -> None:
-    """Refuse an old/unsupported client before exposing a shared snapshot or mutation."""
-    version = request.headers.get(ECONOMY_CAPABILITY_HEADER)
+def require_economy_version(version: str | None) -> None:
+    """Check transport compatibility without selecting an account or granting authority."""
     if version is None:
         raise ApiError(
             409, "economy_context_required", "Reload to use this shared island economy."
@@ -188,3 +187,14 @@ def require_economy_capability(request: Request) -> None:
         raise ApiError(
             409, "economy_version_mismatch", "This client does not support this island economy."
         )
+
+
+def require_economy_capability(request: Request) -> None:
+    """Refuse an old/unsupported client before exposing a shared snapshot or mutation."""
+    require_economy_version(request.headers.get(ECONOMY_CAPABILITY_HEADER))
+
+
+def require_body_capability(request: Request, body: BaseModel) -> None:
+    """Shared HTTP intents negotiate before a root lookup or any domain transaction."""
+    if isinstance(body, SharedBody):
+        require_economy_capability(request)
