@@ -26,7 +26,7 @@ workspace origins plus the inventory of all twenty original before PNGs.
 | Art/renderer matrix | [Initial receipt](native-matrix-initial/execution.json) on `9fa15494`: 22 developer-only sheets, 100 defense bindings, 12.29s; actual compiled frames/shared WebGL walls, not normal gameplay. Caption-only final follow-up pending. |
 | Landscape boundary | Native painter proof passed: exact 2,408,448 alpha bytes/coast mask/profile/source PNG/fallback RGBA retained while RGB changed. |
 | Source invariants | [Coordinator's static record](checks/static-invariants.json): exactly five changed presentation files relative to `6c87b8dc`; backend, migrations, public assets and package/lock files unchanged, required histories retained and original checkout untouched. |
-| Fresh application checks | Frozen-source command receipts to be supplied; previous frontend timeout and multiplayer pose failure remain historical evidence until fresh results establish their status. |
+| Fresh application checks | First `7fab8866` frontend: 4,639 passed / 2 failed, 424 files, 563.75s (564.43s process). Known input timeout plus obsolete observer expectations; [VIS59 #435](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/435) is QA-only. Final sequence/rerun receipts remain pending. |
 | Comparison document | [Native checker](verify-comparison.mjs) prepared; root run pending. It verifies exact served HTML/image bytes, 12 decoded images, three tablists and 33 real keyboard/click actions per viewport, with no page/console/external errors permitted. |
 
 The generated concepts remain in their [original design folder](../../design/reference-village/approved-2026-11-17/README.md).

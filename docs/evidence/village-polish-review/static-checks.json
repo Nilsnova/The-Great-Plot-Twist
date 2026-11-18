@@ -5,9 +5,15 @@
   "comparisonImages": 12,
   "tablists": 3,
   "tabs": 8,
-  "relativeLinkTargetsChecked": 50,
+  "relativeLinkTargetsChecked": 51,
   "jsonParse": "passed",
   "htmlKeyboardScriptSyntax": "passed",
   "nativeCheckerSyntax": "passed",
-  "nativeBrowserRun": "not_run_by_documentation_writer"
+  "nativeBrowserRun": "not_run_by_documentation_writer",
+  "nativeCheckerLines": 135,
+  "nativeCheckerHardening": [
+    "manifest-bound executed helper",
+    "initial default states before input",
+    "cleanup/report retained if browser close rejects"
+  ]
 }

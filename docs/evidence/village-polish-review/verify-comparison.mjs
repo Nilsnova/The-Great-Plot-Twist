@@ -14,6 +14,8 @@ const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const manifestBytes = await readFile(join(root, 'manifest.json'));
 const manifest = JSON.parse(manifestBytes), html = await readFile(join(root, 'comparison.html'));
 assert.equal(sha(html), manifest.files['comparison.html'].sha256, 'HTML matches its recorded bytes');
+const helperSha256 = sha(await readFile(new URL(import.meta.url)));
+assert.equal(helperSha256, manifest.files['verify-comparison.mjs'].sha256, 'executed helper matches the manifest');
 const paths = [...html.toString().matchAll(/<img\b[^>]*\bsrc="([^"]+)"/g)].map(match => match[1]);
 assert.equal(paths.length, 12); assert.equal(new Set(paths).size, 12);
 const files = new Map([['/comparison.html', html]]);
@@ -28,7 +30,7 @@ for (const path of paths) {
 const require = createRequire(resolve(root, '../../../frontend/package.json'));
 const {chromium} = require('playwright-core');
 const unexpectedRequests = [], report = {htmlSha256: sha(html), manifestSha256: sha(manifestBytes),
-  helperSha256: sha(await readFile(new URL(import.meta.url))), started: new Date().toISOString(), checks: []};
+  helperSha256, started: new Date().toISOString(), checks: []};
 const server = createServer((request, response) => {
   const path = new URL(request.url, 'http://127.0.0.1').pathname;
   if (path === '/favicon.ico') { response.writeHead(204); response.end(); return; }
@@ -43,7 +45,7 @@ let browser;
 await mkdir(out, {recursive: true});
 await writeFile(join(out, 'manifest-used.json'), manifestBytes);
 try {
-  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  await new Promise((resolve, reject) => { server.once('error', reject); server.listen(0, '127.0.0.1', resolve); });
   const base = `http://127.0.0.1:${server.address().port}`;
   browser = await chromium.launch({executablePath: process.env.CHROME_PATH || '/usr/bin/chromium', headless: true});
   for (const [width, height] of [[1280, 720], [375, 812]]) {
@@ -73,6 +75,16 @@ try {
       assert.deepEqual([image.declaredWidth, image.declaredHeight], [expected.width, expected.height]);
     }
     const lists = page.locator('[role=tablist]'); assert.equal(await lists.count(), 3); let actions = 0;
+    const defaults = await page.evaluate(() => [...document.querySelectorAll('[role=tablist]')].map(list =>
+      [...list.children].map(tab => ({selected: tab.getAttribute('aria-selected'), tabIndex: tab.tabIndex,
+        hidden: document.getElementById(tab.getAttribute('aria-controls')).hidden}))));
+    for (const [group, tabs] of defaults.entries()) {
+      assert.equal(tabs.length, group === 0 ? 2 : 3);
+      tabs.forEach((tab, index) => assert.deepEqual(tab, {selected: String(index === 0), tabIndex: index === 0 ? 0 : -1, hidden: index !== 0}));
+    }
+    assert.equal(await page.locator('#desktop-panel').isVisible(), true);
+    assert.equal(await page.locator('#phone-panel').isVisible(), false);
+    assert.equal(await page.locator('#desktop-village').isVisible(), true);
     for (let group = 0; group < 3; group++) {
       if (group > 0) { await lists.nth(0).getByRole('tab').nth(group - 1).click(); actions++; }
       const tabs = lists.nth(group).getByRole('tab'), count = await tabs.count();
@@ -101,12 +113,16 @@ try {
   assert.deepEqual(unexpectedRequests, []); assert.equal(sha(await readFile(join(root, 'manifest.json'))), sha(manifestBytes));
   for (const [path, bytes] of files) assert.equal(sha(await readFile(join(root, path.slice(1)))), sha(bytes));
   report.exitCode = 0;
-  console.log('PASS: exact HTML and 12 original images; 3 tablists / 33 real actions per viewport; no page, console or external errors');
 } catch (error) { report.exitCode = 1; report.error = error.message; throw error; }
 finally {
-  await browser?.close(); await new Promise(resolve => server.close(resolve));
+  try { await browser?.close(); }
+  catch (error) { report.exitCode = 1; report.cleanupError = error.message; process.exitCode = 1; }
+  server.closeAllConnections();
+  try { await new Promise((resolve, reject) => server.close(error => error ? reject(error) : resolve())); }
+  catch (error) { report.exitCode = 1; report.cleanupError ??= error.message; process.exitCode = 1; }
   report.finished = new Date().toISOString(); await writeFile(join(out, 'report.json'), JSON.stringify(report, null, 2) + '\n');
 }
+if (report.exitCode === 0) console.log('PASS: exact HTML and 12 original images; 3 tablists / 33 real actions per viewport; no page, console or external errors');
 
 async function checkSelection(page, tabs, selected) {
   for (let index = 0; index < await tabs.count(); index++) {
