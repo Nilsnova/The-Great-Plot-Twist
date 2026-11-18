@@ -1,0 +1,50 @@
+.....................................................................F.. [ 51%]
+.......................F.............................................    [100%]
+=================================== FAILURES ===================================
+_ test_a_visitor_builds_and_upgrades_on_a_friends_island_with_their_own_coins __
+
+database = <psycopg.Connection [INTRANS] (database=postgres) at 0x7f39d0b9c140>
+
+    def test_a_visitor_builds_and_upgrades_on_a_friends_island_with_their_own_coins(database):
+        ready(database, OWNER, FRIEND)
+    
+        built = coop_build(database, FRIEND, OWNER, "wall_2", "wall", "coop-0001")
+        again = coop_build(database, FRIEND, OWNER, "wall_2", "wall", "coop-0001")
+        taken = coop_build(database, OWNER, OWNER, "wall_2", "wall", "coop-0002")
+        raised = upgrade(database, FRIEND, "wall_2", "upgrade-0001", owner=OWNER)
+    
+>       assert (built["level"], built["balance"], again["repeat"]) == (1, 90, True)
+                ^^^^^^^^^^^^^^
+E       KeyError: 'level'
+
+server/tests/island_sql/test_tower_defense_sql.py:326: KeyError
+__________ test_moved_workshop_at_radius_boundary_updates_future_rate __________
+
+database = <psycopg.Connection [INTRANS] (database=postgres) at 0x7f39d0ab6f60>
+
+    def test_moved_workshop_at_radius_boundary_updates_future_rate(database):
+        seed_v1(database)
+        as_server(database)
+        call(database, "select public.islet_build(%s,'house_1','house',10,0,0,'seed-house-01')", OWNER)
+        database.execute(
+            "update public.islet_buildings set level=2,spec='workshop' "
+            "where player_id=%s and plot='house_1'",
+            (OWNER,),
+        )
+        moved = call(
+            database, "select public.island_move(%s,%s,'house_1',-17,-2,'[]'::jsonb)", OWNER, OWNER
+        )
+>       assert moved == {"status": "done"}
+E       AssertionError: assert {'reason': 'b...s': 'refused'} == {'status': 'done'}
+E         
+E         Differing items:
+E         {'status': 'refused'} != {'status': 'done'}
+E         Left contains 1 more item:
+E         {'reason': 'busy'}
+E         Use -v to get more diff
+
+server/tests/island_sql/test_structure_recovery_mutations_sql.py:336: AssertionError
+=========================== short test summary info ============================
+FAILED server/tests/island_sql/test_tower_defense_sql.py::test_a_visitor_builds_and_upgrades_on_a_friends_island_with_their_own_coins
+FAILED server/tests/island_sql/test_structure_recovery_mutations_sql.py::test_moved_workshop_at_radius_boundary_updates_future_rate
+2 failed, 139 passed in 17.09s

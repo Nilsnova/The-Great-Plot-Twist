@@ -1,0 +1,25 @@
+{
+  "migrationVersionsUnique": 72,
+  "frozenFrontendTreeMatches": true,
+  "originalArtifactsByteVerified": 17,
+  "relativeTargetsChecked": 6,
+  "unchangedRuntimeAndDependencyPaths": [
+    "frontend/public",
+    "frontend/package.json",
+    "frontend/package-lock.json",
+    "backend/pyproject.toml",
+    "backend/uv.lock",
+    "frontend/src/pirates/sim.js",
+    "frontend/src/island/placement.js",
+    "frontend/src/island/wall-obstacles.js",
+    "backend/server/island/layout.py",
+    "backend/content/island_layout.json"
+  ],
+  "independentAudit": "Read-only strict-source audit clear ated9c0f14; reviewer ran no tests/browser/DB. Root owns final combined verification.",
+  "authoredWhitespace": "passed",
+  "rawReporterWhitespace": {
+    "exitCode": 2,
+    "diagnostics": 79,
+    "scope": "Unchanged raw reporter output; copied bytes preserved."
+  }
+}

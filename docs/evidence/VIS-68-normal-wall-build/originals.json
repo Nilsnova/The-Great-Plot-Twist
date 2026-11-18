@@ -1,0 +1,104 @@
+[
+  {
+    "path": "raw/backend-focused.log",
+    "origin": "/workspace/reference-village-work/normal-wall-build-results/backend-focused.log",
+    "bytes": 261,
+    "sha256": "e58fc7d213c225cb4a3e94e55c50451560c566935d35c1afd9b25d6f06024998"
+  },
+  {
+    "path": "raw/backend-preflight-green.log",
+    "origin": "/workspace/reference-village-work/normal-wall-build-results/backend-preflight-green.log",
+    "bytes": 99,
+    "sha256": "409a1e10e8ec5c746cd3e9a4d0978a8597d4dee32c2fefbd24b2205b7fc0522c"
+  },
+  {
+    "path": "raw/backend-red.log",
+    "origin": "/workspace/reference-village-work/normal-wall-build-results/backend-red.log",
+    "bytes": 18149,
+    "sha256": "e2dc525d4c389bbefeb0906d3df15c104792243b2b6942f7d5e39b44735c3b9b"
+  },
+  {
+    "path": "raw/backend-sql-green-final.log",
+    "origin": "/workspace/reference-village-work/normal-wall-build-results/backend-sql-green-final.log",
+    "bytes": 99,
+    "sha256": "b762aeccee7e4dba827cb6284321888475ab042d5182cc6b3325ed0adad4c3d3"
+  },
+  {
+    "path": "raw/frontend-green-corrected.log",
+    "origin": "/workspace/reference-village-work/normal-wall-build-results/frontend-green-corrected.log",
+    "bytes": 887,
+    "sha256": "b8156fef06349cc5cd0690b723827455e18025e80ef748afde4e434c12c85e2e"
+  },
+  {
+    "path": "raw/frontend-green.log",
+    "origin": "/workspace/reference-village-work/normal-wall-build-results/frontend-green.log",
+    "bytes": 2042,
+    "sha256": "54722f25c7f38a98394f5ac4316eb408e662bb1322e23b434e5dbb340509faf8"
+  },
+  {
+    "path": "raw/frontend-red-corrected.log",
+    "origin": "/workspace/reference-village-work/normal-wall-build-results/frontend-red-corrected.log",
+    "bytes": 78962,
+    "sha256": "1498fa317e050a1e02837f788200af9a04e782d05d16700cd139809eefda7aff"
+  },
+  {
+    "path": "raw/frontend-red.log",
+    "origin": "/workspace/reference-village-work/normal-wall-build-results/frontend-red.log",
+    "bytes": 79959,
+    "sha256": "b93e4b6ec613539820bef01bb21196d4622af48ebd4c48672bea45e7915dec7d"
+  },
+  {
+    "path": "raw/ruff-final.log",
+    "origin": "/workspace/reference-village-work/normal-wall-build-results/ruff-final.log",
+    "bytes": 19,
+    "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+  },
+  {
+    "path": "raw/ruff.log",
+    "origin": "/workspace/reference-village-work/normal-wall-build-results/ruff.log",
+    "bytes": 397,
+    "sha256": "0c0e1e22ef98300ea00781e21b9f5f63e51e2a2f494fc51c02507630a90dc6a0"
+  },
+  {
+    "path": "raw/sql-context-focused-final.log",
+    "origin": "/workspace/reference-village-work/normal-wall-build-results/sql-context-focused-final.log",
+    "bytes": 181,
+    "sha256": "c5c0f5e7c52cc99336b8edad36658e280c1672c6eb3a45e7187a2a3db8385787"
+  },
+  {
+    "path": "raw/sql-context-focused.log",
+    "origin": "/workspace/reference-village-work/normal-wall-build-results/sql-context-focused.log",
+    "bytes": 2582,
+    "sha256": "9ed570b22b994bd8ab6afc491541654be40f7b3b54af88397614813c4cf3d349"
+  },
+  {
+    "path": "raw/sql-context-green-01.log",
+    "origin": "/workspace/reference-village-work/normal-wall-build-results/sql-context-green-01.log",
+    "bytes": 4629,
+    "sha256": "7bc5dd5286578935a3f4656cd4d8535cb4e024645e4d54a55df49c73f0f939b9"
+  },
+  {
+    "path": "raw/sql-context-red.log",
+    "origin": "/workspace/reference-village-work/normal-wall-build-results/sql-context-red.log",
+    "bytes": 2635,
+    "sha256": "6707e4f2333870bcfc70a96e419bb865330d163473e084e86aef748915cee141"
+  },
+  {
+    "path": "raw/sql-green-01.log",
+    "origin": "/workspace/reference-village-work/normal-wall-build-results/sql-green-01.log",
+    "bytes": 99,
+    "sha256": "e076a428ee6d1e8e61ea50633087ef3650a4b4786d2a73f540f605580c47394c"
+  },
+  {
+    "path": "raw/sql-red.log",
+    "origin": "/workspace/reference-village-work/normal-wall-build-results/sql-red.log",
+    "bytes": 56087,
+    "sha256": "63b7d1ed70c642434be84ff1c7e45c13b87738c868ed942bde3628810352ecfb"
+  },
+  {
+    "path": "raw/strict-source.json",
+    "origin": "/workspace/reference-village-work/normal-wall-build-results/strict-source.json",
+    "bytes": 331,
+    "sha256": "1fd2bc756166c5cf178a5e7ec315a5000876b43e6f388855934e6da635520de2"
+  }
+]

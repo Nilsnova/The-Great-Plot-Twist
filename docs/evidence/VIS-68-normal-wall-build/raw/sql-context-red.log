@@ -1,0 +1,46 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+______ test_old_signature_cannot_bypass_effective_legacy_clearance[False] ______
+
+database = <psycopg.Connection [INTRANS] (database=postgres) at 0x7f9ac47b6a20>
+friend = False
+
+    @pytest.mark.parametrize("friend", [False, True])
+    def test_old_signature_cannot_bypass_effective_legacy_clearance(database, friend):
+        ready(database, 0, (-3.5, 4))
+        effective = layout.positions_of(layout.island_layout(), {"wall_1": (-3.5, 4)})["wall_1"]
+        assert effective == (-3, 3)
+        assert call(database, "select public.island_wall_scenery_clear(-3.5,4)") is True
+        assert call(database, "select public.island_wall_scenery_clear(-3,3)") is False
+        with (
+>           pytest.raises(psycopg.errors.CheckViolation, match="wall_position_check_required"),
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            database.transaction(),
+        ):
+E       Failed: DID NOT RAISE CheckViolation
+
+server/tests/island_sql/test_normal_wall_build_clearance_sql.py:211: Failed
+______ test_old_signature_cannot_bypass_effective_legacy_clearance[True] _______
+
+database = <psycopg.Connection [INTRANS] (database=postgres) at 0x7f9ac47d2210>
+friend = True
+
+    @pytest.mark.parametrize("friend", [False, True])
+    def test_old_signature_cannot_bypass_effective_legacy_clearance(database, friend):
+        ready(database, 0, (-3.5, 4))
+        effective = layout.positions_of(layout.island_layout(), {"wall_1": (-3.5, 4)})["wall_1"]
+        assert effective == (-3, 3)
+        assert call(database, "select public.island_wall_scenery_clear(-3.5,4)") is True
+        assert call(database, "select public.island_wall_scenery_clear(-3,3)") is False
+        with (
+>           pytest.raises(psycopg.errors.CheckViolation, match="wall_position_check_required"),
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            database.transaction(),
+        ):
+E       Failed: DID NOT RAISE CheckViolation
+
+server/tests/island_sql/test_normal_wall_build_clearance_sql.py:211: Failed
+=========================== short test summary info ============================
+FAILED server/tests/island_sql/test_normal_wall_build_clearance_sql.py::test_old_signature_cannot_bypass_effective_legacy_clearance[False]
+FAILED server/tests/island_sql/test_normal_wall_build_clearance_sql.py::test_old_signature_cannot_bypass_effective_legacy_clearance[True]
+2 failed, 22 deselected in 4.98s

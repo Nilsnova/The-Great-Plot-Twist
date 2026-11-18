@@ -1,0 +1,98 @@
+......................................................FF                 [100%]
+=================================== FAILURES ===================================
+_____ test_the_fresh_start_dry_run_reports_the_counts_and_changes_nothing ______
+
+database = <psycopg.Connection [INERROR] (database=postgres) at 0x7f2aaae4bb00>
+
+    def test_the_fresh_start_dry_run_reports_the_counts_and_changes_nothing(database):
+>       seed_progress(database)
+
+server/tests/island_sql/test_islands_and_waves_sql.py:569: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+server/tests/island_sql/test_islands_and_waves_sql.py:526: in seed_progress
+    database.execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <psycopg.Connection [INERROR] (database=postgres) at 0x7f2aaae4bb00>
+query = "insert into public.island_layout (island_owner, plot, x_half, z_half) values (%s, 'wall_1', 4, 6)"
+params = (UUID('00000000-0000-0000-0000-000000000399'),), prepare = None
+binary = False
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool = False,
+    ) -> Cursor[Row]:
+        """Execute a query and return a cursor to read its results."""
+        try:
+            cur = self.cursor()
+            if binary:
+                cur.format = BINARY
+    
+            if isinstance(query, Template):
+                if params is not None:
+                    raise TypeError(
+                        "'execute()' with string template query doesn't support parameters"
+                    )
+                return cur.execute(query, prepare=prepare)
+            else:
+                return cur.execute(query, params, prepare=prepare)
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           psycopg.errors.UniqueViolation: duplicate key value violates unique constraint "island_layout_pkey"
+E           DETAIL:  Key (island_owner, plot)=(00000000-0000-0000-0000-000000000399, wall_1) already exists.
+
+../../../.cache/uv/archive-v0/lZDskjYv8XT6nRkB/lib/python3.12/site-packages/psycopg/connection.py:304: UniqueViolation
+____ test_the_fresh_start_sets_every_wallet_to_100_and_clears_the_progress _____
+
+database = <psycopg.Connection [INERROR] (database=postgres) at 0x7f2aaae4b620>
+
+    def test_the_fresh_start_sets_every_wallet_to_100_and_clears_the_progress(database):
+>       seed_progress(database)
+
+server/tests/island_sql/test_islands_and_waves_sql.py:588: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+server/tests/island_sql/test_islands_and_waves_sql.py:526: in seed_progress
+    database.execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <psycopg.Connection [INERROR] (database=postgres) at 0x7f2aaae4b620>
+query = "insert into public.island_layout (island_owner, plot, x_half, z_half) values (%s, 'wall_1', 4, 6)"
+params = (UUID('00000000-0000-0000-0000-000000000399'),), prepare = None
+binary = False
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool = False,
+    ) -> Cursor[Row]:
+        """Execute a query and return a cursor to read its results."""
+        try:
+            cur = self.cursor()
+            if binary:
+                cur.format = BINARY
+    
+            if isinstance(query, Template):
+                if params is not None:
+                    raise TypeError(
+                        "'execute()' with string template query doesn't support parameters"
+                    )
+                return cur.execute(query, prepare=prepare)
+            else:
+                return cur.execute(query, params, prepare=prepare)
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           psycopg.errors.UniqueViolation: duplicate key value violates unique constraint "island_layout_pkey"
+E           DETAIL:  Key (island_owner, plot)=(00000000-0000-0000-0000-000000000399, wall_1) already exists.
+
+../../../.cache/uv/archive-v0/lZDskjYv8XT6nRkB/lib/python3.12/site-packages/psycopg/connection.py:304: UniqueViolation
+=========================== short test summary info ============================
+FAILED server/tests/island_sql/test_islands_and_waves_sql.py::test_the_fresh_start_dry_run_reports_the_counts_and_changes_nothing
+FAILED server/tests/island_sql/test_islands_and_waves_sql.py::test_the_fresh_start_sets_every_wallet_to_100_and_clears_the_progress
+2 failed, 54 passed in 6.87s
