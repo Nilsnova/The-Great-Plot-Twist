@@ -2,14 +2,14 @@
 import {makeActionUid} from '../screens/islet/action-uid.js';
 import {boatOrigin, sameBoatOrigin} from './shared-boat-shapes.js';
 const PREFIX = 'plot_twist_shared_boat_v1:';
-const keepForRetry = answer => answer?.status === 0 || answer?.status === 429 || answer?.status >= 500 || answer?.code === 'wave_running';
+const keepForRetry = answer => answer?.status === 0 || answer?.status === 401 || answer?.status === 429 || answer?.status >= 500 || answer?.code === 'wave_running';
 const failed = (code, message) => ({ok: false, status: 409, code, message});
 const uid = value => typeof value === 'string' && /^[A-Za-z0-9_-]{8,64}$/.test(value) && !/^(fx_|sys_)/.test(value);
 
 export function createBoatRoundSession({api, getEconomy, getActorId, storage, makeUid = makeActionUid, lock = globalThis.navigator?.locks} = {}) {
   let active = null, finishing = false, tail = Promise.resolve();
-  const serial = work => {
-    const run = () => lock?.request ? lock.request(`${PREFIX}${getActorId?.()}`, work) : work();
+  const serial = (work, actorId = getActorId?.()) => {
+    const run = () => lock?.request ? lock.request(`${PREFIX}${actorId}`, work) : work();
     const result = tail.then(run); tail = result.catch(() => {}); return result;
   };
   const key = record => `${PREFIX}${record.actorId}:${record.startUid}`;
@@ -31,6 +31,11 @@ export function createBoatRoundSession({api, getEconomy, getActorId, storage, ma
     } catch { return null; }
     return result;
   }
+  function contextError(actorId, origin) {
+    if (getActorId?.() !== actorId) return failed('session_expired', 'The signed-in player changed before this round started.');
+    if (!sameBoatOrigin(getEconomy?.(), origin)) return failed('economy_epoch_mismatch', 'The island context changed before this round started.');
+    return null;
+  }
   async function sendClaim(record) {
     if (getActorId?.() !== record.actorId) return failed('session_expired', 'Sign in with the player who started this round.');
     const answer = await api.claim({roundId: record.round.id, economy: record.origin, actorId: record.actorId, stars: record.stars, actionUid: record.claimUid});
@@ -50,10 +55,15 @@ export function createBoatRoundSession({api, getEconomy, getActorId, storage, ma
   }
   return {
     recover: () => serial(() => recoverClaims(getActorId?.())),
-    begin: game => serial(async () => {
+    begin: game => {
       const actorId = getActorId?.(), origin = boatOrigin(getEconomy?.());
+      return serial(async () => {
       if (!actorId || !origin) return failed('economy_context_required', 'Read the current island treasury before sailing.');
+      const changedWhileQueued = contextError(actorId, origin);
+      if (changedWhileQueued) return changedWhileQueued;
       const recovered = await recoverClaims(actorId);
+      const changed = contextError(actorId, origin);
+      if (changed) return changed;
       if (!recovered.ok) return recovered;
       const saved = records(actorId);
       if (!saved) return failed('storage_unavailable', 'Boat retry storage is unavailable.');
@@ -61,15 +71,19 @@ export function createBoatRoundSession({api, getEconomy, getActorId, storage, ma
       if (!record) record = {actorId, origin, game, startUid: makeUid(), claimUid: makeUid(), phase: 'start'};
       if (!save(record)) return failed('storage_unavailable', 'Enable local storage so this round can be retried safely.');
       if (record.phase === 'start') {
+        const changedBeforeSend = contextError(actorId, record.origin);
+        if (changedBeforeSend) return changedBeforeSend;
         const answer = await api.start({game, economy: record.origin, actorId, actionUid: record.startUid});
         if (!answer.ok) { if (!keepForRetry(answer)) remove(record); return answer; }
         record = {...record, phase: 'playing', round: answer.data.receipt.result.round};
         if (!save(record)) return failed('storage_unavailable', 'Keep this page open until retry storage is available.');
       }
-      if (getActorId?.() !== actorId || !sameBoatOrigin(getEconomy?.(), record.origin)) return failed('economy_epoch_mismatch', 'The island context changed while starting this round.');
+      const changedAfterReply = contextError(actorId, record.origin);
+      if (changedAfterReply) return changedAfterReply;
       active = record;
       return {ok: true, status: 200, data: {round: record.round, origin: record.origin}};
-    }),
+      }, actorId);
+    },
     finish: stars => {
       finishing = true;
       return serial(async () => {
