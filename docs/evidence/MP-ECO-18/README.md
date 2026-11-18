@@ -14,6 +14,6 @@ Regenerate from `frontend/`:
 MP_ECO_EVIDENCE_DIR=../docs/evidence/MP-ECO-18 npm test -- --maxWorkers=1 tests/island/economy-dom.test.js tests/island/economy-captain-dom.test.js tests/ui/hud.test.js tests/island/captain-card.test.js
 ```
 
-Result: 4 files, 19 tests passed. The checks assert the displayed money, button state and layout boundaries; screenshots were also visually inspected.
+Current result at frontend runtime `7db9222f`: 4 files, 21 tests passed in 24.43 s. The checks assert the displayed money, button state and layout boundaries; screenshots were also visually inspected.
 
-The [specification](../../../specs/MP-ECO-18-treasury-ui.md) records API dependencies and broader validation limits. Arsenal, Harbor betting, Boat and wave-lifecycle adoption require separate integration. The broad legacy multiplayer browser check is not passing; these fixtures are not evidence that the whole economy or multiplayer rollout is complete.
+The [specification](../../../specs/MP-ECO-18-treasury-ui.md) records API dependencies and broader validation limits. Arsenal, Harbor betting, Boat and wave-lifecycle adoption require separate integration. The current broad legacy multiplayer journey also passed with four pages at runtime `7db9222f`, including the boss finisher; the specification records its exact command and limits separately. These fixtures do not establish authenticated shared-mode integration or complete multiplayer rollout.

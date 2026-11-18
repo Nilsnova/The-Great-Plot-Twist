@@ -121,3 +121,58 @@ Main's pose/gated-defense changes at `77a9e34d` and subsequent repair-option fix
 - Diff/whitespace checks passed. No multiplayer harness or pose implementation was changed by this feature refresh.
 
 The broad journey uses the existing local fake server and legacy-money behavior, including its existing mid-wave join rules and paid revival. It does not prove the new frozen shared roster, free-v1 revival, original-account settlement or authenticated shared-mode backend integration. Those remain explicit integration/acceptance gates.
+
+### Verification with current foundations
+
+Main `a195ec35` is integrated. The checked frontend runtime is `7db9222f`. This retains current wallet-recovery watermarks, wall-purchase feedback/replay suppression, recovery-health guards, quest updates and boat transitions alongside the shared treasury projection. All existing legacy checks remain enabled.
+
+A delayed successful legacy own-build/upgrade may finish after sailing away. Its payload is ignored; a new guarded own-island GET refreshes the current own state. That GET may adopt a new shared account/epoch, and cannot restore the old receipt's personal balance. Shared mutation replies retain their original selection/run rejection. The first combined run had **358 passing checks and one wall-feedback failure** because the old own mirror stayed stale. The added adoption regression also failed before this reconciliation. The corrected focused cases passed **22 checks across three files**.
+
+- The final affected selection passed **34 files, 361 tests in 68.12 s**, including unchanged wallet-watermark, wall-feedback, recovery-upgrade, quest and boat suites. The new shared crew case retains disabled historical Carpenter counts under both recovery versions.
+- `npm run build` passed; spoiler guard checked **251 text files and 12 protected lines**.
+- Screenshot regeneration passed **four files, 21 tests in 24.43 s**. All three public-fixture screenshots were visually inspected at the current runtime; desktop and phone treasury images regenerated identically.
+- `env -u TEST_URL npm run test:mp -- /tmp/mp18-current-main-multiplayer` passed with **four pages** and an owned ephemeral Vite server. Lobby roles, co-op edits, both upgrade directions, research, revival, pause/resume, break upgrades, the desktop/phone musket pose, sampled four-player synchronization and the wave-5 boss finisher completed without browser errors.
+
+The broad journey still uses local fake/legacy money, including its existing mid-wave joining and paid revival. It verifies compatibility of this UI increment; it does not prove shared frozen rosters, free-v1 revival, original-account settlement or authenticated shared-backend integration.
+
+Run from `frontend/`:
+
+```sh
+npm test -- --maxWorkers=1 \
+  tests/island/economy-view.test.js \
+  tests/island/economy-cards.test.js \
+  tests/island/economy-api.test.js \
+  tests/island/economy-http.test.js \
+  tests/island/card-model.test.js \
+  tests/island/api.test.js \
+  tests/island/tower-tree.test.js \
+  tests/online-api.test.js \
+  tests/island/economy-dom.test.js \
+  tests/island/economy-captain-dom.test.js \
+  tests/island/economy-ordering-dom.test.js \
+  tests/ui/hud.test.js \
+  tests/island/first-read-retry.test.js \
+  tests/island/visit-and-mode.test.js \
+  tests/island/fresh-start-dom.test.js \
+  tests/island/demolish-dom.test.js \
+  tests/island/core-rejoin-load.test.js \
+  tests/island/arsenal-context.test.js \
+  tests/island/arsenal-dom.test.js \
+  tests/island/arsenal.test.js \
+  tests/island/captain-card.test.js \
+  tests/island/weapon-comparison-dom.test.js \
+  tests/pirates/poses.test.js \
+  tests/pirates/render.test.js \
+  tests/pirates/live-attack-feedback.test.js \
+  tests/pirates/scattershot-latency.test.js \
+  tests/redesign-movement.test.js \
+  tests/island/structure-recovery-policy.test.js \
+  tests/island/selection-dock.test.js \
+  tests/island/structure-recovery-upgrade-dom.test.js \
+  tests/island/wallet-watermark.test.js \
+  tests/island/wall-feedback-dom.test.js \
+  tests/island/quest-progress.test.js \
+  tests/island/boat-transition.test.js
+npm run build
+MP_ECO_EVIDENCE_DIR=../docs/evidence/MP-ECO-18 npm test -- --maxWorkers=1 tests/island/economy-dom.test.js tests/island/economy-captain-dom.test.js tests/ui/hud.test.js tests/island/captain-card.test.js
+```
