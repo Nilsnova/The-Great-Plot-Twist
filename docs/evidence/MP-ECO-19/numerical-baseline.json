@@ -1,0 +1,4644 @@
+{
+  "evidenceClass": "OFFLINE ARITHMETIC; NO SHARED-MODE PLAY OR LIVE ACTIVATION",
+  "sourceSha256": {
+    "backend/content/islands.json": "cf18f3f6df388f23058591d76a48169ef5fb8d22be26f81409b966ef4a541a95",
+    "backend/content/campaign.json": "7cfd3e5517d101ae8a25f1a1fefa9eac847d5ed958d4413a6d65a86c6719b0a6",
+    "backend/content/boat.json": "6e1d402e1417749a1a0a722bb8c99a38fdda31c527053af2dd0ee80b11822311",
+    "backend/content/tower_trees.json": "8e578b0c271e5d8605af1448a855ccc61030fd7a8247e228e4bf625122862007",
+    "backend/content/defenses_v2.json": "8e1e108688b81998d032b52fd7b0e11862a4b2ea7d3d2c4f81cbbd098503e47c",
+    "backend/content/wave_events.json": "581a41a2768f2d1b670d226083fca829cdbf8349b03ca936d380d445d5db8f16",
+    "backend/server/island/rules.py": "fd31535a94399ee4a45e99986a12fec59d2d5d1b3db53164492d21d80800cd52",
+    "backend/server/island/catalogue.py": "cdde6945a9fba2020cc389674add87be93b88f32f74eadeaf42bc5b2894dc5e8",
+    "backend/server/island/boat.py": "9b4d9693f6314a660a08115e9227d11bba721db72631da355e78314ff00a3b68",
+    "backend/server/island/wave_events.py": "9fede25cc0d6a950ee379314449ea6b113ecf98a4eed0fe58c60e55713803450",
+    "supabase/migrations/20261117025000_legacy_wave_locks.sql": "2572253fbb3b7cc09381719a897eb8b8970cabd984c184139611c7f62e105009",
+    "frontend/src/pirates/sim.js": "e19f09aed4a2e26fa5e205b86da16b3d932803d38f01ef545e9bad8b5cd8c451",
+    "frontend/tests/pirates/balance-fixture.js": "d184d0151503dc33f122a3fbba11b017ed5cc81096455b1ede4c9e4e453fd029"
+  },
+  "assumptions": [
+    "One configured island grant; one win per sequential played wave; no party multiplier.",
+    "Timelines omit bonuses, bets, ships, Engineer discount, refunds and paid repairs.",
+    "Strict queues buy unlocked levels with prior funds before the next bell.",
+    "All wins are assumptions, including waves fought with incomplete planned defenses.",
+    "Fixed-house bounds assume houses from wave1 and subtract no expenses.",
+    "Base seven tower spots; extra spots/culverin remain separately flagged options.",
+    "Carpenter and repair-only effects remain undecided; no invented replacement."
+  ],
+  "catalogue": {
+    "buildings": {
+      "wall": {
+        "incremental": [
+          10,
+          20,
+          40,
+          80,
+          160
+        ],
+        "cumulative": [
+          10,
+          30,
+          70,
+          150,
+          310
+        ],
+        "unlockBest": [
+          0,
+          2,
+          5,
+          12,
+          20
+        ],
+        "engineerIncremental": [
+          9,
+          18,
+          36,
+          72,
+          144
+        ]
+      },
+      "cannon": {
+        "incremental": [
+          30,
+          60,
+          120,
+          240,
+          480
+        ],
+        "cumulative": [
+          30,
+          90,
+          210,
+          450,
+          930
+        ],
+        "unlockBest": [
+          0,
+          2,
+          5,
+          12,
+          20
+        ],
+        "engineerIncremental": [
+          27,
+          54,
+          108,
+          216,
+          432
+        ]
+      },
+      "mortar": {
+        "incremental": [
+          60,
+          120,
+          240,
+          480,
+          960
+        ],
+        "cumulative": [
+          60,
+          180,
+          420,
+          900,
+          1860
+        ],
+        "unlockBest": [
+          2,
+          2,
+          5,
+          15,
+          20
+        ],
+        "engineerIncremental": [
+          54,
+          108,
+          216,
+          432,
+          864
+        ]
+      },
+      "harpoon": {
+        "incremental": [
+          40,
+          80,
+          160,
+          320,
+          640
+        ],
+        "cumulative": [
+          40,
+          120,
+          280,
+          600,
+          1240
+        ],
+        "unlockBest": [
+          12,
+          12,
+          12,
+          15,
+          20
+        ],
+        "engineerIncremental": [
+          36,
+          72,
+          144,
+          288,
+          576
+        ]
+      },
+      "swivel": {
+        "incremental": [
+          50,
+          100,
+          200,
+          400,
+          800
+        ],
+        "cumulative": [
+          50,
+          150,
+          350,
+          750,
+          1550
+        ],
+        "unlockBest": [
+          9,
+          9,
+          9,
+          15,
+          20
+        ],
+        "engineerIncremental": [
+          45,
+          90,
+          180,
+          360,
+          720
+        ]
+      },
+      "watchtower": {
+        "incremental": [
+          40,
+          80,
+          160,
+          320,
+          640
+        ],
+        "cumulative": [
+          40,
+          120,
+          280,
+          600,
+          1240
+        ],
+        "unlockBest": [
+          3,
+          3,
+          12,
+          15,
+          20
+        ],
+        "engineerIncremental": [
+          36,
+          72,
+          144,
+          288,
+          576
+        ]
+      },
+      "house": {
+        "incremental": [
+          50,
+          100,
+          200
+        ],
+        "cumulative": [
+          50,
+          150,
+          350
+        ],
+        "unlockBest": [
+          1,
+          2,
+          5
+        ],
+        "engineerIncremental": [
+          45,
+          90,
+          180
+        ]
+      }
+    },
+    "crew": {
+      "gunner": {
+        "price": 40,
+        "cap": 2,
+        "unlockBest": 3,
+        "effectDecisionPending": false
+      },
+      "carpenter": {
+        "price": 30,
+        "cap": 2,
+        "unlockBest": 5,
+        "effectDecisionPending": true
+      },
+      "lookout": {
+        "price": 25,
+        "cap": 1,
+        "unlockBest": 8,
+        "effectDecisionPending": false
+      },
+      "guard": {
+        "price": 60,
+        "cap": 3,
+        "unlockBest": 6,
+        "effectDecisionPending": false
+      }
+    },
+    "research": {
+      "cannon": {
+        "tiers": [
+          180,
+          360,
+          630
+        ],
+        "skill": 150,
+        "capstone": 600
+      },
+      "mortar": {
+        "tiers": [
+          220,
+          440,
+          770
+        ],
+        "skill": 120,
+        "capstone": 480
+      },
+      "wall": {
+        "tiers": [
+          120,
+          240,
+          420
+        ],
+        "skill": 40,
+        "capstone": 160
+      },
+      "watchtower": {
+        "tiers": [
+          160,
+          320,
+          560
+        ],
+        "skill": 80,
+        "capstone": 320
+      }
+    },
+    "towerTrees": {
+      "cannon": {
+        "tiers": [
+          1000,
+          2200,
+          4800
+        ],
+        "unlockBest": [
+          20,
+          35,
+          45
+        ],
+        "oneFullPathAndOtherTierOne": 9000
+      },
+      "mortar": {
+        "tiers": [
+          1200,
+          2600,
+          5600
+        ],
+        "unlockBest": [
+          20,
+          35,
+          45
+        ],
+        "oneFullPathAndOtherTierOne": 10600
+      },
+      "harpoon": {
+        "tiers": [
+          700,
+          1500,
+          3200
+        ],
+        "unlockBest": [
+          20,
+          35,
+          45
+        ],
+        "oneFullPathAndOtherTierOne": 6100
+      },
+      "culverin": {
+        "tiers": [
+          1400,
+          2800,
+          6000
+        ],
+        "unlockBest": [
+          20,
+          35,
+          45
+        ],
+        "oneFullPathAndOtherTierOne": 11600
+      },
+      "swivel": {
+        "tiers": [
+          900,
+          2000,
+          4400
+        ],
+        "unlockBest": [
+          20,
+          35,
+          45
+        ],
+        "oneFullPathAndOtherTierOne": 8200
+      }
+    },
+    "weapons": {
+      "musket": {
+        "price": 0,
+        "unlockBest": 0
+      },
+      "pistols": {
+        "price": 60,
+        "unlockBest": 2
+      },
+      "blunderbuss": {
+        "price": 120,
+        "unlockBest": 4
+      },
+      "long_rifle": {
+        "price": 200,
+        "unlockBest": 6
+      },
+      "fire_bombs": {
+        "price": 300,
+        "unlockBest": 10
+      }
+    },
+    "wreckGoal": 500,
+    "captainUpgradeAndRespecTargetCoins": 0
+  },
+  "flaggedOptionsOutsideBaseline": {
+    "additionalKinds": {
+      "culverin": {
+        "incremental": [
+          80,
+          160,
+          320,
+          640,
+          1280
+        ],
+        "cumulativeMaximum": 2480,
+        "unlockBest": [
+          15,
+          15,
+          15,
+          20,
+          30
+        ]
+      }
+    },
+    "additionalSpots": {
+      "cannon_8": 10,
+      "cannon_9": 20,
+      "cannon_10": 30,
+      "cannon_11": 40
+    }
+  },
+  "sampleBills": {
+    "startingSixWallsFourCannons": 180,
+    "sevenLevelFiveCannonsOnly": 6510,
+    "fourCannonsThreeMortarsTwelveWallsWatchtowerTwoMaxHouses": {
+      "3": 3920,
+      "4": 7600,
+      "5": 14960
+    },
+    "maxGunnersGuardsLookout": 285,
+    "cannonAllResearchPlusSevenTierOneSkills": 2220,
+    "threeLevelFiveCannonRepairs": 1440,
+    "fourCannonThreeMortarFullTreePackages": 67800,
+    "allResearchBranchesBeforeTowerSkills": 4420,
+    "levelFiveCannonDemolition": {
+      "actualPaid": 930,
+      "refund": 465
+    }
+  },
+  "revenueBounds": [
+    {
+      "wave": 1,
+      "rewardWithoutHouses": 35,
+      "bossMultiplier": 1,
+      "cumulativeIncomeByFixedHouseLevels": {
+        "0": 35,
+        "2": 55,
+        "4": 75,
+        "6": 95
+      },
+      "conditionalFinisherExtra": 0,
+      "conditionalGalleonExtra": 0
+    },
+    {
+      "wave": 5,
+      "rewardWithoutHouses": 225,
+      "bossMultiplier": 3,
+      "cumulativeIncomeByFixedHouseLevels": {
+        "0": 425,
+        "2": 565,
+        "4": 705,
+        "6": 845
+      },
+      "conditionalFinisherExtra": 90,
+      "conditionalGalleonExtra": 0
+    },
+    {
+      "wave": 10,
+      "rewardWithoutHouses": 375,
+      "bossMultiplier": 3,
+      "cumulativeIncomeByFixedHouseLevels": {
+        "0": 1200,
+        "2": 1480,
+        "4": 1760,
+        "6": 2040
+      },
+      "conditionalFinisherExtra": 135,
+      "conditionalGalleonExtra": 180
+    },
+    {
+      "wave": 20,
+      "rewardWithoutHouses": 675,
+      "bossMultiplier": 3,
+      "cumulativeIncomeByFixedHouseLevels": {
+        "0": 3800,
+        "2": 4360,
+        "4": 4920,
+        "6": 5480
+      },
+      "conditionalFinisherExtra": 225,
+      "conditionalGalleonExtra": 300
+    },
+    {
+      "wave": 30,
+      "rewardWithoutHouses": 975,
+      "bossMultiplier": 3,
+      "cumulativeIncomeByFixedHouseLevels": {
+        "0": 7800,
+        "2": 8640,
+        "4": 9480,
+        "6": 10320
+      },
+      "conditionalFinisherExtra": 315,
+      "conditionalGalleonExtra": 420
+    },
+    {
+      "wave": 40,
+      "rewardWithoutHouses": 1825,
+      "bossMultiplier": 5,
+      "cumulativeIncomeByFixedHouseLevels": {
+        "0": 13420,
+        "2": 14580,
+        "4": 15740,
+        "6": 16900
+      },
+      "conditionalFinisherExtra": 675,
+      "conditionalGalleonExtra": 900
+    },
+    {
+      "wave": 50,
+      "rewardWithoutHouses": 1821,
+      "bossMultiplier": 3,
+      "cumulativeIncomeByFixedHouseLevels": {
+        "0": 21588,
+        "2": 23168,
+        "4": 24748,
+        "6": 26328
+      },
+      "conditionalFinisherExtra": 495,
+      "conditionalGalleonExtra": 660
+    },
+    {
+      "wave": 75,
+      "rewardWithoutHouses": 2271,
+      "bossMultiplier": 3,
+      "cumulativeIncomeByFixedHouseLevels": {
+        "0": 45683,
+        "2": 48313,
+        "4": 50943,
+        "6": 53573
+      },
+      "conditionalFinisherExtra": 720,
+      "conditionalGalleonExtra": 960
+    },
+    {
+      "wave": 100,
+      "rewardWithoutHouses": 2721,
+      "bossMultiplier": 3,
+      "cumulativeIncomeByFixedHouseLevels": {
+        "0": 75028,
+        "2": 78708,
+        "4": 82388,
+        "6": 86068
+      },
+      "conditionalFinisherExtra": 945,
+      "conditionalGalleonExtra": 1260
+    }
+  ],
+  "partyComparisonWithoutHouses": [
+    {
+      "throughWave": 5,
+      "parties": [
+        {
+          "captains": 1,
+          "startCoins": 200,
+          "waveIncome": 425,
+          "totalBeforeSpending": 625,
+          "pistolsForEveryCaptain": 60,
+          "longRiflesForEveryCaptain": 200,
+          "formerPersonalUpgradeBill": 300
+        },
+        {
+          "captains": 2,
+          "startCoins": 200,
+          "waveIncome": 425,
+          "totalBeforeSpending": 625,
+          "pistolsForEveryCaptain": 120,
+          "longRiflesForEveryCaptain": 400,
+          "formerPersonalUpgradeBill": 600
+        },
+        {
+          "captains": 4,
+          "startCoins": 200,
+          "waveIncome": 425,
+          "totalBeforeSpending": 625,
+          "pistolsForEveryCaptain": 240,
+          "longRiflesForEveryCaptain": 800,
+          "formerPersonalUpgradeBill": 1200
+        },
+        {
+          "captains": 10,
+          "startCoins": 200,
+          "waveIncome": 425,
+          "totalBeforeSpending": 625,
+          "pistolsForEveryCaptain": 600,
+          "longRiflesForEveryCaptain": 2000,
+          "formerPersonalUpgradeBill": 3000
+        }
+      ]
+    },
+    {
+      "throughWave": 20,
+      "parties": [
+        {
+          "captains": 1,
+          "startCoins": 200,
+          "waveIncome": 3800,
+          "totalBeforeSpending": 4000,
+          "pistolsForEveryCaptain": 60,
+          "longRiflesForEveryCaptain": 200,
+          "formerPersonalUpgradeBill": 300
+        },
+        {
+          "captains": 2,
+          "startCoins": 200,
+          "waveIncome": 3800,
+          "totalBeforeSpending": 4000,
+          "pistolsForEveryCaptain": 120,
+          "longRiflesForEveryCaptain": 400,
+          "formerPersonalUpgradeBill": 600
+        },
+        {
+          "captains": 4,
+          "startCoins": 200,
+          "waveIncome": 3800,
+          "totalBeforeSpending": 4000,
+          "pistolsForEveryCaptain": 240,
+          "longRiflesForEveryCaptain": 800,
+          "formerPersonalUpgradeBill": 1200
+        },
+        {
+          "captains": 10,
+          "startCoins": 200,
+          "waveIncome": 3800,
+          "totalBeforeSpending": 4000,
+          "pistolsForEveryCaptain": 600,
+          "longRiflesForEveryCaptain": 2000,
+          "formerPersonalUpgradeBill": 3000
+        }
+      ]
+    },
+    {
+      "throughWave": 50,
+      "parties": [
+        {
+          "captains": 1,
+          "startCoins": 200,
+          "waveIncome": 21588,
+          "totalBeforeSpending": 21788,
+          "pistolsForEveryCaptain": 60,
+          "longRiflesForEveryCaptain": 200,
+          "formerPersonalUpgradeBill": 300
+        },
+        {
+          "captains": 2,
+          "startCoins": 200,
+          "waveIncome": 21588,
+          "totalBeforeSpending": 21788,
+          "pistolsForEveryCaptain": 120,
+          "longRiflesForEveryCaptain": 400,
+          "formerPersonalUpgradeBill": 600
+        },
+        {
+          "captains": 4,
+          "startCoins": 200,
+          "waveIncome": 21588,
+          "totalBeforeSpending": 21788,
+          "pistolsForEveryCaptain": 240,
+          "longRiflesForEveryCaptain": 800,
+          "formerPersonalUpgradeBill": 1200
+        },
+        {
+          "captains": 10,
+          "startCoins": 200,
+          "waveIncome": 21588,
+          "totalBeforeSpending": 21788,
+          "pistolsForEveryCaptain": 600,
+          "longRiflesForEveryCaptain": 2000,
+          "formerPersonalUpgradeBill": 3000
+        }
+      ]
+    },
+    {
+      "throughWave": 100,
+      "parties": [
+        {
+          "captains": 1,
+          "startCoins": 200,
+          "waveIncome": 75028,
+          "totalBeforeSpending": 75228,
+          "pistolsForEveryCaptain": 60,
+          "longRiflesForEveryCaptain": 200,
+          "formerPersonalUpgradeBill": 300
+        },
+        {
+          "captains": 2,
+          "startCoins": 200,
+          "waveIncome": 75028,
+          "totalBeforeSpending": 75228,
+          "pistolsForEveryCaptain": 120,
+          "longRiflesForEveryCaptain": 400,
+          "formerPersonalUpgradeBill": 600
+        },
+        {
+          "captains": 4,
+          "startCoins": 200,
+          "waveIncome": 75028,
+          "totalBeforeSpending": 75228,
+          "pistolsForEveryCaptain": 240,
+          "longRiflesForEveryCaptain": 800,
+          "formerPersonalUpgradeBill": 1200
+        },
+        {
+          "captains": 10,
+          "startCoins": 200,
+          "waveIncome": 75028,
+          "totalBeforeSpending": 75228,
+          "pistolsForEveryCaptain": 600,
+          "longRiflesForEveryCaptain": 2000,
+          "formerPersonalUpgradeBill": 3000
+        }
+      ]
+    }
+  ],
+  "fundedPlans": {
+    "defense_first": [
+      {
+        "wave": 1,
+        "bestAtPurchase": 0,
+        "purchases": [
+          {
+            "plot": "wall_1",
+            "kind": "wall",
+            "level": 1,
+            "unlockBest": 0,
+            "paidCoins": 10
+          },
+          {
+            "plot": "wall_2",
+            "kind": "wall",
+            "level": 1,
+            "unlockBest": 0,
+            "paidCoins": 10
+          },
+          {
+            "plot": "wall_3",
+            "kind": "wall",
+            "level": 1,
+            "unlockBest": 0,
+            "paidCoins": 10
+          },
+          {
+            "plot": "wall_4",
+            "kind": "wall",
+            "level": 1,
+            "unlockBest": 0,
+            "paidCoins": 10
+          },
+          {
+            "plot": "wall_5",
+            "kind": "wall",
+            "level": 1,
+            "unlockBest": 0,
+            "paidCoins": 10
+          },
+          {
+            "plot": "wall_6",
+            "kind": "wall",
+            "level": 1,
+            "unlockBest": 0,
+            "paidCoins": 10
+          },
+          {
+            "plot": "cannon_1",
+            "kind": "cannon",
+            "level": 1,
+            "unlockBest": 0,
+            "paidCoins": 30
+          },
+          {
+            "plot": "cannon_2",
+            "kind": "cannon",
+            "level": 1,
+            "unlockBest": 0,
+            "paidCoins": 30
+          },
+          {
+            "plot": "cannon_3",
+            "kind": "cannon",
+            "level": 1,
+            "unlockBest": 0,
+            "paidCoins": 30
+          },
+          {
+            "plot": "cannon_4",
+            "kind": "cannon",
+            "level": 1,
+            "unlockBest": 0,
+            "paidCoins": 30
+          }
+        ],
+        "houseLevelsAtBell": 0,
+        "buildingLevels": 10,
+        "remainingPurchases": 96,
+        "beforeIncomeCoins": 20,
+        "income": 35,
+        "closingCoins": 55
+      },
+      {
+        "wave": 2,
+        "bestAtPurchase": 1,
+        "purchases": [
+          {
+            "plot": "house_1",
+            "kind": "house",
+            "level": 1,
+            "unlockBest": 1,
+            "paidCoins": 50
+          }
+        ],
+        "houseLevelsAtBell": 1,
+        "buildingLevels": 11,
+        "remainingPurchases": 95,
+        "beforeIncomeCoins": 5,
+        "income": 55,
+        "closingCoins": 60
+      },
+      {
+        "wave": 3,
+        "bestAtPurchase": 2,
+        "purchases": [
+          {
+            "plot": "house_2",
+            "kind": "house",
+            "level": 1,
+            "unlockBest": 1,
+            "paidCoins": 50
+          }
+        ],
+        "houseLevelsAtBell": 2,
+        "buildingLevels": 12,
+        "remainingPurchases": 94,
+        "beforeIncomeCoins": 10,
+        "income": 75,
+        "closingCoins": 85
+      },
+      {
+        "wave": 4,
+        "bestAtPurchase": 3,
+        "purchases": [
+          {
+            "plot": "cannon_5",
+            "kind": "mortar",
+            "level": 1,
+            "unlockBest": 2,
+            "paidCoins": 60
+          }
+        ],
+        "houseLevelsAtBell": 2,
+        "buildingLevels": 13,
+        "remainingPurchases": 93,
+        "beforeIncomeCoins": 25,
+        "income": 85,
+        "closingCoins": 110
+      },
+      {
+        "wave": 5,
+        "bestAtPurchase": 4,
+        "purchases": [
+          {
+            "plot": "cannon_6",
+            "kind": "mortar",
+            "level": 1,
+            "unlockBest": 2,
+            "paidCoins": 60
+          }
+        ],
+        "houseLevelsAtBell": 2,
+        "buildingLevels": 14,
+        "remainingPurchases": 92,
+        "beforeIncomeCoins": 50,
+        "income": 285,
+        "closingCoins": 335
+      },
+      {
+        "wave": 6,
+        "bestAtPurchase": 5,
+        "purchases": [
+          {
+            "plot": "cannon_7",
+            "kind": "mortar",
+            "level": 1,
+            "unlockBest": 2,
+            "paidCoins": 60
+          },
+          {
+            "plot": "wall_1",
+            "kind": "wall",
+            "level": 2,
+            "unlockBest": 2,
+            "paidCoins": 20
+          },
+          {
+            "plot": "wall_2",
+            "kind": "wall",
+            "level": 2,
+            "unlockBest": 2,
+            "paidCoins": 20
+          },
+          {
+            "plot": "wall_3",
+            "kind": "wall",
+            "level": 2,
+            "unlockBest": 2,
+            "paidCoins": 20
+          },
+          {
+            "plot": "wall_4",
+            "kind": "wall",
+            "level": 2,
+            "unlockBest": 2,
+            "paidCoins": 20
+          },
+          {
+            "plot": "wall_5",
+            "kind": "wall",
+            "level": 2,
+            "unlockBest": 2,
+            "paidCoins": 20
+          },
+          {
+            "plot": "wall_6",
+            "kind": "wall",
+            "level": 2,
+            "unlockBest": 2,
+            "paidCoins": 20
+          },
+          {
+            "plot": "cannon_1",
+            "kind": "cannon",
+            "level": 2,
+            "unlockBest": 2,
+            "paidCoins": 60
+          },
+          {
+            "plot": "cannon_2",
+            "kind": "cannon",
+            "level": 2,
+            "unlockBest": 2,
+            "paidCoins": 60
+          }
+        ],
+        "houseLevelsAtBell": 2,
+        "buildingLevels": 23,
+        "remainingPurchases": 83,
+        "beforeIncomeCoins": 35,
+        "income": 105,
+        "closingCoins": 140
+      },
+      {
+        "wave": 7,
+        "bestAtPurchase": 6,
+        "purchases": [
+          {
+            "plot": "cannon_3",
+            "kind": "cannon",
+            "level": 2,
+            "unlockBest": 2,
+            "paidCoins": 60
+          },
+          {
+            "plot": "cannon_4",
+            "kind": "cannon",
+            "level": 2,
+            "unlockBest": 2,
+            "paidCoins": 60
+          }
+        ],
+        "houseLevelsAtBell": 2,
+        "buildingLevels": 25,
+        "remainingPurchases": 81,
+        "beforeIncomeCoins": 20,
+        "income": 115,
+        "closingCoins": 135
+      },
+      {
+        "wave": 8,
+        "bestAtPurchase": 7,
+        "purchases": [
+          {
+            "plot": "cannon_5",
+            "kind": "mortar",
+            "level": 2,
+            "unlockBest": 2,
+            "paidCoins": 120
+          }
+        ],
+        "houseLevelsAtBell": 2,
+        "buildingLevels": 26,
+        "remainingPurchases": 80,
+        "beforeIncomeCoins": 15,
+        "income": 125,
+        "closingCoins": 140
+      },
+      {
+        "wave": 9,
+        "bestAtPurchase": 8,
+        "purchases": [
+          {
+            "plot": "cannon_6",
+            "kind": "mortar",
+            "level": 2,
+            "unlockBest": 2,
+            "paidCoins": 120
+          }
+        ],
+        "houseLevelsAtBell": 2,
+        "buildingLevels": 27,
+        "remainingPurchases": 79,
+        "beforeIncomeCoins": 20,
+        "income": 135,
+        "closingCoins": 155
+      },
+      {
+        "wave": 10,
+        "bestAtPurchase": 9,
+        "purchases": [
+          {
+            "plot": "cannon_7",
+            "kind": "mortar",
+            "level": 2,
+            "unlockBest": 2,
+            "paidCoins": 120
+          }
+        ],
+        "houseLevelsAtBell": 2,
+        "buildingLevels": 28,
+        "remainingPurchases": 78,
+        "beforeIncomeCoins": 35,
+        "income": 435,
+        "closingCoins": 470
+      },
+      {
+        "wave": 11,
+        "bestAtPurchase": 10,
+        "purchases": [
+          {
+            "plot": "tower_1",
+            "kind": "watchtower",
+            "level": 1,
+            "unlockBest": 3,
+            "paidCoins": 40
+          },
+          {
+            "plot": "wall_7",
+            "kind": "wall",
+            "level": 1,
+            "unlockBest": 5,
+            "paidCoins": 10
+          },
+          {
+            "plot": "wall_8",
+            "kind": "wall",
+            "level": 1,
+            "unlockBest": 5,
+            "paidCoins": 10
+          },
+          {
+            "plot": "wall_9",
+            "kind": "wall",
+            "level": 1,
+            "unlockBest": 5,
+            "paidCoins": 10
+          },
+          {
+            "plot": "wall_10",
+            "kind": "wall",
+            "level": 1,
+            "unlockBest": 5,
+            "paidCoins": 10
+          },
+          {
+            "plot": "wall_11",
+            "kind": "wall",
+            "level": 1,
+            "unlockBest": 5,
+            "paidCoins": 10
+          },
+          {
+            "plot": "wall_12",
+            "kind": "wall",
+            "level": 1,
+            "unlockBest": 5,
+            "paidCoins": 10
+          },
+          {
+            "plot": "tower_1",
+            "kind": "watchtower",
+            "level": 2,
+            "unlockBest": 3,
+            "paidCoins": 80
+          },
+          {
+            "plot": "wall_7",
+            "kind": "wall",
+            "level": 2,
+            "unlockBest": 5,
+            "paidCoins": 20
+          },
+          {
+            "plot": "wall_8",
+            "kind": "wall",
+            "level": 2,
+            "unlockBest": 5,
+            "paidCoins": 20
+          },
+          {
+            "plot": "wall_9",
+            "kind": "wall",
+            "level": 2,
+            "unlockBest": 5,
+            "paidCoins": 20
+          },
+          {
+            "plot": "wall_10",
+            "kind": "wall",
+            "level": 2,
+            "unlockBest": 5,
+            "paidCoins": 20
+          },
+          {
+            "plot": "wall_11",
+            "kind": "wall",
+            "level": 2,
+            "unlockBest": 5,
+            "paidCoins": 20
+          },
+          {
+            "plot": "wall_12",
+            "kind": "wall",
+            "level": 2,
+            "unlockBest": 5,
+            "paidCoins": 20
+          },
+          {
+            "plot": "house_1",
+            "kind": "house",
+            "level": 2,
+            "unlockBest": 2,
+            "paidCoins": 100
+          }
+        ],
+        "houseLevelsAtBell": 3,
+        "buildingLevels": 43,
+        "remainingPurchases": 63,
+        "beforeIncomeCoins": 70,
+        "income": 165,
+        "closingCoins": 235
+      },
+      {
+        "wave": 12,
+        "bestAtPurchase": 11,
+        "purchases": [
+          {
+            "plot": "house_2",
+            "kind": "house",
+            "level": 2,
+            "unlockBest": 2,
+            "paidCoins": 100
+          },
+          {
+            "plot": "wall_1",
+            "kind": "wall",
+            "level": 3,
+            "unlockBest": 5,
+            "paidCoins": 40
+          },
+          {
+            "plot": "wall_2",
+            "kind": "wall",
+            "level": 3,
+            "unlockBest": 5,
+            "paidCoins": 40
+          },
+          {
+            "plot": "wall_3",
+            "kind": "wall",
+            "level": 3,
+            "unlockBest": 5,
+            "paidCoins": 40
+          }
+        ],
+        "houseLevelsAtBell": 4,
+        "buildingLevels": 47,
+        "remainingPurchases": 59,
+        "beforeIncomeCoins": 15,
+        "income": 185,
+        "closingCoins": 200
+      },
+      {
+        "wave": 13,
+        "bestAtPurchase": 12,
+        "purchases": [
+          {
+            "plot": "wall_4",
+            "kind": "wall",
+            "level": 3,
+            "unlockBest": 5,
+            "paidCoins": 40
+          },
+          {
+            "plot": "wall_5",
+            "kind": "wall",
+            "level": 3,
+            "unlockBest": 5,
+            "paidCoins": 40
+          },
+          {
+            "plot": "wall_6",
+            "kind": "wall",
+            "level": 3,
+            "unlockBest": 5,
+            "paidCoins": 40
+          },
+          {
+            "plot": "wall_7",
+            "kind": "wall",
+            "level": 3,
+            "unlockBest": 5,
+            "paidCoins": 40
+          },
+          {
+            "plot": "wall_8",
+            "kind": "wall",
+            "level": 3,
+            "unlockBest": 5,
+            "paidCoins": 40
+          }
+        ],
+        "houseLevelsAtBell": 4,
+        "buildingLevels": 52,
+        "remainingPurchases": 54,
+        "beforeIncomeCoins": 0,
+        "income": 195,
+        "closingCoins": 195
+      },
+      {
+        "wave": 14,
+        "bestAtPurchase": 13,
+        "purchases": [
+          {
+            "plot": "wall_9",
+            "kind": "wall",
+            "level": 3,
+            "unlockBest": 5,
+            "paidCoins": 40
+          },
+          {
+            "plot": "wall_10",
+            "kind": "wall",
+            "level": 3,
+            "unlockBest": 5,
+            "paidCoins": 40
+          },
+          {
+            "plot": "wall_11",
+            "kind": "wall",
+            "level": 3,
+            "unlockBest": 5,
+            "paidCoins": 40
+          },
+          {
+            "plot": "wall_12",
+            "kind": "wall",
+            "level": 3,
+            "unlockBest": 5,
+            "paidCoins": 40
+          }
+        ],
+        "houseLevelsAtBell": 4,
+        "buildingLevels": 56,
+        "remainingPurchases": 50,
+        "beforeIncomeCoins": 35,
+        "income": 205,
+        "closingCoins": 240
+      },
+      {
+        "wave": 15,
+        "bestAtPurchase": 14,
+        "purchases": [
+          {
+            "plot": "cannon_1",
+            "kind": "cannon",
+            "level": 3,
+            "unlockBest": 5,
+            "paidCoins": 120
+          },
+          {
+            "plot": "cannon_2",
+            "kind": "cannon",
+            "level": 3,
+            "unlockBest": 5,
+            "paidCoins": 120
+          }
+        ],
+        "houseLevelsAtBell": 4,
+        "buildingLevels": 58,
+        "remainingPurchases": 48,
+        "beforeIncomeCoins": 0,
+        "income": 645,
+        "closingCoins": 645
+      },
+      {
+        "wave": 16,
+        "bestAtPurchase": 15,
+        "purchases": [
+          {
+            "plot": "cannon_3",
+            "kind": "cannon",
+            "level": 3,
+            "unlockBest": 5,
+            "paidCoins": 120
+          },
+          {
+            "plot": "cannon_4",
+            "kind": "cannon",
+            "level": 3,
+            "unlockBest": 5,
+            "paidCoins": 120
+          },
+          {
+            "plot": "cannon_5",
+            "kind": "mortar",
+            "level": 3,
+            "unlockBest": 5,
+            "paidCoins": 240
+          }
+        ],
+        "houseLevelsAtBell": 4,
+        "buildingLevels": 61,
+        "remainingPurchases": 45,
+        "beforeIncomeCoins": 165,
+        "income": 225,
+        "closingCoins": 390
+      },
+      {
+        "wave": 17,
+        "bestAtPurchase": 16,
+        "purchases": [
+          {
+            "plot": "cannon_6",
+            "kind": "mortar",
+            "level": 3,
+            "unlockBest": 5,
+            "paidCoins": 240
+          }
+        ],
+        "houseLevelsAtBell": 4,
+        "buildingLevels": 62,
+        "remainingPurchases": 44,
+        "beforeIncomeCoins": 150,
+        "income": 235,
+        "closingCoins": 385
+      },
+      {
+        "wave": 18,
+        "bestAtPurchase": 17,
+        "purchases": [
+          {
+            "plot": "cannon_7",
+            "kind": "mortar",
+            "level": 3,
+            "unlockBest": 5,
+            "paidCoins": 240
+          }
+        ],
+        "houseLevelsAtBell": 4,
+        "buildingLevels": 63,
+        "remainingPurchases": 43,
+        "beforeIncomeCoins": 145,
+        "income": 245,
+        "closingCoins": 390
+      },
+      {
+        "wave": 19,
+        "bestAtPurchase": 18,
+        "purchases": [
+          {
+            "plot": "tower_1",
+            "kind": "watchtower",
+            "level": 3,
+            "unlockBest": 12,
+            "paidCoins": 160
+          },
+          {
+            "plot": "house_1",
+            "kind": "house",
+            "level": 3,
+            "unlockBest": 5,
+            "paidCoins": 200
+          }
+        ],
+        "houseLevelsAtBell": 5,
+        "buildingLevels": 65,
+        "remainingPurchases": 41,
+        "beforeIncomeCoins": 30,
+        "income": 265,
+        "closingCoins": 295
+      },
+      {
+        "wave": 20,
+        "bestAtPurchase": 19,
+        "purchases": [
+          {
+            "plot": "house_2",
+            "kind": "house",
+            "level": 3,
+            "unlockBest": 5,
+            "paidCoins": 200
+          },
+          {
+            "plot": "wall_1",
+            "kind": "wall",
+            "level": 4,
+            "unlockBest": 12,
+            "paidCoins": 80
+          }
+        ],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 67,
+        "remainingPurchases": 39,
+        "beforeIncomeCoins": 15,
+        "income": 855,
+        "closingCoins": 870
+      },
+      {
+        "wave": 21,
+        "bestAtPurchase": 20,
+        "purchases": [
+          {
+            "plot": "wall_2",
+            "kind": "wall",
+            "level": 4,
+            "unlockBest": 12,
+            "paidCoins": 80
+          },
+          {
+            "plot": "wall_3",
+            "kind": "wall",
+            "level": 4,
+            "unlockBest": 12,
+            "paidCoins": 80
+          },
+          {
+            "plot": "wall_4",
+            "kind": "wall",
+            "level": 4,
+            "unlockBest": 12,
+            "paidCoins": 80
+          },
+          {
+            "plot": "wall_5",
+            "kind": "wall",
+            "level": 4,
+            "unlockBest": 12,
+            "paidCoins": 80
+          },
+          {
+            "plot": "wall_6",
+            "kind": "wall",
+            "level": 4,
+            "unlockBest": 12,
+            "paidCoins": 80
+          },
+          {
+            "plot": "wall_7",
+            "kind": "wall",
+            "level": 4,
+            "unlockBest": 12,
+            "paidCoins": 80
+          },
+          {
+            "plot": "wall_8",
+            "kind": "wall",
+            "level": 4,
+            "unlockBest": 12,
+            "paidCoins": 80
+          },
+          {
+            "plot": "wall_9",
+            "kind": "wall",
+            "level": 4,
+            "unlockBest": 12,
+            "paidCoins": 80
+          },
+          {
+            "plot": "wall_10",
+            "kind": "wall",
+            "level": 4,
+            "unlockBest": 12,
+            "paidCoins": 80
+          },
+          {
+            "plot": "wall_11",
+            "kind": "wall",
+            "level": 4,
+            "unlockBest": 12,
+            "paidCoins": 80
+          }
+        ],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 77,
+        "remainingPurchases": 29,
+        "beforeIncomeCoins": 70,
+        "income": 295,
+        "closingCoins": 365
+      },
+      {
+        "wave": 22,
+        "bestAtPurchase": 21,
+        "purchases": [
+          {
+            "plot": "wall_12",
+            "kind": "wall",
+            "level": 4,
+            "unlockBest": 12,
+            "paidCoins": 80
+          },
+          {
+            "plot": "cannon_1",
+            "kind": "cannon",
+            "level": 4,
+            "unlockBest": 12,
+            "paidCoins": 240
+          }
+        ],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 79,
+        "remainingPurchases": 27,
+        "beforeIncomeCoins": 45,
+        "income": 305,
+        "closingCoins": 350
+      },
+      {
+        "wave": 23,
+        "bestAtPurchase": 22,
+        "purchases": [
+          {
+            "plot": "cannon_2",
+            "kind": "cannon",
+            "level": 4,
+            "unlockBest": 12,
+            "paidCoins": 240
+          }
+        ],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 80,
+        "remainingPurchases": 26,
+        "beforeIncomeCoins": 110,
+        "income": 315,
+        "closingCoins": 425
+      },
+      {
+        "wave": 24,
+        "bestAtPurchase": 23,
+        "purchases": [
+          {
+            "plot": "cannon_3",
+            "kind": "cannon",
+            "level": 4,
+            "unlockBest": 12,
+            "paidCoins": 240
+          }
+        ],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 81,
+        "remainingPurchases": 25,
+        "beforeIncomeCoins": 185,
+        "income": 325,
+        "closingCoins": 510
+      },
+      {
+        "wave": 25,
+        "bestAtPurchase": 24,
+        "purchases": [
+          {
+            "plot": "cannon_4",
+            "kind": "cannon",
+            "level": 4,
+            "unlockBest": 12,
+            "paidCoins": 240
+          }
+        ],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 82,
+        "remainingPurchases": 24,
+        "beforeIncomeCoins": 270,
+        "income": 1005,
+        "closingCoins": 1275
+      },
+      {
+        "wave": 26,
+        "bestAtPurchase": 25,
+        "purchases": [
+          {
+            "plot": "cannon_5",
+            "kind": "mortar",
+            "level": 4,
+            "unlockBest": 15,
+            "paidCoins": 480
+          },
+          {
+            "plot": "cannon_6",
+            "kind": "mortar",
+            "level": 4,
+            "unlockBest": 15,
+            "paidCoins": 480
+          }
+        ],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 84,
+        "remainingPurchases": 22,
+        "beforeIncomeCoins": 315,
+        "income": 345,
+        "closingCoins": 660
+      },
+      {
+        "wave": 27,
+        "bestAtPurchase": 26,
+        "purchases": [
+          {
+            "plot": "cannon_7",
+            "kind": "mortar",
+            "level": 4,
+            "unlockBest": 15,
+            "paidCoins": 480
+          }
+        ],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 85,
+        "remainingPurchases": 21,
+        "beforeIncomeCoins": 180,
+        "income": 355,
+        "closingCoins": 535
+      },
+      {
+        "wave": 28,
+        "bestAtPurchase": 27,
+        "purchases": [
+          {
+            "plot": "tower_1",
+            "kind": "watchtower",
+            "level": 4,
+            "unlockBest": 15,
+            "paidCoins": 320
+          },
+          {
+            "plot": "wall_1",
+            "kind": "wall",
+            "level": 5,
+            "unlockBest": 20,
+            "paidCoins": 160
+          }
+        ],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 87,
+        "remainingPurchases": 19,
+        "beforeIncomeCoins": 55,
+        "income": 365,
+        "closingCoins": 420
+      },
+      {
+        "wave": 29,
+        "bestAtPurchase": 28,
+        "purchases": [
+          {
+            "plot": "wall_2",
+            "kind": "wall",
+            "level": 5,
+            "unlockBest": 20,
+            "paidCoins": 160
+          },
+          {
+            "plot": "wall_3",
+            "kind": "wall",
+            "level": 5,
+            "unlockBest": 20,
+            "paidCoins": 160
+          }
+        ],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 89,
+        "remainingPurchases": 17,
+        "beforeIncomeCoins": 100,
+        "income": 375,
+        "closingCoins": 475
+      },
+      {
+        "wave": 30,
+        "bestAtPurchase": 29,
+        "purchases": [
+          {
+            "plot": "wall_4",
+            "kind": "wall",
+            "level": 5,
+            "unlockBest": 20,
+            "paidCoins": 160
+          },
+          {
+            "plot": "wall_5",
+            "kind": "wall",
+            "level": 5,
+            "unlockBest": 20,
+            "paidCoins": 160
+          }
+        ],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 91,
+        "remainingPurchases": 15,
+        "beforeIncomeCoins": 155,
+        "income": 1155,
+        "closingCoins": 1310
+      },
+      {
+        "wave": 31,
+        "bestAtPurchase": 30,
+        "purchases": [
+          {
+            "plot": "wall_6",
+            "kind": "wall",
+            "level": 5,
+            "unlockBest": 20,
+            "paidCoins": 160
+          },
+          {
+            "plot": "wall_7",
+            "kind": "wall",
+            "level": 5,
+            "unlockBest": 20,
+            "paidCoins": 160
+          },
+          {
+            "plot": "wall_8",
+            "kind": "wall",
+            "level": 5,
+            "unlockBest": 20,
+            "paidCoins": 160
+          },
+          {
+            "plot": "wall_9",
+            "kind": "wall",
+            "level": 5,
+            "unlockBest": 20,
+            "paidCoins": 160
+          },
+          {
+            "plot": "wall_10",
+            "kind": "wall",
+            "level": 5,
+            "unlockBest": 20,
+            "paidCoins": 160
+          },
+          {
+            "plot": "wall_11",
+            "kind": "wall",
+            "level": 5,
+            "unlockBest": 20,
+            "paidCoins": 160
+          },
+          {
+            "plot": "wall_12",
+            "kind": "wall",
+            "level": 5,
+            "unlockBest": 20,
+            "paidCoins": 160
+          }
+        ],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 98,
+        "remainingPurchases": 8,
+        "beforeIncomeCoins": 190,
+        "income": 389,
+        "closingCoins": 579
+      },
+      {
+        "wave": 32,
+        "bestAtPurchase": 31,
+        "purchases": [
+          {
+            "plot": "cannon_1",
+            "kind": "cannon",
+            "level": 5,
+            "unlockBest": 20,
+            "paidCoins": 480
+          }
+        ],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 99,
+        "remainingPurchases": 7,
+        "beforeIncomeCoins": 99,
+        "income": 393,
+        "closingCoins": 492
+      },
+      {
+        "wave": 33,
+        "bestAtPurchase": 32,
+        "purchases": [
+          {
+            "plot": "cannon_2",
+            "kind": "cannon",
+            "level": 5,
+            "unlockBest": 20,
+            "paidCoins": 480
+          }
+        ],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 100,
+        "remainingPurchases": 6,
+        "beforeIncomeCoins": 12,
+        "income": 397,
+        "closingCoins": 409
+      },
+      {
+        "wave": 34,
+        "bestAtPurchase": 33,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 100,
+        "remainingPurchases": 6,
+        "beforeIncomeCoins": 409,
+        "income": 401,
+        "closingCoins": 810
+      },
+      {
+        "wave": 35,
+        "bestAtPurchase": 34,
+        "purchases": [
+          {
+            "plot": "cannon_3",
+            "kind": "cannon",
+            "level": 5,
+            "unlockBest": 20,
+            "paidCoins": 480
+          }
+        ],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 101,
+        "remainingPurchases": 5,
+        "beforeIncomeCoins": 330,
+        "income": 1215,
+        "closingCoins": 1545
+      },
+      {
+        "wave": 36,
+        "bestAtPurchase": 35,
+        "purchases": [
+          {
+            "plot": "cannon_4",
+            "kind": "cannon",
+            "level": 5,
+            "unlockBest": 20,
+            "paidCoins": 480
+          },
+          {
+            "plot": "cannon_5",
+            "kind": "mortar",
+            "level": 5,
+            "unlockBest": 20,
+            "paidCoins": 960
+          }
+        ],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 103,
+        "remainingPurchases": 3,
+        "beforeIncomeCoins": 105,
+        "income": 409,
+        "closingCoins": 514
+      },
+      {
+        "wave": 37,
+        "bestAtPurchase": 36,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 103,
+        "remainingPurchases": 3,
+        "beforeIncomeCoins": 514,
+        "income": 413,
+        "closingCoins": 927
+      },
+      {
+        "wave": 38,
+        "bestAtPurchase": 37,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 103,
+        "remainingPurchases": 3,
+        "beforeIncomeCoins": 927,
+        "income": 417,
+        "closingCoins": 1344
+      },
+      {
+        "wave": 39,
+        "bestAtPurchase": 38,
+        "purchases": [
+          {
+            "plot": "cannon_6",
+            "kind": "mortar",
+            "level": 5,
+            "unlockBest": 20,
+            "paidCoins": 960
+          }
+        ],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 104,
+        "remainingPurchases": 2,
+        "beforeIncomeCoins": 384,
+        "income": 421,
+        "closingCoins": 805
+      },
+      {
+        "wave": 40,
+        "bestAtPurchase": 39,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 104,
+        "remainingPurchases": 2,
+        "beforeIncomeCoins": 805,
+        "income": 2125,
+        "closingCoins": 2930
+      },
+      {
+        "wave": 41,
+        "bestAtPurchase": 40,
+        "purchases": [
+          {
+            "plot": "cannon_7",
+            "kind": "mortar",
+            "level": 5,
+            "unlockBest": 20,
+            "paidCoins": 960
+          },
+          {
+            "plot": "tower_1",
+            "kind": "watchtower",
+            "level": 5,
+            "unlockBest": 20,
+            "paidCoins": 640
+          }
+        ],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 1330,
+        "income": 643,
+        "closingCoins": 1973
+      },
+      {
+        "wave": 42,
+        "bestAtPurchase": 41,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 1973,
+        "income": 649,
+        "closingCoins": 2622
+      },
+      {
+        "wave": 43,
+        "bestAtPurchase": 42,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 2622,
+        "income": 655,
+        "closingCoins": 3277
+      },
+      {
+        "wave": 44,
+        "bestAtPurchase": 43,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 3277,
+        "income": 661,
+        "closingCoins": 3938
+      },
+      {
+        "wave": 45,
+        "bestAtPurchase": 44,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 3938,
+        "income": 2001,
+        "closingCoins": 5939
+      },
+      {
+        "wave": 46,
+        "bestAtPurchase": 45,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 5939,
+        "income": 673,
+        "closingCoins": 6612
+      },
+      {
+        "wave": 47,
+        "bestAtPurchase": 46,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 6612,
+        "income": 679,
+        "closingCoins": 7291
+      },
+      {
+        "wave": 48,
+        "bestAtPurchase": 47,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 7291,
+        "income": 685,
+        "closingCoins": 7976
+      },
+      {
+        "wave": 49,
+        "bestAtPurchase": 48,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 7976,
+        "income": 691,
+        "closingCoins": 8667
+      },
+      {
+        "wave": 50,
+        "bestAtPurchase": 49,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 8667,
+        "income": 2091,
+        "closingCoins": 10758
+      },
+      {
+        "wave": 51,
+        "bestAtPurchase": 50,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 10758,
+        "income": 703,
+        "closingCoins": 11461
+      },
+      {
+        "wave": 52,
+        "bestAtPurchase": 51,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 11461,
+        "income": 709,
+        "closingCoins": 12170
+      },
+      {
+        "wave": 53,
+        "bestAtPurchase": 52,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 12170,
+        "income": 715,
+        "closingCoins": 12885
+      },
+      {
+        "wave": 54,
+        "bestAtPurchase": 53,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 12885,
+        "income": 721,
+        "closingCoins": 13606
+      },
+      {
+        "wave": 55,
+        "bestAtPurchase": 54,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 13606,
+        "income": 2181,
+        "closingCoins": 15787
+      },
+      {
+        "wave": 56,
+        "bestAtPurchase": 55,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 15787,
+        "income": 733,
+        "closingCoins": 16520
+      },
+      {
+        "wave": 57,
+        "bestAtPurchase": 56,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 16520,
+        "income": 739,
+        "closingCoins": 17259
+      },
+      {
+        "wave": 58,
+        "bestAtPurchase": 57,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 17259,
+        "income": 745,
+        "closingCoins": 18004
+      },
+      {
+        "wave": 59,
+        "bestAtPurchase": 58,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 18004,
+        "income": 751,
+        "closingCoins": 18755
+      },
+      {
+        "wave": 60,
+        "bestAtPurchase": 59,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 18755,
+        "income": 2271,
+        "closingCoins": 21026
+      },
+      {
+        "wave": 61,
+        "bestAtPurchase": 60,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 21026,
+        "income": 763,
+        "closingCoins": 21789
+      },
+      {
+        "wave": 62,
+        "bestAtPurchase": 61,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 21789,
+        "income": 769,
+        "closingCoins": 22558
+      },
+      {
+        "wave": 63,
+        "bestAtPurchase": 62,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 22558,
+        "income": 775,
+        "closingCoins": 23333
+      },
+      {
+        "wave": 64,
+        "bestAtPurchase": 63,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 23333,
+        "income": 781,
+        "closingCoins": 24114
+      },
+      {
+        "wave": 65,
+        "bestAtPurchase": 64,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 24114,
+        "income": 2361,
+        "closingCoins": 26475
+      },
+      {
+        "wave": 66,
+        "bestAtPurchase": 65,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 26475,
+        "income": 793,
+        "closingCoins": 27268
+      },
+      {
+        "wave": 67,
+        "bestAtPurchase": 66,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 27268,
+        "income": 799,
+        "closingCoins": 28067
+      },
+      {
+        "wave": 68,
+        "bestAtPurchase": 67,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 28067,
+        "income": 805,
+        "closingCoins": 28872
+      },
+      {
+        "wave": 69,
+        "bestAtPurchase": 68,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 28872,
+        "income": 811,
+        "closingCoins": 29683
+      },
+      {
+        "wave": 70,
+        "bestAtPurchase": 69,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 29683,
+        "income": 2451,
+        "closingCoins": 32134
+      },
+      {
+        "wave": 71,
+        "bestAtPurchase": 70,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 32134,
+        "income": 823,
+        "closingCoins": 32957
+      },
+      {
+        "wave": 72,
+        "bestAtPurchase": 71,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 32957,
+        "income": 829,
+        "closingCoins": 33786
+      },
+      {
+        "wave": 73,
+        "bestAtPurchase": 72,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 33786,
+        "income": 835,
+        "closingCoins": 34621
+      },
+      {
+        "wave": 74,
+        "bestAtPurchase": 73,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 34621,
+        "income": 841,
+        "closingCoins": 35462
+      },
+      {
+        "wave": 75,
+        "bestAtPurchase": 74,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 35462,
+        "income": 2541,
+        "closingCoins": 38003
+      },
+      {
+        "wave": 76,
+        "bestAtPurchase": 75,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 38003,
+        "income": 853,
+        "closingCoins": 38856
+      },
+      {
+        "wave": 77,
+        "bestAtPurchase": 76,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 38856,
+        "income": 859,
+        "closingCoins": 39715
+      },
+      {
+        "wave": 78,
+        "bestAtPurchase": 77,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 39715,
+        "income": 865,
+        "closingCoins": 40580
+      },
+      {
+        "wave": 79,
+        "bestAtPurchase": 78,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 40580,
+        "income": 871,
+        "closingCoins": 41451
+      },
+      {
+        "wave": 80,
+        "bestAtPurchase": 79,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 41451,
+        "income": 2631,
+        "closingCoins": 44082
+      },
+      {
+        "wave": 81,
+        "bestAtPurchase": 80,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 44082,
+        "income": 883,
+        "closingCoins": 44965
+      },
+      {
+        "wave": 82,
+        "bestAtPurchase": 81,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 44965,
+        "income": 889,
+        "closingCoins": 45854
+      },
+      {
+        "wave": 83,
+        "bestAtPurchase": 82,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 45854,
+        "income": 895,
+        "closingCoins": 46749
+      },
+      {
+        "wave": 84,
+        "bestAtPurchase": 83,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 46749,
+        "income": 901,
+        "closingCoins": 47650
+      },
+      {
+        "wave": 85,
+        "bestAtPurchase": 84,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 47650,
+        "income": 2721,
+        "closingCoins": 50371
+      },
+      {
+        "wave": 86,
+        "bestAtPurchase": 85,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 50371,
+        "income": 913,
+        "closingCoins": 51284
+      },
+      {
+        "wave": 87,
+        "bestAtPurchase": 86,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 51284,
+        "income": 919,
+        "closingCoins": 52203
+      },
+      {
+        "wave": 88,
+        "bestAtPurchase": 87,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 52203,
+        "income": 925,
+        "closingCoins": 53128
+      },
+      {
+        "wave": 89,
+        "bestAtPurchase": 88,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 53128,
+        "income": 931,
+        "closingCoins": 54059
+      },
+      {
+        "wave": 90,
+        "bestAtPurchase": 89,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 54059,
+        "income": 2811,
+        "closingCoins": 56870
+      },
+      {
+        "wave": 91,
+        "bestAtPurchase": 90,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 56870,
+        "income": 943,
+        "closingCoins": 57813
+      },
+      {
+        "wave": 92,
+        "bestAtPurchase": 91,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 57813,
+        "income": 949,
+        "closingCoins": 58762
+      },
+      {
+        "wave": 93,
+        "bestAtPurchase": 92,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 58762,
+        "income": 955,
+        "closingCoins": 59717
+      },
+      {
+        "wave": 94,
+        "bestAtPurchase": 93,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 59717,
+        "income": 961,
+        "closingCoins": 60678
+      },
+      {
+        "wave": 95,
+        "bestAtPurchase": 94,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 60678,
+        "income": 2901,
+        "closingCoins": 63579
+      },
+      {
+        "wave": 96,
+        "bestAtPurchase": 95,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 63579,
+        "income": 973,
+        "closingCoins": 64552
+      },
+      {
+        "wave": 97,
+        "bestAtPurchase": 96,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 64552,
+        "income": 979,
+        "closingCoins": 65531
+      },
+      {
+        "wave": 98,
+        "bestAtPurchase": 97,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 65531,
+        "income": 985,
+        "closingCoins": 66516
+      },
+      {
+        "wave": 99,
+        "bestAtPurchase": 98,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 66516,
+        "income": 991,
+        "closingCoins": 67507
+      },
+      {
+        "wave": 100,
+        "bestAtPurchase": 99,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 67507,
+        "income": 2991,
+        "closingCoins": 70498
+      }
+    ],
+    "income_first": [
+      {
+        "wave": 1,
+        "bestAtPurchase": 0,
+        "purchases": [
+          {
+            "plot": "wall_1",
+            "kind": "wall",
+            "level": 1,
+            "unlockBest": 0,
+            "paidCoins": 10
+          },
+          {
+            "plot": "wall_2",
+            "kind": "wall",
+            "level": 1,
+            "unlockBest": 0,
+            "paidCoins": 10
+          },
+          {
+            "plot": "wall_3",
+            "kind": "wall",
+            "level": 1,
+            "unlockBest": 0,
+            "paidCoins": 10
+          },
+          {
+            "plot": "wall_4",
+            "kind": "wall",
+            "level": 1,
+            "unlockBest": 0,
+            "paidCoins": 10
+          },
+          {
+            "plot": "wall_5",
+            "kind": "wall",
+            "level": 1,
+            "unlockBest": 0,
+            "paidCoins": 10
+          },
+          {
+            "plot": "wall_6",
+            "kind": "wall",
+            "level": 1,
+            "unlockBest": 0,
+            "paidCoins": 10
+          },
+          {
+            "plot": "cannon_1",
+            "kind": "cannon",
+            "level": 1,
+            "unlockBest": 0,
+            "paidCoins": 30
+          },
+          {
+            "plot": "cannon_2",
+            "kind": "cannon",
+            "level": 1,
+            "unlockBest": 0,
+            "paidCoins": 30
+          }
+        ],
+        "houseLevelsAtBell": 0,
+        "buildingLevels": 8,
+        "remainingPurchases": 98,
+        "beforeIncomeCoins": 80,
+        "income": 35,
+        "closingCoins": 115
+      },
+      {
+        "wave": 2,
+        "bestAtPurchase": 1,
+        "purchases": [
+          {
+            "plot": "house_1",
+            "kind": "house",
+            "level": 1,
+            "unlockBest": 1,
+            "paidCoins": 50
+          },
+          {
+            "plot": "house_2",
+            "kind": "house",
+            "level": 1,
+            "unlockBest": 1,
+            "paidCoins": 50
+          }
+        ],
+        "houseLevelsAtBell": 2,
+        "buildingLevels": 10,
+        "remainingPurchases": 96,
+        "beforeIncomeCoins": 15,
+        "income": 65,
+        "closingCoins": 80
+      },
+      {
+        "wave": 3,
+        "bestAtPurchase": 2,
+        "purchases": [],
+        "houseLevelsAtBell": 2,
+        "buildingLevels": 10,
+        "remainingPurchases": 96,
+        "beforeIncomeCoins": 80,
+        "income": 75,
+        "closingCoins": 155
+      },
+      {
+        "wave": 4,
+        "bestAtPurchase": 3,
+        "purchases": [
+          {
+            "plot": "house_1",
+            "kind": "house",
+            "level": 2,
+            "unlockBest": 2,
+            "paidCoins": 100
+          }
+        ],
+        "houseLevelsAtBell": 3,
+        "buildingLevels": 11,
+        "remainingPurchases": 95,
+        "beforeIncomeCoins": 55,
+        "income": 95,
+        "closingCoins": 150
+      },
+      {
+        "wave": 5,
+        "bestAtPurchase": 4,
+        "purchases": [
+          {
+            "plot": "house_2",
+            "kind": "house",
+            "level": 2,
+            "unlockBest": 2,
+            "paidCoins": 100
+          }
+        ],
+        "houseLevelsAtBell": 4,
+        "buildingLevels": 12,
+        "remainingPurchases": 94,
+        "beforeIncomeCoins": 50,
+        "income": 345,
+        "closingCoins": 395
+      },
+      {
+        "wave": 6,
+        "bestAtPurchase": 5,
+        "purchases": [
+          {
+            "plot": "house_1",
+            "kind": "house",
+            "level": 3,
+            "unlockBest": 5,
+            "paidCoins": 200
+          }
+        ],
+        "houseLevelsAtBell": 5,
+        "buildingLevels": 13,
+        "remainingPurchases": 93,
+        "beforeIncomeCoins": 195,
+        "income": 135,
+        "closingCoins": 330
+      },
+      {
+        "wave": 7,
+        "bestAtPurchase": 6,
+        "purchases": [
+          {
+            "plot": "house_2",
+            "kind": "house",
+            "level": 3,
+            "unlockBest": 5,
+            "paidCoins": 200
+          },
+          {
+            "plot": "cannon_3",
+            "kind": "cannon",
+            "level": 1,
+            "unlockBest": 0,
+            "paidCoins": 30
+          },
+          {
+            "plot": "cannon_4",
+            "kind": "cannon",
+            "level": 1,
+            "unlockBest": 0,
+            "paidCoins": 30
+          },
+          {
+            "plot": "cannon_5",
+            "kind": "mortar",
+            "level": 1,
+            "unlockBest": 2,
+            "paidCoins": 60
+          }
+        ],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 17,
+        "remainingPurchases": 89,
+        "beforeIncomeCoins": 10,
+        "income": 155,
+        "closingCoins": 165
+      },
+      {
+        "wave": 8,
+        "bestAtPurchase": 7,
+        "purchases": [
+          {
+            "plot": "cannon_6",
+            "kind": "mortar",
+            "level": 1,
+            "unlockBest": 2,
+            "paidCoins": 60
+          },
+          {
+            "plot": "cannon_7",
+            "kind": "mortar",
+            "level": 1,
+            "unlockBest": 2,
+            "paidCoins": 60
+          },
+          {
+            "plot": "wall_1",
+            "kind": "wall",
+            "level": 2,
+            "unlockBest": 2,
+            "paidCoins": 20
+          },
+          {
+            "plot": "wall_2",
+            "kind": "wall",
+            "level": 2,
+            "unlockBest": 2,
+            "paidCoins": 20
+          }
+        ],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 21,
+        "remainingPurchases": 85,
+        "beforeIncomeCoins": 5,
+        "income": 165,
+        "closingCoins": 170
+      },
+      {
+        "wave": 9,
+        "bestAtPurchase": 8,
+        "purchases": [
+          {
+            "plot": "wall_3",
+            "kind": "wall",
+            "level": 2,
+            "unlockBest": 2,
+            "paidCoins": 20
+          },
+          {
+            "plot": "wall_4",
+            "kind": "wall",
+            "level": 2,
+            "unlockBest": 2,
+            "paidCoins": 20
+          },
+          {
+            "plot": "wall_5",
+            "kind": "wall",
+            "level": 2,
+            "unlockBest": 2,
+            "paidCoins": 20
+          },
+          {
+            "plot": "wall_6",
+            "kind": "wall",
+            "level": 2,
+            "unlockBest": 2,
+            "paidCoins": 20
+          },
+          {
+            "plot": "cannon_1",
+            "kind": "cannon",
+            "level": 2,
+            "unlockBest": 2,
+            "paidCoins": 60
+          }
+        ],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 26,
+        "remainingPurchases": 80,
+        "beforeIncomeCoins": 30,
+        "income": 175,
+        "closingCoins": 205
+      },
+      {
+        "wave": 10,
+        "bestAtPurchase": 9,
+        "purchases": [
+          {
+            "plot": "cannon_2",
+            "kind": "cannon",
+            "level": 2,
+            "unlockBest": 2,
+            "paidCoins": 60
+          },
+          {
+            "plot": "cannon_3",
+            "kind": "cannon",
+            "level": 2,
+            "unlockBest": 2,
+            "paidCoins": 60
+          },
+          {
+            "plot": "cannon_4",
+            "kind": "cannon",
+            "level": 2,
+            "unlockBest": 2,
+            "paidCoins": 60
+          }
+        ],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 29,
+        "remainingPurchases": 77,
+        "beforeIncomeCoins": 25,
+        "income": 555,
+        "closingCoins": 580
+      },
+      {
+        "wave": 11,
+        "bestAtPurchase": 10,
+        "purchases": [
+          {
+            "plot": "cannon_5",
+            "kind": "mortar",
+            "level": 2,
+            "unlockBest": 2,
+            "paidCoins": 120
+          },
+          {
+            "plot": "cannon_6",
+            "kind": "mortar",
+            "level": 2,
+            "unlockBest": 2,
+            "paidCoins": 120
+          },
+          {
+            "plot": "cannon_7",
+            "kind": "mortar",
+            "level": 2,
+            "unlockBest": 2,
+            "paidCoins": 120
+          },
+          {
+            "plot": "tower_1",
+            "kind": "watchtower",
+            "level": 1,
+            "unlockBest": 3,
+            "paidCoins": 40
+          },
+          {
+            "plot": "wall_7",
+            "kind": "wall",
+            "level": 1,
+            "unlockBest": 5,
+            "paidCoins": 10
+          },
+          {
+            "plot": "wall_8",
+            "kind": "wall",
+            "level": 1,
+            "unlockBest": 5,
+            "paidCoins": 10
+          },
+          {
+            "plot": "wall_9",
+            "kind": "wall",
+            "level": 1,
+            "unlockBest": 5,
+            "paidCoins": 10
+          },
+          {
+            "plot": "wall_10",
+            "kind": "wall",
+            "level": 1,
+            "unlockBest": 5,
+            "paidCoins": 10
+          },
+          {
+            "plot": "wall_11",
+            "kind": "wall",
+            "level": 1,
+            "unlockBest": 5,
+            "paidCoins": 10
+          },
+          {
+            "plot": "wall_12",
+            "kind": "wall",
+            "level": 1,
+            "unlockBest": 5,
+            "paidCoins": 10
+          },
+          {
+            "plot": "tower_1",
+            "kind": "watchtower",
+            "level": 2,
+            "unlockBest": 3,
+            "paidCoins": 80
+          },
+          {
+            "plot": "wall_7",
+            "kind": "wall",
+            "level": 2,
+            "unlockBest": 5,
+            "paidCoins": 20
+          },
+          {
+            "plot": "wall_8",
+            "kind": "wall",
+            "level": 2,
+            "unlockBest": 5,
+            "paidCoins": 20
+          }
+        ],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 42,
+        "remainingPurchases": 64,
+        "beforeIncomeCoins": 0,
+        "income": 195,
+        "closingCoins": 195
+      },
+      {
+        "wave": 12,
+        "bestAtPurchase": 11,
+        "purchases": [
+          {
+            "plot": "wall_9",
+            "kind": "wall",
+            "level": 2,
+            "unlockBest": 5,
+            "paidCoins": 20
+          },
+          {
+            "plot": "wall_10",
+            "kind": "wall",
+            "level": 2,
+            "unlockBest": 5,
+            "paidCoins": 20
+          },
+          {
+            "plot": "wall_11",
+            "kind": "wall",
+            "level": 2,
+            "unlockBest": 5,
+            "paidCoins": 20
+          },
+          {
+            "plot": "wall_12",
+            "kind": "wall",
+            "level": 2,
+            "unlockBest": 5,
+            "paidCoins": 20
+          },
+          {
+            "plot": "wall_1",
+            "kind": "wall",
+            "level": 3,
+            "unlockBest": 5,
+            "paidCoins": 40
+          },
+          {
+            "plot": "wall_2",
+            "kind": "wall",
+            "level": 3,
+            "unlockBest": 5,
+            "paidCoins": 40
+          }
+        ],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 48,
+        "remainingPurchases": 58,
+        "beforeIncomeCoins": 35,
+        "income": 205,
+        "closingCoins": 240
+      },
+      {
+        "wave": 13,
+        "bestAtPurchase": 12,
+        "purchases": [
+          {
+            "plot": "wall_3",
+            "kind": "wall",
+            "level": 3,
+            "unlockBest": 5,
+            "paidCoins": 40
+          },
+          {
+            "plot": "wall_4",
+            "kind": "wall",
+            "level": 3,
+            "unlockBest": 5,
+            "paidCoins": 40
+          },
+          {
+            "plot": "wall_5",
+            "kind": "wall",
+            "level": 3,
+            "unlockBest": 5,
+            "paidCoins": 40
+          },
+          {
+            "plot": "wall_6",
+            "kind": "wall",
+            "level": 3,
+            "unlockBest": 5,
+            "paidCoins": 40
+          },
+          {
+            "plot": "wall_7",
+            "kind": "wall",
+            "level": 3,
+            "unlockBest": 5,
+            "paidCoins": 40
+          },
+          {
+            "plot": "wall_8",
+            "kind": "wall",
+            "level": 3,
+            "unlockBest": 5,
+            "paidCoins": 40
+          }
+        ],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 54,
+        "remainingPurchases": 52,
+        "beforeIncomeCoins": 0,
+        "income": 215,
+        "closingCoins": 215
+      },
+      {
+        "wave": 14,
+        "bestAtPurchase": 13,
+        "purchases": [
+          {
+            "plot": "wall_9",
+            "kind": "wall",
+            "level": 3,
+            "unlockBest": 5,
+            "paidCoins": 40
+          },
+          {
+            "plot": "wall_10",
+            "kind": "wall",
+            "level": 3,
+            "unlockBest": 5,
+            "paidCoins": 40
+          },
+          {
+            "plot": "wall_11",
+            "kind": "wall",
+            "level": 3,
+            "unlockBest": 5,
+            "paidCoins": 40
+          },
+          {
+            "plot": "wall_12",
+            "kind": "wall",
+            "level": 3,
+            "unlockBest": 5,
+            "paidCoins": 40
+          }
+        ],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 58,
+        "remainingPurchases": 48,
+        "beforeIncomeCoins": 55,
+        "income": 225,
+        "closingCoins": 280
+      },
+      {
+        "wave": 15,
+        "bestAtPurchase": 14,
+        "purchases": [
+          {
+            "plot": "cannon_1",
+            "kind": "cannon",
+            "level": 3,
+            "unlockBest": 5,
+            "paidCoins": 120
+          },
+          {
+            "plot": "cannon_2",
+            "kind": "cannon",
+            "level": 3,
+            "unlockBest": 5,
+            "paidCoins": 120
+          }
+        ],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 60,
+        "remainingPurchases": 46,
+        "beforeIncomeCoins": 40,
+        "income": 705,
+        "closingCoins": 745
+      },
+      {
+        "wave": 16,
+        "bestAtPurchase": 15,
+        "purchases": [
+          {
+            "plot": "cannon_3",
+            "kind": "cannon",
+            "level": 3,
+            "unlockBest": 5,
+            "paidCoins": 120
+          },
+          {
+            "plot": "cannon_4",
+            "kind": "cannon",
+            "level": 3,
+            "unlockBest": 5,
+            "paidCoins": 120
+          },
+          {
+            "plot": "cannon_5",
+            "kind": "mortar",
+            "level": 3,
+            "unlockBest": 5,
+            "paidCoins": 240
+          },
+          {
+            "plot": "cannon_6",
+            "kind": "mortar",
+            "level": 3,
+            "unlockBest": 5,
+            "paidCoins": 240
+          }
+        ],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 64,
+        "remainingPurchases": 42,
+        "beforeIncomeCoins": 25,
+        "income": 245,
+        "closingCoins": 270
+      },
+      {
+        "wave": 17,
+        "bestAtPurchase": 16,
+        "purchases": [
+          {
+            "plot": "cannon_7",
+            "kind": "mortar",
+            "level": 3,
+            "unlockBest": 5,
+            "paidCoins": 240
+          }
+        ],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 65,
+        "remainingPurchases": 41,
+        "beforeIncomeCoins": 30,
+        "income": 255,
+        "closingCoins": 285
+      },
+      {
+        "wave": 18,
+        "bestAtPurchase": 17,
+        "purchases": [
+          {
+            "plot": "tower_1",
+            "kind": "watchtower",
+            "level": 3,
+            "unlockBest": 12,
+            "paidCoins": 160
+          },
+          {
+            "plot": "wall_1",
+            "kind": "wall",
+            "level": 4,
+            "unlockBest": 12,
+            "paidCoins": 80
+          }
+        ],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 67,
+        "remainingPurchases": 39,
+        "beforeIncomeCoins": 45,
+        "income": 265,
+        "closingCoins": 310
+      },
+      {
+        "wave": 19,
+        "bestAtPurchase": 18,
+        "purchases": [
+          {
+            "plot": "wall_2",
+            "kind": "wall",
+            "level": 4,
+            "unlockBest": 12,
+            "paidCoins": 80
+          },
+          {
+            "plot": "wall_3",
+            "kind": "wall",
+            "level": 4,
+            "unlockBest": 12,
+            "paidCoins": 80
+          },
+          {
+            "plot": "wall_4",
+            "kind": "wall",
+            "level": 4,
+            "unlockBest": 12,
+            "paidCoins": 80
+          }
+        ],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 70,
+        "remainingPurchases": 36,
+        "beforeIncomeCoins": 70,
+        "income": 275,
+        "closingCoins": 345
+      },
+      {
+        "wave": 20,
+        "bestAtPurchase": 19,
+        "purchases": [
+          {
+            "plot": "wall_5",
+            "kind": "wall",
+            "level": 4,
+            "unlockBest": 12,
+            "paidCoins": 80
+          },
+          {
+            "plot": "wall_6",
+            "kind": "wall",
+            "level": 4,
+            "unlockBest": 12,
+            "paidCoins": 80
+          },
+          {
+            "plot": "wall_7",
+            "kind": "wall",
+            "level": 4,
+            "unlockBest": 12,
+            "paidCoins": 80
+          },
+          {
+            "plot": "wall_8",
+            "kind": "wall",
+            "level": 4,
+            "unlockBest": 12,
+            "paidCoins": 80
+          }
+        ],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 74,
+        "remainingPurchases": 32,
+        "beforeIncomeCoins": 25,
+        "income": 855,
+        "closingCoins": 880
+      },
+      {
+        "wave": 21,
+        "bestAtPurchase": 20,
+        "purchases": [
+          {
+            "plot": "wall_9",
+            "kind": "wall",
+            "level": 4,
+            "unlockBest": 12,
+            "paidCoins": 80
+          },
+          {
+            "plot": "wall_10",
+            "kind": "wall",
+            "level": 4,
+            "unlockBest": 12,
+            "paidCoins": 80
+          },
+          {
+            "plot": "wall_11",
+            "kind": "wall",
+            "level": 4,
+            "unlockBest": 12,
+            "paidCoins": 80
+          },
+          {
+            "plot": "wall_12",
+            "kind": "wall",
+            "level": 4,
+            "unlockBest": 12,
+            "paidCoins": 80
+          },
+          {
+            "plot": "cannon_1",
+            "kind": "cannon",
+            "level": 4,
+            "unlockBest": 12,
+            "paidCoins": 240
+          },
+          {
+            "plot": "cannon_2",
+            "kind": "cannon",
+            "level": 4,
+            "unlockBest": 12,
+            "paidCoins": 240
+          }
+        ],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 80,
+        "remainingPurchases": 26,
+        "beforeIncomeCoins": 80,
+        "income": 295,
+        "closingCoins": 375
+      },
+      {
+        "wave": 22,
+        "bestAtPurchase": 21,
+        "purchases": [
+          {
+            "plot": "cannon_3",
+            "kind": "cannon",
+            "level": 4,
+            "unlockBest": 12,
+            "paidCoins": 240
+          }
+        ],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 81,
+        "remainingPurchases": 25,
+        "beforeIncomeCoins": 135,
+        "income": 305,
+        "closingCoins": 440
+      },
+      {
+        "wave": 23,
+        "bestAtPurchase": 22,
+        "purchases": [
+          {
+            "plot": "cannon_4",
+            "kind": "cannon",
+            "level": 4,
+            "unlockBest": 12,
+            "paidCoins": 240
+          }
+        ],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 82,
+        "remainingPurchases": 24,
+        "beforeIncomeCoins": 200,
+        "income": 315,
+        "closingCoins": 515
+      },
+      {
+        "wave": 24,
+        "bestAtPurchase": 23,
+        "purchases": [
+          {
+            "plot": "cannon_5",
+            "kind": "mortar",
+            "level": 4,
+            "unlockBest": 15,
+            "paidCoins": 480
+          }
+        ],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 83,
+        "remainingPurchases": 23,
+        "beforeIncomeCoins": 35,
+        "income": 325,
+        "closingCoins": 360
+      },
+      {
+        "wave": 25,
+        "bestAtPurchase": 24,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 83,
+        "remainingPurchases": 23,
+        "beforeIncomeCoins": 360,
+        "income": 1005,
+        "closingCoins": 1365
+      },
+      {
+        "wave": 26,
+        "bestAtPurchase": 25,
+        "purchases": [
+          {
+            "plot": "cannon_6",
+            "kind": "mortar",
+            "level": 4,
+            "unlockBest": 15,
+            "paidCoins": 480
+          },
+          {
+            "plot": "cannon_7",
+            "kind": "mortar",
+            "level": 4,
+            "unlockBest": 15,
+            "paidCoins": 480
+          },
+          {
+            "plot": "tower_1",
+            "kind": "watchtower",
+            "level": 4,
+            "unlockBest": 15,
+            "paidCoins": 320
+          }
+        ],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 86,
+        "remainingPurchases": 20,
+        "beforeIncomeCoins": 85,
+        "income": 345,
+        "closingCoins": 430
+      },
+      {
+        "wave": 27,
+        "bestAtPurchase": 26,
+        "purchases": [
+          {
+            "plot": "wall_1",
+            "kind": "wall",
+            "level": 5,
+            "unlockBest": 20,
+            "paidCoins": 160
+          },
+          {
+            "plot": "wall_2",
+            "kind": "wall",
+            "level": 5,
+            "unlockBest": 20,
+            "paidCoins": 160
+          }
+        ],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 88,
+        "remainingPurchases": 18,
+        "beforeIncomeCoins": 110,
+        "income": 355,
+        "closingCoins": 465
+      },
+      {
+        "wave": 28,
+        "bestAtPurchase": 27,
+        "purchases": [
+          {
+            "plot": "wall_3",
+            "kind": "wall",
+            "level": 5,
+            "unlockBest": 20,
+            "paidCoins": 160
+          },
+          {
+            "plot": "wall_4",
+            "kind": "wall",
+            "level": 5,
+            "unlockBest": 20,
+            "paidCoins": 160
+          }
+        ],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 90,
+        "remainingPurchases": 16,
+        "beforeIncomeCoins": 145,
+        "income": 365,
+        "closingCoins": 510
+      },
+      {
+        "wave": 29,
+        "bestAtPurchase": 28,
+        "purchases": [
+          {
+            "plot": "wall_5",
+            "kind": "wall",
+            "level": 5,
+            "unlockBest": 20,
+            "paidCoins": 160
+          },
+          {
+            "plot": "wall_6",
+            "kind": "wall",
+            "level": 5,
+            "unlockBest": 20,
+            "paidCoins": 160
+          },
+          {
+            "plot": "wall_7",
+            "kind": "wall",
+            "level": 5,
+            "unlockBest": 20,
+            "paidCoins": 160
+          }
+        ],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 93,
+        "remainingPurchases": 13,
+        "beforeIncomeCoins": 30,
+        "income": 375,
+        "closingCoins": 405
+      },
+      {
+        "wave": 30,
+        "bestAtPurchase": 29,
+        "purchases": [
+          {
+            "plot": "wall_8",
+            "kind": "wall",
+            "level": 5,
+            "unlockBest": 20,
+            "paidCoins": 160
+          },
+          {
+            "plot": "wall_9",
+            "kind": "wall",
+            "level": 5,
+            "unlockBest": 20,
+            "paidCoins": 160
+          }
+        ],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 95,
+        "remainingPurchases": 11,
+        "beforeIncomeCoins": 85,
+        "income": 1155,
+        "closingCoins": 1240
+      },
+      {
+        "wave": 31,
+        "bestAtPurchase": 30,
+        "purchases": [
+          {
+            "plot": "wall_10",
+            "kind": "wall",
+            "level": 5,
+            "unlockBest": 20,
+            "paidCoins": 160
+          },
+          {
+            "plot": "wall_11",
+            "kind": "wall",
+            "level": 5,
+            "unlockBest": 20,
+            "paidCoins": 160
+          },
+          {
+            "plot": "wall_12",
+            "kind": "wall",
+            "level": 5,
+            "unlockBest": 20,
+            "paidCoins": 160
+          },
+          {
+            "plot": "cannon_1",
+            "kind": "cannon",
+            "level": 5,
+            "unlockBest": 20,
+            "paidCoins": 480
+          }
+        ],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 99,
+        "remainingPurchases": 7,
+        "beforeIncomeCoins": 280,
+        "income": 389,
+        "closingCoins": 669
+      },
+      {
+        "wave": 32,
+        "bestAtPurchase": 31,
+        "purchases": [
+          {
+            "plot": "cannon_2",
+            "kind": "cannon",
+            "level": 5,
+            "unlockBest": 20,
+            "paidCoins": 480
+          }
+        ],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 100,
+        "remainingPurchases": 6,
+        "beforeIncomeCoins": 189,
+        "income": 393,
+        "closingCoins": 582
+      },
+      {
+        "wave": 33,
+        "bestAtPurchase": 32,
+        "purchases": [
+          {
+            "plot": "cannon_3",
+            "kind": "cannon",
+            "level": 5,
+            "unlockBest": 20,
+            "paidCoins": 480
+          }
+        ],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 101,
+        "remainingPurchases": 5,
+        "beforeIncomeCoins": 102,
+        "income": 397,
+        "closingCoins": 499
+      },
+      {
+        "wave": 34,
+        "bestAtPurchase": 33,
+        "purchases": [
+          {
+            "plot": "cannon_4",
+            "kind": "cannon",
+            "level": 5,
+            "unlockBest": 20,
+            "paidCoins": 480
+          }
+        ],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 102,
+        "remainingPurchases": 4,
+        "beforeIncomeCoins": 19,
+        "income": 401,
+        "closingCoins": 420
+      },
+      {
+        "wave": 35,
+        "bestAtPurchase": 34,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 102,
+        "remainingPurchases": 4,
+        "beforeIncomeCoins": 420,
+        "income": 1215,
+        "closingCoins": 1635
+      },
+      {
+        "wave": 36,
+        "bestAtPurchase": 35,
+        "purchases": [
+          {
+            "plot": "cannon_5",
+            "kind": "mortar",
+            "level": 5,
+            "unlockBest": 20,
+            "paidCoins": 960
+          }
+        ],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 103,
+        "remainingPurchases": 3,
+        "beforeIncomeCoins": 675,
+        "income": 409,
+        "closingCoins": 1084
+      },
+      {
+        "wave": 37,
+        "bestAtPurchase": 36,
+        "purchases": [
+          {
+            "plot": "cannon_6",
+            "kind": "mortar",
+            "level": 5,
+            "unlockBest": 20,
+            "paidCoins": 960
+          }
+        ],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 104,
+        "remainingPurchases": 2,
+        "beforeIncomeCoins": 124,
+        "income": 413,
+        "closingCoins": 537
+      },
+      {
+        "wave": 38,
+        "bestAtPurchase": 37,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 104,
+        "remainingPurchases": 2,
+        "beforeIncomeCoins": 537,
+        "income": 417,
+        "closingCoins": 954
+      },
+      {
+        "wave": 39,
+        "bestAtPurchase": 38,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 104,
+        "remainingPurchases": 2,
+        "beforeIncomeCoins": 954,
+        "income": 421,
+        "closingCoins": 1375
+      },
+      {
+        "wave": 40,
+        "bestAtPurchase": 39,
+        "purchases": [
+          {
+            "plot": "cannon_7",
+            "kind": "mortar",
+            "level": 5,
+            "unlockBest": 20,
+            "paidCoins": 960
+          }
+        ],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 105,
+        "remainingPurchases": 1,
+        "beforeIncomeCoins": 415,
+        "income": 2125,
+        "closingCoins": 2540
+      },
+      {
+        "wave": 41,
+        "bestAtPurchase": 40,
+        "purchases": [
+          {
+            "plot": "tower_1",
+            "kind": "watchtower",
+            "level": 5,
+            "unlockBest": 20,
+            "paidCoins": 640
+          }
+        ],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 1900,
+        "income": 643,
+        "closingCoins": 2543
+      },
+      {
+        "wave": 42,
+        "bestAtPurchase": 41,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 2543,
+        "income": 649,
+        "closingCoins": 3192
+      },
+      {
+        "wave": 43,
+        "bestAtPurchase": 42,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 3192,
+        "income": 655,
+        "closingCoins": 3847
+      },
+      {
+        "wave": 44,
+        "bestAtPurchase": 43,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 3847,
+        "income": 661,
+        "closingCoins": 4508
+      },
+      {
+        "wave": 45,
+        "bestAtPurchase": 44,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 4508,
+        "income": 2001,
+        "closingCoins": 6509
+      },
+      {
+        "wave": 46,
+        "bestAtPurchase": 45,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 6509,
+        "income": 673,
+        "closingCoins": 7182
+      },
+      {
+        "wave": 47,
+        "bestAtPurchase": 46,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 7182,
+        "income": 679,
+        "closingCoins": 7861
+      },
+      {
+        "wave": 48,
+        "bestAtPurchase": 47,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 7861,
+        "income": 685,
+        "closingCoins": 8546
+      },
+      {
+        "wave": 49,
+        "bestAtPurchase": 48,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 8546,
+        "income": 691,
+        "closingCoins": 9237
+      },
+      {
+        "wave": 50,
+        "bestAtPurchase": 49,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 9237,
+        "income": 2091,
+        "closingCoins": 11328
+      },
+      {
+        "wave": 51,
+        "bestAtPurchase": 50,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 11328,
+        "income": 703,
+        "closingCoins": 12031
+      },
+      {
+        "wave": 52,
+        "bestAtPurchase": 51,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 12031,
+        "income": 709,
+        "closingCoins": 12740
+      },
+      {
+        "wave": 53,
+        "bestAtPurchase": 52,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 12740,
+        "income": 715,
+        "closingCoins": 13455
+      },
+      {
+        "wave": 54,
+        "bestAtPurchase": 53,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 13455,
+        "income": 721,
+        "closingCoins": 14176
+      },
+      {
+        "wave": 55,
+        "bestAtPurchase": 54,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 14176,
+        "income": 2181,
+        "closingCoins": 16357
+      },
+      {
+        "wave": 56,
+        "bestAtPurchase": 55,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 16357,
+        "income": 733,
+        "closingCoins": 17090
+      },
+      {
+        "wave": 57,
+        "bestAtPurchase": 56,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 17090,
+        "income": 739,
+        "closingCoins": 17829
+      },
+      {
+        "wave": 58,
+        "bestAtPurchase": 57,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 17829,
+        "income": 745,
+        "closingCoins": 18574
+      },
+      {
+        "wave": 59,
+        "bestAtPurchase": 58,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 18574,
+        "income": 751,
+        "closingCoins": 19325
+      },
+      {
+        "wave": 60,
+        "bestAtPurchase": 59,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 19325,
+        "income": 2271,
+        "closingCoins": 21596
+      },
+      {
+        "wave": 61,
+        "bestAtPurchase": 60,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 21596,
+        "income": 763,
+        "closingCoins": 22359
+      },
+      {
+        "wave": 62,
+        "bestAtPurchase": 61,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 22359,
+        "income": 769,
+        "closingCoins": 23128
+      },
+      {
+        "wave": 63,
+        "bestAtPurchase": 62,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 23128,
+        "income": 775,
+        "closingCoins": 23903
+      },
+      {
+        "wave": 64,
+        "bestAtPurchase": 63,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 23903,
+        "income": 781,
+        "closingCoins": 24684
+      },
+      {
+        "wave": 65,
+        "bestAtPurchase": 64,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 24684,
+        "income": 2361,
+        "closingCoins": 27045
+      },
+      {
+        "wave": 66,
+        "bestAtPurchase": 65,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 27045,
+        "income": 793,
+        "closingCoins": 27838
+      },
+      {
+        "wave": 67,
+        "bestAtPurchase": 66,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 27838,
+        "income": 799,
+        "closingCoins": 28637
+      },
+      {
+        "wave": 68,
+        "bestAtPurchase": 67,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 28637,
+        "income": 805,
+        "closingCoins": 29442
+      },
+      {
+        "wave": 69,
+        "bestAtPurchase": 68,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 29442,
+        "income": 811,
+        "closingCoins": 30253
+      },
+      {
+        "wave": 70,
+        "bestAtPurchase": 69,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 30253,
+        "income": 2451,
+        "closingCoins": 32704
+      },
+      {
+        "wave": 71,
+        "bestAtPurchase": 70,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 32704,
+        "income": 823,
+        "closingCoins": 33527
+      },
+      {
+        "wave": 72,
+        "bestAtPurchase": 71,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 33527,
+        "income": 829,
+        "closingCoins": 34356
+      },
+      {
+        "wave": 73,
+        "bestAtPurchase": 72,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 34356,
+        "income": 835,
+        "closingCoins": 35191
+      },
+      {
+        "wave": 74,
+        "bestAtPurchase": 73,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 35191,
+        "income": 841,
+        "closingCoins": 36032
+      },
+      {
+        "wave": 75,
+        "bestAtPurchase": 74,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 36032,
+        "income": 2541,
+        "closingCoins": 38573
+      },
+      {
+        "wave": 76,
+        "bestAtPurchase": 75,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 38573,
+        "income": 853,
+        "closingCoins": 39426
+      },
+      {
+        "wave": 77,
+        "bestAtPurchase": 76,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 39426,
+        "income": 859,
+        "closingCoins": 40285
+      },
+      {
+        "wave": 78,
+        "bestAtPurchase": 77,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 40285,
+        "income": 865,
+        "closingCoins": 41150
+      },
+      {
+        "wave": 79,
+        "bestAtPurchase": 78,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 41150,
+        "income": 871,
+        "closingCoins": 42021
+      },
+      {
+        "wave": 80,
+        "bestAtPurchase": 79,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 42021,
+        "income": 2631,
+        "closingCoins": 44652
+      },
+      {
+        "wave": 81,
+        "bestAtPurchase": 80,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 44652,
+        "income": 883,
+        "closingCoins": 45535
+      },
+      {
+        "wave": 82,
+        "bestAtPurchase": 81,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 45535,
+        "income": 889,
+        "closingCoins": 46424
+      },
+      {
+        "wave": 83,
+        "bestAtPurchase": 82,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 46424,
+        "income": 895,
+        "closingCoins": 47319
+      },
+      {
+        "wave": 84,
+        "bestAtPurchase": 83,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 47319,
+        "income": 901,
+        "closingCoins": 48220
+      },
+      {
+        "wave": 85,
+        "bestAtPurchase": 84,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 48220,
+        "income": 2721,
+        "closingCoins": 50941
+      },
+      {
+        "wave": 86,
+        "bestAtPurchase": 85,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 50941,
+        "income": 913,
+        "closingCoins": 51854
+      },
+      {
+        "wave": 87,
+        "bestAtPurchase": 86,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 51854,
+        "income": 919,
+        "closingCoins": 52773
+      },
+      {
+        "wave": 88,
+        "bestAtPurchase": 87,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 52773,
+        "income": 925,
+        "closingCoins": 53698
+      },
+      {
+        "wave": 89,
+        "bestAtPurchase": 88,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 53698,
+        "income": 931,
+        "closingCoins": 54629
+      },
+      {
+        "wave": 90,
+        "bestAtPurchase": 89,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 54629,
+        "income": 2811,
+        "closingCoins": 57440
+      },
+      {
+        "wave": 91,
+        "bestAtPurchase": 90,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 57440,
+        "income": 943,
+        "closingCoins": 58383
+      },
+      {
+        "wave": 92,
+        "bestAtPurchase": 91,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 58383,
+        "income": 949,
+        "closingCoins": 59332
+      },
+      {
+        "wave": 93,
+        "bestAtPurchase": 92,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 59332,
+        "income": 955,
+        "closingCoins": 60287
+      },
+      {
+        "wave": 94,
+        "bestAtPurchase": 93,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 60287,
+        "income": 961,
+        "closingCoins": 61248
+      },
+      {
+        "wave": 95,
+        "bestAtPurchase": 94,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 61248,
+        "income": 2901,
+        "closingCoins": 64149
+      },
+      {
+        "wave": 96,
+        "bestAtPurchase": 95,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 64149,
+        "income": 973,
+        "closingCoins": 65122
+      },
+      {
+        "wave": 97,
+        "bestAtPurchase": 96,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 65122,
+        "income": 979,
+        "closingCoins": 66101
+      },
+      {
+        "wave": 98,
+        "bestAtPurchase": 97,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 66101,
+        "income": 985,
+        "closingCoins": 67086
+      },
+      {
+        "wave": 99,
+        "bestAtPurchase": 98,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 67086,
+        "income": 991,
+        "closingCoins": 68077
+      },
+      {
+        "wave": 100,
+        "bestAtPurchase": 99,
+        "purchases": [],
+        "houseLevelsAtBell": 6,
+        "buildingLevels": 106,
+        "remainingPurchases": 0,
+        "beforeIncomeCoins": 68077,
+        "income": 2991,
+        "closingCoins": 71068
+      }
+    ]
+  },
+  "shipRecordCaps": [
+    {
+      "best": 30,
+      "oneGame": 36,
+      "bothGames": 72,
+      "oneThenThreeThenDuplicate": [
+        12,
+        24,
+        0
+      ]
+    },
+    {
+      "best": 40,
+      "oneGame": 42,
+      "bothGames": 84,
+      "oneThenThreeThenDuplicate": [
+        14,
+        28,
+        0
+      ]
+    },
+    {
+      "best": 50,
+      "oneGame": 48,
+      "bothGames": 96,
+      "oneThenThreeThenDuplicate": [
+        16,
+        32,
+        0
+      ]
+    },
+    {
+      "best": 75,
+      "oneGame": 63,
+      "bothGames": 126,
+      "oneThenThreeThenDuplicate": [
+        21,
+        42,
+        0
+      ]
+    },
+    {
+      "best": 100,
+      "oneGame": 78,
+      "bothGames": 156,
+      "oneThenThreeThenDuplicate": [
+        26,
+        52,
+        0
+      ]
+    }
+  ],
+  "shipPerfectEveryNewRecord30Through100": 7926,
+  "repeatAttemptSensitivity": [
+    {
+      "playedWave": 1,
+      "houseLevels": 0,
+      "oneWin": 35,
+      "tenSeparateWins": 350
+    },
+    {
+      "playedWave": 1,
+      "houseLevels": 2,
+      "oneWin": 55,
+      "tenSeparateWins": 550
+    },
+    {
+      "playedWave": 5,
+      "houseLevels": 0,
+      "oneWin": 225,
+      "tenSeparateWins": 2250
+    },
+    {
+      "playedWave": 5,
+      "houseLevels": 6,
+      "oneWin": 405,
+      "tenSeparateWins": 4050
+    },
+    {
+      "playedWave": 10,
+      "houseLevels": 0,
+      "oneWin": 375,
+      "tenSeparateWins": 3750
+    },
+    {
+      "playedWave": 10,
+      "houseLevels": 6,
+      "oneWin": 555,
+      "tenSeparateWins": 5550
+    }
+  ],
+  "conditionalLossAndReplayCycles": [
+    {
+      "existingRecord": 1,
+      "houseLevelsAlreadyPurchased": 0,
+      "lostWave": 2,
+      "subsequentWonWaves": [
+        1
+      ],
+      "earnedCoins": 35,
+      "newRecordOrMilestone": false
+    },
+    {
+      "existingRecord": 1,
+      "houseLevelsAlreadyPurchased": 2,
+      "lostWave": 2,
+      "subsequentWonWaves": [
+        1
+      ],
+      "earnedCoins": 55,
+      "newRecordOrMilestone": false
+    },
+    {
+      "existingRecord": 5,
+      "houseLevelsAlreadyPurchased": 0,
+      "lostWave": 6,
+      "subsequentWonWaves": [
+        3,
+        4,
+        5
+      ],
+      "earnedCoins": 345,
+      "newRecordOrMilestone": false
+    },
+    {
+      "existingRecord": 5,
+      "houseLevelsAlreadyPurchased": 6,
+      "lostWave": 6,
+      "subsequentWonWaves": [
+        3,
+        4,
+        5
+      ],
+      "earnedCoins": 645,
+      "newRecordOrMilestone": false
+    },
+    {
+      "existingRecord": 10,
+      "houseLevelsAlreadyPurchased": 6,
+      "lostWave": 11,
+      "subsequentWonWaves": [
+        8,
+        9,
+        10
+      ],
+      "earnedCoins": 895,
+      "newRecordOrMilestone": false
+    }
+  ],
+  "conditionalResetGrantWagerExample": {
+    "assumedWonWavesBeforeHarbor": 4,
+    "startGrant": 200,
+    "actualBuildSpend": 180,
+    "earnedLoot": 200,
+    "availableBeforeWager": 220,
+    "committedBeforeWager": 0,
+    "assumedOpeningFee": 0,
+    "conditionalTotalReturnMultiplier": 2,
+    "afterConditionalWin": 440,
+    "afterFullLoss": 0,
+    "replacementEpochStartingCoins": 200,
+    "oldEpochMoneyTransferred": 0
+  }
+}
