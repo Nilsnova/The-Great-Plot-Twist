@@ -1,5 +1,11 @@
 # Wall visual follow-up
 
+## Revalidation on current main
+
+The wall branch was brought up to main `db573347`. Main and the wall branch each completed the same two Chrome journeys. Each journey paid for all 12 walls and 21 upgrades, placed a free third-row Move and reached an actual breach in wave 31. The wall branch disabled a fourth row in the UI and refused it in the fake API. The matched Work shots below use the same fixture and camera. [Desktop main comparison](mauern-desktop-main.png) · [Phone main comparison](mauern-handy-main.png)
+
+## Previous review and upgrade clips
+
 This pass follows the review of PR #474 at `42e1eb62`. The same village and Work camera appear on both sides of the desktop and phone comparisons. The clips record a paid timber-to-stone upgrade in the game, using the in-memory island transport. [Desktop comparison](vergleich-desktop.png) · [Phone comparison](vergleich-handy.png) · [Desktop upgrade](upgrade-desktop.gif) · [Phone Details upgrade](upgrade-handy-details.gif)
 
 The village tour shows repeated caps, weight at the ground and connected corners. The upgrade footage shows a brief cue attached to the affected segment. This pass applies those observations to the island's own materials and perspective. [Supercell village tour](https://www.youtube.com/watch?v=JkFBR05rlWE&t=405s) · [Wall upgrade footage](https://www.youtube.com/watch?v=H9D0XFDGJbE&t=128s)
