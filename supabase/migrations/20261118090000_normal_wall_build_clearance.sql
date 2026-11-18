@@ -21,6 +21,7 @@ set search_path = ''
 as $$
 declare
   v_ref text := 'island:' || p_action_uid;
+  v_scope_key bigint;
   v_balance bigint;
   v_layout jsonb;
   v_reply jsonb;
@@ -37,7 +38,16 @@ begin
     raise exception 'bad_checked_wall_build';
   end if;
 
-  -- Co-op payment already locks payer wallet, target island, then the islet row in this order.
+  -- Match the treasury's signed actor/target scope order before taking any rows.
+  for v_scope_key in
+    select distinct pg_catalog.hashtextextended('island-economy:' || scope.owner_id::text, 0)
+      from pg_catalog.unnest(array[p_player_id, p_island_owner]) as scope(owner_id)
+      order by 1
+  loop
+    perform pg_catalog.pg_advisory_xact_lock(v_scope_key);
+  end loop;
+
+  -- Legacy payment locks payer wallet, target island, then the islet row.
   select balance into v_balance from public.wallets where player_id = p_player_id for update;
   if not found then
     return jsonb_build_object('status', 'refused', 'reason', 'player_not_set_up');

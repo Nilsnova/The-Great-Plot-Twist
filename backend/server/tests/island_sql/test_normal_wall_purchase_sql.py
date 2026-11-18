@@ -285,3 +285,51 @@ def test_member_purchase_waits_for_owner_move_then_refuses_its_stale_snapshot(sc
         assert balance(buyer, member) == 100
         assert ledger(buyer, member, "building_purchase") == []
         assert [row[:3] for row in cells(buyer, host)] == [("wall_6", -24, -2)]
+
+
+@pytest.mark.parametrize("scoped_actor", [False, True], ids=["target", "payer"])
+def test_member_purchase_waits_before_locking_the_payer_wallet(scratch_server, scoped_actor):
+    first_id = 45408100 + 2 * scoped_actor
+    host, member = UUID(int=first_id), UUID(int=first_id + 1)
+    uri = scratch_server.get_uri()
+    with psycopg.connect(uri) as setup:
+        add_players(setup, host, member)
+        open_island(setup, host, "TMP56" if scoped_actor else "TMP58")
+        open_island(setup, member, "TMP57" if scoped_actor else "TMP59")
+        assert call(setup, "select public.game_join(%s,%s,10)", member, host)["status"] == "joined"
+
+    with (
+        psycopg.connect(uri) as scoped_writer,
+        psycopg.connect(uri) as buyer,
+        psycopg.connect(uri, autocommit=True) as observer,
+        ThreadPoolExecutor(max_workers=1) as worker,
+    ):
+        call(
+            scoped_writer,
+            "select public.island_treasury_lock_scope(%s)",
+            member if scoped_actor else host,
+        )
+        buyer.execute("set statement_timeout = '5s'")
+        pending = worker.submit(checked_sql, buyer, member, host)
+        try:
+            deadline = time.monotonic() + 3
+            while time.monotonic() < deadline:
+                blockers = call(observer, "select pg_blocking_pids(%s)", buyer.info.backend_pid)
+                if scoped_writer.info.backend_pid in blockers:
+                    break
+                assert not pending.done()
+                time.sleep(.02)
+            else:
+                pytest.fail("the checked wall purchase did not wait for the economy scope")
+            assert call(
+                scoped_writer,
+                "select balance from public.wallets where player_id=%s for update nowait",
+                member,
+            ) == 100
+        finally:
+            scoped_writer.commit()
+
+        assert pending.result(timeout=5) == {
+            "status": "done", "balance": 90, "repeat": False, "level": 1,
+        }
+        assert ledger(buyer, member, "building_purchase") == [(-10, f"island:{UID}")]
