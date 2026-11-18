@@ -92,6 +92,7 @@ export function createCamera(input) {
       if (!space || ![anchor?.x, anchor?.z, lift].every(Number.isFinite) || lift < 0 || lift > 12
         || Number.isFinite(camera.userData.battleZoom) || (Number.isFinite(tour?.x) && Number.isFinite(tour?.z))) return false;
       const wasFit = villageFit;
+      if (wasFit && anchor.keepFit) return false;
       if (wasFit) workVillage();
       const point = projectPoint(anchor.x, anchor.z), at = workingZoom(frame), y = point.y + lift;
       // Retain the player's working view while the selected anchor fits a one-unit inner margin.

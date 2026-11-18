@@ -1,0 +1,39 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run
+
+
+ RUN  v5.1.0 /workspace/The-Great-Plot-Twist/frontend
+
+
+[recovery-load] 60 s wave, 200 ms round trip: {"events":125,"inputs":83,"emptyInputs":0,"health":12,"finish":0,"maxFlight":{"events":1,"inputs":1,"health":1,"finish":0},"maxStep":1,"longestFreezeMs":48,"endedAt":null}
+
+[recovery-load] 60 s wave, 450 ms round trip: {"events":125,"inputs":83,"emptyInputs":0,"health":12,"finish":0,"maxFlight":{"events":1,"inputs":1,"health":1,"finish":0},"maxStep":1,"longestFreezeMs":48}
+
+[recovery-load] won wave, held break: {"events":31,"inputs":17,"emptyInputs":0,"health":0,"finish":1,"endedAt":13160,"finishAnswered":true}
+
+[recovery-load] two players, 200 ms round trip, no room: {"players":[{"readsPerSecond":2.1321961620469083,"inputsPerSecond":1.1253257521914237,"healthPerSecond":0.059227671167969675,"presses":18,"pressToVisibleMs":0,"neverDrawn":0,"teammatePressToVisibleMs":1024,"teammateDrawn":14,"teammatePresses":14,"journalEffectMs":1024,"afterClose":0,"ended":true,"waveDone":null,"finishes":1},{"readsPerSecond":2.1321961620469083,"inputsPerSecond":1.0068704098554844,"healthPerSecond":0.059227671167969675,"presses":14,"pressToVisibleMs":0,"neverDrawn":0,"teammatePressToVisibleMs":1024,"teammateDrawn":17,"teammatePresses":18,"journalEffectMs":1024,"afterClose":0,"ended":true,"waveDone":null,"finishes":1}],"closedAt":33768,"roomPerSecond":0,"journal":72,"controllers":null}
+
+[recovery-load] two players, 200 ms round trip, 100 ms room: {"players":[{"readsPerSecond":2.1321961620469083,"inputsPerSecond":1.1253257521914237,"healthPerSecond":0.059227671167969675,"presses":18,"pressToVisibleMs":0,"neverDrawn":0,"teammatePressToVisibleMs":112,"teammateDrawn":14,"teammatePresses":14,"journalEffectMs":1024,"afterClose":0,"ended":true,"waveDone":null,"finishes":1},{"readsPerSecond":2.1321961620469083,"inputsPerSecond":1.0068704098554844,"healthPerSecond":0.059227671167969675,"presses":14,"pressToVisibleMs":0,"neverDrawn":0,"teammatePressToVisibleMs":112,"teammateDrawn":18,"teammatePresses":18,"journalEffectMs":1024,"afterClose":0,"ended":true,"waveDone":null,"finishes":1}],"closedAt":33768,"roomPerSecond":0.9476427386875148,"journal":72,"controllers":null}
+
+[recovery-load] hidden 1 min: {"shown":true,"caughtUpAt":250,"closedAt":null}
+
+[recovery-load] hidden 3 min: {"shown":true,"caughtUpAt":200,"closedAt":150900}
+
+[recovery-load] hidden 10 min: {"shown":true,"caughtUpAt":200,"closedAt":150900}
+
+[playtest] musket shots at a walking boarder just inside range where drawn, landing 1 s later: {"hits":{"seen":6,"unseen":0},"tries":{"seen":15,"unseen":15}}
+
+ Test Files  425 passed (425)
+      Tests  4681 passed (4681)
+   Start at  18:15:17
+   Duration  493.25s (tests 88%, import 11%)
+
+    Isolate  425 workers spawned · ~94ms startup each (spawn + environment, per file)
+             at least ~39.65s faster with isolate: false — reuses workers across files instead of one per file
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.3
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.3
+npm notice To update run: npm install -g npm@12.2.3
+npm notice
