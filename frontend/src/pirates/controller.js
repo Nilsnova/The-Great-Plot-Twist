@@ -452,7 +452,8 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
       recoveryClosed: false, cosmeticHeard: new Map(), cosmeticSent: [], catchingUp: false,
       // v3 waves: the event's id and drawing, the finisher's scene and this player's recorder of its samples.
       eventId: first.event?.id ?? null, eventArt: null, finisher: null };
-    emit({ type: 'wave_controller_started', waveId: info.waveId, wave: info.wave, flagship: info.flagship });
+    emit({ type: 'wave_controller_started', waveId: info.waveId, wave: info.wave, flagship: info.flagship,
+      ...(recoveryReplay ? { recovery: true } : {}) });
     if (world.scene) {
       Promise.resolve(createRenderer({ scene: world.scene, defenses, reducedMotion, quality, beamFrom, colour: read(captainColour, 0),
         towerStates: info.rules?.towerHealth === true || !!snapshot, culverins: defenses.some(item => item.kind === 'culverin'),
@@ -574,10 +575,10 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     const startedAt = current.recoveryLastPollAt = now();
     let polling, refusal = null;
     polling = Promise.resolve().then(() => fetchSealedEvents(current.recoveryReplay,
-      request => recoveryTransport.readEvents({ waveId: current.info.waveId, ...request }), undefined, page => { refusal = page; },
+      request => disposed ? null : recoveryTransport.readEvents({ waveId: current.info.waveId, ...request }), undefined, page => { refusal = page; },
       page => { if (page.closed === true) current.recoveryClosed = true; }))
       .catch(error => { console.error(error); refusal = recoveryRefusal(null); return false; }).then(complete => {
-        if (current.recoveryPollPromise !== polling) return complete;
+        if (disposed || current.recoveryPollPromise !== polling) return complete;
         if (complete) {
           current.recoveryPollAttempts = 0;
           resyncActorCounter(current);
@@ -591,8 +592,10 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
         current.recoveryRttMs = took >= current.recoveryRttMs ? took : current.recoveryRttMs + (took - current.recoveryRttMs) / 4;
         current.recoveryPolling = false;
         current.recoveryPollPromise = null;
-        reconcileTerminalRecovery(current);
-        tryRecoveryFinish(current);
+        if (!current.recoveryDetached) {
+          reconcileTerminalRecovery(current);
+          tryRecoveryFinish(current);
+        }
         return complete;
       });
     current.recoveryPollPromise = polling;
@@ -666,7 +669,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     current.recoveryFinishPending = false;
     current.recoveryPending = [];
     if (current.pause) current.pause.failed = true;
-    if (!current.done) {
+    if (wave === current) {
       current.hud?.banner('Wave over', 'This wave ended on the server.');
       later(() => { if (wave === current) stop(); }, END_BEAT_MS);
     }
@@ -770,7 +773,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     return accepted ? { ok: true } : { ok: false, code: answer?.reason ?? answer?.code ?? 'health_sync_required' };
   }
 
-  function advanceRecoveryThrough(current, throughTick) {
+  function advanceRecoveryThrough(current, throughTick, { publish = true } = {}) {
     if (!Number.isInteger(throughTick) || throughTick < current.recoveryDriver.nextTick
       || !current.recoveryReplay.canAdvanceThrough(throughTick)) return current.recoveryDriver.nextTick > throughTick;
     const emitted = [], fresh = [];
@@ -794,16 +797,17 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
           if (JSON.stringify(expected) !== JSON.stringify(after.basisRepairSeq)) current.recoveryInvalid = true;
           else current.recoveryLastRepairSeq += repairs;
         }
-        tagActors(out, journal);
-        emitted.push(...out); fresh.push(...out);
+        if (publish) { tagActors(out, journal); emitted.push(...out); fresh.push(...out); }
         if (simTick !== tick) current.recoveryInvalid = true;
       });
       if (!advanced || current.recoveryInvalid) return false;
       current.ticks = tick + 1;
     }
     current.state = current.sim.state();
-    if (emitted.length) handle(emitted, current, fresh);
-    if (current.sim.done) end(current);
+    if (publish) {
+      if (emitted.length) handle(emitted, current, fresh);
+      if (current.sim.done) end(current);
+    }
     return current.recoveryDriver.nextTick > throughTick;
   }
 
@@ -856,18 +860,28 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
         inputHeadSeq: replay.headSeq, lastRepairSeq: current.recoveryLastRepairSeq,
         basisRepairSeq: vector.basisRepairSeq, hpUnits: vector.hpUnits } };
     current.recoveryFinishRequest = body;
+    current.recoveryFinishNeedsRefresh = false;
+    sendRecoveryFinish(current, body);
+    return true;
+  }
+  // Settlement belongs to its wave, including a request already in flight when the next wave starts.
+  function sendRecoveryFinish(current, body) {
+    if (disposed || current.recoveryFinishing || current.recoveryFinishAnswered || current.recoveryFinishFailed) return;
     current.recoveryFinishing = true;
-    Promise.resolve().then(() => recoveryTransport.finishWave(body)).then(answer => {
+    Promise.resolve().then(() => disposed ? null : recoveryTransport.finishWave(body)).then(answer => {
+      if (disposed) return;
       const recovered = answer?.data?.recovery;
-      const completeClose = answer?.ok === true && validCanonicalClose(recovered, current);
-      // A close answered after the next wave started still pays (and says so); a refusal then no longer matters.
-      if (wave !== current && !completeClose) return;
+      const completeClose = answer?.ok === true && typeof answer.data.survived === 'boolean' && validCanonicalClose(recovered, current);
       if (completeClose) {
         current.answer = answer.data;
         current.recoveryFinishAnswered = true;
         current.recoveryFinishPending = false;
-        roundLoot(current, answer.data.loot);
-        emitRecoveryFinish(current.info.waveId, answer.data, current.result.survived);
+        current.result = { ...(current.result ?? current.sim.result()), survived: answer.data.survived };
+        current.done = true;
+        // An old receipt must never change the new wave's loot chip or run total.
+        if (wave === current) { presentEnd(current); roundLoot(current, answer.data.loot); }
+        else if (Number.isFinite(answer.data.loot)) current.roundLoot = answer.data.loot;
+        emitRecoveryFinish(current.info.waveId, answer.data, current.recoveryFinishExtra);
         return;
       }
       const refusal = answer?.ok === true ? { refused: true, status: 502, code: 'unreadable' }
@@ -877,6 +891,8 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
       if (kind === 'refresh') {
         // Read the journal again, then a new checkpoint; paced, so a refusal loop cannot use up the budget.
         current.recoveryFinishRequest = null;
+        current.recoveryFinishNeedsRefresh = true;
+        current.recoveryFinishFrontierReady = false;
         current.recoveryLastPollAt = -Infinity;
         current.recoveryPollRetryAt = -Infinity;
         current.recoveryFinishRetryAt = now() + delay;
@@ -884,45 +900,81 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
         // An unknown outcome retries byte-for-byte with the same checkpoint UID.
         current.recoveryFinishRetryAt = now() + delay;
       } else {
-        console.warn(`Recovery finish refused (${refusal.code}).`);
-        current.recoveryFinishFailed = true;
-        if (current.pause) current.pause.failed = true;
+        endRecoveryWave(current, refusal.code);
       }
     }).catch(error => {
+      if (disposed) return;
       console.error(error);
       current.recoveryFinishRetryAt = now() + refusalDelayMs(null, current.recoveryFinishAttempts++);
-    }).finally(() => { current.recoveryFinishing = false; });
-    return true;
+    }).finally(() => {
+      current.recoveryFinishing = false;
+      scheduleDetachedFinish(current, body);
+    });
   }
-  const emitRecoveryFinish = (waveId, data, survived, extra = {}) => emit({ type: 'wave_finish_answered', waveId, loot: data.loot ?? null, runLoot,
-    recovery: data.recovery, coins: data.coins, waveBest: data.waveBest, flags: data.flags, survived: survived === true, ...extra });
+
+  function scheduleDetachedFinish(current, body = current.recoveryFinishRequest) {
+    if (disposed || !current.recoveryDetached || current.recoveryFinishAnswered || current.recoveryFinishFailed) return;
+    if (!current.recoveryFinishNeedsRefresh) current.recoveryFinishRequest ??= body;
+    later(() => current.recoveryFinishNeedsRefresh ? refreshDetachedFinish(current)
+      : sendRecoveryFinish(current, current.recoveryFinishRequest), Math.max(0, current.recoveryFinishRetryAt - now()));
+  }
+
+  // Catch up only the old simulation, with one normal replay budget per timer turn and no gameplay output.
+  function advanceDetachedFinish(current) {
+    const through = Math.min(current.recoveryReplay.sealedThroughTick, current.recoveryDriver.nextTick + MAX_TICKS_PER_FRAME - 1);
+    if (current.done) reconcileTerminalRecovery(current);
+    else {
+      advanceRecoveryThrough(current, through, { publish: false });
+      if (current.sim.done) { current.done = true; current.result = current.sim.result(); }
+    }
+    if (current.recoveryInvalid) endRecoveryWave(current, 'checkpoint_divergence');
+    return current.recoveryDriver.nextTick > current.recoveryReplay.sealedThroughTick;
+  }
+
+  async function refreshDetachedFinish(current) {
+    if (disposed || current.recoveryFinishing || current.recoveryFinishAnswered || current.recoveryFinishFailed) return;
+    current.recoveryFinishing = true;
+    let ready = false;
+    try {
+      if (!current.recoveryFinishFrontierReady) current.recoveryFinishFrontierReady = await fetchRecoveryFrontier(current);
+      if (disposed || current.recoveryFinishFailed) return;
+      ready = current.recoveryFinishFrontierReady && advanceDetachedFinish(current);
+      const delay = current.recoveryFinishFrontierReady ? RECOVERY_FLUSH_MS : refusalDelayMs(null, current.recoveryFinishAttempts++);
+      current.recoveryFinishRetryAt = Math.max(now() + delay, current.recoveryPollRetryAt);
+    } catch (error) {
+      console.error(error);
+      current.recoveryFinishRetryAt = now() + refusalDelayMs(null, current.recoveryFinishAttempts++);
+    } finally {
+      current.recoveryFinishing = false;
+      if (!disposed && ready) {
+        current.recoveryFinishNeedsRefresh = false;
+        handOffRecoveryFinish(current, current.recoveryFinishExtra);
+      } else scheduleDetachedFinish(current);
+    }
+  }
+  const emitRecoveryFinish = (waveId, data, extra = {}) => emit({ type: 'wave_finish_answered', waveId, loot: data.loot ?? null, runLoot,
+    recovery: data.recovery, coins: data.coins, waveBest: data.waveBest, flags: data.flags, survived: data.survived, ...extra });
   // A friend rang the next wave before this recovery wave ended on this screen: the server closed it already
   // (a bell is refused while one runs), so our part goes in now with what this sim has; the server pays the
-  // outcome of the first close. Retried under the refusal policy, never longer than a few tries.
-  function handOffRecoveryFinish(current, tries = 5, extra = {}) {
-    if (!current.recoveryReplay || current.recoveryFinishAnswered || current.recoveryFinishFailed || current.recoveryFinishing) return;
+  // outcome of the first close. Retries keep running independently of the wave on screen.
+  function handOffRecoveryFinish(current, extra = {}) {
+    if (!current.recoveryReplay || current.recoveryFinishAnswered || current.recoveryFinishFailed) return;
+    current.recoveryDetached = true;
+    current.recoveryFinishExtra = extra;
+    if (current.recoveryFinishing) return;
+    if (current.recoveryFinishNeedsRefresh) { scheduleDetachedFinish(current); return; }
     const vector = current.sim.recoveryHealthVector();
     if (!vector) return;
     const result = current.result ?? current.sim.result();
-    const body = { waveId: current.info.waveId, survived: result.survived === true, shipsSunk: result.shipsSunk ?? 0, waveProtocol: 2,
+    const body = current.recoveryFinishRequest ?? { waveId: current.info.waveId, survived: result.survived === true, shipsSunk: result.shipsSunk ?? 0, waveProtocol: 2,
       checkpoint: { islandEpoch: current.info.initialSnapshot.islandEpoch, checkpointUid: makeActionUid(),
         throughTick: Math.max(0, current.recoveryDriver.nextTick - 1), inputHeadSeq: current.recoveryReplay.headSeq ?? 0,
         lastRepairSeq: current.recoveryLastRepairSeq, basisRepairSeq: vector.basisRepairSeq, hpUnits: vector.hpUnits } };
-    current.recoveryFinishing = true;
-    let attempt = 0;
-    const send = () => Promise.resolve().then(() => recoveryTransport.finishWave(body)).then(answer => {
-      if (answer?.ok === true && validCanonicalClose(answer.data?.recovery, current)) {
-        current.recoveryFinishAnswered = true;
-        // The old wave's loot is its own round (the island's toast says it), never the new wave's chip.
-        if (Number.isFinite(answer.data.loot)) current.roundLoot = answer.data.loot;
-        emitRecoveryFinish(current.info.waveId, answer.data, answer.data.survived ?? result.survived, extra);
-        return;
-      }
-      const refusal = answer == null ? recoveryRefusal(null) : recoveryRefusal(answer);
-      if (refusalKind(refusal) === 'terminal' || ++attempt >= tries) { current.recoveryFinishFailed = true; return; }
-      later(send, refusalDelayMs(refusal, attempt));
-    }, error => { console.error(error); if (++attempt < tries) later(send, refusalDelayMs(null, attempt)); });
-    void send();
+    current.recoveryFinishRequest = body;
+    current.recoveryFinishPending = true;
+    const delay = Math.max(0, current.recoveryFinishRetryAt - now());
+    if (delay > 0) later(() => sendRecoveryFinish(current, body), delay);
+    else sendRecoveryFinish(current, body);
   }
   function receive(type, payload) {
     if (!wave || wave.done) return;
@@ -1035,7 +1087,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     current.recoveryClosedAway = true;
     current.hud?.banner('Wave over', 'This wave ended while you were away.');
     emit({ type: 'recovery_closed_away', waveId: current.info.waveId });
-    handOffRecoveryFinish(current, 5, { away: true });
+    handOffRecoveryFinish(current, { away: true });
     later(() => { if (wave === current) stop(); }, LOST_BEAT_MS);
   }
   // Your own: drawn here, and told to the room so teammates draw it at once too (input = the journal command).
@@ -1217,7 +1269,8 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     return best;
   }
   // Holding E (or the prompt) next to a fallen teammate: after revive.hold seconds the server charges you
-  // (reviveCaptain), then the revive goes to the room. Let go or walk off and it starts over; after a
+  // (reviveCaptain). Recovery payment includes its journal event; legacy revival goes to the room.
+  // Let go or walk off and it starts over; after a
   // refusal, let go before trying again.
   function holdRevive(current, target, player) {
     const holding = (holdE || holdPrompt) && !blocked();
@@ -1232,10 +1285,13 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     const round = value => Math.round(value * 100) / 100, at = { x: round(player.x), z: round(player.z) };
     // The tick of the fall: the sim keeps it in seconds of 50 ms ticks, the same on every screen.
     const downAt = Math.max(0, Math.round((target.downAt ?? 0) / TICK_SECONDS));
-    Promise.resolve().then(() => (reviveCaptain ? reviveCaptain({ waveId: current.info.waveId, fallen: target.id, downAt }) : null)).then(() => {
+    const recovery = current.recoveryReplay ? { waveProtocol: 2, ...at } : {};
+    Promise.resolve().then(() => (reviveCaptain ? reviveCaptain({ waveId: current.info.waveId, fallen: target.id, downAt, ...recovery }) : null)).then(answer => {
       if (wave !== current) return;
+      if (current.recoveryReplay && answer?.journaled !== true) throw new Error('The revival was not confirmed. Try again.');
       current.revive = null;
-      submit({ type: 'captain_revive', by: playerId, targetId: target.id, skills: mySkills(), ...at });
+      // A recovery payment already committed the journal effect. Replay applies it, including after reload.
+      if (!current.recoveryReplay) submit({ type: 'captain_revive', by: playerId, targetId: target.id, skills: mySkills(), ...at });
     }).catch(error => {
       if (wave !== current) return;
       current.revive = null;
@@ -1595,18 +1651,25 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   function end(current) {
     if (current.done) return;
     current.done = true;
-    const result = current.result = current.sim.result();
-    const run = typeof startNextWave === 'function', fallenAll = current.sim.endReason === 'captains_fallen';
+    current.result = current.sim.result();
     current.revive = null; current.pin = null;
     current.hud?.down?.(null); current.hud?.health?.(null); current.hud?.marks?.([]);
+    if (current.recoveryReplay) {
+      current.recoveryPending = [];
+      current.hud?.banner('Wave over', 'Confirming the result…');
+    } else presentEnd(current);
+    void submitFinish(current);
+  }
+
+  function presentEnd(current) {
+    const result = current.result;
+    const run = typeof startNextWave === 'function', fallenAll = current.sim.endReason === 'captains_fallen';
     if (run && result.survived) current.pause = { until: now() + breakSeconds * 1000, ready: false, requested: false, note: null };
     else if (run) current.hud?.banner(LOST_TITLE, `${fallenAll ? `${LOST_FALLEN} ` : ''}${LOST_LINE}`);
     else current.hud?.banner(result.survived ? 'Wave won!' : 'The island fell', fallenAll ? LOST_FALLEN : `${result.shipsSunk} ${result.shipsSunk === 1 ? 'ship' : 'ships'} sunk`);
     cue(result.survived ? 'pirate-victory' : 'pirate-defeat');
-    emit({ type: 'wave_finished', waveId: current.info.waveId, survived: result.survived, shipsSunk: result.shipsSunk });
-    // Queued commands land after the last sealed tick, so after this sim's end: they cannot change it.
-    if (current.recoveryReplay) current.recoveryPending = [];
-    void submitFinish(current);
+    // Recovery quest/narrator events come once from wave-flow.ended, after wave_finish_answered.
+    if (!current.recoveryReplay) emit({ type: 'wave_finished', waveId: current.info.waveId, survived: result.survived, shipsSunk: result.shipsSunk });
     if (current.pause) return; // the break runs from update(); the next wave (or its end) cleans up
     const summary = { lampsRelit: current.lampsRelit, flagshipSunk: current.flagshipSunk, flagship: current.info.flagship, wave: current.info.wave };
     const cleanup = async () => {
@@ -1654,6 +1717,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   function stop() {
     const current = wave;
     if (!current) return;
+    if (!disposed && current.recoveryFinishPending && !current.recoveryDetached) handOffRecoveryFinish(current);
     wave = null; current.finished = true;
     rangeFeedback.reset(); dangerFeedback.reset(); rangePreview = false;
     if (world.camera?.userData) { delete world.camera.userData.battleZoom; delete world.camera.userData.battleFocus; }
@@ -1724,7 +1788,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     },
     dispose() {
       if (disposed) return;
-      stop(); disposed = true; guide?.dispose(); guide = null;
+      disposed = true; stop(); guide?.dispose(); guide = null;
       for (const id of timers) clearTimer(id);
       timers.clear(); stops.splice(0).forEach(stopListening => stopListening());
       if (typeof window !== 'undefined') { window.removeEventListener('keydown', keydown); window.removeEventListener('keyup', keyup); window.removeEventListener('blur', letGo); }
