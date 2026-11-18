@@ -1916,4 +1916,3 @@ Existing-save admission, reset/owner deletion, wave accounting, product verifica
 money paths require integration before enabling shared mode. Retained account/ledger references
 prevent accidental deletion of an admitted island until explicit deletion/retirement policy exists.
 This foundation neither converts balances nor admits existing saves automatically.
-

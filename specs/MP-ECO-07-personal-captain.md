@@ -108,3 +108,5 @@ The corrected registry cutover (`8a35a58e`) is integrated. Rerunning the four Po
 The absent-profile GET error matches the canonical MP-ECO-01 contract: `409 captain_not_initialized`. POST context failures remain `captain_context_required`; no router registration or legacy-route wiring is added by this correction.
 
 For that GET correction, `uv run --no-sync pytest -q server/tests/test_captain_progression_routes.py server/tests/test_personal_captain.py` passed **46 tests**; full Ruff and whitespace checks passed. The absent-GET regression failed against the old error code before the correction. Existing POST context/version guards remain covered.
+
+Current main refresh: `77a9e34d` and the subsequent repair-option fixes at `03e660fe` are merged. The catalogue/recovery/admin intersections were checked with the same five Python suites above: **108 passed**; full Ruff and diff checks passed. No personal route is registered and no legacy mutation guard is activated by this merge. The earlier full-chain PostgreSQL results remain scoped to their recorded revisions; this refresh did not rerun that suite.
