@@ -15,6 +15,15 @@ assignment or payment record is introduced by the HTTP boundary. Shared response
 retain their explicit economy and controller/spectator metadata instead of being
 filtered through the legacy response serializer.
 
+New bell preparation derives both static simulation inputs and `expectedSource`
+from the same coherent member snapshot. The latter contains raw wave counters,
+crew, exact building/research/layout identities and policy versions, with sorted
+arrays and explicit nullable fields. SQL compares those facts under canonical
+locks before any refresh/freeze. Treasury revision is not a world revision.
+Health retains its independent revision fence. Server catalogue, played wave,
+actual house levels and seed produce the frozen reward basis. No personal wallet
+or legacy Captain projection is read to prepare a shared attempt.
+
 Header, origin and controller assertions do not replace the locked SQL checks.
 Protocol-one shared requests refuse before reaching any legacy mutation. Personal
 saved obligations keep their original legacy settlement path; a retained receipt
