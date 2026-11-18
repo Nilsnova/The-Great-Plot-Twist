@@ -28,6 +28,15 @@ Take the MP-ECO-01 scope guard, account lock, personal state lock for purchases,
 
 Use `island_treasury_spend`/`island_treasury_credit` within the same SQL transaction as structure mutation and its receipt. Account free funds are `balance - committed`; wager holds therefore compete with construction correctly. Recoverable business failure must roll back the entire domain change, including any financial debit or Engineer commitment. Never call a financial RPC over HTTP and then update the structure separately.
 
+Before changing an asset or its refundable payment basis, require a strict non-repeated
+financial success and verify its exact committed child transaction: actor, original
+account/epoch, child UID, kind, reason, reference, signed coin delta and absence of a
+reservation effect. Its complete receipt must match the canonical immutable receipt.
+A successful-looking reply pointing at another transaction or carrying malformed
+repeat/action metadata refuses with `action_conflict`; the root claim and any money
+already changed roll back together. Original domain retries bypass this new-effect
+proof and continue replaying their existing receipt.
+
 ## Asset and price rules
 
 - All invited members may build, upgrade and demolish between reservations; island ownership determines payment and resulting asset ownership.
@@ -166,3 +175,25 @@ historical SQL-contract, personal Captain, personal-route and migration-version 
 checks passed **100 tests** in 7.40 seconds. Full backend Ruff passed, and all **73
 migration versions** were unique and parsed. These checks use disposable local databases;
 no HTTP route, admission, live migration or browser feature is activated.
+
+### Financial receipt consistency verification
+
+Construction now applies the same exact financial-effect proof as shared crew hires.
+The regression substitutes a financial helper answer only within a rollback-only local
+savepoint. It preserves the original spend or credit body in a session-private function,
+then injects a missing repeat flag, a string repeat flag, an unrelated same-account grant
+receipt without a money effect, or an altered action UID after the real debit/refund.
+Both builds and demolitions are exercised. Before the correction all **eight cases
+failed in 4.50 seconds** because construction accepted the inconsistent success; after
+the correction all **eight passed in 4.39 seconds**. The assertions preserve the complete
+structure, personal Captain snapshot, root claims, payment basis, domain receipts and
+treasury, then prove the same action succeeds once the original helper is restored.
+
+With main `f606412f` and personal Captain `fb3b658c` integrated, the affected construction,
+grant, personal Captain and legacy island PostgreSQL selection passed **128 tests in
+21.55 seconds** in one process. The complete migration chain applies twice. The focused
+construction/historical-contract/personal/migration Python selection passed **100 tests
+in 8.89 seconds**; full backend Ruff passed. Existing valid upgrades, actual-cost refunds,
+zero-refund demolition, replay, reservation, membership and grant-ordering checks remain
+part of those selections. Live operations and complete shared gameplay acceptance remain
+outside this bounded transaction component.

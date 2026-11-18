@@ -45,7 +45,7 @@ Effort and risk: S/M/L. "Done" means committed on `refactor/slim` (items 1–7) 
 | 13 | Unreferenced backend routes: `POST /board/pair`, `/board/pin`, `/crews/me/start`, `/crews/me/orders`, `/finale/*`, `/intro/complete` appear in no client file (case/festival/bulletin/predictions routes are flag-OFF features and were left). Confirm with INTERFACES.md owners before deleting; the routes, services and tests are several hundred lines | several hundred lines | M | no |
 | 14 | Test-only backend modules: `island/structure_health.py` (51 lines; the real math is in SQL), `adapters/example.py` (a teaching example), `game/case_lint.py` (case is OFF). Keep or delete by owner decision | ~270 lines | S | no |
 | 15 | Small duplicates left: the `[5000, 15000, 30000]` back-off in `online/adapter/schedule.js` and `read-monitor.js`; three `Retry-After` readers (`online/api.js`, `screens/market/http.js`, `screens/sports/http.js`) that differ on `0`; `coinsText` in `screens/islet/labels.js` and `view.js`; the kit `button` helper copied in the boat and finisher scenes | ~20 lines | S (the Retry-After readers need one agreed rule for `0`) | no |
-| 16 | File splits (not in this pass): `pirates/sim.js` 1,866 lines, `pirates/controller.js` 1,675, `island/index.js` 1,483, `pirates/fake-api.js` 1,265, `pirates/render.js` 1,230 | readability, no size change | L | no |
+| 16 | File splits: `pirates/sim.js` 1,866 lines, `pirates/controller.js` 1,675, `island/index.js` 1,469 (`pirates/fake-api.js` 1,265, `pirates/render.js` 1,230 not yet) | readability, no size change | L | refactor/split: the first three, see below |
 
 ### Bug noticed, fixed on slim-2
 
@@ -102,3 +102,24 @@ Five commits on `refactor/slim-2` (from main 37eb70fa): the recovery-bar bug, th
 | All built JS | 2,184,411 B | 2,142,217 B (−42,194) |
 | `game` chunk | 486,349 B (132,466 gzip) | 446,760 B (119,292 gzip); new `guide` chunk 33,910 B after the first frame |
 | Supabase chunk | 219,184 B (56,083 gzip) | 174,258 B (44,152 gzip) |
+
+## File splits (refactor/split, 18 Nov 2026)
+
+Owner request: simplify the code base so it is easier to change without breaking. The three largest frontend files are split into parts with one job each, as pure moves (no behaviour change, no renamed public API: every old import still works from `sim.js`, `controller.js` and `island/index.js`). Branch `refactor/split` from `fix/arsenal-rejoin`, with origin/main merged in.
+
+**How.** Each file was one factory with a large closure. The closure's mutable variables (`let`) now live on one shared object per file (`sim`, `ctl`, `isl`), every part is a closure over it, and the parts reach each other's functions through names linked once all parts exist. The moves were done by scripts (line ranges, plus a scope-aware rename for the island, where parameters shadow state names), then checked: every original line appears in exactly one new file, and a free-name scan of every new file finds no undeclared name. Statements that run at the start (subscriptions, listeners, `createX` calls) stay in the entry file in their original order; the parts only define functions.
+
+| File | Before (main a195ec35) | After |
+|---|---|---|
+| `pirates/sim.js` | 1,924 | `sim.js` 178 (createWave: inputs, step, state, result, attack coverage) + `sim-config.js` 252 (CONFIG), `sim-read.js` 140 (readers, dice, coverage preview), `sim-fleet.js` 109, `sim-setup.js` 196, `sim-weapons.js` 319, `sim-structures.js` 109, `sim-captains.js` 265 (incl. applyInput), `sim-boarders.js` 345, `sim-tick.js` 157 |
+| `pirates/controller.js` | 1,841 | `controller.js` 376 (options, start-up, live feedback and defense inspection, start, API) + `controller-shared.js` 233, `controller-transport.js` 518 (submit, room, recovery journal and finish), `controller-predict.js` 146, `controller-captain.js` 261, `controller-frame.js` 354 (update, events, HUD, guide), `controller-finish.js` 105 |
+| `island/index.js` | 1,613 | `index.js` 428 (options, start-up in order, the returned object) + `island-shared.js` 28, `island-load.js` 300, `island-recovery.js` 199, `island-cards.js` 269, `island-actions.js` 363, `island-game.js` 188 |
+
+Keeping the branch current: main changed all three files while this branch was open; each merge carries main's lines into the parts (by hand for small changes, by re-running the split on main's version for large ones) and repeats the line-presence check, the free-name scan and the fingerprint (regenerated on a clean export of main when the sim changed).
+
+**Proof.** `tests/pirates/sim-fingerprint.test.js` (new, kept): 279 scenarios (waves 1–60 and 75/90/100, three seeds, every rule off, the production rules without and with `structure_recovery`, partial rule sets, scripted captains, uneven step lengths) hash every tick's events and full `state()`; recorded before the split, identical after it. Full frontend tests and the browser checks are listed in STATUS.
+
+**Cost.** The minifier cannot shorten property names, so `sim.ticks`, `isl.own` and the parts' name lists add bytes: all built JS 2,141,538 → 2,163,629 B (+22,091, +1.0 %); `captain-stats` (the sim) 82,534 → 86,636 B (29,466 → 31,193 gzip), `pirates` 77,248 → 81,404 B (25,917 → 27,201 gzip), `island` 180,803 → 194,631 B (62,952 → 65,598 gzip). Title JS unchanged (19,011 B); 195 JS files before and after (no new chunk). Not measured: runtime cost of the property reads (expected negligible). After the merge of main a195ec35 (whose own features also grew these chunks): all built JS 2,220,995 B in 196 files; `captain-stats` 87,754 B, `pirates` 90,071 B, `island` 207,854 B; the budget check passes.
+
+**Not done.** `fake-api.js` and `render.js`. In the island, the start-up block (`index.js`, ~170 lines of subscriptions and UI wiring) stays one piece: its statements must keep their order. Shrinking the parts' shared objects back into local variables (to win the bytes back) would need each part to own its state, which is a design change, not a move.
+
