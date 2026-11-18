@@ -1,10 +1,10 @@
 # MP ECO 13 Repair benefits after full wave end healing
 
-> **What this is:** the repair-benefit inventory and three bounded product choices for the shared island economy.
+> **What this is:** the Carpenter purchase policy and repair-benefit compatibility requirements for the shared island economy.
 >
 > **Who uses it:** the island crew, Captain progression, repair, conversion and UI implementations.
 
-- **Status:** draft; inventory checked, product selection and implementation remain open.
+- **Status:** Carpenter purchase retirement agreed; other repair-only benefits, conversion and implementation remain open.
 - **Branch:** `docs/mp-eco-13-repair-benefits`.
 - **Issue:** [MP-ECO-13 #496](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/496), under [epic #492](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/492).
 - **Planning baseline:** [#491](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/491); integration must match its final accepted rules.
@@ -47,17 +47,15 @@ Quick Mend and Bastion are mutually exclusive equipped specs, not two simultaneo
 
 A legal complete fork path spends 13 points (`1 + 2 + 3 + 3 + 4`); all seven catalogue costs sum to 18, but an ordinary Captain cannot learn both choices of either fork. Migration must use the actual valid saved allocation, not give every player 18 points. Preserve earned progression, existing unrelated skill allocations, Medic revive hold/HP benefits, Tavern healing, ordinary combat actions and the independent Engineer role selector even if the Shipwright skill branch is hidden.
 
-## Product choices
+## Selected Carpenter policy
 
-These are alternatives, not cumulative features. No option is implemented or enabled by this spec. The selected option must be recorded in the decision log and reflected in the MP-ECO-01/06/07/12/17/18 contracts before its offers change.
+New Carpenter hires are unavailable in the shared island economy. No fortification bonus, automatic paid-repair behavior or other replacement effect is introduced. The legacy economy retains its existing scoped behavior.
 
-| Option | Concrete behavior in the new shared economy | Cost and conversion consequences | Implementation tradeoff |
-|---|---|---|---|
-| **A. Retire obsolete offers first — recommended smallest scope** | Stop offering new Carpenter hires, Workshop selection, Quick Mend and Mason Drill. Keep Bastion as +50% max HP, Tavern healing, Barracks, other wall skills/research and Engineer's 10% discount with its commitment. Retain old identities/history until the selected conversion resolves existing assets. | No new replacement price or multiplier. Workshop selection itself cost no coins, so the house/loot asset remains and the team can choose a surviving role without a role-switch fee. Existing paid Carpenter/Quick Mend/Mason choices need MP-ECO-17's explicit preserve/replace/refund policy before admission; do not silently neutralize a paid asset. Restore retired personal point value through the agreed allocation conversion/free respec, never by minting coins. | Smallest runtime surface and no extra healing or automatic spending. Fewer offers remain until an intentionally designed replacement is selected. |
-| **B. Keep Carpenter as a fortifier** | Carpenter adds a passive max-HP bonus to the six supported damageable structure kinds, frozen into the wave-start snapshot. A candidate for balance review is +10% per Carpenter, capped at +20% for the existing maximum of two. Retire the other rate-only offers as in A; preserve Bastion's existing HP benefit. | Keep Carpenter's current 30-coin hire price/max 2 and wave-5 unlock as a proposal, not approved balance. Existing Carpenter counts map to the replacement rather than being refunded again. Point/other-offer conversion is the same explicit policy gate as A. | Keeps a useful Carpenter without changing repair price, quota or introducing free combat healing. Requires chosen HP values, combination rules with Stone/Thick Walls/Bastion, and early/mid/late balance evidence. |
-| **C. Keep Carpenter as a paid-repair assistant** | With a team setting explicitly enabled between waves, each Carpenter may automatically invoke one existing instant repair in the next reserved wave when an eligible structure is destroyed. Maximum two automated successful actions with two Carpenters. These consume the same three team repair uses and full fixed price; no extra uses or free HP. Retire the other rate-only offers as in A. | Keep the 30-coin hire price/max 2/wave-5 unlock as a proposal. Default automation off, so conversion does not silently authorize treasury spending. Existing counts remain owned. Failed or unaffordable attempts consume neither coins, a repair use nor the worker's successful-action allowance. | Preserves the repair theme through convenience. Needs server-authoritative target order, opt-in setting, stale-quote handling and races with manual repairs/bets. It is a larger runtime change than A or B. |
+Existing Carpenter counts, payment provenance and crew history remain intact for explicit conversion. Removing a new-purchase offer does not authorize deletion of an existing asset or a refund calculated from today's catalogue. Existing Carpenter-only repair effects cannot bypass the new reserved-wave repair rules.
 
-Option B's 10%/20% values are a concrete candidate for discussion, not a target silently selected by this task. Option C changes no accepted repair price or successful-action quota; manual and automatic actions must share the same transaction and journal path. A deterministic destroyed-target/event ordering and bounded retry rule are prerequisites if C is chosen. Avoid importing the legacy free Carpenter/Workshop healing paths as an implementation shortcut.
+The shared crew purchase service must reject Carpenter intents before charging, and shared-mode cards must not present an actionable Carpenter hire. Gunner, Guard and Lookout purchases retain their own island-wide counts, unlocks and configured prices.
+
+The other repair-only offers in the inventory still need a consistent policy before their shared-mode offers are enabled. A bounded retirement approach would stop Workshop selection, Quick Mend and Mason Drill while preserving the house/loot asset, the acquired research tier and access to later tiers. Keep Bastion's +50% max HP, Tavern healing, Barracks, Medic effects and Engineer's retained discount/commitment. This broader retirement and each existing paid asset's replacement/refund treatment remain explicit conversion decisions; no new multiplier or automatic refund is specified here.
 
 ## Existing purchase and point conversion
 
@@ -75,15 +73,14 @@ Future implementation is likely to touch `backend/content/islands.json`, `backen
 
 ## Done when and future checks
 
-The design contribution is complete when this inventory, alternatives and unresolved choice are reviewed as a local diff, every local link resolves, the point-cost arithmetic matches the catalogue, and `git diff --check` passes. Runtime completion remains blocked on product selection and the affected implementation contracts.
+The design contribution is complete when this inventory, selected Carpenter rule and remaining compatibility requirements are reviewed, every local link resolves, the point-cost arithmetic matches the catalogue, and `git diff --check` passes. Runtime completion requires the remaining benefit/conversion decisions and the affected implementation contracts.
 
-- [ ] A, B or C (or another explicit effect) is selected and recorded before implementation.
+- [x] New Carpenter purchases are removed from shared-mode scope, with no replacement effect.
+- [ ] The shared purchase service refuses Carpenter before any charge and the shared UI has no active hire offer; existing counts and history are retained.
 - [ ] New-mode offers and wording never sell obsolete between-wave repair speed or a discount on free revival; legacy policy text/behavior remains scoped correctly.
 - [ ] Bastion +50% max HP, Tavern healing, Medic hold/HP and Engineer 10% plus one-wave binding remain intact.
 - [ ] Actual saved retired allocations return their point value once, preserve earned total/unrelated skills and do not clear an Engineer commitment. Include a valid 13-point Shipwright path, a partial path and repeated conversion.
 - [ ] Paid asset conversion has explicit provenance/replacement/refund rules; house construction, branch research and per-wall skill payments are not conflated.
-- [ ] If B: all clients use the same frozen HP and capped island crew count; modifiers compose as selected, no HP/stat gain during a reservation, no visitor-local count or reload exploit.
-- [ ] If C: manual/automatic requests race for the same three uses and treasury; insufficient funds, all-in wagers, stale quotes and retries grant no extra HP/uses. Automation is off until explicitly selected and enabled.
 - [ ] Run relevant backend/frontend tests and build for the eventual code; include real client evidence for changed cards. Do not count a design document as runtime or balance evidence.
 - [ ] A different human teammate reviews the current eventual implementation before merge.
 
