@@ -1,0 +1,45 @@
+{
+  "file": "frontend/public/village/cannons-v1.png",
+  "sha256": "34d114e147b363bbef131b407d762d7006201a9d4c0cd89a3d01aa12238f48bf",
+  "bytes": 2301091,
+  "mode": "RGBA",
+  "dimensions": [
+    1536,
+    1024
+  ],
+  "nativeDecodedBytes": 6291456,
+  "alphaZeroPixels": 835586,
+  "alphaRange": [
+    0,
+    254
+  ],
+  "cornerAlpha": [
+    0,
+    0,
+    0,
+    0
+  ],
+  "method": "Read-only Pillow inspection. No source pixel edit or offline crop. Explicit base contacts and common per-level virtual fit prevent state rescaling while the broken crops exclude previous-row pixels.",
+  "frames": {
+    "island-cannon": {"rect":[42,88,232,176],"sourceFoot":[123,165],"fitBounds":[123,165,109,11],"edgeAlphaMaximum":1,"solidPixels":14474},
+    "island-cannon-fire": {"rect":[42,351,232,176],"sourceFoot":[123,165],"fitBounds":[123,165,109,11],"edgeAlphaMaximum":2,"solidPixels":14375},
+    "island-cannon-damaged": {"rect":[42,618,232,176],"sourceFoot":[123,165],"fitBounds":[123,165,109,11],"edgeAlphaMaximum":1,"solidPixels":15658},
+    "island-cannon-broken": {"rect":[42,832,232,176],"sourceFoot":[123,165],"fitBounds":[123,165,109,11],"edgeAlphaMaximum":1,"solidPixels":14015},
+    "island-cannon-l2": {"rect":[325,67,250,195],"sourceFoot":[129,184],"fitBounds":[129,184,121,11],"edgeAlphaMaximum":1,"solidPixels":20785},
+    "island-cannon-fire-l2": {"rect":[325,328,250,195],"sourceFoot":[129,184],"fitBounds":[129,184,121,11],"edgeAlphaMaximum":2,"solidPixels":20981},
+    "island-cannon-l2-damaged": {"rect":[325,597,250,195],"sourceFoot":[129,184],"fitBounds":[129,184,121,11],"edgeAlphaMaximum":1,"solidPixels":22332},
+    "island-cannon-l2-broken": {"rect":[325,814,250,195],"sourceFoot":[129,184],"fitBounds":[129,184,121,11],"edgeAlphaMaximum":1,"solidPixels":19637},
+    "island-cannon-l3": {"rect":[615,45,269,216],"sourceFoot":[139,206],"fitBounds":[139,206,130,10],"edgeAlphaMaximum":1,"solidPixels":27513},
+    "island-cannon-fire-l3": {"rect":[615,309,269,216],"sourceFoot":[139,206],"fitBounds":[139,206,130,10],"edgeAlphaMaximum":4,"solidPixels":27248},
+    "island-cannon-l3-damaged": {"rect":[615,576,269,216],"sourceFoot":[139,206],"fitBounds":[139,206,130,10],"edgeAlphaMaximum":1,"solidPixels":28161},
+    "island-cannon-l3-broken": {"rect":[615,800,269,209],"sourceFoot":[139,199],"fitBounds":[139,206,130,10],"edgeAlphaMaximum":1,"solidPixels":21365},
+    "island-cannon-l4": {"rect":[910,31,279,233],"sourceFoot":[148,222],"fitBounds":[148,222,131,11],"edgeAlphaMaximum":1,"solidPixels":31013},
+    "island-cannon-fire-l4": {"rect":[910,296,279,233],"sourceFoot":[148,222],"fitBounds":[148,222,131,11],"edgeAlphaMaximum":2,"solidPixels":29970},
+    "island-cannon-l4-damaged": {"rect":[910,563,279,233],"sourceFoot":[148,222],"fitBounds":[148,222,131,11],"edgeAlphaMaximum":1,"solidPixels":31016},
+    "island-cannon-l4-broken": {"rect":[910,800,279,211],"sourceFoot":[148,200],"fitBounds":[148,222,131,11],"edgeAlphaMaximum":1,"solidPixels":24834},
+    "island-cannon-l5": {"rect":[1222,12,287,251],"sourceFoot":[140,240],"fitBounds":[140,240,147,11],"edgeAlphaMaximum":1,"solidPixels":35674},
+    "island-cannon-fire-l5": {"rect":[1222,275,287,251],"sourceFoot":[140,240],"fitBounds":[140,240,147,11],"edgeAlphaMaximum":1,"solidPixels":35000},
+    "island-cannon-l5-damaged": {"rect":[1222,545,287,251],"sourceFoot":[140,240],"fitBounds":[140,240,147,11],"edgeAlphaMaximum":1,"solidPixels":35058},
+    "island-cannon-l5-broken": {"rect":[1222,800,287,214],"sourceFoot":[140,203],"fitBounds":[140,240,147,11],"edgeAlphaMaximum":1,"solidPixels":30378}
+  }
+}

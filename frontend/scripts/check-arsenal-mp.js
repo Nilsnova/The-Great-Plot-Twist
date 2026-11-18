@@ -384,8 +384,7 @@ try {
     const coins = await coinsOf(host);
     const answer = await raw(host, 'POST', '/api/island/weapon/buy', {weapon: 'blunderbuss', actionUid: `old${Date.now().toString(36)}`});
     assert.deepEqual({ok: answer.ok, status: answer.status, code: answer.code}, {ok: false, status: 409, code: 'use_arsenal'}, 'the old buy');
-    // The client's own call (index.js buyWeapon) shows the server's message and changes nothing.
-    await island(host, i => i.buyWeapon('blunderbuss'));
+    // The client has no weapon-shop call any more (D042); the server's old route still refuses.
     assert.equal(await coinsOf(host), coins, 'nothing paid');
     assert.equal(await island(host, i => i.captainLoadout().weapon), 'long_rifle', 'the loadout is still the carried copy');
     note(`POST /api/island/weapon/buy → ${answer.status} ${answer.code} "${answer.message}"; coins ${coins} → ${await coinsOf(host)}; loadout still long_rifle`);

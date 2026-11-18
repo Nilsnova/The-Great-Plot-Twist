@@ -13,12 +13,13 @@ function bus() {
 }
 const flush = () => new Promise(resolve => setTimeout(resolve, 0));
 
-function make({storage = memoryStorage(), game = {}, preferences = {}, reduced = false, flags = {}} = {}) {
+function make({storage = memoryStorage(), game = {}, preferences = {}, reduced = false, flags = {}, recoveryVersion = 0} = {}) {
   const events = bus(), said = [], views = [], tours = [], cards = [], coach = {shown: null, pointed: null};
   let clock = 1000;
   const state = {place: 'home_islet', code: 'K7Q2M', wave: 0, card: null, waveRunning: false, blocked: false, cutscene: false, dialog: false,
     narrating: false, player: {x: 0, z: 0}, ...game};
   const tutorials = createTutorials({on: events.on, storage, now: () => clock, reducedMotion: () => reduced, flags,
+    recoveryVersion: () => recoveryVersion,
     preferences: () => ({tutorials: true, ...preferences}), onPreferences: () => () => {},
     probe: () => ({...state}), locate: id => ({x: 100, y: 100, size: 60, inside: true, id}), spotTarget: () => 'cannon_7',
     anchor: () => ({x: 4.5, z: 16.5}), tour: point => tours.push(point), say: trigger => said.push(trigger), setGuide: view => views.push(view),
@@ -153,7 +154,7 @@ describe('the unlock cards', () => {
     t.frame(); await flush();
     expect(t.tutorials.guide).toBeNull();
     const catchUp = t.tutorials.queue;
-    expect(catchUp).toEqual(['captain_upgrades', 'houses', 'tear_down', 'level_2', 'mortar', 'house_roles', 'weapon_shop', 'watchtower', 'gunner']);
+    expect(catchUp).toEqual(['captain_upgrades', 'houses', 'tear_down', 'level_2', 'mortar', 'house_roles', 'arsenal', 'watchtower', 'gunner']);
     expect(t.cards[0]).toMatchObject({title: 'Captain upgrades', total: 9});
     t.cards[0].close('skip_all'); await flush();
     expect(t.tutorials.queue).toEqual([]);
@@ -179,6 +180,17 @@ describe('the unlock cards', () => {
     again.frame(); await flush();
     expect(again.tutorials.queue).toEqual([]);
     expect(again.cards).toEqual([]);
+  });
+  it('hides the Carpenter unlock card only for recovery-v1 islands', async () => {
+    const legacy = make({game: {wave: 4}});
+    legacy.frame();
+    legacy.state.wave = 5; legacy.frame(); await flush();
+    expect(legacy.tutorials.queue).toContain('carpenter');
+    const current = make({game: {wave: 4}, recoveryVersion: 1});
+    current.frame();
+    current.state.wave = 5; current.frame(); await flush();
+    expect(current.tutorials.queue).not.toContain('carpenter');
+    expect(current.tutorials.queue).toContain('level_3');
   });
   it('a card open when a wave begins gives way and comes back unread in the next break', async () => {
     const t = make({game: {wave: 3}});

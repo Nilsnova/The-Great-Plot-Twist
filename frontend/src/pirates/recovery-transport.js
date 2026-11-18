@@ -5,8 +5,17 @@ import { isParticipantToken } from './recovery-policy.js';
 
 export const MAX_INPUT_BATCH = 32;
 export const MAX_INPUT_BATCH_BYTES = 16 * 1024;
+// Inputs: one write at a time, only while commands wait, at most every RECOVERY_FLUSH_MS.
 export const RECOVERY_FLUSH_MS = 250;
-export const RECOVERY_POLL_MS = 250;
+// Events: one read at a time. A running wave reads again when its sealed ticks are about to run out under
+// the playout buffer (the round trip plus RECOVERY_POLL_MARGIN_MS before the playout would starve, at
+// least RECOVERY_POLL_LEAD_MS), never sooner than RECOVERY_POLL_MIN_MS after the last read started and
+// never later than RECOVERY_POLL_MS. Measured production round trips are 130-450 ms; the T54 budget is
+// 8 reads a second per participant (TokenBucket(8, 8) in backend/server/app.py).
+export const RECOVERY_POLL_MS = 1000;
+export const RECOVERY_POLL_MIN_MS = 400;
+export const RECOVERY_POLL_LEAD_MS = 300;
+export const RECOVERY_POLL_MARGIN_MS = 200;
 const MAX_TICK = 18_000;
 
 const isObject = value => !!value && typeof value === 'object' && !Array.isArray(value);
@@ -15,6 +24,40 @@ const isWireId = value => typeof value === 'string' && /^[A-Za-z0-9_-]{1,32}$/.t
 const successData = answer => answer?.ok === true && isObject(answer.data) ? answer.data
   : answer?.ok === undefined && answer?.status === undefined && !answer?.error && isObject(answer) ? answer : null;
 
+// One refusal policy for every recovery call (journal reads, inputs, health checkpoints, the finish):
+// 'later'    no answer, a 5xx or 429 (or the wave is not over yet): the same request again after
+//            Retry-After or a growing pause;
+// 'refresh'  the server knows more than this client: read the journal again, then a new request;
+// 'terminal' this request can never succeed: drop it (queued inputs) or end the wave on this screen.
+const REFRESH_CODES = new Set(['health_sync_required', 'checkpoint_stale', 'page_incomplete', 'page_watermark_invalid',
+  'input_counter_conflict']);
+const LATER_CODES = new Set(['too_many_requests', 'wave_too_early', 'network_error', 'database_error', 'unreadable']);
+/** The refusal of a failed answer: {refused: true, status, code, retryAfterSeconds}. */
+export function recoveryRefusal(answer) {
+  const nested = answer?.data?.error ?? answer?.error ?? null;
+  const status = Number.isInteger(answer?.status) ? answer.status : 0;
+  const code = (typeof answer?.code === 'string' && answer.code) || (typeof nested?.code === 'string' && nested.code)
+    || (status === 0 ? 'network_error' : 'http_error');
+  const wait = answer?.retryAfterSeconds ?? answer?.data?.retryAfterSeconds;
+  return { refused: true, status, code, retryAfterSeconds: Number.isFinite(wait) && wait > 0 ? wait : null };
+}
+/** 'later', 'refresh' or 'terminal' for a refusal (see above). */
+export function refusalKind(refusal) {
+  const status = refusal?.status ?? 0, code = refusal?.code ?? '';
+  if (status === 0 || status >= 500 || status === 429 || LATER_CODES.has(code)) return 'later';
+  return REFRESH_CODES.has(code) ? 'refresh' : 'terminal';
+}
+/** How long to wait before the next try: Retry-After when given, else 0.25 s doubling up to 8 s. */
+export function refusalDelayMs(refusal, attempt = 0) {
+  if (Number.isFinite(refusal?.retryAfterSeconds) && refusal.retryAfterSeconds > 0) return refusal.retryAfterSeconds * 1000;
+  return Math.min(8000, 250 * 2 ** Math.max(0, Math.min(5, attempt)));
+}
+// Success data, or the refusal of a failed or thrown request (a local argument error stays null: never sent).
+const dataOrRefusal = answer => successData(answer) ?? recoveryRefusal(answer);
+const thrownRefusal = () => recoveryRefusal(null);
+
+// The tick the shooter saw (fix/playtest-1117): the sim checks a blow's reach and a shot's range there.
+const seenOf = input => (Number.isInteger(input.seen) && input.seen >= 0 && input.seen <= MAX_TICK ? { seen: input.seen } : {});
 /** Reduce a local simulation action to an intent; the server adds actor identity and Captain stats. */
 export function commandForJournal(input) {
   if (!isObject(input) || typeof input.type !== 'string') return null;
@@ -25,10 +68,10 @@ export function commandForJournal(input) {
   }
   if (type === 'captain_shot' && (input.targetId == null || isWireId(input.targetId)) && isCoordinate(input.x) && isCoordinate(input.z)) {
     return { type, targetId: input.targetId ?? null, x: input.x, z: input.z,
-      ...(isCoordinate(input.ax) && isCoordinate(input.az) ? { ax: input.ax, az: input.az } : {}) };
+      ...(isCoordinate(input.ax) && isCoordinate(input.az) ? { ax: input.ax, az: input.az } : {}), ...seenOf(input) };
   }
   if (type === 'captain_strike' && isWireId(input.targetId) && isCoordinate(input.x) && isCoordinate(input.z)) {
-    return { type, targetId: input.targetId, x: input.x, z: input.z };
+    return { type, targetId: input.targetId, x: input.x, z: input.z, ...seenOf(input) };
   }
   if (type === 'captain_move' && isCoordinate(input.x) && isCoordinate(input.z)) {
     return { type, x: input.x, z: input.z,
@@ -36,7 +79,9 @@ export function commandForJournal(input) {
       ...(input.away === true ? { away: true } : {}) };
   }
   if (type === 'captain_revive' && isParticipantToken(input.targetId) && isCoordinate(input.x) && isCoordinate(input.z)) {
-    return { type, targetId: input.targetId, x: input.x, z: input.z };
+    if (input.downAt !== undefined && (!Number.isInteger(input.downAt) || input.downAt < 0 || input.downAt > MAX_TICK)) return null;
+    return { type, targetId: input.targetId, x: input.x, z: input.z,
+      ...(input.downAt !== undefined ? { downAt: input.downAt } : {}) };
   }
   if (type === 'finisher_ready' && isWireId(input.shipId)) return { type, shipId: input.shipId };
   if (type === 'finisher_input' && Number.isInteger(input.from) && Array.isArray(input.marks)
@@ -92,20 +137,20 @@ export function createRecoveryTransport({ get, post } = {}) {
         query.set('sealedThroughTick', String(sealedThroughTick));
       }
       return Promise.resolve(get(`/api/waves/${encodeURIComponent(waveId)}/events?${query}`))
-        .then(successData, () => null);
+        .then(dataOrRefusal, thrownRefusal);
     },
     sendInputs({ waveId, inputs } = {}) {
       if (typeof waveId !== 'string' || !validBatch(inputs)) return Promise.resolve(null);
       const body = { waveProtocol: 2, inputs };
       if (byteLength(JSON.stringify(body)) > MAX_INPUT_BATCH_BYTES) return Promise.resolve(null);
       return Promise.resolve(post(`/api/waves/${encodeURIComponent(waveId)}/inputs`, body))
-        .then(successData, () => null);
+        .then(dataOrRefusal, thrownRefusal);
     },
     checkpoint({ waveId, checkpoint } = {}) {
       if (typeof waveId !== 'string' || !waveId || !validCheckpoint(checkpoint)) return Promise.resolve(null);
       const body = { waveProtocol: 2, ...checkpoint };
       return Promise.resolve(post(`/api/waves/${encodeURIComponent(waveId)}/health`, body))
-        .then(successData, () => null);
+        .then(dataOrRefusal, thrownRefusal);
     },
     finishWave(body) {
       if (!validRecoveryFinishBody(body)) return Promise.resolve(null);

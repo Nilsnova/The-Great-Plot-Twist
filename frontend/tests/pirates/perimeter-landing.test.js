@@ -35,10 +35,11 @@ function play(options = {}) {
 }
 
 describe('perimeter-wave shore entry', () => {
-  it('reproduces the legacy new-spawn bypass in the measured coastal ring', () => {
+  it('preserves the current coastal-spawn safeguard in the measured coastal ring', () => {
     const legacy = play();
-    expect(legacy.spawnedInside.length).toBeGreaterThan(0);
-    expect(legacy.spawnedInside[0]).toEqual(['boarder_7', 'wall_2']);
+    expect(legacy.spawnedInside).toEqual([]);
+    expect(legacy.walkingInside).toEqual([]);
+    expect(legacy.done).toBe(true);
   });
   it.each([7919, 15838, 23757, 31676])('keeps seed %s exterior to standing pieces with actual breach progress', seed => {
     const selected = play({perimeterWalls: true, seed});

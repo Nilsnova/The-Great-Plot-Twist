@@ -4,6 +4,8 @@
 
 > **Recovery version status (17 Nov 2026):** The manual E repair/rebuild and in-wave Carpenter rules in the older sections below describe legacy protocol-1 waves. For recovery-v1/protocol-2 waves, the approved [D059](DECISIONS.md#d059--shared-gradual-hp-recovery-and-paid-instant-repair--2026-11-16) and [T54 implementation plan](../specs/T54-recovery-implementation-plan.md) override only structure-repair behavior; other combat rules follow the wave's frozen protocol and rules. The new behavior is in open draft PRs, is not shipped, and its recovery flag remains off. Frozen protocol-1 waves keep the behavior described in their saved rules.
 
+**Structure-repair revision, 18 Nov:** [D059](DECISIONS.md#d059--shared-gradual-hp-recovery-and-paid-instant-repair--2026-11-16) supersedes repair-specific rules below for recovery-v1 islands. Every canonical wave end restores supported walls/towers fully and free. From accepted bell through preparation/countdown/combat there is no free structure healing; three successful paid instant repairs are shared by the island crew, at the current base-level incremental catalogue price. No gradual timer/ETA remains. New-v1 Carpenter hires, Workshop roles, Quick Mend and Mason Drill are being retired in [#456](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/456) / [#457](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/457); Bastion keeps its +50% wall HP and Engineer its 10% construction/upgrade discount. The legacy skill/crew descriptions and measured balance fixtures below remain historical/legacy behavior, not new-policy purchase guidance. Unrelated roles/skills are unchanged; implementation/release status is on the [task board](OPEN-TODOS.md#11-unified-defense-recovery--unassigned-follow-ups-16-nov).
+
 ## 1. The loop
 
 Fight pirate waves → earn 🪙 loot → build and upgrade towers, hire crew → fight harder waves. Waves go up to **100**; every **5th wave is a boss wave** (a warship); every **10th** brings two. After a won wave an **8-second break** (faster pace, owner 11 Nov; the bell's countdown is 5 s) with a big "Next wave" button (or it starts by itself when the break ends, if "Auto next wave" is on). A lost wave ends the run: you keep your buildings and coins, and the next bell restarts at your best wave minus 2 (at least 1).
@@ -38,7 +40,7 @@ Fight pirate waves → earn 🪙 loot → build and upgrade towers, hire crew �
 
 ## 4. Loot
 
-Won wave *n*: `25 + 10n` + 10 per house (Pirate Point `40 + 10n`); a boss wave pays ×2 (more money, owner 11 Nov; new players start with 🪙 200). Every participant gets their own loot (as today). A lost wave pays 0.
+Won wave *n*: `25 + 10n` + 10 per house (Pirate Point `40 + 10n`); from wave 41 an island wave pays ×1.5 of that, rounded down (`islands.json` `loot.raiseFrom`, `raiseTimes`); a boss wave pays ×3 and the boss wave 40 ×5 (`loot.bossMultiplier`, `bossMultiplierByWave`; owner 18 Nov, was ×2 since 11 Nov; new players start with 🪙 200). Every participant gets their own loot (as today). A lost wave pays 0.
 
 ## 5. Pirate Point (the joint island)
 

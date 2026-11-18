@@ -105,7 +105,7 @@ Shows the title (Play, Join, Settings), the pixel islands, the sea chart and sai
 
 ### Why it was built this way
 - Vite builds a plain static site, which Vercel serves for free and which moves easily ([D002](DECISIONS.md)).
-- Plain JavaScript, two runtime packages only: `three` and `@supabase/supabase-js`, both pinned exactly ([frontend/package.json](../frontend/package.json)).
+- Plain JavaScript, few runtime packages: `three` and three parts of Supabase (`@supabase/auth-js`, `@supabase/postgrest-js`, `@supabase/realtime-js`, wired in [online/supabase-sdk.js](../frontend/src/online/supabase-sdk.js)), all pinned exactly ([frontend/package.json](../frontend/package.json)).
 - Three.js draws the top-down 2D world on the GPU; the art is original, so no licence risk ([D005, D028](DECISIONS.md)).
 - Lazy loading: `main.js` paints the title first and loads the world with `import()` after the first paint ([shell/world-loader.js](../frontend/src/shell/world-loader.js)). Audio loads on the first tap ([audio/lazy.js](../frontend/src/audio/lazy.js)), the online adapter on demand ([adapter/lazy-online.js](../frontend/src/adapter/lazy-online.js)). Phones on class Wi-Fi see the title fast.
 - Budgets are enforced by [scripts/check-loading.js](../frontend/scripts/check-loading.js): cold title JavaScript at most 21,080 bytes, cold CSS under 12 kB, title image at most 350 kB.
@@ -993,6 +993,8 @@ All sprites of the island, people, buildings, ships and effects, and the title a
 4. The ships are in their own chunk, loaded only when a wave's atlas is drawn (`framesFor` in `registry.js`).
 5. `stage.js` draws full-screen scenes in layers with parallax. Still layers are painted once per size.
 
+The [fleet art pass](../specs/VIS-16-29-fleet-art.md) gives the five existing hulls directional cloth folds, layered timbers and waterline foam. The wave renderer applies the health and burning states to those frames. Smoke, splash and impact artwork use the same cached atlas, with the simulation controlling each event and its outcome.
+
 ### Why it was built this way
 - **The owner's decision on 11 Nov:** clean cartoon 2D, not pixel art ([GAME-V3.md §7](GAME-V3.md), commit `e1fcef4`).
 - **Drawn in code instead of image files:** no downloads, no new packages, original designs only, and the picture stays crisp at any density. The painted title and intro images looked AI-generated (the words of T21 in [OPEN-TODOS.md](OPEN-TODOS.md)), so they were replaced (commit `1d8bdb2`).
@@ -1751,8 +1753,10 @@ and changed-file Python formatting passed. `npm run test:mp` failed at the host-
 the integrated revision and exact main `a09787c`. A passive diagnostic on the integrated run showed
 the host wave ended with `survived:false` and no break state, so this was not a missed winning break.
 The smoke flow waited for a break after losing; this is not evidence of a recovery or break
-regression. No multiplayer pass or cause for the host's lost wave is claimed. See the [full T60
-result](evidence/T60-structure-recovery/README.md#final-integrated-verification-and-multiplayer-result).
+regression. This is the historical integrated checkpoint at `dcc5a89b`; its multiplayer attempt
+failed after the host lost the wave. A harness-only follow-up later passed the complete local fake
+four-page browser journey on 2026-11-17; it does not prove hosted protocol-2/database transport or
+physical-device behavior. See the [full T60 result and follow-up](evidence/T60-structure-recovery/README.md#2026-11-17-local-multiplayer-browser-follow-up).
 
 
 ## T58. Captain repair choices and shared wall Tech — Ianno Hollensteiner (#124)
@@ -1770,3 +1774,9 @@ Focused checks: `cd frontend && npm exec vitest -- run tests/tutorial-pages.test
 The [evidence README](evidence/T58-captain-repair/README.md) records screenshot fixtures and the exact scope. These
 checks do not prove persisted production state, live recovery, payments, multiplayer or release activation; combined
 dependency review and release acceptance remain pending.
+
+## Village inspection and shoreline
+
+Select a built structure in Village Mode for its level, installed role or skill, and confirmed health when available. **E** opens the keyboard finder. **Range** shows the selected defense's clear-weather firing area between waves.
+
+The southwest mooring uses the existing walkable beach and paints the skiff on the sea. The skiff and rope clear the naval approach at countdown, while the beach bollard remains visible. The Harbor route still uses its own marked access point. [Desktop and phone evidence](evidence/village-polish/README.md)

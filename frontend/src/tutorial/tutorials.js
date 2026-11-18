@@ -29,7 +29,7 @@
 //   tutorials.active       an unlock card is open (the game pauses walking, like any card)
 import {GUIDE_STEPS, GUIDE_TITLE, applyGuideEvent, guideCaption, guideCurrent, guideStart, guideView, skipGuideStep} from '../ui/first-quests.js';
 import {GUIDE_EVENTS, BUILD_CARD_OPENED, HUD_OPENED, PLAYER_MOVED, WAVE_BEGAN} from '../ui/quest-events.js';
-import {gameKey} from '../narrator/logic.js';
+import {gameKey} from '../narrator/game-key.js';
 import {getPreferences, onPreferences as watchPreferences} from '../settings/preferences.js';
 import {cardById, cardsBetween, cardsOpenAt, cardText} from './unlock-cards.js';
 import {createTutorialMemory} from './memory.js';
@@ -47,7 +47,7 @@ const safeLocal = () => { try { return globalThis.localStorage ?? null; } catch 
 export function createTutorials({container = globalThis.document?.body, on, storage = safeLocal(),
   preferences = getPreferences, onPreferences = watchPreferences, reducedMotion = () => false,
   probe = () => null, locate = () => null, spotTarget = () => null, anchor = () => null, tour = () => {},
-  say = () => [], setGuide = () => {}, focusGame = () => {}, flags = {}, hudParent = () => null,
+  say = () => [], setGuide = () => {}, focusGame = () => {}, flags = {}, recoveryVersion = () => 0, hudParent = () => null,
   loadCard = () => import('./unlock-card.js'), createCoachImpl = createCoach, now = () => Date.now()} = {}) {
   const memory = createTutorialMemory(storage, {now});
   const coach = createCoachImpl(container, {parent: hudParent?.() ?? null, focusGame,
@@ -58,6 +58,7 @@ export function createTutorials({container = globalThis.document?.body, on, stor
   let walked = 0, lastPos = null, cardOpen = null, cardLoading = false, showing = null, target = null, targetAt = -Infinity;
   const queue = [];
   const enabled = () => preferences()?.tutorials !== false;
+  const currentRecoveryVersion = () => { try { return recoveryVersion() === 1 ? 1 : 0; } catch { return 0; } };
   const read = () => { try { return probe() ?? null; } catch { return null; } };
 
   // ---- the guided start ----
@@ -103,7 +104,8 @@ export function createTutorials({container = globalThis.document?.body, on, stor
 
   // ---- the unlock cards ----
   function hand(all) {
-    const cards = all.filter(card => !memory.seenAnywhere(card.id)); // seen on any island: never again
+    const cards = all.filter(card => !memory.seenAnywhere(card.id)
+      && !(currentRecoveryVersion() === 1 && card.id === 'carpenter')); // hidden for v1; still available to legacy islands
     if (!code || !cards.length) return;
     if (!enabled()) { memory.mark(code, cards.map(card => card.id)); return; } // off: told as passed, never piled up
     memory.queue(code, cards.map(card => card.id));
@@ -149,7 +151,8 @@ export function createTutorials({container = globalThis.document?.body, on, stor
     try { module = await loadCard(); } catch { module = null; }
     cardLoading = false;
     if (disposed || !module || queue[0] !== id) return;
-    const total = queue.length, current = cardOpen = module.openUnlockCard({container, text: cardText(card), index: 1, total});
+    const total = queue.length, current = cardOpen = module.openUnlockCard({container,
+      text: cardText(card, currentRecoveryVersion()), index: 1, total});
     const reason = await current.done;
     if (cardOpen === current) cardOpen = null;
     current.dispose?.();

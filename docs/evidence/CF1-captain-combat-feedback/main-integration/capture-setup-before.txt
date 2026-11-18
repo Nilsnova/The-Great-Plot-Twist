@@ -1,0 +1,143 @@
+Initial capture with queued onboarding:
+Opening the local fake game.
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+page.waitForFunction: Timeout 30000ms exceeded.
+    at enter (/workspace/captain-combat-feedback/frontend/scripts/check-captain-feedback.js:42:14)
+    at async file:///workspace/captain-combat-feedback/frontend/scripts/check-captain-feedback.js:68:3 {
+  log: [],
+  name: 'TimeoutError'
+}
+
+Node.js v24.22.1
+
+Preferences-only attempt, before declaring returning-device history:
+Opening the local fake game.
+Ringing the normal fake-server bell.
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+locator.hover: Timeout 30000ms exceeded.
+Call log:
+[2m  - waiting for locator('.pirate-musket')[22m
+[2m    - locator resolved to <button type="button" title="No pirate in range" class="kit-button pirate-musket pirate-musket-idle" aria-label="Fire your musket (F): no pirate in range">…</button>[22m
+[2m  - attempting hover action[22m
+[2m    - waiting for element to be visible and stable[22m
+[2m    - element is visible and stable[22m
+[2m    - scrolling into view if needed[22m
+[2m    - done scrolling[22m
+[2m    - <div data-panel="dark" aria-hidden="true" class="cutscene-shot shot-sky-night">…</div> from <dialog open="" class="cutscene" data-line="lore_intro_03" data-cutscene="lore_intro" aria-labelledby="cutscene-lore_intro-yv397p">…</dialog> subtree intercepts pointer events[22m
+[2m  - retrying hover action[22m
+[2m    - waiting for element to be visible and stable[22m
+[2m    - element is visible and stable[22m
+[2m    - scrolling into view if needed[22m
+[2m    - done scrolling[22m
+[2m    - <div aria-hidden="true" data-panel="pirates" class="cutscene-shot shot-sky-night">…</div> from <dialog open="" class="cutscene" data-line="lore_intro_04" data-cutscene="lore_intro" aria-labelledby="cutscene-lore_intro-yv397p">…</dialog> subtree intercepts pointer events[22m
+[2m  - retrying hover action[22m
+[2m    - waiting 20ms[22m
+[2m    2 × waiting for element to be visible and stable[22m
+[2m      - element is visible and stable[22m
+[2m      - scrolling into view if needed[22m
+[2m      - done scrolling[22m
+[2m      - <div aria-hidden="true" data-panel="pirates" class="cutscene-shot shot-sky-night">…</div> from <dialog open="" class="cutscene" data-line="lore_intro_04" data-cutscene="lore_intro" aria-labelledby="cutscene-lore_intro-yv397p">…</dialog> subtree intercepts pointer events[22m
+[2m    - retrying hover action[22m
+[2m      - waiting 100ms[22m
+[2m    3 × waiting for element to be visible and stable[22m
+[2m      - element is visible and stable[22m
+[2m      - scrolling into view if needed[22m
+[2m      - done scrolling[22m
+[2m      - <div aria-hidden="true" data-panel="pirates" class="cutscene-shot shot-sky-night">…</div> from <dialog open="" class="cutscene" data-line="lore_intro_04" data-cutscene="lore_intro" aria-labelledby="cutscene-lore_intro-yv397p">…</dialog> subtree intercepts pointer events[22m
+[2m    - retrying hover action[22m
+[2m      - waiting 500ms[22m
+[2m    4 × waiting for element to be visible and stable[22m
+[2m      - element is visible and stable[22m
+[2m      - scrolling into view if needed[22m
+[2m      - done scrolling[22m
+[2m      - <div data-panel="home" aria-hidden="true" class="cutscene-shot shot-sky-day">…</div> from <dialog open="" class="cutscene" data-line="lore_intro_05" data-cutscene="lore_intro" aria-labelledby="cutscene-lore_intro-yv397p">…</dialog> subtree intercepts pointer events[22m
+[2m    - retrying hover action[22m
+[2m      - waiting 500ms[22m
+[2m    4 × waiting for element to be visible and stable[22m
+[2m      - element is visible and stable[22m
+[2m      - scrolling into view if needed[22m
+[2m      - done scrolling[22m
+[2m      - <div data-panel="home" aria-hidden="true" class="cutscene-shot shot-sky-day">…</div> from <dialog open="" class="cutscene" data-line="lore_intro_06" data-cutscene="lore_intro" aria-labelledby="cutscene-lore_intro-yv397p">…</dialog> subtree intercepts pointer events[22m
+[2m    - retrying hover action[22m
+[2m      - waiting 500ms[22m
+[2m    14 × waiting for element to be visible and stable[22m
+[2m       - element is visible and stable[22m
+[2m       - scrolling into view if needed[22m
+[2m       - done scrolling[22m
+[2m       - <dialog open="" data-path="island" aria-labelledby="modal-8" class="kit-modal goal-card">…</dialog> intercepts pointer events[22m
+[2m     - retrying hover action[22m
+[2m       - waiting 500ms[22m
+[2m    - waiting for element to be visible and stable[22m
+[2m    - element is visible and stable[22m
+[2m    - scrolling into view if needed[22m
+[2m    - done scrolling[22m
+
+    at capture (/workspace/captain-combat-feedback/frontend/scripts/check-captain-feedback.js:59:84)
+    at async file:///workspace/captain-combat-feedback/frontend/scripts/check-captain-feedback.js:73:5 {
+  log: [
+    "  - waiting for locator('.pirate-musket')",
+    '    - locator resolved to <button type="button" title="No pirate in range" class="kit-button pirate-musket pirate-musket-idle" aria-label="Fire your musket (F): no pirate in range">…</button>',
+    '  - attempting hover action',
+    '    - waiting for element to be visible and stable',
+    '    - element is visible and stable',
+    '    - scrolling into view if needed',
+    '    - done scrolling',
+    '    - <div data-panel="dark" aria-hidden="true" class="cutscene-shot shot-sky-night">…</div> from <dialog open="" class="cutscene" data-line="lore_intro_03" data-cutscene="lore_intro" aria-labelledby="cutscene-lore_intro-yv397p">…</dialog> subtree intercepts pointer events',
+    '  - retrying hover action',
+    '    - waiting for element to be visible and stable',
+    '    - element is visible and stable',
+    '    - scrolling into view if needed',
+    '    - done scrolling',
+    '    - <div aria-hidden="true" data-panel="pirates" class="cutscene-shot shot-sky-night">…</div> from <dialog open="" class="cutscene" data-line="lore_intro_04" data-cutscene="lore_intro" aria-labelledby="cutscene-lore_intro-yv397p">…</dialog> subtree intercepts pointer events',
+    '  - retrying hover action',
+    '    - waiting 20ms',
+    '    2 × waiting for element to be visible and stable',
+    '      - element is visible and stable',
+    '      - scrolling into view if needed',
+    '      - done scrolling',
+    '      - <div aria-hidden="true" data-panel="pirates" class="cutscene-shot shot-sky-night">…</div> from <dialog open="" class="cutscene" data-line="lore_intro_04" data-cutscene="lore_intro" aria-labelledby="cutscene-lore_intro-yv397p">…</dialog> subtree intercepts pointer events',
+    '    - retrying hover action',
+    '      - waiting 100ms',
+    '    3 × waiting for element to be visible and stable',
+    '      - element is visible and stable',
+    '      - scrolling into view if needed',
+    '      - done scrolling',
+    '      - <div aria-hidden="true" data-panel="pirates" class="cutscene-shot shot-sky-night">…</div> from <dialog open="" class="cutscene" data-line="lore_intro_04" data-cutscene="lore_intro" aria-labelledby="cutscene-lore_intro-yv397p">…</dialog> subtree intercepts pointer events',
+    '    - retrying hover action',
+    '      - waiting 500ms',
+    '    4 × waiting for element to be visible and stable',
+    '      - element is visible and stable',
+    '      - scrolling into view if needed',
+    '      - done scrolling',
+    '      - <div data-panel="home" aria-hidden="true" class="cutscene-shot shot-sky-day">…</div> from <dialog open="" class="cutscene" data-line="lore_intro_05" data-cutscene="lore_intro" aria-labelledby="cutscene-lore_intro-yv397p">…</dialog> subtree intercepts pointer events',
+    '    - retrying hover action',
+    '      - waiting 500ms',
+    '    4 × waiting for element to be visible and stable',
+    '      - element is visible and stable',
+    '      - scrolling into view if needed',
+    '      - done scrolling',
+    '      - <div data-panel="home" aria-hidden="true" class="cutscene-shot shot-sky-day">…</div> from <dialog open="" class="cutscene" data-line="lore_intro_06" data-cutscene="lore_intro" aria-labelledby="cutscene-lore_intro-yv397p">…</dialog> subtree intercepts pointer events',
+    '    - retrying hover action',
+    '      - waiting 500ms',
+    '    14 × waiting for element to be visible and stable',
+    '       - element is visible and stable',
+    '       - scrolling into view if needed',
+    '       - done scrolling',
+    '       - <dialog open="" data-path="island" aria-labelledby="modal-8" class="kit-modal goal-card">…</dialog> intercepts pointer events',
+    '     - retrying hover action',
+    '       - waiting 500ms',
+    '    - waiting for element to be visible and stable',
+    '    - element is visible and stable',
+    '    - scrolling into view if needed',
+    '    - done scrolling'
+  ],
+  name: 'TimeoutError'
+}
+
+Node.js v24.22.1

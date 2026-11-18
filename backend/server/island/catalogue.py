@@ -18,6 +18,7 @@ import logging
 import re
 from collections.abc import Mapping
 from dataclasses import dataclass, replace
+from fractions import Fraction
 from pathlib import Path
 
 from server.wallet import MAX_DELTA
@@ -256,6 +257,18 @@ class Loot:
     # the 100-wave game keeps its coins worth something). 0 for late_from: no taper.
     late_from: int = 0
     late_per_wave: int = 0
+    # A boss wave with its own multiplier instead of boss_multiplier (islands.json
+    # bossMultiplierByWave; fix/playtest-1117: the boss wave 40 pays 5 times). Boss waves only.
+    boss_multiplier_by_wave: tuple[tuple[int, int], ...] = ()
+    # Island waves above raise_from pay raise_times x the normal loot (houses included), rounded
+    # down, before bonuses and the boss multiplier (islands.json raiseFrom, raiseTimes; the owner,
+    # fix/playtest-1117). A Fraction; times the per-wave and per-house rates it gives whole coins.
+    raise_from: int = 0
+    raise_times: Fraction = Fraction(1)
+
+    def multiplier_for(self, wave: int) -> int:
+        """The boss multiplier of wave `wave` (applied only when the wave is a boss wave)."""
+        return dict(self.boss_multiplier_by_wave).get(wave, self.boss_multiplier)
 
 
 @dataclass(frozen=True)
@@ -668,7 +681,42 @@ def read_loot(data: dict) -> Loot:
         boss_multiplier=read_whole(entry, "bossMultiplier", "loot", 1, 10),
         late_from=read_whole(entry, "lateFrom", "loot", 0, MAX_WAVE),
         late_per_wave=read_whole(entry, "latePerWave", "loot", 0, 1000),
+        boss_multiplier_by_wave=read_boss_multipliers(entry),
+        raise_from=read_whole(entry, "raiseFrom", "loot", 0, MAX_WAVE)
+        if "raiseFrom" in entry
+        else 0,
+        raise_times=read_raise(entry),
     )
+
+
+def read_raise(entry: dict) -> Fraction:
+    """loot.raiseTimes: 1 to 10 (1.5); the per-wave and per-house rates times it must be whole
+    coins, so the database's plain linear formula rounds the total down exactly."""
+    raw = entry.get("raiseTimes", 1)
+    if isinstance(raw, bool) or not isinstance(raw, (int, float)) or not 1 <= raw <= 10:
+        raise IslandFileError("loot: 'raiseTimes' must be a number from 1 to 10.")
+    times = Fraction(str(raw))
+    for key in ("perWave", "latePerWave", "perHouse"):
+        rate = entry.get(key, 0)
+        if (times * rate).denominator != 1:
+            raise IslandFileError(f"loot: raiseTimes x {key} must be whole coins.")
+    return times
+
+
+def read_boss_multipliers(entry: dict) -> tuple[tuple[int, int], ...]:
+    """loot.bossMultiplierByWave: {"40": 5}: wave numbers 1 to MAX_WAVE, multipliers 1 to 10 (the
+    database's p_boss_multiplier bound). Optional: without it each boss wave uses bossMultiplier."""
+    raw = entry.get("bossMultiplierByWave", {})
+    if not isinstance(raw, dict):
+        raise IslandFileError("loot: 'bossMultiplierByWave' must be an object of wave: multiplier.")
+    pairs = []
+    for key, value in raw.items():
+        if not key.isdigit() or not 1 <= int(key) <= MAX_WAVE:
+            raise IslandFileError(f"loot.bossMultiplierByWave: {key!r} is no wave number.")
+        if isinstance(value, bool) or not isinstance(value, int) or not 1 <= value <= 10:
+            raise IslandFileError(f"loot.bossMultiplierByWave[{key}]: a whole number 1 to 10.")
+        pairs.append((int(key), value))
+    return tuple(sorted(pairs))
 
 
 def read_revive(data: dict) -> Revive:
@@ -1101,3 +1149,73 @@ def catalogue_for_flags(
     if flags.get(MORE_TOWER_SPOTS_FLAG, False) and catalogue.extra_tower_spots:
         catalogue = with_more_tower_spots(catalogue)
     return catalogue
+
+
+def catalogue_for_existing_structures(
+    catalogue: IslandCatalogue, built: Mapping[str, object]
+) -> IslandCatalogue:
+    """Add only gated kinds and plots already present on a persisted recovery-v1 island.
+
+    This catalogue is for reading and changing existing objects. Purchase validation continues to
+    use the flag-filtered catalogue supplied to the build route.
+    """
+    culverin_was_available = any(kind.kind == "culverin" for kind in catalogue.kinds)
+    extra_spots_were_available = catalogue.more_tower_spots
+    existing_kinds = {getattr(building, "kind", None) for building in built.values()}
+    existing_spots = set(built)
+    runtime = catalogue
+    gated_spots = {spot for spot, _wave in runtime.extra_tower_spots}
+    if existing_spots & gated_spots and not extra_spots_were_available:
+        runtime = with_more_tower_spots(runtime)
+    if "culverin" in existing_kinds and not culverin_was_available:
+        runtime = with_defenses_v2(runtime, read_defenses_v2(runtime))
+    culverin_spots = {
+        spot for spot, building in built.items() if getattr(building, "kind", None) == "culverin"
+    }
+    if not culverin_was_available and "culverin" in existing_kinds:
+        spots = []
+        for spot in runtime.spots:
+            kinds = spot.kinds
+            if spot.id in culverin_spots and "culverin" not in kinds:
+                kinds = (*kinds, "culverin")
+            elif spot.id not in culverin_spots:
+                kinds = tuple(kind for kind in kinds if kind != "culverin")
+            spots.append(replace(spot, kinds=kinds))
+        runtime = replace(
+            runtime,
+            spots=tuple(spots),
+        )
+    if runtime.more_tower_spots and not extra_spots_were_available:
+        runtime = replace(
+            runtime,
+            spots=tuple(
+                spot
+                for spot in runtime.spots
+                if spot.id not in gated_spots or spot.id in existing_spots
+            ),
+        )
+        if not existing_spots & gated_spots:
+            runtime = replace(runtime, more_tower_spots=False)
+    return runtime
+
+
+def catalogue_for_demolition(catalogue: IslandCatalogue) -> IslandCatalogue:
+    """Include all known gated plots for the SQL-backed demolition receipt check only.
+
+    This does not authorize a purchase. The demolition RPC checks the caller, UID, receipt, and
+    actual built row atomically; the wider plot catalogue lets a retry reach that check after the
+    original gated building has already been removed.
+    """
+    runtime = catalogue
+    if runtime.extra_tower_spots and not runtime.more_tower_spots:
+        runtime = with_more_tower_spots(runtime)
+    if not any(kind.kind == "culverin" for kind in runtime.kinds):
+        runtime = with_defenses_v2(runtime, read_defenses_v2(runtime))
+    return runtime
+
+
+def catalogue_with_recovery_prices(catalogue: IslandCatalogue) -> IslandCatalogue:
+    """Return supported recovery kind prices without inventing an existing building instance."""
+    if any(kind.kind == "culverin" for kind in catalogue.kinds):
+        return catalogue
+    return with_defenses_v2(catalogue, read_defenses_v2(catalogue))

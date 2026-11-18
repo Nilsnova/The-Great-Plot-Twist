@@ -46,11 +46,11 @@ describe('Captain repair policy versions', () => {
     expect(captainBranchesForPolicy(branches, 1).map(branch => branch.id)).toEqual(['marksman']);
   });
 
-  it('keeps legacy repair text but describes recovery-v1 Tech effects clearly', () => {
+  it('keeps legacy repair text and removes recovery-v1 repair-rate promises', () => {
     expect(recoveryTechLine('bastion', 'Old repair text')).toBe('Old repair text');
-    expect(recoveryTechLine('quick_mend', 'Old repair text', 1)).toBe('This wall mends twice as fast between waves.');
-    expect(recoveryTechLine('mason_drill', 'Old repair text', 1)).toBe('Automatic wall repair for this island runs 50% faster.');
-    expect(recoveryTechLine('bastion', 'Old repair text', 1)).toBe('Bastion adds 50% more HP and repairs it three times faster between waves when equipped.');
+    expect(recoveryTechLine('quick_mend', 'Old repair text', 1)).toBe('This saved Quick Mend choice is retired and no longer affects repair.');
+    expect(recoveryTechLine('mason_drill', 'Old repair text', 1)).toBe('Mason Drill remains in saved research but no longer affects repair.');
+    expect(recoveryTechLine('bastion', 'Old repair text', 1)).toBe('Bastion adds 50% max HP when equipped.');
   });
 });
 

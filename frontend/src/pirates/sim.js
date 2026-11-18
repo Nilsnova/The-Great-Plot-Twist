@@ -280,6 +280,14 @@ export const CONFIG = freeze({
 });
 
 const KINDS = new Set(['wall', 'cannon', 'mortar', 'harpoon', 'culverin', 'swivel', 'watchtower', 'house']);
+const PRIMARY_TARGETS = {
+  cannon: ['ships', 'boarders'],
+  mortar: ['ships', 'boarders'],
+  harpoon: ['sailing-ships'],
+  culverin: ['ships'],
+  swivel: ['boarders'],
+};
+const isAttackTower = kind => Object.hasOwn(PRIMARY_TARGETS, kind);
 const finite = value => typeof value === 'number' && Number.isFinite(value);
 const clamp = (value, low, high) => Math.min(high, Math.max(low, value));
 const round2 = value => Math.round(value * 100) / 100;
@@ -339,6 +347,37 @@ export function skillOf(item, C = CONFIG) {
   return { ...(C.specs[item?.spec] ?? {}), ...(C.research[item?.bonus]?.[item?.spec] ?? {}) };
 }
 const bonusOf = (item, key, C = CONFIG) => C.research[item?.bonus]?.[key] ?? 1;
+
+const lookoutsOf = defenses => defenses.filter(item => item.kind === 'watchtower');
+const lookoutsWith = (lookouts, spec) => lookouts.filter(item => item.spec === spec).map(item => ({ ...item, skill: skillOf(item) }));
+const reach = (list, item) => list.find(tower => distance(tower.x, tower.z, item.x, item.z) <= tower.skill.radius);
+
+function attackRanges(lookouts) {
+  const towerBonus = Math.max(0, ...lookouts.map(item => round2(CONFIG.levels.watchtower[item.level - 1].range * bonusOf(item, 'range'))));
+  const eagles = lookoutsWith(lookouts, 'eagle_eye');
+  return { towerBonus, rangeFor(item, baseRange, specRange) {
+    const eagle = reach(eagles, item)?.skill.range ?? 1;
+    // Culverins and swivels receive nearby Eagle eye but omit the global Watchtower bonus.
+    if (item.kind === 'culverin' || item.kind === 'swivel') return round2(baseRange * eagle + specRange);
+    const upgraded = item.kind === 'cannon' ? baseRange * bonusOf(item, 'range') : baseRange;
+    return round2((upgraded + towerBonus) * eagle + specRange);
+  } };
+}
+
+function coverageProfile({ id, kind, level, x, z }, range) {
+  return { id, kind, level, x, z, range, minRange: CONFIG[kind]?.minRange ?? 0, targets: [...PRIMARY_TARGETS[kind]] };
+}
+
+/** The selected defense's clear-weather primary acquisition geometry. Actual sight and target eligibility are wave rules. */
+export function previewDefenseCoverage(defenses, selectedId, { defensesV2 = false } = {}) {
+  const items = readDefenses(defenses, { culverin: defensesV2 === true });
+  const item = items.find(row => row.id === selectedId && isAttackTower(row.kind));
+  if (!item) return null;
+  const { kind, level } = item;
+  const { rangeFor } = attackRanges(lookoutsOf(items));
+  const range = rangeFor(item, CONFIG.levels[kind][level - 1].range, skillOf(item).range ?? 0);
+  return coverageProfile(item, range);
+}
 
 // Another island's coast (Pirate Point on lighthouse_isle): {rx, rz, seed}, else the home_islet coast.
 function readCoast(coast) {
@@ -513,6 +552,7 @@ export function createWave(options = {}) {
   const C = CONFIG, B = C.boarding, random = createRandom(options?.seed);
   // Recovery v1 pauses every free structure repair path. An unknown version pair fails closed.
   const recoveryPolicy = readRecoveryPolicy(options);
+  const REWIND_TICKS = 40, seenAt = new Map(); // recovery waves: where each ship and boarder was, per tick
   const freeStructureRepair = canFreeStructureRepair(recoveryPolicy);
   const captainStatsFor = (level, skills, weapon) => captainStats(level, skills, weapon,
     { recoveryVersion: recoveryPolicy === 'structure-recovery-v1' ? 1 : 0 });
@@ -538,28 +578,20 @@ export function createWave(options = {}) {
   // T38: a lost wave from wave 4 (not Pirate Point) first offers the captains still on the island one co-op haul.
   const rescue = createRescue({ wave: waveNumber, seed: options?.seed, enabled: options?.rescue === true && !withFlagship,
     preparation: options?.finisherPreparation === true, gapMs: typeof options?.gapMs === 'function' ? options.gapMs : null });
-  const lookouts = defenses.filter(item => item.kind === 'watchtower'), watchtowers = lookouts.map(item => C.levels.watchtower[item.level - 1]);
-  // High tower (tier 2): the watchtower lends more range.
-  const towerBonus = Math.max(0, ...lookouts.map((item, i) => round2(watchtowers[i].range * bonusOf(item, 'range', C)))), boost = Math.max(1, ...watchtowers.map(item => item.boost ?? 1));
-  const S = C.specs, near = spec => lookouts.filter(item => item.spec === spec).map(item => ({ ...item, skill: skillOf(item, C) }));
-  const spotters = near('spotter'), eagles = near('eagle_eye'), drummers = near('war_drums');
+  const lookouts = lookoutsOf(defenses), { towerBonus, rangeFor } = attackRanges(lookouts);
+  const boost = Math.max(1, ...lookouts.map(item => C.levels.watchtower[item.level - 1].boost ?? 1));
+  const S = C.specs, near = spec => lookoutsWith(lookouts, spec);
+  const spotters = near('spotter'), drummers = near('war_drums');
   const signal = Math.max(0, ...near('signal_fire').map(item => item.skill.warn));
-  const reach = (list, item) => list.find(tower => distance(tower.x, tower.z, item.x, item.z) <= tower.skill.radius);
   let fogShare = waveNumber === 1 ? Math.max(1 - fog, C.fog.firstWaveSight) : 1 - fog;
   if (crew.lookout && fog > 0) fogShare = Math.min(1, fogShare * C.crew.lookout.sight);
   const warnLead = (crew.lookout ? C.crew.lookout.warn : 0) + signal;
   const coast = readCoast(options?.coast), laneList = readLanes(options?.lanes);
   // Cannons, mortars, harpoons, culverins and swivel nests, in id order; the gunners man the strongest (damage per second, then level).
-  const isTower = kind => kind === 'cannon' || kind === 'mortar' || kind === 'harpoon' || kind === 'culverin' || kind === 'swivel';
   const firstReload = { mortar: C.mortar.firstReload, harpoon: C.harpoon.firstReload, culverin: C.culverin.firstReload, swivel: C.swivel.firstReload };
-  const towers = defenses.filter(item => isTower(item.kind)).map(item => {
+  const towers = defenses.filter(item => isAttackTower(item.kind)).map(item => {
     const stats = C.levels[item.kind][item.level - 1], spec = skillOf(item, C);
-    // Long guns (tier 2) and Eagle eye (a watchtower's capstone in reach) stretch the range; Long range adds to it.
-    const eagle = reach(eagles, item)?.skill.range ?? 1;
-    // T43: a watchtower's range bonus does not reach a culverin (it would cover the whole sea), nor a swivel nest
-    // (D055: it would make a short gun a long one); Eagle eye does.
-    const range = item.kind === 'culverin' || item.kind === 'swivel' ? round2(stats.range * eagle + (spec.range ?? 0))
-      : round2(((item.kind === 'cannon' ? stats.range * bonusOf(item, 'range', C) : stats.range) + towerBonus) * eagle + (spec.range ?? 0));
+    const range = rangeFor(item, stats.range, spec.range ?? 0);
     // A spotter watchtower in reach adds its share of damage (GAME-V3.md §5); the skill's own numbers on top.
     const spotted = reach(spotters, item)?.skill.damage ?? 1, drums = reach(drummers, item)?.skill.reload ?? 1;
     // D055: the tower's upgrade tree. A tower without one keeps the old sums exactly (no factor is applied at all).
@@ -844,7 +876,8 @@ export function createWave(options = {}) {
   }
   const pending = target => balls.reduce((sum, ball) => sum + (ball.targetId === target.id && ball.hit ? ball.damage : 0), 0);
   // v3 waves: at night a lit target (near the heart, a fire, or burning) is seen at the full range.
-  const sees = (tower, target, d) => d <= tower.sight || (happening.lit(target, fires) && d <= tower.range * fogShare);
+  const litSight = tower => tower.range * fogShare;
+  const sees = (tower, target, d) => d <= tower.sight || (happening.lit(target, fires) && d <= litSight(tower));
   const visible = (cannon, target) => sees(cannon, target, distance(cannon.x, cannon.z, target.x, target.z));
   const armoured = ship => ship.kind === 'flagship' && !lampsLit && ships.length > 1; // escorts first while armoured
   const shoreOrder = (a, b) => (a.state === 'attacking') !== (b.state === 'attacking') ? (a.state === 'attacking' ? -1 : 1) : a.left - b.left;
@@ -879,11 +912,12 @@ export function createWave(options = {}) {
       return;
     }
     if (stats.mode === 'cone') {
-      // A spray of shot: the nearest ships or boarders inside the cone towards the aim point, up to stats.targets.
+      // Select the nearest ships or boarders in the cone where the shooter saw them (bounded by seenPlace).
+      // Keep the living target objects: projectiles and damage still resolve at their current positions.
       const heading = Math.atan2(aimed.z - z, aimed.x - x), half = stats.cone / 2 * Math.PI / 180;
       const inCone = [...ships, ...boarders].map(item => {
-        const d = distance(x, z, item.x, item.z);
-        let turn = Math.abs(Math.atan2(item.z - z, item.x - x) - heading);
+        const at = seenPlace(input, item), d = distance(x, z, at.x, at.z);
+        let turn = Math.abs(Math.atan2(at.z - z, at.x - x) - heading);
         if (turn > Math.PI) turn = 2 * Math.PI - turn;
         return { item, d, turn };
       }).filter(entry => entry.d <= stats.range && entry.turn <= half + 1e-9)
@@ -896,7 +930,8 @@ export function createWave(options = {}) {
       return;
     }
     // single and pierce: the ship or boarder named, in range.
-    if (!named || distance(x, z, named.x, named.z) > stats.range) return;
+    const seen = named ? seenPlace(input, named) : null;
+    if (!named || distance(x, z, seen.x, seen.z) > stats.range) return;
     captains.set(by, t);
     const impactAt = shotAt(named);
     hit(named, impactAt);
@@ -921,6 +956,25 @@ export function createWave(options = {}) {
   // slack: boarders walk on during its lead), all at full damage, with its own short reload. The named boarder
   // (else the nearest) is the one the swing faces. The striker's skills scale it (captain-stats.js): damage ×
   // strikeMultiplier (Cutlass), reload × strikeReloadMultiplier (Second wind), radius + 1 with Sweep. No dice.
+  // Recovery waves (fix/playtest-1117): a captain's command lands about a second after the shooter saw the
+  // target, which has walked on meanwhile, so a blow at a boarder that stood in reach on screen missed. A shot or
+  // blow carries `seen` (the tick the shooter saw); its reach and range are checked against the target's place
+  // at that tick, at most REWIND_TICKS (2 s) back, the same on every replay. Damage still lands now; no other
+  // check changes (the reload, standing, the shooter's own place), so no client can claim more than a hit it
+  // could have made in the last 2 s. Other waves ignore `seen`.
+  function recordSeen() {
+    if (recoveryPolicy !== 'structure-recovery-v1') return;
+    const at = new Map();
+    for (const item of boarders) at.set(item.id, { x: item.x, z: item.z });
+    for (const item of ships) at.set(item.id, { x: item.x, z: item.z });
+    seenAt.set(ticks, at);
+    for (const key of seenAt.keys()) if (key < ticks - REWIND_TICKS) seenAt.delete(key);
+  }
+  function seenPlace(input, target) {
+    if (recoveryPolicy !== 'structure-recovery-v1' || !Number.isInteger(input.seen) || input.seen > ticks
+      || input.seen < ticks - REWIND_TICKS) return target;
+    return seenAt.get(input.seen)?.get(target.id) ?? target;
+  }
   function captainStrike(input, events) {
     const by = captainBy(input);
     if (!by || !finite(input.x) || !finite(input.z) || !standing(by, input)) return;
@@ -929,7 +983,7 @@ export function createWave(options = {}) {
     const reload = round2(blade.reload * stats.strikeReloadMultiplier);
     if (t - (blades.get(by) ?? -Infinity) < reload - 1e-9) return;
     // Everyone in the circle, chosen before a blow lands (a boarder killed first never shifts the rest); in landing order.
-    const hit = boarders.filter(boarder => distance(input.x, input.z, boarder.x, boarder.z) <= reach + 1e-9);
+    const hit = boarders.filter(boarder => { const at = seenPlace(input, boarder); return distance(input.x, input.z, at.x, at.z) <= reach + 1e-9; });
     if (!hit.length) return;
     let target = hit.find(boarder => boarder.id === input.targetId) ?? null;
     if (!target) {
@@ -976,6 +1030,8 @@ export function createWave(options = {}) {
     if (!by || !finite(input.x) || !finite(input.z) || typeof input.targetId !== 'string') return;
     const helper = party.get(by), hero = party.get(input.targetId);
     if (!helper || helper.down || !hero || hero === helper || !hero.down) return;
+    // A delayed paid event belongs to exactly one fall; it cannot revive a later fall.
+    if (input.downAt !== undefined && input.downAt !== Math.round(hero.downAt / C.tick)) return;
     if (distance(input.x, input.z, hero.x, hero.z) > R.reach + R.slack) return;
     helper.seen = ticks * C.tick; helper.away = false; helper.x = input.x; helper.z = input.z;
     hero.down = false; hero.downAt = null; hero.hp = Math.max(1, Math.round(hero.maxHp * captainStatsFor(1, input.skills).reviveShare)); // a medic's help-up gives more hp (captain-stats.js)
@@ -1232,15 +1288,24 @@ export function createWave(options = {}) {
     const T = C.tiers.brutes, every = tier.brutes > 0 ? Math.max(1, Math.round(1 / tier.brutes)) : 0;
     const brute = every > 0 && nextBoarderId % every === 0;
     const hp = Math.round(B.hp * curve.hp * (brute ? T.hp : 1) * 10) / 10;
-    const oldStart = {x: ship.x + (landing.x - ship.x) * .25, z: ship.z + (landing.z - ship.z) * .25};
+    const oldStart = { x: ship.x + (landing.x - ship.x) * .25, z: ship.z + (landing.z - ship.z) * .25 };
     const start = options?.perimeterWalls === true ? exteriorWallLanding(oldStart, landing, wallsInOrder) : oldStart;
-    const startX = start.x, startZ = start.z;
-    const boarder = { id: `boarder_${nextBoarderId++}`, boarder: true, shipId: ship.id, x: startX, z: startZ, vx: 0, vz: 0,
+    // Preserve main's coastal-spawn safeguard for waves that use the existing wall policy.
+    if (options?.perimeterWalls !== true && paths && wallsInOrder.some(wall => wall.hp > 0 && edgeDistance(start, wall) === 0)) {
+      const offshore = coastPoint(ship.a, C.spawnRadius, coast);
+      const hit = wallInWay(offshore, start, wallsInOrder);
+      if (hit) {
+        const share = Math.max(0, hit.t - 1e-6);
+        start.x = offshore.x + (start.x - offshore.x) * share;
+        start.z = offshore.z + (start.z - offshore.z) * share;
+      }
+    }
+    const boarder = { id: `boarder_${nextBoarderId++}`, boarder: true, shipId: ship.id, x: start.x, z: start.z, vx: 0, vz: 0,
       hp, maxHp: hp, speed: round2(B.speed * curve.speed * (brute ? T.speed : 1)), hack: round2(B.hack * curve.damage * (brute ? T.hack : 1)),
       damage: round2(B.heartDamage * curve.damage * (brute ? T.heart : 1)),
       route, leg: 0, goal: null, side, state: 'walking', wallId: null, hackIn: 0, facing: landing.x < ship.x ? -1 : 1, ...(brute ? { brute: true } : {}) };
     boarders.push(boarder); landed++;
-    events.push({ type: 'boarder_landed', t: now(), boarderId: boarder.id, shipId: ship.id, hp, x: round2(startX), z: round2(startZ),
+    events.push({ type: 'boarder_landed', t: now(), boarderId: boarder.id, shipId: ship.id, hp, x: round2(start.x), z: round2(start.z),
       left: ship.crew });
   }
   // The point a boarder walks to for one leg: a wall's is just in front of it on the side the boarder comes
@@ -1525,6 +1590,7 @@ export function createWave(options = {}) {
         events.push({ type: 'militia_out', t: 0, militiaId: id, houseId: null, guard: true, hp, x, z });
       }
     }
+    recordSeen();
     for (const input of queued) applyInput(input, events);
     queued = [];
     if (done) return;
@@ -1796,6 +1862,18 @@ export function createWave(options = {}) {
   return {
     applyRecoveryEvent,
     recoveryHealthVector,
+    // Raw sight and reload from this wave's frozen defenses. `litRange` is only available to lit targets at night.
+    attackCoverage(id) {
+      const tower = towerById.get(id);
+      if (done || !tower) return null;
+      const t = ticks * C.tick;
+      let status = 'ready';
+      if (!towerHealth.canFire(tower)) status = 'destroyed';
+      else if (jammed(tower, t)) status = 'jammed';
+      else if (happening.silenced(tower, t)) status = 'silenced';
+      return { ...coverageProfile(tower, tower.sight),
+        litRange: happening.id === 'night_raid' ? litSight(tower) : null, status, reload: tower.reload };
+    },
     step(dt, inputs = []) {
       const events = [];
       if (done) return events;

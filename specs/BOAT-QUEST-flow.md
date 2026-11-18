@@ -1,0 +1,32 @@
+# Quest recovery and boat wave transitions
+
+What this is: the scope and verification handover for [issue #462](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/462). Used by Ianno and the peer reviewer.
+
+- Responsible teammate: Ianno Hollensteiner (`Iannomh123456`); agent assistance: Codex, one writer and read-only reviewers.
+- Branch: `fix/boat-quest-flow`, started from main `48aee0e7`; now includes main `0a639631` and its co-op/recovered-reward changes.
+- Status: implemented in [PR #467](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/467). Prerequisite captain-feedback [#481](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/481) has merged separately. [Current merge verification](../docs/evidence/boat-quest-flow/merge-0a639631/README.md) covers the integrated HUD and renewed native boat checks. The boat decision is D068; main's D067 retains its reward/revival meaning. Current-head human peer approval remains required.
+
+## Scope and agreed behavior
+
+1. Reconcile existing own-island achievements with the ordered goal prefix. A player who hired both gunners before reaching that goal must continue without another hire. Fresh own-island snapshots and a completed event goal both trigger reconciliation. Keep version-1 saved counts and never rewind them; visiting another island grants none of its building/crew achievements. Demolished buildings and earlier transient invite/Harbor/stake events cannot be reconstructed from the current island snapshot.
+2. The user selected immediate boat interruption at wave countdown and requested clear notification, including refunds when applicable. Dispose the personal scene without reopening the wreck, reset input and restore game focus. Invalidate delayed scene launches, including a wave that starts and stops during import. Explain that attempts are free, so an unfinished round spends no coins and claims no reward. There is no entry fee to refund. A completed round's pending payout continues and reports its eventual result.
+3. The choice between best-score topups and the existing first-success payout is unresolved. Preserve D057's payout and clarify it on the ship card before play. No wallet, API, migration or server change is included.
+
+## Files and contracts
+
+`first-quests.js` holds the pure reconciliation; `hud.js` persists and renders it; `island/index.js` supplies own snapshots through `game.js` and owns boat cancellation. `island/ui.js` shows a seven-second nonblocking interruption notice independent of other toasts; `card-model.js` explains the current payout. The notice reserves its measured height in the real wave announcement lane. Short screens use a compact countdown, sharing a row with the notice in landscape. Toast height updates on rotation. Critical combat/status feedback stays above passive narration during the notice. The callback is documented in INTERFACES; the local transition is recorded in DECISIONS. No room message, dependency or storage format is added.
+
+## Verification
+
+- Main `0a639631` integration: **15 files / 197 focused tests passed**, 50.86 s; build passed in **1.82 s**, including the **250-file / 12-line** spoiler guard. Two mixed-order regressions verify own purchases plus recovered personal wins without battle events; recovery-first failed before the integration fix. Native wave-31 boat checks pass at both small-screen sizes, with error toasts and both settled rotations. All nine application hashes match the integrated source. The complete suite/backend/database checks were not rerun for this conflict resolution; their earlier results retain their original source boundaries.
+- Latest-main/review follow-up: **425 files / 4681 tests passed**, 493.25 s; production build passed with **250 text files / 12 protected lines**. Final boat/selection checks passed **10 tests** after the animation-clearance adjustment. Native application `e12d303d` passes all four small-screen/toast variants and both settled rotations with captain movement restored, stable source hashes and no browser errors. [Exact evidence and scope](../docs/evidence/boat-quest-flow/review-2026-11-18/README.md).
+- Tests first: the three saved-achievement regressions failed before implementation. The real Chromium boat test reproduced retained scene/input at countdown; the delayed-launch regression also failed.
+- Before latest-main integration: **349 files / 3847 tests passed**; production build/spoiler guard and text lint passed. The general four-page multiplayer check stopped at the musket-pose assertion tracked by #421. [Exact commands, results and desktop/phone screenshots](../docs/evidence/boat-quest-flow/README.md).
+- After merging main `37eb70fa`: `npm test -- --maxWorkers=1 tests/ui/first-quests.test.js tests/tutorial/guide.test.js` passed **2 files / 19 tests**. JavaScript syntax checks and `git diff origin/main --check` passed. Conflicts combined the boat hooks with the new village camera, core cleanup and selection dock; the task decision was D067 at this step (now D068), preserving main's D061. Browser, full frontend suite and build were not rerun at this integration step.
+- Joint `9ff8cd8b`: **421 files / 4627 tests passed**, 388.98 s; combined build and fresh desktop/phone captures passed. The first joint source-string guard failure was aligned to the optional phase callback, retaining the movement/overlay gate, and the entire suite was rerun successfully.
+- Browser coverage uses production controllers/scenes with the local fake transport. It does not prove real Supabase delivery, live payment settlement or a second physical device.
+- The unchanged full native multiplayer check passes with **4 pages** on included captain-feedback source `0b714732`; later boss/practice/finisher phases were reached and passed. Exact evidence distinguishes this component-source journey from final joint-suite validation. No timeout or native assertion was relaxed. No main merge or deployment was performed.
+
+## Explain-back
+
+The goals still advance in order, but purchases do not have to happen in that order. The saved own island proves achievements that still exist. Boat interruption uses disposal because the normal Close callback reopens a dialog and would continue blocking captain controls. A finished round already submitted its reward, so closing its screen must not cancel or duplicate the payment.

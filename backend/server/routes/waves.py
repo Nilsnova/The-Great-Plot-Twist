@@ -8,6 +8,19 @@ simulation runs in every browser (frontend/src/pirates/sim.js, BUILD-PLAN 3.5) f
 Every route needs a signed-in player (guests admitted with the class code too), then the flag
 "islands" (404 feature_off), like routes/island.py. start, join and finish share one budget of
 20 requests a minute per player; current has its own of 30 (a friend sailing in may ask often).
+The exception is saved reward recovery: it retains authentication and guest admission while
+working independently of the islands flag, and shares the 20-per-minute wave budget.
+
+POST /api/waves/recover {}
+    -> {"coins": 115, "wonWaveBest": 5,
+        "recovered": [{"waveId": "6f1c...", "wave": 5, "survived": true, "loot": 15}],
+        "hasMore": false}
+    At most 20 previously unpaid, canonically closed protocol-2 participations per call.
+    No player/island/outcome/amount/checkpoint input. The first close's saved result and loot
+    decide payment, using the original wallet reference. Current membership, epoch, wave and
+    catalogue never change that saved obligation; legacy/open/malformed closes are excluded.
+    Repeats return fresh totals even when recovered is empty. Errors: 401, 403 demo_closed,
+    404 player_not_set_up, 422 validation_error, 429 too_many_requests, database errors.
 
 The wave shape (start, join, current):
     {"waveId": "6f1c...", "wave": 1, "seed": 123456789, "startsAt": "2026-11-10T12:00:10Z",
@@ -41,6 +54,9 @@ POST /api/waves/start  {"where": "own" | "ISLE-K7Q2M" | "pirate_point", "actionU
     migration 20261114130500), an empty set too, and join and current answer that kept set
     even after a flag was switched on or off. Every client of a wave reads them from the wave
     answer, never from its own /api/config, so the whole wave plays one rule set.
+    "serverNow" (start, join and current): the server's clock as the answer leaves, UTC with
+    milliseconds. A browser whose clock is off by more than 250 ms runs the wave on it, so every
+    screen of the wave counts the same ticks from startsAt.
     Errors: 404 no_such_island, 409 wave_running (one wave per island at a time)
 
 POST /api/waves/join  {"waveId": "6f1c..."}
@@ -51,10 +67,15 @@ POST /api/waves/join  {"waveId": "6f1c..."}
 
 GET /api/waves/current?where=own | ISLE-K7Q2M | pirate_point
     -> the running wave there, or null. Errors: 404 no_such_island
+    A recovery (protocol-2) wave the caller may join but has not joined yet (the owner or an active
+    member; migration 20261118010000) answers without initialSnapshot, participantToken and
+    lastActorCounter: join it with its waveId, the join answers those. 403 not_in_wave otherwise.
 
 POST /api/waves/finish  {"waveId": "6f1c...", "survived": true, "shipsSunk": 7,
                          "bonuses": ["galleon"], "walls": {"wall_1": 40, "wall_2": 0}}
     -> {"loot": 15, "coins": 115, "waveBest": 1, "flags": 1, "boss": false}
+    Protocol-2 finishes also return boolean "survived": the saved outcome of the first close,
+    which can differ from the caller's unfinished simulation. Legacy answers omit it.
     bonuses (optional, v3 waves, docs/GAME-V3.md 4.2 and 4.3): "galleon" (the treasure galleon was
     sunk) and "finisher" (a boss finisher was won) add 20 + 4 x n and 15 + 3 x n to the base of a
     won wave n (content/wave_events.json), only on an island wave whose seed brings the galleon or
@@ -97,8 +118,15 @@ POST /api/waves/revive  {"waveId": "6f1c...", "fallen": "p-k3x9q2", "downAt": 41
     same in every browser): one fall is paid for once, so when two teammates help the same
     fallen captain up at the same moment the first pays and the second is refused already_up
     and pays nothing. Shares the budget of start, join and finish.
+    Recovery waves require waveProtocol: 2 and the helper's x/z coordinates (-499.999..499.999).
+    The database commits payment, receipt and captain_revive journal event together and answers
+    journaled: true. The event carries the paid fall's downAt and server Captain identity/stats;
+    the client does not submit another revival input. A saved recovery wave refuses a legacy
+    request with 409 client_update_required before charging. A committed protocol-2 repeat stays
+    repeatable after the wave closes or the helper leaves the island.
     Errors: 403 not_member, 403 not_in_wave, 404 no_such_wave, 404 player_not_set_up,
-            409 wave_over, 409 insufficient_funds, 409 already_up
+            409 wave_over, 409 insufficient_funds, 409 already_up, 409 client_update_required,
+            409 action_conflict (the same actionUid names a different paid fall)
 
 Every route also: 401, 403 demo_closed, 404 feature_off, 422 validation_error, 429
 too_many_requests, 502 database_error, 503 database_unavailable.
@@ -106,16 +134,26 @@ too_many_requests, 502 database_error, 503 database_unavailable.
 Used by: the bell, the wave bar and the Pirate Point battle of the game client (lane P).
 """
 
+from datetime import UTC, datetime
 from secrets import randbelow
 from typing import Annotated, Literal
 from uuid import UUID
 
-from fastapi import APIRouter, Query, Request
-from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt
+from fastapi import APIRouter, Query, Request, Response
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    StrictBool,
+    StrictFloat,
+    StrictInt,
+    model_validator,
+)
 
+from server.auth import PlayerDep
 from server.errors import ApiError
 from server.flags import is_enabled
-from server.island import service, wall_repair, wave_rules, waves
+from server.island import service, wall_repair, wave_rewards, wave_rules, waves
 from server.island import wave_recovery as recovery
 from server.island.service import IslandCatalogueDep
 from server.island.wave_weather import wave_weather
@@ -138,6 +176,26 @@ MAX_SHIPS_SUNK = 1000
 WALL_SPOT = Annotated[str, Field(pattern=r"^wall_[0-9]{1,2}$")]
 WALL_HEALTH = Annotated[StrictInt, Field(ge=0, le=100)]
 MAX_WALLS = 24
+
+
+class RewardRecoveryRequest(BaseModel):
+    """No client state decides a historical reward."""
+
+    model_config = ConfigDict(extra="forbid")
+
+
+@router.post("/waves/recover")
+async def post_recover_rewards(
+    body: RewardRecoveryRequest,
+    player: PlayerDep,
+    admin: AdminDep,
+    request: Request,
+    response: Response,
+) -> wave_rewards.RewardRecoveryResponse:
+    # An existing obligation stays recoverable when new island play is disabled.
+    request.app.state.wave_budget.spend(player.id)
+    response.headers["Cache-Control"] = "private, no-store"
+    return await wave_rewards.recover_rewards(admin, player.id)
 
 
 class StartRequest(BaseModel):
@@ -179,12 +237,26 @@ class ReviveRequest(BaseModel):
     # The tick of the fall in the wave's simulation (50 ms ticks; a wave lasts at most 900 s).
     downAt: StrictInt = Field(ge=0, le=100_000)
     actionUid: str = Field(pattern=ACTION_UID_PATTERN)
+    waveProtocol: StrictInt = Field(default=1, ge=1, le=2)
+    x: StrictFloat | None = Field(default=None, ge=-499.999, le=499.999)
+    z: StrictFloat | None = Field(default=None, ge=-499.999, le=499.999)
+
+    @model_validator(mode="after")
+    def recovery_position(self) -> "ReviveRequest":
+        if self.waveProtocol == 2:
+            if self.x is None or self.z is None or self.downAt > 18_000:
+                raise ValueError("A recovery revival needs coordinates and a valid fall tick.")
+            if str(UUID(self.fallen)) != self.fallen.lower():
+                raise ValueError("A recovery revival needs a participant token.")
+            self.fallen = str(UUID(self.fallen))
+        return self
 
 
 class ReviveResponse(BaseModel):
     price: int
     coins: int
     repeat: bool
+    journaled: bool | None = None
 
 
 class WeatherOut(BaseModel):
@@ -211,6 +283,9 @@ class WaveResponse(BaseModel):
     walls: dict[str, int] | None = None
     # The simulation rules this wave keeps (SIM_RULES); null when it keeps none.
     rules: list[str] | None = None
+    # The server's clock as this answer leaves (UTC, milliseconds): a browser whose own clock is off
+    # by more than a quarter second runs the wave on this clock instead (frontend island/api.js).
+    serverNow: str | None = None
 
 
 class RecoveryFinishResponse(BaseModel):
@@ -233,6 +308,7 @@ class FinishResponse(BaseModel):
     waveBest: int
     flags: int
     boss: bool
+    survived: StrictBool | None = None
     recovery: RecoveryFinishResponse | None = None
 
 
@@ -269,7 +345,13 @@ def wave_out(
         lastActorCounter=wave.last_actor_counter,
         walls=walls,
         rules=rules,
+        serverNow=server_now(),
     )
+
+
+def server_now() -> str:
+    """Now in UTC with milliseconds and a Z (2026-11-18T12:00:00.250Z)."""
+    return datetime.now(UTC).isoformat(timespec="milliseconds").replace("+00:00", "Z")
 
 
 def require_protocol2(wave: WaveStart, protocol: int) -> None:
@@ -304,6 +386,7 @@ async def post_start(
     seed = randbelow(waves.SEED_LIMIT)
     admit_v1 = is_enabled("structure_recovery", settings.flags)
     template = None
+    requested_rules = wave_rules.wanted_rules(settings)
     if owner is not None and body.waveProtocol == 2:
         persisted_version = await service.read_recovery_version(admin, owner)
         if admit_v1 or persisted_version == 1:
@@ -314,8 +397,14 @@ async def post_start(
                 island,
                 weather,
                 seed,
-                wave_rules.wanted_rules(settings),
+                requested_rules,
             )
+            if template["createWave"].get("defensesV2"):
+                requested_rules = [
+                    name
+                    for name in wave_rules.SIM_RULES
+                    if name in requested_rules or name == "defenses_v2"
+                ]
     started = await waves.start_protocol2(
         admin,
         catalogue,
@@ -324,7 +413,7 @@ async def post_start(
         body.where,
         body.actionUid,
         template,
-        wave_rules.wanted_rules(settings),
+        requested_rules,
         admit_v1,
         protocol=body.waveProtocol,
         resolved=(place, owner),
@@ -402,7 +491,7 @@ async def post_finish(
             checkpoint=body.checkpoint.model_dump(mode="json", by_alias=True),
         )
         recovery_state = reply.get("recovery")
-        if not isinstance(recovery_state, dict):
+        if not isinstance(recovery_state, dict) or type(reply.get("survived")) is not bool:
             raise ApiError(502, "database_error", "The recovery finish answer could not be read.")
         return FinishResponse(
             loot=reply["loot"],
@@ -410,6 +499,7 @@ async def post_finish(
             waveBest=reply["waveBest"],
             flags=reply["flags"],
             boss=reply["boss"],
+            survived=reply["survived"],
             recovery=recovery_state,
         )
     finished = await waves.finish(
@@ -424,8 +514,10 @@ async def post_finish(
     )
     # D039: the first finish of an island wave keeps its walls' health for the next wave. The
     # finish above is already paid, so this is best effort: a failure is logged, never a 5xx.
+    # The owner's rule (fix/playtest-1117): a finished wave leaves every wall of the island whole;
+    # the first finish records them all at 100 % (clearing damage left from before the rule).
     if is_enabled("wall_recovery", settings.flags):
-        await wall_repair.record_after_finish(admin, player.id, body.waveId, body.walls)
+        await wall_repair.record_after_finish(admin, player.id, body.waveId, body.walls, whole=True)
     return FinishResponse(
         loot=finished.loot,
         coins=finished.coins,
@@ -435,7 +527,7 @@ async def post_finish(
     )
 
 
-@router.post("/waves/revive")
+@router.post("/waves/revive", response_model_exclude_none=True)
 async def post_revive(
     body: ReviveRequest,
     player: IslandPlayerDep,
@@ -445,6 +537,17 @@ async def post_revive(
 ) -> ReviveResponse:
     request.app.state.wave_budget.spend(player.id)
     revived = await waves.revive(
-        admin, catalogue, player.id, body.waveId, body.fallen, body.downAt, body.actionUid
+        admin,
+        catalogue,
+        player.id,
+        body.waveId,
+        body.fallen,
+        body.downAt,
+        body.actionUid,
+        protocol=body.waveProtocol,
+        x=body.x,
+        z=body.z,
     )
-    return ReviveResponse(price=revived.price, coins=revived.coins, repeat=revived.repeat)
+    return ReviveResponse(
+        price=revived.price, coins=revived.coins, repeat=revived.repeat, journaled=revived.journaled
+    )

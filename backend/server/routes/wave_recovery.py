@@ -7,8 +7,10 @@ from fastapi import APIRouter, Path, Query, Request
 from pydantic import BaseModel, ConfigDict, Field
 
 from server.errors import ApiError
+from server.flags import is_enabled
 from server.island import wave_recovery
 from server.routes.island import IslandPlayerDep
+from server.settings import SettingsDep
 from server.supabase_admin import AdminDep
 
 router = APIRouter()
@@ -39,12 +41,15 @@ async def post_inputs(
     body: wave_recovery.RecoveryInputBatch,
     player: IslandPlayerDep,
     admin: AdminDep,
+    settings: SettingsDep,
     request: Request,
 ) -> InputBatchOut:
     if body.waveProtocol != 2:
         raise ApiError(409, "client_update_required", "Reload to join this recovery wave.")
     request.app.state.recovery_write_budget.spend(player.id)
-    result = await wave_recovery.append_inputs(admin, player.id, wave_id, body.inputs)
+    result = await wave_recovery.append_inputs(
+        admin, player.id, wave_id, body.inputs, arsenal=is_enabled("arsenal", settings.flags)
+    )
     return InputBatchOut.model_validate(result.model_dump(by_alias=True))
 
 

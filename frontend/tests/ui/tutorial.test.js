@@ -44,7 +44,7 @@ it('pages with Next and Back, moves the dots, turns with arrow keys and a swipe,
     // The last page: no Next past it; its button says Done. The controls page lists the keys.
     for(let i=0;i<12;i++)await page.keyboard.press('ArrowRight');
     expect(await state(page)).toMatchObject({page:'controls',current:10,buttons:['Close','Back','Done']});
-    expect(await page.locator('.tutorial-keys dt').allTextContents()).toEqual(['WASD or arrows','E','F','Click','M','Mouse wheel']);
+    expect(await page.locator('.tutorial-keys dt').allTextContents()).toEqual(['WASD or arrows','E','F','Click','M','Mouse wheel','Hold Tab']);
     await page.keyboard.press('Escape');
     expect(await page.evaluate(()=>window.reason)).toBe('closed');
     expect(await page.evaluate(()=>window.card.isOpen)).toBe(false);

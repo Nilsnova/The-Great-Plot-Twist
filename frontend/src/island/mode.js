@@ -10,10 +10,13 @@ export function islandsMode({search = '', dev = false, flags = null} = {}) {
   return flags?.islands === true ? 'live' : 'off';
 }
 
-// The flags arrive with /api/config. An online adapter waits a moment for them (Play is usually pressed
-// long after they came); a local or demo adapter never gets them and decides at once.
+// The flags arrive with /api/config. An online adapter waits for them (game.js asks at boot, not at Play);
+// a local or demo adapter never gets them and decides at once. The wait covers a cold serverless start and
+// the adapter's first retry 5 s after a failed read: with 1.5 s a slow first /api/config decided 'off', and
+// the page played the old harbor game without the islands until a reload.
+export const FLAGS_WAIT_MS = 12000;
 export async function resolveIslandsMode({search = '', dev = false, online = false, readFlags = () => null,
-  timeoutMs = 1500, stepMs = 100, wait = ms => new Promise(resolve => setTimeout(resolve, ms))} = {}) {
+  timeoutMs = FLAGS_WAIT_MS, stepMs = 100, wait = ms => new Promise(resolve => setTimeout(resolve, ms))} = {}) {
   const read = () => { try { return readFlags(); } catch { return null; } };
   let flags = read();
   const first = islandsMode({search, dev, flags});

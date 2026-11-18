@@ -42,3 +42,9 @@ Result: `Test Files  4 passed (4)`, `Tests  40 passed (40)`, `Duration  3.52s`, 
 Pure geometry also checks the outermost first hit, empty/gap/rubble preservation, degenerate ray handling and the unchanged occupant exception. JavaScript syntax and `git diff --check`: PASS. Repository text lint: `Text lint: 4413 candidate strings in 488 source files; 0 errors, 8 report-only findings.` No dictionary entries were added.
 
 W22's trusted frozen transport, combined full-suite/build/budget checks, persisted construction and deployment remain outside this branch's proof. No activation or merge was performed.
+
+## Current-main conflict resolution — 18 November 2026
+
+Merged main `2e4e27b6390c0c02637a2bbefd455801a232e685` into the task history. Main now has its own coastal-spawn safeguard. Default/false mode retains that exact safeguard; selected perimeter mode uses the guaranteed exterior first-barrier helper. The historical red reproduction above remains historical: the current legacy test now checks that main's repaired behavior stays intact. Both roadmap entries are retained.
+
+Affected tests: `npm test -- --maxWorkers=1 tests/pirates/perimeter-landing.test.js tests/pirates/wall-blocking.test.js tests/pirates/wall-recovery.test.js tests/pirates/recovery-snapshot.test.js tests/pirates/playtest-1117.test.js` — 5 files / 58 tests passed in 5.99s. No browser, live database, full suite, activation or release acceptance was exercised. Current human peer approval remains required.

@@ -8,6 +8,7 @@
 // DOM only, built with the kit's safe text helpers; the controller decides what to show.
 import './pirates.css';
 import { node } from '../ui/kit/dom.js';
+import { createDefenseInspector } from './defense-inspector.js';
 
 // Boarders on land (TOWER-DEFENSE.md §12) show between the ships and the heart while there are any.
 export const waveBarText = ({ wave, shipsLeft, islandHp, maxIslandHp, boardersLeft = 0 }) =>
@@ -23,7 +24,7 @@ export function goalChips({ wave, shipsLeft, islandHp, maxIslandHp, boardersLeft
 // The first-wave hint: three pictures, one word each: pirates land here → walls and towers block → protect the heart.
 export const GOAL_HINT = Object.freeze([['🏝️', 'Land'], ['🧱', 'Block'], ['❤️', 'Protect']]);
 
-export const runLootText = loot => `Loot this run: 🪙 ${Math.max(0, Math.round(loot) || 0)}`;
+export const runLootText = loot => `Loot this wave: 🪙 ${Math.max(0, Math.round(loot) || 0)}`;
 // What the bar shows of it (owner, 15 Nov: "less text"): the coin and the number only, nothing while it is 0;
 // runLootText stays its spoken label.
 export const runLootChip = loot => { const n = Math.max(0, Math.round(loot) || 0); return n > 0 ? `Loot 🪙 +${n}` : ''; };
@@ -41,9 +42,11 @@ export const healthText = ({ hp, maxHp }) => `Captain ${Math.max(0, Math.ceil(hp
 export const clockText = seconds => { const s = Math.max(0, Math.floor(seconds) || 0); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
 export const DOWN_TITLE = 'You have fallen';
 export const downLine = alone => (alone ? 'every captain is down' : 'a teammate can hold E next to you');
+const shortTouchPortrait = () => innerWidth <= 600 && innerHeight <= 640
+  && innerWidth <= innerHeight && matchMedia('(pointer:coarse)').matches;
 
 export function createWaveHud({ container, onAction = () => {}, onNext = () => {}, onAuto = () => {}, onShoot = () => {}, onHold = () => {},
-  onPromptHold = () => {}, reducedMotion = () => false }) {
+  onPromptHold = () => {}, onRangePreview = () => {}, inspectDefenses = null, reducedMotion = () => false }) {
   const layer = node('div', 'pirate-hud');
   const bar = node('div', 'pirate-bar'); bar.setAttribute('role', 'status');
   const label = node('span', 'pirate-bar-text'), meter = node('span', 'pirate-bar-meter'), fill = node('span', 'pirate-bar-fill');
@@ -54,12 +57,13 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
   chips.setAttribute('aria-hidden', 'true'); label.className = 'pirate-bar-text pirate-quiet';
   bar.append(label, goal, chips); bar.hidden = true;
   // The first-wave hint (GOAL_HINT): three big pictures with arrows, gone after a few seconds or a tap.
-  const hint = node('div', 'pirate-goal-hint'); hint.hidden = true; hint.setAttribute('role', 'note');
+  const hint = node('button', 'pirate-goal-hint'); hint.type = 'button'; hint.hidden = true;
+  hint.setAttribute('aria-label', `${GOAL_HINT.map(([, word]) => word).join(', ')}. Dismiss first-wave hint.`);
   GOAL_HINT.forEach(([icon, word], i) => {
     if (i) hint.append(node('span', 'pirate-goal-hint-arrow', '→'));
     const step = node('span', 'pirate-goal-hint-step'); step.append(node('span', 'pirate-goal-hint-icon', icon), node('span', 'pirate-goal-hint-word', word)); hint.append(step);
   });
-  hint.addEventListener('click', () => { hint.hidden = true; });
+  hint.addEventListener('click', () => { hintDismissed = true; updateHint(); });
   const countdown = node('div', 'pirate-countdown'); countdown.setAttribute('aria-live', 'polite'); countdown.hidden = true;
   const countWords = node('span', 'pirate-countdown-words'), countNumber = node('strong', 'pirate-countdown-number');
   countdown.append(countWords, countNumber);
@@ -93,14 +97,34 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
   const extra = node('span', 'pirate-bar-extra'); bar.append(extra, down); extra.append(health, loot);
   // v3 waves: the wave's event under the wave's numbers (wave-events.js): its title and line while the wave
   // starts, then the title alone as a small chip for the rest of the wave.
-  const event = node('div', 'pirate-event'); event.hidden = true;
+  const event = node('details', 'pirate-event'); event.hidden = true;
+  const eventSummary = node('summary', 'pirate-event-summary');
   const eventIcon = node('span', 'pirate-event-icon'), eventTitle = node('strong', 'pirate-event-title'), eventLine = node('span', 'pirate-event-line');
-  eventIcon.setAttribute('aria-hidden', 'true'); event.append(eventIcon, eventTitle, eventLine); bar.append(event);
+  eventIcon.setAttribute('aria-hidden', 'true'); eventSummary.append(eventIcon, eventTitle); event.append(eventSummary, eventLine); bar.append(event);
+  event.addEventListener('toggle', () => {
+    if (event.open && defenseInspector && !defenseInspector.element.hidden && shortTouchPortrait()) inspectDefenses.onClose();
+    measureBar();
+  });
   // The captain's musket (§10): a big button, held to keep firing at the nearest ship in range (or F).
   const musket = node('button', 'kit-button pirate-musket'); musket.type = 'button'; musket.hidden = true;
   const musketLabel = node('span', 'pirate-musket-label', musketText(true)), musketMeter = node('span', 'pirate-musket-meter');
   const musketFill = node('span', 'pirate-musket-fill'); musketMeter.append(musketFill); musketMeter.setAttribute('aria-hidden', 'true');
   musket.append(node('kbd', 'pirate-musket-key', 'F'), musketLabel, musketMeter);
+  const rangePanel = node('span', 'pirate-range-feedback'); rangePanel.hidden = true;
+  const rangeAnnouncement = node('span', 'pirate-quiet'); rangeAnnouncement.setAttribute('role', 'status');
+  rangeAnnouncement.setAttribute('aria-live', 'polite'); rangeAnnouncement.setAttribute('aria-atomic', 'true');
+  layer.append(rangeAnnouncement);
+  const rangeLabel = node('span', 'pirate-range-label'), rangeStatus = node('span', 'pirate-range-status');
+  rangePanel.append(rangeLabel, rangeStatus); musket.append(rangePanel);
+  let hovering = false, focused = false, lastRange = '', lastDanger = '';
+  const preview = () => onRangePreview(hovering || focused);
+  musket.addEventListener('pointerenter', event => { if (event.pointerType !== 'touch') { hovering = true; preview(); } });
+  musket.addEventListener('pointerleave', () => { hovering = false; preview(); });
+  musket.addEventListener('focus', () => { focused = true; preview(); });
+  musket.addEventListener('blur', () => { focused = false; hovering = false; preview(); onShoot(false); });
+  const danger = node('div', 'pirate-danger'); danger.hidden = true; danger.setAttribute('role', 'alert');
+  danger.setAttribute('aria-atomic', 'true');
+  const dangerTitle = node('strong'), dangerLine = node('span'); danger.append(dangerTitle, dangerLine); bar.append(danger);
   musket.setAttribute('aria-label', 'Fire your musket (F)');
   const release = () => onShoot(false);
   musket.addEventListener('pointerdown', event => { event.preventDefault(); try { musket.setPointerCapture(event.pointerId); } catch { /* old browsers */ } onShoot(true); });
@@ -136,23 +160,52 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
   // The first-wave hint sits inside the bar, under the goal row (overlap audit, 15 Nov): never over the heart,
   // the bar or the toasts, which line up under the bar's measured bottom (--pirate-bar-bottom, pirates.css).
   bar.append(hint);
+  const defenseInspector = inspectDefenses ? createDefenseInspector(inspectDefenses) : null;
+  if (defenseInspector) bar.append(defenseInspector.element);
   layer.append(edge, marks, bar, countdown, warning, prompt, musket, banner, pause, mini); container.append(layer);
   const root = document.documentElement;
-  const measureBar = () => { const bottom = bar.hidden || layer.hidden ? 0 : bar.getBoundingClientRect().bottom;
-    if (bottom > 0) root.style.setProperty('--pirate-bar-bottom', `${Math.ceil(bottom) + 10}px`); };
+  let disposed = false;
+  const headers = new Set();
+  const measureBar = () => {
+    if (disposed || bar.hidden || layer.hidden) return;
+    const frame = layer.getBoundingClientRect(), bounds = bar.getBoundingClientRect();
+    let top = frame.width <= 760 ? 72 : 16;
+    for (const header of container.querySelectorAll('.hud-coins, .hud-menu')) {
+      if (!headers.has(header)) { headers.add(header); barSize?.observe(header); }
+      const box = header.getBoundingClientRect();
+      if (box.width > 0 && box.height > 0 && (frame.width <= 900 || (box.left < bounds.right + 12 && box.right > bounds.left - 12))) {
+        top = Math.max(top, box.bottom - frame.top + 12);
+      }
+    }
+    const value = `${Math.ceil(top)}px`;
+    if (bar.style.top !== value) bar.style.top = value;
+    root.style.setProperty('--pirate-bar-bottom', `${Math.ceil(bar.getBoundingClientRect().bottom) + 10}px`);
+  };
   const barSize = typeof ResizeObserver === 'function' ? new ResizeObserver(measureBar) : null;
   barSize?.observe(bar);
+  window.addEventListener('resize', measureBar);
   // The countdown's room (playtest 16 Nov): on laptops the boss warning sits under it, not on it (pirates.css).
   const measureCount = () => { const height = countdown.hidden || layer.hidden ? 0 : countdown.offsetHeight;
     root.style.setProperty('--pirate-count-space', height > 0 ? `${height + 8}px` : '0px'); };
   const countSize = typeof ResizeObserver === 'function' ? new ResizeObserver(measureCount) : null;
   countSize?.observe(countdown);
   let lastBar = '', lastCount = '', lastPrompt = '', lastLoot = '', lastPause = '', lastMusket = '', hurtUntil = 0, hp = null;
-  let lastHealth = '', lastDown = '', ownHp = null, lastEvent = '';
+  let lastHealth = '', lastDown = '', ownHp = null, lastEvent = '', eventIntro = false;
+  let hintRequested = false, hintDismissed = false, waveNumber = null;
+  function updateHint() {
+    const hidden = !hintRequested || waveNumber !== 1 || hintDismissed;
+    if (hint.hidden !== hidden) { hint.hidden = hidden; measureBar(); }
+  }
 
   return {
     element: layer,
-    setVisible(value) { layer.hidden = !value; },
+    inspectDefense(model) {
+      if (!defenseInspector) return;
+      // The two optional details panes share the space above the touch controls on short screens.
+      if (model && defenseInspector.element.hidden && event.open && shortTouchPortrait()) event.open = false;
+      defenseInspector.render(model);
+    },
+    setVisible(value) { if (layer.hidden === !value) return; layer.hidden = !value; measureBar(); },
     countdown(seconds, words = 'Pirates in') {
       const text = seconds > 0 ? String(seconds) : '';
       countdown.hidden = !text;
@@ -162,7 +215,9 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
       void countdown.offsetWidth; // restart the pop for every new number
     },
     bar(state) {
-      if (!state) { bar.hidden = true; return; }
+      if (!state) { bar.hidden = true; waveNumber = null; updateHint(); return; }
+      if (waveNumber !== state.wave) { waveNumber = state.wave; hintDismissed = false; }
+      updateHint();
       const text = waveBarText(state);
       if (bar.hidden) { bar.hidden = false; measureBar(); }
       if (hp !== null && state.islandHp < hp) {
@@ -241,6 +296,27 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
       musket.classList.toggle('pirate-musket-idle', info.ready !== true);
       musketFill.style.width = `${Math.round(share * 100)}%`;
     },
+    rangeFeedback(info) {
+      rangePanel.hidden = !info;
+      if (!info) { lastRange = ''; rangeAnnouncement.textContent = ''; musket.removeAttribute('aria-description'); return; }
+      rangePanel.style.opacity = String(reducedMotion() ? 1 : info.alpha);
+      const key = `${info.label}|${info.radius}|${info.status}`;
+      if (key === lastRange) return;
+      lastRange = key;
+      rangeLabel.textContent = `${info.label} · ${info.radius}`;
+      rangeStatus.textContent = info.status;
+      const spoken = `${rangeLabel.textContent}. ${info.status}.`;
+      musket.setAttribute('aria-description', spoken); rangeAnnouncement.textContent = spoken;
+    },
+    danger(info) {
+      const key = info ? `${info.key}|${info.title}|${info.line}` : '';
+      if (key === lastDanger) return;
+      lastDanger = key; danger.hidden = !info;
+      if (info) { dangerTitle.textContent = `⚠ ${info.title}`; dangerLine.textContent = info.line;
+        danger.dataset.critical = String(info.critical); }
+      else { dangerTitle.textContent = ''; dangerLine.textContent = ''; }
+      measureBar();
+    },
     // Loot this run, under the bar; null hides it.
     loot(amount) {
       const text = amount === null || amount === undefined ? '' : runLootChip(amount);
@@ -249,17 +325,19 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
       if (text) { loot.setAttribute('aria-label', runLootText(amount)); loot.title = runLootText(amount); }
     },
     // The first-wave hint: true shows the three pictures, false hides them.
-    goalHint(show) { if (hint.hidden === (show !== true)) return; hint.hidden = show !== true; measureBar(); },
+    goalHint(show) { hintRequested = show === true; updateHint(); },
     boss(text) { warning.hidden = !text; warning.textContent = text || ''; },
-    // The wave's event: {id, icon, title, line, open} (open: the line shows too) or null to hide it.
+    // The real intro opens the weather detail once; afterward native disclosure stays under the player's control.
     event(info) {
-      const key = info ? `${info.id}|${info.open === true}` : '';
+      const key = info ? `${info.id}|${info.open === true}|${info.icon}|${info.title}|${info.line}` : '';
       if (key === lastEvent) return;
       lastEvent = key; event.hidden = !info;
-      if (!info) return;
+      if (!info) { eventIntro = false; event.open = false; return; }
+      if (event.dataset.event !== info.id || eventIntro !== (info.open === true)) event.open = info.open === true;
+      eventIntro = info.open === true;
       event.dataset.event = info.id; event.classList.toggle('is-open', info.open === true);
-      eventIcon.textContent = info.icon ?? ''; eventTitle.textContent = info.title; eventLine.textContent = info.open ? info.line : '';
-      eventLine.hidden = !info.open;
+      eventIcon.textContent = info.icon ?? ''; eventTitle.textContent = info.title; eventLine.textContent = info.line ?? '';
+      measureBar();
     },
     // The break: {title, line, seconds, auto, ready, paused, hold: {label, enabled} | null} or null to hide it.
     pause(info) {
@@ -286,6 +364,6 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
       if (line) banner.append(node('span', '', line));
       banner.hidden = false;
     },
-    dispose() { release(); letPromptGo(); barSize?.disconnect(); countSize?.disconnect(); layer.remove(); markPool.clear(); root.style.removeProperty('--pirate-break-bottom'); root.style.removeProperty('--pirate-bar-bottom'); root.style.removeProperty('--pirate-count-space'); },
+    dispose() { disposed = true; release(); letPromptGo(); window.removeEventListener('resize', measureBar); barSize?.disconnect(); countSize?.disconnect(); layer.remove(); markPool.clear(); root.style.removeProperty('--pirate-break-bottom'); root.style.removeProperty('--pirate-bar-bottom'); root.style.removeProperty('--pirate-count-space'); },
   };
 }

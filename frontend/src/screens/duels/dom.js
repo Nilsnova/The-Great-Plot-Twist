@@ -34,15 +34,3 @@ export function changed(holder, signature) {
   holder.last = text;
   return true;
 }
-
-// Calls `callback` once when `element`, which sits in `container`, has been taken out of the page
-// (the game clears its container when it shuts down). Returns a function that stops watching.
-export function whenRemoved(container, element, callback) {
-  const observer = new MutationObserver(() => {
-    if (element.isConnected) return;
-    observer.disconnect();
-    callback();
-  });
-  observer.observe(container, { childList: true });
-  return () => observer.disconnect();
-}
