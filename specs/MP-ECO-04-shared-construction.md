@@ -60,9 +60,12 @@ there is no visiting payer. That generic RPC is not covered by these named islan
 The old Captain/session paths likewise require the global managed-profile guard. Existing
 route refusal mapping and those remaining mutation paths must be integrated before any
 new mode is activated; this package does not register or change route dispatch.
-Entry-kit and demo grants also require their early actor-scope wrapper before their
-existing profile/wallet locks. That matching outer-entry guard is a deployment prerequisite
-for these managed-actor construction wrappers; acquiring an actor scope from a later
+The same `20261118050401` transaction installs the early actor-scope `grant_entry_kit`
+wrapper and preserves its original nine-argument body as private
+`grant_entry_kit_legacy_personal`. Intro and demo share this outermost RPC. Grants and
+first-ending replays remain unchanged; no personal-mode check or treasury transfer is
+added to the kit. Installing both sides together closes the profile/wallet ordering gap
+without a forward dependency on later core guards. Acquiring an actor scope from a later
 transitive call would invert the order.
 
 The existing building/layout/health schema remains authoritative. Additional perimeter placement rules, if introduced by another accepted version, need a matching trusted manifest/guard before those new offers are enabled; this task does not grant land or invent placement rights.
@@ -133,5 +136,33 @@ After the merged recovery-option cleanup, **141 relevant PostgreSQL checks** pas
 actor scope and profile lock, then prove that a visiting build/upgrade waits without taking
 the wallet needed by that actor's grant. A separate real lock interleaving proves the two
 keys are acquired in signed-hash order even when arguments arrive in the opposite order.
-A matching real entry-kit/demo grant interleaving remains a required core-entry integration
-check.
+Standalone construction closure is verified without the later core legacy migration:
+**148 relevant PostgreSQL cases** passed in 11.28 seconds, including seven real kit/demo
+grant cases. Intro and demo grants force visiting build/upgrade to wait on the advisory
+scope before a wallet lock; the reverse order likewise waits at the scope. Original
+payments and first-ending replays are preserved, and the exact nine-argument private alias
+has no service/browser execute right after complete migration reapplication.
+The construction, entry-profile, intro and demo Python checks passed **257 cases** in
+11.61 seconds; full backend Ruff passed. No later core migration was present in this
+standalone verification worktree.
+
+After integration of treasury schema version `20261118050050`, the standalone construction
+and grant suites passed **57 PostgreSQL cases** in 17.52 seconds. Construction, migration
+version, entry, intro and demo Python checks passed **258 cases** in 23.63 seconds. Full
+Ruff passed, and all **72 migration versions** were unique and parsed successfully. The
+owned runtime source was unchanged by this dependency merge.
+
+
+### Final personal dependency alignment
+
+The branch includes the actual final personal Captain dependency `4005fb53`, including
+its global operation registry and isolated race fixtures. The review diff against that
+base contains only the 11 construction files. Duplicate foundation additions use the
+reviewed dependency source; the construction runtime source is unchanged by the merge.
+
+The two construction suites, both personal Captain suites and legacy islands/waves suite
+passed **120 PostgreSQL tests** in 14.82 seconds in one process. The focused construction,
+historical SQL-contract, personal Captain, personal-route and migration-version Python
+checks passed **100 tests** in 7.40 seconds. Full backend Ruff passed, and all **73
+migration versions** were unique and parsed. These checks use disposable local databases;
+no HTTP route, admission, live migration or browser feature is activated.

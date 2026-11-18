@@ -10,7 +10,8 @@ begin
     ('island_build','uuid,uuid,text,text,text,integer'),
     ('island_upgrade','uuid,uuid,text,text,integer[],integer'),
     ('island_demolish','uuid,uuid,text,text,jsonb'),
-    ('island_demolish_quote','uuid,uuid,text,jsonb')
+    ('island_demolish_quote','uuid,uuid,text,jsonb'),
+    ('grant_entry_kit','uuid,text,text,boolean,text,text,bigint,integer,text')
   ) as functions(name, arguments) loop
     if to_regprocedure('public.'||v_item.name||'_legacy_personal('||v_item.arguments||')') is null then
       v_definition := pg_get_functiondef(to_regprocedure('public.'||v_item.name||'('||v_item.arguments||')'));
@@ -65,6 +66,21 @@ comment on function public.island_construction_legacy_actor_allowed_locked(uuid)
   'Private legacy-wallet then personal-anchor gate. Managed actors require an aware construction path; no old role price may bypass the global Engineer commitment.';
 revoke all on function public.island_construction_legacy_actor_allowed_locked(uuid)
   from public, anon, authenticated, service_role;
+
+-- Install the grant side of the ordering protocol in this same transaction.
+-- Intro and demo share this outermost RPC; its original grants/replays are unchanged.
+create or replace function public.grant_entry_kit(
+  p_player_id uuid,p_ending text,p_decision text,p_read_log boolean,p_kit text,
+  p_start_place text,p_kit_coins bigint,p_move_count integer,p_story_sha256 text
+) returns jsonb language plpgsql volatile security definer set search_path = '' as $$
+begin
+  perform public.island_treasury_lock_scope(p_player_id);
+  return public.grant_entry_kit_legacy_personal(p_player_id,p_ending,p_decision,p_read_log,
+    p_kit,p_start_place,p_kit_coins,p_move_count,p_story_sha256);
+end;
+$$;
+comment on function public.grant_entry_kit(uuid,text,text,boolean,text,text,bigint,integer,text) is
+  'Ordering-only actor scope before the unchanged original profile-then-wallet kit grant. Installed atomically with visiting construction guards, preserving intro/demo grants and first-ending replays without a forward migration dependency.';
 
 -- Admission and a legacy build serialize before the old wallet locks.
 create or replace function public.island_build(
@@ -140,7 +156,9 @@ revoke all on function public.island_build(uuid, uuid, text, text, text, integer
 revoke all on function public.island_upgrade(uuid, uuid, text, text, integer[], integer) from public, anon, authenticated, service_role;
 revoke all on function public.island_demolish(uuid, uuid, text, text, jsonb) from public, anon, authenticated, service_role;
 revoke all on function public.island_demolish_quote(uuid, uuid, text, jsonb) from public, anon, authenticated, service_role;
+revoke all on function public.grant_entry_kit(uuid,text,text,boolean,text,text,bigint,integer,text) from public, anon, authenticated, service_role;
 grant execute on function public.island_build(uuid, uuid, text, text, text, integer) to service_role;
 grant execute on function public.island_upgrade(uuid, uuid, text, text, integer[], integer) to service_role;
 grant execute on function public.island_demolish(uuid, uuid, text, text, jsonb) to service_role;
 grant execute on function public.island_demolish_quote(uuid, uuid, text, jsonb) to service_role;
+grant execute on function public.grant_entry_kit(uuid,text,text,boolean,text,text,bigint,integer,text) to service_role;
