@@ -6,6 +6,46 @@ import {browserHarness} from '../g20-browser.js';
 import {data, id} from './shared-arsenal-fixture.js';
 
 const browser = browserHarness();
+
+it('wires the viewed canonical treasury and verified actor through the actual island controller', async () => {
+  await browser.withPage(async page => {
+    const view = data(); view.economy.islandOwner = view.copies[0].holder;
+    await page.evaluate(async fixture => {
+      const {createIsland} = await window.g20Import('/src/island/index.js');
+      const {createFakeIslandTransport} = await window.g20Import('/src/pirates/fake-api.js');
+      const {on, emit} = await window.g20Import('/src/core/events.js');
+      const base = createFakeIslandTransport(); base.dev.setWaveBest(4);
+      window.wiredArsenalRequests = [];
+      const transport = {
+        async get(path) {
+          if (path === '/api/island/arsenal') return {ok: true, data: fixture};
+          const answer = await base.get(path);
+          return path === '/api/island' ? {...answer, data: {...answer.data, economy: fixture.economy}} : answer;
+        },
+        async post(path, body, options) {
+          if (path !== '/api/island/arsenal/buy') return base.post(path, body);
+          window.wiredArsenalRequests.push({path, body, options});
+          return {ok: false, status: 503, code: 'database_unavailable', message: 'Retry the same request.'};
+        },
+      };
+      window.wiredArsenalIsland = createIsland({container: document.body, transport, on, emit, mode: 'live',
+        getActorId: () => fixture.copies[0].holder, storage: null, visitStorage: null,
+        menu: () => () => {}, settings: () => () => {}});
+      await window.wiredArsenalIsland.load(); window.wiredArsenalIsland.arsenal.open();
+    }, view);
+    await page.locator('[data-focus="buy-pistols"]').click();
+    await page.waitForFunction(() => window.wiredArsenalRequests.length === 1);
+    const [request] = await page.evaluate(() => window.wiredArsenalRequests);
+    expect(request.body.economy).toEqual({mode: 'island_shared', version: 1,
+      islandOwner: view.economy.islandOwner, runEpoch: view.economy.runEpoch});
+    expect(request.body).not.toHaveProperty('actorId');
+    expect(request.body).not.toHaveProperty('accountId');
+    expect(request.body).not.toHaveProperty('code');
+    expect(request.options.headers['X-Island-Economy-Version']).toBe('1');
+    await page.evaluate(() => {window.wiredArsenalIsland.dispose(); sessionStorage.clear();});
+  });
+});
+
 it.each([{width: 1280, height: 720}, {width: 375, height: 812}])('shared full-inventory return stays usable at $width x $height', async size => {
   await browser.withPage(async page => {
     await page.setViewportSize(size);

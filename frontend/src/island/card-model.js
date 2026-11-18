@@ -45,7 +45,7 @@ const RECOVERY_HEALTH_KINDS = new Set(['wall', 'cannon', 'mortar', 'harpoon', 'c
 export function buildCardModel({spotId, kind, slot = null, spot = null, coins = null, visitor = false, ownerName = '',
   busy = false, message = '', unlocks = null, prices = null, point = false, campaign = null, battle = false, movable = false, flags = null,
   treePicked = null, recoveryState = null, recoveryStatus = 'disabled', recoveryError = null, recoveryPending = false,
-  recoveryVersion = 0} = {}) {
+  recoveryVersion = 0, economy} = {}) {
   const place = slot ?? (kind === 'cannon' || kind === 'mortar' || kind === 'harpoon' || kind === 'culverin' || kind === 'swivel' ? 'tower' : kind ?? 'wall');
   const built = spot?.built === true, standing = built ? spot.kind : null;
   const level = built ? (Number.isSafeInteger(spot.level) && spot.level > 0 ? spot.level : 1) : 0;
@@ -73,6 +73,7 @@ export function buildCardModel({spotId, kind, slot = null, spot = null, coins = 
       status: recoveryPending ? 'submitting' : recoveryStatus,
       errorCode: recoveryError,
       coins,
+      ...(economy === undefined ? {} : {economy}),
     });
   }
   // A spot of a later campaign step (the inner wall ring after wave 5): shown, marked, not buildable yet.

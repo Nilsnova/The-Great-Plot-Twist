@@ -237,7 +237,20 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   const live = {get: (path, ...options) => (getTransport()?.get?.(path, ...options) ?? notReady()),
     post: (path, body, ...options) => (getTransport()?.post?.(path, body, ...options) ?? notReady())};
   const islandTransport = transport ?? live;
-  const api = createIslandApi({transport: islandTransport, waveProtocol: where => where === 'pirate_point' ? 1 : 2});
+  const target = () => visiting ?? own;
+  const getEconomy = () => visitCode && !visiting ? null : target()?.economy ?? null;
+  const economyContext = mode === 'fake' ? {} : {getEconomy, getActorId};
+  const refreshEconomy = (envelope, origin) => {
+    const selected = getEconomy();
+    if (disposed || envelope?.mode !== 'island_shared' || !sameBoatOrigin(selected, origin)
+      || !sameBoatOrigin(envelope, origin)) return;
+    try { if (BigInt(envelope.revision) <= BigInt(selected.revision)) return; } catch { return; }
+    // Reread only the canonical projection; an arsenal read must not recursively refresh itself.
+    void (visiting ? reloadVisit() : reloadOwn()).then(() => {if (!disposed) refreshCard();})
+      .catch(() => { /* A display refresh cannot change an already committed result. */ });
+  };
+  const api = createIslandApi({transport: islandTransport, ...economyContext, onEconomy: refreshEconomy,
+    waveProtocol: where => where === 'pirate_point' ? 1 : 2});
   const recoveryTransport = Object.freeze({get: (path, ...options) => islandTransport.get(path, ...options),
     post: (path, body, ...options) => islandTransport.post(path, body, ...options)});
   const ui = createIslandUi({container, focus, resetInput,
@@ -262,13 +275,13 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   };
   globalThis.addEventListener?.('keydown', moveKeys, true);
   // The arsenal (T41, D042): the crew's weapons (the server's flag "arsenal" is always on; the old shop is gone).
-  const arsenal = createArsenal({api: createArsenalApi({transport: transport ?? live}), ui, emit, enabled: () => true,
+  const arsenal = createArsenal({api: createArsenalApi({transport: transport ?? live, ...economyContext}),
+    ...economyContext, onEconomy: refreshEconomy, ui, emit, enabled: () => true,
     code: () => (visiting ? displayIslandCode(visiting.code) : visitCode ? displayIslandCode(visitCode) : null),
     place: () => (visiting ? 'visit' : 'own'), level: () => own?.captain?.level ?? 1,
     skills: () => readSkills([...(own?.skills?.known ?? []), ...(isRole(own?.skills?.role) ? [own.skills.role] : [])]),
     asking: coinsAsked, onCoins: (coins, fresh) => arsenalCoins(coins, fresh)});
   const placeholder = mode === 'fake' || new URLSearchParams(search).get('wavedebug') === '1';
-  const target = () => visiting ?? own;
   // Which island is on screen (a visit or your own, and its code), not which answer object: a fresh read of
   // the same island (a crewmate's change, a finished wave) replaces the object but not the island.
   const shownIsland = () => (target() ? JSON.stringify([visiting ? 'visit' : 'own', target().code]) : null);
@@ -390,17 +403,19 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   }
   async function load() {
     const ticket = ++loadTicket;
+    const expectedActor = getActorId();
+    const loadCurrent = () => !disposed && ticket === loadTicket && getActorId() === expectedActor;
     const travelGeneration = coreTravelGeneration;
     let loadedTarget = null;
     if (visitCode && !(await joinFirst(visitCode))) {
-      if (disposed || ticket !== loadTicket) return {ok: false};
+      if (!loadCurrent()) return {ok: false};
       endVisit();
     }
-    if (disposed || ticket !== loadTicket) return {ok: false};
+    if (!loadCurrent()) return {ok: false};
     if (visitCode) {
       const current = reading('visit');
       const answer = await api.visit(visitCode);
-      if (disposed || ticket !== loadTicket) return answer;
+      if (!loadCurrent()) return {ok: false};
       if (answer.ok) {
         if (current() || !visiting) { visiting = {...answer.data, code: islandCode(answer.data.code)}; loadedTarget = shownIsland(); noteCampaign(visiting); }
         showVisit();
@@ -412,13 +427,14 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       // Your own island also while visiting: its coins pay for what you build on the friend's island.
       const current = reading('own');
       const answer = await api.getIsland();
-      if (disposed || ticket !== loadTicket) return answer;
+      if (!loadCurrent()) return {ok: false};
       if (answer.ok) {
         if (current()) { setOwnRead(answer.data); if (!visiting) loadedTarget = shownIsland(); }
         ownMessage = ''; ownRetry = false;
       } else { ownMessage = answer.message; ownRetry = mayPass(answer); }
     }
     await readStructureRecovery();
+    if (!loadCurrent()) return {ok: false};
     applyWorld(); refreshCard();
     void syncGame();
     void arsenal.refresh();
@@ -427,7 +443,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       const answer = await flow.look(where());
       // A retained controller may resume only after this landing confirms its actual server wave.
       // Reject a late load across travel, another load, target change or reset.
-      if (!disposed && ticket === loadTicket && travelGeneration === coreTravelGeneration && loadedTarget !== null && loadedTarget === shownIsland()
+      if (loadCurrent() && travelGeneration === coreTravelGeneration && loadedTarget !== null && loadedTarget === shownIsland()
           && context.key && context.key === syncCoreContext().key && answer?.ok
           && typeof answer.data?.waveId === 'string' && answer.data.waveId
           && flow.current?.wave?.waveId === answer.data.waveId) {
@@ -547,7 +563,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       unlocks: own ? islandUnlocks() : null, prices: own?.prices ?? null, campaign: campaign(), battle: battle && !waveOver,
       movable: island?.layout?.movable === true, flags: {defenses_v2: defensesV2On() === true}, treePicked: treePicked.get(spotId) ?? null,
       recoveryState: recoveryView, recoveryStatus: recoveryEnabled ? (recoveryReady ? 'ready' : recoveryStatus) : 'disabled',
-      recoveryError, recoveryPending: recoveryPendingSpot === spotId, recoveryVersion: recoveryModelVersion()});
+      recoveryError, recoveryPending: recoveryPendingSpot === spotId, recoveryVersion: recoveryModelVersion(),
+      ...(mode === 'fake' ? {} : {economy: getEconomy()})});
     if (recoveryEnabled && recoveryState?.displayPhase === 'combat' && !live) {
       model.recovery = {visible: false, status: 'error', message: 'Battle health is still loading.'};
     }
@@ -588,11 +605,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   // D057: the island's own boat after wave 30. boatStatus: GET /api/island/boat of the island on screen (null while
   // it loads); boatGame: the round on screen (pirates/boat/scene.js, loaded on the first sail).
   let boatStatus = null, boatGame = null, boatLoading = false, boatTicket = 0, boatLaunch = 0;
-  const getEconomy = () => target()?.economy ?? null;
-  const sharedBoatApi = createSharedBoatApi({transport: islandTransport, getEconomy,
-    onEconomy: (_economy, origin) => {
-      if (!disposed && sameBoatOrigin(getEconomy(), origin)) void refreshDefended();
-    }});
+  const sharedBoatApi = createSharedBoatApi({transport: islandTransport, getEconomy, onEconomy: refreshEconomy});
   const sharedBoatSession = createBoatRoundSession({api: sharedBoatApi, getEconomy, getActorId, storage});
   const boatBlocked = () => (battle && !waveOver) || flow.busy || (!!flow.current && !waveOver);
   // Dispose directly: normal Close opens the wreck card and would keep captain input blocked.
@@ -840,10 +853,12 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       return;
     }
     if (answer.ok) {
-      tookCoins(answer.data.coins);
+      if (answer.data.receipt?.origin?.mode !== 'island_shared') tookCoins(answer.data.coins);
       clearRecoveryError();
-      // The wave on screen draws the structure whole at once; its replayed repair event confirms it later.
-      if (quote.expectedWindow === 'reserved_wave') emit({type: 'structure_repair_paid', spot: spotId, waveId: quote.expectedWaveId});
+      // Shared HP changes come from the canonical journal, including on historical receipt replay.
+      if (answer.data.receipt?.origin?.mode !== 'island_shared' && quote.expectedWindow === 'reserved_wave') {
+        emit({type: 'structure_repair_paid', spot: spotId, waveId: quote.expectedWaveId});
+      }
     } else {
       await reloadOwn();
       await readStructureRecovery(spotId);
@@ -965,12 +980,16 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   };
   async function reloadVisit() {
     if (!visiting) return;
-    const current = reading('visit'), fresh = await api.visit(visiting.code);
-    if (!disposed && fresh.ok && visiting && current()) { visiting = {...visiting, ...fresh.data, code: islandCode(fresh.data.code)}; noteCampaign(visiting); }
+    const expectedActor = getActorId(), code = visiting.code;
+    const current = reading('visit'), fresh = await api.visit(code);
+    if (!disposed && getActorId() === expectedActor && fresh.ok && visiting?.code === code && current()) {
+      visiting = {...visiting, ...fresh.data, code: islandCode(fresh.data.code)}; noteCampaign(visiting);
+    }
   }
   async function reloadOwn() {
+    const expectedActor = getActorId();
     const current = reading('own'), mine = await api.getIsland();
-    if (disposed) return;
+    if (disposed || getActorId() !== expectedActor) return;
     if (mine.ok) { ownRetry = false; ownMessage = ''; if (current()) setOwnRead(mine.data); } else if (!own) { ownMessage = mine.message; ownRetry = mayPass(mine); }
   }
   // The island being defended, read again: after a friend built or upgraded there (island_changed in
@@ -1556,6 +1575,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     placeName,
     get visiting() { return visiting ? {...visiting} : visitCode ? {code: visitCode} : null; },
     get island() { return own ? structuredClone(own) : null; },
+    get economy() { const value = getEconomy(); return value ? structuredClone(value) : null; },
+    refreshEconomy,
     // T52: your own island's best wave, without copying the island (the tutorials read it every frame).
     get ownWaveBest() { return Number.isSafeInteger(own?.waveBest) ? own.waveBest : null; },
     get flow() { return flow; },

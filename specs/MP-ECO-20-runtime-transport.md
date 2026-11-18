@@ -82,3 +82,35 @@ Capture the verified reward scope with the launching intent before loading the
 scene module; later status refreshes may clear their display snapshot but cannot
 select a different payment path. A live screen without verified status displays
 neutral unavailable rewards and disables sailing until status arrives.
+
+## Arsenal and repair delegation
+
+Pass the same viewed-island context and authenticated actor callbacks to arsenal
+API/controller and the shared repair adapter. A supplied unknown context cannot
+select personal mutation routes; an explicit `personal_legacy`, version 0 context
+retains legacy behavior. Older callers that omit context callbacks keep their
+existing explicitly legacy factory protocol. Fake mode uses that fixture path.
+
+The island API delegates shared repair intents after translating the learned
+server spot alias. Normalize only fresh structure projections on return; the
+common receipt and its original server spot remain immutable. Initial structure
+reads advertise capability. Shared repair success does not project a receipt
+balance into private coins; stale refusals trigger a fresh validated read.
+
+Verified newer shared envelopes request a canonical own/visited-island reread
+using the existing ordered read guards. They do not create a second economy
+store or recursively reread the arsenal from its own read callback.
+Initial loads and these rereads capture the authenticated actor. Visited-island
+rereads also capture their requested code. An answer after an actor or visit
+change is ignored.
+
+The island Harbor opens the shared wager host for a verified shared context and
+the existing personal stalls for explicit legacy context or fake mode. Unknown
+live context cannot choose a personal stall. Other existing explicitly personal
+world stalls keep their established entry. The shared host participates in game
+input/overlay gates, Escape, screen changes and disposal; pending imports are
+owned overlays too. Its context callbacks expose the viewed projection and a
+guarded canonical reread, never a second account store.
+
+Review correctly spelled new shared-economy vocabulary through the existing
+player-copy linter; keep its spelling and other editable-copy gates enabled.

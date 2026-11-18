@@ -50,6 +50,7 @@ import {BRANCH_BY_ID, SPECS, optionsOf} from '../campaign/tech.js';
 import {isRole as isHouseRole} from '../campaign/houses.js';
 import {readRecoverySnapshot} from '../pirates/recovery-snapshot.js';
 import {isParticipantToken} from '../pirates/recovery-policy.js';
+import {createSharedCombatApi} from './shared-combat-api.js';
 
 const DISCOVERY_OPTIONS = Object.freeze({headers: ECONOMY_CAPABILITY_HEADERS});
 
@@ -266,10 +267,17 @@ export function readFailure(result) {
 // No answer, a timeout or a server-side failure: the write may or may not have happened.
 export const outcomeUnknown = failure => !failure.ok && (failure.status === 0 || failure.status >= 500);
 
-export function createIslandApi({transport, makeUid = makeActionUid, waveProtocol = () => 1, now = () => Date.now()} = {}) {
+export function createIslandApi({transport, makeUid = makeActionUid, waveProtocol = () => 1, now = () => Date.now(),
+  getEconomy, getActorId = () => null, onEconomy = () => {}, pendingStore} = {}) {
   if (!transport || typeof transport.get !== 'function' || typeof transport.post !== 'function') {
     throw new TypeError('createIslandApi needs a transport with get and post.');
   }
+  if (getEconomy !== undefined && typeof getEconomy !== 'function') throw new TypeError('getEconomy must be a function.');
+  const sharedCombat = getEconomy ? createSharedCombatApi({transport, getEconomy, getActorId, onEconomy, makeUid, pendingStore}) : null;
+  const context = () => {try {return getEconomy?.() ?? null;} catch {return null;}};
+  const actor = () => {try {return getActorId?.() ?? null;} catch {return null;}};
+  const contextKey = value => JSON.stringify(['mode', 'version', 'islandOwner', 'accountId', 'runEpoch']
+    .map(key => value?.[key] ?? null));
   const held = new Map(); // 'build:cannon_1' or 'start:own' -> the click id of an unknown outcome
   const protocolFor = where => {
     try {
@@ -450,12 +458,30 @@ export function createIslandApi({transport, makeUid = makeActionUid, waveProtoco
     // T55/T56: read canonical HP and quote context, then submit exactly that quote. The server owns
     // all HP, price, quota and wallet decisions; unknown outcomes keep the same click UID for retry.
     structureRecovery({code = null} = {}) {
+      const selected = context(), expectedContext = contextKey(selected), expectedActor = actor();
       const where = code ? displayIslandCode(code) : '';
       if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
-      return ask(() => transport.get(PATHS.structures(where)), isStructureRecovery)
+      if (selected?.mode === 'island_shared') return sharedCombat.structureRecovery({code})
         .then(answer => answer.ok ? {...answer, data: recoverySpots(answer.data)} : answer);
+      return ask(() => transport.get(PATHS.structures(where), DISCOVERY_OPTIONS), isStructureRecovery)
+        .then(answer => {
+          if (!answer.ok) return answer;
+          if (getEconomy && (contextKey(context()) !== expectedContext || actor() !== expectedActor)) {
+            return refuse(409, 'economy_context_required', 'The island or sign-in changed. Read this building again.');
+          }
+          return {...answer, data: recoverySpots(answer.data)};
+        });
     },
     repairStructure({quote, code = null} = {}) {
+      const selected = context();
+      if (getEconomy && selected?.mode === 'island_shared') {
+        return sharedCombat.repairStructure({quote: quote ? {...quote, spot: sent(quote.spot)} : quote})
+          .then(answer => answer.ok && answer.data.currentState
+            ? {...answer, data: {...answer.data, currentState: recoverySpots(answer.data.currentState)}} : answer);
+      }
+      if (getEconomy && (selected?.mode !== 'personal_legacy' || selected.version !== 0)) {
+        return refuse(409, 'economy_context_required', 'Read the current island before confirming this repair.');
+      }
       const where = code ? displayIslandCode(code) : '';
       if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
       if (!quote || !isText(quote.spot) || !isUuid(quote.instanceId) || !isUuid(quote.expectedEpoch)

@@ -11,24 +11,32 @@ import {createFakeIslandTransport} from '../../src/pirates/fake-api.js';
 const INFO = {waveId: 'return-wave', wave: 2, seed: 77, startsAt: '2026-11-17T12:00:00Z',
   weather: {kind: 'calm'}, flagship: false};
 const islands = [];
-afterEach(() => { for (const island of islands.splice(0)) island.dispose(); });
-function harness() {
-  const listeners = new Map(), base = createFakeIslandTransport(), coins = [], holds = new Map();
+afterEach(() => { for (const island of islands.splice(0)) island.dispose(); vi.unstubAllGlobals(); });
+function harness({getActorId = () => null} = {}) {
+  const listeners = new Map(), base = createFakeIslandTransport(), coins = [], holds = new Map(), posts = [];
+  const legacyRead = base.get;
+  // This harness declares legacy accounting; missing context must not authorize private updates.
+  base.get = async path => {
+    const answer = await legacyRead(path);
+    return answer.ok && (path === '/api/island' || path.startsWith('/api/island/visit/'))
+      ? {...answer, data: {...answer.data, economy: {mode: 'personal_legacy', version: 0}}} : answer;
+  };
   let readWave = () => Promise.resolve({ok: true, data: INFO}), failIsland = false, failVisit = false;
   const on = (name, fn) => {
     if (!listeners.has(name)) listeners.set(name, new Set());
     listeners.get(name).add(fn); return () => listeners.get(name).delete(fn);
   };
   const emit = event => { for (const fn of listeners.get(event.type) ?? []) fn(event); };
-  const island = createIsland({container: {}, emit, on, storage: null, visitStorage: null,
+  const island = createIsland({container: {}, emit, on, storage: null, visitStorage: null, getActorId,
     transport: {...base, get: path => holds.get(path.split('?')[0])?.(path)
       ?? (path.startsWith('/api/waves/current?') ? readWave()
       : path.startsWith('/api/island/visit/') && failVisit ? {ok: false, status: 404, code: 'no_such_island'}
-      : path === '/api/island' && failIsland ? {ok: false, status: 503, code: 'unavailable'} : base.get(path))},
+      : path === '/api/island' && failIsland ? {ok: false, status: 503, code: 'unavailable'} : base.get(path)),
+      post: (path, body, ...options) => {posts.push({path, body}); return base.post(path, body, ...options);}},
     onCoins: value => coins.push(value), menu: () => () => {}, settings: () => () => {}});
   islands.push(island);
   return {island, travel: () => emit({type: 'travel', to: 'saltreach_harbor'}), failIsland: () => { failIsland = true; },
-    failVisit: () => { failVisit = true; }, coins, emit,
+    failVisit: () => { failVisit = true; }, coins, emit, posts,
     // Holds the next GET of this path (any query); resolve(edit) answers it with edit(the fake's answer).
     hold(prefix) {
       let resolve, started;
@@ -50,6 +58,59 @@ function harness() {
 }
 
 describe('actual returned-island current-wave authority', () => {
+  it.each(['own', 'visit'])('ignores an initial %s load answered after an actor change', async place => {
+    let actor = '11111111-1111-4111-8111-111111111111';
+    const h = harness({getActorId: () => actor});
+    const path = place === 'visit' ? '/api/island/visit/ISLE-FR3ND' : '/api/island';
+    if (place === 'visit') h.island.visit('ISLE-FR3ND');
+    const reply = h.hold(path), loading = h.island.load();
+    await reply.asked;
+    actor = '44444444-4444-4444-8444-444444444444';
+    reply.resolve(answer => ({...answer, data: {...answer.data, economy: {
+      mode: 'island_shared', version: 1, islandOwner: '11111111-1111-4111-8111-111111111111',
+      accountId: '22222222-2222-4222-8222-222222222222', runEpoch: '33333333-3333-4333-8333-333333333333',
+      revision: '1', treasury: {balanceCoins: '100', committedCoins: '0', availableCoins: '100'},
+    }}}));
+    await loading;
+    expect(h.island.economy).toBeNull();
+    expect(h.island.island).toBeNull();
+  });
+  it.each(['own', 'visit'])('ignores a %s treasury reread answered after an actor change', async place => {
+    let actor = '11111111-1111-4111-8111-111111111111';
+    const economy = {mode: 'island_shared', version: 1, islandOwner: actor,
+      accountId: '22222222-2222-4222-8222-222222222222', runEpoch: '33333333-3333-4333-8333-333333333333',
+      revision: '1', treasury: {balanceCoins: '100', committedCoins: '0', availableCoins: '100'}};
+    const h = harness({getActorId: () => actor});
+    const path = place === 'visit' ? '/api/island/visit/ISLE-FR3ND' : '/api/island';
+    if (place === 'visit') h.island.visit('ISLE-FR3ND');
+    const initial = h.hold(path), loading = h.island.load();
+    initial.resolve(answer => ({...answer, data: {...answer.data, economy}}));
+    await loading;
+    expect(h.island.economy.revision).toBe('1');
+    const reply = h.hold(path), newer = {...economy, revision: '2'};
+    h.island.refreshEconomy(newer, economy);
+    await reply.asked;
+    actor = '44444444-4444-4444-8444-444444444444';
+    reply.resolve(answer => ({...answer, data: {...answer.data, economy: newer}}));
+    await new Promise(resolve => setTimeout(resolve, 0));
+    expect(h.island.economy.revision).toBe('1');
+  });
+  it('does not spend the own shared treasury while a different visit is unresolved', async () => {
+    const actor = '11111111-1111-4111-8111-111111111111', saved = new Map();
+    vi.stubGlobal('sessionStorage', {getItem: key => saved.get(key) ?? null,
+      setItem: (key, value) => saved.set(key, value), removeItem: key => saved.delete(key)});
+    const h = harness({getActorId: () => actor}), own = h.hold('/api/island'), loading = h.island.load();
+    own.resolve(answer => ({...answer, data: {...answer.data, economy: {
+      mode: 'island_shared', version: 1, islandOwner: actor,
+      accountId: '22222222-2222-4222-8222-222222222222', runEpoch: '33333333-3333-4333-8333-333333333333',
+      revision: '1', treasury: {balanceCoins: '100', committedCoins: '0', availableCoins: '100'},
+    }}}));
+    await loading;
+    expect(h.island.visit('ISLE-FR3ND')).toBe(true);
+    h.island.arsenal.handlers.buy('pistols');
+    await vi.waitFor(() => expect(h.island.arsenal.answer).toBeNull());
+    expect(h.posts.filter(request => request.path === '/api/island/arsenal/buy')).toEqual([]);
+  });
   it('clears proof on travel and authorizes the new context only after a successful same-target server read', async () => {
     const h = harness(); await h.island.load();
     const before = h.island.coreContext;
