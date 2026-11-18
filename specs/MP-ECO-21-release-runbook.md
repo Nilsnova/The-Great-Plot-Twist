@@ -11,7 +11,7 @@
 - **Prerequisites:** MP-ECO-20 integrated acceptance, its MP-ECO-01–19/22 dependencies and the separately authorized release action. Source inspection and isolated foundation tests are not that acceptance.
 - **Related procedures:** [release checklist](../docs/RELEASE-CHECKLIST.md), [reliability runbook](../docs/RUNBOOK.md), [database procedure](../supabase/README.md#apply-before-you-merge), [engineering checks](../docs/ENGINEERING.md#3-commands) and [agreed economy rules](../docs/DECISIONS.md#shared-island-economy-2026-11-18).
 
-This package grants no permission to publish a branch, deploy, apply a live migration, change live configuration, collect player data or admit an island. Existing release-document standing authorization does not extend this preparation task. A different human reviewer must approve the exact candidate, and the actual operation requires its own authorization.
+A different human reviewer must approve the exact release candidate, and each operational action requires explicit authorization. This runbook does not itself authorize deployment, live migration application, live configuration changes, player-data collection or island admission.
 
 ## Release record and hard stop conditions
 
