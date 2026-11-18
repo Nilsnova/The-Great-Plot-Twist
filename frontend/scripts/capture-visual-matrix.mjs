@@ -13,10 +13,13 @@ assert.ok(process.argv[2] && process.argv[3], 'Pass the candidate frontend and o
 const root = resolve(process.argv[2]), out = resolve(process.argv[3]);
 const git = name => execFileSync('git',['rev-parse',name],{cwd:root,encoding:'utf8'}).trim();
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
-const source = git('HEAD'), cache = await mkdtemp(join(tmpdir(),'vis56-matrix-'));
+const source = git('HEAD');
 const helpers = ['capture-visual-matrix.mjs','visual-matrix-fixture.js','visual-matrix-cases.js'];
 const helperHashes = Object.fromEntries(await Promise.all(helpers.map(async name => [name,hash(await readFile(join(root,'scripts',name)))])));
-const report = {source,frontendTree:git('HEAD:frontend/src'),publicTree:git('HEAD:frontend/public'),helperHashes,
+const executedHelperSha256 = hash(await readFile(new URL(import.meta.url)));
+assert.equal(executedHelperSha256,helperHashes['capture-visual-matrix.mjs'],'executed capture helper must match the supplied candidate');
+const cache = await mkdtemp(join(tmpdir(),'vis56-matrix-'));
+const report = {source,frontendTree:git('HEAD:frontend/src'),publicTree:git('HEAD:frontend/public'),helperHashes,executedHelperSha256,
   scope:'Developer-only compiled-art and wall-rendering fixtures, not actual gameplay or payment evidence.',started:new Date().toISOString(),checks:[]};
 let server,browser,activePage; await mkdir(out,{recursive:true});
 try {
