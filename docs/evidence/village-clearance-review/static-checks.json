@@ -213,7 +213,7 @@
     ],
     "reason": "preserve exact raw reporter bytes"
   },
-  "nativeComparisonPage": "not run; static page only, no browser launched by documentation writer",
+  "nativeComparisonPage": "coordinator native page check passed4.17s; documentation writer ran static checks only",
   "applicationChecks": "not run by documentation writer; coordinator originals copied after completion",
   "links": [
     {
