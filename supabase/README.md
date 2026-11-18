@@ -3360,7 +3360,7 @@ server/tests/island_sql/test_revive_reconciliation_sql.py` from `backend/`.
 
 ## Shared island treasury foundation (MP-ECO-02)
 
-`20261118050000_island_treasury.sql` and `20261118050100_island_treasury_functions.sql` add exact
+`20261118050050_island_treasury.sql` and `20261118050100_island_treasury_functions.sql` add exact
 island/run accounts and atomic financial primitives. They create no admission rows or automatic
 balance conversion. Existing personal wallets, ledger and HTTP routes remain unchanged. See
 [the interface contract](../docs/INTERFACES.md#shared-island-treasury-foundation-mp-eco-02)
