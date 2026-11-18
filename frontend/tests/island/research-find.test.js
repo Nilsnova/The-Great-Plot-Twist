@@ -90,11 +90,20 @@ it.each([
 
     await find.focus();
     await page.evaluate(() => window.__island.island.refreshDefended());
-    expect(await find.evaluate(element => document.activeElement === element)).toBe(true);
-    expect(await picker.inputValue()).toBe('cannon_8');
-    expect((await find.boundingBox()).height).toBeGreaterThanOrEqual(44);
-    expect((await picker.boundingBox()).height).toBeGreaterThanOrEqual(44);
-    expect(await tech.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
+    // A concurrent island refresh can replace a control between resolving a locator and reading its box.
+    const afterRefresh = await tech.evaluate(panel => {
+      const button = panel.querySelector('[data-focus="tech-find-defense"]');
+      const select = panel.querySelector('[data-focus="tech-find-choice"]');
+      return {
+        focused: document.activeElement === button, selected: select?.value,
+        buttonHeight: button?.getBoundingClientRect().height ?? 0,
+        selectHeight: select?.getBoundingClientRect().height ?? 0,
+        fits: panel.scrollWidth <= panel.clientWidth,
+      };
+    });
+    expect(afterRefresh).toMatchObject({focused: true, selected: 'cannon_8', fits: true});
+    expect(afterRefresh.buttonHeight).toBeGreaterThanOrEqual(44);
+    expect(afterRefresh.selectHeight).toBeGreaterThanOrEqual(44);
     await take('tech');
     await press(find);
 
