@@ -180,7 +180,7 @@ Collected from the sprint's PR bodies and decisions; none blocks a flag that is 
 
 | Follow-up | Where it comes from | Notes |
 |---|---|---|
-| **Split `frontend/src/pirates/sim.js`** | PR bodies (#52 added the tower, pathing and rescue wiring) | The file is about 1,570 lines. Split it into modules without changing any seed's outcome; the determinism tests are the guard. |
+| **Split `frontend/src/pirates/sim.js`** | PR bodies (#52 added the tower, pathing and rescue wiring) | ✅ Done on `refactor/split` (18 Nov): `sim.js` and its parts `sim-*.js`, guarded by `tests/pirates/sim-fingerprint.test.js` ([SIMPLIFICATION-PLAN.md](SIMPLIFICATION-PLAN.md#file-splits-refactorsplit-18-nov-2026)). |
 | **Wall record race ([D039](DECISIONS.md))** | D039 "Known, low impact" | The finish reads the walls' start health in Python before `island_walls_record()` runs, so a paid restore landing between that read and the first finish's record could be overwritten. Rare and bounded (play money, 10-minute timer). |
 | **Structure health** | [D049](DECISIONS.md), PR #52 | D039/D049 describe the earlier baseline. Current main restores walls/towers fully at canonical wave end; the current all-structure contract is [D059](DECISIONS.md#d059--shared-gradual-hp-recovery-and-paid-instant-repair--2026-11-16), with core implementation merged via #203 and remaining follow-ups in [T54–T60](#11-unified-defense-recovery--unassigned-follow-ups-16-nov) and the [T33 recovery spec](../specs/T33-persistent-tower-damage.md); it is not live. |
 | **Towers as path obstacles** | [T34/T35 spec](../specs/T34-T35-targeting-pathing.md), PR #52 | Only walls are cells of the path grid (`boarder-paths.js`); a tower does not shape the route. |
