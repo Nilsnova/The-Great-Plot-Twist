@@ -9,7 +9,7 @@ from uuid import UUID
 import pytest
 from pydantic import ValidationError
 
-from server.island.catalogue import catalogue_for_flags, load_island
+from server.island.catalogue import load_island, runtime_catalogue
 from server.island.structure_repair import kind_for_instance
 from server.island.structure_repair_models import RepairRequest, RepairResponse
 from server.island.structure_repair_rules import (
@@ -33,7 +33,7 @@ from server.island.structure_repair_rules import (
     ],
 )
 def test_all_repair_prices_are_catalogue_increments_for_the_current_base_level(kind, expected):
-    catalogue = catalogue_for_flags(load_island(), {"defenses_v2": True})
+    catalogue = runtime_catalogue(load_island())
 
     assert [repair_price(catalogue, kind, level) for level in range(1, 6)] == expected
 
@@ -45,7 +45,7 @@ def test_wave_repair_uses_the_price_schedule_frozen_in_its_snapshot():
 
 
 def test_saved_culverin_repair_keeps_its_price_when_defenses_flag_is_off():
-    catalogue = catalogue_for_flags(load_island(), {})
+    catalogue = runtime_catalogue(load_island())
 
     assert repair_price(catalogue, "culverin", 4) == 640
     assert catalogue_price_schedule(catalogue)["culverin"] == [80, 160, 320, 640, 1280]

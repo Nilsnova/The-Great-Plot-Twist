@@ -27,27 +27,25 @@ FLAG_NAMES = (
     "festival",
     "demo",
     "islands",
-    "rescue",  # T38 last-chance rescue (D044): the finish honours rescued; a wave rule for the sim
-    # D039 (proposed): wall damage stays after a wave, paid Repair/Rebuild between waves.
-    # Needs supabase/migrations/20261114100000_wall_recovery.sql applied first.
+    "rescue",  # T38 last-chance rescue (D044), a wave rule. Retired: always on
+    # D039: wall damage stays after a wave, paid Repair/Rebuild between waves. Retired: always on.
     "wall_recovery",
-    "placement",  # T36 flexible placement: needs migration 20261114110000_island_layout.sql
-    # T43 (D048, proposed): the second wave of defenses, starting with the culverin. Keep it off
-    # until its sim wiring and its migration are merged (specs/T43-new-defenses.md).
+    "placement",  # T36 flexible placement: retired, always on (the name is still accepted)
+    # T43 (D048): the second wave of defenses, starting with the culverin. Retired: always on.
     "defenses_v2",
     # T40/T41 (D042): the shared island arsenal. Off: the old personal weapon shop, as before.
     "arsenal",
-    # T33 (D049, proposed): towers have hp, break and are repaired in a wave (a wave rule).
+    # T33 (D049): towers have hp in a wave (a wave rule). Retired: always on (wave_rules.ALWAYS_ON).
     "tower_health",
-    # T34/T35 (D040, proposed): boarders walk round or through the real walls (a wave rule).
+    # T34/T35 (D040): boarders walk round or through real walls (a wave rule). Retired: always on.
     "pathing",
-    # T35 combat towers block boarders; requires both pathing and tower_health.
+    # T35 combat towers block boarders (a wave rule). Retired: always on.
     "tower_obstacles",
     # T50: ships at anchor fire at a real wall, tower or the heart and their hits count (a wave
-    # rule). Needs supabase/migrations/20261116160000_ship_fire_rule.sql applied first.
+    # rule). Retired: always on.
     "ship_fire",
     # D060: extra tower spots that open with progress (cannon_8..cannon_11 after waves 10, 20, 30
-    # and 40). Needs supabase/migrations/20261117010000_more_tower_spots.sql applied first.
+    # and 40). Retired: always on.
     "more_tower_spots",
     # T55/T54: protocol-2 persistent structure HP and recovery state. Keep off until separately
     # reviewed and authorized for activation; adding the registry entry does not enable it.

@@ -1,4 +1,4 @@
-# Simplification plan (refactor/slim and refactor/slim-2, 18 Nov 2026)
+# Simplification plan (refactor/slim, refactor/slim-2, refactor/split and refactor/slim-3, 18 Nov 2026)
 
 > **What this file is:** the measured, ranked list of ways to make the client lighter and the code base smaller without changing what players see or do, and which of them the `refactor/slim` pass did.
 >
@@ -45,7 +45,7 @@ Effort and risk: S/M/L. "Done" means committed on `refactor/slim` (items 1–7) 
 | 13 | Unreferenced backend routes: `POST /board/pair`, `/board/pin`, `/crews/me/start`, `/crews/me/orders`, `/finale/*`, `/intro/complete` appear in no client file (case/festival/bulletin/predictions routes are flag-OFF features and were left). Confirm with INTERFACES.md owners before deleting; the routes, services and tests are several hundred lines | several hundred lines | M | no |
 | 14 | Test-only backend modules: `island/structure_health.py` (51 lines; the real math is in SQL), `adapters/example.py` (a teaching example), `game/case_lint.py` (case is OFF). Keep or delete by owner decision | ~270 lines | S | no |
 | 15 | Small duplicates left: the `[5000, 15000, 30000]` back-off in `online/adapter/schedule.js` and `read-monitor.js`; three `Retry-After` readers (`online/api.js`, `screens/market/http.js`, `screens/sports/http.js`) that differ on `0`; `coinsText` in `screens/islet/labels.js` and `view.js`; the kit `button` helper copied in the boat and finisher scenes | ~20 lines | S (the Retry-After readers need one agreed rule for `0`) | no |
-| 16 | File splits: `pirates/sim.js` 1,866 lines, `pirates/controller.js` 1,675, `island/index.js` 1,469 (`pirates/fake-api.js` 1,265, `pirates/render.js` 1,230 not yet) | readability, no size change | L | refactor/split: the first three, see below |
+| 16 | File splits: `pirates/sim.js` 1,866 lines, `pirates/controller.js` 1,675, `island/index.js` 1,469, `pirates/fake-api.js` 1,237, `pirates/render.js` 1,312 | readability, no size change | L | refactor/split: the first three; refactor/slim-3: the last two (see below) |
 
 ### Bug noticed, fixed on slim-2
 
@@ -58,6 +58,8 @@ With the flag `arsenal` on (as in production), `island/index.js` `load()` can dr
 Fixed on `fix/arsenal-rejoin`: the arsenal's coins merge into `own` (coins only, with a check that a newer island read or write did not answer meanwhile), and `load()` compares which island is shown (visit or own, and its code) rather than the object, so any fresh read of the same island during the landing (a crewmate's change through `refreshDefended`, a won wave's reread) keeps the proof too. Structures, research and walls reads do not replace the island object. A smoke run found one more instance of a stale parallel read on main: the wave wiring's landing join read the current wave while `load()` did, `load()`'s read made it stale and nothing joined after a reload; it now answers `busy` and is retried. Tests for each case are in `tests/island/core-rejoin-load.test.js` (its harness now runs with the arsenal on).
 
 ## Always-on flags: what deleting the OFF branch would remove
+
+**Done on `refactor/slim-3` (below):** `placement`, `tower_health`, `pathing`, `tower_obstacles`, `ship_fire`, `rescue`, `defenses_v2`, `more_tower_spots` and `wall_recovery` are retired. The table is the estimate made before that pass; the measured fallout was much smaller than "rewrite the tests" (the test worlds and the fake had moved on since).
 
 Estimates from reading every flag check (backend `is_enabled`/`flags.get`, client `flags?.x`, `fake-api.js`, `game.js` gates). "Tests" counts the test files that build a world with the flag off and assert the off behaviour.
 
@@ -122,4 +124,51 @@ Keeping the branch current: main changed all three files while this branch was o
 **Cost.** The minifier cannot shorten property names, so `sim.ticks`, `isl.own` and the parts' name lists add bytes: all built JS 2,141,538 → 2,163,629 B (+22,091, +1.0 %); `captain-stats` (the sim) 82,534 → 86,636 B (29,466 → 31,193 gzip), `pirates` 77,248 → 81,404 B (25,917 → 27,201 gzip), `island` 180,803 → 194,631 B (62,952 → 65,598 gzip). Title JS unchanged (19,011 B); 195 JS files before and after (no new chunk). Not measured: runtime cost of the property reads (expected negligible). After the merge of main a195ec35 (whose own features also grew these chunks): all built JS 2,220,995 B in 196 files; `captain-stats` 87,754 B, `pirates` 90,071 B, `island` 207,854 B; the budget check passes.
 
 **Not done.** `fake-api.js` and `render.js`. In the island, the start-up block (`index.js`, ~170 lines of subscriptions and UI wiring) stays one piece: its statements must keep their order. Shrinking the parts' shared objects back into local variables (to win the bytes back) would need each part to own its state, which is a design change, not a move.
+
+## Third pass (refactor/slim-3, 18 Nov 2026, from main f606412f)
+
+Owner's goal: a simpler code base and a smooth, light game; no behaviour or visual change. Two pure-move file splits and nine always-on flags retired, one commit each.
+
+### The last two file splits
+
+**`pirates/render.js` (1,312 lines)** → `render.js` 382 (createWaveRenderer: layers, posts, pools, one frame's `draw()`, the returned API, the public exports) + `render-sprites.js` 301 (the atlas's frames, `packAtlas`/`loadAtlas`, the instanced sprite layer and its shaders, pools, colours, reused option objects, look tables; module level, no renderer state) + `render-draw.js` 432 (ships, boarders, militia, the fallen, every shot in flight and its burst, burning ground, tracers, the cutlass sweep, landings, the captains' rings and hp bars) + `render-events.js` 269 (`onEvent`). Unlike the earlier splits there is no shared-state object: the parts get the layers and pools as positional arguments and keep a copy of the six values `update()` changes (clock, sim time, latest state, captain, revive, figures), which `update()` hands them right after it sets them (`sync`). A first version with a shared object (`ren.clock`, destructured names) grew the render chunk by 5.9 % (minifiers cannot shorten property names); this one costs 2.0 % (45,565 → 46,485 B; gzip 17,059 → 17,753). Every original line is in exactly one new file; only import lines changed.
+
+Proof: a local harness (not committed) ran waves 1–60 under three rule sets (none, production, production + structure recovery; 181 runs, 199,004 frames) with scripted captains through the real sim and renderer, both atlases (pixel and a full cartoon id set), reduced motion, low quality, recovery bars, character scale, beam, `setDefenses`, `setVisible`, and hashed every instance buffer (up to `instanceCount`), visibility, render order, uniform and pixel-effect call each frame: identical before and after (a one-constant change in the draw part changes 180 of the 181 hashes). The render, art (`test:art`) and pixel tests pass.
+
+**`pirates/fake-api.js` (1,237 lines)** → `fake-api.js` 314 (the transport, the shared world of several tabs, the public exports) + `fake-rules.js` 170 (rules, prices, views, loot, `FakeApiError`, `createFakeWorld`) + `fake-server.js` 332 (`createFakeIslandApi`: the setup every route shares, the island answer, the arsenal, `fetch()`) + `fake-island.js` 162 (build/upgrade, wreck, boat, demolish, fresh start, move, walls, Pirate Point) + `fake-research.js` 157 (crew, captain, skills, roles, respec, research, tower specs and trees) + `fake-waves.js` 183 (invite, games, visits, waves, weather). The route groups are closures over `srv` (the setup) and are merged into the same `api` object. Pure move, line-presence and free-name checks as before. The fake stays in its own lazy chunk (53,027 → 53,504 B; game, island and every other chunk unchanged by it). Proof: the 47 test files that use the fake, the full suite, and the browser checks that use it (`test:walls`, `test:rules`, `test:recovery:component`, `test:rescue`, `test:mp` pass, the last one on a clean copy of the commit after a first run under heavy load timed out; `test:placement`, `test:arsenal` and `test:culverin` fail at set-up exactly as on main f606412f: a tutorial card covers the lobby the scripts wait for).
+
+### Always-on flags retired
+
+Each flag's name stays in the backend `FLAG_NAMES` (production `FEATURE_FLAGS` lists it; unknown names raise) and changes nothing. No SQL changed.
+
+| Flag | What went | Lines (+/−) |
+|---|---|---|
+| `placement` | the catalogue switch and its wiring, the `feature_off` move refusal, "the layout table is never read"; 2 flag-off tests | +13 / −60 |
+| `tower_health` | new waves always carry the rule (server `wave_rules.ALWAYS_ON`, the fake's list); the rule tests restated as "always on + flagged" | +106 / −73 |
+| `pathing` | the same, one line each | +3 / −3 |
+| `tower_obstacles` | the same; its "only with pathing and tower_health" guard can no longer drop it and is gone (server and fake), with its 2 OFF-only tests | +8 / −39 |
+| `ship_fire` | the same, one line each | +3 / −3 |
+| `rescue` | the rule, and the finish always honours a won rescue (both finish paths, the fake); the flag-off tests | +25 / −44 |
+| `defenses_v2` | the culverin is always in the catalogue; the route's special case for it; the client's `defensesV2On` switch, the build card's `flags`, the tutorial card's flag; the fake's culverin switch, rule toggles, `ALWAYS_ON_RULES` and `dev.setFlag` (every fake rule is now always on); flag-off tests and browser-check scenarios | +133 / −363 |
+| `more_tower_spots` | the four extra spots always join (server, fake); `catalogue_for_flags` reads no flag any more and is `runtime_catalogue`; the tutorial cards' flag and game.js's probe for it | +71 / −111 |
+| `wall_recovery` | the wall routes' `feature_off`, the wave answers' and finish's flag checks, the upgrade's wall check guard (all now as in production); the client's `wallRecovery` switch; the fake's switch | +43 / −87 |
+
+Wave rules stay frozen per wave (`wave_rules_keep`), and the sim keeps every rule's on and off path, so a wave stored without a rule replays as before; the determinism fingerprint (`tests/pirates/sim-fingerprint.test.js`, 279 scenarios incl. "every rule off") is unchanged. Skipped: none of the nine. Kept on purpose: the recovery-v1 helpers that add gated kinds and plots to a catalogue without them (`catalogue_for_existing_structures`, `catalogue_for_demolition`; they now only matter if `defenses_v2.json` is broken, and belong to structure recovery), the tutorial cards' generic `flag` field (no card uses it now), and the browser scripts' `fakeflags=` lists (ignored).
+
+Two behaviour notes, both production behaviour already: an outsider's upgrade meets the wall check first and is refused with the visit rule's message (as with `wall_recovery` on); every fake wave answer now carries all six rules and `walls`.
+
+### Results of this pass
+
+| Measure | Before (main f606412f) | After |
+|---|---|---|
+| Frontend `src` js lines | 48,378 | 48,486 (+108: the splits +153, the flags −45) |
+| Frontend tests js lines | 53,645 | 53,587 |
+| Backend `server` (non-test) / tests py lines | 41,298 / 86,319 | 41,249 / 86,196 |
+| All built JS | 2,220,995 B | 2,221,640 B (+645) |
+| `render` chunk | 45,565 B (17,059 gzip) | 46,485 B (17,753 gzip), +2.0 % |
+| `fake-api` chunk (lazy) | 53,027 B | 53,504 B |
+| `game` / `island` chunks | 450,073 / 207,854 B | 449,720 / 207,574 B |
+| Title JS / CSS | 19,011 / 9,248 B | unchanged; 191 JS files before and after |
+
+Checks at the end: frontend 4,981/4,982 (only `shortcuts-loading`, env-only); build and budget; `test:walls`, `test:rules`, `test:recovery:component`, `test:overlaps`, `test:art`, `test:rescue` (scenario C, a tab closed mid-haul, flaked once and passed on the rerun; it also passes on main with the production rules) and `test:mp` pass; backend ruff and pytest 12,698 passed. A production-flags smoke through the fake API reached title → island → a wave with all six rules and `walls` → won, no page errors. The browser checks' flag-off scenarios and mid-wave flag switches were deleted with their flags; `test:rescue` and `test:rules` now expect the full rule set.
 
