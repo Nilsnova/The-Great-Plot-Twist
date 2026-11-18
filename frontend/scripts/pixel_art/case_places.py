@@ -130,15 +130,58 @@ def reef():
     return im
 
 def salvage():
-    im,d=canvas(144,112);shadow(d,72,99,65,7)
-    poly(d,[(8,64),(116,52),(136,83),(121,99),(24,99),(13,89)],'#69533c',INK)
-    for y in range(63,96,7):d.line((20,y,119,y-5),fill='#ab8b5a');d.line((24,y+2,121,y-3),fill='#4b4d37')
-    poly(d,[(21,58),(35,29),(92,26),(110,54)],'#425b4a',INK)
-    for x in range(32,100,13):d.line((x,34,x+4,57),fill='#7f8f65',width=2)
-    d.rectangle((46,45,87,76),fill=INK);d.rectangle((49,48,84,74),fill='#806746')
-    d.line((49,49,83,73),fill='#b69c6a',width=2);d.line((82,49,50,73),fill='#b69c6a',width=2)
-    for x,y in [(13,80),(106,79)]:d.rectangle((x,y,x+20,y+18),fill=INK);d.rectangle((x+2,y+2,x+18,y+16),fill='#8b714e');d.line((x+3,y+3,x+17,y+15),fill='#b39a67')
-    d.line((70,21,70,47),fill=INK,width=2);poly(d,[(71,22),(86,27),(71,33)],'#b38b5b')
+    im,d=canvas(144,112)
+    shadow(d,72,99,65,7)
+    # A cut-down hull forms the workshop floor. Its dark ribs stay visible along the nearest lip.
+    poly(d, [(8,64),(112,53),(129,65),(136,82),(120,98),(97,101),(29,100),(15,92)], '#705537', INK)
+    poly(d, [(14,66),(112,56),(127,67),(132,80),(118,91),(92,94),(24,93),(17,86)], '#9c7548')
+    poly(d, [(24,91),(93,92),(119,88),(132,79),(130,87),(119,96),(94,99),(29,98)], '#514f3b')
+    for x,y,x2,y2 in [(16,70,123,62),(18,77,127,69),(20,84,129,77),(26,91,121,85),(35,96,113,93)]:
+        d.line((x,y,x2,y2),fill='#674d34',width=2)
+        d.line((x+3,y-2,x2-3,y2-2),fill='#b28d57')
+    for x,y in [(25,82),(42,86),(63,81),(82,85),(105,82),(118,75)]:
+        d.line((x,y-4,x+2,y),fill='#655237')
+    d.line((30,100,94,101,119,98),fill='#3f4836')
+
+    # The low green shed opens onto the deck, with a deeper right gable and braced uprights.
+    poly(d, [(25,58),(71,50),(92,56),(91,81),(71,86),(26,83)], '#493c2b', INK)
+    poly(d, [(31,61),(71,56),(77,62),(75,79),(32,80)], '#3b4436')
+    poly(d, [(76,54),(91,58),(91,79),(77,84)], '#725c3d')
+    d.rectangle((26,54,30,83),fill='#a18250')
+    d.rectangle((66,54,70,84),fill='#896c43')
+    d.line((27,81,27,62,39,57),fill='#bb9863',width=2)
+    d.line((68,60,57,58),fill='#a98b57',width=2)
+    d.line((81,64,89,61),fill='#9a784d')
+    d.line((81,69,89,66),fill='#9a784d')
+    poly(d, [(19,59),(32,31),(72,26),(93,43),(98,56),(85,62),(25,64)], '#4b6651', INK)
+    poly(d, [(33,32),(72,27),(85,59),(22,62)], '#567454')
+    poly(d, [(71,27),(92,43),(97,55),(85,59)], '#3d584c')
+    for x,y in [(33,54),(44,53),(55,52),(67,51),(39,44),(52,42),(63,41),(47,34),(59,32)]:
+        d.line((x,y,x+7,y-1),fill='#859265',width=2)
+        d.line((x+7,y+1,x+9,y+4),fill='#435e4b')
+    d.line((24,62,84,59,96,55),fill='#829273',width=2)
+    d.line((28,65,85,62),fill='#444b35',width=2)
+
+    # A timber lifting frame and loose tackle make the yard read from the path.
+    poly(d, [(97,81),(106,22),(111,21),(115,24),(108,80)], '#927047', INK)
+    poly(d, [(110,28),(113,28),(125,84),(119,88)], '#624b34', INK)
+    poly(d, [(89,25),(109,21),(117,25),(116,30),(90,33)], '#9c794d', INK)
+    d.line((91,27,108,23,115,26),fill='#be9b60')
+    d.line((109,34,102,77),fill='#c09759')
+    d.line((111,39,123,78),fill='#9a774a')
+    d.ellipse((92,28,98,34),fill='#61563e',outline=INK)
+    d.line((95,34,95,65,98,68,101,65),fill='#c0a26b',width=2)
+    d.line((108,43,117,70),fill='#8e7549',width=2)
+    poly(d, [(112,25),(126,29),(123,33),(127,37),(113,36)], '#ab754f', INK)
+    d.line((113,26,125,29),fill='#c28a57')
+
+    for x,y,w,h in [(18,83,17,14),(81,83,18,13),(110,83,15,11)]:
+        d.rectangle((x,y,x+w,y+h),fill=INK)
+        d.rectangle((x+1,y+1,x+w-1,y+h-2),fill='#886b42')
+        d.line((x+2,y+2,x+w-2,y+2),fill='#bd9964')
+        d.line((x+3,y+3,x+w-3,y+h-3),fill='#ad8955')
+    d.arc((43,77,55,86),190,540,fill='#bba271',width=2)
+    d.arc((45,79,53,86),10,330,fill='#746448')
     return im
 
 def fog():

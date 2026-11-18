@@ -7,7 +7,7 @@ def window(d,x,y,w=12,h=15,bars=False):
     for xx in range(x+4,x+w,4 if bars else w):d.line((xx,y+1,xx,y+h-1),fill=INK if bars else '#b4ab79')
     d.line((x-1,y+h+1,x+w+1,y+h+1),fill='#786b4b')
 def house(kind):
-    w,h={'jail':(112,112),'market-hall':(144,128),'prediction-kiosk':(80,96),'sports-pavilion':(144,128),'cabin':(96,96),'workshop':(112,112)}[kind]
+    w,h={'jail':(112,112),'prediction-kiosk':(80,96),'sports-pavilion':(144,128),'cabin':(96,96),'workshop':(112,112)}[kind]
     im,d=canvas(w,h);cx=w//2;bottom=h-12;roof=h//2;left=15;right=w-16
     shadow(d,cx,bottom+1,cx-8,6)
     stone=kind=='jail';wall='#9d9e7f' if stone else '#b5a578'
@@ -15,7 +15,7 @@ def house(kind):
     d.rectangle((right-9,roof+1,right-3,bottom-3),fill='#8c8965')
     for y in range(roof+5,bottom-2,8):
         for x in range(left+5+(y%3)*6,right-9,19):d.line((x,y,x+8,y),fill='#7c8368' if stone else '#c8b68a')
-    color='#56644a' if kind in ['market-hall','sports-pavilion'] else '#925f47'
+    color='#56644a' if kind=='sports-pavilion' else '#925f47'
     poly(d,[(7,roof),(23,24),(w-25,24),(w-8,roof),(w-12,roof+5),(11,roof+5)],color,INK)
     for y in range(28,roof,5):
         inset=(roof-y)//2+9;d.line((inset,y,w-inset-2,y),fill='#7d8c5c' if color=='#56644a' else '#b77f54')
@@ -27,10 +27,6 @@ def house(kind):
     for x in [left+6,right-20]:window(d,x,bottom-32,bars=stone)
     if kind=='jail':
         d.rectangle((cx-16,roof+8,cx+16,roof+14),fill='#586b59');d.line((cx-12,roof+10,cx+12,roof+10),fill='#a7b296')
-    if kind=='market-hall':
-        for x in range(18,w-20,12):d.rectangle((x,roof+8,x+10,roof+20),fill='#b7ba8c' if x%24 else '#668b74')
-        d.line((18,roof+21,w-20,roof+21),fill=INK)
-        for x in [20,w-39]:d.rectangle((x,bottom-7,x+16,bottom),fill='#6e7048');d.rectangle((x+2,bottom-10,x+5,bottom-7),fill='#c0835b')
     if kind=='prediction-kiosk':
         d.rectangle((18,roof+8,w-19,bottom-13),fill=INK);d.rectangle((21,roof+11,w-22,bottom-16),fill='#9ba984')
         for x,y in [(27,65),(35,59),(42,67),(49,56)]:d.rectangle((x,y,x+3,y+3),fill='#526e5d')
@@ -42,6 +38,60 @@ def house(kind):
     if kind=='workshop':
         d.rectangle((w-34,13,w-24,34),fill='#6b6b56');d.rectangle((w-36,11,w-22,15),fill='#b7ae89')
         d.line((25,bottom-23,35,bottom-12),fill='#d1bc88',width=2);d.line((35,bottom-23,25,bottom-12),fill='#657f71',width=2)
+    return im
+
+def market_hall():
+    im,d=canvas(144,128)
+    shadow(d,72,117,64,6)
+    # The side pier and its stone footing carry the roof and the canvas rail.
+    poly(d, [(15,60),(104,59),(128,65),(128,114),(117,118),(15,116)], '#a99871', INK)
+    poly(d, [(16,67),(31,66),(31,112),(16,113)], '#c2b083')
+    poly(d, [(115,66),(126,69),(126,112),(115,115)], '#8c8061')
+    for x,y,w in [(19,102,9),(18,109,8),(116,98,7),(117,107,6),(25,95,4)]:
+        d.line((x,y,x+w,y),fill='#d3c095')
+
+    # Stepped green clay courses shade from the lit ridge to the deep front eave.
+    poly(d, [(7,62),(23,24),(113,24),(136,64),(130,70),(11,68)], '#405746', INK)
+    poly(d, [(24,26),(104,26),(115,60),(10,61)], '#657e59')
+    poly(d, [(104,25),(112,25),(133,63),(115,61)], '#3b5550')
+    for row,(left,right,y) in enumerate([(23,104,31),(21,106,38),(18,109,45),(15,111,52),(12,114,59)]):
+        d.line((left,y,right,y),fill='#3b5946',width=2)
+        for x in range(left+5+(row%2)*5,right-4,13):
+            d.line((x,y-4,x+7,y-4),fill='#91a079')
+            d.line((x+8,y-4,x+9,y-1),fill='#527054')
+    d.line((24,25,105,25),fill='#a9ae7e',width=2)
+    d.line((9,63,113,63,133,65),fill='#8a8f66',width=2)
+    d.line((13,67,115,67,130,69),fill='#3d4939',width=3)
+
+    # Open counter in the west bay, a recessed passage to its right.
+    poly(d, [(29,76),(113,76),(112,109),(29,110)], '#3c4937')
+    d.rectangle((77,82,108,114),fill='#354238')
+    poly(d, [(81,91),(104,92),(101,114),(80,114)], '#475343')
+    d.rectangle((29,95,73,109),fill='#765a3c')
+    for x in (34,46,58,69):
+        d.line((x,97,x,107),fill='#a88752')
+    for x,y,light in [(34,92,'#b8ad71'),(46,90,'#a68955'),(61,92,'#b88158')]:
+        d.rectangle((x,y,x+9,95),fill=light)
+        d.line((x+1,y,x+7,y),fill='#d0ba83')
+    poly(d, [(25,94),(72,94),(75,98),(27,98)], '#bc9a63', '#59462e')
+    for x in (26,73,111):
+        d.rectangle((x,78,x+4,113),fill='#564d38')
+        d.line((x+1,81,x+1,111),fill='#a28555')
+
+    # Alternating fabric strips change value at the turned front edge.
+    colors=(('#d5c594','#bda878'),('#6c9279','#507660'))
+    for index in range(8):
+        x=26+index*11; left=20+index*13
+        top,edge=colors[index%2]
+        poly(d, [(x,70),(x+11,70),(left+13,84),(left,84)], top)
+        poly(d, [(left,84),(left+13,84),(left+12,90),(left+2,90)], edge)
+        d.line((left+2,84,left+11,84),fill='#b2b58c' if index%2 else '#e1d3a7')
+        d.line((left+2,91,left+12,91),fill='#53604a')
+    d.line((26,70,114,70),fill='#575e40',width=2)
+    poly(d, [(16,111),(113,111),(124,115),(117,120),(18,119),(13,116)], '#85765a', INK)
+    d.line((18,113,70,113),fill='#c1ae7f',width=2)
+    d.line((79,114,109,114),fill='#d4bd87',width=2)
+    d.line((19,117,116,118),fill='#a99871')
     return im
 
 def greenhouse():
@@ -96,7 +146,8 @@ def furniture(kind):
     return im
 
 def assets():
-    result={kind:house(kind) for kind in ['jail','market-hall','prediction-kiosk','sports-pavilion','cabin','workshop']}
+    result={kind:house(kind) for kind in ['jail','prediction-kiosk','sports-pavilion','cabin','workshop']}
+    result['market-hall']=market_hall()
     result.update({'greenhouse':greenhouse(),'windmill':windmill()})
     result.update({kind:furniture(kind) for kind in ['notice-board','captains-table','build-plot','harbour-office-glow']})
     return result
