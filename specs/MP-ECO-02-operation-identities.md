@@ -7,7 +7,7 @@
 - **Status:** foundation extension; no public route or admission activation.
 - **Responsible teammate:** Ianno Hollensteiner (`Iannomh123456`), assisted by Codex.
 - **Issue:** [MP-ECO-02 #494](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/494).
-- **Branch:** `feat/mp-eco-02-operations`.
+- **Branch:** `feat/mp-eco-02-treasury`.
 - **Dependency:** the [treasury foundation](MP-ECO-02-island-treasury.md), including its scope guard, account/ledger tables and private-helper privilege model.
 
 ## Problem and boundary
@@ -113,4 +113,4 @@ Verification on 18 Nov 2026, from `backend/` with a writable uv cache:
 
 The initial plain test collection failed on the absent new module before implementation. No full-backend, public route, authenticated browser, deployed database or activation test is claimed by these focused checks.
 
-Runtime integration must document the operation/child contracts in INTERFACES and the Supabase policy matrix. No old production module, public endpoint, feature flag or existing personal-wallet contract is changed by this extension.
+The operation/child contracts are documented in INTERFACES and the Supabase policy matrix. No old production module, public endpoint, feature flag or existing personal-wallet contract is changed by this extension.

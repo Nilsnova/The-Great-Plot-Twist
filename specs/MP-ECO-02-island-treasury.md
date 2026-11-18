@@ -4,7 +4,7 @@
 >
 > **Who uses it:** the economy resolver, permission layer and later shared purchase/wave/Harbor tasks.
 
-- **Status:** in progress.
+- **Status:** isolated foundation prepared; runtime integration and admission remain pending.
 - **Branch:** `feat/mp-eco-02-treasury`.
 - **Issue:** [MP-ECO-02 #494](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/494), epic #492; accepted target in documentation PR #491.
 - **Responsible teammate:** Ianno Hollensteiner (`Iannomh123456`), assisted by Codex.
@@ -20,6 +20,7 @@ Personal wallets cannot fund a persistent shared island without conflating the a
 - Store finite integral PostgreSQL `numeric` balances without a gameplay ceiling. Python uses integers; JSON money/revision fields are canonical decimal strings.
 - Define `EconomyContext` and `resolve_economy_context(admin, actor_id, island_owner, *, expected_epoch=None)` in `server.island.treasury`. Resolution distinguishes legacy only after a successful known-island read; database failure never means legacy. Membership is the permission layer's responsibility.
 - Supply server-only explicit admission, spend, origin credit, reserve and settlement primitives. Future purchases must call primitives within the same SQL transaction as the asset mutation, never debit over the network and then perform another mutation.
+- Bind free, personal and paid request identities through the [operation registry](MP-ECO-02-operation-identities.md), with proven financial children and disjoint canonical system effects. Its cutover drains concurrent writers before DDL and rejects unsupported transaction isolation.
 - Keep original personal wallets, ledger and legacy runtime untouched. No route calls the new admission function in this change.
 
 **Likely files:** `backend/server/island/treasury*.py`, focused tests, and additive migrations `20261118050000_island_treasury.sql` / `20261118050100_island_treasury_functions.sql`.
