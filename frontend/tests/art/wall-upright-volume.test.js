@@ -49,20 +49,20 @@ describe('upright original wall posts', () => {
     expect(scales[1]).toBeCloseTo(scales[0],12); expect(scales[2]).toBeCloseTo(scales[0],12);
   });
 
-  it.each([[1,1.45],[2,1.70],[3,1.95],[4,2.10],[5,2.20]])(
-    'keeps level %i wider faces inside the real footprint and below visible authored post tops', (level,height) => {
+  it.each([[1,.85],[2,.95],[3,1.10],[4,1.20],[5,1.30]])(
+    'keeps level %i village-scale faces inside the real footprint and below visible authored post tops', (level,height) => {
       const fixture = expected[level-1], scale = Math.min(24/fixture.fit[0],42/fixture.fit[1],24/fixture.fit[2],6/fixture.fit[3]);
-      const visibleTop = (350-fixture.solidTop)*scale/16;
+      const visibleTop = (350-fixture.solidTop)*scale/16*.65;
       // Includes the rear projected rise, not merely the transparent logical image box.
-      expect(height+.6*.4+.02).toBeLessThan(visibleTop);
+      expect(height+.6*.28+.02).toBeLessThan(visibleTop);
       const horizontal = {a:'a',b:'b',x0:0,z0:0,x1:2,z1:0,level};
       const batch = [...texturedWallBatches([horizontal],[],art).values()][0];
       const values = batch.positions;
       expect(values).toHaveLength(48); expect(batch.indices).toHaveLength(24);
-      expect(Math.max(...values.filter((_,i)=>i%3===1))).toBeCloseTo(height+.24,12);
+      expect(Math.max(...values.filter((_,i)=>i%3===1))).toBeCloseTo(height+.168,12);
       const groundY = values.slice(12,18).filter((_,i)=>i%3===1);
-      expect(groundY).toEqual([-.24,-.24]);
-      expect(values.slice(0,12).filter((_,i)=>i%3===0)).toEqual([-.08,2.52,2.68,.08].map(x=>expect.closeTo(x,12)));
+      expect(groundY).toEqual([-.168,-.168]);
+      expect(values.slice(0,12).filter((_,i)=>i%3===0)).toEqual([-.056,2.544,2.656,.056].map(x=>expect.closeTo(x,12)));
       const rows = [wall('a',0,0,level),wall('b',2,0,level),wall('c',4,0,level)], before = structuredClone(rows);
       const topology = wallTopology(rows); texturedWallBatches(topology.links,wallVisualRows(rows),art);
       expect(rows).toEqual(before); expect(topology.links).toHaveLength(2);

@@ -85,7 +85,7 @@ describe('selected walls retain ordinary painter depth', () => {
     drawing.show(rows); const topology = drawing.links; drawing.select('b');
     const actual = postAt(drawing,art,wallFrame(level),2,4);
     expect(actual).toHaveLength(1); expect(actual[0].order).toBe(104);
-    expect(Math.min(...actual[0].points.map(point => point[1]))).toBeCloseTo(-2.4-art.rects[wallFrame(level)].anchor/16,5);
+    expect(Math.min(...actual[0].points.map(point => point[1]))).toBeCloseTo(-2.4-art.rects[wallFrame(level)].anchor/16*.65,5);
     expect(drawing.posts.map(post => post.id)).toEqual(['a','b','c']);
     expect(drawing.links).toEqual(topology); expect(rows).toEqual(before); expect(obsoleteOverlay(root)).toBeUndefined(); drawing.dispose();
   });

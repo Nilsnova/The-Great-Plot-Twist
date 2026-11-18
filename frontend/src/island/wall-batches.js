@@ -2,9 +2,11 @@
 import {projectPoint} from '../world/art.js';
 import {wallFrame, wallSurfaceFrame} from '../art/village/walls.js';
 const UNIT = 16;
-// Tight common-state post fitting leaves visible L5 artwork above 2.477 world units.
-// Rear rise and cap lift are included: 2.20+.6*.40+.02=2.46, below that real top.
-const HEIGHTS = [1.45, 1.70, 1.95, 2.10, 2.20], HALF = .40;
+// Low walls frame the village without hiding its defenses. Artwork alone is scaled;
+// the paid 2×2 cells, real contacts and authoritative ground feet stay unchanged.
+// The tallest cap is 1.30+.6*.28+.02=1.488, below the scaled L5 solid post top.
+const HEIGHTS = [.85, .95, 1.10, 1.20, 1.30], HALF = .28;
+const POST_WIDTH = .60, POST_HEIGHT = .65;
 export function wallVisualRows(spots = []) {
   return spots.filter(row => row?.built === true && row.kind === 'wall' && typeof row.id === 'string'
     && Number.isFinite(row.x) && Number.isFinite(row.z)).map(row => ({id: row.id, x: row.x, z: row.z,
@@ -14,7 +16,7 @@ export function wallVisualRows(spots = []) {
 }
 export function texturedWallBatches(links, posts, art, {selectedId = null, selectionOnly = false} = {}) {
   const filterId = selectionOnly ? selectedId : null;
-  const layers = new Map(), connected = new Set(links.flatMap(link => [link.a, link.b]));
+  const layers = new Map();
   const layerAt = order => {
     if (!layers.has(order)) layers.set(order, {positions: [], uvs: [], indices: []});
     return layers.get(order);
@@ -67,8 +69,10 @@ export function texturedWallBatches(links, posts, art, {selectedId = null, selec
         .map(([x,z]) => {const point=projectPoint(x,z);return [point.x,point.y+height+.02];}), wallSurfaceFrame(post.level,'top'));
       continue;
     }
-    const point = projectPoint(post.x, post.z), width = frame.w / UNIT * (post.look === 'intact' && connected.has(post.id) ? .75 : 1);
-    const bottom = point.y - frame.anchor / UNIT, top = bottom + frame.h / UNIT;
+    // Damage and selection never enlarge a post. Scale around its source foot,
+    // including the transparent anchor margin, rather than lifting it off the tile.
+    const point = projectPoint(post.x, post.z), width = frame.w / UNIT * POST_WIDTH;
+    const bottom = point.y - frame.anchor / UNIT * POST_HEIGHT, top = bottom + frame.h / UNIT * POST_HEIGHT;
     quad(layer, [[point.x-width/2,bottom],[point.x+width/2,bottom],[point.x+width/2,top],[point.x-width/2,top]], id);
   }
   return layers;
