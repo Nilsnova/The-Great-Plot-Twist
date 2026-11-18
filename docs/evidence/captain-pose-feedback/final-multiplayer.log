@@ -1,0 +1,81 @@
+
+> the-great-plot-twist@0.1.0 test:mp
+> node scripts/check-multiplayer.js /tmp/captain-pose-final-mp
+
+Nils is on the island (me)
+Ben is on the island (ben)
+screenshots 01-lobby-two-captains
+screenshots 01b-lobby-role-icons
+screenshots 01-two-captains
+screenshots 02-coop-wall
+screenshots 02b-owner-upgrade
+screenshots 02c-friend-upgrade
+screenshots 02d-tower-skill
+screenshots 02e-research-tiers
+screenshots 03-wave1-muskets
+screenshots 10-revived
+screenshots 04-paused-break
+screenshots 04-break-upgrade
+Ana is on the island (ana)
+Max is on the island (max)
+screenshots 05-four-captains-mid-wave
+screenshots 06-wave2-end
+screenshots 07-finisher-haul-mid-task
+screenshots 07-finisher-outcome
+
+RESULTS
+  lobbies: host Nils (you):online, Ben:online (Start on); friend Nils:online, Ben (you):online (Start off)
+  captain tree: the friend's lobby shows 🩹 Medic on Nils
+  Start: both lobbies closed, game_started true (first) on both pages
+  co-op wall on the owner's island after 511 ms
+  owner upgrade to level 2 on the friend's map and card after 480 ms
+  friend upgrade to level 3 on the owner's map and open card after 600 ms
+  tower skill: the owner's Heavy shot on cannon_1 on the friend's island and card after 684 ms ("Skill: Heavy shot")
+  tower skill: the friend's Rapid on the owner's cannon_1 on the owner's island and card after 685 ms
+  research tier 2: the owner's Long guns on the friend's island after 747 ms
+  research tier 3: the friend's Grapeshot and cannon_1's pick are the same research and defenses on both pages
+  house role: the owner's Barracks on house_1 on the friend's island, card ("Role: Barracks") and map (island-house-barracks) after 765 ms
+  house role: the friend's Workshop on house_1 on the owner's island and card after 721 ms
+  tear down: the owner's confirmation "Tear down this Wall (level 3)?" You get back 🪙 10. Ben gets back 🪙 25.; the friend's island showed the empty spot after 789 ms, his toast "Nils tore down the Wall. You got back 🪙 25.", his coins 1770 → 1795
+  wave 3 (fake-wave-1) on both pages: 1 / 1 ships
+  research in the wave: 2 towers alike in both sims, cannon_1 {"id":"cannon_1","spec":"grapeshot","bonus":"long_guns","range":32.2}
+  musket shots through the room: 2 reached the owner, 2 reached the friend
+  musket shots: owner's sim 2 from 2 captains, friend's sim 2 from 2 (first by p-n1zihzu4)
+  captain health: the friend fell at sim time 27.3 s on his page, 27.3 s on the owner's
+  revive hold 1280x800: observed 0.8308333333333333 share before release
+  revive hold 390x844: observed 0.8183333333333334 share before release
+  captain health: the owner helped him up for 🪙 35 at sim time 62.6 s (the friend's page 62.6 s), by the owner
+  captain tree: the Medic helped him up after a 1.6 s hold, hp 75 of 100 on both pages
+  captains defended the heart after the revive with 5 and 6 post-revive ship shots
+  break time remaining when the host paused: 8 s
+  Pause: both clients said "Paused by Nils" and stayed in the break past its 8 seconds
+  upgrade in the break: cannon_2 is level 2 / 2 in the wave's drawing on both pages
+  wave 1 loot: Nils 35, Ben 35
+  wave 1 sync owner/friend: 107/107 samples with the same ships at the same tick, worst count gap 0
+  wave 1 boarders owner/friend: 107/107 samples with the same boarders ashore (19 with boarders, 5 landed), worst count gap 0
+  wave 1 militia owner/friend: 91/91 samples at the same tick identical (place, hp, state), 0 fighting
+  wave 1 militia: no boarder came near the Barracks in this wave's samples
+  wave 3 ship fire: owner 65 shots, 64 on the heart; friend 65 shots, 64 on the heart; heart ♥ alike at 91/91 shared ticks
+  wave 3 event: owner [{"wave":3,"event":"storm"}], friend [{"wave":3,"event":"storm"}]
+  both pressed Next wave: one wave 4 (fake-wave-2) on both pages
+  Ana joined wave 4 mid-wave at tick 144
+  Max joined wave 4 mid-wave at tick 199
+  late friends: their lobbies closed by themselves (the room said the game is on)
+  members: Nils, Ben, Ana, Max
+  musket pose: the owner's own body posed at 1280x720 captain-1-musket-2, 375x812 captain-1-musket-2, his figure on the friend's page at 1280x720 captain-1-musket-2, 375x812 captain-1-musket-2
+  wave 2 sync owner/Ben: 19/20 same ships, 19/20 same boarders, worst count gap 1 / 1
+  wave 2 sync owner/Ana: 3/3 same ships, 3/3 same boarders, worst count gap 0 / 0
+  wave 2 sync owner/Max: 61/61 same ships, 60/61 same boarders, worst count gap 0 / 1
+  wave 4 defense: four captains used 5, 5, 4, 6 normal contextual attacks before the wave ended
+  boss wave 5 (fake-wave-3): all 4 captains joined on their own
+  boss defense: captains used 17, 15, 15, 24 contextual attacks before the finisher began
+  T28: three captains skipped; one practiced; all four scored clocks and scores stayed zero
+  finisher: haul for p-4c8nl9kr, p-drkmwjoj, p-n1zihzu4, p-u6930yat; heard so far 4 / 4 / 4 / 4
+  finisher outcome on the four pages: finisher_failed 186/224 · finisher_failed 186/224 · finisher_failed 186/224 · finisher_failed 186/224
+
+check-multiplayer: OK (4 pages), screenshots in /tmp/captain-pose-final-mp
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.3
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.3
+npm notice To update run: npm install -g npm@12.2.3
+npm notice
