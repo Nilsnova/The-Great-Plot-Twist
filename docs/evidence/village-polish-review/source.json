@@ -20,13 +20,13 @@
     "historicalIterationActualGame": "passed_188.05_seconds_not_final",
     "nativeLandscape": "passed_exact_alpha_coast_profile_source_and_fallback_rgb_changed",
     "paidTierWalkthrough": "passed_223.56_seconds_both_viewports_492_receipts_each_adaptive_density",
-    "nativeMatrix": "initial_pass_22_sheets_100_bindings_12.29_seconds_final_caption_fix_followup_pending",
+    "nativeMatrix": "final_caption_corrected_22_sheets_passed_11.78_seconds_on_0a461c",
     "correctedActualGame": "passed_192.03_seconds_wrapper192.13_20_original_pngs_high_density1_DPR1",
-    "freshApplicationChecks": "first_sequence_running_QA_only_VIS59_rerun_pending",
-    "documentationStaticChecks": "passed_interim_109_original_artifacts_20_before_inventory_12_html_images_aria_syntax_links_json",
+    "freshApplicationChecks": "7fab_and_0a_sequences_complete_mixed_results_final_VIS60_frozen_run_pending",
+    "documentationStaticChecks": "passed_interim_157_original_artifacts_20_before_inventory_12_unchanged_comparison_images_57_local_targets",
     "highDensityPaidTierWalkthrough": "passed_305.36_seconds_18_original_pngs_984_receipts_total_density1_exact_drawing_dimensions",
     "highDensityAttempt01": "failed_helper_null_selection_before_first_intended_capture_26.70_seconds",
-    "comparisonDocumentBrowser": "pending",
+    "comparisonDocumentBrowser": "passed_7.11_seconds_12_images_3_tablists_33_actions_each_viewport_13_response_hashes_each",
     "firstFrontend7fab": {
       "passed": 4639,
       "failed": 2,
@@ -40,7 +40,32 @@
         "unchanged defense-report ownership 20.027s timeout",
         "legacy multiplayer wall observer expects old L3 profile and no sparse buttresses"
       ]
-    }
+    },
+    "postVis59Frontend": {
+      "source": "0a461c47c3818c5ba31db6113b575c5802dfcc23",
+      "passed": 4760,
+      "failed": 1,
+      "tests": 4761,
+      "filesPassed": 423,
+      "filesFailed": 1,
+      "files": 424,
+      "vitestSeconds": 553.31,
+      "processSeconds": 554.35,
+      "remaining": "known defense-report ownership timeout"
+    },
+    "first7fabMultiplayer": {
+      "seconds": 341.53,
+      "failure": "minimum paired comparison coverage: one matching pair observed versus required three",
+      "observed": "1/1 matching ship and boarder sample; worst recorded drift zero",
+      "notEstablished": "unrecorded states and later steps; not a demonstrated state mismatch or a current pose failure"
+    },
+    "postVis59Multiplayer": {
+      "source": "0a461c47c3818c5ba31db6113b575c5802dfcc23",
+      "seconds": 358.28,
+      "failure": "own musket pose count one versus expected two, check-multiplayer.js line809",
+      "scope": "same known pose-family issue as421; no native success claimed"
+    },
+    "rawLogWhitespace": "two original reporter EOF diagnostics retained; authored text and checker check passes"
   },
   "finalRuntime": "7fab8866b83e27c6102df6b123ffdf2eb96619d0",
   "finalScriptTree": "0ee76841b7c32c629a1b139b5477088c16126897",
@@ -84,5 +109,39 @@
     "draftPr": 435,
     "scope": "strict observer update only; no product code change",
     "finalNativeAndFullResults": "pending"
+  },
+  "testedComparison": {
+    "documentSource": "f70545aa016c923097c03cd1189130e213566961",
+    "htmlSha256": "5c00049be59921a9a970f05f7be9cfa2adc9d2b9820bd910c8800aeeb8ea0b94",
+    "checkerSha256": "c9fd2bf84d54a9716cb713b8cc9cb5066d5d3f027b5f5c133f1929c569538dd6",
+    "inputManifestSha256": "1fe6f68db48e21f263e03426c5e212cf225f8f337bb51f5e9cec24bb885cdc71",
+    "inputManifestCopy": "comparison-browser/manifest-used.json",
+    "metadataBoundary": "The outer package manifest is extended after this native run. Tested HTML, checker and all twelve image bytes remain unchanged."
+  },
+  "qaCoverageFollowup": {
+    "issue": 436,
+    "draftPr": 437,
+    "scope": "all distinct owner/peer tick pairs; exact then +/-1 matching, no reuse/duplicate inflation, unchanged minimum3/tolerances/actions/heart/militia checks",
+    "finalNativeOutcome": "pending"
+  },
+  "finalQaRuntimeCandidate": "6c1cda1739f9e5b8d96946d04c3d919cbe00fcfe",
+  "finalQaCandidateTrees": {
+    "frontend/src": "e191d9290088908ee27e82e03a15847d4a73a38e",
+    "frontend/public": "9306942db1050d728799cee2fbdc8e8960f14ad2",
+    "backend": "3956a73d76f537fd7c85259afa4bf9280a6e0ecd",
+    "supabase/migrations": "ae31ac50221be83070e7f46580d66a70eedbad20",
+    "frontend/scripts": "7fadcb6da62409b29d12f9322ab9af73e062c9aa",
+    "frontend/tests": "fe8a0087a4b45a1d2b12789937974ae048a2c4d6"
+  },
+  "finalMatrixSource": "0a461c47c3818c5ba31db6113b575c5802dfcc23",
+  "documentationReview": {
+    "method": "read-only agent review; no application tests by documentation writers",
+    "corrections": [
+      "main playtest migration is already merged; only checkpoint guard was unmerged",
+      "initial tab states are checked before clicks",
+      "executed helper is bound to manifest",
+      "cleanup failure cannot emit PASS or skip server/report attempt"
+    ],
+    "currentResult": "clear; final application results still pending"
   }
 }

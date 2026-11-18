@@ -1,19 +1,29 @@
 {
-  "status": "interim_final_matrix_and_application_receipts_pending",
-  "originalArtifactsByteVerified": 109,
+  "status": "interim_final_VIS60_application_run_pending",
+  "originalArtifactsByteVerified": 157,
   "allBeforePngInventoryHashesVerified": 20,
   "comparisonImages": 12,
   "tablists": 3,
   "tabs": 8,
-  "relativeLinkTargetsChecked": 51,
+  "relativeLinkTargetsChecked": 57,
   "jsonParse": "passed",
   "htmlKeyboardScriptSyntax": "passed",
   "nativeCheckerSyntax": "passed",
-  "nativeBrowserRun": "not_run_by_documentation_writer",
+  "nativeBrowserRun": "root passed 7.11s; documentation writer did not launch Chrome",
   "nativeCheckerLines": 135,
   "nativeCheckerHardening": [
     "manifest-bound executed helper",
     "initial default states before input",
     "cleanup/report retained if browser close rejects"
-  ]
+  ],
+  "testedHtmlAndImageBytes": "unchanged from the native input manifest",
+  "editedTextWhitespace": "passed; original .log files checked and recorded separately",
+  "originalLogWhitespace": {
+    "exitCode": 2,
+    "diagnostics": [
+      "docs/evidence/village-polish-review/checks/first-7fab/frontend.log:4757: new blank line at EOF.",
+      "docs/evidence/village-polish-review/checks/post-vis59-0a/frontend.log:4852: new blank line at EOF."
+    ],
+    "reason": "preserve exact raw reporter output; no code/test change"
+  }
 }

@@ -1,0 +1,26 @@
+{
+  "source": "7fab8866b83e27c6102df6b123ffdf2eb96619d0",
+  "name": "application-checks",
+  "command": [
+    "python",
+    "/workspace/reference-village-work/run-candidate-checks.py",
+    "--repo",
+    "/workspace/reference-village-work/polish-runtime-04",
+    "--out",
+    "/workspace/reference-village-work/polish-final-checks",
+    "--checks",
+    "frontend",
+    "a11y",
+    "demo",
+    "overlaps",
+    "build",
+    "budget",
+    "text-lint",
+    "multiplayer",
+    "--continue-on-failure"
+  ],
+  "started": "2026-11-18T00:33:37.079567+00:00",
+  "exitCode": 1,
+  "seconds": 1438.59,
+  "finished": "2026-11-18T00:57:35.665370+00:00"
+}
