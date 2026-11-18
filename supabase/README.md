@@ -3261,11 +3261,13 @@ Disposable verification must reapply the complete migration chain, exercise obso
 
 For a backend/client candidate that contains T55/T60 recovery code, review and apply the required files in timestamp order: `20261117020000_structure_recovery.sql`, `20261117025000_legacy_wave_locks.sql`, `20261117030000_paid_structure_repair.sql`, `20261117040000_structure_recovery_api.sql`, then `20261117050000_structure_recovery_mutations.sql`. Include any earlier candidate prerequisite, such as `20261117010000_more_tower_spots.sql`, before this set. The integration tests only apply/reapply this chain in disposable Unix-socket PostgreSQL; no live application or activation is recorded here.
 
+A saved v1 island may retain already-built `cannon_8`–`cannon_11` plots and culverins after the `more_tower_spots` or `defenses_v2` availability flags are off. The application continues to expose and operate those existing buildings, includes their full catalogue repair prices, and freezes `defenses_v2` for a v1 wave containing a culverin. New builds remain gated. This compatibility is application behavior; it makes no migration or activation change.
+
 The recovery feature flag remains off by default and governs admission of new v1 waves on legacy islands. It does not make the migrations optional for a deployed server or protocol-2 client that can read or mutate a saved v1 island. If a release must stop admitting new v1 waves, turn the flag off and preserve saved v1 state. Admission off does not downgrade saved v1 policy, which persists between waves; no safe policy downgrade is implemented. Keep a v1-capable backend and protocol-2 client while any saved v1 island remains, even when no wave is active. Do not reverse the migrations or delete receipts to roll back. Fix forward with reviewed code and migrations; any future saved-policy data transition needs separate review. See the [release checklist](../docs/RELEASE-CHECKLIST.md#t55t60-structure-recovery-release-gate). No live migration, deployment or flag activation was performed by T60.
 
 ## Shared island treasury foundation (MP-ECO-02)
 
-`20261118050000_island_treasury.sql` and `20261118050100_island_treasury_functions.sql` add exact
+`20261118050050_island_treasury.sql` and `20261118050100_island_treasury_functions.sql` add exact
 island/run accounts and atomic financial primitives. They create no admission rows or automatic
 balance conversion. Existing personal wallets, ledger and HTTP routes remain unchanged. See
 [the interface contract](../docs/INTERFACES.md#shared-island-treasury-foundation-mp-eco-02)
@@ -3313,3 +3315,25 @@ bootstrap, no partial admission on UID conflict, exact large funds, same-event i
 spend/reserve races, duplicate settlements, retired-origin payouts and ledger/escrow reconciliation.
 The Python checks cover strict decimal-string/context parsing and fresh state versus immutable
 receipt values. These are local integration checks, not proof of deployed shared-mode gameplay.
+
+### Global operation registry
+
+`20261118050150_island_economy_operations.sql` adds immutable free/personal/paid intent identities
+and the treasury insertion guard. `island_economy_operations` has RLS, no anonymous/authenticated
+access and service-role select only. Claim/effect/system/parser/trigger helpers have no direct
+service-role execute grant; owner-defined domain functions call them inside the asset transaction.
+No public claim-only endpoint is introduced. Historical raw financial UIDs are opaque tombstones;
+checked children must match the original root actor, account and epoch.
+
+Apply this migration transactionally at `READ COMMITTED`. Before any DDL, it collects account,
+existing-operation and ledger relation barriers atomically using `NOWAIT`/savepoint retry. It releases
+partial locks before waiting and fails before changes after 30 seconds of contention. Unsupported
+isolation fails at entry. Do not replace this barrier with an account-scope inventory or account-only
+lock: concurrent new admissions and personal null-scope foreign keys are covered explicitly.
+The [registry spec](../specs/MP-ECO-02-operation-identities.md) documents exact lock modes and errors.
+
+Focused verification also runs `server/tests/test_economy_operations.py`,
+`server/tests/island_sql/test_economy_operations_sql.py` and
+`server/tests/island_sql/test_economy_operations_cutover_sql.py` with the disposable PostgreSQL tools
+above. Source settlement after departure/retirement keeps its original account; this extension does
+not grant current membership, convert saves, register routes or authorize a live migration.

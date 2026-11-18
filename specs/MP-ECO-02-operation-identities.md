@@ -7,7 +7,7 @@
 - **Status:** foundation extension; no public route or admission activation.
 - **Responsible teammate:** Ianno Hollensteiner (`Iannomh123456`), assisted by Codex.
 - **Issue:** [MP-ECO-02 #494](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/494).
-- **Branch:** `feat/mp-eco-02-operations`.
+- **Branch:** `feat/mp-eco-02-treasury`.
 - **Dependency:** the [treasury foundation](MP-ECO-02-island-treasury.md), including its scope guard, account/ledger tables and private-helper privilege model.
 
 ## Problem and boundary
@@ -74,7 +74,11 @@ New canonical system effects must use `sys_` or an explicitly valid child. They 
 
 Existing shared ledger identities are backfilled as opaque financial tombstones, including historically prefixed `fx_`/`sys_` rows. They cannot be adopted as player proof, even if some fields happen to match. Reapplication skips only a child already proven by an exact existing player operation; it checks all other backfilled identities for contradiction and creates no additional operation or grant.
 
-The migration takes existing account scopes and account locks in runtime order before locking ledger writes for backfill/trigger installation. This prevents a missing concurrent financial identity during cutover and avoids a ledger-first foreign-key lock inversion. Application still follows the separately reviewed migration/release procedure.
+The migration requires the documented default `READ COMMITTED` transaction isolation. Other modes fail at entry with `25000 island_economy_operation_cutover_requires_read_committed`, before locks or DDL. A transaction-wide older snapshot could otherwise miss a newly committed admission and its ledger identity even after relation locks drain its writer. The migration does not silently change the caller's isolation.
+
+Before any registry DDL, the migration collects three relation barriers: accounts in `EXCLUSIVE`, the existing operations table in `ACCESS EXCLUSIVE`, and the ledger in `SHARE ROW EXCLUSIVE`. Every acquisition uses `NOWAIT` inside the same exception/savepoint block. An unavailable lock rolls back the entire partial set before a 50 ms retry. After 30 seconds of contention, `55P03 island_economy_operation_cutover_busy` fails before schema or history changes; the migration can be retried after activity drains.
+
+The migration never waits for an island scope, island row or personal row while holding those relation locks. A barrier on accounts alone would be insufficient: even a null-scope personal operation takes the account parent's `ROW SHARE` relation lock for its nullable foreign key, after touching operations. All-or-nothing acquisition avoids both that inversion and the first-application account-FK DDL inversion. On first application the absent operations table is skipped without creating it early. New account admissions either finish before the complete barrier or wait until the backfill and trigger installation commit; no owner-inventory snapshot can miss them. Plain ledger history reads remain compatible with its barrier. Runtime scope/account/personal lock ordering is unchanged. Application still follows the separately reviewed migration/release procedure.
 
 Historical financial replay continues to return its original receipt before insertion, including after backfill. New roots never import private-wallet history or relabel a financial receipt as a free-domain result. No broad backfill of later personal/domain receipt families is invented; any independently deployed unregistered domain history requires its reviewed mapping before that path is admitted.
 
@@ -93,17 +97,30 @@ Required cases are covered by `test_economy_operations.py` and the disposable Po
 - Exact child actor/account/epoch proof; historical prefixed backfill and repeat-safe reapplication.
 - System settlement after departure/retirement; original account changes, replacement account stays untouched.
 - Private grants/RLS, immutable history and the unchanged treasury conservation/regression checks.
+- First and repeated cutover overlapping an existing financial writer or a newly admitted account; a new admission queued behind the barrier uses the installed trigger.
+- Personal null-scope foreign-key overlap and exhausted cutover attempts that release all partial locks without schema changes.
+- Unsupported transaction snapshots fail before DDL while an admission remains uncommitted; a later `READ COMMITTED` retry backfills its identity.
 
 Run the focused Python tests and Ruff; run the new and existing treasury SQL suites with `CASE_PG_SCRATCH=1` and the existing disposable PostgreSQL tools. Parse the complete additive migration chain as documented in [ENGINEERING](../docs/ENGINEERING.md#42-add-a-database-table). No configured database or credentials are used. Final local command results are reported separately; independent human review and full authenticated domain integration remain pending.
 
 Verification on 18 Nov 2026, from `backend/` with a writable uv cache:
 
-- `uv run --no-sync pytest -q server/tests/test_economy_operations.py server/tests/test_island_treasury.py server/tests/test_island_treasury_store.py`: **62 passed in 0.85s**.
-- `CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q server/tests/island_sql/test_economy_operations_sql.py server/tests/island_sql/test_island_treasury_sql.py`: **41 passed in 2.56s**; the fixture applies the complete migration chain twice on a private Unix-socket PostgreSQL server.
+- `uv run --no-sync pytest -q server/tests/test_economy_operations.py server/tests/test_island_treasury.py server/tests/test_island_treasury_store.py`: **62 passed in 0.35s**.
+- `CASE_PG_SCRATCH=1 uv run --no-sync --with pgserver --with 'psycopg[binary]' --with pglast pytest -q --tb=short server/tests/island_sql/test_economy_operations_cutover_sql.py server/tests/island_sql/test_economy_operations_sql.py server/tests/island_sql/test_island_treasury_sql.py`: **54 passed in 23.14s**. The main fixture applies the complete migration chain twice; cutover cases also use isolated pre-registry clusters. All PostgreSQL servers use private Unix sockets.
 - `uv run --no-sync ruff check .`: **All checks passed**.
 - The documented pglast check: **67 migration files parsed**.
 - Relative documentation links, content and `git diff --check`: passed.
 
+Treasury and operation race modules register their own cached instances of the existing full-chain scratch fixture. Their deliberately committed race seeds therefore remain in module-private clusters; the legacy fixture and all test assertions remain unchanged. Cutover cases continue to use their separate per-test clusters.
+
+The ordered treasury purchase/all-in race followed by the legacy empty-database host-console check reproduced **1 passed, 1 failed** before isolation and **2 passed** afterward. The final mixed-order command from `backend/` was:
+
+```sh
+CASE_PG_SCRATCH=1 uv run --no-sync --with pgserver --with 'psycopg[binary]' --with pglast pytest -q --tb=short server/tests/island_sql/test_island_treasury_sql.py server/tests/island_sql/test_economy_operations_sql.py server/tests/island_sql/test_economy_operations_cutover_sql.py server/tests/island_sql/test_host_console_v3_sql.py server/tests/island_sql/test_islands_and_waves_sql.py
+```
+
+Result: **89 passed in 26.76s**, including all 54 treasury/registry/cutover cases and 35 legacy host-console/island cases. Full Ruff and whitespace checks passed after the fixture correction. No production source or migration changed for this test-isolation correction.
+
 The initial plain test collection failed on the absent new module before implementation. No full-backend, public route, authenticated browser, deployed database or activation test is claimed by these focused checks.
 
-Runtime integration must document the operation/child contracts in INTERFACES and the Supabase policy matrix. No old production module, public endpoint, feature flag or existing personal-wallet contract is changed by this extension.
+The operation/child contracts are documented in INTERFACES and the Supabase policy matrix. No old production module, public endpoint, feature flag or existing personal-wallet contract is changed by this extension.

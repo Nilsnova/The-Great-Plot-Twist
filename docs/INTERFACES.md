@@ -692,6 +692,8 @@ Protocol-2 join sends waveId and waveProtocol; current selects waveProtocol in i
 
 `POST /api/island/structures/repair` accepts the current server quote guards `{code?, spot, instanceId, actionUid, expectedEpoch, expectedWindow, expectedWaveId?, expectedLevel, expectedRepairSeq, quotedPrice, waveProtocol: 2}`. It returns an immutable `receipt`, a fresh shared `currentState`, and the caller's own `coins`; a stale quote returns `409 stale_recovery_quote` with the same fresh state and balance. The SQL transaction rechecks membership, phase, identity, fixed current-level price, quota and action-UID fingerprint under canonical wallet/island locks. Successful receipts include `chargedPrice`, `balanceAtCommit`, `waveId`, `useOrdinal`, `eventSeq` and `repairSeq`; between-wave receipts have null wave/quota/event fields. The API does not accept client HP or max-HP authority.
 
+For a persisted recovery-v1 owner, island reads and existing-building actions retain only gated plots and kinds already built on that island when `more_tower_spots` or `defenses_v2` availability is off. New purchases remain validated against the flag-filtered catalogue; demolishing a gated building while its flag is off therefore does not make it rebuildable. Recovery repair quotes retain full catalogue prices, including culverin. A saved culverin is included in the immutable v1 wave snapshot and forces `defenses_v2` into that wave’s frozen rules for host and joiners. A demolition mutation can validate a known gated tower plot after its building was removed so a same-UID retry reaches the SQL receipt; membership is checked first, SQL returns the immutable receipt or checks the current building row, an empty known plot with a new UID returns `409 not_built`, and an unknown plot remains `404`. This broader catalogue is limited to demolition mutations and does not change version-zero or ordinary legacy behavior.
+
 For a persisted recovery-v1 owner, `GET /api/island` omits the seven retired recovery-only Captain choices (`quick_fix`, `long_reach`, `sturdy_planks`, `master_shipwright`, `swift_hammer`, `wide_arc`, `grand_engineer`) from `skills.tree` but retains saved `known` IDs, `spent` points and ordinary accounting. `POST /api/island/skill` rejects a new v1 learn with `409 skill_retired`; a successful same-UID replay is answered first, and v0 behavior is unchanged. The server reads the target owner's persisted policy; the request cannot supply or override a recovery version.
 
 **Persisted policy in ordinary island views (T58 follow-up #456).** `GET /api/island` and `GET /api/island/visit/{code}` include server-owned `recoveryVersion` (0 legacy, 1 structure recovery). A visit carries the target owner's persisted version, even when the visitor is v0 or new admission is disabled. It is available before a structure-health read, so an unavailable health endpoint cannot silently restore legacy repair choices or narration. The caller cannot select/override this field. Start/join/current still use the existing explicit frozen `recoveryVersion` / `waveProtocol` mapping; this adds no protocol or gameplay variant.
@@ -1853,11 +1855,17 @@ with paid-restore race protection in `20261115150000_wall_restore_record_fence.s
 - **Database:** `islet_buildings.tree_a`, `tree_b` (smallint 0–3, default 0) with the check rules `islet_buildings_tree_range` and `islet_buildings_tree_fits_kind`; `islet_buildings_plot_fits_building` also allows `(cannon_1..7, swivel)` (in the follow-up `20261116020100_swivel_spot_rule.sql`, the one file that replaces a rule; until it is applied a swivel build is refused by the database); new `island_tower_tree(p_player_id, p_island_owner, p_plot, p_kind, p_path, p_tier, p_action_uid, p_price, p_unlock_wave, p_level)` (service_role only; locks wallet, island, building; refuses `not_member`, `not_built`, `wrong_kind`, `needs_level`, `locked`, `known`, `needs_tier`, `closed`, `insufficient_funds`).
 - **Sim:** the defense item takes `tree {a, b}`; new kind `swivel` and event `swivel_fired {towerId, targetId, damage, pellets, level, x, z, toX, toZ, hits}`.
 
+### Captain feedback within the render frame (D066)
+
+The main game owns the pirate update loop by passing `loop:false` to `wireWaves`; its `update(delta)` forwards the existing `mountPirates.update`. The optional third argument of `createController.update(delta, active, beforeAnimate)` runs after movement/collision/facing and before `character.animate`. The game uses it for combat sampling and pose consumption in one frame. Default module loops and existing two-argument movement callers keep their behavior.
+
+Legacy body poses may also use accepted outcomes correlated to live local/validated-room inputs admitted after initial catch-up. This channel preserves original event order, rejects ambiguous actor/type batches, and clears on travel/hidden/stop/disposal. It changes neither simulation inputs nor generic renderer/audio history filtering. Recovery feedback keeps its existing prediction/dedup rules. See `live-attack-feedback.js`, the controller and D066.
+
 ## Shared island treasury foundation (MP-ECO-02)
 
 The additive foundation in `backend/server/island/treasury.py`, `treasury_models.py` and
 `treasury_store.py` defines exact accounts per island/run. Contracts are in migrations
-`20261118050000_island_treasury.sql` / `20261118050100_island_treasury_functions.sql`,
+`20261118050050_island_treasury.sql` / `20261118050100_island_treasury_functions.sql`,
 [database rights and checks](../supabase/README.md#shared-island-treasury-foundation-mp-eco-02)
 and [the package spec](../specs/MP-ECO-02-island-treasury.md). Existing HTTP routes do not call
 admission or these money functions; personal-wallet runtime remains unchanged.
@@ -1908,3 +1916,23 @@ Existing-save admission, reset/owner deletion, wave accounting, product verifica
 money paths require integration before enabling shared mode. Retained account/ledger references
 prevent accidental deletion of an admitted island until explicit deletion/retirement policy exists.
 This foundation neither converts balances nor admits existing saves automatically.
+
+### Global operation identities
+
+Converted free, personal and paid actions share immutable `island_economy_operations`, unique by
+authenticated `(actor_id,action_uid)`. The private `island_economy_claim_operation_locked` binds
+server-selected action/fingerprint and original account/epoch after scope/account locks and before
+personal/domain locks. Standalone personal actions use null account/epoch. Replay precedes current
+catalogue, phase and revision checks; every later refusal must roll back a new claim with the whole
+domain transaction. A separate network claim, debit and asset write is not atomic.
+
+Client roots exclude `fx_`/`sys_`. Financial children derive `fx_<operation UUID hex>_<effect key>`
+and prove their root's actor/account/epoch at ledger insertion. Canonical system effects derive
+`sys_<origin UUID hex>_<effect key>` under their own verified saved-origin authority. Raw historical
+financial identities remain opaque tombstones. These identifiers confer no membership or payout
+authority. The [registry spec](../specs/MP-ECO-02-operation-identities.md) defines exact helpers.
+
+The internal treasury result can contain its originating account projection. A public domain reply
+must expose fresh economy/assets only if that origin is still the active current account/epoch and
+the actor is a current member. A departed or retired-origin retry may return its authorized immutable
+receipt, with current projections null/omitted. Never display an old receipt balance as current funds.

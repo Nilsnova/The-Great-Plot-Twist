@@ -287,7 +287,7 @@ def test_upgrade_refuses_damaged_v1_wall_without_charge_and_specialise_preserves
     )
 
 
-def test_carpenter_rate_change_does_not_apply_new_rate_to_elapsed_old_time(database):
+def test_recovery_v1_refuses_new_carpenters_without_charging_or_healing(database):
     seed_v1(database)
     as_server(database)
     database.execute(
@@ -297,17 +297,22 @@ def test_carpenter_rate_change_does_not_apply_new_rate_to_elapsed_old_time(datab
         "where island_owner=%s and spot='wall_1'",
         (OWNER,),
     )
-    hired = call(database, "select public.island_hire(%s,'carpenter','hire-0001',10,10)", OWNER)
-    assert hired["status"] == "done"
+    before = balance(database, OWNER)
+    database.execute("savepoint retired_carpenter")
+    with pytest.raises(psycopg.errors.RaiseException, match="recovery_option_retired"):
+        call(database, "select public.island_hire(%s,'carpenter','hire-0001',10,10)", OWNER)
+    database.execute("rollback to savepoint retired_carpenter")
+    database.execute("release savepoint retired_carpenter")
     health = database.execute(
         "select hp_units,rate_numerator,rate_denominator from public.island_structure_health "
         "where island_owner=%s and spot='wall_1'",
         (OWNER,),
     ).fetchone()
-    assert health == (500_000, 200, 100)
+    assert health == (500_000, 0, 1)
+    assert balance(database, OWNER) == before
 
 
-def test_wall_research_rate_change_settles_old_rate_before_refresh(database):
+def test_recovery_v1_refuses_new_mason_drill_without_charging_or_healing(database):
     seed_v1(database)
     as_server(database)
     database.execute(
@@ -322,50 +327,54 @@ def test_wall_research_rate_change_settles_old_rate_before_refresh(database):
         "values (%s,'wall',%s,10,'research:seed-0001',1)",
         (OWNER, OWNER),
     )
-    changed = call(
-        database,
-        "select public.island_research(%s,%s,'wall','research-0001',10,0,2,'mason_drill',false)",
-        OWNER,
-        OWNER,
-    )
-    assert changed["status"] == "done"
+    before = balance(database, OWNER)
+    database.execute("savepoint retired_mason_drill")
+    with pytest.raises(psycopg.errors.RaiseException, match="recovery_option_retired"):
+        call(
+            database,
+            "select public.island_research(%s,%s,'wall','research-0001',"
+            "10,0,2,'mason_drill',false)",
+            OWNER,
+            OWNER,
+        )
+    database.execute("rollback to savepoint retired_mason_drill")
+    database.execute("release savepoint retired_mason_drill")
     health = database.execute(
         "select hp_units,rate_numerator,rate_denominator from public.island_structure_health "
         "where island_owner=%s and spot='wall_1'",
         (OWNER,),
     ).fetchone()
-    assert health == (500_000, 300, 200)
+    assert health == (500_000, 0, 1)
+    assert balance(database, OWNER) == before
 
 
-def test_moved_workshop_at_radius_boundary_updates_future_rate(database):
+def test_recovery_v1_refuses_a_new_workshop_role_without_changing_rate(database):
     seed_v1(database)
     as_server(database)
     call(database, "select public.islet_build(%s,'house_1','house',10,0,0,'seed-house-01')", OWNER)
-    database.execute(
-        "update public.islet_buildings set level=2,spec='workshop' "
-        "where player_id=%s and plot='house_1'",
+    before = database.execute(
+        "select rate_numerator,rate_denominator from public.island_structure_health "
+        "where island_owner=%s and spot='wall_1'",
         (OWNER,),
-    )
-    moved = call(
-        database, "select public.island_move(%s,%s,'house_1',-17,-2,'[]'::jsonb)", OWNER, OWNER
-    )
-    assert moved == {"status": "done"}
-    position = call(
-        database,
-        "select jsonb_build_object('x',x_half,'z',z_half) from public.island_layout "
-        "where island_owner=%s and plot='house_1'",
-        OWNER,
-    )
-    assert position == {"x": -17, "z": -2}
+    ).fetchone()
+    database.execute("savepoint retired_workshop")
+    with pytest.raises(psycopg.errors.RaiseException, match="recovery_option_retired"):
+        database.execute(
+            "update public.islet_buildings set level=2,spec='workshop' "
+            "where player_id=%s and plot='house_1'",
+            (OWNER,),
+        )
+    database.execute("rollback to savepoint retired_workshop")
+    database.execute("release savepoint retired_workshop")
     health = database.execute(
         "select rate_numerator,rate_denominator from public.island_structure_health "
         "where island_owner=%s and spot='wall_1'",
         (OWNER,),
     ).fetchone()
-    assert health == (130, 100)
+    assert health == before
 
 
-def test_v1_in_wave_hire_keeps_snapshot_paused_hp_and_resumes_after_expiry(database):
+def test_v1_in_wave_unrelated_hire_keeps_snapshot_paused_hp_and_resumes_after_expiry(database):
     seed_v1(database)
     as_server(database)
     start_template = template((("wall_1", "wall"),))
@@ -389,14 +398,14 @@ def test_v1_in_wave_hire_keeps_snapshot_paused_hp_and_resumes_after_expiry(datab
     assert started["status"] == "started"
     snapshot = started["initialSnapshot"]
 
-    hired = call(database, "select public.island_hire(%s,'carpenter','hire-wave-01',10,10)", OWNER)
+    hired = call(database, "select public.island_hire(%s,'gunner','hire-wave-01',10,10)", OWNER)
     assert hired["status"] == "done"
     health = database.execute(
         "select hp_units,rate_numerator,rate_denominator from public.island_structure_health "
         "where island_owner=%s and spot='wall_1'",
         (OWNER,),
     ).fetchone()
-    assert health == (500_000, 200, 100)
+    assert health == (500_000, 100, 100)
     assert (
         call(
             database,
@@ -453,7 +462,7 @@ def test_v1_in_wave_hire_keeps_snapshot_paused_hp_and_resumes_after_expiry(datab
     # fix/playtest-1117 (owner): the wave's end repairs every structure at once.
     assert expired_at is not None
     assert after_expiry[0] == 1_000_000
-    assert after_expiry[2:] == (200, 100)
+    assert after_expiry[2:] == (100, 100)
 
     millis_to_full = call(
         database,

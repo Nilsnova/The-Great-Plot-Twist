@@ -96,5 +96,7 @@ def test_the_migration_is_the_last_word_on_the_upgrade_functions():
         SHARED_CONSTRUCTION.read_text(),
         re.DOTALL,
     ).group(0)
-    assert wrapper.index("island_treasury_lock_scope") < wrapper.index("island_economy_state")
+    assert wrapper.index("island_construction_lock_legacy_scopes") < wrapper.index(
+        "island_economy_state"
+    )
     assert wrapper.index("island_economy_state") < wrapper.index("island_upgrade_legacy_personal")

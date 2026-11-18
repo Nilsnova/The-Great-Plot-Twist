@@ -1,0 +1,16 @@
+{
+  "synthetic": true,
+  "weapon": "fire_bombs",
+  "viewports": [
+    [
+      1280,
+      720
+    ],
+    [
+      375,
+      812
+    ]
+  ],
+  "browserErrors": [],
+  "externalRequests": []
+}
