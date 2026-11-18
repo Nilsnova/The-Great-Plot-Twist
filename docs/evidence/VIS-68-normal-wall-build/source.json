@@ -30,5 +30,18 @@
   "scope": "Final original-wall fresh-proof source. No frontend runtime change after0d. SQL applied only to private disposable Unix-socket test servers. Live application/deployment not authorized.",
   "compatibleSource": "670402d658bcba411df08e859ab88661587c8bc7",
   "compatibleNoWriteBoundary": "Skip layout writes when checked XY equals stored XY or absent canonical default; matching movement metadata and absent rows stay exact. True raw/effective differences alone materialize.",
-  "coordinatorInitialWideSource": "a76e9cccf128567c1f4f1841babba86ac56a42aa"
+  "coordinatorInitialWideSource": "a76e9cccf128567c1f4f1841babba86ac56a42aa",
+  "coordinatorFinalWide": {
+    "source": "456960d02169d508a5cb6f6c6d5d316e06cd5d47",
+    "backendTree": "8232794a485d1b8a0dafe65519d9b9415f950090",
+    "migrationsTree": "9b32d17cd66a6a8fcc2844b3fedf30c8461bf2ef",
+    "scope": "All51islandSQLmodules and relevant island/islet/wall/recovery/wave route+unit files; disposable Unix-socket PostgreSQL only; not complete backend suite.",
+    "finished": "2026-11-18T11:20:15.694986+00:00",
+    "pytestSeconds": 76.98,
+    "processSeconds": 78.38,
+    "passed": 1792,
+    "skipped": 0,
+    "ruffSeconds": 0.22,
+    "exitCode": 0
+  }
 }

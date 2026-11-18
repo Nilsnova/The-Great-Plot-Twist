@@ -130,5 +130,23 @@
     "origin": "/workspace/reference-village-work/clearance-backend-checks/report.json",
     "bytes": 4660,
     "sha256": "8fd560ceb8e28873cbce5373543b170a9ca9a14eb366eb1683e05ef10c83bc81"
+  },
+  {
+    "path": "raw/coordinator-wide-final.log",
+    "origin": "/workspace/reference-village-work/clearance-backend-final-checks/backend.log",
+    "bytes": 2216,
+    "sha256": "acad4fa5cf62449da95eb3c7b377a5c50ccf88596b5590f0fb804e5f59d1c2d7"
+  },
+  {
+    "path": "raw/coordinator-wide-final-report.json",
+    "origin": "/workspace/reference-village-work/clearance-backend-final-checks/report.json",
+    "bytes": 4735,
+    "sha256": "20ec046ba0feae2e9796919ed3cd75f998aa71116a3a1367d7264bdc15afc2a6"
+  },
+  {
+    "path": "raw/coordinator-wide-final-ruff.log",
+    "origin": "/workspace/reference-village-work/clearance-backend-final-checks/ruff.log",
+    "bytes": 19,
+    "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
   }
 ]
