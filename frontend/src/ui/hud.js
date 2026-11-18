@@ -11,8 +11,8 @@ import {getPreferences, reducedMotion} from '../settings/preferences.js';
 import {counterValue} from './coin-counter.js';
 import {addMenuExtras, addMenuStatus} from '../shell/menu-extras.js';
 import {createQuestStrip} from './quest-strip.js';
-import {QUEST_EVENTS, PLACE_ARRIVED, HUD_OPENED} from './quest-events.js';
-import {applyQuestEvent, createIdleHint, firstQuestView, questsFor, readFirstQuests, writeFirstQuests} from './first-quests.js';
+import {QUEST_EVENTS, PLACE_ARRIVED, HUD_OPENED, WAVE_REWARDS_RECOVERED} from './quest-events.js';
+import {applyQuestEvent, reconcileFirstQuests, createIdleHint, firstQuestView, questsFor, readFirstQuests, writeFirstQuests} from './first-quests.js';
 import {showToast} from './toasts.js';
 import {coinsSpoken, formatCoins} from '../lib/coins.js';
 import {hudWaveView} from './wave-progress.js';
@@ -106,7 +106,7 @@ export function createHud(container, actions, {on = defaultOn, emit = defaultEmi
   drawCoins();
 
   // ---- quests: the first 3 minutes unless a part of the game (the class demo) shows its own ----
-  let first = readFirstQuests(storage), guide = null;
+  let first = readFirstQuests(storage), guide = null, questIsland = null, recoveredWinBest = 0;
   const idle = createIdleHint();
   // T52: the first-run goals show only on an island the player owns or joined (actions.hasIsland), never on the
   // front door or signed out; a part of the game with its own goals (the class demo) keeps its strip.
@@ -127,16 +127,27 @@ export function createHud(container, actions, {on = defaultOn, emit = defaultEmi
     if (managing && strip.element.contains(document.activeElement)) actions.focus?.();
     draw();
   }
-  function progress(event) {
-    const result = applyQuestEvent(first, event, quests());
+  function completeGoal(result) {
     if (!result.changed || disposed) return;
-    first = result.state;writeFirstQuests(storage, first);idle.progress();
+    first = reconcileFirstQuests(result.state, questIsland, quests());writeFirstQuests(storage, first);idle.progress();
     if (override) return;
     draw();
     if (guide) return; // the guided start says it itself
     toast({text: first.done >= quests().length ? 'All goals done!' : `Goal done: ${result.completed.label}`, tone: 'success'});
   }
+  function savedWins() {
+    while (!disposed && recoveredWinBest > 0 && quests()[first.done]?.event === QUEST_EVENTS.WAVE_FINISHED) {
+      const result = applyQuestEvent(first, {type: QUEST_EVENTS.WAVE_FINISHED, survived: true, waveBest: recoveredWinBest}, quests());
+      if (!result.changed) break;
+      completeGoal(result);
+    }
+  }
+  function progress(event) { completeGoal(applyQuestEvent(first, event, quests())); savedWins(); }
   const stops = Object.values(QUEST_EVENTS).map(type => on(type, progress));
+  stops.push(on(WAVE_REWARDS_RECOVERED, event => {
+    if (!Number.isSafeInteger(event?.wonWaveBest) || event.wonWaveBest < 0 || event.wonWaveBest > 1000) return;
+    recoveredWinBest = Math.max(recoveredWinBest, event.wonWaveBest); savedWins();
+  }));
   // The world's own arrival event counts as place_arrived too.
   stops.push(on('arrived', event => progress({type: PLACE_ARRIVED, id: event.place})));
   draw();
@@ -168,6 +179,7 @@ export function createHud(container, actions, {on = defaultOn, emit = defaultEmi
   arrive(place);
 
   return {
+    resetRecoveredWins() { recoveredWinBest = 0; },
     get quickPanelsOpen() { return false; },
     setCaptain(view) {
       const value = view?.captain?.coins;
@@ -189,6 +201,16 @@ export function createHud(container, actions, {on = defaultOn, emit = defaultEmi
     setManaging,
     // 'island' (the island API sends setCoins) or 'wallet' (the default).
     setCoinSource(source) { coinSource = source === 'island' ? 'island' : 'wallet'; },
+    // Only the player's own island is supplied here, never the visited island's buildings or crew.
+    setQuestIsland(island) {
+      if (disposed) return;
+      questIsland = island;
+      const next = reconcileFirstQuests(first, questIsland, quests());
+      if (next !== first) {
+        first = next;writeFirstQuests(storage, first);idle.progress();draw();
+      }
+      savedWins();
+    },
     get coins() { return coins; },
     // A part of the game with its own goals (the class demo) passes its view; null gives the strip back.
     setQuests(view) { override = view ?? null; draw(); },

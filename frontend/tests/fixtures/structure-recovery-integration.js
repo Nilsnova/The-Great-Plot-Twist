@@ -17,6 +17,7 @@ import {spotById} from '../../src/island/spots.js';
 import {createFakeIslandTransport} from '../../src/pirates/fake-api.js';
 import {wireWaves} from '../../src/pirates/game-wiring.js';
 import {createPlace} from '../../src/world/places/factory.js';
+import {projectPoint} from '../../src/world/art.js';
 
 const FULL = 1_000_000;
 const TOKEN = '7165d60f-14f5-4b9e-96a0-2ed457b4c219';
@@ -235,6 +236,10 @@ window.recoveryFixture = {
       if (object.name === `island-${kind}:${spot}`) {
         found.building = {visible: object.visible, look: object.userData?.recoveryLook, art: object.userData?.art};
       }
+      if (kind === 'wall' && object.name === 'island-wall-connections') {
+        const post = object.wallPosts?.find(item => item.id === spot);
+        if (post) found.building = {visible: object.visible, look: post.look, art: `wall-post-${post.level}-${post.look}`};
+      }
     });
     return found;
   },
@@ -244,8 +249,17 @@ window.recoveryFixture = {
     place?.group?.traverse(object => {
       if (object.name === `island-${kind}:${spotId}` && object.userData?.recoveryLook === 'broken') building = object;
     });
-    if (!building) return false;
-    const point = building.getWorldPosition(new THREE.Vector3()), halfHeight = 11, aspect = innerWidth / innerHeight;
+    let point = building?.getWorldPosition(new THREE.Vector3()) ?? null;
+    if (!point && kind === 'wall') {
+      let brokenPost = null;
+      place?.group?.traverse(object => {
+        if (object.name !== 'island-wall-connections') return;
+        brokenPost = object.wallPosts?.find(item => item.id === spotId && item.look === 'broken') ?? null;
+      });
+      if (brokenPost) point = new THREE.Vector3(projectPoint(brokenPost.x, brokenPost.z).x, projectPoint(brokenPost.x, brokenPost.z).y, 0);
+    }
+    if (!point) return false;
+    const halfHeight = 11, aspect = innerWidth / innerHeight;
     camera.left = -halfHeight * aspect; camera.right = halfHeight * aspect;
     camera.top = halfHeight; camera.bottom = -halfHeight;
     camera.position.set(point.x, point.y + 2, 50); camera.lookAt(point.x, point.y + 2, 0); camera.updateProjectionMatrix();

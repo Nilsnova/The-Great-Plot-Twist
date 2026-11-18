@@ -96,7 +96,15 @@ export function createNarrator({container = globalThis.document?.body, on, audio
     if (!rule) return [];
     if (rule.cooldown && now() - (lastSpoken.get(trigger) ?? -Infinity) < rule.cooldown) return [];
     if (fighting !== null && !rule.once && rule.priority < PRIORITY.HIGH) return [];
-    const picked = selectLines(index, trigger, {told: memory.told(game), seed});
+    let picked = selectLines(index, trigger, {told: memory.told(game), seed});
+    let recoveryVersion = 0;
+    try { recoveryVersion = getGame?.()?.recoveryVersion === 1 ? 1 : 0; } catch { recoveryVersion = 0; }
+    if (recoveryVersion === 1) {
+      picked = picked.filter(line => line.id !== 'unlock_carpenter').map(line => line.id === 'house_role'
+        ? {...line, id: 'house_role_recovery', voice: null,
+          text: 'A house with a job! Barracks send out militia, and captains heal at a Tavern.'}
+        : line);
+    }
     if (!picked.length) return [];
     lastSpoken.set(trigger, now());
     const queued = picked.filter(line => queue.push(line, {priority: rule.priority, ttl: rule.ttl}));
@@ -196,6 +204,7 @@ export function createNarrator({container = globalThis.document?.body, on, audio
   function waveFinished(event) {
     const id = event?.waveId ?? null, info = id !== null ? started.get(id) : null;
     if (id !== null) { if (finished.has(id)) return; finished.add(id); }
+    if (fighting !== null && fighting !== id) return; // A late receipt must not end a newer battle's narration.
     fighting = null;
     const wave = Number.isSafeInteger(event?.wave) ? event.wave : info?.wave ?? null, game = info?.game ?? current();
     const survived = event?.survived === true;

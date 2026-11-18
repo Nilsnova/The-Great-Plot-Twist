@@ -188,11 +188,13 @@ def test_input_route_requires_explicit_protocol2(wave_protocol):
     assert response.status_code == 422
 
 
-def test_protocol2_finish_maps_the_rpc_balance_to_the_legacy_coins_field(monkeypatch):
+@pytest.mark.parametrize("survived", [True, False])
+def test_protocol2_finish_keeps_the_saved_outcome_and_maps_balance(monkeypatch, survived):
     world = World()
 
     async def finish(*args, **kwargs):
         return {
+            "survived": survived,
             "loot": 15,
             "balance": 115,
             "waveBest": 1,
@@ -227,7 +229,18 @@ def test_protocol2_finish_maps_the_rpc_balance_to_the_legacy_coins_field(monkeyp
 
     assert response.status_code == 200, response.text
     assert response.json()["coins"] == 115
+    assert response.json()["survived"] is survived
     assert response.json()["recovery"]["closedHp"] == {"instance-1": 987654}
+
+
+@pytest.mark.parametrize("survived", [None, 1, "true"])
+def test_protocol2_finish_refuses_an_unreadable_saved_outcome(monkeypatch, survived):
+    async def finish(*args, **kwargs):
+        return {"survived": survived, "recovery": {}}
+
+    monkeypatch.setattr(wave_service, "finish_protocol2", finish)
+    response = World().finish(waveProtocol=2, checkpoint=CHECKPOINT)
+    assert_error(response, 502, "database_error")
 
 
 def _current_v2(world):

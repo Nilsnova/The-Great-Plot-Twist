@@ -7,6 +7,6 @@ export function createVillagePlacementFocus(view) {
     const key = JSON.stringify([placement.spotId ?? 'walls', cell.x, cell.z, placement.message ?? '', placement.cells?.length]);
     if (key === previous) return;
     previous = key;
-    view.focusVillage({x: cell.x, z: cell.z, lift: 1});
+    view.focusVillage({x: cell.x, z: cell.z, lift: cell.lift ?? 1, ...(cell.keepFit ? {keepFit: true} : {})});
   };
 }

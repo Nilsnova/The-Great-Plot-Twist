@@ -96,6 +96,24 @@ describe('wall lanes (D056)', () => {
     expect(run.inside).toEqual([]);
   }, 60_000);
 
+  it('starts a pathing boarder on the seaward side when its landing starts inside a standing wall', () => {
+    const wall = { id: 'wall_12', kind: 'wall', level: 5, x: 20, z: 1.5 };
+    function landing(pathing, defenses) {
+      const sim = createWave({ wave: 15, seed: 3 * 7919, pathing, defenses });
+      while (!sim.done) {
+        const event = sim.step(.25, []).find(event => event.type === 'boarder_landed' && event.boarderId === 'boarder_7');
+        if (event) return event;
+      }
+      throw new Error('Expected the east-lane boarder to land');
+    }
+    const nominal = landing(true, []);
+    expect(nominal).toMatchObject({ x: 20.73, z: 1.91 });
+    expect(landing(false, [wall])).toEqual(nominal);
+    const clear = landing(true, [wall]);
+    expect(clear).toMatchObject({ t: nominal.t, shipId: nominal.shipId });
+    expect(clear.x).toBeGreaterThanOrEqual(wall.x + 1);
+  });
+
   it('a wall alone on a lane cell is hacked in the real sim (a sample of the cells)', () => {
     const cells = laneCells(), missed = [];
     for (let i = 0; i < cells.length; i += 37) {
