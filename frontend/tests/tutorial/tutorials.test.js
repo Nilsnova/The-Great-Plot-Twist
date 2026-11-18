@@ -153,7 +153,7 @@ describe('the unlock cards', () => {
     t.frame(); await flush();
     expect(t.tutorials.guide).toBeNull();
     const catchUp = t.tutorials.queue;
-    expect(catchUp).toEqual(['captain_upgrades', 'houses', 'tear_down', 'level_2', 'mortar', 'house_roles', 'weapon_shop', 'watchtower', 'gunner']);
+    expect(catchUp).toEqual(['captain_upgrades', 'houses', 'tear_down', 'level_2', 'mortar', 'house_roles', 'arsenal', 'watchtower', 'gunner']);
     expect(t.cards[0]).toMatchObject({title: 'Captain upgrades', total: 9});
     t.cards[0].close('skip_all'); await flush();
     expect(t.tutorials.queue).toEqual([]);

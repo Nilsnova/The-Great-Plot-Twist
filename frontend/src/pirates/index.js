@@ -5,7 +5,9 @@
 //     reducedMotion, quality: () => settings.quality, isBlocked: () => !active || outsideBlocked(), on, emit,
 //     getDefenses, finishWave, api, openRoom});           // and pirates.dispose() in dispose()
 //
-// It runs its own frame loop, so game.js needs no other change. What the other lanes hand in:
+// By default it runs its own frame loop. With loop:false the caller owns update(delta); game.js
+// uses that mode to sample combat after movement and apply poses before drawing the same frame.
+// What the other lanes hand in:
 //   getDefenses()   the island lane: [{id, kind, x, z}] of the built walls, cannons, watchtower and
 //                   houses on the island being defended, in home_islet world units
 //   finishWave(body) the island lane: POST /api/waves/finish and show the loot; may throw the API
