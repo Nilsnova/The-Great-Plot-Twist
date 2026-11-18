@@ -133,3 +133,16 @@ its separately supplied integration fix. This checkpoint passed:
 Actual native active-wave production/closure and the committed legacy-copy,
 wallet and inventory-expansion races remain follow-up checks. This checkpoint
 does not label those gates complete or imply provider-issued authentication.
+
+## Committed legacy-writer races
+
+Three additional real PostgreSQL checks passed in 5.25 seconds. A published
+legacy arsenal return holds its island scope while waiting for a copy; deletion
+waits for that exact scope before taking the actor profile. An accepted private
+wallet transaction commits before deletion upgrades the profile. A new legacy
+copy is acquired after deletion captures its initial scope set; the new island
+has an earlier signed scope key. After its FK fence detects the change, deletion
+releases its previous profile lock and waits on the newly discovered scope before
+continuing. The tests assert actual `pg_blocking_pids` wait edges and independently
+probe profile locks, then commit both real operations. No domain helper or
+authority provider is replaced for these checks.
