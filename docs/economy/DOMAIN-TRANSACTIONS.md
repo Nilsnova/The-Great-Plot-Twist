@@ -66,6 +66,12 @@ producer currently supplies it. Existing recovery snapshots without it refuse.
 Free timed revival remains unavailable until canonical target-bound hold/fall and
 controlling-session provenance can authorize its unique ordered event.
 
+The existing `/api/waves/recover` path settles saved legacy personal obligations.
+Shared wave producers and admission guards must preserve each attempt's original
+accounting mode so that this path cannot pay a shared attempt into a personal
+wallet. The existing paid-revival journal proves its durable paid event; it does
+not supply the uninterrupted hold authority required for new shared free revival.
+
 Arsenal member deletion still needs a coordinated transaction replacing the
 destructive holder cascade on continuing islands. Private holder helpers do not
 schedule work, revoke combat input or prove a canonical wave closure by themselves.
