@@ -200,7 +200,7 @@ were changed. No new full multiplayer smoke or live integration pass is claimed.
 ## Release and operator steps
 
 Review and apply the additive migrations in order before deploying the matching API/client:
-[atomic revival](../../supabase/migrations/20261118050000_paid_revive_journal.sql),
+[atomic revival](../../supabase/migrations/20261118051000_paid_revive_journal.sql),
 [saved rewards](../../supabase/migrations/20261118060000_reward_recovery.sql),
 [historical reconciliation](../../supabase/migrations/20261118070000_revive_reconciliation.sql).
 Refresh the PostgREST schema. Existing earlier recovery migrations remain prerequisites;

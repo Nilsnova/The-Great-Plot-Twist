@@ -3259,7 +3259,12 @@ Disposable verification must reapply the complete migration chain, exercise obso
 
 ### Recovery implementation migration order and rollback boundary
 
-`migrations/20261118050000_paid_revive_journal.sql` fixes issue #466. The service-only
+The paid-revival migration uses version `20261118051000`: the merged retirement migration
+already owns `20261118050000`. Its SQL body is unchanged by this publication rename. Apply
+retirement → atomic revival → saved rewards → historical reconciliation in timestamp order.
+Historical evidence manifests retain the filenames used at their recorded commits.
+
+`migrations/20261118051000_paid_revive_journal.sql` fixes issue #466. The service-only
 `recovery_wave_revive` function charges the payer, keeps the fall receipt and appends one
 `captain_revive` journal event in the same transaction, after the sealed frontier. It locks the
 payer wallet, sorted islands, recovery state, wave and participant in that order. Paid repeats
@@ -3300,7 +3305,7 @@ open and unsupported legacy results are excluded before the batch limit. An empt
 still returns the current wallet and persisted personal win progress after a lost response.
 
 Apply the migration and refresh the PostgREST schema before deploying the API/client that uses
-it. Review in timestamp order after `20261118050000_paid_revive_journal.sql`; the historical
+it. Review in timestamp order after `20261118051000_paid_revive_journal.sql`; the historical
 reconciliation migration follows at `20261118070000`. These files were applied and reapplied
 only in disposable test databases. No live application, refund or feature activation is claimed.
 

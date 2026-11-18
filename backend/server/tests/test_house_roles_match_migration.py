@@ -107,7 +107,7 @@ def test_the_latest_wave_revive_keeps_the_tavern_rule():
         if re.search(r"create or replace function public\.wave_revive\(", path.read_text())
     ]
     latest = definitions[-1]
-    assert latest.name == "20261118050000_paid_revive_journal.sql"
+    assert latest.name == "20261118051000_paid_revive_journal.sql"
     text = latest.read_text()
     # The atomic-journal update retains the existing payment implementation by renaming it.
     assert "rename to wave_revive_charge;" in text

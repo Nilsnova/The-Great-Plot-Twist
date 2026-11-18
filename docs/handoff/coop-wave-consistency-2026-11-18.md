@@ -126,7 +126,7 @@ Chromium component tests cover stale bell/card effects and old receipts during t
 ## Not verified and remaining
 
 No production migration, feature activation, deployment or merge was performed. Code publication
-and exact review-head checks are recorded in the draft PR. The additive [revival migration](../../supabase/migrations/20261118050000_paid_revive_journal.sql)
+and exact review-head checks are recorded in the draft PR. The additive [revival migration](../../supabase/migrations/20261118051000_paid_revive_journal.sql)
 must be reviewed and applied through the normal release process before deploying its API.
 The migration guards old clients against a charge-only recovery revival; they need the updated
 client for that action. Existing already-paid historical receipts are not bulk-backfilled.
