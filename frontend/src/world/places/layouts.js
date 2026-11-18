@@ -16,7 +16,7 @@ export const layouts = {
 };
 export const homeBuildings = Object.entries(isletPlots).map(([plot, item]) => ({ plot, ...item }));
 layouts.home_islet = [{ asset: 'bench', x: 4, z: 13 },
-  { asset: 'barrel', x: -12, z: 7 }, { asset: 'lantern', x: -3, z: 12 }];
+  { asset: 'barrel', x: -10.5, z: 8 }, { asset: 'lantern', x: -3, z: 12 }];
 layouts.smugglers_cove = [building('back-room', -8, -1, 4), building('low-tide-cave', 9, 3, 5),
   building('arena-gate', 0, -10, 5), { asset: 'barrel', x: -11, z: 1 }, { asset: 'rope-coil', x: 5, z: 9 }];
 layouts.wreck_point = [building('salvage-yard', -7, -2, 6.7), { asset: 'dark-schooner', x: 13, z: 15 },
