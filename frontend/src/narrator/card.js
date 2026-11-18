@@ -5,6 +5,9 @@ import './narrator.css';
 // The E prompt floating over a building (.interact.floating) moves with the world, so the card does not dodge it
 // (the overlap audit: dodging it pushed the card into the wave bar).
 const CONTROLS = '.bottom-bar,.interact:not([hidden]):not(.floating),.pirate-musket:not([hidden])';
+const ACTIVE_COMBAT = '.pirate-hud:not([hidden]):has(.pirate-bar:not([hidden])):not(:has(.pirate-countdown:not([hidden]),.pirate-break:not([hidden])))';
+const COMBAT_CONTROLS = [CONTROLS, '.touch-stick-group', '.touch-actions button',
+  '.pirate-bar', '.pirate-prompt', '.pirate-point-prompt', '.pirate-boss'].join(',');
 
 export function createNarratorCard(container = document.body, {onSkip = () => {}, large = () => false} = {}) {
   const card = document.createElement('div');
@@ -22,16 +25,61 @@ export function createNarratorCard(container = document.body, {onSkip = () => {}
   skip.title = 'Skip';
   skip.addEventListener('click', event => { event.stopPropagation(); onSkip(); });
   card.append(text, skip);
+  let observedBar = null, layoutFrame = null;
+  const barSize = typeof ResizeObserver === 'function' ? new ResizeObserver(() => {
+    // Position after the HUD has published the new wave bar bottom.
+    if (layoutFrame !== null) return;
+    layoutFrame = requestAnimationFrame(() => {
+      layoutFrame = null;
+      position();
+    });
+  }) : null;
 
-  // Sit above the bottom bar and any prompt; the sound captions move up while the card shows.
+  function watchWaveBar(bar) {
+    if (!barSize || observedBar === bar) return;
+    barSize.disconnect();
+    if (layoutFrame !== null) cancelAnimationFrame(layoutFrame);
+    layoutFrame = null;
+    observedBar = bar;
+    if (bar) barSize.observe(bar);
+  }
+
+  function dockInCombat() {
+    const stick = container.querySelector('.touch-stick-group')?.getBoundingClientRect();
+    const left = stick?.width > 0 ? Math.ceil(stick.right) + 8 : 12;
+    card.style.setProperty('--narrator-dock-left', `${left}px`);
+    card.style.removeProperty('bottom');
+    const own = card.getBoundingClientRect();
+    const obstacles = [...container.querySelectorAll(COMBAT_CONTROLS)].map(node => node.getBoundingClientRect())
+      .filter(rect => rect.width > 0 && rect.height > 0 && rect.left < own.right && rect.right > own.left)
+      .sort((a, b) => b.bottom - a.bottom);
+    let bottom = own.bottom;
+    // Take the lowest space with room for every line, passing above controls only when they intersect.
+    for (const rect of obstacles) if (rect.top < bottom + 4 && rect.bottom > bottom - own.height - 4) bottom = rect.top - 4;
+    if (bottom - own.height < 8 || own.width < skip.offsetWidth + 4) return false;
+    card.style.bottom = `${innerHeight - bottom}px`;
+    return true;
+  }
+
   function position() {
     if (card.hidden) return;
-    const own = card.getBoundingClientRect();
-    // Only controls under the card count (on a phone the musket button sits below it).
-    const controls = [...container.querySelectorAll(CONTROLS)].map(node => node.getBoundingClientRect())
-      .filter(rect => rect.width > 0 && rect.left < own.right && rect.right > own.left);
-    const top = Math.min(innerHeight, ...controls.map(rect => rect.top));
-    card.style.bottom = `${Math.max(16, innerHeight - top + 12)}px`;
+    const combatHud = container.querySelector(ACTIVE_COMBAT);
+    const dock = !card.classList.contains('is-large') && !!combatHud
+      && getComputedStyle(card).getPropertyValue('--narrator-dock-enabled').trim() === '1';
+    // The wave event details can resize the bar without changing any control's hidden flag.
+    watchWaveBar(dock ? combatHud.querySelector('.pirate-bar:not([hidden])') : null);
+    card.classList.toggle('is-combat-docked', dock);
+    card.classList.remove('is-combat-fallback');
+    if (!dock || !dockInCombat()) {
+      card.classList.remove('is-combat-docked');
+      card.classList.toggle('is-combat-fallback', dock);
+      const own = card.getBoundingClientRect();
+      const controls = [...container.querySelectorAll(CONTROLS)].map(node => node.getBoundingClientRect())
+        .filter(rect => rect.width > 0 && rect.left < own.right && rect.right > own.left);
+      const top = Math.min(innerHeight, ...controls.map(rect => rect.top));
+      const bottom = Math.max(16, innerHeight - top + 12);
+      card.style.bottom = `${dock ? Math.min(bottom, Math.max(8, innerHeight - own.height - 8)) : bottom}px`;
+    }
     document.documentElement.style.setProperty('--narrator-card-height', `${Math.round(card.getBoundingClientRect().height)}px`);
   }
   addEventListener('resize', position);
@@ -53,6 +101,7 @@ export function createNarratorCard(container = document.body, {onSkip = () => {}
     },
     hide() {
       watch(false);
+      watchWaveBar(null);
       card.hidden = true;
       delete card.dataset.line;
       text.textContent = '';

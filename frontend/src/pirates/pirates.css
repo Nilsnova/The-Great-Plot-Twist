@@ -79,6 +79,10 @@ html:has(.pirate-hud:not([hidden]) .pirate-bar:not([hidden])) :is(.u-toasts,.u-t
 @media(max-width:760px) and (pointer:coarse){.pirate-bar{padding:4px 10px 6px;gap:3px}.pirate-prompt{bottom:232px}
 .pirate-hud>.pirate-musket{right:14px;bottom:300px;min-width:120px;min-height:56px;padding:6px 12px}
 .pirate-point-layer .lamp-status{bottom:232px}.pirate-point-prompt{bottom:294px}}
+/* Short portrait screens can run out of room above the attack button when the wave bar grows. */
+@media(max-width:600px) and (orientation:portrait) and (pointer:coarse){
+  .pirate-hud>.pirate-musket{top:clamp(0px,max(calc(100% - 356px),var(--pirate-bar-bottom,150px)),calc(100% - 72px));bottom:auto}
+}
 /* While a wave runs: no goals panel, the toasts under the wave bar, the visiting chip out of the way. */
 html:has(.pirate-hud:not([hidden]) .pirate-bar:not([hidden])) .quest-strip{display:none}
 @media(min-width:901px){html:has(.pirate-hud:not([hidden]) .pirate-bar:not([hidden])) :is(.u-toasts,.u-toasts[popover]){inset:var(--pirate-bar-bottom,150px) 340px auto}}

@@ -271,6 +271,11 @@ function pool() {
 const colour = hex => { const c = new THREE.Color(hex); return { r: c.r, g: c.g, b: c.b }; };
 const GOLD = colour('#ffd77a'), RED = colour('#d8553f'), GREEN = colour('#9fd26a'), DARK = colour('#1f2622'), BEAM = colour('#ffe9a8');
 const BRASS = colour('#e0b04a'), TEAL = colour('#4fc3c9');
+const CANNONBALL_LOOK = {
+  island: { core: { r: 1.1, g: 1.05, flashing: .04 }, trail: colour('#ffdc97') },
+  ship: { core: { r: 1.4, g: .72, b: .55, flashing: .065 }, trail: colour('#fa8355') },
+};
+const CANNONBALL_TAIL = [{ width: .32, alpha: .88 }, { width: .19, alpha: .44 }];
 // One reused {r, g, b, a} for a colour at an alpha: layer.push copies the numbers at once, so the many
 // bars, shadows and pips drawn each frame need no new object each.
 const TINT = { r: 1, g: 1, b: 1, a: 1 };
@@ -416,7 +421,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       case 'ship_spawned': shipMeta(event.shipId, event.kind, event.x, event.z, event.toX, event.toZ); break;
       case 'cannon_fired': {
         balls.add(item => Object.assign(item, { x: event.x, z: event.z, toX: event.toX, toZ: event.toZ, from: event.t, to: event.impactAt,
-          hit: event.hit, enemy: false, splashed: false, manual: event.manual }));
+          hit: event.hit, enemy: false, splashed: false, manual: event.manual, kind: 'cannon' }));
         const flip = facingTo(event) < 0;
         fire.set(event.cannonId, { until: clock + FIRE_SECONDS, flip });
         const post = posts.find(item => item.id === event.cannonId); if (post) post.flip = flip;
@@ -460,7 +465,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
         // T50 (the wave rule ship_fire): the ship's ball flies from its hull to the wall, tower or heart it aims at, on
         // the sim's own flight (its impactAt); the impact's dust, flash or red burst comes when it lands (land()).
         balls.add(item => Object.assign(item, { x: event.x, z: event.z, toX: event.toX, toZ: event.toZ, from: event.t, to: event.impactAt,
-          hit: true, enemy: true, splashed: false, dust: event.target === 'heart' ? 'heart' : 'wall', wallId: event.targetId ?? null }));
+          hit: true, enemy: true, splashed: false, kind: 'cannon', dust: event.target === 'heart' ? 'heart' : 'wall', wallId: event.targetId ?? null }));
         const meta = ships.get(event.shipId), size = SHIP_SIZE[event.kind] ?? SHIP_SIZE.sloop;
         effects()?.bloom(x + (meta?.facing ?? 1) * size.w * .25, y + size.h * .4, { radius: .8, life: .3, colour: '#ffcf6a' });
         break;
@@ -479,7 +484,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
         const ship = latest?.ships?.find(item => item.id === event.shipId);
         const targetX = event.type === 'wall_damaged' ? event.x : event.x * .86, targetZ = event.type === 'wall_damaged' ? event.z : event.z * .86;
         if (ship) balls.add(item => Object.assign(item, { x: ship.x, z: ship.z, toX: targetX, toZ: targetZ, from: simNow, to: simNow + .45,
-          hit: true, enemy: true, splashed: false, dust: event.type === 'wall_damaged' ? 'wall' : 'shore', wallId: event.wallId }));
+          hit: true, enemy: true, splashed: false, kind: 'cannon', dust: event.type === 'wall_damaged' ? 'wall' : 'shore', wallId: event.wallId }));
         else if (event.type === 'wall_damaged') wallFlash.set(event.wallId, clock + FLASH_SECONDS);
         break;
       }
@@ -487,7 +492,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       case 'harpoon_thrown': {
         // The harpoon tower (GAME-V3.md §5): a flat, quick flight of the harpoon with its rope behind it.
         balls.add(item => Object.assign(item, { x: event.x, z: event.z, toX: event.toX, toZ: event.toZ, from: event.t, to: event.impactAt,
-          hit: true, enemy: false, splashed: false, manual: false, harpoon: true }));
+          hit: true, enemy: false, splashed: false, manual: false, kind: 'harpoon' }));
         const flip = facingTo(event) < 0;
         fire.set(event.towerId, { until: clock + FIRE_SECONDS * 1.3, flip });
         const post = posts.find(item => item.id === event.towerId); if (post) post.flip = flip;
@@ -497,7 +502,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       case 'culverin_fired': {
         // The culverin (T43): a fast, flat, heavy shot from the long barrel, a long muzzle flash and a ring of smoke.
         balls.add(item => Object.assign(item, { x: event.x, z: event.z, toX: event.toX, toZ: event.toZ, from: event.t, to: event.impactAt,
-          hit: true, enemy: false, splashed: false, manual: false, culverin: true }));
+          hit: true, enemy: false, splashed: false, manual: false, kind: 'culverin' }));
         const flip = facingTo(event) < 0;
         fire.set(event.towerId, { until: clock + FIRE_SECONDS * 1.4, flip });
         const post = posts.find(item => item.id === event.towerId); if (post) post.flip = flip;
@@ -513,7 +518,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
         for (let k = 0; k < n; k++) {
           const side = (k - (n - 1) / 2) * .45;
           balls.add(item => Object.assign(item, { x: event.x, z: event.z, toX: event.toX + side * .6, toZ: event.toZ + side, from: event.t, to: event.t + Math.max(.08, d / 40),
-            hit: true, enemy: false, splashed: false, manual: false, swivel: true }));
+            hit: true, enemy: false, splashed: false, manual: false, kind: 'swivel' }));
         }
         fire.set(event.towerId, { until: clock + FIRE_SECONDS * .8, flip });
         const post = posts.find(item => item.id === event.towerId); if (post) post.flip = flip;
@@ -826,23 +831,40 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   }
 
   function drawBall(ball) {
-    if (ball.harpoon) { drawHarpoon(ball); return; }
-    if (ball.swivel) { drawPellet(ball); return; }
-    if (ball.culverin) { drawCulverinBall(ball); return; }
+    if (ball.kind === 'harpoon') { drawHarpoon(ball); return; }
+    if (ball.kind === 'swivel') { drawPellet(ball); return; }
+    if (ball.kind === 'culverin') { drawCulverinBall(ball); return; }
     const span = Math.max(.05, ball.to - ball.from), p = Math.min(1, Math.max(0, (simNow - ball.from) / span));
-    const x = ball.x + (ball.toX - ball.x) * p, z = ball.z + (ball.toZ - ball.z) * p;
-    const distance = Math.hypot(ball.toX - ball.x, ball.toZ - ball.z);
-    const lift = still() ? .8 : (ball.enemy ? .8 : 1.2) + 4 * (distance * (ball.enemy ? .03 : .07)) * p * (1 - p);
-    const r = rect['pirate-cannonball'];
-    // A short pale trail behind the ball, then the ball itself.
-    if (!still() && p > .08) for (const back of [.07, .14]) {
-      const q = Math.max(0, p - back), tx = ball.x + (ball.toX - ball.x) * q, tz = ball.z + (ball.toZ - ball.z) * q;
-      const tl = (ball.enemy ? .8 : 1.2) + 4 * (distance * (ball.enemy ? .03 : .07)) * q * (1 - q);
-      layers.air.push(rect[WHITE], drawnX(tx, tz), drawnY(tz) + tl, .25, .25, .5, .125, { r: .9, g: .9, b: .85, a: back < .1 ? .55 : .3 });
+    const dx = ball.toX - ball.x, dz = ball.toZ - ball.z;
+    const ground = projectGround(ball.x + dx * p, ball.z + dz * p);
+    const reduced = still(), lowArc = ball.enemy ? .8 : 1.2;
+    const arc = 4 * Math.hypot(dx, dz) * (ball.enemy ? .03 : .07);
+    const lift = reduced ? .8 : lowArc + arc * p * (1 - p);
+    const y = ground.y + lift, look = ball.enemy ? CANNONBALL_LOOK.ship : CANNONBALL_LOOK.island;
+    if (!reduced && p > 0) {
+      const direction = projectGroundVector(dx, dz);
+      // Sample the same lifted arc just behind the head. Cap the wake in display units on long shots.
+      const speed = Math.hypot(direction.x, direction.y + arc * (1 - 2 * p));
+      const step = Math.min(.07, .96 / Math.max(speed, 1));
+      let frontX = ground.x, frontY = y, q = p;
+      for (const segment of CANNONBALL_TAIL) {
+        q = Math.max(0, q - step);
+        const backX = ground.x - direction.x * (p - q);
+        const backY = ground.y - direction.y * (p - q) + lowArc + arc * q * (1 - q);
+        const trailX = frontX - backX, trailY = frontY - backY;
+        const length = Math.min(1, Math.hypot(trailX, trailY));
+        if (length > .02) {
+          const angle = Math.atan2(trailY, trailX) - Math.PI / 2;
+          layers.air.push(rect[WHITE], frontX, frontY, segment.width, length, .5, length,
+            { ...look.trail, angle, a: segment.alpha });
+        }
+        frontX = backX;
+        frontY = backY;
+      }
     }
-    layers.air.push(r, drawnX(x, z), drawnY(z) + lift, r.w * 1.1, r.h * 1.1, .5, .55 * r.h, ball.enemy ? { r: .55, g: .45, b: .4 } : undefined);
-    // The ball's shadow on the water or the sand.
-    if (!still()) layers.air.push(rect[WHITE], drawnX(x, z), drawnY(z) - .05, .3, .1, .5, 0, tinted(DARK, .35));
+    const r = rect['pirate-cannonball'];
+    layers.air.push(r, ground.x, y, r.w * 1.1, r.h * 1.1, .5, .55 * r.h, look.core);
+    if (!reduced) layers.air.push(rect[WHITE], ground.x, ground.y - .05, .3, .1, .5, 0, tinted(DARK, .35));
   }
 
   // A mortar shell: a high, slow arc with its shadow racing ahead on the water.

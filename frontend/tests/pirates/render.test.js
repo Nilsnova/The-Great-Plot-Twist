@@ -75,6 +75,61 @@ describe('pirate wave renderer', () => {
     renderer.dispose();
   });
 
+  it('keeps standard cannon wakes on the projected arc and leaves only the core under reduced motion', () => {
+    const scene = new THREE.Scene(), pack = packAtlas();
+    let reduced = false;
+    const renderer = createWaveRenderer({ scene, atlas: { texture: new THREE.Texture(), ...pack },
+      reducedMotion: () => reduced, fx: () => null });
+    const air = renderer.root.getObjectByName('pirates:air').geometry;
+    const data = (name, index) => [...air.getAttribute(name).array.slice(index * 4, (index + 1) * 4)];
+    const uvOf = (name, index) => (pack.rects[name].x + .01) / pack.width - data('iUv', index)[0];
+    const state = { ships: [], boarders: [], walls: [], towers: [] };
+    const path = { x: 4, z: 7, toX: 13, toZ: -5, t: 0, impactAt: 1, hit: true };
+    const point = progress => projectGround(path.x + (path.toX - path.x) * progress, path.z + (path.toZ - path.z) * progress);
+    const height = (p, enemy) => (enemy ? .8 : 1.2) + 4 * 15 * (enemy ? .03 : .07) * p * (1 - p);
+
+    function testShot(enemy, from) {
+      renderer.events([{ ...path, t: from, impactAt: from + 1, type: enemy ? 'ship_fired' : 'cannon_fired',
+        cannonId: 'c', shipId: 's', target: 'heart' }]);
+      renderer.update({ state, simTime: from + .5 });
+      expect(air.instanceCount).toBe(4); // Two trail segments, the ball and its shadow.
+      expect(uvOf('pirate-cannonball', 2)).toBeCloseTo(0, 6);
+      const [x, y] = data('iPos', 2), [nearX, nearY, angle] = data('iPos', 0), [farX, farY] = data('iPos', 1);
+      expect(x).toBeCloseTo(point(.5).x);
+      expect(y).toBeCloseTo(point(.5).y + height(.5, enemy));
+      expect(nearX).toBeCloseTo(x);
+      expect(nearY).toBeCloseTo(y);
+      const progress = .5 * (farX - point(0).x) / (x - point(0).x);
+      expect(progress).toBeLessThan(.5);
+      expect(farY).toBeCloseTo(point(progress).y + height(progress, enemy));
+      expect(angle).toBeCloseTo(Math.atan2(y - farY, x - farX) - Math.PI / 2);
+      const [width, length] = data('iSize', 0), [backWidth, backLength] = data('iSize', 1);
+      expect(width).toBeGreaterThan(backWidth);
+      expect(Math.max(length, backLength)).toBeLessThanOrEqual(1);
+      const tint = data('iTint', 0), coreLight = air.getAttribute('iFlash').array[2];
+      expect(coreLight).toBeGreaterThan(0);
+
+      reduced = true;
+      renderer.update({ state, simTime: from + .5 });
+      expect(air.instanceCount).toBe(1);
+      expect(uvOf('pirate-cannonball', 0)).toBeCloseTo(0, 6);
+      expect(data('iPos', 0)[1]).toBeCloseTo(point(.5).y + .8);
+      expect(air.getAttribute('iFlash').array[0]).toBe(coreLight);
+      renderer.update({ state, simTime: from + 1 });
+      expect(air.instanceCount).toBe(0);
+      reduced = false;
+      return tint;
+    }
+
+    const islandTint = testShot(false, 0);
+    // Roll a specialist projectile through the pool before a normal ship shot reuses the entry.
+    renderer.events([{ ...path, type: 'culverin_fired', towerId: 'c', t: 2, impactAt: 3 }]);
+    renderer.update({ state, simTime: 3 });
+    const shipTint = testShot(true, 4);
+    expect(shipTint[1]).toBeLessThan(islandTint[1]); // Incoming fire has the copper wake.
+    renderer.dispose();
+  });
+
   it('shows damaged walls and zero or tiny-positive tower HP only in recovery v1', () => {
     const scene = new THREE.Scene(), renderer = createWaveRenderer({ scene, atlas: atlas(), defenses: DEFENSES, recoveryV1: true, fx: () => null });
     const state = { time: 0, ships: [], boarders: [], walls: [{ id: 'wall_1', x: 0, z: 1, hp: 0, maxHp: 60, broken: true }],
