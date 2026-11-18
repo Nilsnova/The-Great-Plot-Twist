@@ -1,19 +1,10 @@
 {
-  "status": "collecting_coordinator_evidence",
+  "status": "complete_evidence_with_open_test_failures_and_human_review_gates",
   "responsibleHuman": "Johannes Franz Lang",
   "github": "frcola",
   "beforeRuntime": "6c87b8dcd2d7a1bb5376c3b64bbede27a144479e",
   "historicalIterationRuntime": "65bda4fd750e4a2001fecc6d99b03ff287727e10",
-  "correctedCandidateRuntime": "9fa154940cbc9dab29ece4d15bba7efa8778a520",
   "parentDocumentationBase": "13c10cdc2789829eacd9d71cfd8d5e16072be88b",
-  "candidateTrees": {
-    "frontend/src": "e191d9290088908ee27e82e03a15847d4a73a38e",
-    "frontend/public": "9306942db1050d728799cee2fbdc8e8960f14ad2",
-    "backend": "3956a73d76f537fd7c85259afa4bf9280a6e0ecd",
-    "supabase/migrations": "ae31ac50221be83070e7f46580d66a70eedbad20",
-    "frontend/scripts": "b5c4837c92361163c3eced4d20509004ddcf80a4",
-    "frontend/tests": "07944eef575e72984a899e31c34b9f5afea024f7"
-  },
   "identityBoundary": "The parent documentation base has matching frontend/src, frontend/public, backend and complete supabase/migrations subtrees. Top-level supabase differs through README only; build stamps follow the actual HEAD.",
   "results": {
     "beforeActualGame": "passed_215.30_seconds_20_original_pngs",
@@ -22,8 +13,18 @@
     "paidTierWalkthrough": "passed_223.56_seconds_both_viewports_492_receipts_each_adaptive_density",
     "nativeMatrix": "final_caption_corrected_22_sheets_passed_11.78_seconds_on_0a461c",
     "correctedActualGame": "passed_192.03_seconds_wrapper192.13_20_original_pngs_high_density1_DPR1",
-    "freshApplicationChecks": "7fab_and_0a_sequences_complete_mixed_results_final_VIS60_frozen_run_pending",
-    "documentationStaticChecks": "passed_interim_157_original_artifacts_20_before_inventory_12_unchanged_comparison_images_57_local_targets",
+    "freshApplicationChecks": "completed_all_three_attempts; final6c1c overall exit1 due known input timeout and pose feedback failure",
+    "documentationStaticChecks": {
+      "originalArtifacts": 169,
+      "beforeInventory": 20,
+      "unchangedComparisonImages": 12,
+      "localTargets": 65,
+      "manifestFiles": 176,
+      "checkerSyntax": "passed",
+      "authoredWhitespace": "passed",
+      "originalReporterWhitespaceDiagnostics": 3,
+      "applicationTestsByDocumentationWriter": false
+    },
     "highDensityPaidTierWalkthrough": "passed_305.36_seconds_18_original_pngs_984_receipts_total_density1_exact_drawing_dimensions",
     "highDensityAttempt01": "failed_helper_null_selection_before_first_intended_capture_26.70_seconds",
     "comparisonDocumentBrowser": "passed_7.11_seconds_12_images_3_tablists_33_actions_each_viewport_13_response_hashes_each",
@@ -65,10 +66,62 @@
       "failure": "own musket pose count one versus expected two, check-multiplayer.js line809",
       "scope": "same known pose-family issue as421; no native success claimed"
     },
-    "rawLogWhitespace": "two original reporter EOF diagnostics retained; authored text and checker check passes"
+    "rawLogWhitespace": "three original frontend reporter EOF diagnostics retained; authored text/checker check passes",
+    "finalFrontend": {
+      "source": "6c1cda1739f9e5b8d96946d04c3d919cbe00fcfe",
+      "passed": 4792,
+      "failed": 1,
+      "tests": 4793,
+      "filesPassed": 425,
+      "filesFailed": 1,
+      "files": 426,
+      "vitestSeconds": 575.87,
+      "processSeconds": 576.94,
+      "failure": "unchanged defense-report ownership timeout 20.025s"
+    },
+    "finalMultiplayer": {
+      "source": "6c1cda1739f9e5b8d96946d04c3d919cbe00fcfe",
+      "exitCode": 1,
+      "seconds": 345.91,
+      "failure": "own musket pose count 0 versus expected 2 at current line 814; known issue #421 family",
+      "unreached": [
+        "later boss/finisher steps",
+        "late-join wave2 comparison target"
+      ],
+      "sampleScope": "ONLY fake-wave-1 owner/Ben",
+      "observedMetrics": {
+        "checked": 108,
+        "same": 108,
+        "worst": 0,
+        "sameBoarders": 108,
+        "worstBoarders": 0,
+        "withBoarders": 19,
+        "landed": 5,
+        "militiaChecked": 86,
+        "sameMilitia": 86,
+        "fighting": 0,
+        "heartChecked": 86,
+        "sameHeart": 86
+      },
+      "laterWaveComparisonNativeResolved": false,
+      "joinBoundary": "Ana/Max join, lobby and membership passed; later-wave synchronization comparison target not reached"
+    },
+    "finalBuildBudgetText": {
+      "exitCode": 0,
+      "seconds": {
+        "build": 6.03,
+        "budget": 0.8,
+        "text": 3.51
+      },
+      "titleJavaScriptBytes": 18932,
+      "titleCssBytes": 9410,
+      "titleImage": null,
+      "textCandidates": 4550,
+      "textSourceFiles": 534,
+      "textErrors": 0,
+      "textReportOnlyFindings": 8
+    }
   },
-  "finalRuntime": "7fab8866b83e27c6102df6b123ffdf2eb96619d0",
-  "finalScriptTree": "0ee76841b7c32c629a1b139b5477088c16126897",
   "paidScreenshotDensityBoundary": {
     "functionalSource": "9fa154940cbc9dab29ece4d15bba7efa8778a520",
     "highSetting": true,
@@ -108,7 +161,7 @@
     "issue": 434,
     "draftPr": 435,
     "scope": "strict observer update only; no product code change",
-    "finalNativeAndFullResults": "pending"
+    "finalNativeAndFullResults": "strict observer passes complete0a and6c frontend runs; input and pose remain separate failures"
   },
   "testedComparison": {
     "documentSource": "f70545aa016c923097c03cd1189130e213566961",
@@ -122,16 +175,7 @@
     "issue": 436,
     "draftPr": 437,
     "scope": "all distinct owner/peer tick pairs; exact then +/-1 matching, no reuse/duplicate inflation, unchanged minimum3/tolerances/actions/heart/militia checks",
-    "finalNativeOutcome": "pending"
-  },
-  "finalQaRuntimeCandidate": "6c1cda1739f9e5b8d96946d04c3d919cbe00fcfe",
-  "finalQaCandidateTrees": {
-    "frontend/src": "e191d9290088908ee27e82e03a15847d4a73a38e",
-    "frontend/public": "9306942db1050d728799cee2fbdc8e8960f14ad2",
-    "backend": "3956a73d76f537fd7c85259afa4bf9280a6e0ecd",
-    "supabase/migrations": "ae31ac50221be83070e7f46580d66a70eedbad20",
-    "frontend/scripts": "7fadcb6da62409b29d12f9322ab9af73e062c9aa",
-    "frontend/tests": "fe8a0087a4b45a1d2b12789937974ae048a2c4d6"
+    "finalNativeOutcome": "108 distinct matching first-wave owner/Ben samples recorded; late-join comparison target not reached before pose failure"
   },
   "finalMatrixSource": "0a461c47c3818c5ba31db6113b575c5802dfcc23",
   "documentationReview": {
@@ -142,6 +186,33 @@
       "executed helper is bound to manifest",
       "cleanup failure cannot emit PASS or skip server/report attempt"
     ],
-    "currentResult": "clear; final application results still pending"
-  }
+    "currentResult": "earlier read-only consistency review clear; final metadata checked against exact receipts"
+  },
+  "actualCaptureRuntime": "7fab8866b83e27c6102df6b123ffdf2eb96619d0",
+  "finalVerificationRuntime": "6c1cda1739f9e5b8d96946d04c3d919cbe00fcfe",
+  "verificationTrees": {
+    "frontend/src": "e191d9290088908ee27e82e03a15847d4a73a38e",
+    "frontend/public": "9306942db1050d728799cee2fbdc8e8960f14ad2",
+    "backend": "3956a73d76f537fd7c85259afa4bf9280a6e0ecd",
+    "supabase/migrations": "ae31ac50221be83070e7f46580d66a70eedbad20",
+    "frontend/scripts": "7fadcb6da62409b29d12f9322ab9af73e062c9aa",
+    "frontend/tests": "fe8a0087a4b45a1d2b12789937974ae048a2c4d6"
+  },
+  "initialCorrectedTrees": {
+    "frontend/src": "e191d9290088908ee27e82e03a15847d4a73a38e",
+    "frontend/public": "9306942db1050d728799cee2fbdc8e8960f14ad2",
+    "backend": "3956a73d76f537fd7c85259afa4bf9280a6e0ecd",
+    "supabase/migrations": "ae31ac50221be83070e7f46580d66a70eedbad20",
+    "frontend/scripts": "b5c4837c92361163c3eced4d20509004ddcf80a4",
+    "frontend/tests": "07944eef575e72984a899e31c34b9f5afea024f7"
+  },
+  "reviewGates": {
+    "humanVisualAcceptance": "open",
+    "personalExplainBack": "not_recorded",
+    "differentHumanReview": "pending",
+    "prReadyOrMergePerformedByTask": false,
+    "productionRolloutPerformedByTask": false
+  },
+  "initialCorrectedRuntime": "9fa154940cbc9dab29ece4d15bba7efa8778a520",
+  "actualCaptureScriptTree": "0ee76841b7c32c629a1b139b5477088c16126897"
 }

@@ -1,13 +1,13 @@
 {
-  "status": "interim_final_VIS60_application_run_pending",
+  "status": "complete_evidence_with_open_application_failures_and_human_gates",
   "actualBeforeSource": "6c87b8dcd2d7a1bb5376c3b64bbede27a144479e",
   "actualAfterSource": "7fab8866b83e27c6102df6b123ffdf2eb96619d0",
   "scope": "Unchanged original artifacts plus documentation. The manifest does not hash itself.",
-  "guideSha256": "c0b1451fb4fa88ebffdafaafb34f2f2810741b387d97cc67ec907c197f68bc0d",
+  "guideSha256": "b27eb441da2b69237a52c4e3f1e342de219b53efccf6ca139764d2061849734c",
   "files": {
     "README.md": {
-      "bytes": 11099,
-      "sha256": "8ac19c51ddead91adcdf9926da4677abe471093b1ad5b4fa880a36338ae61848"
+      "bytes": 12617,
+      "sha256": "6c6ea1fdc065ea223bad780368da054246a314a2eb9b804e43160f827ea66d7e"
     },
     "actual-after/capture.log": {
       "bytes": 201,
@@ -197,6 +197,60 @@
       "width": 375,
       "height": 812
     },
+    "checks/final-invariants-6c1cda17.json": {
+      "bytes": 1864,
+      "sha256": "e9940488f3b2956cd40b86bcc839c850dbb66d1150cc9983842188718bdfff1d"
+    },
+    "checks/final-vis60/budget.log": {
+      "bytes": 83560,
+      "sha256": "78ce3271a55453782723643bb8dd9cedeff3b250a3d8350920ea993a07e0a764"
+    },
+    "checks/final-vis60/build.log": {
+      "bytes": 17404,
+      "sha256": "8e458eedd1731718e3516428fb91649a24c045de1b30ba6218ab6ea9c55695ba"
+    },
+    "checks/final-vis60/frontend.log": {
+      "bytes": 671147,
+      "sha256": "9536a5ee97f2bf31c77de136ceb9b504904ef88d366cb93d974c7a4d5d3fdafb"
+    },
+    "checks/final-vis60/multiplayer-captures/03-wave1-muskets-me.png": {
+      "bytes": 634210,
+      "sha256": "6e7edcbf82150783ba5f668f097efeaa722215b1b598e341dd15bf743e80d8e8",
+      "width": 960,
+      "height": 600
+    },
+    "checks/final-vis60/multiplayer-captures/failure-ben.png": {
+      "bytes": 535773,
+      "sha256": "8a2f6e200f579483894706fcedcca293ea91bf591c788ee822cf0f6cfdb654c9",
+      "width": 960,
+      "height": 600
+    },
+    "checks/final-vis60/multiplayer-captures/failure-me.png": {
+      "bytes": 523734,
+      "sha256": "5ac3737859bc726957868370fa211f09ac2ac7ff09ae278ef657668cfd473e6c",
+      "width": 960,
+      "height": 600
+    },
+    "checks/final-vis60/multiplayer-captures/sync-samples.json": {
+      "bytes": 479802,
+      "sha256": "cd7b52ac993f81ca4beef277df8fd95dfa96c92cdda330a5699663ba59880c08"
+    },
+    "checks/final-vis60/multiplayer.log": {
+      "bytes": 14492,
+      "sha256": "667f3455acb138ff8122d3ab35b3da3e72c62decaea69db1e131c513117d2608"
+    },
+    "checks/final-vis60/report.json": {
+      "bytes": 1489,
+      "sha256": "7608112623603fd973de7b07d528aeaf0863d0b32b27684028a5ac959f772d34"
+    },
+    "checks/final-vis60/runner.log": {
+      "bytes": 839,
+      "sha256": "39a22bdb89c8bfc1b223ab5302a55793acaeec1dbafe983ae0dbb111b8d2a64b"
+    },
+    "checks/final-vis60/text-lint.log": {
+      "bytes": 1037,
+      "sha256": "3a8fa9b0965a95c2e2776a043e0f8a4ac2c2bd8d0cb1601ec59bcb9fa623f266"
+    },
     "checks/first-7fab/a11y.log": {
       "bytes": 818,
       "sha256": "a966f2a7f04a2795da2f363d4f6fffaf2c78ac4dfa9ad6cb0b6c61e0175945de"
@@ -246,8 +300,8 @@
       "sha256": "dcfe8190c0eb1779634deaa234bde2334c61caa1a97463398fe655465d34216c"
     },
     "checks/original-log-whitespace.txt": {
-      "bytes": 195,
-      "sha256": "a7c034eb403e331e602f413b23c3613f96b307857b872516c7eac0ff7ef7d545"
+      "bytes": 292,
+      "sha256": "d9e3ac201c1585d650244bbb82fc2e040901f0e139ea0070e507633cbd2c20b7"
     },
     "checks/post-vis59-0a/budget.log": {
       "bytes": 83560,
@@ -606,8 +660,8 @@
       "height": 1219
     },
     "originals.json": {
-      "bytes": 52131,
-      "sha256": "11122e4f018bb5ac6207ad539335a609a77876d9fabb7291d99ff80e13630417"
+      "bytes": 55539,
+      "sha256": "4787fa274d1d79dfba7828d0571f0658618742690b8f1d7ba184401ba2554066"
     },
     "paid-functional/execution.json": {
       "bytes": 407,
@@ -868,17 +922,18 @@
       "sha256": "9c3537e012ad0a81f1049b7104082b69e060fb9487285516b79d333e731642d7"
     },
     "source.json": {
-      "bytes": 7391,
-      "sha256": "a0293aff578b8af167ffa9c8f63f27d3f7a9ce496ebce8f0aad95b27ecfcddcc"
+      "bytes": 9819,
+      "sha256": "5279158139322d46105ba2bb44c3c7f7e1071d2c3c87d0ba1dab4df26c3223b6"
     },
     "static-checks.json": {
-      "bytes": 1153,
-      "sha256": "cc38ad21bf9c27122cfb18abb7e5d8a1d271ba0f517cb9c85513843b00a6efe8"
+      "bytes": 1374,
+      "sha256": "a64e83ff297a3e49d6a4e085948c7b3201f9a5b587194b07bf5d241a4f3d9f3d"
     },
     "verify-comparison.mjs": {
       "bytes": 9070,
       "sha256": "c9fd2bf84d54a9716cb713b8cc9cb5066d5d3f027b5f5c133f1929c569538dd6"
     }
   },
-  "nativeComparisonInputManifest": "comparison-browser/manifest-used.json"
+  "nativeComparisonInputManifest": "comparison-browser/manifest-used.json",
+  "finalVerificationSource": "6c1cda1739f9e5b8d96946d04c3d919cbe00fcfe"
 }

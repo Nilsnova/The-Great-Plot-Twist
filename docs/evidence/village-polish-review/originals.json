@@ -1362,6 +1362,84 @@
       "origin": "/workspace/reference-village-work/polish-postqa-checks/text-lint.log",
       "bytes": 1037,
       "sha256": "3a8fa9b0965a95c2e2776a043e0f8a4ac2c2bd8d0cb1601ec59bcb9fa623f266"
+    },
+    {
+      "path": "checks/final-vis60/budget.log",
+      "origin": "/workspace/reference-village-work/polish-qa-final-checks/budget.log",
+      "bytes": 83560,
+      "sha256": "78ce3271a55453782723643bb8dd9cedeff3b250a3d8350920ea993a07e0a764"
+    },
+    {
+      "path": "checks/final-vis60/build.log",
+      "origin": "/workspace/reference-village-work/polish-qa-final-checks/build.log",
+      "bytes": 17404,
+      "sha256": "8e458eedd1731718e3516428fb91649a24c045de1b30ba6218ab6ea9c55695ba"
+    },
+    {
+      "path": "checks/final-vis60/frontend.log",
+      "origin": "/workspace/reference-village-work/polish-qa-final-checks/frontend.log",
+      "bytes": 671147,
+      "sha256": "9536a5ee97f2bf31c77de136ceb9b504904ef88d366cb93d974c7a4d5d3fdafb"
+    },
+    {
+      "path": "checks/final-vis60/multiplayer.log",
+      "origin": "/workspace/reference-village-work/polish-qa-final-checks/multiplayer.log",
+      "bytes": 14492,
+      "sha256": "667f3455acb138ff8122d3ab35b3da3e72c62decaea69db1e131c513117d2608"
+    },
+    {
+      "path": "checks/final-vis60/report.json",
+      "origin": "/workspace/reference-village-work/polish-qa-final-checks/report.json",
+      "bytes": 1489,
+      "sha256": "7608112623603fd973de7b07d528aeaf0863d0b32b27684028a5ac959f772d34"
+    },
+    {
+      "path": "checks/final-vis60/runner.log",
+      "origin": "/workspace/reference-village-work/polish-qa-final-checks/runner.log",
+      "bytes": 839,
+      "sha256": "39a22bdb89c8bfc1b223ab5302a55793acaeec1dbafe983ae0dbb111b8d2a64b"
+    },
+    {
+      "path": "checks/final-vis60/text-lint.log",
+      "origin": "/workspace/reference-village-work/polish-qa-final-checks/text-lint.log",
+      "bytes": 1037,
+      "sha256": "3a8fa9b0965a95c2e2776a043e0f8a4ac2c2bd8d0cb1601ec59bcb9fa623f266"
+    },
+    {
+      "path": "checks/final-vis60/multiplayer-captures/sync-samples.json",
+      "origin": "/workspace/reference-village-work/polish-qa-final-checks/multiplayer-captures/sync-samples.json",
+      "bytes": 479802,
+      "sha256": "cd7b52ac993f81ca4beef277df8fd95dfa96c92cdda330a5699663ba59880c08"
+    },
+    {
+      "path": "checks/final-vis60/multiplayer-captures/failure-me.png",
+      "origin": "/workspace/reference-village-work/polish-qa-final-checks/multiplayer-captures/failure-me.png",
+      "bytes": 523734,
+      "sha256": "5ac3737859bc726957868370fa211f09ac2ac7ff09ae278ef657668cfd473e6c",
+      "width": 960,
+      "height": 600
+    },
+    {
+      "path": "checks/final-vis60/multiplayer-captures/failure-ben.png",
+      "origin": "/workspace/reference-village-work/polish-qa-final-checks/multiplayer-captures/failure-ben.png",
+      "bytes": 535773,
+      "sha256": "8a2f6e200f579483894706fcedcca293ea91bf591c788ee822cf0f6cfdb654c9",
+      "width": 960,
+      "height": 600
+    },
+    {
+      "path": "checks/final-vis60/multiplayer-captures/03-wave1-muskets-me.png",
+      "origin": "/workspace/reference-village-work/polish-qa-final-checks/multiplayer-captures/03-wave1-muskets-me.png",
+      "bytes": 634210,
+      "sha256": "6e7edcbf82150783ba5f668f097efeaa722215b1b598e341dd15bf743e80d8e8",
+      "width": 960,
+      "height": 600
+    },
+    {
+      "path": "checks/final-invariants-6c1cda17.json",
+      "origin": "/workspace/reference-village-work/next-pass/final-invariants-6c1cda17.json",
+      "bytes": 1864,
+      "sha256": "e9940488f3b2956cd40b86bcc839c850dbb66d1150cc9983842188718bdfff1d"
     }
   ]
 }
