@@ -22,7 +22,7 @@ from server.tests.island_sql.test_islands_and_waves_sql import build, open_islan
 
 def seed(connection):
     owner, member, _, _ = ready(connection, admitted=False)
-    alphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
+    alphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"  # pragma: allowlist secret (public code alphabet)
     code = "".join(alphabet[(member.int >> (5 * i)) % len(alphabet)] for i in range(5))
     open_island(connection, member, code)
     build(connection, owner, "wall_1", "wall", "build-0001", coins=10)
