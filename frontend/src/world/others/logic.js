@@ -1,5 +1,5 @@
 // Pure presence math shared by the renderer and its focused tests.
-const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
+import {clamp} from '../../core/math.js';
 export const PRESENCE_LIMITS=Object.freeze({visible:8,interpolationMs:200,extrapolationMs:250,snapGapMs:2000,fadeMs:420});
 export const crewSkinByKit=Object.freeze({true_keeper:'navigator',witness:'cook',informant:'salvager',stranger:'deckhand'});
 const validArchetypes=new Set(['navigator','cook','salvager','deckhand']);
