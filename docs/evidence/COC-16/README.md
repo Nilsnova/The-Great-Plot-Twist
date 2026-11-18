@@ -15,3 +15,5 @@ At 375 × 812, the confirmed Ground view drew 28 gap markers. The valid draft dr
 The render count was 98 draw calls with coverage off and 99 for both Ground and Sea. Each of three settled 90-frame measurements had a 16.70 ms 95th-percentile browser frame interval. The separate desktop model benchmark prepared and classified 129 points against 11 attack towers in 0.036 ms at the 95th percentile. That measurement covers the model calculations only.
 
 The cold title measurements passed with 19,011 bytes of JavaScript and 9,248 bytes of CSS, identical to the base revision. The stock loading check timed out on both revisions while waiting for focus on the game canvas after onboarding. A separate production browser run reached a visible game canvas with no browser errors or external requests.
+
+The overlap audit passed 115 state and viewport combinations, including the active coverage toolbar with a toast at five sizes. The short landscape layout keeps the controls and legend clear of the toast.
