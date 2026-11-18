@@ -1,0 +1,47 @@
+
+ RUN  v5.1.0 /workspace/captain-combat-feedback/frontend
+
+ ❯ tests/pirates/combat-feedback-controller.test.js (4 tests | 1 failed) 96ms
+   × keeps host and visitor range private while their shots are shared 30ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/pirates/combat-feedback-controller.test.js > keeps host and visitor range private while their shots are shared
+AssertionError: expected { x: -26.020000000000003, …(8) } to match object { x: -26.020000000000003, …(3) }
+(5 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "label": "Fire bombs throw range",
+-   "radius": 18,
++   "radius": 14,
+    "x": -26.020000000000003,
+    "z": 4.54,
+  }
+
+ ❯ tests/pirates/combat-feedback-controller.test.js:93:27
+     91|     visitor.callbacks.onRangePreview(true);
+     92|     await advance(50);
+     93|     expect(visitor.range).toMatchObject({ x: visitor.player.x, z: visi…
+       |                           ^
+     94|     const hostOrigin = { x: host.range.x, z: host.range.z, radius: hos…
+     95|     expect(visitor.controller.shoot(target.id)).toBe(true);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 5 passed (6)
+      Tests  1 failed | 30 passed (31)
+   Start at  14:53:29
+   Duration  3.49s (tests 62%, import 20%, transform 17%, worker 2%)
+
+    Isolate  6 workers spawned · ~136ms startup each (spawn + environment, per file)
+             at least ~681ms faster with isolate: false — reuses workers across files instead of one per file
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.3
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.3
+npm notice To update run: npm install -g npm@12.2.3
+npm notice

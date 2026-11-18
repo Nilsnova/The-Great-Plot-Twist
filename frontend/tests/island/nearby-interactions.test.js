@@ -16,6 +16,7 @@ it.each([
     const THREE = await window.g20Import('/node_modules/three/build/three.module.js');
     const {decorateIsland} = await window.g20Import('/src/island/world.js');
     const {SPOTS, islandZones} = await window.g20Import('/src/island/spots.js');
+    const {projectGround} = await window.g20Import('/src/world/projection.js');
     const canvas = document.createElement('canvas');
     canvas.style.cssText = 'width:640px;height:480px'; document.body.append(canvas);
     const camera = new THREE.OrthographicCamera(-32, 32, 24, -24, 1, 50);
@@ -28,7 +29,7 @@ it.each([
     const place = {group: new THREE.Group(), colliders: [], zones: []};
     const drawing = decorateIsland(place, {canvas, camera, player: () => player, reducedMotion: true,
       isActive: () => active, onPick: id => picked.push(id), onFar: (_id, verdict) => warnings.push(verdict.hint)});
-    const point = new THREE.Vector3(spot.x, -spot.z * .72, 0).project(camera);
+    const foot = projectGround(spot.x, spot.z), point = new THREE.Vector3(foot.x, foot.y, 0).project(camera);
     const box = canvas.getBoundingClientRect();
     const pointer = {button: 0, pointerId: 1, bubbles: true,
       clientX: box.left + (point.x + 1) * box.width / 2,

@@ -43,13 +43,18 @@ describe('the card table', () => {
     expect(cardById('tech_hub').where).toBe('island_techhub');
     expect(cardById('harpoon').where).toBe('cannon_5');
   });
+  it('keeps the Workshop legacy copy but removes its repair-speed promise in recovery-v1 help', () => {
+    const house = cardById('house_roles');
+    expect(cardText(house).what).toContain('Workshop speeds up wall repairs');
+    expect(cardText(house, 1).what).toBe('A level-2 house picks a job: Barracks sends out militia, and a Tavern heals captains.');
+    expect(cardText(house, 1).what).not.toContain('Workshop');
+  });
 });
 
 describe('which cards a win brings', () => {
   it('lists the cards of the waves between, in wave order, with the flags', () => {
     expect(cardsBetween(3, 4).map(card => card.id)).toEqual(['harbor', 'finishers']);
-    expect(cardsBetween(1, 2).map(card => card.id)).toEqual(['level_2', 'mortar', 'house_roles', 'weapon_shop']);
-    expect(cardsBetween(1, 2, {arsenal: () => true}).map(card => card.id)).toEqual(['level_2', 'mortar', 'house_roles', 'arsenal']);
+    expect(cardsBetween(1, 2).map(card => card.id)).toEqual(['level_2', 'mortar', 'house_roles', 'arsenal']);
     expect(cardsBetween(14, 15).map(card => card.id)).toEqual(['level_4_more', 'tougher_bosses', 'research_2', 'gunboats']);
     expect(cardsBetween(14, 15, {defenses_v2: true}).map(card => card.id)).toContain('culverin');
     expect(cardsBetween(4, 4)).toEqual([]);

@@ -28,8 +28,9 @@ export const TUTORIAL_PAGES = Object.freeze([
     alt: 'A pirate sloop and a big warship',
     art: [art('pirate-sloop-1', 64, 64, 2), art('pirate-warship-1', 160, 128, 1)]},
   {id: 'captain', title: 'Your captain fights',
-    text: ['Click a spot to aim your musket and fire there.', 'Press F to fire at the nearest ship, and hold F to keep firing.',
-      'On a phone, tap where to fire, or use the musket button at the bottom right.'],
+    text: ['Click a spot to aim your musket and fire there; its range ring shows how far you can shoot.',
+      'Press F to fire at the nearest ship, and hold F to keep firing.',
+      'On a phone, tap where to fire or use the musket button; bullets and impact flashes show your shots.'],
     alt: 'Your captain fires a musket at a pirate sloop',
     art: [art('captain-musket-2', 48, 32, 3), art('pirate-sloop-1', 64, 64, 2)]},
   {id: 'ashore', title: 'Pirates come ashore',
@@ -69,7 +70,7 @@ export const TUTORIAL_PAGES = Object.freeze([
   {id: 'controls', title: 'Controls',
     text: ['Walk up close to open a building. From far away, a click only says "Walk closer".', 'On a phone, use the joystick and the Use button.'],
     keys: [['WASD or arrows', 'Walk'], ['E', 'Walk up, then build, use, repair, help up'], ['F', 'Fire your musket'], ['Click', 'Aim and fire'],
-      ['M', 'Sea chart'], ['Mouse wheel', 'Zoom']],
+      ['M', 'Sea chart'], ['Mouse wheel', 'Zoom'], ['Hold Tab', 'See the whole island']],
     alt: 'A brass compass',
     art: [art('compass', 32, 32, 3)]},
 ].map(freezePage));
@@ -92,7 +93,7 @@ export const ONE_ISLAND_PAGES = Object.freeze(TUTORIAL_PAGES.map(page => {
 const RECOVERY_COPY = Object.freeze({
   ashore: {
     text: ['Pirates that reach the shore climb out and attack on foot: the heart of the island and any captain nearby.',
-      'Between waves, buildings mend on their own but stop when you ring the bell.',
+      'After the bell, only paid Repair now heals buildings; wave end restores every wall and tower fully.',
       'Walk up to a damaged or broken building to see its health and Repair now option.'],
   },
   crew: {
@@ -109,8 +110,8 @@ function recoveryPages(pages) {
     }
     return RECOVERY_COPY[page.id] ? freezePage({...page, ...RECOVERY_COPY[page.id]}) : page;
   });
-  current.push(freezePage({id: 'repair', title: 'Repairs between waves',
-    text: ['Damaged buildings mend between waves but pause when you ring the bell.',
+  current.push(freezePage({id: 'repair', title: 'Wave-end full repair',
+    text: ['Every wall and tower returns to full health as soon as a wave ends.',
       'Repair now restores full health at the catalog price for your current level.',
       'Ring the bell to share up to three successful Repair now uses across the island for that wave.'],
     alt: 'A damaged island wall', art: [art('island-wall-damaged', 48, 48, 2)]}));

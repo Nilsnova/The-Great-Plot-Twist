@@ -1,0 +1,54 @@
+{
+  "baselineSource": "../accessibility-baseline.json",
+  "baseSha": "48aee0e7b34c879968c4bc606b543f911032adfa",
+  "screens": 33,
+  "baselineFailureCount": 8,
+  "currentFailureCount": 7,
+  "currentFailures": [
+    {
+      "screen": "market-placed",
+      "width": 1280,
+      "check": "contrast",
+      "count": 1
+    },
+    {
+      "screen": "market-placed",
+      "width": 375,
+      "check": "contrast",
+      "count": 1
+    },
+    {
+      "screen": "market-placed",
+      "width": 320,
+      "check": "contrast",
+      "count": 1
+    },
+    {
+      "screen": "market-hotspot",
+      "check": "keyboard"
+    },
+    {
+      "screen": "market-prices",
+      "check": "keyboard"
+    },
+    {
+      "screen": "market-confirm",
+      "check": "keyboard"
+    },
+    {
+      "screen": "market-placed",
+      "check": "keyboard"
+    }
+  ],
+  "newFailures": [],
+  "baselineNotReproduced": [
+    {
+      "check": "keyboard",
+      "screen": "lobby"
+    }
+  ],
+  "note": "A baseline-only lobby keyboard finding did not reproduce; this pose-only change does not claim a focus fix.",
+  "errors": [],
+  "browserErrors": [],
+  "externalRequests": []
+}

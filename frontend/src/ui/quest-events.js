@@ -20,6 +20,8 @@
 //   boarders_ashore       {wave}       the first boarders of a wave landed (controller.js)
 export const ISLAND_BUILT = 'island_built';
 export const WAVE_FINISHED = 'wave_finished';
+// Personal saved rewards were reconciled: {wonWaveBest, recovered}; never a battle lifecycle event.
+export const WAVE_REWARDS_RECOVERED = 'wave_rewards_recovered';
 export const PLACE_ARRIVED = 'place_arrived';
 export const HARBOR_STAKE_PLACED = 'harbor_stake_placed';
 export const ISLAND_INVITE_OPENED = 'island_invite_opened';

@@ -1,14 +1,20 @@
 // A place owns its root, textures, materials, geometry and explicit subscriptions.
 import * as THREE from 'three';
+import {legacyBackdrop} from '../ground-transform.js';
 import { loadTexture } from '../texture.js';
 import { hasGround, paintGround } from '../../art/ground.js';
 import { premultiply, screenDensity, smoothTexture } from '../../art/textures.js';
+import {acquireRasterSheet} from '../../art/village-raster.js';
+import {TERRAIN_SHEET} from '../../art/village/terrain-materials.js';
 // A place with a painted cartoon ground (src/art/ground.js) gets it instead of its pixel backdrop:
 // 16 to 32 texels per world unit, by the screen's density.
 export async function loadBackdrop(path, { quality = 'high' } = {}) {
   const id = /^places\/([a-z_]+)\.png$/.exec(path)?.[1];
   if (id && hasGround(id) && typeof document !== 'undefined') {
-    return smoothTexture(paintGround(id, Math.max(16, Math.min(32, screenDensity(quality) * 8))));
+    const lease = await acquireRasterSheet(TERRAIN_SHEET);
+    try {
+      return smoothTexture(paintGround(id, Math.max(16, Math.min(32, screenDensity(quality) * 8)), lease.image));
+    } finally { lease.release(); }
   }
   const texture = await loadTexture(`${import.meta.env.BASE_URL}${path}`);
   texture.colorSpace = THREE.SRGBColorSpace; texture.magFilter = THREE.NearestFilter;
@@ -34,6 +40,6 @@ export function backdrop(group, texture) {
     map: texture, transparent: true, premultipliedAlpha: !!texture.premultiplyAlpha, depthTest: false, depthWrite: false, toneMapped: false,
   });
   if (texture.premultiplyAlpha) material.onBeforeCompile = premultiply;
-  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(64, 48), material);
+  const mesh = legacyBackdrop(new THREE.Mesh(new THREE.PlaneGeometry(64, 48), material));
   mesh.renderOrder = 4; group.add(mesh); return mesh;
 }

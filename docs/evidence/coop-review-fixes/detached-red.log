@@ -1,0 +1,56 @@
+
+ RUN  v5.1.0 /workspace/wave-review-finish/frontend
+
+ ❯ tests/pirates/recovery-detached-finish.test.js (2 tests | 2 failed) 35ms
+   ❯ a detached finish whose checkpoint is known stale (2)
+     × refreshes its sealed prefix and paid repair without publishing old gameplay, preserving unknown retries 29ms
+     × ignores a refresh read completed after disposal and schedules no further finish 5ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/pirates/recovery-detached-finish.test.js > a detached finish whose checkpoint is known stale > refreshes its sealed prefix and paid repair without publishing old gameplay, preserving unknown retries
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/pirates/recovery-detached-finish.test.js:81:42
+     79|       h.events.length = 0; h.onEvents.mockClear(); h.sound.cue.mockCle…
+     80|       for (let i = 0; i < 40 && !old.recoveryFinishAnswered; i++) awai…
+     81|       expect(old.recoveryFinishAnswered).toBe(true);
+       |                                          ^
+     82|       expect(finishWave).toHaveBeenCalledTimes(4);
+     83|       const requests = finishWave.mock.calls.map(([body]) => body);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/pirates/recovery-detached-finish.test.js > a detached finish whose checkpoint is known stale > ignores a refresh read completed after disposal and schedules no further finish
+AssertionError: expected undefined to be type of 'function'
+
+Expected: "function"
+Received: "undefined"
+
+ ❯ tests/pirates/recovery-detached-finish.test.js:108:27
+    106|     h.begin('wave-new'); await flush(); await h.wait(250);
+    107|     try {
+    108|       expect(resolveRead).toBeTypeOf('function');
+       |                           ^
+    109|       h.events.length = 0; h.onEvents.mockClear();
+    110|       const tickBefore = old.recoveryDriver.nextTick;
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  18:06:50
+   Duration  677ms (transform 71%, import 21%, tests 7%, worker 1%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.3
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.3
+npm notice To update run: npm install -g npm@12.2.3
+npm notice

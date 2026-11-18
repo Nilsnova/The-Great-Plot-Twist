@@ -16,8 +16,6 @@
 //   await api.upgradeCaptain();                       // POST /api/island/captain     (§10)
 //   await api.learnSkill({skill: 'steady_aim'});      // POST /api/island/skill       (§14)
 //   await api.pickRole({role: 'medic'}); await api.respec(); // POST /api/island/role, /respec
-//   await api.buyWeapon({weapon: 'pistols'});         // POST /api/island/weapon/buy  (§15)
-//   await api.equipWeapon({weapon: 'pistols'});       // POST /api/island/weapon/equip
 //   await api.demolishQuote({spot, code?});            // GET  /api/island/demolish   (GAME-V3.md §4.2: who gets what back)
 //   await api.demolish({spot, code?});                 // POST /api/island/demolish   (between waves; half back to each payer)
 //   await api.move({spot, x, z, code?});               // POST /api/island/move       (T36: a spot to a cell of the build grid, free)
@@ -46,7 +44,7 @@
 import {makeActionUid} from '../screens/islet/action-uid.js';
 import {islandCode, displayIslandCode} from './codes.js';
 import {localSpotId} from './spots.js';
-import {SKILL_BY_ID, WEAPON_BY_ID, isRole} from '../pirates/captain-ids.js';
+import {SKILL_BY_ID, isRole} from '../pirates/captain-ids.js';
 import {BRANCH_BY_ID, SPECS, optionsOf} from '../campaign/tech.js';
 import {isRole as isHouseRole} from '../campaign/houses.js';
 import {readRecoverySnapshot} from '../pirates/recovery-snapshot.js';
@@ -57,7 +55,7 @@ export const PATHS = Object.freeze({
   start: '/api/waves/start', join: '/api/waves/join', finish: '/api/waves/finish', revive: '/api/waves/revive',
   current: (where, waveProtocol = 1) => `/api/waves/current?where=${encodeURIComponent(where)}${waveProtocol === 2 ? '&waveProtocol=2' : ''}`,
   upgrade: '/api/island/upgrade', hire: '/api/island/hire', captain: '/api/island/captain', inviteJoin: '/api/island/invite/join',
-  skill: '/api/island/skill', role: '/api/island/role', respec: '/api/island/respec', weaponBuy: '/api/island/weapon/buy', weaponEquip: '/api/island/weapon/equip',
+  skill: '/api/island/skill', role: '/api/island/role', respec: '/api/island/respec',
   point: '/api/pirate-point', pointBuild: '/api/pirate-point/build', pointUpgrade: '/api/pirate-point/upgrade',
   games: '/api/games', gameJoin: '/api/games/join', gameLeave: '/api/games/leave', game: code => `/api/games/${code}`,
   research: '/api/island/research', specialise: '/api/island/tower-skill', towerTree: '/api/island/tower-tree', wreck: '/api/island/wreck',
@@ -84,7 +82,6 @@ export const MESSAGES = Object.freeze({
   badCrew: 'Choose a gunner, a carpenter, a lookout or a guard.',
   badSkill: 'There is no such skill.',
   badRole: 'There is no such role.',
-  badWeapon: 'There is no such weapon.',
   badResearch: 'There is no such research.',
   badSpec: 'There is no such tower skill.',
   badTree: 'There is no such step in a tower tree.',
@@ -193,16 +190,34 @@ export function wallHealthBody(walls) {
   for (const [id, value] of Object.entries(walls)) if (/^wall_[0-9]{1,2}$/.test(id) && Number.isInteger(value) && value >= 0 && value <= 100) out[id] = value;
   return Object.keys(out).length ? out : null;
 }
+const isWaveRow = data => !!data && isText(data.waveId) && Number.isSafeInteger(data.wave) && data.wave >= 1 && isCount(data.seed)
+  && typeof data.startsAt === 'string' && Number.isFinite(Date.parse(data.startsAt))
+  && !!data.weather && typeof data.weather.kind === 'string' && typeof data.flagship === 'boolean';
 export function isWave(data) {
-  const base = !!data && isText(data.waveId) && Number.isSafeInteger(data.wave) && data.wave >= 1 && isCount(data.seed)
-    && typeof data.startsAt === 'string' && Number.isFinite(Date.parse(data.startsAt))
-    && !!data.weather && typeof data.weather.kind === 'string' && typeof data.flagship === 'boolean';
-  if (!base) return false;
+  if (!isWaveRow(data)) return false;
   if (data.waveProtocol === undefined && (data.recoveryVersion === undefined || data.recoveryVersion === 0)) return true;
   if (data.waveProtocol === 1 && (data.recoveryVersion === undefined || data.recoveryVersion === 0)) return true;
   return data.waveProtocol === 2 && data.recoveryVersion === 1
     && readRecoverySnapshot(data.initialSnapshot, data.waveId) !== null && isParticipantToken(data.participantToken)
     && Number.isSafeInteger(data.lastActorCounter) && data.lastActorCounter >= 0;
+}
+// GET /api/waves/current of a recovery wave you may join but have not joined yet (a teammate's bell): the
+// public wave (recoveryVersion 1, waveProtocol 2) without snapshot, participant token or counter. Only a
+// join (POST /api/waves/join) answers those, so such a wave is shown and joined, never started from.
+export const isJoinableWave = data => isWaveRow(data) && data.recoveryVersion === 1 && data.waveProtocol === 2
+  && data.initialSnapshot == null && data.participantToken == null && data.lastActorCounter == null;
+// The wave's clock (legacy waves run from startsAt on every screen): a wave answer carries the server's time
+// (serverNow, ms). clockOffsetMs = server minus this browser, measured when the answer arrives, only when the
+// browser's clock is off by more than CLOCK_SLACK_MS (an input stamped for tick n then still lands before
+// tick n on a teammate's screen: the input lead is 200 ms). A clock off by seconds made the same wave
+// diverge between browsers; a well-set clock keeps its own time (the answer's travel time is no better).
+export const CLOCK_SLACK_MS = 250;
+const DAY_MS = 86_400_000;
+export function clockOffset(data, now) {
+  const server = typeof data?.serverNow === 'string' ? Date.parse(data.serverNow) : NaN;
+  if (!Number.isFinite(server)) return null;
+  const offset = Math.round(server - now);
+  return Math.abs(offset) >= CLOCK_SLACK_MS && Math.abs(offset) <= DAY_MS ? offset : null;
 }
 // Captain health (GAME-V3.md §3): what the revive cost you and your coins after it.
 export const isRevive = data => !!data && isCount(data.price) && isCount(data.coins) && typeof data.repeat === 'boolean';
@@ -248,7 +263,7 @@ export function readFailure(result) {
 // No answer, a timeout or a server-side failure: the write may or may not have happened.
 export const outcomeUnknown = failure => !failure.ok && (failure.status === 0 || failure.status >= 500);
 
-export function createIslandApi({transport, makeUid = makeActionUid, waveProtocol = () => 1} = {}) {
+export function createIslandApi({transport, makeUid = makeActionUid, waveProtocol = () => 1, now = () => Date.now()} = {}) {
   if (!transport || typeof transport.get !== 'function' || typeof transport.post !== 'function') {
     throw new TypeError('createIslandApi needs a transport with get and post.');
   }
@@ -270,11 +285,12 @@ export function createIslandApi({transport, makeUid = makeActionUid, waveProtoco
   }
   // A write with a click id: reuse the held id after an unknown outcome, drop it after a clear answer.
   async function write(key, send, accept) {
-    const actionUid = held.get(key) ?? makeUid();
+    const heldUid = held.get(key), actionUid = heldUid ?? makeUid();
     held.set(key, actionUid);
     const answer = await ask(() => send(actionUid), data => accept(data, actionUid));
     if (answer.ok || !outcomeUnknown(answer)) held.delete(key);
-    return answer;
+    // A successful retry can be a replay of a purchase that already landed.
+    return heldUid && answer.ok ? {...answer, reconciled: true} : answer;
   }
   // The server's own spelling of each spot id, learnt from its answers (spots.js SPOT_ALIASES).
   const serverIds = new Map();
@@ -293,6 +309,12 @@ export function createIslandApi({transport, makeUid = makeActionUid, waveProtoco
   const writeSpots = (key, send, accept) => write(key, send, accept).then(answer => (answer.ok ? {...answer, data: readSpots(answer.data)} : answer));
   const where = value => (value === 'own' || value === 'pirate_point' ? value : displayIslandCode(value) || null);
   const refuse = (status, code, message) => Promise.resolve({ok: false, status, code, message});
+  // A wave answer with the browser's clock offset (clockOffset above), stamped as it arrives.
+  const timed = answer => {
+    if (!answer.ok || !answer.data) return answer;
+    const offset = clockOffset(answer.data, now());
+    return offset === null ? answer : {...answer, data: {...answer.data, clockOffsetMs: offset}};
+  };
 
   return {
     // scope 'week' (T7) or 'all' (T45, all time). The answer must be the board that was asked for.
@@ -332,15 +354,6 @@ export function createIslandApi({transport, makeUid = makeActionUid, waveProtoco
     },
     respec() {
       return writeSpots('respec', actionUid => transport.post(PATHS.respec, {actionUid}), isIsland);
-    },
-    // §15: buy a weapon once with coins, then equip it (equipping again changes nothing, so no click id).
-    buyWeapon({weapon} = {}) {
-      if (!Object.hasOwn(WEAPON_BY_ID, weapon ?? '')) return refuse(400, 'bad_weapon', MESSAGES.badWeapon);
-      return writeSpots(`weapon:${weapon}`, actionUid => transport.post(PATHS.weaponBuy, {weapon, actionUid}), isIsland);
-    },
-    equipWeapon({weapon} = {}) {
-      if (!Object.hasOwn(WEAPON_BY_ID, weapon ?? '')) return refuse(400, 'bad_weapon', MESSAGES.badWeapon);
-      return askSpots(() => transport.post(PATHS.weaponEquip, {weapon}), isIsland);
     },
     // GAME-V3.md §5, §5.1: one research step at the Tech hub of the island (yours, or the game of `code`):
     // tier 1 of a branch, or one option of tier 2 or 3 (`change`: switch from the option the crew chose before).
@@ -501,18 +514,18 @@ export function createIslandApi({transport, makeUid = makeActionUid, waveProtoco
       if (!target) return refuse(422, 'validation_error', MESSAGES.badCode);
       const version = askedProtocol === 2 ? 2 : protocolFor(target);
       return write(`start:${target}`, actionUid => transport.post(PATHS.start,
-        {where: target, actionUid, ...(version === 2 ? {waveProtocol: 2} : {})}), isWave);
+        {where: target, actionUid, ...(version === 2 ? {waveProtocol: 2} : {})}), isWave).then(timed);
     },
     joinWave({waveId, waveProtocol: askedProtocol = null} = {}) {
       if (!isText(waveId)) return refuse(404, 'no_such_wave', MESSAGES.badWave);
       const version = askedProtocol === 2 ? 2 : protocolFor();
-      return ask(() => transport.post(PATHS.join, {waveId, ...(version === 2 ? {waveProtocol: 2} : {})}), isWave);
+      return ask(() => transport.post(PATHS.join, {waveId, ...(version === 2 ? {waveProtocol: 2} : {})}), isWave).then(timed);
     },
     currentWave({where: place = 'own', waveProtocol: askedProtocol = null} = {}) {
       const target = where(place);
       if (!target) return refuse(422, 'validation_error', MESSAGES.badCode);
       const version = askedProtocol === 2 ? 2 : protocolFor(target);
-      return ask(() => transport.get(PATHS.current(target, version)), data => data === null || isWave(data));
+      return ask(() => transport.get(PATHS.current(target, version)), data => data === null || isWave(data) || isJoinableWave(data)).then(timed);
     },
     finishWave({waveId, survived, shipsSunk = 0, bonuses, rescued, walls} = {}) {
       if (!isText(waveId)) return refuse(404, 'no_such_wave', MESSAGES.badWave);
@@ -527,11 +540,17 @@ export function createIslandApi({transport, makeUid = makeActionUid, waveProtoco
     },
     // A fallen teammate stood up (captain health): you pay 20 + 5 × wave; fallen is their id in the wave's sim,
     // downAt the tick of their fall (one fall is paid once: a second helper is refused 409 already_up).
-    reviveCaptain({waveId, fallen, downAt} = {}) {
+    reviveCaptain({waveId, fallen, downAt, waveProtocol = 1, x, z} = {}) {
       if (!isText(waveId)) return refuse(404, 'no_such_wave', MESSAGES.badWave);
       if (typeof fallen !== 'string' || !/^[A-Za-z0-9_.:-]{1,64}$/.test(fallen)) return refuse(422, 'validation_error', MESSAGES.unknown);
       if (!Number.isSafeInteger(downAt) || downAt < 0 || downAt > 100000) return refuse(422, 'validation_error', MESSAGES.unknown);
-      return write(`revive:${waveId}:${fallen}:${downAt}`, actionUid => transport.post(PATHS.revive, {waveId, fallen, downAt, actionUid}), isRevive);
+      const recovery = waveProtocol === 2;
+      if (recovery && ![x, z].every(value => Number.isFinite(value) && Math.abs(value) <= 499.999)) {
+        return refuse(422, 'validation_error', MESSAGES.unknown);
+      }
+      const position = recovery ? {waveProtocol: 2, x, z} : {};
+      return write(`revive:${waveId}:${fallen}:${downAt}`, actionUid => transport.post(PATHS.revive,
+        {waveId, fallen, downAt, actionUid, ...position}), data => isRevive(data) && (!recovery || data.journaled === true));
     },
     // For tests and the console: the click id kept for an unknown outcome, if any.
     heldActionUid: key => held.get(key) ?? null,

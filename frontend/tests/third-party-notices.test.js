@@ -12,14 +12,14 @@ const exactLicense=(name,file)=>{
 };
 it('ships exact notices for actual bundled packages and Vite helper code',async()=>{
   const fixture={name:'notice-fixture',resolveId(id){if(id==='notice-entry')return '\0notice-entry';},
-    load(id){if(id==='\0notice-entry')return 'import {Vector2} from "three"; import {createClient} from "@supabase/supabase-js"; console.log(new Vector2(1,2),createClient);';}};
+    load(id){if(id==='\0notice-entry')return 'import {Vector2} from "three"; import {AuthClient} from "@supabase/auth-js"; import {RealtimeClient} from "@supabase/realtime-js"; console.log(new Vector2(1,2),AuthClient,RealtimeClient);';}};
   const result=await build({configFile:false,logLevel:'silent',plugins:[fixture,thirdPartyNoticesPlugin()],
     build:{write:false,copyPublicDir:false,license:{fileName:noticesFile},rolldownOptions:{input:'notice-entry'}}});
   const notice=result.output.find(asset=>asset.fileName===noticesFile)?.source;
   expect(notice).toContain(exactLicense('three','LICENSE'));
-  expect(notice).toContain(exactLicense('@supabase/supabase-js','LICENSE'));
   expect(notice).toContain(exactLicense('vite','LICENSE.md'));
   expect(notice).toContain('## @supabase/auth-js');
+  expect(notice).toContain('## @supabase/realtime-js');
 });
 it('fails the build hook when automatic dependency notices were not generated',()=>{
   expect(()=>thirdPartyNoticesPlugin().generateBundle.handler({},{})).toThrow('notices are missing');

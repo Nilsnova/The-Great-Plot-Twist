@@ -1,0 +1,39 @@
+{
+  "source": "Generated original PNG; unchanged original bytes; read-only alpha/crop measurement using Pillow. No offline image editing.",
+  "sha256": "46e2050d0c7fc4480babe7f54f210a7a04572c5fe232f51e7943fc30b5a6d755",
+  "encodedBytes": 2004621,
+  "decodedBytes": 6291456,
+  "dimensions": [
+    1536,
+    1024
+  ],
+  "alphaZeroPixels": 1130214,
+  "cornerAlpha": [
+    0,
+    0,
+    0,
+    0
+  ],
+  "frames": {
+    "island-harpoon": {"nativeBounds":[87,63,185,182],"sourceFoot":[75,176],"edgeAlphaMaximum":1,"solidPixels":14123,"band":[0,256]},
+    "island-harpoon-fire": {"nativeBounds":[87,327,169,157],"sourceFoot":[75,151],"edgeAlphaMaximum":1,"solidPixels":13228,"band":[256,512]},
+    "island-harpoon-damaged": {"nativeBounds":[85,563,171,164],"sourceFoot":[77,157],"edgeAlphaMaximum":1,"solidPixels":14347,"band":[512,768]},
+    "island-harpoon-broken": {"nativeBounds":[68,852,187,84],"sourceFoot":[94,78],"edgeAlphaMaximum":2,"solidPixels":8763,"band":[768,1024]},
+    "island-harpoon-l2": {"nativeBounds":[381,62,186,182],"sourceFoot":[82,176],"edgeAlphaMaximum":1,"solidPixels":14870,"band":[0,256]},
+    "island-harpoon-fire-l2": {"nativeBounds":[384,327,179,157],"sourceFoot":[79,151],"edgeAlphaMaximum":2,"solidPixels":14196,"band":[256,512]},
+    "island-harpoon-l2-damaged": {"nativeBounds":[380,560,175,166],"sourceFoot":[83,159],"edgeAlphaMaximum":1,"solidPixels":15170,"band":[512,768]},
+    "island-harpoon-l2-broken": {"nativeBounds":[368,848,193,88],"sourceFoot":[95,82],"edgeAlphaMaximum":2,"solidPixels":9732,"band":[768,1024]},
+    "island-harpoon-l3": {"nativeBounds":[683,61,181,184],"sourceFoot":[80,178],"edgeAlphaMaximum":1,"solidPixels":15659,"band":[0,256]},
+    "island-harpoon-fire-l3": {"nativeBounds":[683,323,183,162],"sourceFoot":[80,156],"edgeAlphaMaximum":2,"solidPixels":15380,"band":[256,512]},
+    "island-harpoon-l3-damaged": {"nativeBounds":[676,560,176,167],"sourceFoot":[87,160],"edgeAlphaMaximum":2,"solidPixels":16895,"band":[512,768]},
+    "island-harpoon-l3-broken": {"nativeBounds":[663,846,196,91],"sourceFoot":[100,85],"edgeAlphaMaximum":2,"solidPixels":10370,"band":[768,1024]},
+    "island-harpoon-l4": {"nativeBounds":[982,61,187,183],"sourceFoot":[82,177],"edgeAlphaMaximum":2,"solidPixels":16009,"band":[0,256]},
+    "island-harpoon-fire-l4": {"nativeBounds":[984,323,190,161],"sourceFoot":[80,155],"edgeAlphaMaximum":2,"solidPixels":15423,"band":[256,512]},
+    "island-harpoon-l4-damaged": {"nativeBounds":[978,559,180,168],"sourceFoot":[86,161],"edgeAlphaMaximum":2,"solidPixels":16832,"band":[512,768]},
+    "island-harpoon-l4-broken": {"nativeBounds":[965,847,199,88],"sourceFoot":[99,82],"edgeAlphaMaximum":2,"solidPixels":10733,"band":[768,1024]},
+    "island-harpoon-l5": {"nativeBounds":[1279,61,190,184],"sourceFoot":[85,178],"edgeAlphaMaximum":1,"solidPixels":17291,"band":[0,256]},
+    "island-harpoon-fire-l5": {"nativeBounds":[1280,320,193,165],"sourceFoot":[84,159],"edgeAlphaMaximum":2,"solidPixels":16705,"band":[256,512]},
+    "island-harpoon-l5-damaged": {"nativeBounds":[1277,557,186,170],"sourceFoot":[87,163],"edgeAlphaMaximum":2,"solidPixels":18188,"band":[512,768]},
+    "island-harpoon-l5-broken": {"nativeBounds":[1268,842,201,96],"sourceFoot":[96,90],"edgeAlphaMaximum":2,"solidPixels":11955,"band":[768,1024]}
+  }
+}

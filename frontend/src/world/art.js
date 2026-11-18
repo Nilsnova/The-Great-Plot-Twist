@@ -7,9 +7,10 @@ import * as THREE from 'three';
 import { loadTexture } from './texture.js';
 import { pixelArtIds, pixelById, pixelSizes } from '../pixel/catalog.js';
 import { islandFrame, islandSizes } from '../art/registry.js';
-import { lazyMaterials, screenDensity } from '../art/textures.js';
+import { lazyMaterials, paintIds, screenDensity, smoothTexture, spriteMaterial } from '../art/textures.js';
+import {getRasterFrame, rasterFrameSizes} from '../art/village-raster.js';
 // The pixel catalog's boxes, plus the frames only the cartoon set has (ten captains, boarders, the bell…).
-export const artSizes = { ...islandSizes(), ...pixelSizes };
+export const artSizes = { ...islandSizes(), ...pixelSizes, ...rasterFrameSizes() };
 
 let quality = 'high';
 /** The art density follows the quality setting (low: smaller textures); set before loading. */
@@ -19,8 +20,14 @@ export async function loadArt(names = pixelArtIds, { detail = false, density = s
   if (!Array.isArray(names)) throw new Error('Art names must be an array.');
   const ids = [...new Set(names)];
   for (const id of ids) if (!Object.hasOwn(artSizes, id)) throw new Error(`Unknown drawing: ${id}`);
-  const cartoon = ids.filter(id => islandFrame(id)), materials = lazyMaterials(cartoon, density);
-  const pixel = ids.filter(id => !islandFrame(id)), loader = new THREE.TextureLoader();
+  const raster = ids.filter(id => getRasterFrame(id)), materials = lazyMaterials(ids.filter(id => islandFrame(id) && !getRasterFrame(id)), density);
+  try {
+    if (raster.length) await paintIds(raster, density, (id, canvas) => { materials[id] = spriteMaterial(smoothTexture(canvas)); });
+  } catch (error) {
+    Object.values(materials).forEach(material => { material.map.dispose(); material.dispose(); });
+    console.error('Approved world artwork failed to load.', error); throw error;
+  }
+  const pixel = ids.filter(id => !islandFrame(id) && !getRasterFrame(id)), loader = new THREE.TextureLoader();
   const results = await Promise.allSettled(pixel.map(async name => {
     const item = pixelById[name];
     const path = `pixel/${detail && item.detail ? item.detail.file : item.file}`;
@@ -44,7 +51,8 @@ export function mergeArt(...sources) {
     ownKeys: () => [...new Set(list.flatMap(source => Reflect.ownKeys(source)))],
   });
 }
-export function projectPoint(x, z) { return { x, y: -z * 0.72 }; }
+export {projectGround as projectPoint} from './projection.js';
+import {projectGround as projectPoint} from './projection.js';
 export function placeArt(scene, art, name, x, z, scale = 1) {
   if (!Object.hasOwn(artSizes, name) || !Object.hasOwn(art, name)) throw new Error(`Load drawing before placing it: ${name}`);
   if (pixelById[name] && !islandFrame(name)) scale = Math.max(1, Math.round(scale));

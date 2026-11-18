@@ -1,0 +1,80 @@
+{
+  "sourceFile": "frontend/public/village/services-v1.png",
+  "generatedBy": "OpenAI image_gen, 17 November 2026",
+  "sha256": "d9091a95d8a3267f2c0790a06343d42d21232bc1c521bbcd1afc410914c991ff",
+  "bytes": 2193948,
+  "nativeSize": [
+    1536,
+    1024
+  ],
+  "mode": "RGBA",
+  "alpha": {
+    "corners": [
+      0,
+      0,
+      1,
+      0
+    ],
+    "separatorCenter": 0,
+    "meaningfulThreshold": 16,
+    "solidThreshold": 240
+  },
+  "cells": [
+    {
+      "id": "island-techhub",
+      "rect": [
+        20,
+        125,
+        698,
+        776
+      ],
+      "sourceFoot": [
+        345,
+        761
+      ],
+      "meaningfulAlphaBounds": [
+        12,
+        12,
+        686,
+        764
+      ],
+      "solidBounds": [
+        13,
+        13,
+        685,
+        762
+      ]
+    },
+    {
+      "id": "island-arsenal",
+      "rect": [
+        771,
+        225,
+        747,
+        680
+      ],
+      "sourceFoot": [
+        365,
+        665
+      ],
+      "meaningfulAlphaBounds": [
+        12,
+        12,
+        735,
+        668
+      ],
+      "solidBounds": [
+        13,
+        14,
+        734,
+        666
+      ]
+    }
+  ],
+  "limits": [
+    "PNG bytes are unchanged; source rectangle and alpha measurements are read-only and no offline image edits are emitted.",
+    "The generation preview contains colored RGB behind alpha0; the actual source separator and background are transparent.",
+    "Runtime source rectangles retain all alpha>=16 plus12px margin.",
+    "Actual service interaction/world/phase/device evidence remains coordinated separately."
+  ]
+}

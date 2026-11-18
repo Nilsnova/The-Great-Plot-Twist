@@ -1,0 +1,175 @@
+{
+  "label": "after",
+  "source": "/workspace/wave-integration",
+  "scriptSha256": "6a84a45f559670e52b89e9920db1bec88f95dc82ade99a260eccea4f47ee8716",
+  "trackedDiffSha256": "5b366b34937b1cfb0361d82ba6e4f6d0e4ac4bfe09dc8889ead3cf502c636b8e",
+  "sourceHead": "48aee0e7b34c879968c4bc606b543f911032adfa",
+  "browser": "156.0.8078.79",
+  "limits": "Real controller and HUD with synthetic in-browser journal/receipt. No live game, HTTP API, wallet, database, multiplayer or physical-device claim.",
+  "reports": [
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "result": {
+        "done": true,
+        "localResult": {
+          "survived": false,
+          "shipsSunk": 0,
+          "boardersKilled": 0,
+          "islandHp": 0,
+          "time": 27.95
+        },
+        "presentedResult": {
+          "survived": true,
+          "shipsSunk": 0,
+          "boardersKilled": 0,
+          "islandHp": 0,
+          "time": 27.95
+        },
+        "answered": true,
+        "finishCalls": 1,
+        "finishRequestSurvived": false,
+        "canonicalReceipt": {
+          "loot": 35,
+          "coins": 135,
+          "waveBest": 1,
+          "flags": 1,
+          "boss": false,
+          "survived": true,
+          "recovery": {
+            "waveId": "wave-r",
+            "islandEpoch": "epoch-r",
+            "closedAt": "2026-11-18T12:00:00.000Z",
+            "closedHp": {
+              "wall-instance": 1000000
+            },
+            "checkpointUid": "qwaq5gqo52ulpx5k",
+            "throughTick": 1158,
+            "inputHeadSeq": 0,
+            "lastRepairSeq": 0,
+            "basisRepairSeq": {
+              "wall-instance": 0
+            }
+          }
+        },
+        "screens": "Wave 2 · 5 ships left · 3 ashore · ♥ 0\n❤️\n0\n🌊\n2\n⛵\n5\n☠️\n3\nLoot 🪙 +35\nWave won!\n0 ships sunk",
+        "events": [
+          {
+            "type": "wave_finish_answered",
+            "waveId": "wave-r",
+            "loot": 35,
+            "runLoot": 35,
+            "recovery": {
+              "waveId": "wave-r",
+              "islandEpoch": "epoch-r",
+              "closedAt": "2026-11-18T12:00:00.000Z",
+              "closedHp": {
+                "wall-instance": 1000000
+              },
+              "checkpointUid": "qwaq5gqo52ulpx5k",
+              "throughTick": 1158,
+              "inputHeadSeq": 0,
+              "lastRepairSeq": 0,
+              "basisRepairSeq": {
+                "wall-instance": 0
+              }
+            },
+            "coins": 135,
+            "waveBest": 1,
+            "flags": 1,
+            "survived": true
+          }
+        ]
+      },
+      "stale": {
+        "started": 0,
+        "current": null
+      },
+      "errors": []
+    },
+    {
+      "viewport": {
+        "width": 375,
+        "height": 812
+      },
+      "result": {
+        "done": true,
+        "localResult": {
+          "survived": false,
+          "shipsSunk": 0,
+          "boardersKilled": 0,
+          "islandHp": 0,
+          "time": 27.95
+        },
+        "presentedResult": {
+          "survived": true,
+          "shipsSunk": 0,
+          "boardersKilled": 0,
+          "islandHp": 0,
+          "time": 27.95
+        },
+        "answered": true,
+        "finishCalls": 1,
+        "finishRequestSurvived": false,
+        "canonicalReceipt": {
+          "loot": 35,
+          "coins": 135,
+          "waveBest": 1,
+          "flags": 1,
+          "boss": false,
+          "survived": true,
+          "recovery": {
+            "waveId": "wave-r",
+            "islandEpoch": "epoch-r",
+            "closedAt": "2026-11-18T12:00:00.000Z",
+            "closedHp": {
+              "wall-instance": 1000000
+            },
+            "checkpointUid": "3ja2sskab5tynnq7",
+            "throughTick": 1158,
+            "inputHeadSeq": 0,
+            "lastRepairSeq": 0,
+            "basisRepairSeq": {
+              "wall-instance": 0
+            }
+          }
+        },
+        "screens": "Wave 2 · 5 ships left · 3 ashore · ♥ 0\n❤️\n0\n🌊\n2\n⛵\n5\n☠️\n3\nLoot 🪙 +35\nWave won!\n0 ships sunk",
+        "events": [
+          {
+            "type": "wave_finish_answered",
+            "waveId": "wave-r",
+            "loot": 35,
+            "runLoot": 35,
+            "recovery": {
+              "waveId": "wave-r",
+              "islandEpoch": "epoch-r",
+              "closedAt": "2026-11-18T12:00:00.000Z",
+              "closedHp": {
+                "wall-instance": 1000000
+              },
+              "checkpointUid": "3ja2sskab5tynnq7",
+              "throughTick": 1158,
+              "inputHeadSeq": 0,
+              "lastRepairSeq": 0,
+              "basisRepairSeq": {
+                "wall-instance": 0
+              }
+            },
+            "coins": 135,
+            "waveBest": 1,
+            "flags": 1,
+            "survived": true
+          }
+        ]
+      },
+      "stale": {
+        "started": 0,
+        "current": null
+      },
+      "errors": []
+    }
+  ]
+}

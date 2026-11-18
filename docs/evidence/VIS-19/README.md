@@ -35,3 +35,9 @@ node scripts/capture-cliff-style.mjs /path/to/this/frontend /tmp/cliff-captures 
 ```
 
 Use separate clean source checkouts with installed existing dependencies, and coordinate the browser lane. No `.env` is read by these fixture servers. Full build/budget/accessibility/demo, five actual browser travel cycles, production/Safari/physical-device and final human visual acceptance remain unverified in this slice. Existing place lifetime tests passed; no new mesh/material/texture owner was introduced.
+
+## Current-main reconciliation — 18 November 2026
+
+The branch is reconciled with main `2e4e27b6390c0c02637a2bbefd455801a232e685`. Main already contains the later D063/D064 facade, original image materials, 3.2-unit depth and matching affine-projection checks. Those runtime files, tests and current decisions are preserved exactly; the original 1.4-unit before/after captures and scripts remain historical evidence for this trial. They do not show the current main renderer. Both roadmap histories are retained.
+
+Focused geometry/projection checks: 3 files / 13 tests passed in 2.01s (`tests/art/coast-cliffs.test.js`, `tests/world/ground-transform.test.js`, `tests/world/projection.test.js`). Production build passed in 1.07s and spoiler guard passed (251 text files, 12 protected lines). No fresh browser screenshots, full-suite result, visual acceptance or live rollout is claimed. Current human peer approval remains required.

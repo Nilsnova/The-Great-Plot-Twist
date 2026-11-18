@@ -2,6 +2,7 @@ import {describe, expect, it} from 'vitest';
 import {APPROACH_DEPTH, CLIFF_DEPTH, NAVAL_APPROACH_BEARINGS, cliffProfile} from '../../src/art/coast-cliffs.js';
 import {surfaceClass, surfaces} from '../../src/world/places/surfaces.js';
 import {projectPoint} from '../../src/world/art.js';
+import {projectLegacyGround} from '../../src/world/projection.js';
 import {CONFIG} from '../../src/pirates/sim.js';
 
 const coast = surfaces.home_islet;
@@ -12,12 +13,18 @@ describe('decorative cliffs and the unchanged walkable top', () => {
     for (const point of profile) {
       expect(surfaceClass('home_islet', point.x * .999, point.z * .999)).toBeGreaterThan(0);
       expect(surfaceClass('home_islet', point.x * 1.001, point.z * 1.001)).toBe(0);
-      expect(point.y).toBe(-projectPoint(point.x, point.z).y);
+      expect(point.y).toBe(point.z * .72); // Painter coordinates retain the original depth compression.
+      const shown = projectLegacyGround(point.x, -point.y), anchor = projectPoint(point.x, point.z);
+      expect(shown.x).toBeCloseTo(1.3 * point.x + .2 * point.z, 12);
+      expect(shown.y).toBeCloseTo(-.6 * point.z, 12);
+      expect(shown.x).toBeCloseTo(anchor.x, 12); expect(shown.y).toBeCloseTo(anchor.y, 12);
       expect(point.baseY).toBeGreaterThan(point.y);
     }
     expect(coast).toEqual(before);
   });
-  it('bounds every decorative face within the existing backdrop without increasing its screen-X extent', () => {
+  it('bounds every decorative face within the existing legacy paint backdrop and paint-X extent', () => {
+    expect(CLIFF_DEPTH).toBe(3.2); // Approved D063 facade envelope; not inferred from the painter.
+    expect(APPROACH_DEPTH).toBe(.35);
     const profile = cliffProfile(coast);
     for (const point of profile) {
       expect(Math.abs(point.x)).toBeLessThan(30);
@@ -36,8 +43,8 @@ describe('decorative cliffs and the unchanged walkable top', () => {
       const i = ((bearing + offset + 360) % 360) / 2;
       expect(profile[i].depth).toBeCloseTo(APPROACH_DEPTH, 12);
     }
-    expect(profile[30].depth).toBeCloseTo(CLIFF_DEPTH, 12);
-    expect(profile[60].depth).toBeCloseTo(CLIFF_DEPTH, 12);
+    expect(profile[30].depth).toBeCloseTo(3.2, 12);
+    expect(profile[60].depth).toBeCloseTo(3.2, 12);
     expect(profile[34].depth).toBeGreaterThan(APPROACH_DEPTH);
     expect(profile[34].depth).toBeLessThan(CLIFF_DEPTH);
   });

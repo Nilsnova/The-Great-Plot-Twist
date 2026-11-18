@@ -74,8 +74,9 @@ it('shows a practice code without a host button in a rehearsal, and no QR while 
 
 it('draws the quest strip with ticks and one-line hints',async()=>{
   const result=await evaluate(async()=>{
-    const {createQuestStrip}=await window.g20Import('/src/class-demo/quest-strip.js');
-    const strip=createQuestStrip({parent:document.body});strip.update({wave:true,defend:false,lamp:false});
+    const {createQuestStrip}=await window.g20Import('/src/ui/quest-strip.js');
+    const {classQuestView}=await window.g20Import('/src/class-demo/quests.js');
+    const strip=createQuestStrip({parent:document.body});strip.update=state=>strip.render(classQuestView(state));strip.update({wave:true,defend:false,lamp:false});
     const buttons=[...document.querySelectorAll('.quest-item')];
     buttons[2].click();
     const hint=document.querySelector('.quest-hint');

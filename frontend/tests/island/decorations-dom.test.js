@@ -34,6 +34,7 @@ it('updates the viewed island, reuses unchanged art and releases its own resourc
     const place = {group: new THREE.Group(), colliders: [{x: 1, z: 2, radius: .48}]};
     const tree = new THREE.Object3D(); tree.userData.asset = 'oak'; tree.scale.set(2, 2, 2); place.group.add(tree);
     const decor = decorateProgress(place), root = place.group.getObjectByName('island-progress');
+    await decor.retryArt();
     const flag = root.getObjectByName('island-best-wave'), statue = root.getObjectByName('island-wave-25');
     const house = id => ({id, kind: 'house', built: true});
     decor.apply({wave: 24}, [house('house_1')], true);

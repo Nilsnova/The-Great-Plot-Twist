@@ -1,0 +1,25 @@
+{
+  "command": "node scripts/report-budget.js --check",
+  "exitCode": 0,
+  "selectedOutput": true,
+  "limits": {
+    "titleJavaScript": 21080,
+    "titleCss": 12000,
+    "titleImage": 0
+  },
+  "initial": {
+    "javaScript": 18899,
+    "javaScriptGzip": 8880,
+    "css": 9410,
+    "cssGzip": 3488,
+    "titleImage": null
+  },
+  "totals": {
+    "javaScript": 2119057,
+    "images": 826107,
+    "audio": 2902465,
+    "files": 715,
+    "bytes": 6261513
+  },
+  "unshippedInDist": []
+}
