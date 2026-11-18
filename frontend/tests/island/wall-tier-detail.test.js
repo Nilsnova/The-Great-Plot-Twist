@@ -9,7 +9,8 @@ const wall = (id, x, z = 0, level = 3) => ({id, x, z, level, kind: 'wall', built
 const atlas = () => ({texture: new THREE.Texture(), width: 512, height: 512, ownsTexture: false,
   rects: Object.fromEntries(WALL_ATLAS_IDS.map((id, i) => [id,
     {x: i % 8 * 60, y: Math.floor(i / 8) * 50, w: frames[id].logical[0], h: frames[id].logical[1], anchor: frames[id].logical[2]}]))});
-const draw = (rows, art, selectedId = null) => texturedWallBatches(wallTopology(rows).links, wallVisualRows(rows), art, selectedId);
+const draw = (rows, art, selectedId = null) => texturedWallBatches(wallTopology(rows).links, wallVisualRows(rows), art,
+  {selectedId, selectionOnly: selectedId !== null});
 function quads(layers) {
   return [...layers.values()].flatMap(batch => Array.from({length: batch.positions.length / 12}, (_, i) => ({
     positions: batch.positions.slice(i * 12, i * 12 + 12), uvs: batch.uvs.slice(i * 8, i * 8 + 8),

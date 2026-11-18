@@ -11,7 +11,8 @@ export function wallVisualRows(spots = []) {
     look: row.broken || row.hp === 0 || row.health === 0 || row.look === 'broken' ? 'broken' : row.look === 'damaged' ? 'damaged' : 'intact'}))
     .sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 }
-export function texturedWallBatches(links, posts, art, selectedId = null) {
+export function texturedWallBatches(links, posts, art, {selectedId = null, selectionOnly = false} = {}) {
+  const filterId = selectionOnly ? selectedId : null;
   const layers = new Map(), connected = new Set(links.flatMap(link => [link.a, link.b]));
   const layerAt = order => {
     if (!layers.has(order)) layers.set(order, {positions: [], uvs: [], indices: []});
@@ -42,11 +43,11 @@ export function texturedWallBatches(links, posts, art, selectedId = null) {
       ? [[x1,z0,height-.14],[x1,z1,height-.14],[x1,z1,height+.01],[x1,z0,height+.01]]
       : [[x0,z1,height-.14],[x1,z1,height-.14],[x1,z1,height+.01],[x0,z1,height+.01]], 0, 'top');
   }
-  for (const link of links) if (selectedId === null || link.a === selectedId || link.b === selectedId)
+  for (const link of links) if (filterId === null || link.a === filterId || link.b === filterId)
     span(link, layerAt(100 + (link.z0 + link.z1) / 2 - .02));
   const byId = new Map(posts.map(post => [post.id, post]));
   for (const post of posts) {
-    if (selectedId !== null && post.id !== selectedId) continue;
+    if (filterId !== null && post.id !== filterId) continue;
     const id = wallFrame(post.level, post.look), frame = art.rects[id]; if (!frame) continue;
     const layer = layerAt(100 + post.z), neighbors = links.filter(link => link.a === post.id || link.b === post.id)
       .map(link => byId.get(link.a === post.id ? link.b : link.a));
