@@ -440,9 +440,6 @@ class IslandCatalogue:
     campaign: Campaign
     research: tuple[Research, ...] = ()
     wreck: Wreck = Wreck(500, (25, 100))
-    # T36: the feature flag "placement" (set by create_app, not by the file). While it is off the
-    # island layout table is never read and no spot moves: every answer shows the fixed spots.
-    placement: bool = False
     # D055: the upgrade trees by tower kind (tower_trees.json). A kind that is not in `kinds` (the
     # culverin while defenses_v2 is off) is never built, so its tree is never offered.
     trees: tuple[TowerTree, ...] = ()
