@@ -1,0 +1,333 @@
+{
+  "revision": {
+    "commit": "3df0c894c6c159085972af1d5fdbb25664875054",
+    "sources": {
+      "src/game.js": "65a846e19c5edf8f9ca8c4eaf2be72236dfcdc54",
+      "src/island/wall-batches.js": "900671842605c63306e3dd25163a390db8c4afe0",
+      "src/island/wall-connections.js": "b0a2a3b8f032117c7175aaff3852efb4d79b9b6f",
+      "src/island/wall-footing.js": "b6734250b672298dd6ee139571c829813a38238e",
+      "src/island/wall-feedback.js": "c28208a3960e7601b1d19077927c637366d49c8e",
+      "src/island/world.js": "b857f4783e87ea892ea29c00c9ab688d3d81e103"
+    }
+  },
+  "browserVersion": "157.0.8103.79",
+  "browserMode": "headless Chrome",
+  "fixture": [
+    {
+      "id": "wall_1",
+      "kind": "wall",
+      "kinds": [
+        "wall"
+      ],
+      "built": true,
+      "level": 1,
+      "cost": 10,
+      "upgradeCost": 20,
+      "spec": null,
+      "tree": null
+    },
+    {
+      "id": "wall_2",
+      "kind": "wall",
+      "kinds": [
+        "wall"
+      ],
+      "built": true,
+      "level": 2,
+      "cost": 10,
+      "upgradeCost": 40,
+      "spec": null,
+      "tree": null
+    },
+    {
+      "id": "wall_3",
+      "kind": "wall",
+      "kinds": [
+        "wall"
+      ],
+      "built": true,
+      "level": 3,
+      "cost": 10,
+      "upgradeCost": 80,
+      "spec": null,
+      "tree": null
+    },
+    {
+      "id": "wall_4",
+      "kind": "wall",
+      "kinds": [
+        "wall"
+      ],
+      "built": true,
+      "level": 4,
+      "cost": 10,
+      "upgradeCost": 160,
+      "spec": null,
+      "tree": null
+    },
+    {
+      "id": "wall_5",
+      "kind": "wall",
+      "kinds": [
+        "wall"
+      ],
+      "built": true,
+      "level": 5,
+      "cost": 10,
+      "upgradeCost": null,
+      "spec": null,
+      "tree": null
+    },
+    {
+      "id": "wall_6",
+      "kind": "wall",
+      "kinds": [
+        "wall"
+      ],
+      "built": true,
+      "level": 1,
+      "cost": 10,
+      "upgradeCost": 20,
+      "spec": null,
+      "tree": null
+    },
+    {
+      "id": "wall_7",
+      "kind": "wall",
+      "kinds": [
+        "wall"
+      ],
+      "built": true,
+      "level": 2,
+      "cost": 10,
+      "upgradeCost": 40,
+      "spec": null,
+      "tree": null
+    },
+    {
+      "id": "wall_8",
+      "kind": "wall",
+      "kinds": [
+        "wall"
+      ],
+      "built": true,
+      "level": 3,
+      "cost": 10,
+      "upgradeCost": 80,
+      "spec": null,
+      "tree": null
+    },
+    {
+      "id": "wall_9",
+      "kind": "wall",
+      "kinds": [
+        "wall"
+      ],
+      "built": true,
+      "level": 4,
+      "cost": 10,
+      "upgradeCost": 160,
+      "spec": null,
+      "tree": null
+    },
+    {
+      "id": "wall_10",
+      "kind": "wall",
+      "kinds": [
+        "wall"
+      ],
+      "built": true,
+      "level": 5,
+      "cost": 10,
+      "upgradeCost": null,
+      "spec": null,
+      "tree": null
+    },
+    {
+      "id": "wall_11",
+      "kind": "wall",
+      "kinds": [
+        "wall"
+      ],
+      "built": true,
+      "level": 1,
+      "cost": 10,
+      "upgradeCost": 20,
+      "spec": null,
+      "tree": null
+    },
+    {
+      "id": "wall_12",
+      "kind": "wall",
+      "kinds": [
+        "wall"
+      ],
+      "built": true,
+      "level": 2,
+      "cost": 10,
+      "upgradeCost": 40,
+      "spec": null,
+      "tree": null
+    }
+  ],
+  "frameTiming": {
+    "elapsedMs": 35015.3,
+    "intervals": 2101,
+    "cadenceHz": 60.002341833427096,
+    "meanMs": 16.66601618277011,
+    "p50Ms": 16.69999999999709,
+    "p95Ms": 16.700000000004366,
+    "p99Ms": 16.80000000000291,
+    "maxMs": 16.80000000000291,
+    "over25ms": 0,
+    "over34ms": 0,
+    "over50ms": 0
+  },
+  "ranges": {
+    "calls": {
+      "min": 90,
+      "max": 90,
+      "first": 90,
+      "last": 90
+    },
+    "textures": {
+      "min": 51,
+      "max": 51,
+      "first": 51,
+      "last": 51
+    },
+    "geometries": {
+      "min": 142,
+      "max": 142,
+      "first": 142,
+      "last": 142
+    },
+    "triangles": {
+      "min": 544,
+      "max": 544,
+      "first": 544,
+      "last": 544
+    }
+  },
+  "snapshots": [
+    {
+      "elapsedMs": 0,
+      "calls": 90,
+      "triangles": 544,
+      "textures": 51,
+      "geometries": 142
+    },
+    {
+      "elapsedMs": 5016,
+      "calls": 90,
+      "triangles": 544,
+      "textures": 51,
+      "geometries": 142
+    },
+    {
+      "elapsedMs": 10016,
+      "calls": 90,
+      "triangles": 544,
+      "textures": 51,
+      "geometries": 142
+    },
+    {
+      "elapsedMs": 15016,
+      "calls": 90,
+      "triangles": 544,
+      "textures": 51,
+      "geometries": 142
+    },
+    {
+      "elapsedMs": 20016,
+      "calls": 90,
+      "triangles": 544,
+      "textures": 51,
+      "geometries": 142
+    },
+    {
+      "elapsedMs": 25016,
+      "calls": 90,
+      "triangles": 544,
+      "textures": 51,
+      "geometries": 142
+    },
+    {
+      "elapsedMs": 30015,
+      "calls": 90,
+      "triangles": 544,
+      "textures": 51,
+      "geometries": 142
+    },
+    {
+      "elapsedMs": 35015,
+      "calls": 90,
+      "triangles": 544,
+      "textures": 51,
+      "geometries": 142
+    }
+  ],
+  "gpu": {
+    "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+    "vendor": "Google Inc. (Apple)",
+    "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+  },
+  "viewer": {
+    "viewport": [
+      1280,
+      720
+    ],
+    "devicePixelRatio": 1,
+    "zoom": 0.5250743853520584,
+    "drawingBuffer": [
+      1280,
+      720
+    ],
+    "quality": "high",
+    "place": "home_islet"
+  },
+  "hostContention": [
+    {
+      "time": "2026-11-18T12:56:27.944Z",
+      "load": [
+        9.3037109375,
+        12.35302734375,
+        10.228515625
+      ]
+    },
+    {
+      "time": "2026-11-18T12:56:38.011Z",
+      "load": [
+        8.92333984375,
+        12.1748046875,
+        10.1904296875
+      ]
+    },
+    {
+      "time": "2026-11-18T12:56:48.011Z",
+      "load": [
+        8.09228515625,
+        11.88916015625,
+        10.11181640625
+      ]
+    },
+    {
+      "time": "2026-11-18T12:56:58.103Z",
+      "load": [
+        8.26318359375,
+        11.794921875,
+        10.0986328125
+      ]
+    },
+    {
+      "time": "2026-11-18T12:57:03.076Z",
+      "load": [
+        8.64208984375,
+        11.814453125,
+        10.115234375
+      ]
+    }
+  ],
+  "pageErrors": [],
+  "consoleErrors": []
+}

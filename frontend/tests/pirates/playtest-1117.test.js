@@ -68,7 +68,7 @@ function setup({ weapon = 'musket', defenses, structures, finish, startNextWave 
 
 describe('1. the "+coins" of a round', () => {
   it('shows nothing before the answer, then this wave\'s loot (never a run total); the lost banner says the same', async () => {
-    const finish = vi.fn(async body => ({ ok: true, data: { loot: 0, coins: 120, waveBest: 1, flags: 1, recovery: {
+    const finish = vi.fn(async body => ({ ok: true, data: { survived: body.survived, loot: 0, coins: 120, waveBest: 1, flags: 1, recovery: {
       waveId: body.waveId, islandEpoch: 'epoch-p', closedAt: new Date(START).toISOString(), closedHp: {}, checkpointUid: 'closeuid0001',
       throughTick: body.checkpoint.throughTick, inputHeadSeq: body.checkpoint.inputHeadSeq, lastRepairSeq: 0, basisRepairSeq: {} } } }));
     const h = setup({ finish, startNextWave: () => new Promise(() => {}) });

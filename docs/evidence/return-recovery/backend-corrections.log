@@ -1,0 +1,11 @@
+Downloading pglast (7.6MiB)
+ Downloaded pglast
+Installed 8 packages in 82ms
+.....................                                                    [100%]
+=============================== warnings summary ===============================
+server/tests/followups_sql/test_delete_versions.py::test_owner_handover_and_freed_seat_increment_the_crew_once
+  /tmp/audit-revive-uv/archive-v0/UJzOEfNTtX0sT_Vv/lib/python3.12/site-packages/platformdirs/api.py:420: RuntimeDirWarning: XDG_RUNTIME_DIR is not set, falling back to /tmp/runtime-1000
+    return Path(self.user_runtime_dir)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+21 passed, 1 warning in 2.17s

@@ -1,0 +1,45 @@
+{
+  "screens": 33,
+  "failures": [
+    {
+      "screen": "market-placed",
+      "width": 1280,
+      "check": "contrast",
+      "count": 1
+    },
+    {
+      "screen": "market-placed",
+      "width": 375,
+      "check": "contrast",
+      "count": 1
+    },
+    {
+      "screen": "market-placed",
+      "width": 320,
+      "check": "contrast",
+      "count": 1
+    },
+    {
+      "screen": "market-hotspot",
+      "check": "keyboard"
+    },
+    {
+      "screen": "market-prices",
+      "check": "keyboard"
+    },
+    {
+      "screen": "market-confirm",
+      "check": "keyboard"
+    },
+    {
+      "screen": "market-placed",
+      "check": "keyboard"
+    },
+    {
+      "screen": "lobby",
+      "check": "keyboard"
+    }
+  ],
+  "errors": [],
+  "browserErrors": []
+}

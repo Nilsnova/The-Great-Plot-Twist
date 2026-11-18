@@ -1047,7 +1047,7 @@ def test_recovery_finish_preserves_first_close_receipt_and_pays_each_actor_once(
     ).fetchone() == (True,)
 
 
-def test_late_registered_finisher_expires_without_rewriting_normal_close(database):
+def test_late_registered_finisher_recovers_saved_win_without_rewriting_normal_close(database):
     add_players(database, OWNER, FRIEND)
     open_island(database, OWNER, "K7Q2M")
     open_island(database, FRIEND, "M8P3N")
@@ -1156,8 +1156,8 @@ def test_late_registered_finisher_expires_without_rewriting_normal_close(databas
         json.dumps({}),
     )
     assert late["status"] == "done"
-    assert late["expired"] is True
-    assert late["loot"] == 0
+    assert late["expired"] is False
+    assert late["loot"] == owner_finish["loot"]
     assert late["recovery"] == canonical
     assert (
         database.execute(
@@ -1169,7 +1169,7 @@ def test_late_registered_finisher_expires_without_rewriting_normal_close(databas
     assert database.execute(
         "select loot,expired from public.wave_participants where wave_id=%s and player_id=%s",
         (wave_id, FRIEND),
-    ).fetchone() == (0, True)
+    ).fetchone() == (owner_finish["loot"], False)
     assert (
         database.execute(
             "select balance from public.wallets where player_id=%s", (OWNER,)
