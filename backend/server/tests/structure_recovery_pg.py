@@ -35,6 +35,7 @@ TABLES = frozenset(
 FUNCTIONS = frozenset(
     {
         "island_open",
+        "island_economy_context",
         "wave_rules_keep",
         "structure_recovery_read_state",
         "island_structure_repair",

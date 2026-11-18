@@ -1,8 +1,8 @@
-"""Gated shared repair transaction adapter; no existing route calls it yet.
+"""Shared repair transaction adapter; used by the authenticated shared repair HTTP branch.
 
-Used by integration tests and future routes. SQL atomically owns the debit/HP/quota/event/root
-receipt; Python never performs a separate financial write. Timed free revival stays refused
-until canonical target-bound hold/fall provenance is available.
+Used by integration tests and shared_repair_runtime.py. SQL atomically owns the debit, HP,
+quota, event and root receipt. Python never performs a separate financial write. Timed free
+revival stays refused until canonical target-bound hold/fall provenance is available.
 """
 
 from typing import Never

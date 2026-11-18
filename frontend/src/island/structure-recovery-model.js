@@ -1,6 +1,8 @@
 // Builds exact-health and repair feedback from the server-owned recovery response.
 // Used by structure cards and the island recovery health-bar presentation.
 
+import {repairFunding} from './shared-combat-funds.js';
+
 const FULL_HP_UNITS = 1_000_000;
 const SUPPORTED_KINDS = new Set(['wall', 'cannon', 'mortar', 'harpoon', 'culverin', 'swivel']);
 const ERROR_LABELS = {
@@ -78,17 +80,14 @@ function buildStructureRecoveryView(state, structure, options = {}) {
   const fixedPrice = Number.isSafeInteger(structure.fixedPrice) && structure.fixedPrice > 0
     ? structure.fixedPrice
     : null;
-  const canQuote = fixedPrice !== null;
+  const funding = repairFunding(state, options, fixedPrice);
+  const canQuote = fixedPrice !== null && (!funding.shared || reserved);
   const remainingUses = Number.isInteger(state.remainingPaidUses)
     && state.remainingPaidUses >= 0 && state.remainingPaidUses <= 3
     ? state.remainingPaidUses
     : null;
   const errorMessage = ERROR_LABELS[options.errorCode] ?? null;
   const actionPending = options.status === 'submitting';
-  const coinsKnown = Number.isSafeInteger(options.coins) && options.coins >= 0;
-  const canAfford = coinsKnown && fixedPrice !== null && options.coins >= fixedPrice;
-  const fundsReason = !coinsKnown ? 'Coins are still loading.'
-    : fixedPrice !== null && !canAfford ? `Need ${fixedPrice - options.coins} more coins.` : null;
   return {
     visible: true,
     status: options.status === 'submitting' ? 'submitting' : 'ready',
@@ -102,7 +101,8 @@ function buildStructureRecoveryView(state, structure, options = {}) {
     hpLabel: `${formatHp(actualHp)} / ${formatHp(structure.maxHP)} HP`,
     healthBar: getStructureHealthBarModel(structure.hpUnits, structure.maxHP),
     repairLabel: canQuote ? `Repair now: pay ${fixedPrice} coins` : null,
-    repairReasonLabel: fundsReason,
+    repairReasonLabel: canQuote ? funding.reason : null,
+    payerLabel: canQuote ? funding.payerLabel : null,
     quotedPrice: fixedPrice,
     helperLabel: null,
     statusLabel: null,
@@ -112,7 +112,7 @@ function buildStructureRecoveryView(state, structure, options = {}) {
       : null,
     errorMessage,
     actionPending,
-    repairDisabled: !canQuote || actionPending || !canAfford || (reserved && remainingUses !== null && remainingUses === 0)
+    repairDisabled: !canQuote || actionPending || !funding.affordable || (reserved && remainingUses !== null && remainingUses === 0)
       || (reserved && remainingUses === null),
     repairIntent: canQuote ? {
       spot: structure.spot,

@@ -5,8 +5,9 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
 
-from server.island.structure_repair_models import RepairRequest
+from server.island.structure_repair_models import ActionUid, SpotId
 from server.island.treasury_store import EnvelopeRow, ReceiptRow
+from server.wallet import MAX_DELTA
 
 DecimalCoins = Annotated[StrictStr, Field(pattern=r"^[1-9][0-9]*$")]
 
@@ -21,12 +22,23 @@ class RepairEconomyIntent(BaseModel):
     runEpoch: UUID
 
 
-class SharedRepairRequest(RepairRequest):
-    """A shared request always belongs to an accepted reservation, including countdown."""
+class SharedRepairRequest(BaseModel):
+    """A shared intent targets only its common origin, never a mutable navigation code."""
 
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+    spot: SpotId
+    instance_id: UUID = Field(alias="instanceId")
+    action_uid: ActionUid = Field(alias="actionUid")
+    expected_epoch: UUID = Field(alias="expectedEpoch")
     economy: RepairEconomyIntent
     expected_window: Literal["reserved_wave"] = Field(alias="expectedWindow")
     expected_wave_id: UUID = Field(alias="expectedWaveId")
+    expected_level: StrictInt = Field(alias="expectedLevel", ge=1, le=5)
+    expected_repair_seq: StrictInt = Field(
+        alias="expectedRepairSeq", ge=0, le=9_223_372_036_854_775_807
+    )
+    quoted_price: StrictInt = Field(alias="quotedPrice", ge=1, le=MAX_DELTA)
+    wave_protocol: Literal[2] = Field(alias="waveProtocol")
 
 
 class RepairOrigin(RepairEconomyIntent):
