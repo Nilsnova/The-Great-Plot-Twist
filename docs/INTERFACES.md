@@ -1986,9 +1986,12 @@ The additive candidate migration
 that backend**; it has not been applied live by this work. Missing overloads are
 an error, with no fallback to an unchecked purchase. The service-only wrapper
 locks the payer wallet and then the owner island, revalidates membership and
-compares the complete raw layout and policy. A fresh purchase materializes only
-its checked effective cell and pays through the existing purchase function in
-one bounded subtransaction; a refusal rolls that cell change back too.
+compares the complete raw layout and policy. A fresh purchase materializes its
+checked effective cell only when it differs from the stored cell or absent-row
+canonical default. Matching rows retain their exact movement metadata; default
+purchases retain absent rows and their layout version. Payment uses the existing
+purchase function in the same bounded subtransaction; a refusal rolls back any
+necessary cell change too.
 
 A fresh original-wall INSERT requires exact transaction-local proof from this
 wrapper or the existing positioned-chain transaction, plus static scenery
