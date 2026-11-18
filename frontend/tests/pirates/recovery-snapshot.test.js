@@ -16,6 +16,35 @@ const makeSnapshot = () => ({ recoveryVersion: 1, waveProtocol: 2, configVersion
 });
 
 describe('recovery-v1 immutable wave snapshots', () => {
+  it('accepts public geometry v2 only with the complete frozen perimeter contract', () => {
+    const source = makeSnapshot();
+    source.configVersion = 2; source.wallRuleVersion = 1; source.wallCapacity = 128;
+    source.rules.push('pathing');
+    source.createWave.pathing = true; source.createWave.perimeterWalls = true;
+    source.structures[0].spot = 'wall_128'; source.createWave.defenses[0].id = 'wall_128';
+    const snapshot = readRecoverySnapshot(source, 'wave-a');
+    expect(snapshot?.configVersion).toBe(2);
+    expect(recoveryWaveDefenses(snapshot)[0].id).toBe('wall_128');
+    expect(Object.isFrozen(snapshot.createWave)).toBe(true);
+    for (const change of [{configVersion: 1}, {wallRuleVersion: 0}, {wallCapacity: 12},
+      {createWave: {...source.createWave, pathing: false}}, {createWave: {...source.createWave, perimeterWalls: false}},
+      {rules: ['structure_recovery']}]) expect(readRecoverySnapshot({...source, ...change}, 'wave-a')).toBeNull();
+    const unknown = structuredClone(source); unknown.structures[0].spot = 'wall_129';
+    expect(readRecoverySnapshot(unknown, 'wave-a')).toBeNull();
+    const wrongKind = structuredClone(source); wrongKind.structures[0].kind = 'cannon';
+    expect(readRecoverySnapshot(wrongKind, 'wave-a')).toBeNull();
+    const malformed = structuredClone(source); malformed.structures[0].spot = 'wall_013';
+    expect(readRecoverySnapshot(malformed, 'wave-a')).toBeNull();
+    const full = structuredClone(source);
+    const ids = [...Array.from({length: 128}, (_, i) => `wall_${i + 1}`), ...Array.from({length: 11}, (_, i) => `cannon_${i + 1}`)];
+    full.structures = ids.map(spot => ({...source.structures[0], spot, instanceId: `instance-${spot}`, kind: spot.startsWith('wall_') ? 'wall' : 'cannon'}));
+    full.createWave.defenses = full.structures.map(row => ({id: row.spot, kind: row.kind, level: row.level, x: row.x, z: row.z}));
+    expect(readRecoverySnapshot(full, 'wave-a')?.structures).toHaveLength(139);
+    full.structures.push({...full.structures[0], spot: 'wall_129', instanceId: 'one-too-many'});
+    expect(readRecoverySnapshot(full, 'wave-a')).toBeNull();
+    expect(source.configVersion).toBe(2);
+  });
+
   it('validates versions and HP identity, then owns a frozen copy', () => {
     const source = makeSnapshot();
     const snapshot = readRecoverySnapshot(source, 'wave-a');

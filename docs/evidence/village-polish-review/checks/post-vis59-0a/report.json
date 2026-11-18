@@ -1,0 +1,67 @@
+{
+  "started": "2026-11-18T00:59:27.418434+00:00",
+  "source": "0a461c47c3818c5ba31db6113b575c5802dfcc23",
+  "frontendTree": "e191d9290088908ee27e82e03a15847d4a73a38e",
+  "publicTree": "9306942db1050d728799cee2fbdc8e8960f14ad2",
+  "backendTree": "3956a73d76f537fd7c85259afa4bf9280a6e0ecd",
+  "checks": [
+    {
+      "name": "frontend",
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "--maxWorkers=1",
+        "--reporter=verbose"
+      ],
+      "exitCode": 1,
+      "seconds": 554.35,
+      "log": "frontend.log"
+    },
+    {
+      "name": "multiplayer",
+      "command": [
+        "node",
+        "scripts/check-multiplayer.js",
+        "/workspace/reference-village-work/polish-postqa-checks/multiplayer-captures"
+      ],
+      "exitCode": 1,
+      "seconds": 358.28,
+      "log": "multiplayer.log"
+    },
+    {
+      "name": "build",
+      "command": [
+        "npm",
+        "run",
+        "build"
+      ],
+      "exitCode": 0,
+      "seconds": 2.41,
+      "log": "build.log"
+    },
+    {
+      "name": "budget",
+      "command": [
+        "node",
+        "scripts/report-budget.js",
+        "--check"
+      ],
+      "exitCode": 0,
+      "seconds": 0.32,
+      "log": "budget.log"
+    },
+    {
+      "name": "text-lint",
+      "command": [
+        "node",
+        "../scripts/text-lint/index.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 1.55,
+      "log": "text-lint.log"
+    }
+  ],
+  "finished": "2026-11-18T01:14:44.390012+00:00",
+  "exitCode": 1
+}

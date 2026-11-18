@@ -1,0 +1,16 @@
+{
+  "source": "78278cf7e2934270f4aefa822039e7d8be8f2de5",
+  "testSha256": "07f39681d53241e38afeb8b2df9346e0c92858bed69248d0ba7fe20972e88ecc",
+  "observerSha256": "1b9cc2b656a38230eebbe5e4a70bbcffd216100d73f5b8a61d56201abe80588a",
+  "started": "2026-11-18T00:49:29.348156+00:00",
+  "command": [
+    "npm",
+    "test",
+    "--",
+    "--maxWorkers=1",
+    "--reporter=verbose",
+    "tests/multiplayer-map-observer.test.js"
+  ],
+  "exitCode": 1,
+  "seconds": 2.76
+}

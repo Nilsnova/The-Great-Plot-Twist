@@ -1,0 +1,190 @@
+{
+  "source": "e874023f27fff1a7bf5b21787e1ecd5c55a75a9f",
+  "applicationTrees": {
+    "frontend/src": "d76918ec05735c46c9cda4a55cc495e28bfa0d5a",
+    "frontend/public": "9306942db1050d728799cee2fbdc8e8960f14ad2",
+    "backend": "c785196095edef4f5416744b46435ab564da4e9c",
+    "supabase": "6e52a63b87028291127dbae8c344c9f49a73896d"
+  },
+  "status": "closed mixed result: frontend4586pass/1 unchanged20s timeout; a11y33/demo34/build/title-budget/text pass;21 measured overlaps pass/3 skipped; separate12-image native comparison passed",
+  "copyMethod": "unchanged original bytes; only three island-toast PNGs published here; all 21 measured rows and 3 skipped rows remain in the complete report",
+  "files": [
+    {
+      "file": "report.json",
+      "original": "final-toast-smoke/report.json",
+      "bytes": 1071,
+      "sha256": "6837b31da1b5bcb74aac5e96a7bc16166e84803f43d8b56781fd6e92da2528e1"
+    },
+    {
+      "file": "runner.log",
+      "original": "final-toast-smoke/runner.log",
+      "bytes": 540,
+      "sha256": "e52b017fe3eee723a7a2cec8cfee64a0eb41b223475d2a489eccd0a7960764a0"
+    },
+    {
+      "file": "overlaps.log",
+      "original": "final-toast-smoke/overlaps.log",
+      "bytes": 6189,
+      "sha256": "0e9cb4f7aeffd819c53d4a27b85344bfd40c99ee75cf45a298f9b80a3962da3a"
+    },
+    {
+      "file": "overlap-captures/report.json",
+      "original": "final-toast-smoke/overlap-captures/report.json",
+      "bytes": 6349,
+      "sha256": "85d1fa6dcb7f6529a178b93f91b672090a8b010a0b58fe556df7e2601ea1d181"
+    },
+    {
+      "file": "overlap-captures/island-toast-1280x720.png",
+      "original": "final-toast-smoke/overlap-captures/island-toast-1280x720.png",
+      "bytes": 1326350,
+      "sha256": "019d2af610287365020c6eda4bf64ef1b523487fb219ddd6e8fba0891e6b3857",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "file": "overlap-captures/island-toast-390x844.png",
+      "original": "final-toast-smoke/overlap-captures/island-toast-390x844.png",
+      "bytes": 369099,
+      "sha256": "077d94d186b431e13432daeba5049d802d15a2c109237352a81bb09fe420c500",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "file": "overlap-captures/island-toast-844x390.png",
+      "original": "final-toast-smoke/overlap-captures/island-toast-844x390.png",
+      "bytes": 452256,
+      "sha256": "97ea592edd58c871749a679baaf61117819d79e7c77eb23a8c3e87be2a860a71",
+      "width": 844,
+      "height": 390
+    },
+    {
+      "file": "frontend.log",
+      "original": "final-post-toast-checks/frontend.log",
+      "bytes": 637356,
+      "sha256": "2e56517eaf6cb6c7d3d48c0aedb4bcd11d4c8e9e06f86f2d27bcd647e396f7d4"
+    },
+    {
+      "file": "final-commands-report.json",
+      "original": "final-post-toast-checks/report.json",
+      "bytes": 1563,
+      "sha256": "ef45510a821817b5990ed5efd5453e061fe9d51efec3818a38051d9b58891df1"
+    },
+    {
+      "file": "final-commands-runner.log",
+      "original": "final-post-toast-checks/runner.log",
+      "bytes": 849,
+      "sha256": "484a3a64a7c4c0d7d0be12738106e7f5c9ef8ec2a1399b6dd0610e0187571fc4"
+    },
+    {
+      "file": "a11y.log",
+      "original": "final-post-toast-checks/a11y.log",
+      "bytes": 818,
+      "sha256": "a966f2a7f04a2795da2f363d4f6fffaf2c78ac4dfa9ad6cb0b6c61e0175945de"
+    },
+    {
+      "file": "demo.log",
+      "original": "final-post-toast-checks/demo.log",
+      "bytes": 2692,
+      "sha256": "6e2babd496bacf26a60526202e9db732dd981492378797887016fc85adfefb77"
+    },
+    {
+      "file": "build.log",
+      "original": "final-post-toast-checks/build.log",
+      "bytes": 17404,
+      "sha256": "8d905a31078b3baebf837a7cada473a92792c4919772fe2a4ea3da90d00dd64d"
+    },
+    {
+      "file": "budget.log",
+      "original": "final-post-toast-checks/budget.log",
+      "bytes": 83560,
+      "sha256": "3accf31696c61af7905aa162e174b4d6206980b5b534e4a5afc939b75351c360"
+    },
+    {
+      "file": "text-lint.log",
+      "original": "final-post-toast-checks/text-lint.log",
+      "bytes": 1037,
+      "sha256": "b5cf05cd71da1e3d4b824e499509fd61efca5ccf5dbb8f1049fd0ce659f341f3"
+    },
+    {
+      "file": "demo-captures/journey.json",
+      "original": "final-post-toast-checks/demo-captures/journey.json",
+      "bytes": 2614,
+      "sha256": "79bbd1744212bf6e7e6ea1c69976ce6db967f55a4dc9f2c95cb2be172c5adb5a"
+    }
+  ],
+  "finalCommands": {
+    "source": "e874023f27fff1a7bf5b21787e1ecd5c55a75a9f",
+    "started": "2026-11-17T22:59:48.635341+00:00",
+    "finished": "2026-11-17T23:16:40.118952+00:00",
+    "overallExitCode": 1,
+    "checks": [
+      {
+        "name": "frontend",
+        "command": [
+          "npm",
+          "test",
+          "--",
+          "--maxWorkers=1",
+          "--reporter=verbose"
+        ],
+        "exitCode": 1,
+        "seconds": 555.61,
+        "log": "frontend.log"
+      },
+      {
+        "name": "a11y",
+        "command": [
+          "npm",
+          "run",
+          "test:a11y"
+        ],
+        "exitCode": 0,
+        "seconds": 359.22,
+        "log": "a11y.log"
+      },
+      {
+        "name": "demo",
+        "command": [
+          "npm",
+          "run",
+          "test:demo"
+        ],
+        "exitCode": 0,
+        "seconds": 91.97,
+        "log": "demo.log"
+      },
+      {
+        "name": "build",
+        "command": [
+          "npm",
+          "run",
+          "build"
+        ],
+        "exitCode": 0,
+        "seconds": 1.88,
+        "log": "build.log"
+      },
+      {
+        "name": "budget",
+        "command": [
+          "node",
+          "scripts/report-budget.js",
+          "--check"
+        ],
+        "exitCode": 0,
+        "seconds": 0.37,
+        "log": "budget.log"
+      },
+      {
+        "name": "text-lint",
+        "command": [
+          "node",
+          "../scripts/text-lint/index.mjs"
+        ],
+        "exitCode": 0,
+        "seconds": 2.4,
+        "log": "text-lint.log"
+      }
+    ]
+  }
+}

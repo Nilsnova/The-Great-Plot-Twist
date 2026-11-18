@@ -1,0 +1,36 @@
+{
+  "status": "passed both viewports; 12 originals/3 tablists/33 actions each; exact same-navigation browser bytes; no app rerun",
+  "htmlSha256": "f65e50207d375c2b594c872e403dbff5a308e1d1809a54eabc0feda33d067e76",
+  "checkerSha256": "d3d59405be7c7eb20106c6af7cd911ac35b8caeaae4b186e2a8c4da2c137adc6",
+  "files": [
+    {
+      "file": "comparison-1280x720.png",
+      "original": "final-comparison-browser-checks-stream/comparison-1280x720.png",
+      "bytes": 675704,
+      "sha256": "7ddcaae52761397a709b2b8600e5f8c39688a9b8deef531ef29ca568b979b968",
+      "width": 1280,
+      "height": 1336
+    },
+    {
+      "file": "comparison-375x812.png",
+      "original": "final-comparison-browser-checks-stream/comparison-375x812.png",
+      "bytes": 753712,
+      "sha256": "74667eed01d5f4ddc7d9ea2df81520a080b94c72b8ca9dd31cb54232a4ad53b4",
+      "width": 375,
+      "height": 3655
+    },
+    {
+      "file": "report.json",
+      "original": "final-comparison-browser-checks-stream/report.json",
+      "bytes": 107888,
+      "sha256": "14b623985142082efa18ed85c9fa5222fdbbe205675386c6451fc2cabbdaa9c3"
+    },
+    {
+      "file": "run.log",
+      "original": "final-comparison-browser-checks-stream/run.log",
+      "bytes": 279,
+      "sha256": "36203cae9c8db7272deaeaa2fb739209dd03de725cbf23ba58da14874534dbc1"
+    }
+  ],
+  "screenshotNote": "Full-page documentation screenshots; filenames identify viewport, while width/height fields record actual full-page PNG dimensions. Game PNGs remain separate unchanged native-size originals."
+}

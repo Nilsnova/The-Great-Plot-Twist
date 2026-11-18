@@ -1,0 +1,17 @@
+{
+  "runtimeSource": "3ccbe82b079eaf7d302a54a935f05aab8085c709",
+  "base": "6c87b8dcd2d7a1bb5376c3b64bbede27a144479e",
+  "frontendTree": "896b0240f414b05aff0ac1620e1eaf97e8b48839",
+  "publicTree": "9306942db1050d728799cee2fbdc8e8960f14ad2",
+  "backendTree": "3956a73d76f537fd7c85259afa4bf9280a6e0ecd",
+  "supabaseTree": "c3319eb968d7ac28624ecb8434909f37ca00edf2",
+  "focusedEvidence": "Working tree before runtime commit; only subsequent selected-test change was a comment. Runtime drawing was identical to 3ccbe82b.",
+  "receiptSha256": {
+    "build.log": "c43d1041fcc9c905fa44c3712dbc67f128f3aec3581ccf613e40f43422eea5a3",
+    "focused.log": "1b1ee8e96a84b605a86f67958fbf743cdb74961bf1e037d6b5cdefece0b9be22",
+    "red.log": "8ac9240f7bfed0c7295c8f05480e7e206390211fd812fcdd36f3bbd210ccdce4",
+    "title-budget.log": "f888db454de24e5d6f273d720198b65c5dbcb01e773d3bb481344ba9383b7cd2"
+  },
+  "browser": "Not run by this agent; coordinator owns native evidence.",
+  "fullApplication": "Not run by this agent; existing failures remain open."
+}

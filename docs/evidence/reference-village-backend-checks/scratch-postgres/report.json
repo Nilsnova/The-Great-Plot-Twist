@@ -1,0 +1,47 @@
+{
+  "started": "2026-11-17T21:53:41.816408+00:00",
+  "source": "0d3589c21108d682f0c88d9698efda7d52c2301e",
+  "backendTree": "c785196095edef4f5416744b46435ab564da4e9c",
+  "supabaseTree": "6e52a63b87028291127dbae8c344c9f49a73896d",
+  "scratchOptIn": "CASE_PG_SCRATCH=1",
+  "checks": [
+    {
+      "name": "postgres",
+      "command": [
+        "uv",
+        "run",
+        "--frozen",
+        "--no-env-file",
+        "--with",
+        "pgserver",
+        "--with",
+        "psycopg[binary]",
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "-rs",
+        "server/tests/island_sql/test_live_wave_wrappers_sql.py",
+        "server/tests/island_sql/test_recovery_away_sql.py",
+        "server/tests/island_sql/test_recovery_two_player_http_pg.py",
+        "server/tests/island_sql/test_recovery_wave_end_sql.py",
+        "server/tests/island_sql/test_structure_recovery_api_sql.py",
+        "server/tests/island_sql/test_structure_recovery_http_pg.py",
+        "server/tests/island_sql/test_perimeter_v1_lifecycle_sql.py",
+        "server/tests/island_sql/test_perimeter_recovery_bridge_sql.py",
+        "server/tests/island_sql/test_perimeter_wave_start_sql.py",
+        "server/tests/island_sql/test_perimeter_http_pg.py",
+        "server/tests/island_sql/test_wall_chain_build_sql.py",
+        "server/tests/island_sql/test_wall_chain_concurrency_sql.py",
+        "server/tests/island_sql/test_wall_cohort_sql.py",
+        "server/tests/island_sql/test_wall_cohort_repair_sql.py",
+        "server/tests/island_sql/test_wall_cohort_demolition_sql.py",
+        "server/tests/island_sql/test_recovery_finish_checkpoint_guard_sql.py"
+      ],
+      "exitCode": 0,
+      "seconds": 16.25,
+      "log": "postgres.log"
+    }
+  ],
+  "finished": "2026-11-17T21:53:58.074711+00:00"
+}

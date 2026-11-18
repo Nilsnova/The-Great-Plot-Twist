@@ -1,0 +1,16 @@
+{
+  "classification": "inconclusive native setup; known upstream MP pose failure remains open",
+  "issue": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/421",
+  "source": "52f6bb158b03188b57260c1872e273391598debf",
+  "frontendTree": "6e0c6b27b717a7b8eedcde498d7372de6f0942cb",
+  "nativeAccepted": false,
+  "nativeFiredEvents": 0,
+  "nativeDriverSeconds": 54.417,
+  "closed": true,
+  "originalScriptSha256": "715dda1f9b0a9d949431e2595ea2d641c5350a5130e9a84b8d716a3de1af875f",
+  "preservedOriginalScriptSha256": "715dda1f9b0a9d949431e2595ea2d641c5350a5130e9a84b8d716a3de1af875f",
+  "correctedFutureScriptSha256": "bfb96664d3d23bdd63fefe4f16a6da1235f400974ff70cb0052b6b0eef108076",
+  "correctedFutureScriptNativeRun": false,
+  "noProductSourceEdits": true,
+  "pureMechanism": "Same accepted legacy shot emits1/draws1/pose0 after250ms; emits1/draws0/poseNull after1800ms. Not native causal proof."
+}

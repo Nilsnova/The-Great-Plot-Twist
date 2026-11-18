@@ -1,0 +1,17 @@
+{
+  "command": [
+    "npm",
+    "test",
+    "--",
+    "--maxWorkers=1",
+    "tests/art/landscape-materials.test.js",
+    "tests/art/terrain-materials.test.js",
+    "tests/art/coast-cliffs.test.js",
+    "tests/art/coast-water.test.js",
+    "tests/world/ground-transform.test.js",
+    "tests/art/terrain-backdrop-lifetime.test.js",
+    "--reporter=verbose"
+  ],
+  "exitCode": 0,
+  "seconds": 3.57
+}

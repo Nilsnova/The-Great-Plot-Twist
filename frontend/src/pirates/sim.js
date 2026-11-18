@@ -31,6 +31,7 @@ import { DEFENSES_V2 } from './defenses-v2.js';
 // D055: the upgrade trees after level 5 (two paths of three tiers each, src/pirates/tower-trees.js).
 import { readTree, treeStats } from './tower-trees.js';
 import { canFreeStructureRepair, readRecoveryPolicy } from './recovery-policy.js';
+import {exteriorWallLanding} from './perimeter-landing.js';
 
 const freeze = value => {
   for (const inner of Object.values(value)) if (inner && typeof inner === 'object') freeze(inner);
@@ -501,12 +502,14 @@ function shuffle(list, random) {
  * defensesV2: true (T43, D048; the wave's rule "defenses_v2") lets culverins in `defenses` fight: a long gun on a
  * tower spot that shoots gunboats and siege barges first, then the ship with the most hp. Without it a culverin
  * in `defenses` is ignored, and a wave without a culverin plays exactly as before either way.
+ * perimeterWalls: true protects new entry from coastal wall overhangs; requires pathing and a trusted frozen option.
  * shipFire: true (T50; the wave's rule "ship_fire") makes a ship at anchor fire at a real target (ship-fire.js): the wall
  * on its beach, else the nearest standing tower (with towerHealth), else the heart, each in reach; the ball flies and
  * its impact costs that target hp (the heart its ♥, captains next to it a little). With nothing in reach it holds its
  * fire. Without it a ship shells the nearest wall in reach, else the island at CONFIG.boarding.shellShare, as before.
  */
 export function createWave(options = {}) {
+  if (options?.perimeterWalls === true && options?.pathing !== true) throw new Error('Perimeter walls require pathing.');
   const C = CONFIG, B = C.boarding, random = createRandom(options?.seed);
   // Recovery v1 pauses every free structure repair path. An unknown version pair fails closed.
   const recoveryPolicy = readRecoveryPolicy(options);
@@ -607,7 +610,7 @@ export function createWave(options = {}) {
   // T35: the routes over the walls (null without the option: today's fixed routes). No dice.
   const towerBlocking = options?.towerObstacles === true && options?.pathing === true && towerHealth.enabled;
   const paths = options?.pathing === true ? createBoarderPaths({ coast: readCoast(options?.coast), heart, walls,
-    towers, towerBlocking,
+    towers, towerBlocking, perimeterWalls: options?.perimeterWalls === true,
     pace: { hackPerSecond: B.hack * curve.damage / B.hackEvery, speed: B.speed * curve.speed } }) : null;
 
   // Where a gunboat anchors (CONFIG.gunboat): the first point of its course where the nearest tower is as
@@ -1250,7 +1253,9 @@ export function createWave(options = {}) {
     const T = C.tiers.brutes, every = tier.brutes > 0 ? Math.max(1, Math.round(1 / tier.brutes)) : 0;
     const brute = every > 0 && nextBoarderId % every === 0;
     const hp = Math.round(B.hp * curve.hp * (brute ? T.hp : 1) * 10) / 10;
-    const startX = ship.x + (landing.x - ship.x) * .25, startZ = ship.z + (landing.z - ship.z) * .25;
+    const oldStart = {x: ship.x + (landing.x - ship.x) * .25, z: ship.z + (landing.z - ship.z) * .25};
+    const start = options?.perimeterWalls === true ? exteriorWallLanding(oldStart, landing, wallsInOrder) : oldStart;
+    const startX = start.x, startZ = start.z;
     const boarder = { id: `boarder_${nextBoarderId++}`, boarder: true, shipId: ship.id, x: startX, z: startZ, vx: 0, vz: 0,
       hp, maxHp: hp, speed: round2(B.speed * curve.speed * (brute ? T.speed : 1)), hack: round2(B.hack * curve.damage * (brute ? T.hack : 1)),
       damage: round2(B.heartDamage * curve.damage * (brute ? T.heart : 1)),

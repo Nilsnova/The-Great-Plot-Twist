@@ -1,0 +1,85 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run --maxWorkers=1 --reporter=verbose tests/island/wave-flow-races.test.js tests/pirates/multiplayer.test.js tests/island/structure-recovery-api.test.js
+
+
+ RUN  v5.1.0 /workspace/reference-village-work/latest-main-preview/frontend
+
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > only the newest requested target may apply, old reply first=true 5ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > only the newest requested target may apply, old reply first=false 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > stale empty/failed reads cannot clear a newer target: {"ok":true,"data":null} 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > stale empty/failed reads cannot clear a newer target: {"ok":false,"code":"offline"} 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a failed newest lookup does not make an older pending answer current again 0ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > reset during a read cannot repopulate current or notify after the reset 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > an accepted new wave fences a lookup already in flight 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > wave begin also fences a read started during defense preparation 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a newer confirmed same-target wave during preparation cannot be overwritten by the older accepted start 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a newer confirmed same-target wave before the start response cannot be overwritten either 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > starting admission invalidates an older read before it can interfere with preparation 0ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > reset cancels a pending ring admission before it begins 2ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > reset cancels a pending join admission before it begins 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > reset while preparing an already accepted response still prevents its late begin 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a same-target refresh does not cancel a valid pending start admission 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a late accepted start cannot move back from a newer requested target 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a superseded ring fallback lookup cannot auto-join cached state or cancel a newer same-target read 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a late join outcome cannot replace/clear the newer target: {"ok":true,"data":{"waveId":"wave-a","wave":2,"seed":77,"startsAt":"2026-11-17T12:00:10.000Z","weather":{"kind":"calm"},"flagship":false}} 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a late join outcome cannot replace/clear the newer target: {"ok":false,"code":"wave_over"} 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a late join cannot replace/clear a newer wave on the same target: {"ok":true,"data":{"waveId":"wave-a","wave":2,"seed":77,"startsAt":"2026-11-17T12:00:10.000Z","weather":{"kind":"calm"},"flagship":false}} 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a late join cannot replace/clear a newer wave on the same target: {"ok":false,"code":"wave_over"} 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > same-target reads preserve a joined wave, and a fresh real next wave can replace it 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a confirmed empty different target clears the joined old wave and its countdown timers 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a same-target empty refresh preserves the joined wave and its countdown 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > finishing/clearing a wave invalidates a lookup that would revive it 2ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a recovery end fences an older read before it can revive that wave: null 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a recovery end fences an older read before it can revive that wave: {"survived":true,"loot":0,"coins":100} 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > ending an unrelated old wave does not cancel the current wave or its current lookup 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a canonical close after local stop rejects a later pending read of the same closed wave 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a canonical close for the old wave does not cancel a pending read of a different wave 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a local stop alone still permits the server to report the same wave open for rejoin 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a reset boundary starts a fresh closed-wave history 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a context boundary starts a fresh closed-wave history 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a successful finish keeps a later stale read closed too 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a late accepted old start cannot reopen a canonically closed wave or cancel a different-wave read 1ms
+ ✓ tests/pirates/multiplayer.test.js > the break with several captains > Auto next with a refused start ends the break instead of keeping it (and the input) forever 45ms
+ ✓ tests/pirates/multiplayer.test.js > the break with several captains > a friend's next wave arriving before ours ended here plays ours out and finishes it first 13ms
+ ✓ tests/pirates/multiplayer.test.js > the room-wide Pause between waves (GAME-V3.md §2) > holds the break open, stops Auto next and "Next wave", and shows who paused; Resume lets it run out 46ms
+ ✓ tests/pirates/multiplayer.test.js > the bell when two captains ring at once > "Next wave" that finds the other captain's wave running joins it 31ms
+ ✓ tests/pirates/multiplayer.test.js > the bell when two captains ring at once > reads the island once more before a wave starts, so a friend's new wall is in it 3ms
+ ✓ tests/pirates/multiplayer.test.js > the island room for every defender > periodically republishes a retained legacy core after a proven same-wave return without rereading recovery vectors 7ms
+ ✓ tests/pirates/multiplayer.test.js > the island room for every defender > wires authenticated recovery reads and checkpoints into the mounted island controller 7ms
+ ✓ tests/pirates/multiplayer.test.js > the island room for every defender > keeps Pirate Point waves on protocol 1 when island recovery is enabled 1ms
+ ✓ tests/pirates/multiplayer.test.js > the island room for every defender > publishes and clears replayed structure health through the island setter 1ms
+ ✓ tests/pirates/multiplayer.test.js > the island room for every defender > the owner joins the island room as soon as the island answered (it is unknown at the landing) 3ms
+ ✓ tests/pirates/multiplayer.test.js > the island room for every defender > sends wave_start, again a little later, and joins when a friend's wave_start arrives 2ms
+ ✓ tests/pirates/multiplayer.test.js > the island room for every defender > tries the join again while the bell is busy with our own ring 2ms
+ ✓ tests/pirates/multiplayer.test.js > the island room for every defender > joins the next wave after a retry found its wave already joined by our own "Next wave" 2ms
+ ✓ tests/pirates/multiplayer.test.js > the island room for every defender > asks the server once while a join is in progress, however many wave_start arrive 1ms
+ ✓ tests/pirates/multiplayer.test.js > the island room for every defender > a friend landing while a wave runs joins it once the island answered 1ms
+ ✓ tests/pirates/multiplayer.test.js > the island room for every defender > co-op builds: ours go to the room as island_changed, a friend's make us read the island again 1ms
+ ✓ tests/pirates/multiplayer.test.js > an upgrade is never missed (11 Nov: "sometimes some upgrades were not visible") > tells the room about our upgrade twice, in case a friend's room was still joining 2ms
+ ✓ tests/pirates/multiplayer.test.js > an upgrade is never missed (11 Nov: "sometimes some upgrades were not visible") > reads the island on screen again every 15 seconds, also when no message came 1ms
+ ✓ tests/pirates/multiplayer.test.js > an upgrade is never missed (11 Nov: "sometimes some upgrades were not visible") > gives the wave on screen the new levels after our change and after every read 2ms
+ ✓ tests/pirates/multiplayer.test.js > the shared fake world (?islands=fake&fakeworld=…, scripts/check-multiplayer.js) > reads its tab's captain from the address 1ms
+ ✓ tests/pirates/multiplayer.test.js > the shared fake world (?islands=fake&fakeworld=…, scripts/check-multiplayer.js) > lets four tabs join, build, visit and fight one island together 22ms
+ ✓ tests/island/structure-recovery-api.test.js > structure recovery API > requests protocol two from the persisted policy and preserves the entire recovery wave DTO 5ms
+ ✓ tests/island/structure-recovery-api.test.js > structure recovery API > lets a second player find a teammate's recovery wave without a token and join it for their own 3ms
+ ✓ tests/island/structure-recovery-api.test.js > structure recovery API > advertises protocol two for first-wave admission while accepting a frozen legacy reply 0ms
+ ✓ tests/island/structure-recovery-api.test.js > structure recovery API > refuses local legacy perimeter data mixed into a public recovery wave 1ms
+ ✓ tests/island/structure-recovery-api.test.js > structure recovery API > accepts only the canonical versioned state and requests it for the selected island 1ms
+ ✓ tests/island/structure-recovery-api.test.js > structure recovery API > submits the quoted fields and retries an unknown result with the same action UID 1ms
+ ✓ tests/island/structure-recovery-api.test.js > structure recovery API > keeps a stale quote response current state and wallet separately from the refusal 5ms
+ ✓ tests/island/structure-recovery-api.test.js > structure recovery API > remembers the server spot alias from the canonical recovery view for the repair request 0ms
+
+ Test Files  3 passed (3)
+      Tests  64 passed (64)
+   Start at  21:35:53
+   Duration  1.78s (import 43%, transform 34%, tests 21%, worker 2%)
+
+    Isolate  3 workers spawned · ~165ms startup each (spawn + environment, per file)
+             at least ~330ms faster with isolate: false — reuses workers across files instead of one per file
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice

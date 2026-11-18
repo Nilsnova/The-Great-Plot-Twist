@@ -1,0 +1,1445 @@
+{
+  "beforeCaptureSource": "6c87b8dcd2d7a1bb5376c3b64bbede27a144479e",
+  "allBeforeOriginalPngs": [
+    {
+      "name": "reference-arranged-1280x720.png",
+      "bytes": 1175673,
+      "sha256": "606618600f454ea1c1d28b84d371095e0ddefa06a33a689c55b2820cfac445e5",
+      "dimensions": [
+        1280,
+        720
+      ],
+      "copied": true
+    },
+    {
+      "name": "reference-arranged-375x812.png",
+      "bytes": 442819,
+      "sha256": "95a03e6f8659f1d8b02f9cc69e5c7a8a38313f359050f18c4011f56a5638c77a",
+      "dimensions": [
+        375,
+        812
+      ],
+      "copied": true
+    },
+    {
+      "name": "reference-entry-1280x720.png",
+      "bytes": 1173770,
+      "sha256": "fd7d018d80708fecc58ea9e002bbbcd49ba8b4986fc35d3c73698209eba73b88",
+      "dimensions": [
+        1280,
+        720
+      ],
+      "copied": false
+    },
+    {
+      "name": "reference-entry-375x812.png",
+      "bytes": 441868,
+      "sha256": "926eb34cd89b2c24bbfde5743ef50031d8713f42394e492067c15b5308809eb9",
+      "dimensions": [
+        375,
+        812
+      ],
+      "copied": false
+    },
+    {
+      "name": "reference-fit-1280x720.png",
+      "bytes": 1130789,
+      "sha256": "3295a99c28dce702360ace58af0ad1748452df3cb49e41b2558053c040b69381",
+      "dimensions": [
+        1280,
+        720
+      ],
+      "copied": false
+    },
+    {
+      "name": "reference-fit-375x812.png",
+      "bytes": 311149,
+      "sha256": "f8083df7af2042f61d382e931e4bc3fa70547ef13018a457966a42c28c062acb",
+      "dimensions": [
+        375,
+        812
+      ],
+      "copied": false
+    },
+    {
+      "name": "reference-move-level3-1280x720.png",
+      "bytes": 1116957,
+      "sha256": "cea253588c2c9ee8e006257ed9298672a50f94a0120697f849875ba551643897",
+      "dimensions": [
+        1280,
+        720
+      ],
+      "copied": false
+    },
+    {
+      "name": "reference-move-level3-375x812.png",
+      "bytes": 334566,
+      "sha256": "659c76dc6df35d6871caf806c92c00d8ac24efafd50d7e9ea94e2111c419c92f",
+      "dimensions": [
+        375,
+        812
+      ],
+      "copied": false
+    },
+    {
+      "name": "reference-selected-level3-1280x720.png",
+      "bytes": 1134401,
+      "sha256": "6eb77760ead4f0df5fb62e509a952bd3d39181edfb88544ee08a6879a83e783d",
+      "dimensions": [
+        1280,
+        720
+      ],
+      "copied": true
+    },
+    {
+      "name": "reference-selected-level3-375x812.png",
+      "bytes": 305337,
+      "sha256": "02717b96433c34ce6487be8dd4e4197998278c952575b6d6f8222ae7deda1504",
+      "dimensions": [
+        375,
+        812
+      ],
+      "copied": true
+    },
+    {
+      "name": "reference-wall-draft-1280x720.png",
+      "bytes": 927178,
+      "sha256": "381d2231b1e670cce22a3f49aef46b8ee36c020f15ba421eb1b8314a0f450d0e",
+      "dimensions": [
+        1280,
+        720
+      ],
+      "copied": false
+    },
+    {
+      "name": "reference-wall-draft-375x812.png",
+      "bytes": 363666,
+      "sha256": "46ff0f0d8955cddc9f6fe51226236d7301ce199959ad041b92cf5d0a7ae7f408",
+      "dimensions": [
+        375,
+        812
+      ],
+      "copied": false
+    },
+    {
+      "name": "reference-wall-draft-fine-1280x720.png",
+      "bytes": 904878,
+      "sha256": "8814e04cf6b7ad7c52cd024db54ac3f6587e3569f4a51ebae67cc3a178be15f8",
+      "dimensions": [
+        1280,
+        720
+      ],
+      "copied": false
+    },
+    {
+      "name": "reference-wall-draft-fine-375x812.png",
+      "bytes": 273742,
+      "sha256": "c032ca2e58ca14f5e44482951be09c9370dcb3fb6b0a1bb8d432deeb07bd0ded",
+      "dimensions": [
+        375,
+        812
+      ],
+      "copied": false
+    },
+    {
+      "name": "wave-breach-1280x720.png",
+      "bytes": 1159734,
+      "sha256": "959905a7786784a6f9580d3fbd6b4871e3792878e13501568e7163a48347402b",
+      "dimensions": [
+        1280,
+        720
+      ],
+      "copied": true
+    },
+    {
+      "name": "wave-breach-375x812.png",
+      "bytes": 307115,
+      "sha256": "36be5f58692f34f10029fea65dcb83527aa638f5035ece9304de7e9c3bd9114d",
+      "dimensions": [
+        375,
+        812
+      ],
+      "copied": true
+    },
+    {
+      "name": "wave-projectiles-1280x720.png",
+      "bytes": 1052844,
+      "sha256": "7184d8f25cb9ed0d20863174821d93f69c800ddad8b48fd1a5dd3e527501ed96",
+      "dimensions": [
+        1280,
+        720
+      ],
+      "copied": false
+    },
+    {
+      "name": "wave-projectiles-375x812.png",
+      "bytes": 254476,
+      "sha256": "b6f71be2529aa8724c807de906bc2a026e0278d8d9681d9e76b188a6e9279bd8",
+      "dimensions": [
+        375,
+        812
+      ],
+      "copied": false
+    },
+    {
+      "name": "wave-standing-1280x720.png",
+      "bytes": 1057154,
+      "sha256": "f40f62af7cda5b18e8dd1bb8e044abd9209ea7c5cef8aac14a9b71e490e1da65",
+      "dimensions": [
+        1280,
+        720
+      ],
+      "copied": false
+    },
+    {
+      "name": "wave-standing-375x812.png",
+      "bytes": 260763,
+      "sha256": "9e08183cd1001f2e76d8abcc329e3418287a73b12430330fb4630f1dc15edf91",
+      "dimensions": [
+        375,
+        812
+      ],
+      "copied": false
+    }
+  ],
+  "copiedOriginalArtifacts": [
+    {
+      "path": "actual-before/reference-arranged-1280x720.png",
+      "origin": "/workspace/reference-village-work/polish-before-captures/reference-arranged-1280x720.png",
+      "bytes": 1175673,
+      "sha256": "606618600f454ea1c1d28b84d371095e0ddefa06a33a689c55b2820cfac445e5",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "actual-before/reference-arranged-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-before-captures/reference-arranged-375x812.png",
+      "bytes": 442819,
+      "sha256": "95a03e6f8659f1d8b02f9cc69e5c7a8a38313f359050f18c4011f56a5638c77a",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "actual-before/reference-selected-level3-1280x720.png",
+      "origin": "/workspace/reference-village-work/polish-before-captures/reference-selected-level3-1280x720.png",
+      "bytes": 1134401,
+      "sha256": "6eb77760ead4f0df5fb62e509a952bd3d39181edfb88544ee08a6879a83e783d",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "actual-before/reference-selected-level3-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-before-captures/reference-selected-level3-375x812.png",
+      "bytes": 305337,
+      "sha256": "02717b96433c34ce6487be8dd4e4197998278c952575b6d6f8222ae7deda1504",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "actual-before/wave-breach-1280x720.png",
+      "origin": "/workspace/reference-village-work/polish-before-captures/wave-breach-1280x720.png",
+      "bytes": 1159734,
+      "sha256": "959905a7786784a6f9580d3fbd6b4871e3792878e13501568e7163a48347402b",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "actual-before/wave-breach-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-before-captures/wave-breach-375x812.png",
+      "bytes": 307115,
+      "sha256": "36be5f58692f34f10029fea65dcb83527aa638f5035ece9304de7e9c3bd9114d",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "actual-before/execution.json",
+      "origin": "/workspace/reference-village-work/polish-before-captures/execution.json",
+      "bytes": 1154,
+      "sha256": "a6ece2144e8a44c19fd24e77805f1c689b8bc35cb223e21045df600add874e88"
+    },
+    {
+      "path": "actual-before/report.json",
+      "origin": "/workspace/reference-village-work/polish-before-captures/report.json",
+      "bytes": 4530393,
+      "sha256": "635d779267a0944fd4d46b0aac008e935bf7a482ce2e0896dc1db57c5cc97d60"
+    },
+    {
+      "path": "actual-before/capture.log",
+      "origin": "/workspace/reference-village-work/polish-before-captures/capture.log",
+      "bytes": 201,
+      "sha256": "512b2d752d5fde7d4b05e170a5f703bb209b5f8547651ca79a3797853769e5dd"
+    },
+    {
+      "path": "native-landscape/after-terrain-native.png",
+      "origin": "/workspace/reference-village-work/polish-landscape-parity/after-terrain-native.png",
+      "bytes": 1642344,
+      "sha256": "9f1b37efa311cec41991f22ab4315b42a96c98ecdc91d0246b4cadd42427c4b7",
+      "width": 1792,
+      "height": 1344
+    },
+    {
+      "path": "native-landscape/before-terrain-native.png",
+      "origin": "/workspace/reference-village-work/polish-landscape-parity/before-terrain-native.png",
+      "bytes": 1637192,
+      "sha256": "12db54be8e8d83ecd4a5c2984915bc33cff2e8c8f0a8f22e296feb190731faa1",
+      "width": 1792,
+      "height": 1344
+    },
+    {
+      "path": "native-landscape/report.json",
+      "origin": "/workspace/reference-village-work/polish-landscape-parity/report.json",
+      "bytes": 73426,
+      "sha256": "ec120050dfe4d9f0bab9fead430cd9406366740be2681c7110a7d952795f2444"
+    },
+    {
+      "path": "native-matrix-initial/art-buildings-1280x720.png",
+      "origin": "/workspace/reference-village-work/polish-native-matrix/art-buildings-1280x720.png",
+      "bytes": 364764,
+      "sha256": "8ff6f8907317d00a50434163355fb0f305888fbba8025fa1dfb584c2c6633190",
+      "width": 1280,
+      "height": 1120
+    },
+    {
+      "path": "native-matrix-initial/art-buildings-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-native-matrix/art-buildings-375x812.png",
+      "bytes": 123290,
+      "sha256": "fddfa9f955e6e68fae25dc70c29f3e24ae129f1fb362e37bbb7c14c31b38b265",
+      "width": 375,
+      "height": 862
+    },
+    {
+      "path": "native-matrix-initial/art-cannon-1280x720.png",
+      "origin": "/workspace/reference-village-work/polish-native-matrix/art-cannon-1280x720.png",
+      "bytes": 318409,
+      "sha256": "f5541b2e2a6901502dbe564b79869cf6816ee2dce24ba0f1867884fe76aeabb3",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "native-matrix-initial/art-cannon-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-native-matrix/art-cannon-375x812.png",
+      "bytes": 85534,
+      "sha256": "ef429ae8799fa01a452b896a747ce7bffc98419d065d00cfc19c504e070d339a",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "native-matrix-initial/art-culverin-1280x720.png",
+      "origin": "/workspace/reference-village-work/polish-native-matrix/art-culverin-1280x720.png",
+      "bytes": 335063,
+      "sha256": "e15cf9405d80349dfecb30f677fa8474c0a5f56f170efd23589105e5be889055",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "native-matrix-initial/art-culverin-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-native-matrix/art-culverin-375x812.png",
+      "bytes": 87823,
+      "sha256": "0745066bbf28d462e03e71d33443e85b1db28676057e646e4dda3da2897f3bec",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "native-matrix-initial/art-harpoon-1280x720.png",
+      "origin": "/workspace/reference-village-work/polish-native-matrix/art-harpoon-1280x720.png",
+      "bytes": 284488,
+      "sha256": "ba3cfa70b88119b936997abec54e2bb557e532b1d09300ec540fabff58dea61d",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "native-matrix-initial/art-harpoon-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-native-matrix/art-harpoon-375x812.png",
+      "bytes": 78539,
+      "sha256": "de08c1eaf2a2e163a8ab78e90127e53ca4b472999a7e7e976e95e3690640b608",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "native-matrix-initial/art-mortar-1280x720.png",
+      "origin": "/workspace/reference-village-work/polish-native-matrix/art-mortar-1280x720.png",
+      "bytes": 291989,
+      "sha256": "d3ba16da94de1c3e6c0a551ffe88d351ce986434404d2927ab6fcaff2cb3455a",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "native-matrix-initial/art-mortar-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-native-matrix/art-mortar-375x812.png",
+      "bytes": 79611,
+      "sha256": "9386af5705f6aac4058d569db798dc4f1308a2a16fb616c026fed3d974119b39",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "native-matrix-initial/art-swivel-1280x720.png",
+      "origin": "/workspace/reference-village-work/polish-native-matrix/art-swivel-1280x720.png",
+      "bytes": 308694,
+      "sha256": "de4166fc7fa853eb774936d6ec9f4b2abeded52290aaf2f30a26fe35169aee06",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "native-matrix-initial/art-swivel-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-native-matrix/art-swivel-375x812.png",
+      "bytes": 81883,
+      "sha256": "34c345fa4f4929ca3e83a1581698a7dc32b49ffb1a8b0f83cd7acbdb0a7ab071",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "native-matrix-initial/execution.json",
+      "origin": "/workspace/reference-village-work/polish-native-matrix/execution.json",
+      "bytes": 397,
+      "sha256": "f08ea5236db0b8adeabd6a71a8695ef0213e98e2ad2a749f11604028a4cf014c"
+    },
+    {
+      "path": "native-matrix-initial/report.json",
+      "origin": "/workspace/reference-village-work/polish-native-matrix/report.json",
+      "bytes": 647247,
+      "sha256": "61698159cdb8ec644af9878f1c5ffc2add2b13d0079fba75bd4bcef3031f2dd5"
+    },
+    {
+      "path": "native-matrix-initial/run.log",
+      "origin": "/workspace/reference-village-work/polish-native-matrix/run.log",
+      "bytes": 683,
+      "sha256": "8966dd288cf789606e7ebda4f84411f07d52b885242c6dbe54f1861f3c8dedde"
+    },
+    {
+      "path": "native-matrix-initial/wall-1-1280x720.png",
+      "origin": "/workspace/reference-village-work/polish-native-matrix/wall-1-1280x720.png",
+      "bytes": 405323,
+      "sha256": "97e00a565bb1689890981b854f3652fc5b1c11698a912469b78a7d73e08d8104",
+      "width": 1280,
+      "height": 1068
+    },
+    {
+      "path": "native-matrix-initial/wall-1-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-native-matrix/wall-1-375x812.png",
+      "bytes": 235677,
+      "sha256": "606e5bfc084a5dde2937b9b28a8ea6cb588dd95dc19535ce1e299a60a76b18a7",
+      "width": 375,
+      "height": 1219
+    },
+    {
+      "path": "native-matrix-initial/wall-2-1280x720.png",
+      "origin": "/workspace/reference-village-work/polish-native-matrix/wall-2-1280x720.png",
+      "bytes": 396612,
+      "sha256": "bd97a53279b7c1282fbf4181d31b30fdc82d2ea4b7112dfc0173ea6240fa0de7",
+      "width": 1280,
+      "height": 1068
+    },
+    {
+      "path": "native-matrix-initial/wall-2-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-native-matrix/wall-2-375x812.png",
+      "bytes": 226844,
+      "sha256": "81fd53ceba4b1a9bc3b35c01da57a5233fc652e09ca4f167ec5df9c9e0422a8c",
+      "width": 375,
+      "height": 1219
+    },
+    {
+      "path": "native-matrix-initial/wall-3-1280x720.png",
+      "origin": "/workspace/reference-village-work/polish-native-matrix/wall-3-1280x720.png",
+      "bytes": 422653,
+      "sha256": "467e3f8cd84a9172bec2e1ff5b093f15e060b25bca499382a018660818cb4f27",
+      "width": 1280,
+      "height": 1068
+    },
+    {
+      "path": "native-matrix-initial/wall-3-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-native-matrix/wall-3-375x812.png",
+      "bytes": 242086,
+      "sha256": "84d75bfbcd43753d4557f6055b8822668943c401b7ed20c940614ab5abc22049",
+      "width": 375,
+      "height": 1219
+    },
+    {
+      "path": "native-matrix-initial/wall-4-1280x720.png",
+      "origin": "/workspace/reference-village-work/polish-native-matrix/wall-4-1280x720.png",
+      "bytes": 429458,
+      "sha256": "7fd517aea95b802934bba4b0e62a9fdba8ccf5d5947f2fd8b1f6e1979fcd9d0a",
+      "width": 1280,
+      "height": 1068
+    },
+    {
+      "path": "native-matrix-initial/wall-4-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-native-matrix/wall-4-375x812.png",
+      "bytes": 245979,
+      "sha256": "64044990e65f3499decdb99a2793e7de456230174203c8319a46399bcfe34ad2",
+      "width": 375,
+      "height": 1219
+    },
+    {
+      "path": "native-matrix-initial/wall-5-1280x720.png",
+      "origin": "/workspace/reference-village-work/polish-native-matrix/wall-5-1280x720.png",
+      "bytes": 443387,
+      "sha256": "e424a8f5e8d6f3db3219c2c52c14188b1f558539509aec67ef057d94ef465a8e",
+      "width": 1280,
+      "height": 1068
+    },
+    {
+      "path": "native-matrix-initial/wall-5-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-native-matrix/wall-5-375x812.png",
+      "bytes": 254795,
+      "sha256": "9cf51e9eec62a60501c22a636ad6f46df631938d68b2c8f6627053131f24e616",
+      "width": 375,
+      "height": 1219
+    },
+    {
+      "path": "paid-functional/execution.json",
+      "origin": "/workspace/reference-village-work/polish-paid-tiers/execution.json",
+      "bytes": 407,
+      "sha256": "6bf6c496217981760c190f004223117256709b6c9b5001c0c270268b3fda7a55"
+    },
+    {
+      "path": "paid-functional/houses-0-1280x720.png",
+      "origin": "/workspace/reference-village-work/polish-paid-tiers/houses-0-1280x720.png",
+      "bytes": 873800,
+      "sha256": "870c796e3e0734faeb80f5c4a76c13a70c2e5a607125a39d04d7fb43e4d4456d",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "paid-functional/houses-0-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-paid-tiers/houses-0-375x812.png",
+      "bytes": 364364,
+      "sha256": "cfbc3162d3873271f6290818209ba88aba8dca39e6d17d99ef18896eb86c7b73",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "paid-functional/houses-1-1280x720.png",
+      "origin": "/workspace/reference-village-work/polish-paid-tiers/houses-1-1280x720.png",
+      "bytes": 876670,
+      "sha256": "5229591034c54e0444142fed394d7c8162b9b40028832a2771899753655f9ae2",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "paid-functional/houses-1-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-paid-tiers/houses-1-375x812.png",
+      "bytes": 365712,
+      "sha256": "a4be30ae9c8ce69a3cce4d3593522a21e54d6ff3e34cf0888041d0416acc96bd",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "paid-functional/houses-2-1280x720.png",
+      "origin": "/workspace/reference-village-work/polish-paid-tiers/houses-2-1280x720.png",
+      "bytes": 886783,
+      "sha256": "f8f0e8d7e5ed3e4cd20be953a7bcd410b126d7743bb21f3d6e940d8e1dee71a5",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "paid-functional/houses-2-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-paid-tiers/houses-2-375x812.png",
+      "bytes": 368291,
+      "sha256": "a79de40eedf91f7485bd4f0c38a72ef58e2e10c159aa3ebce14fc047d4ca4b3c",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "paid-functional/paid-level-1-1280x720.png",
+      "origin": "/workspace/reference-village-work/polish-paid-tiers/paid-level-1-1280x720.png",
+      "bytes": 913245,
+      "sha256": "ebec8f811c8984b289047aa55ed73ebb2864c1ff450f469b5cd4fc7700f5a617",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "paid-functional/paid-level-1-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-paid-tiers/paid-level-1-375x812.png",
+      "bytes": 348387,
+      "sha256": "a17ba3d68d88e1c71b275bdf46d4d5314093b70e1c4d9c7cd65562d443a4ac15",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "paid-functional/paid-level-2-1280x720.png",
+      "origin": "/workspace/reference-village-work/polish-paid-tiers/paid-level-2-1280x720.png",
+      "bytes": 900583,
+      "sha256": "f64d631038381e37743bd2e69d7746e0de0bf78b52770c26950bc188bfee7616",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "paid-functional/paid-level-2-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-paid-tiers/paid-level-2-375x812.png",
+      "bytes": 343319,
+      "sha256": "3f175794ed410558113fb184fc7402b243281d0081b6316aff53bb95acf6bdc7",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "paid-functional/paid-level-3-1280x720.png",
+      "origin": "/workspace/reference-village-work/polish-paid-tiers/paid-level-3-1280x720.png",
+      "bytes": 900210,
+      "sha256": "c36b40045b0869bedce6d6150aa66dae1d2ad45738b70a4331fc0fd16f279343",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "paid-functional/paid-level-3-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-paid-tiers/paid-level-3-375x812.png",
+      "bytes": 343869,
+      "sha256": "feec4adc49e75a3a37c62a18d61802ad65ee3c833c6800ab6bed7bee29d11d87",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "paid-functional/paid-level-4-1280x720.png",
+      "origin": "/workspace/reference-village-work/polish-paid-tiers/paid-level-4-1280x720.png",
+      "bytes": 904665,
+      "sha256": "872748a17dada3e34e01709f7cfc36ca132da25c69062929cdbb19cc1cd2dd24",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "paid-functional/paid-level-4-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-paid-tiers/paid-level-4-375x812.png",
+      "bytes": 343208,
+      "sha256": "33fab291ed24354e97cd7d1d9b32df16210fb6a16bad0201d1dd0257d445e546",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "paid-functional/paid-level-5-1280x720.png",
+      "origin": "/workspace/reference-village-work/polish-paid-tiers/paid-level-5-1280x720.png",
+      "bytes": 910174,
+      "sha256": "ed14de52fbc5e1a8116c8770277a80af25d3100203418d5ee955a9da8e6d5907",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "paid-functional/paid-level-5-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-paid-tiers/paid-level-5-375x812.png",
+      "bytes": 346541,
+      "sha256": "1ccae66baac6c5dc340e5dbe0723c3e2961da9378cf876c734fd940e8b0ab6eb",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "paid-functional/paid-selected-level-5-1280x720.png",
+      "origin": "/workspace/reference-village-work/polish-paid-tiers/paid-selected-level-5-1280x720.png",
+      "bytes": 900569,
+      "sha256": "255028de9e1002fb2abb3f17d5714390b300059c7618a349d3179c735a33f43f",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "paid-functional/paid-selected-level-5-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-paid-tiers/paid-selected-level-5-375x812.png",
+      "bytes": 275245,
+      "sha256": "c18486ce168e76c939616a194a1c70d3e6e04b089e6be1d724b92bcf4900520e",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "paid-functional/report.json",
+      "origin": "/workspace/reference-village-work/polish-paid-tiers/report.json",
+      "bytes": 9189352,
+      "sha256": "fc067ae59e988ee3262d83e27ead22006a601b8cbd53f51bc83d53cdec43aab5"
+    },
+    {
+      "path": "paid-functional/run.log",
+      "origin": "/workspace/reference-village-work/polish-paid-tiers/run.log",
+      "bytes": 176,
+      "sha256": "1ddb6c54c5f19462cd04afdc63e02046fccb28269fd106b51d8bfa721d9b51d2"
+    },
+    {
+      "path": "paid-hires-attempt-01/execution.json",
+      "origin": "/workspace/reference-village-work/polish-paid-tiers-hires/execution.json",
+      "bytes": 411,
+      "sha256": "107e7460953ca989d0fc1ac48e4eab17ac22fed7810df1f2fe08396797e8a14a"
+    },
+    {
+      "path": "paid-hires-attempt-01/failure.json",
+      "origin": "/workspace/reference-village-work/polish-paid-tiers-hires/failure.json",
+      "bytes": 459,
+      "sha256": "5244d8deb0b6111335e6c8bba30ceea0b59904468832a3246815062f009e6a0a"
+    },
+    {
+      "path": "paid-hires-attempt-01/failure.png",
+      "origin": "/workspace/reference-village-work/polish-paid-tiers-hires/failure.png",
+      "bytes": 871522,
+      "sha256": "6181a276704f038e3273ede7ef64af1d25dcf3202b1359b91652b644812b7469",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "paid-hires-attempt-01/run.log",
+      "origin": "/workspace/reference-village-work/polish-paid-tiers-hires/run.log",
+      "bytes": 577,
+      "sha256": "9c3537e012ad0a81f1049b7104082b69e060fb9487285516b79d333e731642d7"
+    },
+    {
+      "path": "paid-hires/houses-0-1280x720.png",
+      "origin": "/workspace/reference-village-work/polish-paid-tiers-hires-02/houses-0-1280x720.png",
+      "bytes": 1092468,
+      "sha256": "d805dfe60efee90c501d59f9e35dc5c9e9ea0d7c28d01b162d30754f17ffc70e",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "paid-hires/houses-0-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-paid-tiers-hires-02/houses-0-375x812.png",
+      "bytes": 414484,
+      "sha256": "947d92afbec47706a35914473aa2a1939a8f1c321106410145821ad822f25be3",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "paid-hires/houses-1-1280x720.png",
+      "origin": "/workspace/reference-village-work/polish-paid-tiers-hires-02/houses-1-1280x720.png",
+      "bytes": 1098410,
+      "sha256": "64ab38c200662bbff9f0b35fa1fcdbae6f1b6e924a5e60ef9c0ec09127d27fcc",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "paid-hires/houses-1-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-paid-tiers-hires-02/houses-1-375x812.png",
+      "bytes": 415743,
+      "sha256": "12d6b119ec965911003d5b8bbf55b605ff9e3bcdde0fc90d6c4de597edae3a08",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "paid-hires/houses-2-1280x720.png",
+      "origin": "/workspace/reference-village-work/polish-paid-tiers-hires-02/houses-2-1280x720.png",
+      "bytes": 1099753,
+      "sha256": "3b0b95d8cde90c455463921b9322c3b79a471c3bc863dd0df7b38fb4ba07ee4e",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "paid-hires/houses-2-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-paid-tiers-hires-02/houses-2-375x812.png",
+      "bytes": 418453,
+      "sha256": "497494fe9371a7ee56e426b35688977e520071bbc26d51561339096d46786926",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "paid-hires/paid-level-1-1280x720.png",
+      "origin": "/workspace/reference-village-work/polish-paid-tiers-hires-02/paid-level-1-1280x720.png",
+      "bytes": 1120341,
+      "sha256": "608d1aa61bce30a9208b7fe4927f2d59521f3b49550ed8fdcbcae2276d9bc240",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "paid-hires/paid-level-1-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-paid-tiers-hires-02/paid-level-1-375x812.png",
+      "bytes": 428531,
+      "sha256": "4ec6d4fc73f589283af0ff50948b7acc9575a8c4d9ef169330de4d2c8b5a196b",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "paid-hires/paid-level-2-1280x720.png",
+      "origin": "/workspace/reference-village-work/polish-paid-tiers-hires-02/paid-level-2-1280x720.png",
+      "bytes": 1106121,
+      "sha256": "f5cb5933d5dc421a7dd04140c39cc1ba32ad0f43d7e081b95519b81c83b91532",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "paid-hires/paid-level-2-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-paid-tiers-hires-02/paid-level-2-375x812.png",
+      "bytes": 424278,
+      "sha256": "ca3b83ca6f857d18306697751497def7e66c1b0f83a952e897154ae3f161d25b",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "paid-hires/paid-level-3-1280x720.png",
+      "origin": "/workspace/reference-village-work/polish-paid-tiers-hires-02/paid-level-3-1280x720.png",
+      "bytes": 1113194,
+      "sha256": "3d9427c969ecdc458ff0e932241ab6504b04780f675d157f6446d63c0072f564",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "paid-hires/paid-level-3-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-paid-tiers-hires-02/paid-level-3-375x812.png",
+      "bytes": 425879,
+      "sha256": "95cba6a2fefb1b962b83952c8083f29827a152b1215267806fbc4709eddcffbd",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "paid-hires/paid-level-4-1280x720.png",
+      "origin": "/workspace/reference-village-work/polish-paid-tiers-hires-02/paid-level-4-1280x720.png",
+      "bytes": 1104205,
+      "sha256": "c52b9b0d196e51b8c48ed58f2c35888c41f6d78f2477593c3bca4015c0968de1",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "paid-hires/paid-level-4-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-paid-tiers-hires-02/paid-level-4-375x812.png",
+      "bytes": 423915,
+      "sha256": "236d7025f6c0d5b9194c5dbde559d78fe2fa0323286a59bcd78619949446068e",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "paid-hires/paid-level-5-1280x720.png",
+      "origin": "/workspace/reference-village-work/polish-paid-tiers-hires-02/paid-level-5-1280x720.png",
+      "bytes": 1105846,
+      "sha256": "4aa299b362655da7624a9aa0aa54d42c349faf1b37c855a480af2c291a8a67a5",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "paid-hires/paid-level-5-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-paid-tiers-hires-02/paid-level-5-375x812.png",
+      "bytes": 424644,
+      "sha256": "484c4f6012f013bec27298114b8048bbe676d92284e99dc5d1d05b02e6153efc",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "paid-hires/paid-selected-level-5-1280x720.png",
+      "origin": "/workspace/reference-village-work/polish-paid-tiers-hires-02/paid-selected-level-5-1280x720.png",
+      "bytes": 1092301,
+      "sha256": "5813a284de0520a000f60301ce4c74ac1ef6599b826ea2bcb350ec8ef6584c4c",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "paid-hires/paid-selected-level-5-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-paid-tiers-hires-02/paid-selected-level-5-375x812.png",
+      "bytes": 307481,
+      "sha256": "31f06eb02738a936e3bd7c778eec1b2815f14762dedb0310480b4b77bdaef411",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "paid-hires/report.json",
+      "origin": "/workspace/reference-village-work/polish-paid-tiers-hires-02/report.json",
+      "bytes": 9199107,
+      "sha256": "657fda62b8044b36d636285b28937afe16b4968ea64fa61c06c6c463f5155d01"
+    },
+    {
+      "path": "paid-hires/run.log",
+      "origin": "/workspace/reference-village-work/polish-paid-tiers-hires-02/run.log",
+      "bytes": 176,
+      "sha256": "1ddb6c54c5f19462cd04afdc63e02046fccb28269fd106b51d8bfa721d9b51d2"
+    },
+    {
+      "path": "paid-hires/wrapper.json",
+      "origin": "/workspace/reference-village-work/polish-paid-tiers-hires-02/wrapper.json",
+      "bytes": 440,
+      "sha256": "32c070c13b444e6f308b9a7d2b957968858e4225e2056f5fca5318f5ec50418e"
+    },
+    {
+      "path": "actual-after/capture.log",
+      "origin": "/workspace/reference-village-work/polish-final-captures/capture.log",
+      "bytes": 201,
+      "sha256": "512b2d752d5fde7d4b05e170a5f703bb209b5f8547651ca79a3797853769e5dd"
+    },
+    {
+      "path": "actual-after/execution.json",
+      "origin": "/workspace/reference-village-work/polish-final-captures/execution.json",
+      "bytes": 1158,
+      "sha256": "3a5e51a569941fd5311e86ae2d5dfe9bd7bf583e16144ce60764a2da11d4c82b"
+    },
+    {
+      "path": "actual-after/reference-arranged-1280x720.png",
+      "origin": "/workspace/reference-village-work/polish-final-captures/reference-arranged-1280x720.png",
+      "bytes": 1112886,
+      "sha256": "c36e1d3db357bfaa5d8ac2407d7f8e8e05e481090db9995b333d9e17ee2aa7e0",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "actual-after/reference-arranged-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-final-captures/reference-arranged-375x812.png",
+      "bytes": 427427,
+      "sha256": "40e3043742d31d3ba14f07db853d8100b2340eaf7deeac315cf1feae09edd5d7",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "actual-after/reference-entry-1280x720.png",
+      "origin": "/workspace/reference-village-work/polish-final-captures/reference-entry-1280x720.png",
+      "bytes": 1105702,
+      "sha256": "73f516b91eddb053167d70953557a71aa8c8273c276a35e0454c2ed34b867599",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "actual-after/reference-entry-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-final-captures/reference-entry-375x812.png",
+      "bytes": 425435,
+      "sha256": "df6048cda655ee1bff5d5585952bfb03c51a77956a5dfd0cbd4cf95ce1995182",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "actual-after/reference-fit-1280x720.png",
+      "origin": "/workspace/reference-village-work/polish-final-captures/reference-fit-1280x720.png",
+      "bytes": 1081865,
+      "sha256": "95f9bd7144e8fd41f909d332e5e836eb7d6a81cb7aff369b38c2698a5b775fa6",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "actual-after/reference-fit-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-final-captures/reference-fit-375x812.png",
+      "bytes": 304188,
+      "sha256": "c9aa168d76f3264e363ff255921fc9e38a6b445e1163da43aa55fa41956a0868",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "actual-after/reference-move-level3-1280x720.png",
+      "origin": "/workspace/reference-village-work/polish-final-captures/reference-move-level3-1280x720.png",
+      "bytes": 1075424,
+      "sha256": "c57a8c4c5f83a4552b06cdf557e159ae55b6c0443814ea1c91955fe12ae324e0",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "actual-after/reference-move-level3-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-final-captures/reference-move-level3-375x812.png",
+      "bytes": 327026,
+      "sha256": "1cd38820094c2f2d54c2571c7168e05e741d36bf85a7f2514b1a1302364b041d",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "actual-after/reference-selected-level3-1280x720.png",
+      "origin": "/workspace/reference-village-work/polish-final-captures/reference-selected-level3-1280x720.png",
+      "bytes": 1095906,
+      "sha256": "9af64dab92a06cded973978b68bc15e7afdd331a6c3d3a7b2e4c963470b02492",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "actual-after/reference-selected-level3-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-final-captures/reference-selected-level3-375x812.png",
+      "bytes": 296032,
+      "sha256": "2959f6dbcbeb0bcd0d4228755e7561564990270dafc3be435dbca045136ab41c",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "actual-after/reference-wall-draft-1280x720.png",
+      "origin": "/workspace/reference-village-work/polish-final-captures/reference-wall-draft-1280x720.png",
+      "bytes": 890915,
+      "sha256": "9837473c6b128a8ec6bfadd5596786f8d9f4b1ab01af94211beb8efae675628e",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "actual-after/reference-wall-draft-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-final-captures/reference-wall-draft-375x812.png",
+      "bytes": 349284,
+      "sha256": "6cfd5251748bb641ea225fe508fbf9fcc5fc5756e2c12d48f065e194abd118cf",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "actual-after/reference-wall-draft-fine-1280x720.png",
+      "origin": "/workspace/reference-village-work/polish-final-captures/reference-wall-draft-fine-1280x720.png",
+      "bytes": 869612,
+      "sha256": "466d5fd8e7a7878012a54cd1203ee1f8f5c2fcd09c63042258853ea1dbfca37a",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "actual-after/reference-wall-draft-fine-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-final-captures/reference-wall-draft-fine-375x812.png",
+      "bytes": 265881,
+      "sha256": "78ae5e6fceb216cae950e336d63541764b3865b4e1104ac70d8025be0436e8a9",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "actual-after/report.json",
+      "origin": "/workspace/reference-village-work/polish-final-captures/report.json",
+      "bytes": 4530060,
+      "sha256": "bdc279b3531336c305af6e82ff948516c145ec79c664f592162dc812678f098c"
+    },
+    {
+      "path": "actual-after/run.log",
+      "origin": "/workspace/reference-village-work/polish-final-captures/run.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "actual-after/wave-breach-1280x720.png",
+      "origin": "/workspace/reference-village-work/polish-final-captures/wave-breach-1280x720.png",
+      "bytes": 1140160,
+      "sha256": "70dd38d6eda516ad825c0c442e6b005ce9543a8d73b65054b5234070155c8e4b",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "actual-after/wave-breach-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-final-captures/wave-breach-375x812.png",
+      "bytes": 302473,
+      "sha256": "1f77015d09d910003fcb0309129b4ea8fbd11d71a79dc9d726775c22bd29e392",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "actual-after/wave-projectiles-1280x720.png",
+      "origin": "/workspace/reference-village-work/polish-final-captures/wave-projectiles-1280x720.png",
+      "bytes": 1016574,
+      "sha256": "7e351e7a6a499ea030e855f44550d529abeada95f24fa23a26816a89f5ccfd87",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "actual-after/wave-projectiles-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-final-captures/wave-projectiles-375x812.png",
+      "bytes": 250429,
+      "sha256": "05445073691eb70ebf133d28a6b0d85e5614a052b6b306229053383cb3ba7e2f",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "actual-after/wave-standing-1280x720.png",
+      "origin": "/workspace/reference-village-work/polish-final-captures/wave-standing-1280x720.png",
+      "bytes": 1033022,
+      "sha256": "5ea33e37b143d4135b15b9635b5d6f8afacb06e15bd66e3684deb03fa11a3da9",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "actual-after/wave-standing-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-final-captures/wave-standing-375x812.png",
+      "bytes": 252778,
+      "sha256": "3e8d46fbe894e0fd1c7504b3da50c29eb4982f0f8f9b63162048c7ef63101113",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "actual-after/wrapper.json",
+      "origin": "/workspace/reference-village-work/polish-final-captures/wrapper.json",
+      "bytes": 468,
+      "sha256": "fe1ae857334e35e842f9a0a5bca311683a03d09313c60cc39be37426686f38da"
+    },
+    {
+      "path": "checks/static-invariants.json",
+      "origin": "/workspace/reference-village-work/next-pass/final-invariants.json",
+      "bytes": 712,
+      "sha256": "82bf349b148b89414383ab3dd3791eeeaad65165fd212c8502fae01e2fa46f1c"
+    },
+    {
+      "path": "native-matrix-final/art-buildings-1280x720.png",
+      "origin": "/workspace/reference-village-work/polish-native-matrix-final/art-buildings-1280x720.png",
+      "bytes": 364705,
+      "sha256": "9f014cd5c7b10c0f3159da64b812727230e94077933414893b0cf7441b48903b",
+      "width": 1280,
+      "height": 1120
+    },
+    {
+      "path": "native-matrix-final/art-buildings-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-native-matrix-final/art-buildings-375x812.png",
+      "bytes": 123364,
+      "sha256": "20aa5bc2d17dfe56fd213efa5506fb6f619fa68fe7333a73385bc017c702da54",
+      "width": 375,
+      "height": 862
+    },
+    {
+      "path": "native-matrix-final/art-cannon-1280x720.png",
+      "origin": "/workspace/reference-village-work/polish-native-matrix-final/art-cannon-1280x720.png",
+      "bytes": 318409,
+      "sha256": "f5541b2e2a6901502dbe564b79869cf6816ee2dce24ba0f1867884fe76aeabb3",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "native-matrix-final/art-cannon-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-native-matrix-final/art-cannon-375x812.png",
+      "bytes": 85534,
+      "sha256": "ef429ae8799fa01a452b896a747ce7bffc98419d065d00cfc19c504e070d339a",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "native-matrix-final/art-culverin-1280x720.png",
+      "origin": "/workspace/reference-village-work/polish-native-matrix-final/art-culverin-1280x720.png",
+      "bytes": 335063,
+      "sha256": "e15cf9405d80349dfecb30f677fa8474c0a5f56f170efd23589105e5be889055",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "native-matrix-final/art-culverin-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-native-matrix-final/art-culverin-375x812.png",
+      "bytes": 87823,
+      "sha256": "0745066bbf28d462e03e71d33443e85b1db28676057e646e4dda3da2897f3bec",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "native-matrix-final/art-harpoon-1280x720.png",
+      "origin": "/workspace/reference-village-work/polish-native-matrix-final/art-harpoon-1280x720.png",
+      "bytes": 284488,
+      "sha256": "ba3cfa70b88119b936997abec54e2bb557e532b1d09300ec540fabff58dea61d",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "native-matrix-final/art-harpoon-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-native-matrix-final/art-harpoon-375x812.png",
+      "bytes": 78539,
+      "sha256": "de08c1eaf2a2e163a8ab78e90127e53ca4b472999a7e7e976e95e3690640b608",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "native-matrix-final/art-mortar-1280x720.png",
+      "origin": "/workspace/reference-village-work/polish-native-matrix-final/art-mortar-1280x720.png",
+      "bytes": 291989,
+      "sha256": "d3ba16da94de1c3e6c0a551ffe88d351ce986434404d2927ab6fcaff2cb3455a",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "native-matrix-final/art-mortar-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-native-matrix-final/art-mortar-375x812.png",
+      "bytes": 79611,
+      "sha256": "9386af5705f6aac4058d569db798dc4f1308a2a16fb616c026fed3d974119b39",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "native-matrix-final/art-swivel-1280x720.png",
+      "origin": "/workspace/reference-village-work/polish-native-matrix-final/art-swivel-1280x720.png",
+      "bytes": 308694,
+      "sha256": "de4166fc7fa853eb774936d6ec9f4b2abeded52290aaf2f30a26fe35169aee06",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "native-matrix-final/art-swivel-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-native-matrix-final/art-swivel-375x812.png",
+      "bytes": 81883,
+      "sha256": "34c345fa4f4929ca3e83a1581698a7dc32b49ffb1a8b0f83cd7acbdb0a7ab071",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "native-matrix-final/execution.json",
+      "origin": "/workspace/reference-village-work/polish-native-matrix-final/execution.json",
+      "bytes": 403,
+      "sha256": "c6a039804429493d0448df61a111c416a0d63a8af5829d0fb113f3a84029a772"
+    },
+    {
+      "path": "native-matrix-final/report.json",
+      "origin": "/workspace/reference-village-work/polish-native-matrix-final/report.json",
+      "bytes": 647247,
+      "sha256": "22172374a1a512dae3ec793e90e9331a8e8f0d084939c15300470860c0420fbb"
+    },
+    {
+      "path": "native-matrix-final/run.log",
+      "origin": "/workspace/reference-village-work/polish-native-matrix-final/run.log",
+      "bytes": 683,
+      "sha256": "8966dd288cf789606e7ebda4f84411f07d52b885242c6dbe54f1861f3c8dedde"
+    },
+    {
+      "path": "native-matrix-final/wall-1-1280x720.png",
+      "origin": "/workspace/reference-village-work/polish-native-matrix-final/wall-1-1280x720.png",
+      "bytes": 405323,
+      "sha256": "97e00a565bb1689890981b854f3652fc5b1c11698a912469b78a7d73e08d8104",
+      "width": 1280,
+      "height": 1068
+    },
+    {
+      "path": "native-matrix-final/wall-1-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-native-matrix-final/wall-1-375x812.png",
+      "bytes": 235677,
+      "sha256": "606e5bfc084a5dde2937b9b28a8ea6cb588dd95dc19535ce1e299a60a76b18a7",
+      "width": 375,
+      "height": 1219
+    },
+    {
+      "path": "native-matrix-final/wall-2-1280x720.png",
+      "origin": "/workspace/reference-village-work/polish-native-matrix-final/wall-2-1280x720.png",
+      "bytes": 396612,
+      "sha256": "bd97a53279b7c1282fbf4181d31b30fdc82d2ea4b7112dfc0173ea6240fa0de7",
+      "width": 1280,
+      "height": 1068
+    },
+    {
+      "path": "native-matrix-final/wall-2-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-native-matrix-final/wall-2-375x812.png",
+      "bytes": 226844,
+      "sha256": "81fd53ceba4b1a9bc3b35c01da57a5233fc652e09ca4f167ec5df9c9e0422a8c",
+      "width": 375,
+      "height": 1219
+    },
+    {
+      "path": "native-matrix-final/wall-3-1280x720.png",
+      "origin": "/workspace/reference-village-work/polish-native-matrix-final/wall-3-1280x720.png",
+      "bytes": 422653,
+      "sha256": "467e3f8cd84a9172bec2e1ff5b093f15e060b25bca499382a018660818cb4f27",
+      "width": 1280,
+      "height": 1068
+    },
+    {
+      "path": "native-matrix-final/wall-3-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-native-matrix-final/wall-3-375x812.png",
+      "bytes": 242086,
+      "sha256": "84d75bfbcd43753d4557f6055b8822668943c401b7ed20c940614ab5abc22049",
+      "width": 375,
+      "height": 1219
+    },
+    {
+      "path": "native-matrix-final/wall-4-1280x720.png",
+      "origin": "/workspace/reference-village-work/polish-native-matrix-final/wall-4-1280x720.png",
+      "bytes": 429458,
+      "sha256": "7fd517aea95b802934bba4b0e62a9fdba8ccf5d5947f2fd8b1f6e1979fcd9d0a",
+      "width": 1280,
+      "height": 1068
+    },
+    {
+      "path": "native-matrix-final/wall-4-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-native-matrix-final/wall-4-375x812.png",
+      "bytes": 245979,
+      "sha256": "64044990e65f3499decdb99a2793e7de456230174203c8319a46399bcfe34ad2",
+      "width": 375,
+      "height": 1219
+    },
+    {
+      "path": "native-matrix-final/wall-5-1280x720.png",
+      "origin": "/workspace/reference-village-work/polish-native-matrix-final/wall-5-1280x720.png",
+      "bytes": 443387,
+      "sha256": "e424a8f5e8d6f3db3219c2c52c14188b1f558539509aec67ef057d94ef465a8e",
+      "width": 1280,
+      "height": 1068
+    },
+    {
+      "path": "native-matrix-final/wall-5-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-native-matrix-final/wall-5-375x812.png",
+      "bytes": 254795,
+      "sha256": "9cf51e9eec62a60501c22a636ad6f46df631938d68b2c8f6627053131f24e616",
+      "width": 375,
+      "height": 1219
+    },
+    {
+      "path": "comparison-browser/execution.json",
+      "origin": "/workspace/reference-village-work/polish-comparison-native/execution.json",
+      "bytes": 406,
+      "sha256": "490d893b8c1b43931c9519101e923a18fd0892ee06b067f03ee1c77c317ba603"
+    },
+    {
+      "path": "comparison-browser/manifest-used.json",
+      "origin": "/workspace/reference-village-work/polish-comparison-native/manifest-used.json",
+      "bytes": 22373,
+      "sha256": "1fe6f68db48e21f263e03426c5e212cf225f8f337bb51f5e9cec24bb885cdc71"
+    },
+    {
+      "path": "comparison-browser/report.json",
+      "origin": "/workspace/reference-village-work/polish-comparison-native/report.json",
+      "bytes": 5986,
+      "sha256": "ec60b74d346bc554fb81169b2bec49a1957814f3c06cb0e40de750c186544c11"
+    },
+    {
+      "path": "comparison-browser/run.log",
+      "origin": "/workspace/reference-village-work/polish-comparison-native/run.log",
+      "bytes": 120,
+      "sha256": "9829dcb05f84042244931d9e5574869dd74f2373fd7209926d55e96e7e143cd2"
+    },
+    {
+      "path": "checks/first-7fab/a11y.log",
+      "origin": "/workspace/reference-village-work/polish-final-checks/a11y.log",
+      "bytes": 818,
+      "sha256": "a966f2a7f04a2795da2f363d4f6fffaf2c78ac4dfa9ad6cb0b6c61e0175945de"
+    },
+    {
+      "path": "checks/first-7fab/budget.log",
+      "origin": "/workspace/reference-village-work/polish-final-checks/budget.log",
+      "bytes": 83560,
+      "sha256": "8eaf94644b18e35c1709f71740322b73e06818bfbd7dba2e263c7446257711d9"
+    },
+    {
+      "path": "checks/first-7fab/build.log",
+      "origin": "/workspace/reference-village-work/polish-final-checks/build.log",
+      "bytes": 17404,
+      "sha256": "38da82f9c888cff8f1945d1ae83fc39f56772c1142d37e4cc36799f8e3effcb3"
+    },
+    {
+      "path": "checks/first-7fab/demo.log",
+      "origin": "/workspace/reference-village-work/polish-final-checks/demo.log",
+      "bytes": 2692,
+      "sha256": "cce2b9a73ce66145d175026f00fe3de8651e2d57117d5d4f7bcf45b240b266e4"
+    },
+    {
+      "path": "checks/first-7fab/frontend.log",
+      "origin": "/workspace/reference-village-work/polish-final-checks/frontend.log",
+      "bytes": 647806,
+      "sha256": "acdf6f5428c5acade0a17caaca860875af2216f7a7fdcb04528b567e6b7b281f"
+    },
+    {
+      "path": "checks/first-7fab/multiplayer.log",
+      "origin": "/workspace/reference-village-work/polish-final-checks/multiplayer.log",
+      "bytes": 13227,
+      "sha256": "6cf305b6d529e5035ec293ed3fec4c6f9014d6712d136dc9a0cbdd649a83ea18"
+    },
+    {
+      "path": "checks/first-7fab/overlaps.log",
+      "origin": "/workspace/reference-village-work/polish-final-checks/overlaps.log",
+      "bytes": 6094,
+      "sha256": "f0fa6694eb3464198860664dd19221a93c7b3f94df25970fac1990403dc12e5e"
+    },
+    {
+      "path": "checks/first-7fab/report.json",
+      "origin": "/workspace/reference-village-work/polish-final-checks/report.json",
+      "bytes": 2161,
+      "sha256": "9c40fefa24d66fca63f0c69c2ff453a1fb568d1ef7e7135395809f54d91f9e4e"
+    },
+    {
+      "path": "checks/first-7fab/run.log",
+      "origin": "/workspace/reference-village-work/polish-final-checks/run.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "checks/first-7fab/runner.log",
+      "origin": "/workspace/reference-village-work/polish-final-checks/runner.log",
+      "bytes": 1320,
+      "sha256": "3cdd4050894d41cfae1bd64a35c6fbeb5d4f10b4f189e86924f91aaf7389ab9e"
+    },
+    {
+      "path": "checks/first-7fab/text-lint.log",
+      "origin": "/workspace/reference-village-work/polish-final-checks/text-lint.log",
+      "bytes": 1037,
+      "sha256": "3a8fa9b0965a95c2e2776a043e0f8a4ac2c2bd8d0cb1601ec59bcb9fa623f266"
+    },
+    {
+      "path": "checks/first-7fab/wrapper.json",
+      "origin": "/workspace/reference-village-work/polish-final-checks/wrapper.json",
+      "bytes": 638,
+      "sha256": "dcfe8190c0eb1779634deaa234bde2334c61caa1a97463398fe655465d34216c"
+    },
+    {
+      "path": "checks/post-vis59-0a/budget.log",
+      "origin": "/workspace/reference-village-work/polish-postqa-checks/budget.log",
+      "bytes": 83560,
+      "sha256": "b2196d66b1c495532ac78157401cc45a993644bc4d49be9c35ee8c42765552ce"
+    },
+    {
+      "path": "checks/post-vis59-0a/build.log",
+      "origin": "/workspace/reference-village-work/polish-postqa-checks/build.log",
+      "bytes": 17404,
+      "sha256": "a30b8c214cc3108a4372d475d2f2122fec95dd077f4f0f98035f4f97eadf706f"
+    },
+    {
+      "path": "checks/post-vis59-0a/frontend.log",
+      "origin": "/workspace/reference-village-work/polish-postqa-checks/frontend.log",
+      "bytes": 665825,
+      "sha256": "a548e1beca2fae4a0c14729288864bba366433bc39964b7d35eaca3aea0733f8"
+    },
+    {
+      "path": "checks/post-vis59-0a/multiplayer.log",
+      "origin": "/workspace/reference-village-work/polish-postqa-checks/multiplayer.log",
+      "bytes": 15502,
+      "sha256": "988cd1eb0017dd8b26b32c711920cba4bb6be05a0b70cb1be77ef7c6b4d2fbdd"
+    },
+    {
+      "path": "checks/post-vis59-0a/report.json",
+      "origin": "/workspace/reference-village-work/polish-postqa-checks/report.json",
+      "bytes": 1488,
+      "sha256": "7acbc888a28012be041ab9f49d7772c78d9707773a0993630e0fc85dfa715d28"
+    },
+    {
+      "path": "checks/post-vis59-0a/runner.log",
+      "origin": "/workspace/reference-village-work/polish-postqa-checks/runner.log",
+      "bytes": 838,
+      "sha256": "a5a2414feeb2df617b925352d84481e1bb8241cae570b89a48e2ef499b1f094d"
+    },
+    {
+      "path": "checks/post-vis59-0a/text-lint.log",
+      "origin": "/workspace/reference-village-work/polish-postqa-checks/text-lint.log",
+      "bytes": 1037,
+      "sha256": "3a8fa9b0965a95c2e2776a043e0f8a4ac2c2bd8d0cb1601ec59bcb9fa623f266"
+    },
+    {
+      "path": "checks/final-vis60/budget.log",
+      "origin": "/workspace/reference-village-work/polish-qa-final-checks/budget.log",
+      "bytes": 83560,
+      "sha256": "78ce3271a55453782723643bb8dd9cedeff3b250a3d8350920ea993a07e0a764"
+    },
+    {
+      "path": "checks/final-vis60/build.log",
+      "origin": "/workspace/reference-village-work/polish-qa-final-checks/build.log",
+      "bytes": 17404,
+      "sha256": "8e458eedd1731718e3516428fb91649a24c045de1b30ba6218ab6ea9c55695ba"
+    },
+    {
+      "path": "checks/final-vis60/frontend.log",
+      "origin": "/workspace/reference-village-work/polish-qa-final-checks/frontend.log",
+      "bytes": 671147,
+      "sha256": "9536a5ee97f2bf31c77de136ceb9b504904ef88d366cb93d974c7a4d5d3fdafb"
+    },
+    {
+      "path": "checks/final-vis60/multiplayer.log",
+      "origin": "/workspace/reference-village-work/polish-qa-final-checks/multiplayer.log",
+      "bytes": 14492,
+      "sha256": "667f3455acb138ff8122d3ab35b3da3e72c62decaea69db1e131c513117d2608"
+    },
+    {
+      "path": "checks/final-vis60/report.json",
+      "origin": "/workspace/reference-village-work/polish-qa-final-checks/report.json",
+      "bytes": 1489,
+      "sha256": "7608112623603fd973de7b07d528aeaf0863d0b32b27684028a5ac959f772d34"
+    },
+    {
+      "path": "checks/final-vis60/runner.log",
+      "origin": "/workspace/reference-village-work/polish-qa-final-checks/runner.log",
+      "bytes": 839,
+      "sha256": "39a22bdb89c8bfc1b223ab5302a55793acaeec1dbafe983ae0dbb111b8d2a64b"
+    },
+    {
+      "path": "checks/final-vis60/text-lint.log",
+      "origin": "/workspace/reference-village-work/polish-qa-final-checks/text-lint.log",
+      "bytes": 1037,
+      "sha256": "3a8fa9b0965a95c2e2776a043e0f8a4ac2c2bd8d0cb1601ec59bcb9fa623f266"
+    },
+    {
+      "path": "checks/final-vis60/multiplayer-captures/sync-samples.json",
+      "origin": "/workspace/reference-village-work/polish-qa-final-checks/multiplayer-captures/sync-samples.json",
+      "bytes": 479802,
+      "sha256": "cd7b52ac993f81ca4beef277df8fd95dfa96c92cdda330a5699663ba59880c08"
+    },
+    {
+      "path": "checks/final-vis60/multiplayer-captures/failure-me.png",
+      "origin": "/workspace/reference-village-work/polish-qa-final-checks/multiplayer-captures/failure-me.png",
+      "bytes": 523734,
+      "sha256": "5ac3737859bc726957868370fa211f09ac2ac7ff09ae278ef657668cfd473e6c",
+      "width": 960,
+      "height": 600
+    },
+    {
+      "path": "checks/final-vis60/multiplayer-captures/failure-ben.png",
+      "origin": "/workspace/reference-village-work/polish-qa-final-checks/multiplayer-captures/failure-ben.png",
+      "bytes": 535773,
+      "sha256": "8a2f6e200f579483894706fcedcca293ea91bf591c788ee822cf0f6cfdb654c9",
+      "width": 960,
+      "height": 600
+    },
+    {
+      "path": "checks/final-vis60/multiplayer-captures/03-wave1-muskets-me.png",
+      "origin": "/workspace/reference-village-work/polish-qa-final-checks/multiplayer-captures/03-wave1-muskets-me.png",
+      "bytes": 634210,
+      "sha256": "6e7edcbf82150783ba5f668f097efeaa722215b1b598e341dd15bf743e80d8e8",
+      "width": 960,
+      "height": 600
+    },
+    {
+      "path": "checks/final-invariants-6c1cda17.json",
+      "origin": "/workspace/reference-village-work/next-pass/final-invariants-6c1cda17.json",
+      "bytes": 1864,
+      "sha256": "e9940488f3b2956cd40b86bcc839c850dbb66d1150cc9983842188718bdfff1d"
+    }
+  ]
+}

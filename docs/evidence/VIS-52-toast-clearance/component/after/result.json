@@ -1,0 +1,19 @@
+{
+  "source": "ea87f88283dc999670e45f7c98bb0535d21c3c7a",
+  "frontendTree": "d76918ec05735c46c9cda4a55cc495e28bfa0d5a",
+  "helperSha256": "02d4a240d44b96dce9e01ec23408bdce8e741b77c37981117f27238512ec862b",
+  "helperSource": "ea87f882",
+  "scope": "Corrected HUD source and identical native geometry/lifecycle regression helper.",
+  "started": "2026-11-17T22:46:29.713733+00:00",
+  "command": [
+    "npm",
+    "test",
+    "--",
+    "--maxWorkers=1",
+    "tests/ui/toast-clearance.test.js",
+    "--reporter=verbose"
+  ],
+  "exitCode": 0,
+  "seconds": 10.03,
+  "finished": "2026-11-17T22:46:39.744922+00:00"
+}

@@ -1,0 +1,449 @@
+{
+  "source": "5837335faa5122058a2105644bb6af1d40b58580",
+  "oldSource": "9dc1bea505fe3b26bd56d6ad02c21a2db8bd8be9",
+  "scope": "Actual GPU water/terrain components; not full gameplay or physical-device FPS",
+  "reports": [
+    {
+      "width": 1280,
+      "height": 720,
+      "frames": [
+        {
+          "name": "before",
+          "quality": "high",
+          "reduced": false,
+          "rain": 0,
+          "hash": "01c73ea3435c221415eb3b3cdaedde7aaea435687ab70b8357140365e18b6416",
+          "laterHash": "785e8192cd927be74588f08570e913d6c085eda432079788c021c2d79b6164e3",
+          "unchangedWhenReduced": null,
+          "drawCalls": 2,
+          "geometries": 2,
+          "textures": 2,
+          "groundMatrix": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "envelope": {
+            "min": [
+              -20.48229157883956,
+              -17.85800194096398,
+              0
+            ],
+            "max": [
+              21.08490361569788,
+              16.827601972477453,
+              0
+            ]
+          },
+          "gpuSynchronizedMilliseconds": {
+            "median": 0.29999999701976776,
+            "max": 0.5
+          },
+          "backend": {
+            "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+            "vendor": "Google Inc. (Google)",
+            "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+          },
+          "shaderErrors": []
+        },
+        {
+          "name": "after",
+          "quality": "high",
+          "reduced": false,
+          "rain": 0,
+          "hash": "bb17fdfdb8b87ec40fa2cc5477e35982be8746e865b8f606290a66d05190c4e3",
+          "laterHash": "b2bb57ae4fae1e7fd773acc8ca21afbce4759b631c92f4106f354bf4f277108c",
+          "unchangedWhenReduced": null,
+          "drawCalls": 2,
+          "geometries": 2,
+          "textures": 2,
+          "groundMatrix": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "envelope": {
+            "min": [
+              -20.48229157883956,
+              -17.85800194096398,
+              0
+            ],
+            "max": [
+              21.08490361569788,
+              16.827601972477453,
+              0
+            ]
+          },
+          "gpuSynchronizedMilliseconds": {
+            "median": 0.20000000298023224,
+            "max": 0.29999999701976776
+          },
+          "backend": {
+            "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+            "vendor": "Google Inc. (Google)",
+            "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+          },
+          "shaderErrors": []
+        },
+        {
+          "name": "low",
+          "quality": "low",
+          "reduced": false,
+          "rain": 0,
+          "hash": "ea6250ff5c0a36506b1466301f38074513517deb2465533bf8bcb5676ffee809",
+          "laterHash": "3c625bdc23f99ef44b0eaeec130c049700551a54482485597b37230fdb5064b5",
+          "unchangedWhenReduced": null,
+          "drawCalls": 2,
+          "geometries": 2,
+          "textures": 2,
+          "groundMatrix": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "envelope": {
+            "min": [
+              -20.48229157883956,
+              -17.85800194096398,
+              0
+            ],
+            "max": [
+              21.08490361569788,
+              16.827601972477453,
+              0
+            ]
+          },
+          "gpuSynchronizedMilliseconds": {
+            "median": 0.10000000149011612,
+            "max": 0.30000000447034836
+          },
+          "backend": {
+            "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+            "vendor": "Google Inc. (Google)",
+            "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+          },
+          "shaderErrors": []
+        },
+        {
+          "name": "reduced",
+          "quality": "high",
+          "reduced": true,
+          "rain": 0,
+          "hash": "dcd112cefb95fc6250da7bade521c110d0d57d2dc6d60ea7f3903b054e47e3a4",
+          "laterHash": "dcd112cefb95fc6250da7bade521c110d0d57d2dc6d60ea7f3903b054e47e3a4",
+          "unchangedWhenReduced": true,
+          "drawCalls": 2,
+          "geometries": 2,
+          "textures": 2,
+          "groundMatrix": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "envelope": {
+            "min": [
+              -20.48229157883956,
+              -17.85800194096398,
+              0
+            ],
+            "max": [
+              21.08490361569788,
+              16.827601972477453,
+              0
+            ]
+          },
+          "gpuSynchronizedMilliseconds": {
+            "median": 0.10000000149011612,
+            "max": 0.19999999552965164
+          },
+          "backend": {
+            "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+            "vendor": "Google Inc. (Google)",
+            "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+          },
+          "shaderErrors": []
+        }
+      ],
+      "mask": {
+        "waterDrawnInsideOpaqueTerrain": [],
+        "rockSamples": 4,
+        "transparentFallback": 0,
+        "shaderErrors": []
+      }
+    },
+    {
+      "width": 375,
+      "height": 812,
+      "frames": [
+        {
+          "name": "before",
+          "quality": "high",
+          "reduced": false,
+          "rain": 0,
+          "hash": "e671a7391ef3d3fadd1fb02605d2d373bef015a3e933bf786b14e3f109f94291",
+          "laterHash": "8b8773c700dd333549d26aba4c86b0ca49ee44d01a4e2355879b869fba16809c",
+          "unchangedWhenReduced": null,
+          "drawCalls": 2,
+          "geometries": 2,
+          "textures": 2,
+          "groundMatrix": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "envelope": {
+            "min": [
+              -20.48229157883956,
+              -17.85800194096398,
+              0
+            ],
+            "max": [
+              21.08490361569788,
+              16.827601972477453,
+              0
+            ]
+          },
+          "gpuSynchronizedMilliseconds": {
+            "median": 0.4000000059604645,
+            "max": 0.6000000014901161
+          },
+          "backend": {
+            "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+            "vendor": "Google Inc. (Google)",
+            "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+          },
+          "shaderErrors": []
+        },
+        {
+          "name": "after",
+          "quality": "high",
+          "reduced": false,
+          "rain": 0,
+          "hash": "f22988d8f7dfdf2148866abf5ea5cdca770a4aaafa89817a76313464a4d6f935",
+          "laterHash": "87a4ac7722b7540a32f6db7b9ef9cf5478a3a9ffadb7b717783d922764918d3c",
+          "unchangedWhenReduced": null,
+          "drawCalls": 2,
+          "geometries": 2,
+          "textures": 2,
+          "groundMatrix": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "envelope": {
+            "min": [
+              -20.48229157883956,
+              -17.85800194096398,
+              0
+            ],
+            "max": [
+              21.08490361569788,
+              16.827601972477453,
+              0
+            ]
+          },
+          "gpuSynchronizedMilliseconds": {
+            "median": 0.04999999701976776,
+            "max": 0.10000000149011612
+          },
+          "backend": {
+            "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+            "vendor": "Google Inc. (Google)",
+            "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+          },
+          "shaderErrors": []
+        },
+        {
+          "name": "low",
+          "quality": "low",
+          "reduced": false,
+          "rain": 0,
+          "hash": "40aa19b15b56aef16afad04837a4bc3a047ac7ab571bab48e2ec0b5435edaba6",
+          "laterHash": "febf52aafd8c82911db67927ad9c4ff2db23d511a6e50fa5aa68799bf65dfbed",
+          "unchangedWhenReduced": null,
+          "drawCalls": 2,
+          "geometries": 2,
+          "textures": 2,
+          "groundMatrix": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "envelope": {
+            "min": [
+              -20.48229157883956,
+              -17.85800194096398,
+              0
+            ],
+            "max": [
+              21.08490361569788,
+              16.827601972477453,
+              0
+            ]
+          },
+          "gpuSynchronizedMilliseconds": {
+            "median": 0.09999999776482582,
+            "max": 0.10000000149011612
+          },
+          "backend": {
+            "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+            "vendor": "Google Inc. (Google)",
+            "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+          },
+          "shaderErrors": []
+        },
+        {
+          "name": "reduced",
+          "quality": "high",
+          "reduced": true,
+          "rain": 0,
+          "hash": "d4315027d75f328e12d51ce50daef28b8ec7d611633e8a3f884123013faf7f26",
+          "laterHash": "d4315027d75f328e12d51ce50daef28b8ec7d611633e8a3f884123013faf7f26",
+          "unchangedWhenReduced": true,
+          "drawCalls": 2,
+          "geometries": 2,
+          "textures": 2,
+          "groundMatrix": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "envelope": {
+            "min": [
+              -20.48229157883956,
+              -17.85800194096398,
+              0
+            ],
+            "max": [
+              21.08490361569788,
+              16.827601972477453,
+              0
+            ]
+          },
+          "gpuSynchronizedMilliseconds": {
+            "median": 0.10000000149011612,
+            "max": 0.29999999701976776
+          },
+          "backend": {
+            "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+            "vendor": "Google Inc. (Google)",
+            "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+          },
+          "shaderErrors": []
+        }
+      ],
+      "mask": {
+        "waterDrawnInsideOpaqueTerrain": [],
+        "rockSamples": 4,
+        "transparentFallback": 0,
+        "shaderErrors": []
+      }
+    }
+  ],
+  "errors": [],
+  "external": []
+}

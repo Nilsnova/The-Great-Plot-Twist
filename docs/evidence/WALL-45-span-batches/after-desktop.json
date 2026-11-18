@@ -1,0 +1,665 @@
+{
+  "source": "74d895b1f9bdf85cedc877a58f066dd596fe038d",
+  "fixture": "same declared8000/best40/seven paid buildings/102 paid ring/one upgrade; public-controller metric preparation",
+  "saved": {
+    "coins": 6660,
+    "code": "ISLE-K7Q2M",
+    "walls": [
+      {
+        "id": "wall_1",
+        "x": -18.5,
+        "z": 2,
+        "level": 2
+      },
+      {
+        "id": "wall_2",
+        "x": -18.5,
+        "z": 0,
+        "level": 1
+      },
+      {
+        "id": "wall_3",
+        "x": -18.5,
+        "z": -2,
+        "level": 1
+      },
+      {
+        "id": "wall_4",
+        "x": -18.5,
+        "z": -4,
+        "level": 1
+      },
+      {
+        "id": "wall_5",
+        "x": -18.5,
+        "z": -6,
+        "level": 1
+      },
+      {
+        "id": "wall_6",
+        "x": -18.5,
+        "z": -8,
+        "level": 1
+      },
+      {
+        "id": "wall_7",
+        "x": -18.5,
+        "z": -10,
+        "level": 1
+      },
+      {
+        "id": "wall_8",
+        "x": -16.5,
+        "z": -10,
+        "level": 1
+      },
+      {
+        "id": "wall_9",
+        "x": -16.5,
+        "z": -12,
+        "level": 1
+      },
+      {
+        "id": "wall_10",
+        "x": -14.5,
+        "z": -12,
+        "level": 1
+      },
+      {
+        "id": "wall_11",
+        "x": -12.5,
+        "z": -12,
+        "level": 1
+      },
+      {
+        "id": "wall_12",
+        "x": -10.5,
+        "z": -12,
+        "level": 1
+      },
+      {
+        "id": "wall_13",
+        "x": -10.5,
+        "z": -14,
+        "level": 1
+      },
+      {
+        "id": "wall_14",
+        "x": -10.5,
+        "z": -16,
+        "level": 1
+      },
+      {
+        "id": "wall_15",
+        "x": -8.5,
+        "z": -16,
+        "level": 1
+      },
+      {
+        "id": "wall_16",
+        "x": -8.5,
+        "z": -18,
+        "level": 1
+      },
+      {
+        "id": "wall_17",
+        "x": -6.5,
+        "z": -18,
+        "level": 1
+      },
+      {
+        "id": "wall_18",
+        "x": -6.5,
+        "z": -20,
+        "level": 1
+      },
+      {
+        "id": "wall_19",
+        "x": -4.5,
+        "z": -20,
+        "level": 1
+      },
+      {
+        "id": "wall_20",
+        "x": -4.5,
+        "z": -22,
+        "level": 1
+      },
+      {
+        "id": "wall_21",
+        "x": -2.5,
+        "z": -22,
+        "level": 1
+      },
+      {
+        "id": "wall_22",
+        "x": -0.5,
+        "z": -22,
+        "level": 1
+      },
+      {
+        "id": "wall_23",
+        "x": 1.5,
+        "z": -22,
+        "level": 1
+      },
+      {
+        "id": "wall_24",
+        "x": 1.5,
+        "z": -20,
+        "level": 1
+      },
+      {
+        "id": "wall_25",
+        "x": 3.5,
+        "z": -20,
+        "level": 1
+      },
+      {
+        "id": "wall_26",
+        "x": 5.5,
+        "z": -20,
+        "level": 1
+      },
+      {
+        "id": "wall_27",
+        "x": 5.5,
+        "z": -18,
+        "level": 1
+      },
+      {
+        "id": "wall_28",
+        "x": 7.5,
+        "z": -18,
+        "level": 1
+      },
+      {
+        "id": "wall_29",
+        "x": 9.5,
+        "z": -18,
+        "level": 1
+      },
+      {
+        "id": "wall_30",
+        "x": 9.5,
+        "z": -16,
+        "level": 1
+      },
+      {
+        "id": "wall_31",
+        "x": 7.5,
+        "z": -16,
+        "level": 1
+      },
+      {
+        "id": "wall_32",
+        "x": 5.5,
+        "z": -16,
+        "level": 1
+      },
+      {
+        "id": "wall_33",
+        "x": 3.5,
+        "z": -16,
+        "level": 1
+      },
+      {
+        "id": "wall_34",
+        "x": 3.5,
+        "z": -14,
+        "level": 1
+      },
+      {
+        "id": "wall_35",
+        "x": 3.5,
+        "z": -12,
+        "level": 1
+      },
+      {
+        "id": "wall_36",
+        "x": 3.5,
+        "z": -10,
+        "level": 1
+      },
+      {
+        "id": "wall_37",
+        "x": 5.5,
+        "z": -10,
+        "level": 1
+      },
+      {
+        "id": "wall_38",
+        "x": 7.5,
+        "z": -10,
+        "level": 1
+      },
+      {
+        "id": "wall_39",
+        "x": 9.5,
+        "z": -10,
+        "level": 1
+      },
+      {
+        "id": "wall_40",
+        "x": 9.5,
+        "z": -8,
+        "level": 1
+      },
+      {
+        "id": "wall_41",
+        "x": 9.5,
+        "z": -6,
+        "level": 1
+      },
+      {
+        "id": "wall_42",
+        "x": 11.5,
+        "z": -6,
+        "level": 1
+      },
+      {
+        "id": "wall_43",
+        "x": 13.5,
+        "z": -6,
+        "level": 1
+      },
+      {
+        "id": "wall_44",
+        "x": 13.5,
+        "z": -8,
+        "level": 1
+      },
+      {
+        "id": "wall_45",
+        "x": 13.5,
+        "z": -10,
+        "level": 1
+      },
+      {
+        "id": "wall_46",
+        "x": 13.5,
+        "z": -12,
+        "level": 1
+      },
+      {
+        "id": "wall_47",
+        "x": 15.5,
+        "z": -12,
+        "level": 1
+      },
+      {
+        "id": "wall_48",
+        "x": 15.5,
+        "z": -10,
+        "level": 1
+      },
+      {
+        "id": "wall_49",
+        "x": 17.5,
+        "z": -10,
+        "level": 1
+      },
+      {
+        "id": "wall_50",
+        "x": 17.5,
+        "z": -8,
+        "level": 1
+      },
+      {
+        "id": "wall_51",
+        "x": 17.5,
+        "z": -6,
+        "level": 1
+      },
+      {
+        "id": "wall_52",
+        "x": 19.5,
+        "z": -6,
+        "level": 1
+      },
+      {
+        "id": "wall_53",
+        "x": 19.5,
+        "z": -4,
+        "level": 1
+      },
+      {
+        "id": "wall_54",
+        "x": 19.5,
+        "z": -2,
+        "level": 1
+      },
+      {
+        "id": "wall_55",
+        "x": 19.5,
+        "z": 0,
+        "level": 1
+      },
+      {
+        "id": "wall_56",
+        "x": 19.5,
+        "z": 2,
+        "level": 1
+      },
+      {
+        "id": "wall_57",
+        "x": 17.5,
+        "z": 2,
+        "level": 1
+      },
+      {
+        "id": "wall_58",
+        "x": 17.5,
+        "z": 4,
+        "level": 1
+      },
+      {
+        "id": "wall_59",
+        "x": 15.5,
+        "z": 4,
+        "level": 1
+      },
+      {
+        "id": "wall_60",
+        "x": 13.5,
+        "z": 4,
+        "level": 1
+      },
+      {
+        "id": "wall_61",
+        "x": 11.5,
+        "z": 4,
+        "level": 1
+      },
+      {
+        "id": "wall_62",
+        "x": 9.5,
+        "z": 4,
+        "level": 1
+      },
+      {
+        "id": "wall_63",
+        "x": 9.5,
+        "z": 6,
+        "level": 1
+      },
+      {
+        "id": "wall_64",
+        "x": 9.5,
+        "z": 8,
+        "level": 1
+      },
+      {
+        "id": "wall_65",
+        "x": 9.5,
+        "z": 10,
+        "level": 1
+      },
+      {
+        "id": "wall_66",
+        "x": 11.5,
+        "z": 10,
+        "level": 1
+      },
+      {
+        "id": "wall_67",
+        "x": 13.5,
+        "z": 10,
+        "level": 1
+      },
+      {
+        "id": "wall_68",
+        "x": 15.5,
+        "z": 10,
+        "level": 1
+      },
+      {
+        "id": "wall_69",
+        "x": 15.5,
+        "z": 12,
+        "level": 1
+      },
+      {
+        "id": "wall_70",
+        "x": 13.5,
+        "z": 12,
+        "level": 1
+      },
+      {
+        "id": "wall_71",
+        "x": 13.5,
+        "z": 14,
+        "level": 1
+      },
+      {
+        "id": "wall_72",
+        "x": 13.5,
+        "z": 16,
+        "level": 1
+      },
+      {
+        "id": "wall_73",
+        "x": 13.5,
+        "z": 18,
+        "level": 1
+      },
+      {
+        "id": "wall_74",
+        "x": 11.5,
+        "z": 18,
+        "level": 1
+      },
+      {
+        "id": "wall_75",
+        "x": 11.5,
+        "z": 20,
+        "level": 1
+      },
+      {
+        "id": "wall_76",
+        "x": 9.5,
+        "z": 20,
+        "level": 1
+      },
+      {
+        "id": "wall_77",
+        "x": 7.5,
+        "z": 20,
+        "level": 1
+      },
+      {
+        "id": "wall_78",
+        "x": 5.5,
+        "z": 20,
+        "level": 1
+      },
+      {
+        "id": "wall_79",
+        "x": 3.5,
+        "z": 20,
+        "level": 1
+      },
+      {
+        "id": "wall_80",
+        "x": 1.5,
+        "z": 20,
+        "level": 1
+      },
+      {
+        "id": "wall_81",
+        "x": -0.5,
+        "z": 20,
+        "level": 1
+      },
+      {
+        "id": "wall_82",
+        "x": -2.5,
+        "z": 20,
+        "level": 1
+      },
+      {
+        "id": "wall_83",
+        "x": -4.5,
+        "z": 20,
+        "level": 1
+      },
+      {
+        "id": "wall_84",
+        "x": -6.5,
+        "z": 20,
+        "level": 1
+      },
+      {
+        "id": "wall_85",
+        "x": -8.5,
+        "z": 20,
+        "level": 1
+      },
+      {
+        "id": "wall_86",
+        "x": -8.5,
+        "z": 18,
+        "level": 1
+      },
+      {
+        "id": "wall_87",
+        "x": -10.5,
+        "z": 18,
+        "level": 1
+      },
+      {
+        "id": "wall_88",
+        "x": -10.5,
+        "z": 16,
+        "level": 1
+      },
+      {
+        "id": "wall_89",
+        "x": -12.5,
+        "z": 16,
+        "level": 1
+      },
+      {
+        "id": "wall_90",
+        "x": -12.5,
+        "z": 14,
+        "level": 1
+      },
+      {
+        "id": "wall_91",
+        "x": -12.5,
+        "z": 12,
+        "level": 1
+      },
+      {
+        "id": "wall_92",
+        "x": -14.5,
+        "z": 12,
+        "level": 1
+      },
+      {
+        "id": "wall_93",
+        "x": -16.5,
+        "z": 12,
+        "level": 1
+      },
+      {
+        "id": "wall_94",
+        "x": -16.5,
+        "z": 10,
+        "level": 1
+      },
+      {
+        "id": "wall_95",
+        "x": -16.5,
+        "z": 8,
+        "level": 1
+      },
+      {
+        "id": "wall_96",
+        "x": -14.5,
+        "z": 8,
+        "level": 1
+      },
+      {
+        "id": "wall_97",
+        "x": -12.5,
+        "z": 8,
+        "level": 1
+      },
+      {
+        "id": "wall_98",
+        "x": -12.5,
+        "z": 6,
+        "level": 1
+      },
+      {
+        "id": "wall_99",
+        "x": -12.5,
+        "z": 4,
+        "level": 1
+      },
+      {
+        "id": "wall_100",
+        "x": -12.5,
+        "z": 2,
+        "level": 1
+      },
+      {
+        "id": "wall_101",
+        "x": -14.5,
+        "z": 2,
+        "level": 1
+      },
+      {
+        "id": "wall_102",
+        "x": -16.5,
+        "z": 2,
+        "level": 1
+      }
+    ]
+  },
+  "frame": {
+    "name": "metrics.png",
+    "qualityBefore": {
+      "pixelRatio": 0.5,
+      "drawingWidth": 640,
+      "drawingHeight": 360,
+      "quality": "high",
+      "densityScale": 0.5
+    },
+    "camera": [
+      1.3445875065350603e-12,
+      1.6366785154526573,
+      100
+    ],
+    "zoom": 0.35164636309743014,
+    "captain": [
+      8.5,
+      1.03,
+      12.8
+    ],
+    "contextLost": false,
+    "drawCalls": 235,
+    "rendering": {
+      "pixelRatio": 1,
+      "drawingWidth": 1280,
+      "drawingHeight": 720,
+      "quality": "high",
+      "densityScale": 1
+    },
+    "pixelRatio": 1,
+    "drawingSize": [
+      1280,
+      720
+    ],
+    "memory": {
+      "geometries": 260,
+      "textures": 38
+    },
+    "worldLinks": 106,
+    "worldWallDrawMeshes": 36
+  },
+  "errors": [],
+  "external": []
+}

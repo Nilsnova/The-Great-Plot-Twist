@@ -1,0 +1,28 @@
+{
+  "checked": "2026-11-17T22:54:04.021163+00:00",
+  "scope": "documentation packaging only; no browser/application rerun",
+  "archiveOriginalReceipts": 20,
+  "latestPackageHashReceipts": 35,
+  "stageEightProtectedFilesUnchanged": 31,
+  "exactEmbeddedPngs": 12,
+  "nativePngDimensionsChecked": true,
+  "uniqueObservedOpenDrafts": 50,
+  "existingLocalMarkdownTargets": 325,
+  "sourceIdentitiesChecked": [
+    "52f6bb158b03188b57260c1872e273391598debf",
+    "b9da278390ac4f63c580ab34d7ba369e71a4a36a",
+    "91c1f9d57c1edd957d26588b99fbb1489e575127"
+  ],
+  "applicationTreesPerSource": 4,
+  "result": "passed",
+  "nativeTwelveImageDocumentCheck": "PENDING",
+  "nextComposedCandidateApplicationChecks": "PENDING",
+  "stagedWhitespaceCheck": {
+    "editedDocumentation": "passed when exact raw logs excluded",
+    "unchangedRawLogDiagnostics": [
+      "sequence/frontend.log: final blank line retained from original",
+      "keyboard-follow-up/report-input.log: final blank line retained from original"
+    ],
+    "reason": "Do not edit original verification bytes to silence whitespace diagnostics."
+  }
+}

@@ -21,6 +21,7 @@ from dataclasses import dataclass, replace
 from fractions import Fraction
 from pathlib import Path
 
+from server.island.wall_cohort import LEGACY_WALL_CAPACITY, PERIMETER_WALL_CAPACITY
 from server.wallet import MAX_DELTA
 
 logger = logging.getLogger(__name__)
@@ -45,9 +46,8 @@ TOWER_SPOT_TEMPLATE = "cannon_1"
 ID_PATTERN = re.compile(r"[a-z][a-z0-9_]{1,39}")
 # The weather states of weather/states.py. Each one needs its line in the file.
 WEATHER_KINDS = ("storm", "fog", "rain", "calm")
-# The limits the database checks too (wave_runs in the migration). MAX_SPOTS: the longest spot list
-# (22 island spots since the inner ring of TOWER-DEFENSE section 12), with room to spare.
-MAX_SPOTS = 30
+# The bounded selected catalogue includes the perimeter cohort and every D060 non-wall spot.
+MAX_SPOTS = PERIMETER_WALL_CAPACITY + 14  # 11 tower spots, watchtower and two houses.
 MAX_WAVE = 1000
 MAX_SECONDS = 86400
 MIN_SHIPS, MAX_SHIPS = 0.5, 3.0
@@ -1132,6 +1132,31 @@ def with_more_tower_spots(catalogue: IslandCatalogue) -> IslandCatalogue:
         for spot_id, wave in catalogue.extra_tower_spots
     )
     return replace(catalogue, spots=catalogue.spots + extra, more_tower_spots=True)
+
+
+def with_wall_capacity(catalogue: IslandCatalogue, capacity: int) -> IslandCatalogue:
+    """Add inventory identities only for a trusted, admitted perimeter policy.
+
+    These spots have no default coordinates. The service must hide unbuilt added pieces and
+    reject their unpositioned single-build route; admission and paid placement are separate.
+    """
+    if type(capacity) is not int or capacity not in {LEGACY_WALL_CAPACITY, PERIMETER_WALL_CAPACITY}:
+        raise ValueError("Unsupported wall capacity.")
+    if capacity == LEGACY_WALL_CAPACITY:
+        return catalogue
+    known = {spot.id: spot for spot in catalogue.spots}
+    template = known.get("wall_1")
+    if template is None or template.kinds != ("wall",):
+        raise IslandFileError("Perimeter walls require the legacy wall template.")
+    extra = []
+    for number in range(LEGACY_WALL_CAPACITY + 1, capacity + 1):
+        expected = replace(template, id=f"wall_{number}")
+        if expected.id in known:
+            if known[expected.id] != expected:
+                raise IslandFileError("A perimeter wall has incompatible catalogue rules.")
+        else:
+            extra.append(expected)
+    return replace(catalogue, spots=catalogue.spots + tuple(extra)) if extra else catalogue
 
 
 def catalogue_for_flags(

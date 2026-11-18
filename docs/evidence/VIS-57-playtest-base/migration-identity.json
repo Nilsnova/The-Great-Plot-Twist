@@ -1,0 +1,11 @@
+{
+  "source": "6c87b8dcd2d7a1bb5376c3b64bbede27a144479e",
+  "renamedFrom": "supabase/migrations/20261118040000_recovery_finish_checkpoint_guard.sql",
+  "renamedTo": "supabase/migrations/20261118050000_recovery_finish_checkpoint_guard.sql",
+  "guardByteIdentity": true,
+  "guardSha256": "651e50530d86cd1ecb63f3c08a77afb98b8f60ea12f34b1d2c4bbbeabc88dc25",
+  "mainPlaytestByteIdentity": true,
+  "mainPlaytestSha256": "fcd4e95c24e727340b7777391cf150cd0345a561379f87389cf68df126a3a266",
+  "uniqueVersions": 71,
+  "duplicates": []
+}

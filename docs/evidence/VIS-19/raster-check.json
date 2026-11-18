@@ -1,0 +1,14 @@
+{
+  "scope": "actual Canvas2D terrain and real simulation/minimum-anchor coordinates; no full-hull visual claim",
+  "allowed": {
+    "minX": -21.282291578839562,
+    "maxX": 21.88490361569788,
+    "minY": -17.627601972477454,
+    "maxY": 16.896177433013733
+  },
+  "opaque": 266219,
+  "outsideOpaque": 0,
+  "actualAnchors": 17,
+  "closestAnchors": 21,
+  "hiddenAnchors": []
+}

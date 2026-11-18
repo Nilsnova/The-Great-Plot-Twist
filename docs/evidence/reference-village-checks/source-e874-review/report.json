@@ -1,0 +1,39 @@
+{
+  "started": "2026-11-17T22:54:25.025796+00:00",
+  "source": "e874023f27fff1a7bf5b21787e1ecd5c55a75a9f",
+  "frontendTree": "d76918ec05735c46c9cda4a55cc495e28bfa0d5a",
+  "publicTree": "9306942db1050d728799cee2fbdc8e8960f14ad2",
+  "backendTree": "c785196095edef4f5416744b46435ab564da4e9c",
+  "checks": [
+    {
+      "name": "overlaps",
+      "command": [
+        "npm",
+        "run",
+        "test:overlaps",
+        "--",
+        "--shots",
+        "/workspace/reference-village-work/final-toast-smoke/overlap-captures"
+      ],
+      "exitCode": 0,
+      "seconds": 86.77,
+      "log": "overlaps.log"
+    },
+    {
+      "name": "capture",
+      "command": [
+        "python",
+        "/workspace/reference-village-work/capture-candidate.py",
+        "--repo",
+        "/workspace/reference-village-work/latest-main-preview",
+        "--out",
+        "/workspace/reference-village-work/stage-09-final-toast"
+      ],
+      "exitCode": 0,
+      "seconds": 199.85,
+      "log": "capture.log"
+    }
+  ],
+  "finished": "2026-11-17T22:59:11.665406+00:00",
+  "exitCode": 0
+}

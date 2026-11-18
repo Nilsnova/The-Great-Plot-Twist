@@ -1,0 +1,53 @@
+{
+  "checkedAt": "2026-11-18T01:48:32.258411+00:00",
+  "checkedReviewHead": "ce59f3fec1589747cf59fb75fb627bb2a2285763",
+  "runtimeHead": "6c1cda1739f9e5b8d96946d04c3d919cbe00fcfe",
+  "trees": {
+    "frontend/src": {
+      "review": "e191d9290088908ee27e82e03a15847d4a73a38e",
+      "runtime": "e191d9290088908ee27e82e03a15847d4a73a38e"
+    },
+    "frontend/public": {
+      "review": "9306942db1050d728799cee2fbdc8e8960f14ad2",
+      "runtime": "9306942db1050d728799cee2fbdc8e8960f14ad2"
+    },
+    "backend": {
+      "review": "3956a73d76f537fd7c85259afa4bf9280a6e0ecd",
+      "runtime": "3956a73d76f537fd7c85259afa4bf9280a6e0ecd"
+    },
+    "supabase/migrations": {
+      "review": "ae31ac50221be83070e7f46580d66a70eedbad20",
+      "runtime": "ae31ac50221be83070e7f46580d66a70eedbad20"
+    },
+    "frontend/scripts": {
+      "review": "7fadcb6da62409b29d12f9322ab9af73e062c9aa",
+      "runtime": "7fadcb6da62409b29d12f9322ab9af73e062c9aa"
+    },
+    "frontend/tests": {
+      "review": "fe8a0087a4b45a1d2b12789937974ae048a2c4d6",
+      "runtime": "fe8a0087a4b45a1d2b12789937974ae048a2c4d6"
+    }
+  },
+  "changedProductFilesRelativeTo6c87": [
+    "frontend/src/art/coast-cliffs.js",
+    "frontend/src/art/ground.js",
+    "frontend/src/art/village/terrain-materials.js",
+    "frontend/src/island/wall-batches.js",
+    "frontend/src/world/places/settlement.js"
+  ],
+  "unchangedBackendMigrationsPublicPackages": true,
+  "migrationVersions": 71,
+  "ancestry": [
+    "66d29ea9",
+    "e636ae75",
+    "593fbaec"
+  ],
+  "originalHead": "ee9d03cb0fc8402e9e6c43644260024ff3521092",
+  "originalClean": true,
+  "reviewClean": true,
+  "identity": {
+    "user.name": "Johannes Franz Lang",
+    "user.email": "83476@novasbe.pt"
+  },
+  "scope": "Source/code invariants at this checked revision; later documentation metadata may change HEAD without changing these code trees."
+}

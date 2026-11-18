@@ -1,0 +1,22 @@
+{
+  "source": "3584c38692fe7672309b56c417641339c9eb5bd7",
+  "testSha256": "ae0bfd36f8480706d98834f051f94e0951bc558ed8f0324b832680b98ed1a5e1",
+  "observerSha256": "3c0768bee371f680428ed6cc4ac3fcb82b68332a7f395c45eb030c020c0d1c8a",
+  "started": "2026-11-18T00:52:50.960835+00:00",
+  "command": [
+    "npm",
+    "test",
+    "--",
+    "--maxWorkers=1",
+    "--reporter=verbose",
+    "tests/multiplayer-map-observer.test.js",
+    "tests/island/wall-textured-batches.test.js",
+    "tests/island/wall-connections.test.js",
+    "tests/island/wall-selection.test.js",
+    "tests/pirates/wall-connections.test.js",
+    "tests/art/wall-tier-identity.test.js",
+    "tests/island/capture-wall-buffers.test.js"
+  ],
+  "exitCode": 0,
+  "seconds": 7.16
+}

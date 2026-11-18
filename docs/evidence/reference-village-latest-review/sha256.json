@@ -1,0 +1,487 @@
+{
+  "status": "actual latest capture; human/device/balance acceptance open",
+  "captureRuntime": "e874023f27fff1a7bf5b21787e1ecd5c55a75a9f",
+  "applicationTrees": {
+    "frontend/src": "d76918ec05735c46c9cda4a55cc495e28bfa0d5a",
+    "frontend/public": "9306942db1050d728799cee2fbdc8e8960f14ad2",
+    "backend": "c785196095edef4f5416744b46435ab564da4e9c",
+    "supabase": "6e52a63b87028291127dbae8c344c9f49a73896d"
+  },
+  "mainCutoff": "ee5677ff4986b671c271c85a35abcee70aa8fe59",
+  "frozenVerificationSource": "e874023f27fff1a7bf5b21787e1ecd5c55a75a9f",
+  "verificationApplicationTrees": {
+    "frontend/src": "d76918ec05735c46c9cda4a55cc495e28bfa0d5a",
+    "frontend/public": "9306942db1050d728799cee2fbdc8e8960f14ad2",
+    "backend": "c785196095edef4f5416744b46435ab564da4e9c",
+    "supabase": "6e52a63b87028291127dbae8c344c9f49a73896d"
+  },
+  "postCaptureChangedFiles": [],
+  "helperHead": "12fe7ab781b2223de191485170aa48f664e4b91e",
+  "helperHashes": {
+    "capture-village-composition.mjs": "0ffcefb64fd6a32f6348e6c35542bd54887e07b8fe8aed0eb85f904e427dbda8",
+    "perimeter-game-ui.mjs": "8f47d596ea378800b89e88171ab58aa37477faf892658cd7aca7c20f327a8ffb",
+    "perimeter-game-wave.mjs": "9c2f3a1951a1a57154c93e7cc113a33fc3b6dd16eb895126eac5eb5adb7547af"
+  },
+  "selectedWallBefore": {
+    "source": "5e3dd6ccb3597617e67a8b720525d3add78c3704",
+    "frontendTree": "d40e9c78a8c1179965db1af0f5c10a29f41bf48e",
+    "backendTree": "e61fa1b8f6bcd02bb357b17b530b427acf5abee2"
+  },
+  "copyMethod": "unchanged original bytes; no image editing or re-encoding",
+  "files": [
+    {
+      "file": "reference-arranged-1280x720.png",
+      "bytes": 1175194,
+      "sha256": "723a3f684282e674c65e3be58c928525eedd399fabac67d642927f932a5eb209",
+      "original": "stage-09-final-toast/reference-arranged-1280x720.png",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "file": "reference-arranged-375x812.png",
+      "bytes": 443126,
+      "sha256": "209dee38cb6d443b2289fd1bab4a809897eea2d6494114cd84aa8a152c860ccd",
+      "original": "stage-09-final-toast/reference-arranged-375x812.png",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "file": "reference-entry-1280x720.png",
+      "bytes": 1174510,
+      "sha256": "662eb19fb93ace0eea8e8efd632a4270199143153b5405bca78b8d0edd7b8ea8",
+      "original": "stage-09-final-toast/reference-entry-1280x720.png",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "file": "reference-entry-375x812.png",
+      "bytes": 441337,
+      "sha256": "3e742110f61beeff079abd98b376957ed4579bb6c8966b05bbcbcda592a1081a",
+      "original": "stage-09-final-toast/reference-entry-375x812.png",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "file": "reference-fit-1280x720.png",
+      "bytes": 1134303,
+      "sha256": "b6d15466ee94ed458f0f549d34e8fbaedf2e5b219e9768e0c1875d627b69f794",
+      "original": "stage-09-final-toast/reference-fit-1280x720.png",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "file": "reference-fit-375x812.png",
+      "bytes": 310740,
+      "sha256": "5fc1651b77382c5f843aab535798e2d89253e18178ed1b32c725b12890ad0e4d",
+      "original": "stage-09-final-toast/reference-fit-375x812.png",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "file": "reference-move-level3-1280x720.png",
+      "bytes": 1114359,
+      "sha256": "0802e18646dec777690c59c33c16fb91c3bef1dff540a770a4b898114212c00a",
+      "original": "stage-09-final-toast/reference-move-level3-1280x720.png",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "file": "reference-move-level3-375x812.png",
+      "bytes": 334013,
+      "sha256": "7ca3147f38853bc375f016f752e88da03ec428896a2454bb46ac7627bc15d21d",
+      "original": "stage-09-final-toast/reference-move-level3-375x812.png",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "file": "reference-selected-level3-1280x720.png",
+      "bytes": 1134672,
+      "sha256": "df837831ae6a0c5ce940929abc4e055d19dc66099bb9557bf11c7c02337cfcab",
+      "original": "stage-09-final-toast/reference-selected-level3-1280x720.png",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "file": "reference-selected-level3-375x812.png",
+      "bytes": 306333,
+      "sha256": "c6964148c4427b673cbaa73c878729f6e0154715b893d2072b13c79d4b82d49c",
+      "original": "stage-09-final-toast/reference-selected-level3-375x812.png",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "file": "reference-wall-draft-1280x720.png",
+      "bytes": 920616,
+      "sha256": "fe639e169491a74294e7442fc7d2d6cf927921180c564b9230703fa3e5f3673d",
+      "original": "stage-09-final-toast/reference-wall-draft-1280x720.png",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "file": "reference-wall-draft-375x812.png",
+      "bytes": 363546,
+      "sha256": "b0e30d6ddf9a3be8bb4ca0aa622eddf7631a7e8988c37abc08be0b04ad5fb042",
+      "original": "stage-09-final-toast/reference-wall-draft-375x812.png",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "file": "reference-wall-draft-fine-1280x720.png",
+      "bytes": 901569,
+      "sha256": "2c143d375347db1f8deeb2571c67b809f4f015cdafe8932541da6da226703474",
+      "original": "stage-09-final-toast/reference-wall-draft-fine-1280x720.png",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "file": "reference-wall-draft-fine-375x812.png",
+      "bytes": 273354,
+      "sha256": "4e83104850aa67192fbc96100d5d87089b6ab9a5c7fbfc3dbf69f795cad8237a",
+      "original": "stage-09-final-toast/reference-wall-draft-fine-375x812.png",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "file": "wave-breach-1280x720.png",
+      "bytes": 1161679,
+      "sha256": "b9fe4e341841212d2f1c98c60797000a7b3588f490a39112f6b1ec9a1267f773",
+      "original": "stage-09-final-toast/wave-breach-1280x720.png",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "file": "wave-breach-375x812.png",
+      "bytes": 307965,
+      "sha256": "0cac0d1f8cc7dfc8a2282530f698e125ca90832131246b451348e120808dbbf2",
+      "original": "stage-09-final-toast/wave-breach-375x812.png",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "file": "wave-projectiles-1280x720.png",
+      "bytes": 1047143,
+      "sha256": "1941f48623f826f1e0f138c79487c5d15a6b8eaf90eeb3d1fcc36fda98759de9",
+      "original": "stage-09-final-toast/wave-projectiles-1280x720.png",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "file": "wave-projectiles-375x812.png",
+      "bytes": 254070,
+      "sha256": "5ec73c6e29cdc6dbafc23d5ea4664451102997540749aa83ac83b83543a311bf",
+      "original": "stage-09-final-toast/wave-projectiles-375x812.png",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "file": "wave-standing-1280x720.png",
+      "bytes": 1056857,
+      "sha256": "a1f9bfd78c654dd4ae178e6496412a037612c8ea029540095be5b85d3078d479",
+      "original": "stage-09-final-toast/wave-standing-1280x720.png",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "file": "wave-standing-375x812.png",
+      "bytes": 255477,
+      "sha256": "cea3da0ad313d063548ac603b7f15991eee53f692d98284c0a4a2c41234136e8",
+      "original": "stage-09-final-toast/wave-standing-375x812.png",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "file": "report.json",
+      "bytes": 4530401,
+      "sha256": "1644ac4b822d5ac44fd5680f49b3a20dbc94b48b776a6ce65080a8b40611e1b8",
+      "original": "stage-09-final-toast/report.json"
+    },
+    {
+      "file": "execution.json",
+      "bytes": 1159,
+      "sha256": "fdb4ed2193cbd4a1d59c991eb39b02eec16fe88c31f8b82598fc9f5779a1cb6a",
+      "original": "stage-09-final-toast/execution.json"
+    },
+    {
+      "file": "capture.log",
+      "bytes": 201,
+      "sha256": "512b2d752d5fde7d4b05e170a5f703bb209b5f8547651ca79a3797853769e5dd",
+      "original": "stage-09-final-toast/capture.log"
+    },
+    {
+      "file": "before-village-1280x720.png",
+      "bytes": 580168,
+      "sha256": "cee4a182f13a1cc45b3f6854e3fd675c73efbd1d05bf67876592f9e37141c655",
+      "original": "visual-handover/docs/evidence/VIS-33-working-composition/before-fit-1280x720.png",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "file": "before-combat-1280x720.png",
+      "bytes": 831409,
+      "sha256": "b00b5cbeaa8526feecca43276037171faf4902de3ac2ce8c232f9d3fd2b8a438",
+      "original": "visual-handover/docs/evidence/WALL-24/wave-breach-1280x720.png",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "file": "before-selected-1280x720.png",
+      "bytes": 1135309,
+      "sha256": "986df84cd3ab8c4bc2688ffa4acae326e1f66bab26270b375a307ae9844ce511",
+      "original": "visual-handover/docs/evidence/VIS-31-stage-07/reference-selected-level3-1280x720.png",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "file": "before-village-375x812.png",
+      "bytes": 235580,
+      "sha256": "8cb06060ea18ccb37ff06629ff85e1ac19da7bf8a5490d0976ce0dedc57619e0",
+      "original": "visual-handover/docs/evidence/VIS-33-working-composition/before-fit-375x812.png",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "file": "before-combat-375x812.png",
+      "bytes": 265121,
+      "sha256": "855b864d70d1784ccf43023d2dc9fa02a94b2b04ab0908ec13cbf31b79e1ccd5",
+      "original": "visual-handover/docs/evidence/WALL-24/wave-breach-375x812.png",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "file": "before-selected-375x812.png",
+      "bytes": 306665,
+      "sha256": "3c41ace725c11cec97460c43f0e19933dcb3c0e5c858b271afc692e6b8e65590",
+      "original": "visual-handover/docs/evidence/VIS-31-stage-07/reference-selected-level3-375x812.png",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "file": "verify-comparison.mjs",
+      "bytes": 15324,
+      "sha256": "d3d59405be7c7eb20106c6af7cd911ac35b8caeaae4b186e2a8c4da2c137adc6",
+      "note": "Bounded same-navigation response streaming correction; exact byte proof and all native assertions retained. Third native run passed; both earlier cache-read failures/checkers are archived."
+    }
+  ],
+  "captureStats": [
+    {
+      "width": 1280,
+      "height": 720,
+      "entryCalls": 116,
+      "selectedCalls": 119,
+      "combatStandingCalls": 117,
+      "combatFiringCalls": 119,
+      "combatBreachCalls": 129,
+      "pageErrors": [],
+      "externalRequests": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 503 (Service Unavailable)"
+      ]
+    },
+    {
+      "width": 375,
+      "height": 812,
+      "entryCalls": 116,
+      "selectedCalls": 116,
+      "combatStandingCalls": 116,
+      "combatFiringCalls": 120,
+      "combatBreachCalls": 129,
+      "pageErrors": [],
+      "externalRequests": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 503 (Service Unavailable)"
+      ]
+    }
+  ],
+  "checkerPortability": {
+    "defaultFrontendPackage": "../../../frontend/package.json relative to the checker file",
+    "defaultHtml": "comparison.html beside the checker",
+    "defaultOutput": "captures/review-document relative to the command working directory",
+    "optionalPackageOverride": "REVIEW_FRONTEND_PACKAGE",
+    "requires": "existing locked frontend playwright-core and installed Chromium",
+    "bodyTransport": "owned CDP Network session enabled before navigation; resource buffer4xHTML bytes,total16x; streamResourceContent starts on owned Document responseReceived, bufferedData prefix plus same-request ordered dataReceived.data through loadingFinished; original-size bound and exact original-byte comparison"
+  },
+  "comparison": {
+    "file": "comparison.html",
+    "bytes": 10522733,
+    "sha256": "f65e50207d375c2b594c872e403dbff5a308e1d1809a54eabc0feda33d067e76",
+    "embeddedOriginals": [
+      {
+        "file": "before-village-1280x720.png",
+        "bytes": 580168,
+        "sha256": "cee4a182f13a1cc45b3f6854e3fd675c73efbd1d05bf67876592f9e37141c655",
+        "width": 1280,
+        "height": 720,
+        "label": "Before: village",
+        "boundary": "VIS33 original-art Fit view; source 9dc1bea5. Declared earlier fixture: 102 paid walls; 6,660 coins."
+      },
+      {
+        "file": "reference-arranged-1280x720.png",
+        "bytes": 1175194,
+        "sha256": "723a3f684282e674c65e3be58c928525eedd399fabac67d642927f932a5eb209",
+        "width": 1280,
+        "height": 720,
+        "label": "Latest actual review: village",
+        "boundary": "Latest actual arranged village; source e874023f. Declared paid fixture: 123 walls; 5,150 coins."
+      },
+      {
+        "file": "before-combat-1280x720.png",
+        "bytes": 831409,
+        "sha256": "b00b5cbeaa8526feecca43276037171faf4902de3ac2ce8c232f9d3fd2b8a438",
+        "width": 1280,
+        "height": 720,
+        "label": "Before: combat",
+        "boundary": "WALL24 actual local-wave breach. Earlier source/layout: 102 paid walls; 6,660 coins before combat."
+      },
+      {
+        "file": "wave-breach-1280x720.png",
+        "bytes": 1161679,
+        "sha256": "b9fe4e341841212d2f1c98c60797000a7b3588f490a39112f6b1ec9a1267f773",
+        "width": 1280,
+        "height": 720,
+        "label": "Latest actual review: combat",
+        "boundary": "Latest actual local-wave breach; source e874023f. Pre-wave arranged fixture: 123 walls; 5,150 coins."
+      },
+      {
+        "file": "before-selected-1280x720.png",
+        "bytes": 1135309,
+        "sha256": "986df84cd3ab8c4bc2688ffa4acae326e1f66bab26270b375a307ae9844ce511",
+        "width": 1280,
+        "height": 720,
+        "label": "Before: selected wall",
+        "boundary": "Stage seven actual selected level-three shore wall; source 5e3dd6cc. Foliage partly covers the selection; 6,620 coins."
+      },
+      {
+        "file": "reference-selected-level3-1280x720.png",
+        "bytes": 1134672,
+        "sha256": "df837831ae6a0c5ce940929abc4e055d19dc66099bb9557bf11c7c02337cfcab",
+        "width": 1280,
+        "height": 720,
+        "label": "Latest actual review: selected wall",
+        "boundary": "Latest actual selected level-three shore wall; source e874023f. Same declared paid selection fixture; 6,620 coins."
+      },
+      {
+        "file": "before-village-375x812.png",
+        "bytes": 235580,
+        "sha256": "8cb06060ea18ccb37ff06629ff85e1ac19da7bf8a5490d0976ce0dedc57619e0",
+        "width": 375,
+        "height": 812,
+        "label": "Before: village",
+        "boundary": "VIS33 original-art Fit view; source 9dc1bea5. Declared earlier fixture: 102 paid walls; 6,660 coins."
+      },
+      {
+        "file": "reference-arranged-375x812.png",
+        "bytes": 443126,
+        "sha256": "209dee38cb6d443b2289fd1bab4a809897eea2d6494114cd84aa8a152c860ccd",
+        "width": 375,
+        "height": 812,
+        "label": "Latest actual review: village",
+        "boundary": "Latest actual arranged village; source e874023f. Declared paid fixture: 123 walls; 5,150 coins."
+      },
+      {
+        "file": "before-combat-375x812.png",
+        "bytes": 265121,
+        "sha256": "855b864d70d1784ccf43023d2dc9fa02a94b2b04ab0908ec13cbf31b79e1ccd5",
+        "width": 375,
+        "height": 812,
+        "label": "Before: combat",
+        "boundary": "WALL24 actual local-wave breach. Earlier source/layout: 102 paid walls; 6,660 coins before combat."
+      },
+      {
+        "file": "wave-breach-375x812.png",
+        "bytes": 307965,
+        "sha256": "0cac0d1f8cc7dfc8a2282530f698e125ca90832131246b451348e120808dbbf2",
+        "width": 375,
+        "height": 812,
+        "label": "Latest actual review: combat",
+        "boundary": "Latest actual local-wave breach; source e874023f. Pre-wave arranged fixture: 123 walls; 5,150 coins."
+      },
+      {
+        "file": "before-selected-375x812.png",
+        "bytes": 306665,
+        "sha256": "3c41ace725c11cec97460c43f0e19933dcb3c0e5c858b271afc692e6b8e65590",
+        "width": 375,
+        "height": 812,
+        "label": "Before: selected wall",
+        "boundary": "Stage seven actual selected level-three shore wall; source 5e3dd6cc. Foliage partly covers the selection; 6,620 coins."
+      },
+      {
+        "file": "reference-selected-level3-375x812.png",
+        "bytes": 306333,
+        "sha256": "c6964148c4427b673cbaa73c878729f6e0154715b893d2072b13c79d4b82d49c",
+        "width": 375,
+        "height": 812,
+        "label": "Latest actual review: selected wall",
+        "boundary": "Latest actual selected level-three shore wall; source e874023f. Same declared paid selection fixture; 6,620 coins."
+      }
+    ],
+    "tabCounts": [
+      2,
+      3,
+      3
+    ],
+    "note": "Twelve exact original PNG streams; whole-game and selected-wall source boundaries differ."
+  },
+  "focusedReportInputBeforeLatest": {
+    "source": "5e3dd6ccb3597617e67a8b720525d3add78c3704",
+    "frontendTree": "d40e9c78a8c1179965db1af0f5c10a29f41bf48e",
+    "backendTree": "e61fa1b8f6bcd02bb357b17b530b427acf5abee2",
+    "scope": "one real keyboard/gamepad report-input test with unchanged original pointer activation of UI controls; no full pass or robust timing claim",
+    "bodyMilliseconds": 19440,
+    "limitMilliseconds": 20000,
+    "processSeconds": 21.98,
+    "files": [
+      {
+        "file": "focused-report-input-5e/report.json",
+        "original": "latest-report-input/report.json",
+        "bytes": 682,
+        "sha256": "5ea90abbf5772d434bc9bf8be10f8396f53b05ac204d22b447c5e8a8d002aef8"
+      },
+      {
+        "file": "focused-report-input-5e/report-input.log",
+        "original": "latest-report-input/report-input.log",
+        "bytes": 484,
+        "sha256": "cf3c44304e15018e51ca9478566d4c901196e724d64f9fb8d1ccaa7d4c835aa0"
+      }
+    ]
+  },
+  "componentSnapshot": {
+    "file": "pr-snapshot.json",
+    "bytes": 15316,
+    "sha256": "633483379431ee895a3ebef8c8868fd77bfbb856899f3a3d7e874e3185225ff5",
+    "rows": 50,
+    "allDraft": true
+  },
+  "completedVerificationHistory": {
+    "source": "52f6bb158b03188b57260c1872e273391598debf",
+    "path": "../reference-village-checks/source-52-completed/README.md",
+    "status": "historical mixed source-52 results preserved unchanged; final e874 results have their own exact source record"
+  },
+  "priorStageEightPackage": {
+    "immutableDocsHead": "267405eafbc9241d3bce9aaca8e1aeac9efa28bc",
+    "originalCaptureSource": "91c1f9d57c1edd957d26588b99fbb1489e575127",
+    "originalFrontendTree": "6e0c6b27b717a7b8eedcde498d7372de6f0942cb",
+    "history": "Original stage-eight capture package remains at immutable docs head 07d0c14649ae7d1fb6a3503012d8941bee4e6a42; source-52 archive in 267405ea preserves its previous manifest/snapshot/README bytes."
+  },
+  "stageNineChangeBoundary": {
+    "source": "e874023f27fff1a7bf5b21787e1ecd5c55a75a9f",
+    "frontendTree": "d76918ec05735c46c9cda4a55cc495e28bfa0d5a",
+    "changeAfterStageEight": "VIS52 measured Goals/toast clearance; keyboard-activated test variant also present; old stage-eight images are not asserted to depict the new UI source.",
+    "finalSixCommandVerification": "closed mixed: frontend 4586 passed/1 timeout; a11y33/demo34/build/title-budget/text passed; overall exit1",
+    "strictNativeComparisonCheck": "passed both viewports:12 original PNGs,3 tablists,33 real actions each,zero errors/external,exact browser response bytes"
+  },
+  "reviewReadme": {
+    "file": "README.md",
+    "bytes": 12914,
+    "sha256": "dcb9affac672d3b5a17ac5795e12d9d048c87c1ddf3da17bb854e08e7453dea9"
+  },
+  "nativeComparisonAttempts": {
+    "failedAttempt": "../reference-village-comparison-browser/latest-v2-stage09/attempt-01-cache-failed",
+    "status": "attempts1/2 failed before native assertions from inspector-cache eviction; attempt3 same-navigation streaming passed all unchanged native assertions",
+    "htmlSha256": "f65e50207d375c2b594c872e403dbff5a308e1d1809a54eabc0feda33d067e76",
+    "oldCheckerSha256": "dbdb2dc8e443d4414f206a31575344b1020a4586a1f10130d4d8f1df4ef3b789",
+    "newCheckerSha256": "d3d59405be7c7eb20106c6af7cd911ac35b8caeaae4b186e2a8c4da2c137adc6",
+    "secondFailedAttempt": "../reference-village-comparison-browser/latest-v2-stage09/attempt-02-cache-failed",
+    "passedAttempt": "../reference-village-comparison-browser/latest-v2-stage09/passed-stream",
+    "checkerSha256": "d3d59405be7c7eb20106c6af7cd911ac35b8caeaae4b186e2a8c4da2c137adc6"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "status": "final_static_validation_complete_with_documented_application_failures",
+  "originalArtifactsByteVerified": 169,
+  "allBeforePngInventoryHashesVerified": 20,
+  "comparisonImages": 12,
+  "tablists": 3,
+  "tabs": 8,
+  "relativeLinkTargetsChecked": 65,
+  "jsonParse": "passed",
+  "htmlKeyboardScriptSyntax": "passed",
+  "nativeCheckerSyntax": "passed",
+  "nativeBrowserRun": "root passed 7.11s; documentation writer did not launch Chrome",
+  "nativeCheckerLines": 135,
+  "nativeCheckerHardening": [
+    "manifest-bound executed helper",
+    "initial default states before input",
+    "cleanup/report retained if browser close rejects"
+  ],
+  "testedHtmlAndImageBytes": "unchanged from the native input manifest",
+  "editedTextWhitespace": "passed; original .log files checked and recorded separately",
+  "originalLogWhitespace": {
+    "exitCode": 2,
+    "diagnostics": [
+      "docs/evidence/village-polish-review/checks/final-vis60/frontend.log:4884: new blank line at EOF.",
+      "docs/evidence/village-polish-review/checks/first-7fab/frontend.log:4757: new blank line at EOF.",
+      "docs/evidence/village-polish-review/checks/post-vis59-0a/frontend.log:4852: new blank line at EOF."
+    ],
+    "reason": "untouched original reporter output retained"
+  },
+  "finalApplicationTests": "not run by documentation writer; coordinator receipts copied unchanged"
+}

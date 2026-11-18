@@ -1,0 +1,29 @@
+{
+  "runtimeSource": "d6ca49981d3a7b83f84352cf927253fa42ae1c42",
+  "previousRuntime": "3ccbe82b079eaf7d302a54a935f05aab8085c709",
+  "base": "6c87b8dcd2d7a1bb5376c3b64bbede27a144479e",
+  "frontendTree": "907a21fcca7b14807d7fa81603296c10ee6a2e32",
+  "publicTree": "9306942db1050d728799cee2fbdc8e8960f14ad2",
+  "backendTree": "3956a73d76f537fd7c85259afa4bf9280a6e0ecd",
+  "supabaseTree": "c3319eb968d7ac28624ecb8434909f37ca00edf2",
+  "projectionCorrection": {
+    "uprightHeights": [
+      0.95,
+      1.15,
+      1.25,
+      1.35,
+      1.43
+    ],
+    "highestStandingStraightCapDisplayOffset": 1.618,
+    "postTopDisplayOffset": 1.625
+  },
+  "receiptSha256": {
+    "profile-boundary-build.log": "00dcf0f221c5cffdc4ec5d9383ce568156cf7082abae3e8baa39ef3d329fd5b0",
+    "profile-boundary-focused.log": "c73e7dfea77425ec036b5619b5ae9fef7d11be90f8b43329790042ae0a2c5b15",
+    "profile-boundary-red-value-first.log": "8afbe4c6ca1dae46ac2eb38019773c075a820cb2032936c367fcc00999dc4ecf",
+    "profile-boundary-red.log": "469eaae6eacdd821e2bf7dea6382be65aa5f29411dd7bb5264a47f7aa6b1b918",
+    "profile-boundary-title-budget.log": "29c7b09c96604bf48535683d128c6168a80608abdaea9236f9cc6313c23281a8"
+  },
+  "browser": "Not run by this agent; coordinator owns native evidence.",
+  "fullApplication": "Not run by this agent; existing failures remain open."
+}

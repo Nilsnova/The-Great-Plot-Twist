@@ -1,0 +1,27 @@
+{
+  "rootHead": "480d636d3e18b879f51126804d8c76e2720265e2",
+  "changedProductFiles": [
+    "frontend/src/art/coast-cliffs.js",
+    "frontend/src/art/ground.js",
+    "frontend/src/art/village/terrain-materials.js",
+    "frontend/src/island/wall-batches.js",
+    "frontend/src/world/places/settlement.js"
+  ],
+  "unchanged": {
+    "backend": true,
+    "supabase/migrations": true,
+    "frontend/public": true,
+    "frontend/package.json": true,
+    "frontend/package-lock.json": true
+  },
+  "requiredAncestry": [
+    "66d29ea9",
+    "e636ae75",
+    "593fbaec"
+  ],
+  "originalCheckout": "unchanged HEAD and clean",
+  "identity": {
+    "user.name": "Johannes Franz Lang",
+    "user.email": "83476@novasbe.pt"
+  }
+}

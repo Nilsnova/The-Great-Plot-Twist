@@ -25,8 +25,9 @@ import { towerMaxHp } from './tower-health.js';
 import { blocksAsTower } from './tower-obstacles.js';
 import { toScreen } from '../world/pixel-glsl.js';
 import { WALL_LANE_ROWS } from '../island/wall-lanes.js';
+import {projectGround, LEGACY_DEPTH, groundProjectionGlsl} from '../world/projection.js';
 
-const Y = .72; // drawn y per world z (the island's tilt)
+const Y = LEGACY_DEPTH; // existing ground instance geometry is converted together in the vertex shader
 export const GUIDE = Object.freeze({
   routeLimit: 400,     // at most this many steps per route (a route never visits a cell twice)
   heartReach: CONFIG.boarding.heartRadius,
@@ -62,7 +63,8 @@ export function guideWalls(defenses = [], stateWalls = null) {
   const live = new Map((stateWalls ?? []).map(wall => [wall.id, wall]));
   return defenses.filter(item => item?.kind === 'wall' && Number.isFinite(item.x) && Number.isFinite(item.z)).map(item => {
     const level = Math.max(1, Math.min(CONFIG.levels.wall.length, Number.isInteger(item.level) ? item.level : 1));
-    const full = round2(CONFIG.levels.wall[level - 1].hp * (skillOf(item).hp ?? 1)), now = live.get(item.id);
+    const researchHp = CONFIG.research[item.bonus]?.hp ?? 1;
+    const full = round2(CONFIG.levels.wall[level - 1].hp * (skillOf(item).hp ?? 1) * researchHp), now = live.get(item.id);
     const maxHp = now?.maxHp > 0 ? now.maxHp : full, hp = now ? Math.max(0, now.hp) : startShare(item.health) * maxHp;
     return { id: item.id, x: item.x, z: item.z, level, hp: round2(hp), maxHp };
   }).sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
@@ -84,11 +86,11 @@ const startShare = health => (Number.isInteger(health) && health >= 0 && health 
  * A wall on the way is treated as broken once reached, so the line goes on through the gap it will make.
  * wave: the wave number (the boarders' hack and walk speed set what a breach costs against a detour).
  */
-export function guideRoute({ from, heart = CONFIG.boarding.heart, walls = [], towers = [], towerBlocking = false, coast = CONFIG.coast, wave = 1 }) {
+export function guideRoute({ from, heart = CONFIG.boarding.heart, walls = [], towers = [], towerBlocking = false, perimeterWalls = false, coast = CONFIG.coast, wave = 1 }) {
   const curve = curveFor(Math.max(1, wave || 1)), B = CONFIG.boarding;
   const copies = walls.map(wall => ({ id: wall.id, x: wall.x, z: wall.z, hp: wall.hp, maxHp: wall.maxHp }));
   const towerCopies = towers.map(tower => ({...tower}));
-  const paths = createBoarderPaths({ coast, heart, walls: copies, towers: towerCopies, towerBlocking,
+  const paths = createBoarderPaths({ coast, heart, walls: copies, towers: towerCopies, towerBlocking, perimeterWalls,
     pace: { hackPerSecond: B.hack * curve.damage / B.hackEvery, speed: B.speed * curve.speed } });
   paths.refresh();
   const walker = { x: from.x, z: from.z }, points = [{ x: from.x, z: from.z }], breaches = [];
@@ -117,14 +119,15 @@ export function guideRoute({ from, heart = CONFIG.boarding.heart, walls = [], to
 }
 
 /** A route per landing: [{id, landing, points, breaches, reachable}]. */
-export function guideRoutes({ landings = [], heart, walls = [], towers = [], towerBlocking = false, coast, wave }) {
-  return landings.map(landing => ({ id: landing.id, landing, ...guideRoute({ from: landing, heart, walls, towers, towerBlocking, coast, wave }) }));
+export function guideRoutes({ landings = [], heart, walls = [], towers = [], towerBlocking = false, perimeterWalls = false, coast, wave }) {
+  return landings.map(landing => ({ id: landing.id, landing, ...guideRoute({ from: landing, heart, walls, towers, towerBlocking, perimeterWalls, coast, wave }) }));
 }
 
-/** What changes a route: the landings and each wall's quarter of hp (the grid's own breach bands). */
-export function routeKey(landings, walls, wave, towers = [], towerBlocking = false) {
+/** Route identity includes absolute durability: the same quarter of a stronger obstacle costs more to breach. */
+export function routeKey(landings, walls, wave, towers = [], towerBlocking = false, perimeterWalls = false) {
   const band = wall => (wall.hp > 0 ? Math.ceil(wall.hp / wall.maxHp * 4) : 0);
-  return `${wave}|${towerBlocking ? 1 : 0}|${landings.map(item => `${item.id}:${item.x},${item.z}`).join(';')}|${walls.map(wall => `${wall.id}:${wall.x},${wall.z}:${band(wall)}`).join(';')}|${towers.map(tower => `${tower.id}:${tower.x},${tower.z}:${band(tower)}`).join(';')}`;
+  const obstacleKey = item => `${item.id}:${item.x},${item.z}:${item.maxHp}:${band(item)}`;
+  return `${perimeterWalls ? 'perimeter|' : ''}${wave}|${towerBlocking ? 1 : 0}|${landings.map(item => `${item.id}:${item.x},${item.z}`).join(';')}|${walls.map(obstacleKey).join(';')}|${towers.map(obstacleKey).join(';')}`;
 }
 
 /**
@@ -166,13 +169,17 @@ const SHAPE = { disc: 0, ring: 1, chevron: 2, icon: 3, box: 4, dashed: 5 };
 const ICONS = ['skull', 'heart', 'rubble'];
 const ICON_PX = 64;
 const vertex = /* glsl */`
+${groundProjectionGlsl}
+uniform bool uGround;
 attribute vec4 iPos;attribute vec2 iSize;attribute vec4 iColor;attribute vec4 iUv;
 varying vec2 vLocal;varying vec4 vColor;varying vec2 vUv;varying float vShape;
 void main(){
   vec2 corner=position.xy;vLocal=corner*2.0-1.0;vShape=iPos.w;vColor=iColor;vUv=mix(iUv.xy,iUv.zw,corner);
   vec2 local=(corner-.5)*iSize;float c=cos(iPos.z),s=sin(iPos.z);
   local=vec2(local.x*c-local.y*s,local.x*s+local.y*c);
-  gl_Position=projectionMatrix*viewMatrix*vec4(iPos.xy+local,0.0,1.0);
+  vec2 at=iPos.xy+local;
+  if(uGround)at=projectGround(vec2(at.x,-at.y/${LEGACY_DEPTH.toFixed(8)}));
+  gl_Position=projectionMatrix*viewMatrix*vec4(at,0.0,1.0);
 }`;
 const fragment = /* glsl */`
 uniform sampler2D uIcons;varying vec2 vLocal;varying vec4 vColor;varying vec2 vUv;varying float vShape;
@@ -275,7 +282,7 @@ const BAR = { good: RGB('#7ed957'), low: RGB('#ffd34d'), bad: RGB('#ff4a36') };
  * view: null (hide), or {mode: 'preview'|'wave', lanes (the wave_started lanes, or null: every sea lane), defenses
  * (where the walls stand), stateWalls (the sim's walls in a wave, else null), boarders, heart: {x, z}, wave, dt}.
  * preview draws faintly, over the wall lanes, without wall marks (view.wallLanes: false leaves the lanes out); wave draws everything. The
- * routes are worked out again only when routeKey() changes (a wall placed, broken, rebuilt or past a quarter of hp).
+ * routes are worked out again only when routeKey() changes (position, maximum hp or quarter-health band).
  */
 // sparse(): a phone-sized screen (overlap audit, 15 Nov): half the dots and fewer chevrons, so the routes stay readable.
 // Between waves the preview always draws half the dots and no chevrons.
@@ -284,11 +291,13 @@ export function createBattleGuide({ scene, reducedMotion = () => false, characte
   const owned = [], root = new THREE.Group(); root.name = 'battle-guide'; scene.add(root);
   const icons = paintIcons(), blank = icons ? null : new THREE.DataTexture(new Uint8Array([255, 255, 255, 255]), 1, 1);
   if (blank) blank.needsUpdate = true;
-  const material = new THREE.ShaderMaterial({ vertexShader: vertex, fragmentShader: fragment, uniforms: { uIcons: { value: icons ?? blank } },
+  const material = new THREE.ShaderMaterial({ vertexShader: vertex, fragmentShader: fragment, uniforms: { uIcons: { value: icons ?? blank }, uGround: {value: false} },
     transparent: true, premultipliedAlpha: true, depthTest: false, depthWrite: false, toneMapped: false });
-  owned.push(material, icons ?? blank);
+  const groundMaterial = material.clone(); groundMaterial.uniforms.uGround.value = true;
+  groundMaterial.uniforms.uIcons.value = material.uniforms.uIcons.value; // one owned icon texture for both layers
+  owned.push(material, groundMaterial, icons ?? blank);
   // On the ground (over the terrain, under every building and character) and in the air (badges and bars).
-  const ground = createInstances('ground', 1600, material, 9, owned), air = createInstances('air', 160, material, 936, owned);
+  const ground = createInstances('ground', 1600, groundMaterial, 9, owned), air = createInstances('air', 160, material, 936, owned);
   root.add(ground.mesh, air.mesh);
   let clock = 0, disposed = false, key = null, routes = [];
   const still = () => !!reducedMotion();
@@ -332,7 +341,8 @@ export function createBattleGuide({ scene, reducedMotion = () => false, characte
     // A shore wall on the landing would hide under the badge (and its hp bar collide with it): the badge then
     // moves seaward, still inside the ring.
     const [sx, sz] = skullAt(landing, heart, walls, k);
-    air.push(SHAPE.icon, sx, drawnY(sz) + 1.5 * k, 1.8 * k, 1.8 * k, { ...WHITE, a: Math.min(1, alpha + .3) }, { icon: 'skull' });
+    const badge = projectGround(sx, sz);
+    air.push(SHAPE.icon, badge.x, badge.y + 1.5 * k, 1.8 * k, 1.8 * k, { ...WHITE, a: Math.min(1, alpha + .3) }, { icon: 'skull' });
   }
   // D056: one box per run of a wall lane row (every half unit from x0 to x1 on row z, one grid cell round each).
   let laneBoxes = 0;
@@ -348,10 +358,11 @@ export function createBattleGuide({ scene, reducedMotion = () => false, characte
     const pulse = still() ? 1 : 1 + (live ? .08 : .04) * Math.sin(clock * 3), y = drawnY(heart.z), r = 4 * k * pulse;
     ground.push(SHAPE.ring, heart.x, y, r + .3 * k, (r + .3 * k) * Y, { ...DARK, a: .55 });
     ground.push(SHAPE.ring, heart.x, y, r, r * Y, { ...GOLD, a: live ? .95 : .75 });
-    air.push(SHAPE.icon, heart.x, y + 2.4 * k, 2 * k * pulse, 2 * k * pulse, { ...WHITE, a: 1 }, { icon: 'heart' });
+    const badge = projectGround(heart.x, heart.z);
+    air.push(SHAPE.icon, badge.x, badge.y + 2.4 * k, 2 * k * pulse, 2 * k * pulse, { ...WHITE, a: 1 }, { icon: 'heart' });
   }
   function drawWall(wall, attacked) {
-    const y = drawnY(wall.z), half = WALL_FOOTPRINT / 2;
+    const at = projectGround(wall.x, wall.z), half = WALL_FOOTPRINT / 2;
     if (!(wall.hp > 0)) {
       // The gap: the footprint outlined in red dashes on the ground, and the rubble badge over it.
       for (let i = 0; i < 8; i += 2) {
@@ -360,14 +371,14 @@ export function createBattleGuide({ scene, reducedMotion = () => false, characte
           ground.push(SHAPE.box, x, drawnY(z), .36, .3, { ...RED, a: .9 });
         }
       }
-      air.push(SHAPE.icon, wall.x, y + 1.3 * k, 1.5 * k, 1.5 * k, { ...WHITE, a: .95 }, { icon: 'rubble' });
+      air.push(SHAPE.icon, at.x, at.y + 1.3 * k, 1.5 * k, 1.5 * k, { ...WHITE, a: .95 }, { icon: 'rubble' });
       return;
     }
     const bar = wallBar(wall, attacked);
     if (!bar) return;
-    const w = 1.6 * k, h = .22 * k, top = y + 1.45 * k;
-    air.push(SHAPE.box, wall.x, top, w + .14 * k, h + .14 * k, { ...DARK, a: .9 });
-    air.push(SHAPE.box, wall.x - w / 2 * (1 - bar.share), top, w * bar.share, h, { ...BAR[bar.level], a: 1 });
+    const w = 1.6 * k, h = .22 * k, top = at.y + 1.45 * k;
+    air.push(SHAPE.box, at.x, top, w + .14 * k, h + .14 * k, { ...DARK, a: .9 });
+    air.push(SHAPE.box, at.x - w / 2 * (1 - bar.share), top, w * bar.share, h, { ...BAR[bar.level], a: 1 });
   }
 
   return {
@@ -379,15 +390,17 @@ export function createBattleGuide({ scene, reducedMotion = () => false, characte
         thin = !!sparse();
         clock += Math.max(0, Math.min(.1, view.dt || 0));
         const live = view.mode === 'wave', alpha = live ? .95 : GUIDE.previewAlpha;
-        if (!live && view.wallLanes !== false) drawLanes(); else laneBoxes = 0; // D056: under everything else
+        // Village management already shows its precise grid. Combat still draws useful live guidance.
+        if (!live && view.managing === true) { laneBoxes = 0; ground.end(); air.end(); return; }
+        if (!live && view.perimeterWalls !== true && view.wallLanes !== false) drawLanes(); else laneBoxes = 0;
         k = live ? Math.max(1, Math.min(2, Number(characterScale()) || 1)) : 1;
         const landings = view.lanes?.length ? waveLandings(view.lanes) : laneLandings();
         const walls = guideWalls(view.defenses ?? [], view.stateWalls ?? null), attacked = attackedWalls(view.boarders);
-        const towerBlocking = view.towerObstacles === true;
+        const towerBlocking = view.towerObstacles === true, perimeterWalls = view.perimeterWalls === true;
         const towers = towerBlocking ? guideTowers(view.defenses ?? [], view.stateTowers ?? null) : [];
         const heart = view.heart ?? CONFIG.boarding.heart;
-        const next = `${heart.x},${heart.z}|${routeKey(landings, walls, view.wave ?? 1, towers, towerBlocking)}`;
-        if (next !== key) { key = next; routes = guideRoutes({ landings, heart, walls, towers, towerBlocking, wave: view.wave ?? 1 }); }
+        const next = `${heart.x},${heart.z}|${routeKey(landings, walls, view.wave ?? 1, towers, towerBlocking, perimeterWalls)}`;
+        if (next !== key) { key = next; routes = guideRoutes({ landings, heart, walls, towers, towerBlocking, perimeterWalls, wave: view.wave ?? 1 }); }
         for (const route of routes) drawRoute(route, alpha, live);
         for (const route of routes) drawLanding(route.landing, alpha, live, heart, walls);
         drawHeart(heart, live);

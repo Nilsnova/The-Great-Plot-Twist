@@ -1,0 +1,49 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run --maxWorkers=1 --reporter=verbose tests/island/structure-recovery-api.test.js
+
+
+ RUN  v5.1.0 /workspace/reference-village-work/latest-main-preview/frontend
+
+ ✓ tests/island/structure-recovery-api.test.js > structure recovery API > requests protocol two from the persisted policy and preserves the entire recovery wave DTO 6ms
+ ✓ tests/island/structure-recovery-api.test.js > structure recovery API > lets a second player find a teammate's recovery wave without a token and join it for their own 3ms
+ ✓ tests/island/structure-recovery-api.test.js > structure recovery API > advertises protocol two for first-wave admission while accepting a frozen legacy reply 1ms
+ × tests/island/structure-recovery-api.test.js > structure recovery API > refuses local legacy perimeter data mixed into a public recovery wave 10ms
+   → expected true to be false // Object.is equality
+ ✓ tests/island/structure-recovery-api.test.js > structure recovery API > accepts only the canonical versioned state and requests it for the selected island 2ms
+ ✓ tests/island/structure-recovery-api.test.js > structure recovery API > submits the quoted fields and retries an unknown result with the same action UID 1ms
+ ✓ tests/island/structure-recovery-api.test.js > structure recovery API > keeps a stale quote response current state and wallet separately from the refusal 7ms
+ ✓ tests/island/structure-recovery-api.test.js > structure recovery API > remembers the server spot alias from the canonical recovery view for the repair request 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/island/structure-recovery-api.test.js > structure recovery API > refuses local legacy perimeter data mixed into a public recovery wave
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/island/structure-recovery-api.test.js:104:36
+    102|       const data = {...open, rules: ['pathing'], perimeterDemo};
+    103|       expect(isWave(data)).toBe(false);
+    104|       expect(isJoinableWave(data)).toBe(false);
+       |                                    ^
+    105|       const api = createIslandApi({waveProtocol: () => 2, transport: {
+    106|         get: async () => ({ok: true, data}), post: async () => null,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 7 passed (8)
+   Start at  21:32:42
+   Duration  438ms (transform 49%, import 36%, tests 14%, worker 2%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice

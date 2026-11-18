@@ -1,0 +1,109 @@
+{
+  "mode": "after",
+  "root": "/workspace/village-perimeter-work/base-02/frontend",
+  "fixture": "actual Chromium / local fake API, not production",
+  "screens": [
+    {
+      "width": 1280,
+      "height": 720,
+      "name": "after-1280x720.png",
+      "initial": {
+        "zoom": 0.2596973062386623,
+        "captain": [
+          -7,
+          1.03,
+          -11
+        ]
+      },
+      "workingPan": -2.8632883120152677,
+      "workingZoom": 0.7125183501775498,
+      "buttons": [
+        {
+          "width": 44,
+          "height": 44,
+          "hit": true
+        },
+        {
+          "width": 44,
+          "height": 44,
+          "hit": true
+        },
+        {
+          "width": 44,
+          "height": 44,
+          "hit": true
+        },
+        {
+          "width": 71.921875,
+          "height": 46.09375,
+          "hit": true
+        }
+      ],
+      "rendering": {
+        "zoom": 0.9479750098964783,
+        "position": [
+          -3.001347480459389,
+          1.3957005134700844,
+          100
+        ],
+        "pixelRatio": 1,
+        "drawingWidth": 1280,
+        "drawingHeight": 720,
+        "quality": "high",
+        "densityScale": 1
+      }
+    },
+    {
+      "width": 375,
+      "height": 812,
+      "name": "after-375x812.png",
+      "initial": {
+        "zoom": 0.2991367028173087,
+        "captain": [
+          -7,
+          1.03,
+          -11
+        ]
+      },
+      "workingPan": -2.667727677281845,
+      "workingZoom": 0.6840559899857593,
+      "buttons": [
+        {
+          "width": 44,
+          "height": 44,
+          "hit": true
+        },
+        {
+          "width": 44,
+          "height": 44,
+          "hit": true
+        },
+        {
+          "width": 44,
+          "height": 44,
+          "hit": true
+        },
+        {
+          "width": 71.921875,
+          "height": 46.09375,
+          "hit": true
+        }
+      ],
+      "rendering": {
+        "zoom": 0.8237977937996419,
+        "position": [
+          -3.4384107560824444,
+          -1.5826829599207046,
+          100
+        ],
+        "pixelRatio": 1,
+        "drawingWidth": 375,
+        "drawingHeight": 812,
+        "quality": "high",
+        "densityScale": 1
+      }
+    }
+  ],
+  "pageErrors": 0,
+  "externalRequests": 0
+}

@@ -1,0 +1,186 @@
+{
+  "status": "intermediate functional pass; final visual/device/full-suite acceptance pending; breach draw target not met",
+  "runtime": "414559fba3efade531de71acd7f24593f65b006d",
+  "frontendSourceTree": "b765286c950b39405ebfd2767ad5c45e2af9ba4d",
+  "compatibleMainAncestryCandidate": "591813762a11fa29dee9097a79811831982eb0ef",
+  "identicalTrees": {
+    "frontend/src": "b765286c950b39405ebfd2767ad5c45e2af9ba4d",
+    "frontend/public": "9306942db1050d728799cee2fbdc8e8960f14ad2",
+    "backend": "e8d128f1ed1830a052aa1407858d8d899d3cb2d8"
+  },
+  "helperCommit": "074a4675b99c68a41604bb1658943f5dfb1ee067",
+  "helperSha256": {
+    "capture-village-composition.mjs": "0ffcefb64fd6a32f6348e6c35542bd54887e07b8fe8aed0eb85f904e427dbda8",
+    "perimeter-game-ui.mjs": "8f47d596ea378800b89e88171ab58aa37477faf892658cd7aca7c20f327a8ffb",
+    "perimeter-game-wave.mjs": "9c2f3a1951a1a57154c93e7cc113a33fc3b6dd16eb895126eac5eb5adb7547af"
+  },
+  "copyMethod": "byte-for-byte from coordinator stage-04-complete; no pixel editing or re-encoding",
+  "files": [
+    {
+      "file": "report.json",
+      "bytes": 4530058,
+      "sha256": "896e6e5d027dbc157a689df330a6cc0489950e9a47cc692fc264fd2a3395616d",
+      "kind": "raw-report"
+    },
+    {
+      "file": "reference-arranged-1280x720.png",
+      "bytes": 1170743,
+      "sha256": "a9bbd691e799bef9dc53bc9814882d4c6d65d5a89885bf5bc261147d55c144ed",
+      "kind": "actual-screenshot",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "file": "reference-arranged-375x812.png",
+      "bytes": 443094,
+      "sha256": "37ccd483a7f7ae6a19b409f5857589bb3f68bd304a49b9eb723d2bf381901ca5",
+      "kind": "actual-screenshot",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "file": "reference-entry-1280x720.png",
+      "bytes": 1173701,
+      "sha256": "e6669588e3ca1c02b74ec43172364a6414eb29b58d3b37fd4d215bb4afa7d347",
+      "kind": "actual-screenshot",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "file": "reference-entry-375x812.png",
+      "bytes": 441724,
+      "sha256": "ffcd0972ec50df3445e7a251208d8e4e97fd622e9a50755e18792bf521e3f1b4",
+      "kind": "actual-screenshot",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "file": "reference-fit-1280x720.png",
+      "bytes": 1128151,
+      "sha256": "49e7c0fa23317a37d501936f9d0f9576cbab2123eb2d61cdd4555bef875197b4",
+      "kind": "actual-screenshot",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "file": "reference-fit-375x812.png",
+      "bytes": 310720,
+      "sha256": "685f2c40b2cc6e7dc7b7c2122623a185a4bc87c5176db0bf535f5307dd578671",
+      "kind": "actual-screenshot",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "file": "reference-move-level3-1280x720.png",
+      "bytes": 1114543,
+      "sha256": "191d03405fafa68e82d0ab943446b7f4260beaf5386f005239fada3faa970686",
+      "kind": "actual-screenshot",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "file": "reference-move-level3-375x812.png",
+      "bytes": 333646,
+      "sha256": "5f2294d22bbde357832958b183897a4c7b6b9d2a522377aeeebf9845fea79a80",
+      "kind": "actual-screenshot",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "file": "reference-selected-level3-1280x720.png",
+      "bytes": 1136051,
+      "sha256": "e49162040c1b313ab2d06d5ca76c8a5e55a7112e26a60b64e6c6e111f6e56014",
+      "kind": "actual-screenshot",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "file": "reference-selected-level3-375x812.png",
+      "bytes": 306264,
+      "sha256": "f1945f22dcb125f0ee9d35c51f810baf50c18012a7020a71692fbfe1867fd7b6",
+      "kind": "actual-screenshot",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "file": "reference-wall-draft-1280x720.png",
+      "bytes": 917137,
+      "sha256": "5298f7947667e7aa39d4fbd6eb0d540943de233df6164299bee674cd80f345f7",
+      "kind": "actual-screenshot",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "file": "reference-wall-draft-375x812.png",
+      "bytes": 363357,
+      "sha256": "bb291f7254ba050f18361b8a7ca7ca579b40b34a6eef7e4bcaabdc40d8c412c2",
+      "kind": "actual-screenshot",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "file": "reference-wall-draft-fine-1280x720.png",
+      "bytes": 898305,
+      "sha256": "5b8c21e764706a79e1a8e312a63121d26a2f15fa17304281ded93092987165cf",
+      "kind": "actual-screenshot",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "file": "reference-wall-draft-fine-375x812.png",
+      "bytes": 273425,
+      "sha256": "a7ccce1d370e147cb4df40f00276251bb31bf410f7bba7e2c09c321d6a4fd4f0",
+      "kind": "actual-screenshot",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "file": "wave-breach-1280x720.png",
+      "bytes": 1193908,
+      "sha256": "4d38b187189dc822a2b6aa4d5d6d7b5c4a72a8ff638611d62e78ddcb0ba35d20",
+      "kind": "actual-screenshot",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "file": "wave-breach-375x812.png",
+      "bytes": 316559,
+      "sha256": "3576a8762784fc3397dedb8ce68380d027f9d4efc0f8a8ec1fdf78938631256d",
+      "kind": "actual-screenshot",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "file": "wave-projectiles-1280x720.png",
+      "bytes": 1080253,
+      "sha256": "895bc75da4ff993754cc2b5183490dafdf3b57c9590f83eaab30dfcf1e42b474",
+      "kind": "actual-screenshot",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "file": "wave-projectiles-375x812.png",
+      "bytes": 260129,
+      "sha256": "0836b5719b5c1a1186752d54544db483cc534f231fc3a25e7ca976236bb55a7a",
+      "kind": "actual-screenshot",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "file": "wave-standing-1280x720.png",
+      "bytes": 1057053,
+      "sha256": "ad9794bfdb2606cb5048c6b7865e3117d04618db0e8734cb9331003058590100",
+      "kind": "actual-screenshot",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "file": "wave-standing-375x812.png",
+      "bytes": 277057,
+      "sha256": "f2fa053cb8436a4c31821d79516686f16c8de779d0505cd56c07722899bd515a",
+      "kind": "actual-screenshot",
+      "width": 375,
+      "height": 812
+    }
+  ]
+}

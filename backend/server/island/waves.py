@@ -160,6 +160,7 @@ async def start_protocol2(
     protocol: int = 2,
     resolved: tuple[str, str | None] | None = None,
     make_seed: Callable[[int], int] = secrets.randbelow,
+    wall_client_version: int = 0,
 ) -> WaveStart:
     """Start or replay a wave using capability-aware, atomic v1 admission."""
     place, owner = resolved or await find_place(
@@ -183,9 +184,10 @@ async def start_protocol2(
         "p_snapshot_template": snapshot_template,
         "p_admit_v1": admit_v1 and place == "island",
         "p_protocol": protocol,
+        "p_wall_client_version": wall_client_version,
     }
     reply = await wave_recovery.call_lifecycle_rpc(
-        admin, "recovery_wave_start", arguments, statuses={"started"}
+        admin, "perimeter_wave_start", arguments, statuses={"started"}
     )
     return recovery_wave_of(catalogue, reply)
 
@@ -224,6 +226,28 @@ def recovery_wave_of(
     ):
         raise SupabaseRejected("The database sent an incoherent recovery wave version.")
     snapshot = reply.get("initialSnapshot")
+    create = snapshot.get("createWave") if isinstance(snapshot, dict) else None
+    create = create if isinstance(create, dict) else {}
+    if isinstance(snapshot, dict) and (
+        snapshot.get("wallRuleVersion") == 1
+        or snapshot.get("wallCapacity") == 128
+        or create.get("perimeterWalls") is True
+    ):
+        if (
+            type(snapshot.get("wallRuleVersion")) is not int
+            or snapshot.get("wallRuleVersion") != 1
+            or type(snapshot.get("wallCapacity")) is not int
+            or snapshot.get("wallCapacity") != 128
+            or type(snapshot.get("configVersion")) is not int
+            or snapshot.get("configVersion") != 1
+            or create.get("perimeterWalls") is not True
+            or create.get("pathing") is not True
+            or not isinstance(snapshot.get("rules"), list)
+            or "pathing" not in snapshot.get("rules", [])
+        ):
+            raise SupabaseRejected("The frozen perimeter wave configuration is incomplete.")
+        # SQL health configuration remains v1; public geometry v2 fences older sim clients.
+        snapshot = {**snapshot, "configVersion": 2}
     token = reply.get("participantToken")
     counter = reply.get("lastActorCounter")
     not_joined = (

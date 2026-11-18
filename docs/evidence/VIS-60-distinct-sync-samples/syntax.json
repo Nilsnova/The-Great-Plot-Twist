@@ -1,0 +1,12 @@
+{
+  "source": "8b901604be03076a70802f7140c80871aa742293",
+  "command": [
+    "node",
+    "--check",
+    "scripts/check-multiplayer.js"
+  ],
+  "exitCode": 0,
+  "stdout": "",
+  "stderr": "",
+  "checkedAt": "2026-11-18T01:29:15.649820+00:00"
+}

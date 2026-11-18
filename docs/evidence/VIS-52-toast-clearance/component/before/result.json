@@ -1,0 +1,19 @@
+{
+  "source": "52f6bb158b03188b57260c1872e273391598debf",
+  "frontendTree": "6e0c6b27b717a7b8eedcde498d7372de6f0942cb",
+  "helperSha256": "02d4a240d44b96dce9e01ec23408bdce8e741b77c37981117f27238512ec862b",
+  "helperSource": "ea87f882",
+  "scope": "Actual source52 runtime plus identical newly introduced native regression helper; expected geometry failures, no source patch.",
+  "started": "2026-11-17T22:45:26.726981+00:00",
+  "command": [
+    "npm",
+    "test",
+    "--",
+    "--maxWorkers=1",
+    "tests/ui/toast-clearance.test.js",
+    "--reporter=verbose"
+  ],
+  "exitCode": 1,
+  "seconds": 11.54,
+  "finished": "2026-11-17T22:45:38.264820+00:00"
+}

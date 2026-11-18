@@ -1,0 +1,46 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run --maxWorkers=1 tests/art/landscape-materials.test.js tests/art/terrain-materials.test.js tests/art/coast-cliffs.test.js tests/art/coast-water.test.js tests/world/ground-transform.test.js tests/art/terrain-backdrop-lifetime.test.js --reporter=verbose
+
+
+ RUN  v5.1.0 /workspace/reference-village-work/landscape-polish/frontend
+
+ ✓ tests/art/coast-water.test.js > the real decorative coast field > binds the cold manual affine backdrop before the first render or forced matrix update 76ms
+ ✓ tests/art/coast-water.test.js > the real decorative coast field > keeps water clear, land zero-distance, native-distance scale and image-row orientation 5ms
+ ✓ tests/art/coast-water.test.js > the real decorative coast field > refreshes another place, maps its translated ground and clears stale coast on failure 53ms
+ ✓ tests/art/coast-water.test.js > sea ownership and existing effect controls > shares weather/coast/quality/time references with the existing lighthouse beam 25ms
+ ✓ tests/art/coast-water.test.js > sea ownership and existing effect controls > retains the boss pace and repeated reduced-motion time-zero behavior 2ms
+ ✓ tests/art/coast-water.test.js > sea ownership and existing effect controls > owns one water mesh/material and releases those without destroying shared coast state 3ms
+ ✓ tests/world/ground-transform.test.js > projected ground buffers and coast sampling > keeps both real backdrop paths and upright feet on exactly one affine surface 6ms
+ ✓ tests/world/ground-transform.test.js > projected ground buffers and coast sampling > uses the complete inverse for coast UVs under shear, translation and parent scale 2ms
+ ✓ tests/world/ground-transform.test.js > projected ground buffers and coast sampling > projects every move/lane vertex while retaining positive winding and the real footprint size 6ms
+ ✓ tests/world/ground-transform.test.js > projected ground buffers and coast sampling > projects a real ground light instance while keeping its upright halo proportions 2ms
+ ✓ tests/world/ground-transform.test.js > projected ground buffers and coast sampling > places and releases an independent selected bracket without creating Move state 4ms
+ ✓ tests/art/coast-cliffs.test.js > decorative cliffs and the unchanged walkable top > keeps every original top point on the same analytic boundary and projection 94ms
+ ✓ tests/art/coast-cliffs.test.js > decorative cliffs and the unchanged walkable top > bounds every decorative face within the existing legacy paint backdrop and paint-X extent 20ms
+ ✓ tests/art/coast-cliffs.test.js > decorative cliffs and the unchanged walkable top > keeps every current naval/beach window shallow and eases into taller faces between lanes 3ms
+ ✓ tests/art/coast-cliffs.test.js > decorative cliffs and the unchanged walkable top > is deterministic and leaves other analytic surfaces unchanged 5ms
+ ✓ tests/art/terrain-backdrop-lifetime.test.js > temporary terrain decode ownership > paints while leased, then releases the source while returning only the owned texture 3ms
+ ✓ tests/art/terrain-backdrop-lifetime.test.js > temporary terrain decode ownership > releases after a painter or texture failure and never invents a successful backdrop 3ms
+ ✓ tests/art/terrain-backdrop-lifetime.test.js > temporary terrain decode ownership > propagates failed acquisition without painting and leaves other places on their old route 1ms
+ ✓ tests/art/terrain-materials.test.js > original terrain source mapping > maps four separate inset source regions inside the actual committed PNG 9ms
+ ✓ tests/art/terrain-materials.test.js > original terrain source mapping > keeps visible cells identical when a different region or resolution is painted 2ms
+ ✓ tests/art/terrain-materials.test.js > original terrain source mapping > keeps the richer meadow inside analytic land and the existing approaches sandy 6ms
+ ✓ tests/art/landscape-materials.test.js > landscape material follow-up > keeps the exact original four inset source crops without shipping a new texture 2ms
+ ✓ tests/art/landscape-materials.test.js > landscape material follow-up > uses modestly larger pavers at stable world anchors, independent of the clipped region 2ms
+ ✓ tests/art/landscape-materials.test.js > landscape material follow-up > retains every original cliff point and logical land value from the pinned base 3ms
+ ✓ tests/art/landscape-materials.test.js > landscape material follow-up > changes paver sampling without widening the existing path or its clearing 1ms
+
+ Test Files  6 passed (6)
+      Tests  25 passed (25)
+   Start at  00:00:04
+   Duration  2.49s (transform 43%, import 33%, tests 22%, worker 2%)
+
+    Isolate  6 workers spawned · ~142ms startup each (spawn + environment, per file)
+             at least ~708ms faster with isolate: false — reuses workers across files instead of one per file
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice

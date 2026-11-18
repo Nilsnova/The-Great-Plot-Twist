@@ -53,7 +53,7 @@ export function buildCardModel({spotId, kind, slot = null, spot = null, coins = 
   const enough = price => coins !== null && Number.isSafeInteger(price) && coins >= price;
   const short = price => `Not enough 🪙: you need ${coinText(price - coins)} more.`;
   const model = {spotId, slot: place, title: info?.name ?? 'Tower spot', purpose: info?.line ?? (point ? 'Build a cannon or a mortar here.' : 'Build a cannon, a mortar or a harpoon tower here.'),
-    mode: 'info', built, kind: shown, level, maxLevel: shown ? maxLevel(shown) : 0, pips: [], stats: '', choices: [], cost: '',
+    mode: 'info', built, kind: shown, level, spec: built ? spot.spec ?? null : null, maxLevel: shown ? maxLevel(shown) : 0, pips: [], stats: '', choices: [], cost: '',
     button: '', disabled: true, reason: '', upgrade: null, soon: '', message, busy, skills: null, locked: false,
     coins: coins === null ? '' : `You have ${coinText(coins)}`,
     owner: point ? 'Paid by you · belongs to Pirate Point' : visitor ? `You pay · it stays on ${ownerName ? `${ownerName}'s` : 'this'} island` : '', hire: false,
@@ -66,6 +66,7 @@ export function buildCardModel({spotId, kind, slot = null, spot = null, coins = 
   model.hire = !point && !visitor && built && (place === 'tower' || place === 'wall');
   if (!point && built && ['wall', 'cannon', 'mortar', 'harpoon', 'culverin', 'swivel'].includes(shown) && recoveryStatus !== 'disabled') {
     const recovery = recoveryState?.structures?.find(item => item.spot === spotId) ?? null;
+    model.recoveryLevel = recovery?.level ?? null;
     model.recovery = buildStructureRecoveryView(recoveryState, recovery, {
       status: recoveryPending ? 'submitting' : recoveryStatus,
       errorCode: recoveryError,
@@ -117,7 +118,7 @@ export function buildCardModel({spotId, kind, slot = null, spot = null, coins = 
   const recoveryRow = recoveryState?.recoveryVersion === 1
     ? recoveryState.structures?.find(item => item.spot === spotId) : null;
   if (shown === 'wall' && recoveryRow) model.stats = model.stats.replace(/^Strength\b/, 'Base strength');
-  const recoveryUnavailable = recoveryStatus === 'loading' || recoveryStatus === 'error';
+  const recoveryUnavailable = recoveryStatus === 'loading' || recoveryStatus === 'error' || (!!recoveryRow && recoveryRow.level !== level);
   const upgradeBlockedReason = recoveryUnavailable ? 'Building health is unavailable. Try again.'
     : recoveryRow && recoveryState.recoveryVersion === 1
     ? recoveryState.repairWindow === 'reserved_wave' ? 'Upgrades are available between waves.'
@@ -130,6 +131,7 @@ export function buildCardModel({spotId, kind, slot = null, spot = null, coins = 
   if (allowed(shown) < next) { model.soon = `Level ${next}: ${opensText(lockedWave(unlocks, {kind: shown, level: next}) ?? '?')}.`; return model; }
   const price = Number.isSafeInteger(spot.upgradeCost) ? spot.upgradeCost : priceFor(shown, level, prices);
   model.mode = 'upgrade';
+  model.upgradePrice = coinText(price);
   model.upgrade = {label: `Level ${next} · ${coinText(price)}`, stats: statLine(shown, level, next)};
   if (shown === 'wall' && recoveryRow) model.upgrade.stats = model.upgrade.stats.replace(/^Strength\b/, 'Base strength');
   model.button = busy ? 'Upgrading…' : 'Upgrade';

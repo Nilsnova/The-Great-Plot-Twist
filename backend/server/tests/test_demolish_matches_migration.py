@@ -21,6 +21,7 @@ TOWER_DEFENSE = MIGRATIONS / "20261111030000_tower_defense.sql"
 TIERS = MIGRATIONS / "20261112070000_tower_tiers.sql"
 MORE_TOWER_SPOTS = MIGRATIONS / "20261117010000_more_tower_spots.sql"
 RECOVERY_MUTATIONS = MIGRATIONS / "20261117050000_structure_recovery_mutations.sql"
+WALL_COHORT = MIGRATIONS / "20261117143000_wall_demolition_cohort.sql"
 
 REFUND_NOTE = (
     "  -- 20261112080000_demolish.sql: who paid for this {}, for a refund when it is torn down.\n"
@@ -81,8 +82,9 @@ def test_no_later_migration_changes_the_build_or_upgrade_functions_again():
         )
     ]
     # D060 widens the demolish spots; T55 then adds recovery settlement/identity handling while
-    # preserving the payment/refund rows and all supported plots.
-    assert later == [MORE_TOWER_SPOTS.name, RECOVERY_MUTATIONS.name]
+    # preserving the payment/refund rows and all supported plots. WALL-21 admits the full
+    # canonical wall cohort and checks current authorization before replaying a receipt.
+    assert later == [MORE_TOWER_SPOTS.name, RECOVERY_MUTATIONS.name, WALL_COHORT.name]
 
 
 def test_recovery_replacements_preserve_build_upgrade_payments_and_demolish_refunds():
@@ -99,6 +101,68 @@ def test_recovery_replacements_preserve_build_upgrade_payments_and_demolish_refu
     assert "insert into public.building_demolitions" in demolish
     assert "structure_recovery_mutation_begin(p_island_owner)" in demolish
     assert "structure_recovery_mutation_finish(p_island_owner, v_recovery)" in demolish
+
+
+def test_latest_cohort_quote_changes_only_the_canonical_wall_admission():
+    before = body(MORE_TOWER_SPOTS.read_text(), "island_demolish_quote")
+    after = body(WALL_COHORT.read_text(), "island_demolish_quote")
+    old_guard = f"if p_plot !~ {D060_PLOT_RULE} then"
+    new_guard = (
+        "if public.island_wall_number(p_plot) is null\n"
+        "     and p_plot !~ '^(cannon_([1-9]|1[01])|tower_1|house_[12])$' then"
+    )
+    assert before.count(old_guard) == 1
+    assert after == before.replace(old_guard, new_guard)
+
+
+def test_latest_cohort_preserves_the_complete_locked_payment_refund_and_recovery_path():
+    before = body(RECOVERY_MUTATIONS.read_text(), "island_demolish")
+    after = body(WALL_COHORT.read_text(), "island_demolish")
+    # Everything from the first building read remains byte-for-byte equal, except the
+    # intentional UID intent check on the second receipt lookup after waiting for locks.
+    anchor = "  select * into v_building\n"
+    conflict_check = (
+        "      if v_done.island_owner <> p_island_owner or v_done.plot <> p_plot then\n"
+        "        return jsonb_build_object('status', 'refused', 'reason', 'action_uid_conflict');\n"
+        "      end if;\n"
+    )
+    tail = after[after.index(anchor) :]
+    assert tail.count(conflict_check) == 1
+    assert tail.replace(conflict_check, "") == before[before.index(anchor) :]
+
+
+def test_latest_cohort_authorizes_receipt_replay_and_binds_both_replays_to_the_intent():
+    latest = body(WALL_COHORT.read_text(), "island_demolish")
+    first_receipt = latest.index("  select * into v_done\n")
+    admission = latest[:first_receipt]
+    assert "public.island_wall_number(p_plot) is null" in admission
+    assert "'reason', 'no_island'" in admission
+    assert "from public.island_members" in admission
+    assert "left_at is null" in admission
+    assert "'reason', 'not_member'" in admission
+    replay = latest[first_receipt : latest.index("  select * into v_building\n")]
+    assert replay.index("from public.islands where player_id = p_island_owner for update;") < (
+        replay.index("from public.island_members")
+    )
+    assert replay.index("'reason', 'not_member'") < replay.index("'repeat', true")
+    intent = "v_done.island_owner <> p_island_owner or v_done.plot <> p_plot"
+    assert latest.count(intent) == 2
+    assert latest.count("'reason', 'action_uid_conflict'") == 2
+
+
+def test_latest_cohort_functions_keep_the_service_only_execution_boundary():
+    text = WALL_COHORT.read_text()
+    for name in ("island_demolish_quote", "island_demolish"):
+        assert re.search(
+            rf"revoke all on function public\.{name}\([^)]*\)\s+"
+            r"from public, anon, authenticated, service_role;",
+            text,
+        ), name
+        assert re.search(
+            rf"grant execute on function public\.{name}\([^)]*\)\s+to service_role;", text
+        ), name
+        latest = body(text, name)
+        assert "security invoker" in latest and "set search_path = ''" in latest, name
 
 
 def test_the_extra_tower_spots_widen_only_the_plot_test_of_the_tear_down():

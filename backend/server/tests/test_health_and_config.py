@@ -82,6 +82,7 @@ def test_config_lists_all_flags_in_the_agreed_order():
         "ship_fire",
         "more_tower_spots",
         "structure_recovery",
+        "perimeter_walls",
     ]
 
 

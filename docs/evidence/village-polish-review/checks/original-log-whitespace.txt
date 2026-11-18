@@ -1,0 +1,3 @@
+docs/evidence/village-polish-review/checks/final-vis60/frontend.log:4884: new blank line at EOF.
+docs/evidence/village-polish-review/checks/first-7fab/frontend.log:4757: new blank line at EOF.
+docs/evidence/village-polish-review/checks/post-vis59-0a/frontend.log:4852: new blank line at EOF.

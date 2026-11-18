@@ -14,7 +14,9 @@ beforeAll(() => { globalThis.Path2D ??= FakePath; });
 // A 2D context that records the sequence of calls; any property write is accepted.
 function recorder() {
   const calls = [], c = new Proxy({}, {
-    get: (target, key) => (key === 'calls' ? calls : key === 'shadows' ? null : key in target ? target[key] : (...args) => { calls.push(String(key)); return undefined; }),
+    get: (target, key) => (key === 'calls' ? calls : key === 'shadows' ? null
+      : key === 'createLinearGradient' ? () => { calls.push('createLinearGradient'); return {addColorStop(at, colour) { calls.push(`stop:${at}:${colour}`); }}; }
+      : key in target ? target[key] : (...args) => { calls.push(String(key)); return undefined; }),
     set: (target, key, value) => { target[key] = value; return true; },
   });
   return c;

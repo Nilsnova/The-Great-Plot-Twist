@@ -1,0 +1,25 @@
+{
+  "source": "733cced0af1c80b1a798c11e1459c4519e8aef11",
+  "backendTree": "c785196095edef4f5416744b46435ab564da4e9c",
+  "supabaseTree": "6e52a63b87028291127dbae8c344c9f49a73896d",
+  "started": "2026-11-17T21:47:33.455916+00:00",
+  "command": [
+    "uv",
+    "run",
+    "--frozen",
+    "--no-env-file",
+    "--with",
+    "pgserver",
+    "--with",
+    "psycopg[binary]",
+    "pytest",
+    "-q",
+    "server/tests/island_sql/test_recovery_finish_checkpoint_guard_sql.py",
+    "--basetemp",
+    "/workspace/reference-village-work/vis50-pg-checks/scratch-progress-green"
+  ],
+  "scope": "Strengthened refused-finish progress tuple; same already-verified production SQL tree.",
+  "exitCode": 0,
+  "seconds": 3.81,
+  "finished": "2026-11-17T21:47:37.268224+00:00"
+}

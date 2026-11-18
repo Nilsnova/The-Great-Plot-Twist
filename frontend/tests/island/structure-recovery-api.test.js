@@ -35,7 +35,7 @@ describe('structure recovery API', () => {
     expect(isWave(data)).toBe(true);
     expect((await api.startWave({where: 'own'})).data).toEqual(data);
     expect(sent[0]).toMatchObject({method: 'post', path: PATHS.start,
-      body: {where: 'own', actionUid: 'wave-action-1', waveProtocol: 2}});
+      body: {where: 'own', actionUid: 'wave-action-1', waveProtocol: 2, wallClientVersion: 1}});
     expect((await api.joinWave({waveId})).data.initialSnapshot).toEqual(data.initialSnapshot);
     expect(sent[1]).toEqual({method: 'post', path: PATHS.join, body: {waveId, waveProtocol: 2}});
     expect((await api.currentWave({where: 'own'})).data.participantToken).toBe(token);
@@ -88,7 +88,27 @@ describe('structure recovery API', () => {
     }});
     expect(isWave(legacy)).toBe(true);
     expect((await api.startWave({where: 'own'})).data).toEqual(legacy);
-    expect(sent).toEqual({path: PATHS.start, body: {where: 'own', actionUid: 'new-island-wave', waveProtocol: 2}});
+    expect(sent).toEqual({path: PATHS.start, body: {where: 'own', actionUid: 'new-island-wave', waveProtocol: 2, wallClientVersion: 1}});
+  });
+
+  it('refuses local legacy perimeter data mixed into a public recovery wave', async () => {
+    const full = recoveryWave(waveId);
+    const {initialSnapshot: _snapshot, participantToken: _token, lastActorCounter: _counter, ...open} = full;
+    const legacyDemo = {version: 1, waveId, wave: open.wave, seed: open.seed, startsAt: open.startsAt,
+      islandEpoch: epoch, pathing: true, perimeterWalls: true, defenses: [],
+      crew: {gunner: 0, carpenter: 0, lookout: 0, guard: 0}};
+    expect(isWave({...open, recoveryVersion: 0, waveProtocol: 1, rules: ['pathing'], perimeterDemo: legacyDemo})).toBe(true);
+    for (const perimeterDemo of [null, {}, legacyDemo]) {
+      const data = {...open, rules: ['pathing'], perimeterDemo};
+      expect(isWave(data)).toBe(false);
+      expect(isJoinableWave(data)).toBe(false);
+      const api = createIslandApi({waveProtocol: () => 2, transport: {
+        get: async () => ({ok: true, data}), post: async () => null,
+      }});
+      const events = [], flow = createWaveFlow({api, emit: event => events.push(event), setTimer: () => 0, clearTimer: () => {}});
+      expect((await flow.look()).ok).toBe(false);
+      expect(flow.current).toBeNull(); expect(events).toEqual([]); flow.dispose();
+    }
   });
 
   it('accepts only the canonical versioned state and requests it for the selected island', async () => {

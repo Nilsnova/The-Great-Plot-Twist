@@ -45,11 +45,12 @@
 // same bell) sends it again, so the server never charges or starts twice. Any clear answer drops it.
 import {makeActionUid} from '../screens/islet/action-uid.js';
 import {islandCode, displayIslandCode} from './codes.js';
-import {localSpotId} from './spots.js';
+import {localSpotId, spotById} from './spots.js';
 import {SKILL_BY_ID, WEAPON_BY_ID, isRole} from '../pirates/captain-ids.js';
 import {BRANCH_BY_ID, SPECS, optionsOf} from '../campaign/tech.js';
 import {isRole as isHouseRole} from '../campaign/houses.js';
 import {readRecoverySnapshot} from '../pirates/recovery-snapshot.js';
+import {readPerimeterDemo, canonicalWallId} from '../pirates/perimeter-demo.js';
 import {isParticipantToken} from '../pirates/recovery-policy.js';
 
 export const PATHS = Object.freeze({
@@ -142,16 +143,20 @@ const isMember = member => !!member && isText(member.id) && typeof member.name =
 export const isLobby = data => !!data && isGame(data.game) && Array.isArray(data.members) && data.members.length > 0 && data.members.every(isMember);
 export const isLeft = data => !!data && typeof data.left === 'boolean';
 // D039: GET /api/island/walls: {coins, walls: [{spot, level, health, recoversAt, repairCost}]}.
-const isWall = wall => !!wall && isText(wall.spot) && Number.isSafeInteger(wall.level) && Number.isInteger(wall.health)
-  && wall.health >= 0 && wall.health <= 100 && (wall.recoversAt === null || typeof wall.recoversAt === 'string')
+const isWall = wall => !!wall && spotById(wall.spot)?.slot === 'wall' && Number.isSafeInteger(wall.level) && wall.level >= 1 && wall.level <= 5 && Number.isInteger(wall.health)
+  && wall.health >= 0 && wall.health <= 100 && (wall.recoversAt === null || isDate(wall.recoversAt))
   && (wall.repairCost === null || isCount(wall.repairCost));
-export const isWalls = data => !!data && isCount(data.coins) && Array.isArray(data.walls) && data.walls.length <= 50 && data.walls.every(isWall);
+const uniqueSpots = rows => new Set(rows.map(row => localSpotId(row.spot))).size === rows.length;
+// The full perimeter inventory is bounded; repeated or unsupported identities are never extra capacity.
+export const isWalls = data => !!data && isCount(data.coins) && Array.isArray(data.walls) && data.walls.length <= 128
+  && data.walls.every(isWall) && uniqueSpots(data.walls);
 const localWalls = answer => (answer.ok ? {...answer, data: {...answer.data, walls: answer.data.walls.map(wall => ({...wall, spot: localSpotId(wall.spot)}))}} : answer);
 const RECOVERY_KINDS = new Set(['wall', 'cannon', 'mortar', 'harpoon', 'culverin', 'swivel']);
 const RECOVERY_PHASES = new Set(['between_waves', 'preparing', 'combat']);
 const RECOVERY_WINDOWS = new Set(['between_waves', 'reserved_wave']);
-const isUuid = value => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
-const isRecoveryItem = row => !!row && isText(row.spot) && isUuid(row.instanceId) && RECOVERY_KINDS.has(row.kind)
+const isUuid = value => typeof value === 'string' && value.length === 36 && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+const recoverySlotMatches = row => spotById(row.spot)?.slot === (row.kind === 'wall' ? 'wall' : 'tower');
+const isRecoveryItem = row => !!row && isText(row.spot) && isUuid(row.instanceId) && RECOVERY_KINDS.has(row.kind) && recoverySlotMatches(row)
   && Number.isSafeInteger(row.level) && row.level >= 1 && row.level <= 5
   && Number.isSafeInteger(row.hpUnits) && row.hpUnits >= 0 && row.hpUnits <= 1_000_000
   && Number.isFinite(row.maxHP) && row.maxHP > 0
@@ -163,7 +168,9 @@ export function isStructureRecovery(data) {
     && data.recoveryVersion === 1 && data.waveProtocol === 2 && RECOVERY_PHASES.has(data.displayPhase)
     && RECOVERY_WINDOWS.has(data.repairWindow) && (data.waveId === null || isUuid(data.waveId))
     && (data.remainingPaidUses === null || (Number.isSafeInteger(data.remainingPaidUses) && data.remainingPaidUses >= 0 && data.remainingPaidUses <= 3))
-    && Array.isArray(data.structures) && data.structures.length <= 50 && data.structures.every(isRecoveryItem)
+    // Recovery supports 128 walls and 11 cannon-slot towers, excluding houses and the watchtower.
+    && Array.isArray(data.structures) && data.structures.length <= 139 && data.structures.every(isRecoveryItem)
+    && uniqueSpots(data.structures) && new Set(data.structures.map(row => row.instanceId.toLowerCase())).size === data.structures.length
     && ((data.repairWindow === 'between_waves' && data.waveId === null)
       || (data.repairWindow === 'reserved_wave' && data.waveId !== null));
 }
@@ -190,7 +197,7 @@ function isStructureRepair(data) {
 export function wallHealthBody(walls) {
   if (!walls || typeof walls !== 'object') return null;
   const out = {};
-  for (const [id, value] of Object.entries(walls)) if (/^wall_[0-9]{1,2}$/.test(id) && Number.isInteger(value) && value >= 0 && value <= 100) out[id] = value;
+  for (const [id, value] of Object.entries(walls)) if (canonicalWallId(id) && Number.isInteger(value) && value >= 0 && value <= 100) out[id] = value;
   return Object.keys(out).length ? out : null;
 }
 const isWaveRow = data => !!data && isText(data.waveId) && Number.isSafeInteger(data.wave) && data.wave >= 1 && isCount(data.seed)
@@ -198,6 +205,7 @@ const isWaveRow = data => !!data && isText(data.waveId) && Number.isSafeInteger(
   && !!data.weather && typeof data.weather.kind === 'string' && typeof data.flagship === 'boolean';
 export function isWave(data) {
   if (!isWaveRow(data)) return false;
+  if (data.perimeterDemo !== undefined && (!readPerimeterDemo(data.perimeterDemo,data) || (!Array.isArray(data.rules) || !data.rules.includes('pathing')))) return false;
   if (data.waveProtocol === undefined && (data.recoveryVersion === undefined || data.recoveryVersion === 0)) return true;
   if (data.waveProtocol === 1 && (data.recoveryVersion === undefined || data.recoveryVersion === 0)) return true;
   return data.waveProtocol === 2 && data.recoveryVersion === 1
@@ -208,6 +216,7 @@ export function isWave(data) {
 // public wave (recoveryVersion 1, waveProtocol 2) without snapshot, participant token or counter. Only a
 // join (POST /api/waves/join) answers those, so such a wave is shown and joined, never started from.
 export const isJoinableWave = data => isWaveRow(data) && data.recoveryVersion === 1 && data.waveProtocol === 2
+  && !Object.hasOwn(data, 'perimeterDemo') // Local perimeter-demo inputs belong only to legacy protocol 1.
   && data.initialSnapshot == null && data.participantToken == null && data.lastActorCounter == null;
 // The wave's clock (legacy waves run from startsAt on every screen): a wave answer carries the server's time
 // (serverNow, ms). clockOffsetMs = server minus this browser, measured when the answer arrives, only when the
@@ -525,7 +534,7 @@ export function createIslandApi({transport, makeUid = makeActionUid, waveProtoco
       if (!target) return refuse(422, 'validation_error', MESSAGES.badCode);
       const version = askedProtocol === 2 ? 2 : protocolFor(target);
       return write(`start:${target}`, actionUid => transport.post(PATHS.start,
-        {where: target, actionUid, ...(version === 2 ? {waveProtocol: 2} : {})}), isWave).then(timed);
+        {where: target, actionUid, ...(version === 2 ? {waveProtocol: 2, wallClientVersion: 1} : {})}), isWave).then(timed);
     },
     joinWave({waveId, waveProtocol: askedProtocol = null} = {}) {
       if (!isText(waveId)) return refuse(404, 'no_such_wave', MESSAGES.badWave);

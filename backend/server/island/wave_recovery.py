@@ -5,6 +5,7 @@ module validates the bounded wire shape and translates stable SQL refusal codes.
 """
 
 import json
+import math
 import re
 from typing import Any
 from uuid import UUID
@@ -23,6 +24,7 @@ from server.island.structure_recovery_manifest import (
     max_structure_hp,
 )
 from server.island.structure_recovery_rate import recovery_rate_factor
+from server.island.wall_cohort import PERIMETER_WALL_CAPACITY, is_inventory_wall_id
 from server.supabase_admin import SupabaseAdmin, SupabaseRejected
 
 UID = re.compile(r"^[A-Za-z0-9_-]{8,64}$")
@@ -32,6 +34,7 @@ MAX_BODY_BYTES = 16 * 1024
 MAX_PAGE = 256
 MAX_HP_UNITS = 1_000_000
 SNAPSHOT_READ_ATTEMPTS = 2
+MAX_RECOVERY_STRUCTURES = PERIMETER_WALL_CAPACITY + 11  # All walls and D060 tower spots.
 
 
 class RecoveryInput(BaseModel):
@@ -80,8 +83,8 @@ class RecoveryHealthRequest(BaseModel):
     throughTick: StrictInt = Field(ge=0, le=18_000)
     inputHeadSeq: StrictInt = Field(ge=0)
     lastRepairSeq: StrictInt = Field(ge=0)
-    basisRepairSeq: dict[UUID, StrictInt]
-    hpUnits: dict[UUID, StrictInt]
+    basisRepairSeq: dict[UUID, StrictInt] = Field(max_length=MAX_RECOVERY_STRUCTURES)
+    hpUnits: dict[UUID, StrictInt] = Field(max_length=MAX_RECOVERY_STRUCTURES)
 
 
 class RecoveryCheckpoint(BaseModel):
@@ -92,8 +95,8 @@ class RecoveryCheckpoint(BaseModel):
     throughTick: StrictInt = Field(ge=0, le=18_000)
     inputHeadSeq: StrictInt = Field(ge=0)
     lastRepairSeq: StrictInt = Field(ge=0)
-    basisRepairSeq: dict[UUID, StrictInt]
-    hpUnits: dict[UUID, StrictInt]
+    basisRepairSeq: dict[UUID, StrictInt] = Field(max_length=MAX_RECOVERY_STRUCTURES)
+    hpUnits: dict[UUID, StrictInt] = Field(max_length=MAX_RECOVERY_STRUCTURES)
 
 
 class RecoveryInputResult(BaseModel):
@@ -250,6 +253,16 @@ def _refusal(reply: Any) -> None:
             headers={"Retry-After": str(wait)},
         )
     mapped = {
+        "structure_recovery_required": (
+            409,
+            "structure_recovery_required",
+            "Perimeter waves need recovery support.",
+        ),
+        "perimeter_rules_required": (
+            409,
+            "perimeter_rules_required",
+            "Reload to use the perimeter wall rules.",
+        ),
         "no_such_wave": (404, "no_such_wave", "There is no such wave."),
         "not_in_wave": (403, "not_in_wave", "Join the wave first: you are not in this wave."),
         "wave_over": (409, "wave_over", "This wave is over."),
@@ -346,6 +359,8 @@ async def build_snapshot_template(
     weather: Weather,
     seed: int,
     kept_rules: list[str],
+    *,
+    expected_wall_policy: tuple[int, int] | None = None,
 ) -> dict[str, Any]:
     """Build server-owned static createWave inputs; the admission RPC fills locked HP identities.
 
@@ -369,6 +384,19 @@ async def build_snapshot_template(
         )
     geometry = layout.island_layout(catalogue.more_tower_spots)
     complete_geometry = layout.island_layout(more=True)
+    info = getattr(view, "layout", service.FIXED_LAYOUT)
+    policy = (info.wall_rule_version, info.wall_capacity)
+    try:
+        layout.check_wall_policy(*policy)
+    except ValueError as error:
+        raise SupabaseRejected("The frozen wall policy could not be read.") from error
+    if expected_wall_policy is not None and policy != expected_wall_policy:
+        raise ApiError(409, "island_changed", "The wall policy changed. Retry the same request.")
+    perimeter = policy[0] == 1
+    if perimeter and "pathing" not in kept_rules:
+        raise ApiError(409, "perimeter_rules_required", "Perimeter walls need the pathing update.")
+    known = {spot.spot: spot.slot for spot in complete_geometry.spots}
+    seen: set[str] = set()
     defenses = []
     structure_config: dict[str, dict[str, Any]] = {}
     wall_tier = view.campaign.tiers.get("wall")
@@ -381,6 +409,27 @@ async def build_snapshot_template(
     for spot in view.spots:
         if not spot.built:
             continue
+        inventory = perimeter and is_inventory_wall_id(spot.id, policy[1])
+        slot = "wall" if inventory else known.get(spot.id)
+        allowed = {
+            "wall": {"wall"},
+            "tower": set(SUPPORTED_KINDS) - {"wall"},
+            "watchtower": {"watchtower"},
+            "house": {"house"},
+        }.get(slot, set())
+        if (
+            spot.id in seen
+            or spot.kind not in allowed
+            or not all(
+                isinstance(value, (float, int))
+                and not isinstance(value, bool)
+                and math.isfinite(value)
+                and layout.on_grid(geometry, float(value))
+                for value in (spot.x, spot.z)
+            )
+        ):
+            raise SupabaseRejected("The frozen defense identity or position could not be read.")
+        seen.add(spot.id)
         item: dict[str, Any] = {
             "id": spot.id,
             "kind": spot.kind,
@@ -468,6 +517,8 @@ async def build_snapshot_template(
     }
     for rule_name, option_name in rule_options.items():
         create_wave[option_name] = rule_name in kept_rules
+    if perimeter:
+        create_wave["perimeterWalls"] = True
 
     events = {
         str(number): wave_events.event_for(number, seed)
@@ -502,6 +553,8 @@ async def build_snapshot_template(
         "legacyWallRecoverSeconds": wall_health.RECOVERY_SECONDS,
         "configVersion": RECOVERY_MANIFEST.recovery_version,
         "supportedStructureKinds": list(SUPPORTED_KINDS),
+        "wallRuleVersion": policy[0],
+        "wallCapacity": policy[1],
     }
 
 
@@ -603,7 +656,7 @@ async def read_events(
 async def report_health(
     admin: SupabaseAdmin, player_id: str, wave_id: UUID, report: RecoveryHealthRequest
 ) -> RecoveryHealthResult:
-    if len(report.hpUnits) > 26 or len(report.basisRepairSeq) > 26:
+    if max(len(report.hpUnits), len(report.basisRepairSeq)) > MAX_RECOVERY_STRUCTURES:
         raise ApiError(422, "validation_error", "The health vector is too large.")
     if any(not 0 <= hp <= MAX_HP_UNITS for hp in report.hpUnits.values()):
         raise ApiError(

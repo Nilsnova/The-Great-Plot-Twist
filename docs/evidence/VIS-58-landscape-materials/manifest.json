@@ -1,0 +1,61 @@
+{
+  "source": "b0c63cf480ac739cfc46c6ed3b28aaca563bc5d8",
+  "base": "6c87b8dcd2d7a1bb5376c3b64bbede27a144479e",
+  "sourceFiles": {
+    "frontend/src/art/ground.js": "bee54163f343313e3622bf8014f4326a4c54e2eade7b36684e72b6d445a3ba35",
+    "frontend/src/art/coast-cliffs.js": "11aca080f1812bfe58bac37e894960db4d2873cadf74bde59da2994c28f5f321",
+    "frontend/src/art/village/terrain-materials.js": "ff884aac42573e1e87c2e7a758327948b08a5cc014bbe87a23a78e88e54f830e",
+    "frontend/tests/art/landscape-materials.test.js": "c4ba48e97ba4fdb474bbe33defebd0dbded0f6818a614de017c7f8618034ea1d",
+    "frontend/scripts/capture-landscape-parity.mjs": "f52d6fc808903fcf7801c0e115c48472e925f431cc445bc06349fc73060fcd2e",
+    "frontend/public/village/terrain-materials-v1.png": "a4d94dde648a784d106f547df1073903d982573478f1775d914ceb30879ece6f"
+  },
+  "logs": {
+    "red.log": {
+      "sha256": "eacbe58af59b1732d445cfba7d4aba52c483c3eff5bc8166c529f12fa305eed0",
+      "bytes": 2697
+    },
+    "red.json": {
+      "sha256": "58480711ffb947e7812c6e1decb3b726e34ac08b9f71ae07c86bc8739efb9653",
+      "bytes": 184
+    },
+    "focused.log": {
+      "sha256": "f04fcacf89334d159d4ad25cccd6920703b6a1556f85048f1379a1e25fec9c9c",
+      "bytes": 5130
+    },
+    "focused.json": {
+      "sha256": "b06beca9249be531408e082a3ddbb943f46887e7b1fb5d178815a2c47d847af6",
+      "bytes": 397
+    },
+    "focused-alpha-preserving.log": {
+      "sha256": "9dac3a16e73508f7913c39de17fdaeaacb461d6b2cf28f954f4575fa7cc9941c",
+      "bytes": 5130
+    },
+    "focused-alpha-preserving.json": {
+      "sha256": "d98076cce91303f1363c0ff1a368ca6e86e3d797e0ced418f77cdb1ae6906364",
+      "bytes": 397
+    },
+    "final-helper-syntax.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "final-build.log": {
+      "sha256": "65b828077c9a9624fbcc2e5c93b6e04abe9e3d1f13ff422363dd06d9f1c03b02",
+      "bytes": 17612
+    },
+    "final-budget.log": {
+      "sha256": "c24016baae67d5a3d4bba830e428de8a897ef47425b300e45cf99a895901d209",
+      "bytes": 83560
+    },
+    "final-text-lint.log": {
+      "sha256": "3a8fa9b0965a95c2e2776a043e0f8a4ac2c2bd8d0cb1601ec59bcb9fa623f266",
+      "bytes": 1037
+    },
+    "final-checks.json": {
+      "sha256": "7b4feb4cf2a4706c8924ee409e8dabd7f018c2ca680063731518ec3259ecde24",
+      "bytes": 1338
+    }
+  },
+  "nativeRunByWriter": false,
+  "cliffProfileBaselineSha256": "ae9f508e33801919cd8d7a9adc9587a226c6a9e04910ad747c5082cade395e65",
+  "logicalSurfacesBaselineSha256": "3daf6aa373417ebedbf0c032584e25c9bee8386b4e11324d61a4b02d529c36a5"
+}

@@ -1,0 +1,54 @@
+{
+  "started": "2026-11-17T23:18:08.829Z",
+  "source": "/workspace/reference-village-work/visual-handover/docs/evidence/reference-village-latest-review/comparison.html",
+  "bytes": 10522733,
+  "sha256": "f65e50207d375c2b594c872e403dbff5a308e1d1809a54eabc0feda33d067e76",
+  "validationVersion": "latest-review-v2",
+  "checkerSource": "/workspace/reference-village-work/visual-handover/docs/evidence/reference-village-latest-review/verify-comparison.mjs",
+  "checkerSha256": "dbdb2dc8e443d4414f206a31575344b1020a4586a1f10130d4d8f1df4ef3b789",
+  "frontendPackage": "/workspace/reference-village-work/visual-handover/frontend/package.json",
+  "dependencyResolution": "checkout-relative",
+  "expectedImages": 12,
+  "expectedTabCounts": [
+    2,
+    3,
+    3
+  ],
+  "status": "failed",
+  "viewports": [
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "status": "running",
+      "pageErrors": [],
+      "externalRequests": [],
+      "ownedRequests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:40231/"
+        }
+      ],
+      "checks": []
+    }
+  ],
+  "embeddedOriginalHashes": "12 exact matches",
+  "mode": "owned-loopback-http",
+  "ownedHttpRequests": [
+    {
+      "method": "GET",
+      "path": "/",
+      "status": 200,
+      "bytes": 10522733
+    }
+  ],
+  "origin": "http://127.0.0.1:40231",
+  "browserVersion": "156.0.8078.79",
+  "error": {
+    "name": "Error",
+    "message": "response.body: Protocol error (Network.getResponseBody): Request content was evicted from inspector cache\nResponse body is not available for a response that was navigated away from. Read response.body() before triggering any navigation."
+  },
+  "httpServerClosed": true,
+  "finished": "2026-11-17T23:18:10.817Z"
+}

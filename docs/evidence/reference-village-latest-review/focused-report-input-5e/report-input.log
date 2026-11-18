@@ -1,0 +1,14 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run --maxWorkers=1 tests/pirates/defense-report-ownership.test.js --reporter=verbose
+
+
+ RUN  v5.1.0 /workspace/reference-village-work/latest-main-preview/frontend
+
+ ✓ tests/pirates/defense-report-ownership.test.js > the actual game blocks keyboard and gamepad movement while the report owns input 19440ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  21:43:09
+   Duration  21.27s (tests 96%, import 3%, transform 1%)
+
