@@ -1,0 +1,12 @@
+{
+  "command": [
+    "npm",
+    "test",
+    "--",
+    "--maxWorkers=1",
+    "tests/art/landscape-materials.test.js",
+    "--reporter=verbose"
+  ],
+  "exitCode": 1,
+  "seconds": 2.26
+}
