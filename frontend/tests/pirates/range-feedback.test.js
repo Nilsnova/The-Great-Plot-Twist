@@ -32,10 +32,10 @@ describe('contextual captain range', () => {
     expect(view(feedback, { stats, nowMs: 2700, preview: true })).toMatchObject({ radius: stats.range, label: 'Fire bombs throw range' });
   });
 
-  it('shows the explicit gun attempt before a nearby enemy’s ambient cutlass hint', () => {
+  it.each(['Shot fired', 'Out of range · move closer'])('prioritizes an explicit gun attempt over a nearby cutlass hint: %s', message => {
     const feedback = createRangeFeedback(), point = { x: 12, z: 3 };
     expect(view(feedback, { preview: true, blade: true })).toMatchObject({ label: 'Cutlass reach', melee: true });
-    feedback.attempt({ nowMs: 1000, message: 'Shot fired', point, blade: false });
+    feedback.attempt({ nowMs: 1000, message, point, blade: false });
     expect(view(feedback, { blade: true })).toMatchObject({ label: 'Musket range', radius: 14, melee: false, point });
     expect(view(feedback, { nowMs: 2500, preview: true, blade: true })).toMatchObject({ radius: 14, melee: false, point });
     expect(view(feedback, { nowMs: 2600, preview: true, blade: true })).toMatchObject({
