@@ -40,3 +40,5 @@ The short phone view keeps the arrows and actions in two compact rows. Chrome an
 Destroyed towers keep their rubble and zero-health indicator. Level stars return with confirmed positive health. Chrome exercised zero, one positive unit, partial recovery and full health on desktop and phone, including the older recovery policy and unchanged adjacent towers.
 
 The Controls labels use the existing parchment color. Their measured contrast rose from 6.70:1 to 7.96:1 on desktop and phone. The Settings audit covered five viewport sizes. The production startup check now follows the actual first-run panels before asserting world focus. The underlying app already returned focus correctly when those panels were dismissed.
+
+The documented legacy-travel check passed all 38 checks. After ten round trips, the same scene retained 95 draw calls, 101 geometries, 30 textures and one active scene root. The sample returned 60 browser frames per second on this Mac.
