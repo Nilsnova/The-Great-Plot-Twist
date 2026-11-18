@@ -1,0 +1,137 @@
+{
+  "file": "frontend/public/village/nature-v1.png",
+  "sha256": "c528807c91a2d79ba73ba201085ac7343a271818500421e656c3a9576b774412",
+  "bytes": 2103968,
+  "mode": "RGBA",
+  "dimensions": [
+    1536,
+    1024
+  ],
+  "nativeDecodedBytes": 6291456,
+  "alphaZeroPixels": 977213,
+  "alphaRange": [
+    0,
+    254
+  ],
+  "cornerAlpha": [
+    0,
+    0,
+    0,
+    0
+  ],
+  "frames": {
+    "oak": {
+      "rect": [
+        24,
+        132,
+        418,
+        431
+      ],
+      "sourceFoot": [
+        197,
+        420
+      ],
+      "edgeAlphaMaximum": 1,
+      "solidPixels": 105776
+    },
+    "pine": {
+      "rect": [
+        442,
+        74,
+        322,
+        489
+      ],
+      "sourceFoot": [
+        158,
+        478
+      ],
+      "edgeAlphaMaximum": 1,
+      "solidPixels": 81041
+    },
+    "birch": {
+      "rect": [
+        779,
+        144,
+        362,
+        419
+      ],
+      "sourceFoot": [
+        145,
+        408
+      ],
+      "edgeAlphaMaximum": 1,
+      "solidPixels": 69439
+    },
+    "birch-tall": {
+      "rect": [
+        1149,
+        54,
+        369,
+        509
+      ],
+      "sourceFoot": [
+        164,
+        498
+      ],
+      "edgeAlphaMaximum": 2,
+      "solidPixels": 70997
+    },
+    "rock": {
+      "rect": [
+        53,
+        737,
+        337,
+        223
+      ],
+      "sourceFoot": [
+        167,
+        209
+      ],
+      "edgeAlphaMaximum": 1,
+      "solidPixels": 39840
+    },
+    "shrub": {
+      "rect": [
+        439,
+        739,
+        307,
+        221
+      ],
+      "sourceFoot": [
+        152,
+        208
+      ],
+      "edgeAlphaMaximum": 1,
+      "solidPixels": 42205
+    },
+    "flowers": {
+      "rect": [
+        813,
+        748,
+        284,
+        211
+      ],
+      "sourceFoot": [
+        145,
+        198
+      ],
+      "edgeAlphaMaximum": 1,
+      "solidPixels": 30169
+    },
+    "grass-tuft": {
+      "rect": [
+        1177,
+        763,
+        303,
+        196
+      ],
+      "sourceFoot": [
+        154,
+        183
+      ],
+      "edgeAlphaMaximum": 1,
+      "solidPixels": 24248
+    }
+  },
+  "method": "Read-only Pillow inspection of source PNG; no pixels or files modified. Source feet manually placed at observed root/contact baselines."
+}

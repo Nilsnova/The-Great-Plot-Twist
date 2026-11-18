@@ -1,0 +1,459 @@
+{
+  "source": "exec-cd71b547-8787-4388-943c-8f237df9a922.png",
+  "sha256": "c1d8549fd93913df9dfa9ad5977bc77e5a236347dfbc852cdf0ac61875612377",
+  "encodedBytes": 2257251,
+  "native": [
+    1536,
+    1024
+  ],
+  "alphaZeroPixels": 964000,
+  "cornerAlpha": [
+    0,
+    0,
+    0,
+    0
+  ],
+  "analysis": "Read-only alpha>4 native bounds,3px crop gutter; manually selected shared base-center X and foot6px above visible base bottom. Original pixels unchanged.",
+  "frames": {
+    "island-culverin": {
+      "nativeBounds": [
+        52,
+        67,
+        198,
+        184
+      ],
+      "sourceFoot": [
+        95,
+        175
+      ],
+      "band": [
+        0,
+        270
+      ],
+      "column": [
+        0,
+        306
+      ],
+      "edgeAlphaMaximum": 2,
+      "solidPixels": 17936
+    },
+    "island-culverin-fire": {
+      "nativeBounds": [
+        51,
+        318,
+        214,
+        188
+      ],
+      "sourceFoot": [
+        96,
+        179
+      ],
+      "band": [
+        270,
+        533
+      ],
+      "column": [
+        0,
+        306
+      ],
+      "edgeAlphaMaximum": 3,
+      "solidPixels": 18061
+    },
+    "island-culverin-damaged": {
+      "nativeBounds": [
+        52,
+        571,
+        198,
+        189
+      ],
+      "sourceFoot": [
+        95,
+        180
+      ],
+      "band": [
+        533,
+        808
+      ],
+      "column": [
+        0,
+        306
+      ],
+      "edgeAlphaMaximum": 2,
+      "solidPixels": 18320
+    },
+    "island-culverin-broken": {
+      "nativeBounds": [
+        35,
+        848,
+        231,
+        141
+      ],
+      "sourceFoot": [
+        112,
+        132
+      ],
+      "band": [
+        808,
+        1024
+      ],
+      "column": [
+        0,
+        306
+      ],
+      "edgeAlphaMaximum": 2,
+      "solidPixels": 14933
+    },
+    "island-culverin-l2": {
+      "nativeBounds": [
+        342,
+        67,
+        214,
+        184
+      ],
+      "sourceFoot": [
+        106,
+        175
+      ],
+      "band": [
+        0,
+        270
+      ],
+      "column": [
+        306,
+        611
+      ],
+      "edgeAlphaMaximum": 2,
+      "solidPixels": 20865
+    },
+    "island-culverin-fire-l2": {
+      "nativeBounds": [
+        341,
+        318,
+        218,
+        187
+      ],
+      "sourceFoot": [
+        107,
+        178
+      ],
+      "band": [
+        270,
+        533
+      ],
+      "column": [
+        306,
+        611
+      ],
+      "edgeAlphaMaximum": 3,
+      "solidPixels": 20909
+    },
+    "island-culverin-l2-damaged": {
+      "nativeBounds": [
+        342,
+        571,
+        217,
+        187
+      ],
+      "sourceFoot": [
+        106,
+        178
+      ],
+      "band": [
+        533,
+        808
+      ],
+      "column": [
+        306,
+        611
+      ],
+      "edgeAlphaMaximum": 2,
+      "solidPixels": 21033
+    },
+    "island-culverin-l2-broken": {
+      "nativeBounds": [
+        325,
+        848,
+        252,
+        139
+      ],
+      "sourceFoot": [
+        123,
+        130
+      ],
+      "band": [
+        808,
+        1024
+      ],
+      "column": [
+        306,
+        611
+      ],
+      "edgeAlphaMaximum": 2,
+      "solidPixels": 17548
+    },
+    "island-culverin-l3": {
+      "nativeBounds": [
+        622,
+        67,
+        224,
+        180
+      ],
+      "sourceFoot": [
+        113,
+        171
+      ],
+      "band": [
+        0,
+        270
+      ],
+      "column": [
+        611,
+        903
+      ],
+      "edgeAlphaMaximum": 3,
+      "solidPixels": 20687
+    },
+    "island-culverin-fire-l3": {
+      "nativeBounds": [
+        623,
+        314,
+        223,
+        188
+      ],
+      "sourceFoot": [
+        112,
+        179
+      ],
+      "band": [
+        270,
+        533
+      ],
+      "column": [
+        611,
+        903
+      ],
+      "edgeAlphaMaximum": 2,
+      "solidPixels": 20795
+    },
+    "island-culverin-l3-damaged": {
+      "nativeBounds": [
+        623,
+        571,
+        221,
+        186
+      ],
+      "sourceFoot": [
+        112,
+        177
+      ],
+      "band": [
+        533,
+        808
+      ],
+      "column": [
+        611,
+        903
+      ],
+      "edgeAlphaMaximum": 2,
+      "solidPixels": 20985
+    },
+    "island-culverin-l3-broken": {
+      "nativeBounds": [
+        623,
+        844,
+        254,
+        149
+      ],
+      "sourceFoot": [
+        112,
+        140
+      ],
+      "band": [
+        808,
+        1024
+      ],
+      "column": [
+        611,
+        903
+      ],
+      "edgeAlphaMaximum": 2,
+      "solidPixels": 19452
+    },
+    "island-culverin-l4": {
+      "nativeBounds": [
+        925,
+        62,
+        238,
+        192
+      ],
+      "sourceFoot": [
+        117,
+        183
+      ],
+      "band": [
+        0,
+        270
+      ],
+      "column": [
+        903,
+        1208
+      ],
+      "edgeAlphaMaximum": 2,
+      "solidPixels": 26289
+    },
+    "island-culverin-fire-l4": {
+      "nativeBounds": [
+        925,
+        308,
+        238,
+        200
+      ],
+      "sourceFoot": [
+        117,
+        191
+      ],
+      "band": [
+        270,
+        533
+      ],
+      "column": [
+        903,
+        1208
+      ],
+      "edgeAlphaMaximum": 2,
+      "solidPixels": 26668
+    },
+    "island-culverin-l4-damaged": {
+      "nativeBounds": [
+        925,
+        567,
+        237,
+        194
+      ],
+      "sourceFoot": [
+        117,
+        185
+      ],
+      "band": [
+        533,
+        808
+      ],
+      "column": [
+        903,
+        1208
+      ],
+      "edgeAlphaMaximum": 1,
+      "solidPixels": 26716
+    },
+    "island-culverin-l4-broken": {
+      "nativeBounds": [
+        916,
+        842,
+        258,
+        147
+      ],
+      "sourceFoot": [
+        126,
+        138
+      ],
+      "band": [
+        808,
+        1024
+      ],
+      "column": [
+        903,
+        1208
+      ],
+      "edgeAlphaMaximum": 2,
+      "solidPixels": 20015
+    },
+    "island-culverin-l5": {
+      "nativeBounds": [
+        1226,
+        64,
+        263,
+        186
+      ],
+      "sourceFoot": [
+        132,
+        177
+      ],
+      "band": [
+        0,
+        270
+      ],
+      "column": [
+        1208,
+        1536
+      ],
+      "edgeAlphaMaximum": 2,
+      "solidPixels": 27147
+    },
+    "island-culverin-fire-l5": {
+      "nativeBounds": [
+        1226,
+        312,
+        263,
+        194
+      ],
+      "sourceFoot": [
+        132,
+        185
+      ],
+      "band": [
+        270,
+        533
+      ],
+      "column": [
+        1208,
+        1536
+      ],
+      "edgeAlphaMaximum": 2,
+      "solidPixels": 27356
+    },
+    "island-culverin-l5-damaged": {
+      "nativeBounds": [
+        1227,
+        571,
+        261,
+        188
+      ],
+      "sourceFoot": [
+        131,
+        179
+      ],
+      "band": [
+        533,
+        808
+      ],
+      "column": [
+        1208,
+        1536
+      ],
+      "edgeAlphaMaximum": 2,
+      "solidPixels": 27319
+    },
+    "island-culverin-l5-broken": {
+      "nativeBounds": [
+        1225,
+        847,
+        282,
+        145
+      ],
+      "sourceFoot": [
+        133,
+        136
+      ],
+      "band": [
+        808,
+        1024
+      ],
+      "column": [
+        1208,
+        1536
+      ],
+      "edgeAlphaMaximum": 1,
+      "solidPixels": 23239
+    }
+  }
+}

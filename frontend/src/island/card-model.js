@@ -4,7 +4,7 @@ import {BUILDINGS, CREW, CREW_IDS, CAPTAIN, CAPTAIN_MAX, SLOT_KINDS, maxLevel, p
 import {towerKinds} from './defenses-v2.js';
 import {displayIslandCode, visitUrl} from './codes.js';
 import {formatCoinDelta, formatCoins} from '../lib/coins.js';
-import {BRANCHES, ROLES, ROLE_BY_ID, ROLE_LEVEL, SKILLS, SKILL_BY_ID, WEAPONS, WEAPON_BY_ID, isRole, pointsEarned, pointsSpent, readSkills, readWeapon, respecPrice, skillNeeds} from '../pirates/captain-ids.js';
+import {BRANCHES, ROLES, ROLE_BY_ID, ROLE_LEVEL, SKILLS, SKILL_BY_ID, WEAPONS, WEAPON_BY_ID, isRole, pointsEarned, pointsSpent, readSkills, readWeapon, respecPrice} from '../pirates/captain-ids.js';
 import {isExtraSpot} from './extra-spots.js';
 import {opensText, spotWave, waveOf, isOpen, tierItem, tierWave} from '../campaign/index.js';
 import {BRANCH_BY_ID, SPECS, TOP_TIER, isCapstone, optionLine, optionName, optionsOf, readSpec, readTier, skillPrice} from '../campaign/tech.js';
@@ -54,7 +54,7 @@ export function buildCardModel({spotId, kind, slot = null, spot = null, coins = 
   const enough = price => coins !== null && Number.isSafeInteger(price) && coins >= price;
   const short = price => `Not enough 🪙: you need ${coinText(price - coins)} more.`;
   const model = {spotId, slot: place, title: info?.name ?? 'Tower spot', purpose: info?.line ?? (point ? 'Build a cannon or a mortar here.' : 'Build a cannon, a mortar or a harpoon tower here.'),
-    mode: 'info', built, kind: shown, level, maxLevel: shown ? maxLevel(shown) : 0, pips: [], stats: '', choices: [], cost: '',
+    mode: 'info', built, kind: shown, level, spec: built ? spot.spec ?? null : null, maxLevel: shown ? maxLevel(shown) : 0, pips: [], stats: '', choices: [], cost: '',
     button: '', disabled: true, reason: '', upgrade: null, soon: '', message, busy, skills: null, locked: false,
     coins: coins === null ? '' : `You have ${coinText(coins)}`,
     owner: point ? 'Paid by you · belongs to Pirate Point' : visitor ? `You pay · it stays on ${ownerName ? `${ownerName}'s` : 'this'} island` : '', hire: false,
@@ -67,6 +67,7 @@ export function buildCardModel({spotId, kind, slot = null, spot = null, coins = 
   model.hire = !point && !visitor && built && (place === 'tower' || place === 'wall');
   if (!point && built && RECOVERY_HEALTH_KINDS.has(shown) && recoveryStatus !== 'disabled') {
     const recovery = recoveryState?.structures?.find(item => item.spot === spotId) ?? null;
+    model.recoveryLevel = recovery?.level ?? null;
     model.recovery = buildStructureRecoveryView(recoveryState, recovery, {
       status: recoveryPending ? 'submitting' : recoveryStatus,
       errorCode: recoveryError,
@@ -120,6 +121,7 @@ export function buildCardModel({spotId, kind, slot = null, spot = null, coins = 
   if (shown === 'wall' && recoveryRow) model.stats = model.stats.replace(/^Strength\b/, 'Base strength');
   const recoveryUnavailable = RECOVERY_HEALTH_KINDS.has(shown)
     && (recoveryStatus === 'loading' || recoveryStatus === 'error'
+      || (!!recoveryRow && recoveryRow.level !== level)
       || (recoveryVersion === 1 && (recoveryStatus !== 'ready' || !recoveryRow)));
   const upgradeBlockedReason = recoveryUnavailable ? 'Wait until building health has loaded.'
     : recoveryRow && recoveryState.recoveryVersion === 1
@@ -133,6 +135,7 @@ export function buildCardModel({spotId, kind, slot = null, spot = null, coins = 
   if (allowed(shown) < next) { model.soon = `Level ${next}: ${opensText(lockedWave(unlocks, {kind: shown, level: next}) ?? '?')}.`; return model; }
   const price = Number.isSafeInteger(spot.upgradeCost) ? spot.upgradeCost : priceFor(shown, level, prices);
   model.mode = 'upgrade';
+  model.upgradePrice = coinText(price);
   model.upgrade = {label: `Level ${next} · ${coinText(price)}`, stats: statLine(shown, level, next)};
   if (shown === 'wall' && recoveryRow) model.upgrade.stats = model.upgrade.stats.replace(/^Strength\b/, 'Base strength');
   model.button = busy ? 'Upgrading…' : 'Upgrade';

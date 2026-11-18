@@ -16,7 +16,7 @@
 //     .canReach(a, b)   a straight walk from a to b crosses no water and no standing wall
 import { buildLayout, cellOf, centreOf, createGrid, standingWallAt } from './path-grid.js';
 import { createFieldCache, lineIsClear, neighbours, nextStep } from './pathing.js';
-import { towerObstacles, towerFootprintPoints, TOWER_FOOTPRINT } from './tower-obstacles.js';
+import { towerObstacles, TOWER_FOOTPRINT } from './tower-obstacles.js';
 
 export const WALL_FOOTPRINT = 2; // units: T36's wall square (FOOTPRINTS.wall in src/island/placement.js)
 const INSET = .25;               // points this far inside the square's edges, so only cells it covers count

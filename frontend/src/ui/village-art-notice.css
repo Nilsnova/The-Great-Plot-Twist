@@ -1,0 +1,5 @@
+.village-art-notice{position:absolute;z-index:45;top:calc(84px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);width:min(420px,calc(100% - 24px));box-sizing:border-box;padding:12px;border:2px solid #edc779;border-radius:12px;background:#173f49;color:#fff6dd;box-shadow:0 4px 16px #09283180;display:flex;align-items:center;gap:12px}
+.village-art-notice[hidden]{display:none}
+.village-art-notice p{margin:0;flex:1}
+.village-art-notice button{min-width:44px;min-height:44px;flex-shrink:0}
+@media(max-width:480px){.village-art-notice{top:calc(112px + env(safe-area-inset-top));flex-wrap:wrap}.village-art-notice p{flex-basis:100%}}

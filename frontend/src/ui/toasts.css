@@ -7,7 +7,7 @@
 .u-toast[data-tone=success] .u-toast-icon{background:#2f6b5a;color:#fff}
 .u-toast-text{margin:0;font:700 16px/1.45 var(--u-font)}.u-toast-next{display:block;margin-top:2px;font-weight:500;font-size:14px;opacity:.85}
 @keyframes u-toast-in{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
-@media(max-width:900px){.u-toasts,.u-toasts[popover]{inset:172px 12px auto}}
+@media(max-width:900px){.u-toasts,.u-toasts[popover]{inset:max(172px,var(--hud-goals-toast-top,0px)) 12px auto}}
 @media(prefers-reduced-motion:reduce){.u-toast{animation:none}}
 html[data-reduced-motion=true] .u-toast{animation:none}
 /* A card is open (a modal dialog): the toasts sit inside the card, just under its header, so the card's title and
