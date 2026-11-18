@@ -26,3 +26,5 @@ Review changed links and current rule wording, retain old anchors and compare ST
 ## Review
 
 Ianno manually reviews the result and confirms publication. Franz (@frcola) reviews the current revision before a human merges. No agent merge, auto-merge, deployment or live migration application.
+
+Combined source review, exact check outputs, corrected failed attempts and limits are in [the 18 Nov evidence](../docs/evidence/T54-wave-end-review/README.md).
