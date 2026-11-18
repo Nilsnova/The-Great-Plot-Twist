@@ -17,6 +17,61 @@ function mutation(view = data()) {
       result: {copyId: id(5), weapon: 'pistols', holderGeneration: '1', priceCoins: '60', financialReceiptId: id(7)}}};
 }
 
+const legacy = () => ({code: 'ISLE-K7Q2M', capacity: 20, stored: 0, copies: [],
+  mine: null, carried: 'musket', waveRunning: false, coins: 1000, unlockWave: 4});
+
+it('uses an explicitly verified legacy context for reads, purchases and private controller updates', async () => {
+  const context = {mode: 'personal_legacy', version: 0, islandOwner: OWNER};
+  const bought = {...legacy(), coins: 940, mine: id(5), carried: 'pistols',
+    copies: [{id: id(5), no: 1, weapon: 'pistols', holder: ACTOR, you: true, away: false}]};
+  const transport = {get: vi.fn(async () => ({ok: true, data: legacy()})),
+    post: vi.fn(async () => ({ok: true, data: bought}))};
+  const getEconomy = () => context, api = createArsenalApi({transport, getEconomy, makeUid: () => 'legacy001'});
+  expect((await api.state()).ok).toBe(true);
+  const onCoins = vi.fn(), ui = {open: 'arsenal', arsenalCard: vi.fn(), toast: vi.fn()};
+  const arsenal = createArsenal({api, getEconomy, ui, onCoins, enabled: () => true});
+  await arsenal.refresh();
+  expect(arsenal.answer.coins).toBe(1000);
+  arsenal.handlers.buy('pistols');
+  await new Promise(resolve => setImmediate(resolve));
+  expect(transport.post).toHaveBeenCalledExactlyOnceWith('/api/island/arsenal/buy',
+    {weapon: 'pistols', actionUid: 'legacy001'});
+  expect(arsenal.answer.coins).toBe(940);
+  expect(onCoins).toHaveBeenLastCalledWith(940, expect.any(Function));
+});
+
+it.each([null, undefined, {}, {mode: 'personal_legacy', version: 1},
+  {mode: 'personal_legacy', version: '0'}, {mode: 'island_shared', version: 1}])(
+  'refuses supplied unknown context %j before any private mutation', async context => {
+    const transport = {post: vi.fn()};
+    const api = createArsenalApi({transport, getEconomy: () => context});
+    for (const result of [await api.buy({weapon: 'pistols'}), await api.take({copy: id(5)}), await api.giveBack()]) {
+      expect(result).toMatchObject({ok: false, status: 409, code: 'economy_context_required'});
+    }
+    expect(transport.post).not.toHaveBeenCalled();
+  });
+
+it('reserves legacy factory compatibility for an omitted getter and allows read discovery with null', async () => {
+  const transport = {get: vi.fn(async () => ({ok: true, data: legacy()})), post: vi.fn()};
+  const api = createArsenalApi({transport, getEconomy: undefined});
+  expect((await api.buy({weapon: 'pistols'})).status).toBe(409);
+  const discovering = createArsenalApi({transport, getEconomy: () => null});
+  expect((await discovering.state()).ok).toBe(true);
+  expect(transport.post).not.toHaveBeenCalled();
+});
+
+it('does not apply private snapshots or send controller actions with a supplied null context', async () => {
+  const api = {state: vi.fn(async () => ({ok: true, data: legacy()})), buy: vi.fn()};
+  const onCoins = vi.fn(), ui = {open: 'arsenal', arsenalCard: vi.fn(), toast: vi.fn()};
+  const arsenal = createArsenal({api, getEconomy: () => null, onCoins, ui, enabled: () => true});
+  await arsenal.refresh();
+  arsenal.handlers.buy('pistols');
+  await new Promise(resolve => setImmediate(resolve));
+  expect(arsenal.answer).toBeNull();
+  expect(onCoins).not.toHaveBeenCalled();
+  expect(api.buy).not.toHaveBeenCalled();
+});
+
 it('reads shared decimal funds without a private coins field or numeric ceiling', () => {
   const view = data();
   expect(readArsenal(view)).toBe(true);

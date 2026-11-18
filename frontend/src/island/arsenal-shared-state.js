@@ -8,6 +8,7 @@ export const sameArsenalOrigin = (a, b) => !!a && !!b && ['mode', 'version', 'is
 export const arsenalOrigin = value => value ? Object.fromEntries(['mode', 'version', 'islandOwner', 'accountId', 'runEpoch'].map(key => [key, value[key]])) : null;
 export const isArsenalOrigin = value => !!value && value.mode === 'island_shared' && value.version === 1
   && ['islandOwner', 'accountId', 'runEpoch'].every(key => isArsenalId(value[key]));
+export const isArsenalLegacyContext = value => value?.mode === 'personal_legacy' && value.version === 0;
 
 export function isArsenalEconomy(value) {
   if (!isArsenalOrigin(value) || !isDecimalCoin(value.revision)) return false;

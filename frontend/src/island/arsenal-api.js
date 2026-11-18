@@ -10,7 +10,7 @@ import {MESSAGES, outcomeUnknown, readFailure} from './api.js';
 import {displayIslandCode} from './codes.js';
 import {readArsenal} from './arsenal-model.js';
 import {ECONOMY_CAPABILITY_HEADERS} from '../online/api.js';
-import {arsenalOrigin, isArsenalEconomy, readArsenalReceipt, readSharedArsenal} from './arsenal-shared-state.js';
+import {arsenalOrigin, isArsenalEconomy, isArsenalLegacyContext, readArsenalReceipt, readSharedArsenal} from './arsenal-shared-state.js';
 import {defaultArsenalPendingStore, pendingArsenalIntent} from './arsenal-pending.js';
 
 export const ARSENAL_PATHS = Object.freeze({
@@ -18,8 +18,11 @@ export const ARSENAL_PATHS = Object.freeze({
   buy: '/api/island/arsenal/buy', take: '/api/island/arsenal/take', giveBack: '/api/island/arsenal/return',
 });
 
-export function createArsenalApi({transport, makeUid = makeActionUid, getEconomy = () => null,
-  getActorId = () => null, pendingStore = defaultArsenalPendingStore()} = {}) {
+export function createArsenalApi(options = {}) {
+  const {transport, makeUid = makeActionUid, getEconomy,
+    getActorId = () => null, pendingStore = defaultArsenalPendingStore()} = options;
+  const legacyFactory = !('getEconomy' in options);
+  const selectedEconomy = () => typeof getEconomy === 'function' ? getEconomy() : null;
   const held = new Map();
   const knownShared = new Set(), capability = {headers: ECONOMY_CAPABILITY_HEADERS};
   async function ask(send, valid = readArsenal) {
@@ -40,8 +43,8 @@ export function createArsenalApi({transport, makeUid = makeActionUid, getEconomy
   const withCode = code => (where(code) ? {code: where(code)} : {});
   const blocked = () => ({ok: false, status: 409, code: 'economy_context_required', message: 'Wait for your island to load and try again.'});
   async function change(kind, values, code) {
-    const economy = getEconomy(), actor = getActorId();
-    if (economy === null) {
+    const economy = selectedEconomy(), actor = getActorId();
+    if (legacyFactory || isArsenalLegacyContext(economy)) {
       if (knownShared.has(`${actor}:${where(code)}`)) return blocked();
       const key = `${kind}:${where(code)}:${values.weapon ?? values.copy ?? ''}`;
       return write(key, actionUid => transport.post(ARSENAL_PATHS[kind], {
@@ -71,9 +74,10 @@ export function createArsenalApi({transport, makeUid = makeActionUid, getEconomy
   }
   return {
     state: async code => {
-      const expectedOrigin = arsenalOrigin(getEconomy()), actor = getActorId();
+      const economy = selectedEconomy(), expectedOrigin = isArsenalEconomy(economy) ? arsenalOrigin(economy) : null;
+      const actor = getActorId();
       const answer = await ask(() => transport.get(ARSENAL_PATHS.state(where(code)), capability));
-      if (answer.ok && expectedOrigin && !readSharedArsenal(answer.data)) return {ok: false, status: 502, code: 'unreadable', message: MESSAGES.unreadable};
+      if (answer.ok && economy?.mode === 'island_shared' && !readSharedArsenal(answer.data)) return {ok: false, status: 502, code: 'unreadable', message: MESSAGES.unreadable};
       if (answer.ok && readSharedArsenal(answer.data)) knownShared.add(`${actor}:${where(code)}`);
       return {...answer, expectedOrigin};
     },

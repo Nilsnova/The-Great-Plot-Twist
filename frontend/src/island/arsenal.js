@@ -12,19 +12,22 @@
 import {arsenalModel} from './arsenal-model.js';
 import {readWeapon, WEAPON_BY_ID} from '../pirates/captain-ids.js';
 import {ARSENAL} from './spots.js';
-import {arsenalOrigin, readSharedArsenal, sameArsenalOrigin} from './arsenal-shared-state.js';
+import {arsenalOrigin, isArsenalEconomy, isArsenalLegacyContext, readSharedArsenal, sameArsenalOrigin} from './arsenal-shared-state.js';
 
 const REFRESH_ON = new Set(['taken', 'arsenal_full', 'no_such_copy', 'wave_running', 'insufficient_funds', 'locked', 'nothing_held', 'action_used', 'stale_holder', 'economy_epoch_mismatch']);
 const nameOf = (data, id) => { const copy = data.copies.find(item => item.id === id); return copy ? `${WEAPON_BY_ID[copy.weapon].name} #${copy.no}` : 'The weapon'; };
 
-export function createArsenal({api, ui, emit = () => {}, enabled = () => false, code = () => null, place = () => 'own',
-  level = () => 1, skills = () => [], onCoins = () => {}, asking = () => () => true,
-  getEconomy = () => null, getActorId = () => null, onEconomy = () => {}} = {}) {
+export function createArsenal(options = {}) {
+  const {api, ui, emit = () => {}, enabled = () => false, code = () => null, place = () => 'own',
+    level = () => 1, skills = () => [], onCoins = () => {}, asking = () => () => true,
+    getEconomy, getActorId = () => null, onEconomy = () => {}} = options;
+  const legacyFactory = !('getEconomy' in options);
+  const selectedEconomy = () => typeof getEconomy === 'function' ? getEconomy() : null;
   let answer = null, answeredFor = null, busy = null, message = '', loading = false, ticket = 0, rackFilter = 'all';
   // loadFailed: the message is the arsenal's own read failing (a later good read clears it). A refused move's
   // reason stays until the card opens again or the next move, also through a crewmate's change (island_changed).
   let loadFailed = false;
-  const key = () => JSON.stringify([getActorId(), code() ?? 'own', arsenalOrigin(getEconomy())]);
+  const key = () => JSON.stringify([getActorId(), code() ?? 'own', arsenalOrigin(selectedEconomy())]);
   const current = () => (answer && answeredFor === key() ? answer : null);
   const model = () => arsenalModel({answer: current(), level: level(), skills: skills(), filter: rackFilter, busy, message, loading: loading && !current()});
   const copyIntent = id => ({copy: id, holderGeneration: current()?.copies.find(copy => copy.id === id)?.holderGeneration, code: code()});
@@ -49,11 +52,11 @@ export function createArsenal({api, ui, emit = () => {}, enabled = () => false, 
       if (readSharedArsenal(current()) && sameArsenalOrigin(current().economy, data.economy)
         && BigInt(data.arsenalRevision) < BigInt(current().arsenalRevision)) return false;
       onEconomy(data.economy, expectedOrigin ?? arsenalOrigin(data.economy));
-      const known = getEconomy();
+      const known = selectedEconomy();
       answer = sameArsenalOrigin(known, data.economy) && BigInt(known.revision) >= BigInt(data.economy.revision)
         ? {...data, economy: known} : data;
     } else {
-      if (getEconomy() !== null) return false;
+      if (!legacyFactory && !isArsenalLegacyContext(selectedEconomy())) return false;
       answer = data; onCoins(data.coins, fresh);
     }
     answeredFor = key();
@@ -74,6 +77,10 @@ export function createArsenal({api, ui, emit = () => {}, enabled = () => false, 
   }
   async function move(kind, send, success) {
     if (busy || !enabled()) return;
+    const economy = selectedEconomy();
+    if (!legacyFactory && !isArsenalLegacyContext(economy) && !isArsenalEconomy(economy)) {
+      message = 'Wait for your island to load and try again.'; redraw(); return;
+    }
     const asked = key();
     busy = kind; message = ''; loadFailed = false; redraw();
     const before = answer, fresh = asking(), result = await send();
