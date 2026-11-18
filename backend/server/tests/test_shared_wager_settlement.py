@@ -32,6 +32,15 @@ def test_payouts_above_legacy_ceilings_are_exact_decimal_strings() -> None:
     ] == str(payout)
 
 
+def test_5001_digit_payout_uses_the_foundation_decimal_formatter() -> None:
+    payout = 10**5000 + 7
+    encoded = settlement_arguments(RESERVATION, payout, "football:fd-123", "settle-0001")[
+        "p_returned_payout"
+    ]
+    assert len(encoded) == 5001
+    assert encoded == "1" + "0" * 4999 + "7"
+
+
 def test_a_retry_preserves_the_source_and_operation_identity() -> None:
     first = settlement_arguments(RESERVATION, 50, "football:fd-123", "settle-0001")
     again = settlement_arguments(RESERVATION, 50, "football:fd-123", "settle-0001")
