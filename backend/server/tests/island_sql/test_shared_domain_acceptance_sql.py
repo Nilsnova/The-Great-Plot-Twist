@@ -189,6 +189,55 @@ def test_failure_after_actual_asset_and_charge_rolls_back_root_and_every_effect(
     reconciles(database, keys(initial)[0])
 
 
+@pytest.mark.skipif(
+    not (MIGRATIONS / "20261118051200_shared_combat_repairs.sql").exists(),
+    reason="Actual shared repair migration not integrated; repair race not executed.",
+)
+def test_actual_countdown_repair_and_wager_share_last_funds_without_extra_heal_or_quota(
+    database,
+    scratch_server,
+):
+    from server.tests.island_sql.test_shared_combat_repairs_sql import repair, seed
+
+    # The helper explicitly injects the missing canonical economy-bound snapshot producer.
+    world = seed(database, coins=10)
+    as_owner(database)
+    database.execute("update public.islands set wave_best=7 where player_id=%s", (world.owner,))
+    database.commit()
+    results = concurrent_calls(
+        scratch_server,
+        [
+            lambda c: repair(c, world, uid="race-repair1"),
+            lambda c: open_market_call(c, world.owner, world.initial, "repair-bet01", stake=10),
+        ],
+    )
+    assert sorted(item["status"] for item in results) == ["done", "refused"]
+    assert next(item for item in results if item["status"] == "refused")["reason"] == (
+        "insufficient_funds"
+    )
+    money = account_money(database, world.initial)
+    assert money in ((0, 0, 0), (10, 10, 0))
+    expected_repairs = int(money == (0, 0, 0))
+    assert database.execute(
+        "select paid_used,journal_head from public.recovery_wave_states where wave_id=%s",
+        (world.wave,),
+    ).fetchone() == (expected_repairs, expected_repairs)
+    assert database.execute(
+        "select hp_units,repair_seq from public.island_structure_health "
+        "where island_owner=%s and spot='wall_1'",
+        (world.owner,),
+    ).fetchone() == (500_000 + expected_repairs * 500_000, expected_repairs)
+    assert (
+        database.execute(
+            "select count(*) from public.island_economy_operations "
+            "where account_id=%s and is_player_intent",
+            (keys(world.initial)[0],),
+        ).fetchone()[0]
+        == 1
+    )
+    reconciles(database, keys(world.initial)[0])
+
+
 @pytest.mark.parametrize("domain", ["arsenal", "wager", "ship"])
 def test_actual_domain_replay_after_departure_returns_common_receipt_without_current_treasury(
     database,
