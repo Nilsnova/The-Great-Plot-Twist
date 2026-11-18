@@ -993,6 +993,8 @@ All sprites of the island, people, buildings, ships and effects, and the title a
 4. The ships are in their own chunk, loaded only when a wave's atlas is drawn (`framesFor` in `registry.js`).
 5. `stage.js` draws full-screen scenes in layers with parallax. Still layers are painted once per size.
 
+The [fleet art pass](../specs/VIS-16-29-fleet-art.md) gives the five existing hulls directional cloth folds, layered timbers and waterline foam. The wave renderer applies the health and burning states to those frames. Smoke, splash and impact artwork use the same cached atlas, with the simulation controlling each event and its outcome.
+
 ### Why it was built this way
 - **The owner's decision on 11 Nov:** clean cartoon 2D, not pixel art ([GAME-V3.md §7](GAME-V3.md), commit `e1fcef4`).
 - **Drawn in code instead of image files:** no downloads, no new packages, original designs only, and the picture stays crisp at any density. The painted title and intro images looked AI-generated (the words of T21 in [OPEN-TODOS.md](OPEN-TODOS.md)), so they were replaced (commit `1d8bdb2`).
