@@ -13,6 +13,8 @@ import pytest
 
 psycopg = pytest.importorskip("psycopg")
 
+# Register this fixture here so committed races use this module's own cached cluster.
+from server.tests.case_sql.conftest import scratch_server as scratch_server  # noqa: E402
 from server.tests.island_sql.test_islands_and_waves_sql import (  # noqa: E402
     add_players,
     as_owner,
