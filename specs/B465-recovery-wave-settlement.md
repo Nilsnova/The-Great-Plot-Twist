@@ -7,6 +7,7 @@
 - **Status:** implemented; human review pending
 - **Branch:** `fix/recovery-wave-settlement`
 - **Publication branch:** `fix/coop-wave-consistency-review` (the development branch is retained).
+- **Draft PR:** [#485](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/485).
 - **Issue:** [#465](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/465)
 
 ## Why

@@ -7,6 +7,7 @@ was recorded from local changes based on `48aee0e7b34c879968c4bc606b543f911032ad
 The publication branch is `fix/coop-wave-consistency-review`, based on current main `db573347`.
 It preserves the merged VIS-41 and WebP work and adds only the remaining co-op corrections.
 Ianno authorized commits and draft publication; different-human approval is still required.
+Draft review: [PR #485](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/485).
 
 The current-main core publication slice passed **95 frontend tests in 10 files** (8.52 seconds)
 and **552 backend/API/PostgreSQL tests** (29.54 seconds), including the complete island SQL
