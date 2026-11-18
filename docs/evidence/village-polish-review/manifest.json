@@ -3,11 +3,11 @@
   "actualBeforeSource": "6c87b8dcd2d7a1bb5376c3b64bbede27a144479e",
   "actualAfterSource": "7fab8866b83e27c6102df6b123ffdf2eb96619d0",
   "scope": "Unchanged original artifacts plus documentation. The manifest does not hash itself.",
-  "guideSha256": "2ec87fa3821bed7e2653245c388c7bc9fa8732f6892279f16f57c3af9f392a19",
+  "guideSha256": "98e8cd8794984ff5682e005c521c869278a451f62f5f66d4c810726f0fef2aeb",
   "files": {
     "README.md": {
-      "bytes": 8942,
-      "sha256": "215e943e1f16afbcc254ca2fbf370c40ea9095da6824f261c986d6d3f184a5ab"
+      "bytes": 9046,
+      "sha256": "a5c7ddb39c68cc19cd91d6eff0ce044b43cbbd96ac059f1a7ee65db4173a6ceb"
     },
     "actual-after/capture.log": {
       "bytes": 201,
@@ -628,16 +628,16 @@
       "sha256": "9c3537e012ad0a81f1049b7104082b69e060fb9487285516b79d333e731642d7"
     },
     "source.json": {
-      "bytes": 3692,
-      "sha256": "d2e62602b3a11ae613e7cf9dd1dc94f706c4ce625c4032c1ac16218fdacb81ba"
+      "bytes": 4261,
+      "sha256": "221fd4b20aa45d06307e1e163093ae387389d8a55e8d4ece16834dfcc3fa8119"
     },
     "static-checks.json": {
-      "bytes": 406,
-      "sha256": "a118afd23ad85caf955e7a8630444585e13fbb065f874606c0621173ad7d6583"
+      "bytes": 606,
+      "sha256": "78d387c648f2e39450d940f41b74d4bd445d9cc2d9d4dd58272baf9618d891da"
     },
     "verify-comparison.mjs": {
-      "bytes": 7781,
-      "sha256": "e945689f0cb6b796f4ebe7ca831a60b7134f9673b1d24c1304c536e520e44afe"
+      "bytes": 9070,
+      "sha256": "c9fd2bf84d54a9716cb713b8cc9cb5066d5d3f027b5f5c133f1929c569538dd6"
     }
   }
 }

@@ -42,16 +42,18 @@ The implementation retains its existing original pirate-village artwork.
 | 1 | VIS57: preserve current main and the prior visual preview | [#426](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/426) | Both histories and all teammate fixes survive; the renderer uses smoothed coordinates with the existing projection; migration versions are unique. |
 | 2 | VIS54: home-tree clearance | [#427](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/427) | Smaller artwork leaves exact tree feet, blockers, player fade, wind and house growth intact. |
 | 3 | VIS55: connected wall details | [#428](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/428) | Real tier posts, cap trim and profiles improve readability without changing paid positions, contacts, health or gaps. |
-| 4 | VIS58: landscape materials | [#431](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/431) | Ground color/texture sampling and rock lighting change inside the original masks; native alpha and fallback bytes are retained. |
-| 5 | VIS56: existing-level renderer fixtures | [#430](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/430) | The actual compiled frames and shared wall renderer cover the real level/state catalogue; fixtures are labeled honestly. |
-| 6 | VIS56: assembled actual-game review | [#432](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/432) | The composed source has matching screenshots, paid-action proof and fresh regression results. |
-| 7 | VIS56: this documentation package | [#433](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/433) | Claims, sources, raw receipts, copied bytes and remaining gates agree. |
+| 4 | VIS59: strict wall observer | [#435](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/435) | QA-only follow-up recognizes the deliberately changed wall profiles and sparse posts while retaining topology/buffer checks; reruns remain pending. |
+| 5 | VIS58: landscape materials | [#431](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/431) | Ground color/texture sampling and rock lighting change inside the original masks; native alpha and fallback bytes are retained. |
+| 6 | VIS56: existing-level renderer fixtures | [#430](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/430) | The actual compiled frames and shared wall renderer cover the real level/state catalogue; fixtures are labeled honestly. |
+| 7 | VIS56: assembled actual-game review | [#432](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/432) | The composed source has matching screenshots, paid-action proof and fresh regression results. |
+| 8 | VIS56: this documentation package | [#433](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/433) | Claims, sources, raw receipts, copied bytes and remaining gates agree. |
 
 Issues: [#422](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/422),
 [#423](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/423),
 [#424](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/424),
 [#425](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/425) and
-[#429](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/429).
+[#429](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/429) and
+[VIS59 #434](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/434).
 
 The two assembled preview branches retain many earlier dependencies. Their small
 component PRs, not a wholesale aggregate merge, are the review units. A different
@@ -238,13 +240,17 @@ appearance remain limitations to assess rather than invented new tier art.
 | Native renderer matrix | Initial 22 fixture sheets / all 100 defense bindings passed in 12.29s on `9fa15494`, with visible framebuffer negative controls and no page errors/external requests. Caption-only follow-up pending. |
 | Corrected actual full-game captures | Passed on `7fab8866`: 20 original PNGs, 192.03s helper / 192.13s wrapper, both viewports, all snapshots High/density 1/DPR 1; zero page errors/external requests and one expected offline 503 console message per viewport. |
 | Comparison document browser | Checker prepared for exact served HTML/image hashes, 12 decodes and 33 real tab actions per viewport; root native run pending. This is document operability, not game test coverage. |
-| Fresh complete frontend/a11y/demo/overlap/build/budget/text/multiplayer | Pending coordinator results; older passes and failures are historical. |
-| This documentation | Interim static check passed: 109 copied originals, all 20 before-image inventory hashes, 12 image dimensions, ARIA/syntax, 50 relative link targets and 115 manifest file hashes. Final matrix/application additions require a fresh static pass. No application tests run by this writer. |
+| First complete frontend on `7fab8866` | 4,639 passed / 2 failed (4,641), 422 passed / 2 failed files (424), 563.75s Vitest / 564.43s process. Input timeout and obsolete wall-observer expectation remain recorded. |
+| Remaining first-sequence commands and QA-only rerun | Coordinator sequence/rerun still in progress; final frontend, multiplayer and combined results remain pending. |
+| This documentation | Interim static check passed: 109 copied originals, all 20 before-image inventory hashes, 12 image dimensions, ARIA/syntax, 51 relative link targets and 115 manifest file hashes. Final matrix/application additions require a fresh static pass. No application tests run by this writer. |
 
-The fresh frontend run is still in progress and has already logged the unchanged
-defense-report ownership case at its **20.027s timeout**. Final pass/file counts
-and the completed command result are not yet available. This guide does not call
-the suite green while it is running.
+The first frontend command finished with two failures: the unchanged
+defense-report ownership case at its **20.027s timeout**, and the old multiplayer
+wall observer still expecting a level-three height of `1.45` instead of the
+deliberate `1.25` profile, without recognizing sparse buttresses. VIS59 updates
+verification only; it does not alter the game to satisfy the old observer. A
+fresh complete frontend/multiplayer run is required after that QA correction.
+The first failure count must not be relabeled as the final outcome.
 
 The older `e874023f` frontend run had **4,586 passes and one unchanged 20-second
 input timeout**. Its full multiplayer predecessor stopped at a firing-pose check;

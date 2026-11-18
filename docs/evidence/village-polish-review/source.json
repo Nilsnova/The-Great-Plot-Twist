@@ -22,11 +22,25 @@
     "paidTierWalkthrough": "passed_223.56_seconds_both_viewports_492_receipts_each_adaptive_density",
     "nativeMatrix": "initial_pass_22_sheets_100_bindings_12.29_seconds_final_caption_fix_followup_pending",
     "correctedActualGame": "passed_192.03_seconds_wrapper192.13_20_original_pngs_high_density1_DPR1",
-    "freshApplicationChecks": "running_known_input_timeout_20.027_seconds_final_counts_pending",
+    "freshApplicationChecks": "first_sequence_running_QA_only_VIS59_rerun_pending",
     "documentationStaticChecks": "passed_interim_109_original_artifacts_20_before_inventory_12_html_images_aria_syntax_links_json",
     "highDensityPaidTierWalkthrough": "passed_305.36_seconds_18_original_pngs_984_receipts_total_density1_exact_drawing_dimensions",
     "highDensityAttempt01": "failed_helper_null_selection_before_first_intended_capture_26.70_seconds",
-    "comparisonDocumentBrowser": "pending"
+    "comparisonDocumentBrowser": "pending",
+    "firstFrontend7fab": {
+      "passed": 4639,
+      "failed": 2,
+      "tests": 4641,
+      "filesPassed": 422,
+      "filesFailed": 2,
+      "files": 424,
+      "vitestSeconds": 563.75,
+      "processSeconds": 564.43,
+      "failures": [
+        "unchanged defense-report ownership 20.027s timeout",
+        "legacy multiplayer wall observer expects old L3 profile and no sparse buttresses"
+      ]
+    }
   },
   "finalRuntime": "7fab8866b83e27c6102df6b123ffdf2eb96619d0",
   "finalScriptTree": "0ee76841b7c32c629a1b139b5477088c16126897",
@@ -64,5 +78,11 @@
     "frontend/public": "9306942db1050d728799cee2fbdc8e8960f14ad2",
     "backend": "3956a73d76f537fd7c85259afa4bf9280a6e0ecd",
     "supabase": "5dfb7a3d506568b2e344c795360a562580854c33"
+  },
+  "qaFollowup": {
+    "issue": 434,
+    "draftPr": 435,
+    "scope": "strict observer update only; no product code change",
+    "finalNativeAndFullResults": "pending"
   }
 }
