@@ -3,10 +3,10 @@
 Uses the complete migration chain twice, synthetic members, and real Captain hooks.
 """
 
+import asyncio
 import json
 from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
-from pathlib import Path
 from queue import Queue
 from threading import Barrier
 from time import monotonic, sleep
@@ -18,10 +18,13 @@ psycopg = pytest.importorskip("psycopg")
 
 from psycopg.types.json import Jsonb  # noqa: E402
 
-from server.island.catalogue import CAMPAIGN_FILE, CONTENT_FILE, load_island  # noqa: E402
-from server.island.construction_rules import catalogue_manifest  # noqa: E402
+from server.errors import ApiError  # noqa: E402
+from server.island import construction_store, layout  # noqa: E402
+from server.island.catalogue import CAMPAIGN_FILE, CONTENT_FILE, catalogue_for_flags, load_island  # noqa: E402
+from server.island.construction_rules import ConstructionIntent, catalogue_manifest  # noqa: E402
 from server.island.economy_operations import system_uid  # noqa: E402
-from server.tests.case_sql import conftest as postgres_fixture  # noqa: E402
+from server.island.treasury import EconomyContext  # noqa: E402
+from server.tests.case_sql.conftest import scratch_server as scratch_server  # noqa: E402
 from server.tests.island_sql.test_island_treasury_sql import (  # noqa: E402
     keys,
     money,
@@ -47,23 +50,6 @@ from server.tests.island_sql.test_structure_recovery_mutations_sql import (  # n
 )
 
 MANIFEST = catalogue_manifest(load_island())
-
-
-@pytest.fixture
-def isolated_transition(scratch_server, tmp_path):
-    """Run committed adoption races without leaving records in other SQL fixtures."""
-    pgserver = pytest.importorskip("pgserver")
-    assert psycopg.conninfo.conninfo_to_dict(scratch_server.get_uri())["host"].startswith("/")
-    with pgserver.get_server(
-        tmp_path / "construction-transition-pg", cleanup_mode="delete"
-    ) as server:
-        with psycopg.connect(server.get_uri(), autocommit=True) as connection:
-            connection.execute(Path(postgres_fixture.__file__).with_name("stub.sql").read_text())
-            for _ in range(2):
-                for migration in sorted(postgres_fixture.MIGRATIONS.glob("*.sql")):
-                    connection.execute(migration.read_text())
-        with psycopg.connect(server.get_uri()) as connection:
-            yield connection, server
 
 
 def intent(action="build", *, spot="wall_1", kind="wall", instance=None, level=0, coins="9"):
@@ -788,6 +774,7 @@ def test_history_and_private_legacy_aliases_have_no_write_or_execute_capability(
         "island_demolish_quote_legacy_personal(uuid,uuid,text,jsonb)",
         "island_economy_require_idle_locked(uuid)",
         "island_construction_legacy_actor_allowed_locked(uuid)",
+        "island_construction_lock_legacy_scopes(uuid,uuid)",
     ):
         for role in ("anon", "authenticated", "service_role"):
             assert database.execute(
@@ -831,9 +818,9 @@ def test_unadopted_actor_keeps_legacy_build_and_upgrade_behavior(database):
 
 @pytest.mark.parametrize("transition", ["adoption", "respec"])
 def test_legacy_build_rechecks_global_personal_mode_after_waiting_for_transition(
-    isolated_transition, transition
+    database, scratch_server, transition
 ):
-    database, server = isolated_transition
+    server = scratch_server
     owner, actor, _, treasury, _ = initialized(database)
     alphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
     code = "".join(alphabet[(actor.int >> (5 * index)) % len(alphabet)] for index in range(5))
@@ -887,3 +874,221 @@ def test_legacy_build_rechecks_global_personal_mode_after_waiting_for_transition
     assert answer == {"status": "refused", "reason": "captain_context_required"}
     assert balance(database, actor) == 100 and standing(database, actor) is None
     assert view(database, actor)["captain"]["engineerCommitment"] is None
+
+
+def through_adapter(connection, actor, treasury, request, uid):
+    """Exercise the real adapter against the same private SQL transaction."""
+
+    class Admin:
+        async def call_function(self, name, arguments):
+            assert name == "island_economy_construct"
+            as_server(connection)
+            return rpc(
+                connection,
+                name,
+                arguments["p_actor_id"],
+                arguments["p_account_id"],
+                arguments["p_run_epoch"],
+                arguments["p_action_uid"],
+                Jsonb(arguments["p_intent"]),
+                Jsonb(arguments["p_catalogue"]),
+            )
+
+    origin = treasury["currentEconomy"]
+    context = EconomyContext(
+        "island_shared",
+        1,
+        str(actor),
+        origin["islandOwner"],
+        origin["accountId"],
+        origin["runEpoch"],
+        int(origin["revision"]),
+    )
+    return asyncio.run(
+        construction_store.construct(
+            Admin(), context, uid, ConstructionIntent.model_validate(request), load_island()
+        )
+    )
+
+
+@pytest.mark.parametrize(
+    "kind,spot", [("culverin", "cannon_1"), ("cannon", "cannon_8"), ("culverin", "cannon_8")]
+)
+def test_saved_v1_gated_structure_can_upgrade_and_demolish_without_opening_new_offers(
+    database, kind, spot
+):
+    owner, _, _, treasury, _ = initialized(database)
+    as_owner(database)
+    epoch = uuid4()
+    database.execute(
+        "update public.island_recovery_state set reset_epoch=%s,recovery_version=1,"
+        "wave_protocol=2 where island_owner=%s",
+        (epoch, owner),
+    )
+    snapshot = template()
+    snapshot["defaultPositions"] = {
+        entry.spot: {"x": entry.x, "z": entry.z} for entry in layout.island_layout(more=True).spots
+    }
+    database.execute(
+        "insert into public.recovery_wave_states(wave_id,island_owner,reset_epoch,"
+        "recovery_version,wave_protocol,initial_snapshot) values(%s,%s,%s,1,2,%s)",
+        (uuid4(), owner, epoch, Jsonb(snapshot)),
+    )
+    as_server(database)
+    rpc(
+        database,
+        "island_treasury_credit",
+        owner,
+        *keys(treasury),
+        system_uid(str(uuid4()), "loot"),
+        "pirate_loot",
+        "fixture:gated",
+        2000,
+    )
+    enabled = catalogue_for_flags(load_island(), {"defenses_v2": True, "more_tower_spots": True})
+    entry = next(entry for entry in enabled.kinds if entry.kind == kind)
+    paid = [max(1, (price * 90 + 50) // 100) for price in entry.prices[:2]]
+    built = construct(
+        database,
+        owner,
+        treasury,
+        intent(spot=spot, kind=kind, coins=str(paid[0])),
+        manifest=catalogue_manifest(enabled),
+    )
+    assert built["status"] == "done", built
+    upgraded = through_adapter(
+        database, owner, treasury, target(built, "upgrade", str(paid[1])), "gatedup01"
+    )
+    assert upgraded["receipt"]["result"]["level"] == 2
+    with pytest.raises(ApiError) as caught:
+        through_adapter(
+            database,
+            owner,
+            treasury,
+            intent(spot="cannon_9", kind=kind, coins=str(paid[0])),
+            "gatednew1",
+        )
+    assert caught.value.code == "protected"
+    assert standing(database, owner, "cannon_9") is None
+    refund = sum(paid) // 2
+    request = target(upgraded, "demolish", str(refund))
+    removed = through_adapter(database, owner, treasury, request, "gateddel1")
+    assert removed["receipt"]["result"]["refundedCoins"] == str(refund)
+    assert (
+        through_adapter(database, owner, treasury, request, "gateddel1")["receipt"]
+        == removed["receipt"]
+    )
+    with pytest.raises(ApiError) as caught:
+        through_adapter(
+            database, owner, treasury, intent(spot=spot, kind=kind, coins=str(paid[0])), "gatednew2"
+        )
+    assert caught.value.code == "protected"
+    assert standing(database, owner, spot) is None
+    assert balance(database, owner) == 100
+    expected = 2200 - sum(paid) + refund
+    current = through_adapter(database, owner, treasury, request, "gateddel1")
+    assert money(current) == (expected, 0, expected)
+    reconciles(database, keys(treasury)[0])
+
+
+@pytest.mark.parametrize("action", ["build", "upgrade"])
+def test_legacy_visitor_takes_actor_scope_before_wallet_and_personal_locks(
+    database, scratch_server, action
+):
+    actor, _, _, _ = ready(database, admitted=False)
+    owner, _, _, _ = ready(database, admitted=False)
+    rpc(database, "game_join", actor, owner, 10)
+    if action == "upgrade":
+        rpc(database, "island_build", owner, owner, "wall_1", "wall", "seedwall1", 10)
+    database.commit()
+    as_owner(database)
+    rpc(database, "island_treasury_lock_scope", actor)
+    database.execute("select 1 from public.profiles where id=%s for update", (actor,))
+    started = Queue()
+
+    def buy():
+        with psycopg.connect(scratch_server.get_uri()) as connection:
+            connection.execute("set lock_timeout='5s'")
+            as_server(connection)
+            started.put(connection.info.backend_pid)
+            if action == "build":
+                return rpc(
+                    connection, "island_build", actor, owner, "wall_1", "wall", "scopewait1", 10
+                )
+            return rpc(
+                connection,
+                "island_upgrade",
+                actor,
+                owner,
+                "wall_1",
+                "scopewait1",
+                [10, 20, 40, 80, 160],
+                5,
+            )
+
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        future = pool.submit(buy)
+        worker = started.get(timeout=5)
+        deadline = monotonic() + 3
+        blocked = False
+        while monotonic() < deadline:
+            blocked = database.execute(
+                "select %s = any(pg_blocking_pids(%s))", (database.info.backend_pid, worker)
+            ).fetchone()[0]
+            if blocked:
+                break
+            sleep(0.01)
+        assert blocked
+        # An actor grant can still lock its wallet while this visitor is waiting.
+        with database.transaction():
+            database.execute(
+                "select 1 from public.wallets where player_id=%s for update nowait", (actor,)
+            )
+        database.commit()
+        assert future.result(timeout=5)["status"] == "done"
+    assert balance(database, actor) == (90 if action == "build" else 80)
+
+
+def test_two_scope_keys_are_acquired_in_signed_hash_order(database, scratch_server):
+    owners = (uuid4(), uuid4())
+    as_owner(database)
+    ordered = sorted(
+        (
+            database.execute(
+                "select hashtextextended('island-economy:'||%s::uuid::text,0)", (owner,)
+            ).fetchone()[0],
+            owner,
+        )
+        for owner in owners
+    )
+    low_key, low_owner = ordered[0]
+    high_key, high_owner = ordered[1]
+    assert low_key < high_key
+    rpc(database, "island_treasury_lock_scope", low_owner)
+    started = Queue()
+
+    def lock_pair():
+        with psycopg.connect(scratch_server.get_uri()) as connection:
+            connection.execute("set lock_timeout='5s'")
+            started.put(connection.info.backend_pid)
+            rpc(connection, "island_construction_lock_legacy_scopes", high_owner, low_owner)
+            return True
+
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        future = pool.submit(lock_pair)
+        worker = started.get(timeout=5)
+        deadline = monotonic() + 3
+        blocked = False
+        while monotonic() < deadline:
+            blocked = database.execute(
+                "select %s = any(pg_blocking_pids(%s))", (database.info.backend_pid, worker)
+            ).fetchone()[0]
+            if blocked:
+                break
+            sleep(0.01)
+        assert blocked
+        assert database.execute("select pg_try_advisory_xact_lock(%s)", (high_key,)).fetchone() == (
+            True,
+        )
+        database.commit()
+        assert future.result(timeout=5)

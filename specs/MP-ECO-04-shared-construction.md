@@ -18,7 +18,7 @@ This task adds isolated Python construction rules/adapter code, additive SQL and
 
 ## Server and transaction contract
 
-The server builds a trusted construction manifest from its flag-filtered catalogue: each kind has exact positive integral prices and required island wave per level; each permitted spot has allowed kinds and its required wave. Browser input cannot choose a payer, price table, actor role or unlock level. Client quote fields identify action, spot/kind, expected instance/level and exact quoted charge/refund. SQL repeats the domain checks against the current island record and personal Captain state.
+The server builds a trusted construction manifest: each kind has exact positive integral prices and required island wave per level; each permitted spot has allowed kinds and its required wave. Builds and rebuilds use the flag-filtered catalogue. For upgrade and demolition, the existing-structure catalogue helper restores only known saved kinds/plots for the intent's target; SQL must still match its actual instance, kind, level and payment basis. This preserves an owned culverin or extra tower spot after new offers close, without authorizing a new gated purchase. Browser input cannot choose a payer, price table, actor role or unlock level. Client quote fields identify action, spot/kind, expected instance/level and exact quoted charge/refund. SQL repeats the domain checks against the current island record and personal Captain state.
 
 `island_economy_construct(actor, account, epoch, actionUid, intent, catalogue)` is service-only. The intent is one of `build`, `upgrade` or `demolish`. It binds the operation identity to the original account/epoch, exact instance/level and quote. Successful responses separate an immutable domain receipt from fresh originating-account state. A repeated identical action returns that receipt before validating the current catalogue or structure; changed target/quote/payload returns SQL `action_conflict` (`idempotency_conflict` at the adapter boundary). No retry may silently act on a replacement structure. Fresh `currentEconomy` requires current membership and the original active account/epoch to remain the current active admission pointer. Departed actors and retries after retirement, pointer replacement or admission pause receive their original receipt with `currentEconomy: null`.
 
@@ -46,7 +46,9 @@ Use `island_treasury_spend`/`island_treasury_credit` within the same SQL transac
 Legacy defaults and route payloads stay unchanged. Additive wrappers guard `island_build`, `island_upgrade`, `island_demolish` and `island_demolish_quote` before any old wallet/island locks. They acquire the same scope guard as admission and refuse every admitted shared mode, including a paused one. Original bodies remain private aliases with no browser or standalone service execute grant. Capture each original only once, then recreate public wrappers on reapplication; this prevents capturing a wrapper and recursing when the complete migration chain is applied twice. No admitted route may fall back to a personal wallet or catalogue-based private refund.
 
 Legacy `island_build` and `island_upgrade` also check the actor's global personal mode,
-even on a target island with legacy accounting. They lock the existing actor wallet before
+even on a target island with legacy accounting. Before any row lock, they acquire the actor
+and target island scopes as distinct signed hash keys in ascending order, matching the
+treasury scope namespace. They then lock the existing actor wallet before
 the personal profile anchor and refuse managed actors with `captain_context_required`
 before delegating to the old body. This prevents old role prices from avoiding the managed
 Engineer commitment. Unadopted actors keep legacy behavior. Unsupported managed-actor
@@ -58,6 +60,13 @@ there is no visiting payer. That generic RPC is not covered by these named islan
 The old Captain/session paths likewise require the global managed-profile guard. Existing
 route refusal mapping and those remaining mutation paths must be integrated before any
 new mode is activated; this package does not register or change route dispatch.
+The same `20261118050401` transaction installs the early actor-scope `grant_entry_kit`
+wrapper and preserves its original nine-argument body as private
+`grant_entry_kit_legacy_personal`. Intro and demo share this outermost RPC. Grants and
+first-ending replays remain unchanged; no personal-mode check or treasury transfer is
+added to the kit. Installing both sides together closes the profile/wallet ordering gap
+without a forward dependency on later core guards. Acquiring an actor scope from a later
+transitive call would invert the order.
 
 The existing building/layout/health schema remains authoritative. Additional perimeter placement rules, if introduced by another accepted version, need a matching trusted manifest/guard before those new offers are enabled; this task does not grant land or invent placement rights.
 
@@ -112,5 +121,48 @@ and negative totals are rejected; a wide legacy bookkeeping total cannot inflate
 After the current-main compatibility merge, **135 real PostgreSQL checks** passed in
 10.35 seconds and **51 focused Python checks** passed. New cases cover managed actors on
 legacy build/upgrade targets, preserved unadopted legacy behavior, and actual blocked-lock
-interleavings with personal adoption and respec. New committed transition races use their
-own disposable cluster, so their records cannot change other tests' global counts.
+interleavings with personal adoption and respec.
+
+The saved-defense compatibility follow-up passed **138 relevant PostgreSQL cases** in
+8.64 seconds and **53 focused Python cases**. Three real recovery-v1 cases preserve
+culverin, extra-spot cannon and extra-spot culverin upgrade/demolition when their offer
+flags are off, while new builds and same-slot rebuilds remain refused. All actual payment
+and refund receipts reconcile. The new construction test module registers a module-local
+instance of the existing scratch fixture; a mixed **82-case PostgreSQL** run with legacy
+host-console and fresh-start counts passed, without changing the shared legacy fixture.
+
+After the merged recovery-option cleanup, **141 relevant PostgreSQL checks** passed in
+16.68 seconds and **53 focused Python checks** passed. The new scope-order cases hold an
+actor scope and profile lock, then prove that a visiting build/upgrade waits without taking
+the wallet needed by that actor's grant. A separate real lock interleaving proves the two
+keys are acquired in signed-hash order even when arguments arrive in the opposite order.
+Standalone construction closure is verified without the later core legacy migration:
+**148 relevant PostgreSQL cases** passed in 11.28 seconds, including seven real kit/demo
+grant cases. Intro and demo grants force visiting build/upgrade to wait on the advisory
+scope before a wallet lock; the reverse order likewise waits at the scope. Original
+payments and first-ending replays are preserved, and the exact nine-argument private alias
+has no service/browser execute right after complete migration reapplication.
+The construction, entry-profile, intro and demo Python checks passed **257 cases** in
+11.61 seconds; full backend Ruff passed. No later core migration was present in this
+standalone verification worktree.
+
+After integration of treasury schema version `20261118050050`, the standalone construction
+and grant suites passed **57 PostgreSQL cases** in 17.52 seconds. Construction, migration
+version, entry, intro and demo Python checks passed **258 cases** in 23.63 seconds. Full
+Ruff passed, and all **72 migration versions** were unique and parsed successfully. The
+owned runtime source was unchanged by this dependency merge.
+
+
+### Final personal dependency alignment
+
+The branch includes the actual final personal Captain dependency `4005fb53`, including
+its global operation registry and isolated race fixtures. The review diff against that
+base contains only the 11 construction files. Duplicate foundation additions use the
+reviewed dependency source; the construction runtime source is unchanged by the merge.
+
+The two construction suites, both personal Captain suites and legacy islands/waves suite
+passed **120 PostgreSQL tests** in 14.82 seconds in one process. The focused construction,
+historical SQL-contract, personal Captain, personal-route and migration-version Python
+checks passed **100 tests** in 7.40 seconds. Full backend Ruff passed, and all **73
+migration versions** were unique and parsed. These checks use disposable local databases;
+no HTTP route, admission, live migration or browser feature is activated.

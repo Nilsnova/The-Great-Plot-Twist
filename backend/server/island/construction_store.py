@@ -10,9 +10,10 @@ from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, Valida
 
 from server.errors import ApiError
 from server.island import treasury_store
-from server.island.catalogue import IslandCatalogue
+from server.island.catalogue import IslandCatalogue, catalogue_for_existing_structures
 from server.island.construction_rules import ConstructionIntent, Unsigned, catalogue_manifest
 from server.island.economy_operations import root_action_uid
+from server.island.rules import Built
 from server.island.treasury import EconomyContext, scope
 from server.supabase_admin import SupabaseAdmin, SupabaseRejected
 
@@ -150,6 +151,12 @@ async def construct(
 ) -> dict:
     """One domain RPC; neither a wallet call nor an asset write can happen separately."""
     root_action_uid(action_uid)
+    if intent.action != "build":
+        # This supplies known saved kinds/plots, not ownership. SQL independently
+        # checks the exact current instance, kind, level and actual payment basis.
+        catalogue = catalogue_for_existing_structures(
+            catalogue, {intent.spot: Built(intent.kind, intent.expectedLevel)}
+        )
     parameters = {
         **scope(context),
         "p_action_uid": action_uid,

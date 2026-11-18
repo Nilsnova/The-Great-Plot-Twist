@@ -8,6 +8,7 @@ from threading import Barrier
 import pytest
 
 psycopg = pytest.importorskip("psycopg")
+from server.tests.case_sql.conftest import scratch_server as scratch_server  # noqa: E402
 from server.tests.island_sql.test_economy_operations_sql import (  # noqa: E402
     apply_intent,
     operation_count,
