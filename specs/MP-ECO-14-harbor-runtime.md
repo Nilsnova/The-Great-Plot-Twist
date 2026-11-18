@@ -19,6 +19,10 @@ Prepare GitHub Actions every-five-minute wake-up code and manual dispatch, gated
 
 Add separate shared Harbor cards/adapters with canonical decimal strings and BigInt arithmetic, minimum one coin, full available-funds all-in and no daily/open-count/event caps. Common origin receipts are separate from authorized current balances. Pending intents retain their original UID/body/scope on unknown outcomes and across close/reload; island/reset/identity changes never retarget them. The shared island integration provides `getEconomy`, guarded `onEconomy(envelope, expectedOrigin)`, optional `subscribeEconomy`, authoritative `getActorId`, capability-aware transport and router/card wiring. No credential or token parsing belongs in the cards.
 
+A `401` retry does not resolve an earlier unknown opening. Preserve its original UID/body
+through reauthentication and reload; only the original actor and account/run may retry it.
+An intervening authentication failure must not authorize a fresh stake with a replacement UID.
+
 ## Verification and remaining gates
 
 Tests cover real disposable PostgreSQL queue creation/retries/source settlement after departure/retirement, protected HTTP auth/capability/payload/scope validation, exact large amounts, concurrent funds and duplicate completion, frontend scope changes/unknown retries/multiple same-event bets, and real browser controls. Run focused Python/SQL/frontend checks, whole-backend Ruff, SQL parsing and production frontend build. Label injected authority/provider/auth fixtures separately from actual authenticated multi-client evidence. Actual production authority/client acceptance remains a gate until canonical shared session integration is available. Final verification/results are recorded after execution; human review follows CONTRIBUTING.md.

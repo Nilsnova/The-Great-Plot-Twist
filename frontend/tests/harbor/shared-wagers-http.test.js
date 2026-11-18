@@ -50,6 +50,33 @@ describe('dedicated shared wager transport', () => {
     expect((await reloaded.retry()).ok).toBe(true);
     expect(sent[1]).toEqual(sent[0]);
   });
+  it.each(['market_call', 'football'])('retains the original %s opening through unknown outcome, 401 and same-actor reauthentication', async product => {
+    const context = economy(), pendingStore = store(), sent = []; let user = actor, uidCount = 0;
+    const api = {post: async (_path, body) => {
+      sent.push(structuredClone(body));
+      if (sent.length === 1) return {ok: false, status: 0};
+      if (sent.length === 2) return {ok: false, status: 401, code: 'unauthorized'};
+      return accepted(body, context);
+    }};
+    const config = {api, getEconomy: () => context, getActorId: () => user, product, pendingStore,
+      makeUid: () => `market00${++uidCount}`};
+    const first = createSharedWagersHttp(config);
+    const draft = {eventId: product === 'market_call' ? 'harbor-trust' : 'fd-123',
+      selection: product === 'market_call' ? 'up' : 'home', stake: '100'};
+    expect((await first.place(draft)).unknown).toBe(true);
+    const expired = createSharedWagersHttp(config);
+    expect((await expired.retry()).status).toBe(401);
+    expect(expired.pending.body).toEqual(sent[0]);
+    user = null; expect(createSharedWagersHttp(config).pending).toBe(null);
+    user = id(7); expect(createSharedWagersHttp(config).pending).toBe(null);
+    user = actor;
+    const restored = createSharedWagersHttp(config);
+    expect(restored.pending.body).toEqual(sent[0]);
+    expect((await restored.place({...draft, stake: '1'})).code).toBe('pending_wager');
+    expect((await restored.retry()).ok).toBe(true);
+    expect(sent).toEqual([sent[0], sent[0], sent[0]]);
+    expect(uidCount).toBe(1); expect(restored.pending).toBe(null);
+  });
   it('allows independent same-event stakes with fresh UIDs after each confirmed result', async () => {
     const context = economy(), sent = []; let counter = 0;
     const api = {post: async (_path, body) => { sent.push(body); return accepted(body, context); }};
