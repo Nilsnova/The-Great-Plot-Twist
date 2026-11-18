@@ -31,7 +31,7 @@
     "seconds": 335.47,
     "exitCode": 0
   },
-  "boundary": "Execution began on the named immutable source. Final receipt and complete run outcome are pending; no copied capture is used as a passing result. Documentation-only commits may change HEAD without changing application trees.",
+  "boundary": "The named coordinator intermediate paid run is complete and copied unchanged. The later revised final candidate and its complete checks remain pending. Documentation-only commits can change HEAD without changing application trees; built bundle identity is not inferred from matching application trees.",
   "layoutMeaning": "New normal paid arrangement, not automatic migration or injected successful walls. Existing saved coordinates and receipt replay remain authoritative.",
   "results": {
     "fullFrontend": "pending coordinator",
