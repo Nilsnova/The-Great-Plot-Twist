@@ -270,7 +270,10 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
         // The Harbor building (GAME-V3.md §4) opens the same stalls as the old Harbor overview.
         openHarborStall:id=>void(id==='weather'?harbor.openWeather():id==='market'?openMarket():id==='match'?sportsUi.open().catch(()=>{}):null),
         // The visit chip: the old "Visiting … · Sail home" only where travel applies (src/island/one-island.js).
-        travel:()=>travelOpen(),villageCamera:action=>view.villageControl(action),
+        travel:()=>travelOpen(),villageCamera:(action,anchor)=>{
+          view.villageControl(action);
+          if(anchor&&action==='work')view.focusVillage(anchor);
+        },
         // D039 (proposed): lasting wall damage and the paid Repair/Rebuild, only while the server's flag is on.
         // In fake mode (?islands=fake) the fake server's own flags decide (?fakeflags=wall_recovery, fake-api.js).
         wallRecovery:()=>{if(fakeTransport)return fakeTransport.flags.wall_recovery===true;
@@ -436,6 +439,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
       if(stopPlots.active){stopPlots.close();input.reset();graphics.renderer.domElement.focus({preventScroll:true});return true;}
       if(hud.closeQuickPanels?.())return true;
       if(sportsUi.active&&!document.querySelector('.sports-modal[open]')){sportsUi.close();return true;}
+      if(waves?.island.closeDefenseInspection?.())return true;
       const panel=[...document.querySelectorAll('dialog[open]')].filter(node=>!node.classList.contains('cinematic-modal')&&!node.classList.contains('shell-screen')).at(-1);
       const debug=container.querySelector('.debug:not([hidden])');
       const action=escapePriority({panel:!!panel||!!debug,playing:!shell.blocked});

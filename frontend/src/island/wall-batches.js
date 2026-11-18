@@ -116,6 +116,7 @@ export function texturedWallBatches(links, posts, art, {selectedId = null, selec
     // including the transparent anchor margin, rather than lifting it off the tile.
     const point = projectPoint(post.x, post.z), width = frame.w / UNIT * POST_WIDTH;
     const bottom = point.y - frame.anchor / UNIT * POST_HEIGHT, top = bottom + frame.h / UNIT * POST_HEIGHT;
+    if (post.id === selectedId) layer.selectedPost = layer.positions.length / 3;
     quad(layer, [[point.x-width/2,bottom],[point.x+width/2,bottom],[point.x+width/2,top],[point.x-width/2,top]]
       .map(([x,y]) => [x,y,post.x,post.z]), id);
   }
