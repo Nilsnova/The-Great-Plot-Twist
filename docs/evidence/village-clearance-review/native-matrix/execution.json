@@ -1,0 +1,14 @@
+{
+  "source": "68d41990615bac98aac3b3ffb2225857c8707a81",
+  "name": "matrix-final",
+  "command": [
+    "node",
+    "scripts/capture-visual-matrix.mjs",
+    "/workspace/reference-village-work/clearance-runtime-02/frontend",
+    "/workspace/reference-village-work/clearance-native-matrix"
+  ],
+  "started": "2026-11-18T10:44:21.012537+00:00",
+  "exitCode": 0,
+  "seconds": 12.79,
+  "finished": "2026-11-18T10:44:33.803701+00:00"
+}

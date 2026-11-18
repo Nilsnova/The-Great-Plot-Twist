@@ -1,16 +1,56 @@
 {
   "status": "static_integrity_checked_application_results_recorded_separately",
-  "originalArtifactsByteVerified": 63,
+  "originalArtifactsByteVerified": 112,
   "paidPngsBoundToOriginalCaptureReports": 52,
-  "pngFiles": 52,
+  "pngFiles": 94,
   "comparisonImages": 12,
-  "localLinkTargetsChecked": 70,
+  "localLinkTargetsChecked": 74,
   "jsonParse": "passed",
   "htmlTagBalanceAndLocalReferences": "passed",
   "authoredWhitespace": "passed; untouched original logs inspected separately",
   "originalLogWhitespace": {
-    "exitCode": 0,
-    "diagnostics": [],
+    "whitespaceDiagnosticsPresent": true,
+    "diagnostics": [
+      "docs/evidence/village-clearance-review/checks/final-frontend/frontend.log:4998: new blank line at EOF."
+    ],
+    "perFileNoIndexExitCodes": [
+      {
+        "path": "docs/evidence/village-clearance-review/actual-final/run.log",
+        "exitCode": 1
+      },
+      {
+        "path": "docs/evidence/village-clearance-review/before-paid/run.log",
+        "exitCode": 1
+      },
+      {
+        "path": "docs/evidence/village-clearance-review/checks/final-frontend/frontend.log",
+        "exitCode": 3
+      },
+      {
+        "path": "docs/evidence/village-clearance-review/integration-fixture-checks/fixture-backend.log",
+        "exitCode": 1
+      },
+      {
+        "path": "docs/evidence/village-clearance-review/integration-fixture-checks/fixture-frontend-corrected.log",
+        "exitCode": 1
+      },
+      {
+        "path": "docs/evidence/village-clearance-review/integration-fixture-checks/fixture-frontend.log",
+        "exitCode": 1
+      },
+      {
+        "path": "docs/evidence/village-clearance-review/native-matrix/run.log",
+        "exitCode": 1
+      },
+      {
+        "path": "docs/evidence/village-clearance-review/paid-final/run.log",
+        "exitCode": 1
+      },
+      {
+        "path": "docs/evidence/village-clearance-review/progress-paid-bcf/capture.log",
+        "exitCode": 1
+      }
+    ],
     "reason": "preserve exact raw reporter bytes"
   },
   "nativeComparisonPage": "not run; static page only, no browser launched by documentation writer",
@@ -135,6 +175,22 @@
     {
       "from": "docs/evidence/village-clearance-review/README.md",
       "target": "integration-fixture-checks/checks.json"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/README.md",
+      "target": "actual-final/execution.json"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/README.md",
+      "target": "native-matrix/execution.json"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/README.md",
+      "target": "checks/final-frontend/summary.json"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/README.md",
+      "target": "checks/final-frontend/frontend.log"
     },
     {
       "from": "docs/evidence/village-clearance-review/comparison.html",

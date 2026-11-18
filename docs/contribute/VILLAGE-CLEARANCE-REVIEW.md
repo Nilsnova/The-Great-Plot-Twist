@@ -4,7 +4,9 @@ For **Johannes Franz Lang (`frcola`)** and a different human reviewer. This guid
 explains the follow-up after the user reported walls crossing objects and an
 appearance still below the approved island reference.
 
-**Status: implementation is assembled; final combined evidence is being collected.**
+**Status: native captures are complete; the full frontend has one unchanged failure.**
+Source `68d41990`: **4,906 frontend passes / one 20-second input timeout**. Other
+application and strict backend/SQL results are still being collected.
 The coordinator is capturing the actual game and will supply exact fresh command
 results. The focused branch checks below do not establish a complete-suite pass.
 All PRs stay Draft. No human visual acceptance, readiness, PR merge or deployment
@@ -83,6 +85,33 @@ follow-up owns any required atomic SQL change. An exact paid receipt is
 reconciled before revalidation: it remains the same receipt rather than charging
 again or reconstructing a demolished/reset piece. See
 [VIS62's authority and tests](../evidence/VIS-62-scenery-clearance/README.md).
+
+## Ordinary purchases need atomic checked authority too
+
+Independent review found a separate bypass after the explicit quote/Move guard:
+an ordinary owner/friend purchase could still buy an old empty original wall
+site on scenery. A raw stored coordinate cannot authorize that fresh purchase:
+legacy settlement can display the site somewhere else. [VIS68/Draft #455](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/455)
+and [D066](https://github.com/Nilsnova/The-Great-Plot-Twist/blob/chore/vis-61-clearance-review/docs/DECISIONS.md#d066--atomic-authority-for-every-fresh-original-wall-purchase--2026-11-18)
+define the mandatory checked normal-build wrappers needed to close this path.
+The strict context revision and its final PostgreSQL proof are still in progress.
+
+The wall-only service path supplies the effective displayed cell and complete
+atomic layout snapshot. Under the existing payer-wallet then owner-island lock
+order, the wrapper preserves original UID replay/already-built results first,
+fences policy/capacity/every raw row, materializes only the fresh purchase's checked
+cell and performs the original payment/build in the same transaction. A refusal
+must roll back that materialization too. Fresh insertion requires transaction-local
+authority matching owner, plot and checked coordinate; raw rows alone are insufficient.
+Old-signature fresh purchases fail closed. Existing paid reads, retries and health
+upgrades are not converted into layout cleanup; non-wall calls keep their old signatures.
+
+The additive 72nd migration, `20261118060000_wall_single_build_clearance.sql`, is
+written for review/private tests only. The human owner applies it before deploying
+the corresponding backend; missing mandatory overloads fail closed without an
+old-signature fallback. No agent applies it live. The earlier 41 new / 182 broader SQL
+passes on the initial e57 source do not establish closure of the later raw/effective
+authority gap. Final strict transaction/context and PostgreSQL results are pending.
 
 ## What selection now draws
 
@@ -181,8 +210,8 @@ being multiplied by the ground projection to `-0.806`. The badge now receives it
 screen-facing offset after its building foot is projected, matching combat.
 
 The [original selected-check logs](../evidence/village-clearance-review/integration-fixture-checks/checks.json)
-retain80passes/2failures and then82passes across eight files in11.63s, plus
-38targeted backend passes in3.75s. These working-tree checks precede the final
+retain 80 passes / 2 failures and then 82 passes across eight files in 11.63s, plus
+38 targeted backend passes in 3.75s. These working-tree checks precede the final
 frozen runtime and are not relabeled as complete application verification.
 
 ## Evidence and walkthrough

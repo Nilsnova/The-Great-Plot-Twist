@@ -1,5 +1,5 @@
 {
-  "status": "interim_final_combined_evidence_pending",
+  "status": "frontend_and_native_captures_closed_remaining_application_and_backend_checks_pending",
   "responsibleHuman": "Johannes Franz Lang",
   "github": "frcola",
   "documentationBase": "bcf8f1bce5458cfb9c5d07e063ea0c2f3d57c44f",
@@ -34,10 +34,10 @@
   "boundary": "The named coordinator intermediate paid run is complete and copied unchanged. The later revised final candidate and its complete checks remain pending. Documentation-only commits can change HEAD without changing application trees; built bundle identity is not inferred from matching application trees.",
   "layoutMeaning": "New normal paid arrangement, not automatic migration or injected successful walls. Existing saved coordinates and receipt replay remain authoritative.",
   "results": {
-    "fullFrontend": "pending coordinator",
+    "fullFrontend": "4906passed/one unchanged20secondinputtimeout;435files(434pass/1fail),622.73sVitest/623.58sprocess; overallnotgreen",
     "nativePaidProgression": "Final frontend68d passed28PNG/984upgrades335.84s; distinct interimbcf proof retained",
-    "nativeActualJourney": "pending coordinator",
-    "nativeMatrix": "pending coordinator",
+    "nativeActualJourney": "PASS210.61s20actualPNGs on68d, declared8000funds normalnew102+21layout ends5150coins; selection/Move cancel/unpaidghosts/fire/breach",
+    "nativeMatrix": "PASS12.79s22labeledfixture sheets on68d; different from actual gameplay screenshots",
     "backendTargetedPG": "pending coordinator",
     "uiChecks": "pending coordinator"
   },
@@ -67,12 +67,14 @@
     "issue": 454,
     "status": "frontend fake parity in68d candidate; final backend/SQL implementation and coordinator private-PG proof pending",
     "scope": "Close regular original-wall purchase bypass in addition to explicit Move/positioned-quote clearance. Atomic authority/fake parity and any additive migration remain separate from the interim capture.",
-    "draftPR": 455
+    "draftPR": 455,
+    "strictContextRevision": "Initiale57PG/HTTP41pass+broader182pass does not close the older raw/effective SQL authority gap. D066 requires transaction-local checked authority and old-signature fresh purchases fail closed. Final strict source and PG results pending.",
+    "migration": "20261118060000_wall_single_build_clearance.sql (72nd), written only; human owner applies before corresponding backend deployment; no agent live apply or fallback to old signatures."
   },
   "finalFrontendCandidate": {
     "source": "68d41990615bac98aac3b3ffb2225857c8707a81",
     "runtime": "/workspace/reference-village-work/clearance-runtime-02",
-    "status": "paid stage completed335.84s/exit0; actual/native/full application sequence still running",
+    "status": "nativepaid/actual/matrix andfullfrontendclosed; remaininga11y/demo/layout/build/budget/text/MPsequencepending",
     "includes": "revised water and early local-fake normal-purchase parity; final backend/SQL guard is tested separately after writer completion",
     "sequence": "/workspace/reference-village-work/clearance-ui-sequence/report.json",
     "plannedArtifacts": [
@@ -156,5 +158,64 @@
       "passed": 38,
       "seconds": 3.75
     }
+  },
+  "finalActualExecution": {
+    "source": "68d41990615bac98aac3b3ffb2225857c8707a81",
+    "name": "actual-final",
+    "command": [
+      "node",
+      "scripts/capture-village-composition.mjs",
+      "/workspace/reference-village-work/clearance-runtime-02/frontend",
+      "/workspace/reference-village-work/clearance-actual-final",
+      "reference",
+      "--arranged",
+      "--wave",
+      "--scenery"
+    ],
+    "started": "2026-11-18T10:40:50.392872+00:00",
+    "exitCode": 0,
+    "seconds": 210.61,
+    "finished": "2026-11-18T10:44:21.003413+00:00"
+  },
+  "finalMatrixExecution": {
+    "source": "68d41990615bac98aac3b3ffb2225857c8707a81",
+    "name": "matrix-final",
+    "command": [
+      "node",
+      "scripts/capture-visual-matrix.mjs",
+      "/workspace/reference-village-work/clearance-runtime-02/frontend",
+      "/workspace/reference-village-work/clearance-native-matrix"
+    ],
+    "started": "2026-11-18T10:44:21.012537+00:00",
+    "exitCode": 0,
+    "seconds": 12.79,
+    "finished": "2026-11-18T10:44:33.803701+00:00"
+  },
+  "closedFrontendResult": {
+    "source": "68d41990615bac98aac3b3ffb2225857c8707a81",
+    "command": [
+      "npm",
+      "test",
+      "--",
+      "--maxWorkers=1",
+      "--reporter=verbose"
+    ],
+    "exitCode": 1,
+    "passed": 4906,
+    "failed": 1,
+    "filesPassed": 434,
+    "filesFailed": 1,
+    "filesTotal": 435,
+    "secondsVitest": 622.73,
+    "secondsProcess": 623.58,
+    "failure": "unchanged defense-report input-ownership test times out at20seconds; no retry/skip/timeout relaxation",
+    "case": "frontend/tests/pirates/defense-report-ownership.test.js",
+    "caseBlobUnchangedFromPriorVisualReview": "9e0b0591ef0506de436b46ea33db8db277b6e78d",
+    "boundary": "Generated summary of the closed coordinator frontend step; complete multi-command report is still being appended and is not copied yet."
+  },
+  "captureMethods": {
+    "paid": "High retained; normalviewport+1/restore before snapshots establishes density1/DPR1. Work andadditionalrealFit retained separately.",
+    "actualJourney": "Existing Low-to-High setting reset before ordinary snapshots, inherited capture method. Recorded snapshots High/density1/DPR1. No sustainedFPS claim.",
+    "matrix": "Native compiled-frame/wall-render contact sheets with framebuffernegativecontrol; not actualgameplay or unlock/progression proof."
   }
 }

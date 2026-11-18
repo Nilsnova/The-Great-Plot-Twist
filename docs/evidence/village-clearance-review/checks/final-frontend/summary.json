@@ -1,0 +1,22 @@
+{
+  "source": "68d41990615bac98aac3b3ffb2225857c8707a81",
+  "command": [
+    "npm",
+    "test",
+    "--",
+    "--maxWorkers=1",
+    "--reporter=verbose"
+  ],
+  "exitCode": 1,
+  "passed": 4906,
+  "failed": 1,
+  "filesPassed": 434,
+  "filesFailed": 1,
+  "filesTotal": 435,
+  "secondsVitest": 622.73,
+  "secondsProcess": 623.58,
+  "failure": "unchanged defense-report input-ownership test times out at20seconds; no retry/skip/timeout relaxation",
+  "case": "frontend/tests/pirates/defense-report-ownership.test.js",
+  "caseBlobUnchangedFromPriorVisualReview": "9e0b0591ef0506de436b46ea33db8db277b6e78d",
+  "boundary": "Generated summary of the closed coordinator frontend step; complete multi-command report is still being appended and is not copied yet."
+}
