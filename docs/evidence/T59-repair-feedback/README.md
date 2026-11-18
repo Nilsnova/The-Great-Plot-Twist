@@ -133,3 +133,18 @@ On 17 Nov 2026, `npm exec vitest -- run tests/island/structure-recovery-model.te
 Upgrade remains visible and disabled while canonical health is loading or unavailable, with the helper “Wait until building health has loaded.” When valid data arrives, normal full-health and between-wave eligibility applies. The updated desktop/phone component crops above show this state; capture source is `8ca34b18`.
 
 After synchronization with main `48aee0e7`, the nine-file policy/card/API/Captain check listed above passed **105 tests across 9 files in 28.31 seconds**. The production build and spoiler guard passed. Every committed STATUS line from both branch histories was preserved. No PR, migration, deployment or activation was performed; manual review and publication confirmation remain pending.
+
+
+## Current-main policy review · 18 Nov
+
+Source baseline `d9809cc8` includes main `db573347`; an unrelated EOF-only stylesheet difference was removed so `frontend/src/ui/styles.css` matches main exactly. Both committed STATUS histories and the protected instruction files are retained.
+
+The 105-test focused run includes headless Chromium DOM fixtures; no new full-game or authenticated browser session was run during that synchronization. A fresh selected Chromium capture regression on the current baseline passed (1 passed, 9 skipped by the name filter) with:
+
+```sh
+cd frontend && RECOVERY_POLICY_CAPTURE_DIR=../docs/evidence/T59-repair-feedback/policy-main-db573347 ./node_modules/.bin/vitest run --maxWorkers=1 tests/island/structure-recovery-policy.test.js -t 'does not downgrade a persisted v1 island'
+```
+
+[Desktop Wall error](policy-main-db573347/t59-policy-fallback-wall-error-desktop.png) and [375 × 812 phone Cannon guard](policy-main-db573347/t59-policy-fallback-cannon-phone.png) were visually inspected. These crop the production-styled card from offline fake-island fixtures, make no authenticated request and prove no live wallet, database or multiplayer outcome. The earlier captures remain unchanged. [Exact capture output](policy-main-db573347/capture.txt).
+
+The local four-branch candidate `35f91e0e` passed 232 focused frontend tests across 23 files, production build/spoiler checks, and text lint (zero errors, eight unchanged report-only findings). It retains the target island's saved policy, blocks legacy fallback and stale-level health rows, and keeps HP-less houses/watchtowers outside the health-loading guard. This is combined-source evidence rather than an isolated-branch full-suite result. No PR, live migration, deployment or activation.
