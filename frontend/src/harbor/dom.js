@@ -2,18 +2,14 @@
 // stake picker (D050), the sign-in line, the "My stakes" list and the sparkline. Strings are always text.
 import './harbor.css';
 import {createModal} from '../ui/kit/modal.js';
+import {node as el} from '../ui/kit/dom.js';
 import {formatCoins} from '../lib/coins.js';
 import {QUICK_SHARES, clampStake, firstStake, shareStake, stepFor, stepStake} from './stakes.js';
 import {MY_STAKES, PLACE, SIGN_IN, SIGN_IN_BUTTON, STAKE} from './words.js';
 
 let ids = 0;
 export const uid = prefix => `harbor-${prefix}-${++ids}`;
-export function el(tag, className, text) {
-  const element = document.createElement(tag);
-  if (className) element.className = className;
-  if (text !== undefined && text !== null) element.textContent = String(text);
-  return element;
-}
+export {el};
 export function button(label, onClick, className = 'kit-button harbor-button') {
   const element = el('button', className, label);
   element.type = 'button';

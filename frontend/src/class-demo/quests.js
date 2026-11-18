@@ -1,5 +1,5 @@
 // The demo's quest strip as plain data: three small goals, a one-line hint each, and the done state
-// kept per player in local storage. No DOM here; quest-strip.js draws it.
+// kept per player in local storage. No DOM here; src/ui/quest-strip.js draws it.
 export const QUEST_KEY = 'plot_twist_quests_v1';
 // The class at Pirate Point (lane 0, task 0.4): wave to a captain, help defend Pirate Point when the host
 // rings its bell, and light one of its three lamps (three captains together sink the flagship). The duel

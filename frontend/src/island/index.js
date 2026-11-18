@@ -40,7 +40,7 @@ import {createArsenalApi} from './arsenal-api.js';
 import {buildCardModel, bellModel, inviteModel, crewModel, captainModel, captainsModel, skillsModel, weaponsModel, coinText,
   harborModel, techModel, wreckModel, demolishModel, refundToast} from './card-model.js';
 import {campaignOf, isOpen, openedBetween, opensText, waveOf} from '../campaign/index.js';
-import {BRANCH_BY_ID, SPECS, optionName, optionsOf} from '../campaign/tech.js';
+import {BRANCH_BY_ID, SPECS, optionName} from '../campaign/tech.js';
 import {TOWER_TREES} from '../pirates/tower-trees.js';
 import {ROLES, activeRole, roleRadius} from '../campaign/houses.js';
 import {ROLE_BY_ID, SKILL_BY_ID, WEAPON_BY_ID, WEAPONS, isRole, readSkills, readWeapon} from '../pirates/captain-ids.js';
