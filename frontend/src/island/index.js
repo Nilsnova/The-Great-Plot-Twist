@@ -424,7 +424,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     // The fake server's helpers (setCoins, failNext, startWaveAt...) in fake mode, for the console and checks.
     get dev() { return transport?.dev ?? null; },
     get ui() { return isl.ui; },
-    get active() { return isl.ui.active || !!isl.cutscene || !!isl.boatGame; }, // D057: a boat round holds the keys too
+    get active() { return isl.ui.active || !!isl.cutscene || isl.boatLoading || !!isl.boatGame; }, // Pending rounds hold the keys too.
     get managing() { return isl.village.active; },
     get selection() { return selectedAnchor(); },
     get selectionElement() { return isl.ui.selectionElement; },
@@ -433,6 +433,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     get moving() { return isl.moving.state; },
     get moveMode() { return isl.moving; },
     handleEscape() {
+      if (isl.boatLoading) { interruptBoat(); return true; }
       if (isl.boatGame) { isl.boatGame.close(); return true; }
       if (isl.cutscene) { isl.cutscene.skip(); return true; }
       if (isl.moving.active && !isl.ui.active) { isl.moving.cancel(); return true; }

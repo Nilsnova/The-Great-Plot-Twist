@@ -83,6 +83,10 @@ scene module; later status refreshes may clear their display snapshot but cannot
 select a different payment path. A live screen without verified status displays
 neutral unavailable rewards and disables sailing until status arrives.
 
+Pending server-bound round creation remains an owned overlay after the ship card
+closes. It blocks captain input, and Escape invalidates the pending launch so a
+late start reply cannot mount a scene after cancellation.
+
 ## Arsenal and repair delegation
 
 Pass the same viewed-island context and authenticated actor callbacks to arsenal

@@ -4,7 +4,7 @@ vi.mock('../../src/island/ui.js', () => ({createIslandUi: () => ({open: null, ac
   buildCard(model, handlers) {this.model = model; this.handlers = handlers; this.open = 'build';},
   close() {this.open = null;}, dispose() {}, toast() {}, banner() {}, visit() {}})}));
 vi.mock('../../src/island/move-bar.js', () => ({createMoveBar: () => ({render() {}, dispose() {}})}));
-vi.mock('../../src/island/village-bar.js', () => ({createVillageBar: () => ({render() {}, dispose() {}})}));
+vi.mock('../../src/island/village-bar.js', () => ({createVillageBar: () => ({render() {}, setBuildings() {}, dispose() {}})}));
 vi.mock('../../src/island/wall-builder-bar.js', () => ({createWallBuilderBar: () => ({render() {}, dispose() {}})}));
 import {createIsland} from '../../src/island/index.js';
 import {buildCardModel} from '../../src/island/card-model.js';

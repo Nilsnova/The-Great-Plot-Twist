@@ -58,6 +58,7 @@ async function mountSharedIsland(page, withContext, delayScene = false) {
           if (!path.startsWith('/api/island/boat')) return base.post(path, body);
           window.sharedBoatRequests.push({path, body, options});
           const start = path.endsWith('/start');
+          if (start && window.holdSharedBoatStart) await new Promise(resolve => {window.releaseSharedBoatStart = resolve;});
           if (!start && !path.endsWith('/claim')) return {ok: false, status: 409, code: 'economy_context_required'};
           return {ok: true, status: 200, data: {status: start ? 'started' : 'done', repeat: false,
             receipt: {receiptId: crypto.randomUUID(), action: start ? 'boat:start' : 'boat:claim',
@@ -96,6 +97,22 @@ it('refuses a shared launch without canonical context and sends no personal awar
       expect(await page.evaluate(() => window.sharedBoatRequests)).toEqual([]);
       expect(await page.locator('.shared-boat-scene-fixture').count()).toBe(0);
       await page.evaluate(() => {window.sharedBoatIsland.dispose(); localStorage.clear();});
+  });
+});
+
+it('holds input during shared round creation and Escape cancels the pending scene', async () => {
+  await browser.withPage(async page => {
+    await page.evaluate(() => {window.holdSharedBoatStart = true;});
+    await mountSharedIsland(page, true);
+    await page.waitForFunction(() => typeof window.releaseSharedBoatStart === 'function');
+    expect(await page.evaluate(() => window.sharedBoatIsland.active)).toBe(true);
+    expect(await page.evaluate(() => window.sharedBoatIsland.handleEscape())).toBe(true);
+    await page.evaluate(() => window.releaseSharedBoatStart());
+    await page.waitForFunction(() => !window.sharedBoatIsland.active);
+    expect(await page.locator('.shared-boat-scene-fixture').count()).toBe(0);
+    expect((await page.evaluate(() => window.sharedBoatRequests)).map(request => request.path))
+      .toEqual(['/api/island/boat/start']);
+    await page.evaluate(() => {window.sharedBoatIsland.dispose(); localStorage.clear();});
   });
 });
 
