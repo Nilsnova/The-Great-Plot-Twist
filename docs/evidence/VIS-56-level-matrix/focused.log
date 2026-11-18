@@ -1,0 +1,184 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run --maxWorkers=1 tests/art/village-level-matrix.test.js tests/art/village-activation.test.js tests/art/wall-tier-identity.test.js tests/art/village-cannons.test.js tests/art/village-mortars.test.js tests/art/village-harpoons.test.js tests/art/village-culverins.test.js tests/art/village-swivels.test.js tests/island/wall-textured-batches.test.js tests/island/tiers.test.js --reporter=verbose
+
+
+ RUN  v5.1.0 /workspace/reference-village-work/polish-verification/frontend
+
+ ✓ tests/island/wall-textured-batches.test.js > dimensional wall artwork contract > keeps every authored crop and foot inside the real sheet, retaining all five materials and ruin IDs 21ms
+ ✓ tests/island/wall-textured-batches.test.js > dimensional wall artwork contract > places the post baseline at its authoritative foot and never moves source coordinates 4ms
+ ✓ tests/island/wall-textured-batches.test.js > dimensional wall artwork contract > batches the measured 102 posts while retaining all106 real joins and their exact depth orders 26ms
+ ✓ tests/island/wall-textured-batches.test.js > dimensional wall artwork contract > preserves the actual old span position/index buffers under the new material and post batches 67ms
+ ✓ tests/island/wall-textured-batches.test.js > dimensional wall artwork contract > rebuilds real buffers for a breach, retains its ruin post and restores exactly the original contacts 6ms
+ ✓ tests/island/wall-textured-batches.test.js > dimensional wall artwork contract > updates every draft ghost to the registered frame height without moving its ground foot or owning its borrowed texture 8ms
+ ✓ tests/island/wall-textured-batches.test.js > dimensional wall artwork contract > uses accepted combat HP and break restoration without leaking stale starting-health or making unknown links 3ms
+ ✓ tests/art/wall-tier-identity.test.js > wall tier identity across canonical artwork and consumers > keeps each of the fifteen canonical frames in its authored material column and damage row 7ms
+ ✓ tests/art/wall-tier-identity.test.js > wall tier identity across canonical artwork and consumers > world buffers select the correct canonical atlas rectangle for all tiers and states 6ms
+ ✓ tests/art/wall-tier-identity.test.js > wall tier identity across canonical artwork and consumers > combat buffers select the correct canonical atlas rectangle for all tiers and states 3ms
+ ✓ tests/art/village-swivels.test.js > original shaded swivel family > covers exactly the existing five levels and four states with the coordinated visual revision 15ms
+ ✓ tests/art/village-swivels.test.js > original shaded swivel family > binds the inspected original RGBA bytes and bounded native source 7ms
+ ✓ tests/art/village-swivels.test.js > original shaded swivel family > island-swivel contains its complete native crop, foot and clear edge inside one state band 1ms
+ ✓ tests/art/village-swivels.test.js > original shaded swivel family > island-swivel-fire contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-swivels.test.js > original shaded swivel family > island-swivel-damaged contains its complete native crop, foot and clear edge inside one state band 1ms
+ ✓ tests/art/village-swivels.test.js > original shaded swivel family > island-swivel-broken contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-swivels.test.js > original shaded swivel family > island-swivel-l2 contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-swivels.test.js > original shaded swivel family > island-swivel-fire-l2 contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-swivels.test.js > original shaded swivel family > island-swivel-l2-damaged contains its complete native crop, foot and clear edge inside one state band 2ms
+ ✓ tests/art/village-swivels.test.js > original shaded swivel family > island-swivel-l2-broken contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-swivels.test.js > original shaded swivel family > island-swivel-l3 contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-swivels.test.js > original shaded swivel family > island-swivel-fire-l3 contains its complete native crop, foot and clear edge inside one state band 1ms
+ ✓ tests/art/village-swivels.test.js > original shaded swivel family > island-swivel-l3-damaged contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-swivels.test.js > original shaded swivel family > island-swivel-l3-broken contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-swivels.test.js > original shaded swivel family > island-swivel-l4 contains its complete native crop, foot and clear edge inside one state band 1ms
+ ✓ tests/art/village-swivels.test.js > original shaded swivel family > island-swivel-fire-l4 contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-swivels.test.js > original shaded swivel family > island-swivel-l4-damaged contains its complete native crop, foot and clear edge inside one state band 1ms
+ ✓ tests/art/village-swivels.test.js > original shaded swivel family > island-swivel-l4-broken contains its complete native crop, foot and clear edge inside one state band 1ms
+ ✓ tests/art/village-swivels.test.js > original shaded swivel family > island-swivel-l5 contains its complete native crop, foot and clear edge inside one state band 1ms
+ ✓ tests/art/village-swivels.test.js > original shaded swivel family > island-swivel-fire-l5 contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-swivels.test.js > original shaded swivel family > island-swivel-l5-damaged contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-swivels.test.js > original shaded swivel family > island-swivel-l5-broken contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-swivels.test.js > original shaded swivel family > never samples a neighboring tier or state 5ms
+ ✓ tests/art/village-swivels.test.js > original shaded swivel family > normalizes every state to the same tier scale and exact foot at density1.5 5ms
+ ✓ tests/art/village-swivels.test.js > original shaded swivel family > normalizes every state to the same tier scale and exact foot at density2 3ms
+ ✓ tests/art/village-swivels.test.js > original shaded swivel family > normalizes every state to the same tier scale and exact foot at density4 2ms
+ ✓ tests/art/village-cannons.test.js > the original shaded cannon family > covers all actual level/state names and only the approved visual metrics 7ms
+ ✓ tests/art/village-cannons.test.js > the original shaded cannon family > binds an inspected RGBA source within the declared native transfer/memory bounds 3ms
+ ✓ tests/art/village-cannons.test.js > the original shaded cannon family > island-cannon has a complete crop, clear edge and a contained virtual fit 0ms
+ ✓ tests/art/village-cannons.test.js > the original shaded cannon family > island-cannon-fire has a complete crop, clear edge and a contained virtual fit 0ms
+ ✓ tests/art/village-cannons.test.js > the original shaded cannon family > island-cannon-damaged has a complete crop, clear edge and a contained virtual fit 0ms
+ ✓ tests/art/village-cannons.test.js > the original shaded cannon family > island-cannon-broken has a complete crop, clear edge and a contained virtual fit 0ms
+ ✓ tests/art/village-cannons.test.js > the original shaded cannon family > island-cannon-l2 has a complete crop, clear edge and a contained virtual fit 0ms
+ ✓ tests/art/village-cannons.test.js > the original shaded cannon family > island-cannon-fire-l2 has a complete crop, clear edge and a contained virtual fit 4ms
+ ✓ tests/art/village-cannons.test.js > the original shaded cannon family > island-cannon-l2-damaged has a complete crop, clear edge and a contained virtual fit 0ms
+ ✓ tests/art/village-cannons.test.js > the original shaded cannon family > island-cannon-l2-broken has a complete crop, clear edge and a contained virtual fit 0ms
+ ✓ tests/art/village-cannons.test.js > the original shaded cannon family > island-cannon-l3 has a complete crop, clear edge and a contained virtual fit 0ms
+ ✓ tests/art/village-cannons.test.js > the original shaded cannon family > island-cannon-fire-l3 has a complete crop, clear edge and a contained virtual fit 0ms
+ ✓ tests/art/village-cannons.test.js > the original shaded cannon family > island-cannon-l3-damaged has a complete crop, clear edge and a contained virtual fit 0ms
+ ✓ tests/art/village-cannons.test.js > the original shaded cannon family > island-cannon-l3-broken has a complete crop, clear edge and a contained virtual fit 0ms
+ ✓ tests/art/village-cannons.test.js > the original shaded cannon family > island-cannon-l4 has a complete crop, clear edge and a contained virtual fit 0ms
+ ✓ tests/art/village-cannons.test.js > the original shaded cannon family > island-cannon-fire-l4 has a complete crop, clear edge and a contained virtual fit 0ms
+ ✓ tests/art/village-cannons.test.js > the original shaded cannon family > island-cannon-l4-damaged has a complete crop, clear edge and a contained virtual fit 0ms
+ ✓ tests/art/village-cannons.test.js > the original shaded cannon family > island-cannon-l4-broken has a complete crop, clear edge and a contained virtual fit 0ms
+ ✓ tests/art/village-cannons.test.js > the original shaded cannon family > island-cannon-l5 has a complete crop, clear edge and a contained virtual fit 0ms
+ ✓ tests/art/village-cannons.test.js > the original shaded cannon family > island-cannon-fire-l5 has a complete crop, clear edge and a contained virtual fit 0ms
+ ✓ tests/art/village-cannons.test.js > the original shaded cannon family > island-cannon-l5-damaged has a complete crop, clear edge and a contained virtual fit 0ms
+ ✓ tests/art/village-cannons.test.js > the original shaded cannon family > island-cannon-l5-broken has a complete crop, clear edge and a contained virtual fit 0ms
+ ✓ tests/art/village-cannons.test.js > the original shaded cannon family > keeps every pose of island-cannon at one authored level scale 0ms
+ ✓ tests/art/village-cannons.test.js > the original shaded cannon family > keeps every pose of island-cannon-l2 at one authored level scale 0ms
+ ✓ tests/art/village-cannons.test.js > the original shaded cannon family > keeps every pose of island-cannon-l3 at one authored level scale 0ms
+ ✓ tests/art/village-cannons.test.js > the original shaded cannon family > keeps every pose of island-cannon-l4 at one authored level scale 0ms
+ ✓ tests/art/village-cannons.test.js > the original shaded cannon family > keeps every pose of island-cannon-l5 at one authored level scale 0ms
+ ✓ tests/art/village-cannons.test.js > the original shaded cannon family > keeps each semantic state in its own inspected source band 1ms
+ ✓ tests/art/village-cannons.test.js > the original shaded cannon family > never reuses neighboring source pixels across levels or states 2ms
+ ✓ tests/art/village-mortars.test.js > original shaded mortar family > covers exactly the existing five levels and four states with the coordinated visual revision 10ms
+ ✓ tests/art/village-mortars.test.js > original shaded mortar family > binds the inspected original RGBA bytes and bounded native source 3ms
+ ✓ tests/art/village-mortars.test.js > original shaded mortar family > island-mortar contains its complete native crop, foot and clear edge inside one state band 1ms
+ ✓ tests/art/village-mortars.test.js > original shaded mortar family > island-mortar-fire contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-mortars.test.js > original shaded mortar family > island-mortar-damaged contains its complete native crop, foot and clear edge inside one state band 1ms
+ ✓ tests/art/village-mortars.test.js > original shaded mortar family > island-mortar-broken contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-mortars.test.js > original shaded mortar family > island-mortar-l2 contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-mortars.test.js > original shaded mortar family > island-mortar-fire-l2 contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-mortars.test.js > original shaded mortar family > island-mortar-l2-damaged contains its complete native crop, foot and clear edge inside one state band 1ms
+ ✓ tests/art/village-mortars.test.js > original shaded mortar family > island-mortar-l2-broken contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-mortars.test.js > original shaded mortar family > island-mortar-l3 contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-mortars.test.js > original shaded mortar family > island-mortar-fire-l3 contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-mortars.test.js > original shaded mortar family > island-mortar-l3-damaged contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-mortars.test.js > original shaded mortar family > island-mortar-l3-broken contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-mortars.test.js > original shaded mortar family > island-mortar-l4 contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-mortars.test.js > original shaded mortar family > island-mortar-fire-l4 contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-mortars.test.js > original shaded mortar family > island-mortar-l4-damaged contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-mortars.test.js > original shaded mortar family > island-mortar-l4-broken contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-mortars.test.js > original shaded mortar family > island-mortar-l5 contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-mortars.test.js > original shaded mortar family > island-mortar-fire-l5 contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-mortars.test.js > original shaded mortar family > island-mortar-l5-damaged contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-mortars.test.js > original shaded mortar family > island-mortar-l5-broken contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-mortars.test.js > original shaded mortar family > never samples a neighboring tier or state 3ms
+ ✓ tests/art/village-mortars.test.js > original shaded mortar family > normalizes every state to the same tier scale and exact foot at density1.5 4ms
+ ✓ tests/art/village-mortars.test.js > original shaded mortar family > normalizes every state to the same tier scale and exact foot at density2 2ms
+ ✓ tests/art/village-mortars.test.js > original shaded mortar family > normalizes every state to the same tier scale and exact foot at density4 3ms
+ ✓ tests/art/village-culverins.test.js > original shaded culverin family > covers exactly the existing five levels and four states with the coordinated visual revision 9ms
+ ✓ tests/art/village-culverins.test.js > original shaded culverin family > binds the inspected original RGBA bytes and bounded native source 3ms
+ ✓ tests/art/village-culverins.test.js > original shaded culverin family > island-culverin contains its complete native crop, foot and clear edge inside one state band 1ms
+ ✓ tests/art/village-culverins.test.js > original shaded culverin family > island-culverin-fire contains its complete native crop, foot and clear edge inside one state band 1ms
+ ✓ tests/art/village-culverins.test.js > original shaded culverin family > island-culverin-damaged contains its complete native crop, foot and clear edge inside one state band 1ms
+ ✓ tests/art/village-culverins.test.js > original shaded culverin family > island-culverin-broken contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-culverins.test.js > original shaded culverin family > island-culverin-l2 contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-culverins.test.js > original shaded culverin family > island-culverin-fire-l2 contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-culverins.test.js > original shaded culverin family > island-culverin-l2-damaged contains its complete native crop, foot and clear edge inside one state band 1ms
+ ✓ tests/art/village-culverins.test.js > original shaded culverin family > island-culverin-l2-broken contains its complete native crop, foot and clear edge inside one state band 1ms
+ ✓ tests/art/village-culverins.test.js > original shaded culverin family > island-culverin-l3 contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-culverins.test.js > original shaded culverin family > island-culverin-fire-l3 contains its complete native crop, foot and clear edge inside one state band 1ms
+ ✓ tests/art/village-culverins.test.js > original shaded culverin family > island-culverin-l3-damaged contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-culverins.test.js > original shaded culverin family > island-culverin-l3-broken contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-culverins.test.js > original shaded culverin family > island-culverin-l4 contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-culverins.test.js > original shaded culverin family > island-culverin-fire-l4 contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-culverins.test.js > original shaded culverin family > island-culverin-l4-damaged contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-culverins.test.js > original shaded culverin family > island-culverin-l4-broken contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-culverins.test.js > original shaded culverin family > island-culverin-l5 contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-culverins.test.js > original shaded culverin family > island-culverin-fire-l5 contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-culverins.test.js > original shaded culverin family > island-culverin-l5-damaged contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-culverins.test.js > original shaded culverin family > island-culverin-l5-broken contains its complete native crop, foot and clear edge inside one state band 1ms
+ ✓ tests/art/village-culverins.test.js > original shaded culverin family > never samples a neighboring tier or state 5ms
+ ✓ tests/art/village-culverins.test.js > original shaded culverin family > normalizes every state to the same tier scale and exact foot at density1.5 7ms
+ ✓ tests/art/village-culverins.test.js > original shaded culverin family > normalizes every state to the same tier scale and exact foot at density2 5ms
+ ✓ tests/art/village-culverins.test.js > original shaded culverin family > normalizes every state to the same tier scale and exact foot at density4 5ms
+ ✓ tests/art/village-level-matrix.test.js > complete existing village review cases > selects all 100 real combat defense poses and agrees with the village for intact frames 7ms
+ ✓ tests/art/village-level-matrix.test.js > complete existing village review cases > retains canonical house caps, role availability, watchtower aliases and all core health states 2ms
+ ✓ tests/art/village-level-matrix.test.js > complete existing village review cases > exercises an inner divider, straight selection, mixed joins and a real breach at level 1 3ms
+ ✓ tests/art/village-level-matrix.test.js > complete existing village review cases > exercises an inner divider, straight selection, mixed joins and a real breach at level 2 2ms
+ ✓ tests/art/village-level-matrix.test.js > complete existing village review cases > exercises an inner divider, straight selection, mixed joins and a real breach at level 3 1ms
+ ✓ tests/art/village-level-matrix.test.js > complete existing village review cases > exercises an inner divider, straight selection, mixed joins and a real breach at level 4 2ms
+ ✓ tests/art/village-level-matrix.test.js > complete existing village review cases > exercises an inner divider, straight selection, mixed joins and a real breach at level 5 1ms
+ ✓ tests/art/village-harpoons.test.js > original shaded harpoon family > covers exactly the existing five levels and four states with the coordinated visual revision 6ms
+ ✓ tests/art/village-harpoons.test.js > original shaded harpoon family > binds the inspected original RGBA bytes and bounded native source 3ms
+ ✓ tests/art/village-harpoons.test.js > original shaded harpoon family > island-harpoon contains its complete native crop, foot and clear edge inside one state band 1ms
+ ✓ tests/art/village-harpoons.test.js > original shaded harpoon family > island-harpoon-fire contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-harpoons.test.js > original shaded harpoon family > island-harpoon-damaged contains its complete native crop, foot and clear edge inside one state band 1ms
+ ✓ tests/art/village-harpoons.test.js > original shaded harpoon family > island-harpoon-broken contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-harpoons.test.js > original shaded harpoon family > island-harpoon-l2 contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-harpoons.test.js > original shaded harpoon family > island-harpoon-fire-l2 contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-harpoons.test.js > original shaded harpoon family > island-harpoon-l2-damaged contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-harpoons.test.js > original shaded harpoon family > island-harpoon-l2-broken contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-harpoons.test.js > original shaded harpoon family > island-harpoon-l3 contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-harpoons.test.js > original shaded harpoon family > island-harpoon-fire-l3 contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-harpoons.test.js > original shaded harpoon family > island-harpoon-l3-damaged contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-harpoons.test.js > original shaded harpoon family > island-harpoon-l3-broken contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-harpoons.test.js > original shaded harpoon family > island-harpoon-l4 contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-harpoons.test.js > original shaded harpoon family > island-harpoon-fire-l4 contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-harpoons.test.js > original shaded harpoon family > island-harpoon-l4-damaged contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-harpoons.test.js > original shaded harpoon family > island-harpoon-l4-broken contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-harpoons.test.js > original shaded harpoon family > island-harpoon-l5 contains its complete native crop, foot and clear edge inside one state band 1ms
+ ✓ tests/art/village-harpoons.test.js > original shaded harpoon family > island-harpoon-fire-l5 contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-harpoons.test.js > original shaded harpoon family > island-harpoon-l5-damaged contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-harpoons.test.js > original shaded harpoon family > island-harpoon-l5-broken contains its complete native crop, foot and clear edge inside one state band 0ms
+ ✓ tests/art/village-harpoons.test.js > original shaded harpoon family > never samples a neighboring tier or state 3ms
+ ✓ tests/art/village-harpoons.test.js > original shaded harpoon family > normalizes every state to the same tier scale and exact foot at density1.5 4ms
+ ✓ tests/art/village-harpoons.test.js > original shaded harpoon family > normalizes every state to the same tier scale and exact foot at density2 2ms
+ ✓ tests/art/village-harpoons.test.js > original shaded harpoon family > normalizes every state to the same tier scale and exact foot at density4 2ms
+ ✓ tests/art/village-activation.test.js > approved village family activation > binds supplied world frames to the proved compiled provider 2ms
+ ✓ tests/art/village-activation.test.js > approved village family activation > uses the approved bell visual override and preserves the hero ground anchor 4ms
+ ✓ tests/art/village-activation.test.js > approved village family activation > binds every supplied defense, service, wall and progress frame to the shared world metrics 9ms
+ ✓ tests/art/village-activation.test.js > approved village family activation > retains unregistered actor and effect families as the existing fallback 0ms
+ ✓ tests/island/tiers.test.js > tower levels 4 and 5 > cost the same in islands.json and on the cards 4ms
+ ✓ tests/island/tiers.test.js > tower levels 4 and 5 > show on the cards the numbers the sim fights with 1ms
+ ✓ tests/island/tiers.test.js > tower levels 4 and 5 > open after waves 12, 15 and 20, in order 1ms
+ ✓ tests/island/tiers.test.js > tower levels 4 and 5 > are paid by the loot of the late waves without the loot running away (islands.json loot) 1ms
+ ✓ tests/island/tiers.test.js > tower levels 4 and 5 > look their own: gold trim and a banner at 4 and 5, gold stars over them 1ms
+ ✓ tests/island/tiers.test.js > level pips at 4 and 5 > stand apart in one row, smaller than the brass ones, the row of five no wider than before 2ms
+ ✓ tests/island/tiers.test.js > the firing frame follows the level > has a firing drawing for every level of the cannon and the mortar 1ms
+ ✓ tests/island/tiers.test.js > the firing frame follows the level > picks the level's firing frame while a tower fires, its still art otherwise 1ms
+ ✓ tests/island/tiers.test.js > the firing frame follows the level > falls back to level 1's firing frame and level 3's art in an atlas without the cartoon frames 0ms
+
+ Test Files  10 passed (10)
+      Tests  163 passed (163)
+   Start at  00:00:32
+   Duration  3.32s (import 52%, transform 25%, tests 21%, worker 2%)
+
+    Isolate  10 workers spawned · ~133ms startup each (spawn + environment, per file)
+             at least ~1.19s faster with isolate: false — reuses workers across files instead of one per file
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice

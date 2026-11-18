@@ -1,0 +1,33 @@
+{
+  "command": [
+    "npm",
+    "test",
+    "--",
+    "--maxWorkers=1",
+    "tests/art/village-level-matrix.test.js",
+    "tests/art/village-activation.test.js",
+    "tests/art/wall-tier-identity.test.js",
+    "tests/art/village-cannons.test.js",
+    "tests/art/village-mortars.test.js",
+    "tests/art/village-harpoons.test.js",
+    "tests/art/village-culverins.test.js",
+    "tests/art/village-swivels.test.js",
+    "tests/island/wall-textured-batches.test.js",
+    "tests/island/tiers.test.js",
+    "--reporter=verbose"
+  ],
+  "exitCode": 0,
+  "seconds": 4.22,
+  "codeCommit": "6b2bb4588cd771dad90ef42a7a0ebca732d05ecd",
+  "scope": "Focused pure checks ran on the unchanged helper/test working tree committed as codeCommit. No browser run by this agent.",
+  "resultLines": [
+    "Test Files  10 passed (10)",
+    "Tests  163 passed (163)",
+    "Duration  3.32s (import 52%, transform 25%, tests 21%, worker 2%)"
+  ],
+  "helperHashes": {
+    "capture-visual-matrix.mjs": "0708a332e4b9da9d81fc193bf691315fc2c86e898610d72937aa7c7b384e602d",
+    "visual-matrix-cases.js": "3619efa8e91f23c26f63ce8b86e45bd49059623af43ab81da48d7a8e08732a30",
+    "visual-matrix-fixture.js": "3dd44f699a22ffc87bd75eedab2ff9e6a05e63fa52c6234ad9eb0960c900ad55"
+  }
+}
