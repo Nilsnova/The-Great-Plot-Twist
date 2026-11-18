@@ -287,6 +287,14 @@ A host-side "reset lamps" control.
 
 ## 8. Islands, tower defense and the economy (server)
 
+The [shared island economy rules](DECISIONS.md#shared-island-economy-2026-11-18)
+describe a versioned target, not a completed replacement for the legacy personal
+wallet behavior described here. [MP-ECO-20 acceptance](economy/ACCEPTANCE.md) lists
+the database and authenticated-client scenarios needed to establish that target.
+Its offline assertions check ledger reconciliation and declared evidence metadata;
+fake-room browser checks and synthetic evidence do not prove the integrated economy.
+Authenticated runtime and physical-device results must be reported separately.
+
 ### What it does
 Each player owns an island with a code (`ISLE-` + 5 symbols) and 16 build spots. With coins they build and upgrade walls, cannons or mortars, a watchtower and houses, hire crew (gunner, carpenter, lookout) and level up their own captain. They ring a bell to start a wave (up to wave 100, a boss warship every 5th wave) and get loot for surviving. Friends on the island build there with their own coins (co-op). Pirate Point has ten shared spots that anyone can build. The rules are in [TOWER-DEFENSE.md](TOWER-DEFENSE.md); decisions [D032](DECISIONS.md) and [D036](DECISIONS.md).
 

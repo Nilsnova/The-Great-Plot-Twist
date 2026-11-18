@@ -14,6 +14,14 @@
 - **No test uses the network.** Outside services, the sign-in check, the database and the clock are fakes ([ENGINEERING.md, section 5](ENGINEERING.md), rule 3).
 - **No CI.** The only GitHub Actions workflow is the keep-alive ([.github/workflows/keepalive.yml](../.github/workflows/keepalive.yml)). Each pull request pastes its own results ([CONTRIBUTING.md](../CONTRIBUTING.md)).
 
+The planned shared economy has a separate [MP-ECO-20 acceptance matrix](economy/ACCEPTANCE.md).
+Its [offline assertion/evidence tests](../backend/server/tests/test_economy_acceptance.py)
+run with `cd backend && uv run pytest -q server/tests/test_economy_acceptance.py`.
+They validate decimal treasury reconciliation and evidence metadata, using synthetic
+inputs. They do not verify treasury RPCs, hosted authentication or the integrated
+multiplayer economy. Runtime SQL, authenticated-browser and physical-device evidence
+remain separate; the existing fake-room `test:mp` check does not establish them.
+
 ## 1. Backend unit tests (pytest)
 
 Command for all of them: `cd backend && uv run pytest` (paths `server/tests` and `plot_twist/tests`, set in [backend/pyproject.toml](../backend/pyproject.toml)). One file: `cd backend && uv run pytest -q server/tests/test_wave_routes.py`.
