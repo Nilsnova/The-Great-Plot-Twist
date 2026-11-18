@@ -1772,3 +1772,9 @@ Focused checks: `cd frontend && npm exec vitest -- run tests/tutorial-pages.test
 The [evidence README](evidence/T58-captain-repair/README.md) records screenshot fixtures and the exact scope. These
 checks do not prove persisted production state, live recovery, payments, multiplayer or release activation; combined
 dependency review and release acceptance remain pending.
+
+## Village inspection and shoreline
+
+Select a built structure in Village Mode for its level, installed role or skill, and confirmed health when available. **E** opens the keyboard finder. **Range** shows the selected defense's clear-weather firing area between waves.
+
+The southwest mooring uses the existing walkable beach and paints the skiff on the sea. The skiff and rope clear the naval approach at countdown, while the beach bollard remains visible. The Harbor route still uses its own marked access point. [Desktop and phone evidence](evidence/village-polish/README.md)

@@ -15,4 +15,4 @@ The selected building stays visible while you see its actual level, installed ro
 - Native Chrome checks covered 1280 × 720 desktop, 375 × 812 touch and a 320 × 640 touch layout. Fit, Work, panning, focus return, Move cancel and actual saved health were exercised in the game.
 - In matched Wave 9 Treasure Galleon runs, the skiff and rope hid at countdown and through the live attack. The bollard remained visible. Shore walking, tree collision, Harbor round trips and the ship snapshot matched the baseline.
 
-The paired images use offline saves and the same viewport within each pair. Village inspection was captured at `6e9a30bb`, the shore detail at `0c6430e2`, and both paths were rerun together at `60afb0fd` over `main` at `64d59506`. The browser phone runs used touch emulation.
+The paired images use offline saves and the same viewport within each pair. Village inspection was captured at `6e9a30bb` and the shore detail at `0c6430e2`. The combined desktop and touch rerun at `373c6fb3` over `main` at `d58d9246` reproduced the same camera, prop positions, and wave visibility. The browser phone runs used touch emulation.
