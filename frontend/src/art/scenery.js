@@ -322,8 +322,8 @@ function frameNames(o) {
 /**
  * A scene for ./stage.js. options: sky (dusk, night, storm, dawn, day), island (lighthouse, home or none),
  * far ('lighthouse': a small dark lighthouse isle on the horizon), lit and beam (the lamp), ships
- * [{name, x, y, size, flip, drift, sink}] (x a share of the width, y a share of the sea below the horizon,
- * size times the scene scale, drift px per second, sink px per second), rain, fog, gulls, stars, crew,
+ * [{name, x, y, size, flip, drift, sink, portrait}] (x a share of the width, y a share of the sea below
+ * the horizon, size times the scene scale, drift and sink px per second, optional portrait x/y), rain, fog, gulls, stars, crew,
  * coins, harbor, horizon (a share of the height), foreground (default true), still (no motion).
  */
 export async function createScene(options = {}) {
@@ -338,8 +338,9 @@ export async function createScene(options = {}) {
   ];
   const shipLayer = (ship, depth) => ({depth, draw: (c, g, time) => {
     const t = o.still ? 0 : time, k = g.s * (ship.size ?? 1), item = sprite(ship.name, k, ship.tint ?? mood.tint);
-    const x = g.w * ship.x + (ship.drift ?? 0) * g.s * t, y = g.hz + (g.h - g.hz) * (ship.y ?? 0) + (ship.sink ?? 0) * g.s * t;
-    place(c, item, x, y + Math.sin(t * 1.4 + ship.x * 9) * 3 * k, {flip: ship.flip, rotate: Math.sin(t * 1.1 + ship.x * 5) * .035 + (ship.sink ? Math.min(.3, t * .05) : 0)});
+    const position = (g.portrait && ship.portrait) || ship;
+    const x = g.w * position.x + (ship.drift ?? 0) * g.s * t, y = g.hz + (g.h - g.hz) * (position.y ?? 0) + (ship.sink ?? 0) * g.s * t;
+    place(c, item, x, y + Math.sin(t * 1.4 + position.x * 9) * 3 * k, {flip: ship.flip, rotate: Math.sin(t * 1.1 + position.x * 5) * .035 + (ship.sink ? Math.min(.3, t * .05) : 0)});
   }});
   for (const ship of o.ships.filter(item => (item.y ?? 0) < .2)) layers.push(shipLayer(ship, .34));
   if (o.far === 'lighthouse') layers.push({depth: .22, still: true, draw: (c, g) => {
@@ -364,7 +365,7 @@ export async function createScene(options = {}) {
 
 /** The scenes the title and the cutscenes use, by name (options for createScene). */
 export const PANELS = Object.freeze({
-  title: {sky: 'dusk', island: 'lighthouse', lit: true, beam: true, ships: [{name: 'pirate-flagship-1', x: .47, y: .05, size: .58}], portraitHorizon: .5, seed: 11},
+  title: {sky: 'dusk', island: 'lighthouse', lit: true, beam: true, ships: [{name: 'pirate-flagship-1', x: .62, y: .27, size: .64, portrait: {x: .12, y: .04}}], portraitHorizon: .44, seed: 11},
   coast: {sky: 'dusk', island: 'lighthouse', lit: true, beam: true, gulls: true, at: .66, seed: 3},
   dark: {sky: 'storm', island: 'lighthouse', lit: false, rain: true, at: .6, seed: 5},
   pirates: {sky: 'night', far: 'lighthouse', fog: true, ships: [{name: 'pirate-flagship-1', x: .42, y: .32, size: 2.1}, {name: 'pirate-sloop-1', x: .14, y: .08, size: .9}], seed: 9},
