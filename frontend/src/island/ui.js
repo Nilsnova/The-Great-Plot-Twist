@@ -37,7 +37,7 @@ function button(label, onClick, quiet = false) {
 }
 
 export function createIslandUi({container, focus = () => {}, resetInput = () => {}, toasts = gameToasts, onSelection = () => {}} = {}) {
-  let modal = null, kind = null, render = null, disposed = false, lastToast = null;
+  let modal = null, kind = null, render = null, disposed = false, lastToast = null, boatNoticeTimer = null;
   let selection = null, selectionModel = null, selectionHandlers = null, returnToDock = null;
   // The Tech hub tile the player tapped (kept while the page lives); the tree shows its detail.
   let techPicked = null;
@@ -47,7 +47,17 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
   bannerEyebrow.setAttribute('aria-hidden', 'true');
   banner.append(bannerEyebrow, bannerText);
   const visit = node('div', 'island-visit'); visit.hidden = true;
-  container.append(banner, visit);
+  const boatNotice = node('p', 'island-boat-notice');boatNotice.hidden = true;
+  boatNotice.setAttribute('role', 'status');boatNotice.setAttribute('aria-live', 'polite');boatNotice.setAttribute('aria-atomic', 'true');
+  container.append(banner, visit, boatNotice);
+  // The real wave countdown follows this measured slot, including wrapped text and viewport changes.
+  function measureBoatNotice() {
+    const height = boatNotice.hidden ? 0 : boatNotice.offsetHeight;
+    // Leave room for the countdown number's existing 1.5x pop and the panel's frame.
+    document.documentElement?.style.setProperty('--boat-notice-space', height > 0 ? `${height + 16}px` : '0px');
+  }
+  const boatNoticeSize = typeof ResizeObserver === 'function' ? new ResizeObserver(measureBoatNotice) : null;
+  boatNoticeSize?.observe(boatNotice);
 
   function close(restore = false) {
     if (!modal && !selection) return false;
@@ -625,6 +635,15 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
       visit.append(node('span', '', chip.text), go);
     },
     // tone: 'info', 'success' (a building, loot) or 'error' (the server's plain message).
+    // Independent of the one-toast queue: a pending payout or existing error must not hide why play stopped.
+    boatNotice(details) {
+      if (disposed) return;
+      clearTimeout(boatNoticeTimer);
+      boatNotice.replaceChildren(node('strong', '', 'Wave starting. Back to the island.'), node('span', '', details));
+      boatNotice.hidden = false;
+      measureBoatNotice();
+      boatNoticeTimer = setTimeout(() => { boatNotice.hidden = true; measureBoatNotice(); }, 7000);
+    },
     toast(text, tone = 'info', next = '') {
       if (disposed || !text) return;
       const id = toasts().show(next ? {text, tone, next} : {text, tone});
@@ -635,7 +654,8 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
       if (disposed) return; disposed = true;
       returnToDock = null; selection?.dispose(); selection = null;
       if (modal) { const current = modal; modal = null; current.dispose(); }
-      banner.remove(); visit.remove();
+      clearTimeout(boatNoticeTimer);boatNoticeSize?.disconnect();boatNotice.remove();banner.remove(); visit.remove();
+      document.documentElement?.style.removeProperty('--boat-notice-space');
     },
   };
 }
