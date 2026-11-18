@@ -774,6 +774,7 @@ def test_history_and_private_legacy_aliases_have_no_write_or_execute_capability(
         "island_demolish_quote_legacy_personal(uuid,uuid,text,jsonb)",
         "island_economy_require_idle_locked(uuid)",
         "island_construction_legacy_actor_allowed_locked(uuid)",
+        "island_construction_lock_legacy_scopes(uuid,uuid)",
     ):
         for role in ("anon", "authenticated", "service_role"):
             assert database.execute(
@@ -988,3 +989,106 @@ def test_saved_v1_gated_structure_can_upgrade_and_demolish_without_opening_new_o
     current = through_adapter(database, owner, treasury, request, "gateddel1")
     assert money(current) == (expected, 0, expected)
     reconciles(database, keys(treasury)[0])
+
+
+@pytest.mark.parametrize("action", ["build", "upgrade"])
+def test_legacy_visitor_takes_actor_scope_before_wallet_and_personal_locks(
+    database, scratch_server, action
+):
+    actor, _, _, _ = ready(database, admitted=False)
+    owner, _, _, _ = ready(database, admitted=False)
+    rpc(database, "game_join", actor, owner, 10)
+    if action == "upgrade":
+        rpc(database, "island_build", owner, owner, "wall_1", "wall", "seedwall1", 10)
+    database.commit()
+    as_owner(database)
+    rpc(database, "island_treasury_lock_scope", actor)
+    database.execute("select 1 from public.profiles where id=%s for update", (actor,))
+    started = Queue()
+
+    def buy():
+        with psycopg.connect(scratch_server.get_uri()) as connection:
+            connection.execute("set lock_timeout='5s'")
+            as_server(connection)
+            started.put(connection.info.backend_pid)
+            if action == "build":
+                return rpc(
+                    connection, "island_build", actor, owner, "wall_1", "wall", "scopewait1", 10
+                )
+            return rpc(
+                connection,
+                "island_upgrade",
+                actor,
+                owner,
+                "wall_1",
+                "scopewait1",
+                [10, 20, 40, 80, 160],
+                5,
+            )
+
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        future = pool.submit(buy)
+        worker = started.get(timeout=5)
+        deadline = monotonic() + 3
+        blocked = False
+        while monotonic() < deadline:
+            blocked = database.execute(
+                "select %s = any(pg_blocking_pids(%s))", (database.info.backend_pid, worker)
+            ).fetchone()[0]
+            if blocked:
+                break
+            sleep(0.01)
+        assert blocked
+        # An actor grant can still lock its wallet while this visitor is waiting.
+        with database.transaction():
+            database.execute(
+                "select 1 from public.wallets where player_id=%s for update nowait", (actor,)
+            )
+        database.commit()
+        assert future.result(timeout=5)["status"] == "done"
+    assert balance(database, actor) == (90 if action == "build" else 80)
+
+
+def test_two_scope_keys_are_acquired_in_signed_hash_order(database, scratch_server):
+    owners = (uuid4(), uuid4())
+    as_owner(database)
+    ordered = sorted(
+        (
+            database.execute(
+                "select hashtextextended('island-economy:'||%s::uuid::text,0)", (owner,)
+            ).fetchone()[0],
+            owner,
+        )
+        for owner in owners
+    )
+    low_key, low_owner = ordered[0]
+    high_key, high_owner = ordered[1]
+    assert low_key < high_key
+    rpc(database, "island_treasury_lock_scope", low_owner)
+    started = Queue()
+
+    def lock_pair():
+        with psycopg.connect(scratch_server.get_uri()) as connection:
+            connection.execute("set lock_timeout='5s'")
+            started.put(connection.info.backend_pid)
+            rpc(connection, "island_construction_lock_legacy_scopes", high_owner, low_owner)
+            return True
+
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        future = pool.submit(lock_pair)
+        worker = started.get(timeout=5)
+        deadline = monotonic() + 3
+        blocked = False
+        while monotonic() < deadline:
+            blocked = database.execute(
+                "select %s = any(pg_blocking_pids(%s))", (database.info.backend_pid, worker)
+            ).fetchone()[0]
+            if blocked:
+                break
+            sleep(0.01)
+        assert blocked
+        assert database.execute("select pg_try_advisory_xact_lock(%s)", (high_key,)).fetchone() == (
+            True,
+        )
+        database.commit()
+        assert future.result(timeout=5)
