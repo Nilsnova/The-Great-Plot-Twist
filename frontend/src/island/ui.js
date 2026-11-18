@@ -24,6 +24,11 @@ import {createSelectionDock} from './selection-dock.js';
 // (island.css), so the island stays in view; the menus (crew, captain, lobby, invite) stay centred. The Tech
 // hub is a big centred tree card like the captain's skills (skill-tree.js), so it is not docked.
 export const DOCKED = new Set(['build', 'wreck', 'harbor', 'arsenal']);
+const WALL_RECEIPT_PULSE = 'island-wall-level-receipt';
+
+function cancelWallReceiptPulse(header) {
+  header.getAnimations().find(animation => animation.id === WALL_RECEIPT_PULSE)?.cancel();
+}
 
 function button(label, onClick, quiet = false) {
   const element = node('button', `kit-button${quiet ? ' kit-quiet' : ''}`, label); element.type = 'button';
@@ -112,6 +117,7 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
   function buildCard(model, handlers, {dock = false, details = false} = {}) {
     if (disposed) return;
     const on = typeof handlers === 'function' ? {build: handlers} : handlers ?? {};
+    if (selectionModel?.spotId !== model.spotId) returnToDock = null;
     selectionModel = model; selectionHandlers = on;
     if (!dock && !details) returnToDock = null;
     if (dock && returnToDock) returnToDock = () => buildCard(model, on, {dock: true});
@@ -131,6 +137,7 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
       modal.element.classList.toggle('island-card-docked', !treeCard);
       modal.element.classList.toggle('island-card-wide', treeCard);
       modal.element.classList.toggle('island-card-tree', treeCard);
+      prepareWallReceipt(model);
       if (!treeCard) body.append(line('island-purpose', model.purpose));
       if (model.pips.length && !treeCard) { const row = node('div', 'island-level'); row.append(pips(model.pips), line('island-stats', model.stats)); body.append(row); }
       if (model.owner) body.append(line('island-owner', model.owner));
@@ -569,13 +576,56 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
     open('overview', model.title, body => drawUpgradeOverview(body, model, {kind: overviewKind, state: overviewState,
       choose: (kind, state) => { overviewKind = kind; overviewState = state; overviewCard(model); }}));
   }
+  // Keep the live receipt in the stable header when a wall details sheet redraws its body.
+  function prepareWallReceipt(model) {
+    const header = modal.element.querySelector('.kit-modal-header');
+    const heading = header.querySelector('.kit-heading');
+    let receipt = header.querySelector('.island-wall-purchase-receipt');
+    if (model.kind !== 'wall') {
+      if (receipt) {
+        cancelWallReceiptPulse(header);
+        const group = receipt.parentElement;
+        group.before(heading);
+        group.remove();
+      }
+      return;
+    }
+    if (!receipt) {
+      const group = node('div', 'island-wall-receipt-heading');
+      receipt = node('p', 'island-wall-purchase-receipt');
+      receipt.setAttribute('role', 'status');
+      heading.before(group);
+      group.append(heading, receipt);
+    }
+    if (receipt.dataset.spot !== model.spotId) {
+      if (receipt.textContent) cancelWallReceiptPulse(header);
+      receipt.dataset.spot = model.spotId;
+      receipt.textContent = '';
+    }
+  }
+  function showWallReceipt(spotId, message, reduced) {
+    if (kind !== 'build' || !modal?.element.open || selectionModel?.spotId !== spotId) return false;
+    const header = modal.element.querySelector('.kit-modal-header');
+    const receipt = header.querySelector('.island-wall-purchase-receipt');
+    if (!receipt) return false;
+    receipt.textContent = message;
+    cancelWallReceiptPulse(header);
+    const styles = getComputedStyle(header);
+    const glow = {boxShadow: styles.getPropertyValue('--wall-receipt-glow').trim()};
+    header.animate([glow, {boxShadow: styles.boxShadow}],
+      {id: WALL_RECEIPT_PULSE, duration: reduced ? 520 : 620, easing: reduced ? 'steps(1, end)' : 'ease-out'});
+    return true;
+  }
   return {
     overviewCard, leaderboardCard, buildCard, bellCard, inviteCard, lobbyCard, crewCard, captainCard, captainsCard, harborCard, techCard, wreckCard, arsenalCard, demolishCard, close, copyLink,
     cancel: () => close(true),
     get selectionElement() { return selection?.element ?? null; },
+    get selectionSpot() { return selection ? selectionModel.spotId : null; },
+    get selectionRange() { return selection?.coverage ?? null; },
     // Re-draw the open card from fresh models (the island controller calls this on every change).
     get open() { return kind; },
     get active() { return !!modal; },
+    showWallReceipt,
     banner(text) { bannerText.textContent = text ?? ''; banner.hidden = !text; },
     // The chip of the game on screen ({text, label} from one-island.js visitChip), or null to hide it.
     visit(chip, onAction) {

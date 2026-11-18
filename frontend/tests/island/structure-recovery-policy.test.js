@@ -466,3 +466,54 @@ it('advertises protocol two regardless of the admission flag on a legacy island'
   }));
   expect(result).toEqual({waveProtocol: 2, responseProtocol: 1});
 });
+
+it.each([[0, 1], [1, 0]])('uses personal recovery v%s for Crew while visiting recovery v%s', async (ownVersion, hostVersion) => {
+  const result = await browser.withPage(page => page.evaluate(async ({ownVersion, hostVersion}) => {
+    const {createIsland} = await window.g20Import('/src/island/index.js');
+    const {createFakeIslandTransport} = await window.g20Import('/src/pirates/fake-api.js');
+    const {on, emit} = await window.g20Import('/src/core/events.js');
+    const base = createFakeIslandTransport();
+    base.dev.setWaveBest(8);
+    base.dev.setCoins(800);
+    const transport = {...base, get: async path => {
+      const answer = await base.get(path);
+      if (!answer.ok) return answer;
+      if (path === '/api/island') return {...answer, data: {...answer.data, recoveryVersion: ownVersion,
+        crew: {...answer.data.crew, carpenter: 1}}};
+      if (path.startsWith('/api/island/visit/')) return {...answer, data: {...answer.data, recoveryVersion: hostVersion}};
+      return answer;
+    }};
+    const island = createIsland({container: document.body, emit, on, mode: 'fake', transport, storage: null,
+      menu: () => () => {}, travel: () => true});
+    const readCrew = () => {
+      island.openCrew();
+      const card = document.querySelector('.island-card-crew');
+      const result = {
+        hostCode: island.visiting?.code ?? null,
+        policyOnScreen: island.recoveryVersion,
+        personalCarpenters: island.island.crew.carpenter,
+        personalCoins: island.island.coins,
+        carpenter: card.querySelector('[data-crew="carpenter"]')?.innerText ?? null,
+        gunner: !!card.querySelector('[data-crew="gunner"]'),
+      };
+      island.ui.close();
+      return result;
+    };
+    await island.load();
+    const home = readCrew();
+    island.visit('isle-fr3nd');
+    await island.load();
+    const away = readCrew();
+    island.dispose();
+    return {home, away};
+  }, {ownVersion, hostVersion}));
+  expect(result.home).toMatchObject({hostCode: null, policyOnScreen: ownVersion, personalCarpenters: 1, personalCoins: 800, gunner: true});
+  expect(result.away).toMatchObject({hostCode: 'FR3ND', policyOnScreen: hostVersion, personalCarpenters: 1, personalCoins: 800, gunner: true});
+  if (ownVersion === 0) {
+    expect(result.home.carpenter).toContain('1 of 2');
+    expect(result.away.carpenter).toBe(result.home.carpenter);
+  } else {
+    expect(result.home.carpenter).toBeNull();
+    expect(result.away.carpenter).toBeNull();
+  }
+});
