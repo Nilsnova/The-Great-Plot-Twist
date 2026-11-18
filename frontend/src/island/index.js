@@ -549,7 +549,10 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     return holdOtherBuildingAction(recoveryControlsOn() ? model : withWallRecovery(model, {wall: shown, coins: own?.coins ?? null,
       busy: busySpot === spotId ? busyKind : false, battle: battle && !waveOver}), busySpot);
   }
-  const crew = () => crewModel({crew: own?.crew ?? {}, coins: own?.coins ?? null, unlocks: own ? unlocks() : null, busy: busyCrew, message: cardMessage || (!own ? ownMessage : ''), prices: own?.prices, recoveryVersion: recoveryModelVersion()});
+  // Hiring still changes the caller's own island when they are visiting.
+  const crew = () => crewModel({crew: own?.crew ?? {}, coins: own?.coins ?? null, unlocks: own ? unlocks() : null,
+    busy: busyCrew, message: cardMessage || (!own ? ownMessage : ''), prices: own?.prices,
+    recoveryVersion: visiting ? own?.recoveryVersion ?? 0 : recoveryModelVersion()});
   const captain = () => {
     const message = cardMessage || (!own ? ownMessage : ''), wonWave = own ? unlocks().wonWave : 0;
     return {tab: captainTab,
