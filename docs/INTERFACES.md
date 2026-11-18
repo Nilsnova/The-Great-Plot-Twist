@@ -1865,7 +1865,7 @@ Legacy body poses may also use accepted outcomes correlated to live local/valida
 
 The additive foundation in `backend/server/island/treasury.py`, `treasury_models.py` and
 `treasury_store.py` defines exact accounts per island/run. Contracts are in migrations
-`20261118050000_island_treasury.sql` / `20261118050100_island_treasury_functions.sql`,
+`20261118050050_island_treasury.sql` / `20261118050100_island_treasury_functions.sql`,
 [database rights and checks](../supabase/README.md#shared-island-treasury-foundation-mp-eco-02)
 and [the package spec](../specs/MP-ECO-02-island-treasury.md). Existing HTTP routes do not call
 admission or these money functions; personal-wallet runtime remains unchanged.
@@ -1916,3 +1916,23 @@ Existing-save admission, reset/owner deletion, wave accounting, product verifica
 money paths require integration before enabling shared mode. Retained account/ledger references
 prevent accidental deletion of an admitted island until explicit deletion/retirement policy exists.
 This foundation neither converts balances nor admits existing saves automatically.
+
+### Global operation identities
+
+Converted free, personal and paid actions share immutable `island_economy_operations`, unique by
+authenticated `(actor_id,action_uid)`. The private `island_economy_claim_operation_locked` binds
+server-selected action/fingerprint and original account/epoch after scope/account locks and before
+personal/domain locks. Standalone personal actions use null account/epoch. Replay precedes current
+catalogue, phase and revision checks; every later refusal must roll back a new claim with the whole
+domain transaction. A separate network claim, debit and asset write is not atomic.
+
+Client roots exclude `fx_`/`sys_`. Financial children derive `fx_<operation UUID hex>_<effect key>`
+and prove their root's actor/account/epoch at ledger insertion. Canonical system effects derive
+`sys_<origin UUID hex>_<effect key>` under their own verified saved-origin authority. Raw historical
+financial identities remain opaque tombstones. These identifiers confer no membership or payout
+authority. The [registry spec](../specs/MP-ECO-02-operation-identities.md) defines exact helpers.
+
+The internal treasury result can contain its originating account projection. A public domain reply
+must expose fresh economy/assets only if that origin is still the active current account/epoch and
+the actor is a current member. A departed or retired-origin retry may return its authorized immutable
+receipt, with current projections null/omitted. Never display an old receipt balance as current funds.
