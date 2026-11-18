@@ -13,7 +13,7 @@ describe('complete existing village review cases', () => {
       const expected = row.label === 'fire' ? `island-${kind}-fire${suffix}`
         : `island-${kind}${suffix}${row.label === 'intact' ? '' : `-${row.label}`}`;
       expect(cell.id).toBe(expected); ids.add(cell.id);
-      expect(getRasterFrame(cell.id)?.sheet.file, cell.id).toMatch(/^village\/compiled\//);
+      expect(getRasterFrame(cell.id)?.sheet.file, cell.id).toMatch(/^village\/shipped\/.+\.webp$/);
       expect(getRasterFrame(cell.id)?.logical, cell.id).toEqual([56, 48, 7]);
       if (row.label === 'intact') expect(buildingArt(kind, level)).toBe(cell.id);
     }

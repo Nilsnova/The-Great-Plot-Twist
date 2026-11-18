@@ -41,8 +41,8 @@
   },
   "reusedReportSha256": "103a2c81661580313b589c8f0a67af370351d86fb965152a17d0c91cb057c9ec",
   "normalizerHashes": {
-    "src/art/village-raster.js": "ec35729ea275655317c3802fc9d1fe45470fb31ec04ca551450382b1a0dbe3d9",
-    "src/art/village-decode.js": "123ea0cbe2a59d6d62e5e6bec7e11a575a1f2cd0cbfec7f09d4f47c78896054f"
+    "src/art/village-raster.js": "4db5ffa86253a7ece821804586518e2fabea33b33d0c59c4f3223df80d969e3f",
+    "src/art/village-decode.js": "1d55341b2c947e3bcfc019c0e8bb8722591f0a2312cd7a8a0585a873cd8fa537"
   },
   "original": {
     "files": [
@@ -17202,6 +17202,20 @@
         "village/compiled/walls-4x-1-4905aac4841a.png"
       ],
       "note": "Historical transport records are retained unchanged; their old wall output remains present. New wall output has separate native raw-vs-baked pixel proof."
+    }
+  ],
+  "normalizerHistory": [
+    {
+      "sourceCommit": "840549a58623caa94db4774a408e53953c58db10",
+      "reason": "sheet validation and decoding accept the shipped WebP; normalizeRasterFrame byte-identical",
+      "previous": {
+        "src/art/village-raster.js": "ec35729ea275655317c3802fc9d1fe45470fb31ec04ca551450382b1a0dbe3d9",
+        "src/art/village-decode.js": "123ea0cbe2a59d6d62e5e6bec7e11a575a1f2cd0cbfec7f09d4f47c78896054f"
+      },
+      "current": {
+        "src/art/village-raster.js": "4db5ffa86253a7ece821804586518e2fabea33b33d0c59c4f3223df80d969e3f",
+        "src/art/village-decode.js": "1d55341b2c947e3bcfc019c0e8bb8722591f0a2312cd7a8a0585a873cd8fa537"
+      }
     }
   ]
 }
