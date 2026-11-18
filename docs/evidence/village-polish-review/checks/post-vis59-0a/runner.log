@@ -1,0 +1,10 @@
+START frontend
+DONE {"name": "frontend", "command": ["npm", "test", "--", "--maxWorkers=1", "--reporter=verbose"], "exitCode": 1, "seconds": 554.35, "log": "frontend.log"}
+START multiplayer
+DONE {"name": "multiplayer", "command": ["node", "scripts/check-multiplayer.js", "/workspace/reference-village-work/polish-postqa-checks/multiplayer-captures"], "exitCode": 1, "seconds": 358.28, "log": "multiplayer.log"}
+START build
+DONE {"name": "build", "command": ["npm", "run", "build"], "exitCode": 0, "seconds": 2.41, "log": "build.log"}
+START budget
+DONE {"name": "budget", "command": ["node", "scripts/report-budget.js", "--check"], "exitCode": 0, "seconds": 0.32, "log": "budget.log"}
+START text-lint
+DONE {"name": "text-lint", "command": ["node", "../scripts/text-lint/index.mjs"], "exitCode": 0, "seconds": 1.55, "log": "text-lint.log"}

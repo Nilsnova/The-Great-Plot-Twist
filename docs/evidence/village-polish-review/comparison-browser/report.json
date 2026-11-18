@@ -1,0 +1,164 @@
+{
+  "htmlSha256": "5c00049be59921a9a970f05f7be9cfa2adc9d2b9820bd910c8800aeeb8ea0b94",
+  "manifestSha256": "1fe6f68db48e21f263e03426c5e212cf225f8f337bb51f5e9cec24bb885cdc71",
+  "helperSha256": "c9fd2bf84d54a9716cb713b8cc9cb5066d5d3f027b5f5c133f1929c569538dd6",
+  "started": "2026-11-18T01:24:59.901Z",
+  "checks": [
+    {
+      "width": 1280,
+      "height": 720,
+      "decodedImages": 12,
+      "tablists": 3,
+      "actions": 33,
+      "responses": [
+        {
+          "path": "/comparison.html",
+          "status": 200,
+          "sha256": "5c00049be59921a9a970f05f7be9cfa2adc9d2b9820bd910c8800aeeb8ea0b94"
+        },
+        {
+          "path": "/actual-before/reference-arranged-1280x720.png",
+          "status": 200,
+          "sha256": "606618600f454ea1c1d28b84d371095e0ddefa06a33a689c55b2820cfac445e5"
+        },
+        {
+          "path": "/actual-after/reference-arranged-1280x720.png",
+          "status": 200,
+          "sha256": "c36e1d3db357bfaa5d8ac2407d7f8e8e05e481090db9995b333d9e17ee2aa7e0"
+        },
+        {
+          "path": "/actual-before/wave-breach-1280x720.png",
+          "status": 200,
+          "sha256": "959905a7786784a6f9580d3fbd6b4871e3792878e13501568e7163a48347402b"
+        },
+        {
+          "path": "/actual-after/wave-breach-1280x720.png",
+          "status": 200,
+          "sha256": "70dd38d6eda516ad825c0c442e6b005ce9543a8d73b65054b5234070155c8e4b"
+        },
+        {
+          "path": "/actual-before/reference-selected-level3-1280x720.png",
+          "status": 200,
+          "sha256": "6eb77760ead4f0df5fb62e509a952bd3d39181edfb88544ee08a6879a83e783d"
+        },
+        {
+          "path": "/actual-after/reference-selected-level3-1280x720.png",
+          "status": 200,
+          "sha256": "9af64dab92a06cded973978b68bc15e7afdd331a6c3d3a7b2e4c963470b02492"
+        },
+        {
+          "path": "/actual-before/reference-arranged-375x812.png",
+          "status": 200,
+          "sha256": "95a03e6f8659f1d8b02f9cc69e5c7a8a38313f359050f18c4011f56a5638c77a"
+        },
+        {
+          "path": "/actual-after/reference-arranged-375x812.png",
+          "status": 200,
+          "sha256": "40e3043742d31d3ba14f07db853d8100b2340eaf7deeac315cf1feae09edd5d7"
+        },
+        {
+          "path": "/actual-before/wave-breach-375x812.png",
+          "status": 200,
+          "sha256": "36be5f58692f34f10029fea65dcb83527aa638f5035ece9304de7e9c3bd9114d"
+        },
+        {
+          "path": "/actual-after/wave-breach-375x812.png",
+          "status": 200,
+          "sha256": "1f77015d09d910003fcb0309129b4ea8fbd11d71a79dc9d726775c22bd29e392"
+        },
+        {
+          "path": "/actual-before/reference-selected-level3-375x812.png",
+          "status": 200,
+          "sha256": "02717b96433c34ce6487be8dd4e4197998278c952575b6d6f8222ae7deda1504"
+        },
+        {
+          "path": "/actual-after/reference-selected-level3-375x812.png",
+          "status": 200,
+          "sha256": "2959f6dbcbeb0bcd0d4228755e7561564990270dafc3be435dbca045136ab41c"
+        }
+      ],
+      "pageErrors": [],
+      "consoleErrors": [],
+      "externalRequests": []
+    },
+    {
+      "width": 375,
+      "height": 812,
+      "decodedImages": 12,
+      "tablists": 3,
+      "actions": 33,
+      "responses": [
+        {
+          "path": "/comparison.html",
+          "status": 200,
+          "sha256": "5c00049be59921a9a970f05f7be9cfa2adc9d2b9820bd910c8800aeeb8ea0b94"
+        },
+        {
+          "path": "/actual-before/reference-arranged-1280x720.png",
+          "status": 200,
+          "sha256": "606618600f454ea1c1d28b84d371095e0ddefa06a33a689c55b2820cfac445e5"
+        },
+        {
+          "path": "/actual-after/reference-arranged-1280x720.png",
+          "status": 200,
+          "sha256": "c36e1d3db357bfaa5d8ac2407d7f8e8e05e481090db9995b333d9e17ee2aa7e0"
+        },
+        {
+          "path": "/actual-before/wave-breach-1280x720.png",
+          "status": 200,
+          "sha256": "959905a7786784a6f9580d3fbd6b4871e3792878e13501568e7163a48347402b"
+        },
+        {
+          "path": "/actual-after/wave-breach-1280x720.png",
+          "status": 200,
+          "sha256": "70dd38d6eda516ad825c0c442e6b005ce9543a8d73b65054b5234070155c8e4b"
+        },
+        {
+          "path": "/actual-before/reference-selected-level3-1280x720.png",
+          "status": 200,
+          "sha256": "6eb77760ead4f0df5fb62e509a952bd3d39181edfb88544ee08a6879a83e783d"
+        },
+        {
+          "path": "/actual-after/reference-selected-level3-1280x720.png",
+          "status": 200,
+          "sha256": "9af64dab92a06cded973978b68bc15e7afdd331a6c3d3a7b2e4c963470b02492"
+        },
+        {
+          "path": "/actual-before/reference-arranged-375x812.png",
+          "status": 200,
+          "sha256": "95a03e6f8659f1d8b02f9cc69e5c7a8a38313f359050f18c4011f56a5638c77a"
+        },
+        {
+          "path": "/actual-after/reference-arranged-375x812.png",
+          "status": 200,
+          "sha256": "40e3043742d31d3ba14f07db853d8100b2340eaf7deeac315cf1feae09edd5d7"
+        },
+        {
+          "path": "/actual-before/wave-breach-375x812.png",
+          "status": 200,
+          "sha256": "36be5f58692f34f10029fea65dcb83527aa638f5035ece9304de7e9c3bd9114d"
+        },
+        {
+          "path": "/actual-after/wave-breach-375x812.png",
+          "status": 200,
+          "sha256": "1f77015d09d910003fcb0309129b4ea8fbd11d71a79dc9d726775c22bd29e392"
+        },
+        {
+          "path": "/actual-before/reference-selected-level3-375x812.png",
+          "status": 200,
+          "sha256": "02717b96433c34ce6487be8dd4e4197998278c952575b6d6f8222ae7deda1504"
+        },
+        {
+          "path": "/actual-after/reference-selected-level3-375x812.png",
+          "status": 200,
+          "sha256": "2959f6dbcbeb0bcd0d4228755e7561564990270dafc3be435dbca045136ab41c"
+        }
+      ],
+      "pageErrors": [],
+      "consoleErrors": [],
+      "externalRequests": []
+    }
+  ],
+  "exitCode": 0,
+  "finished": "2026-11-18T01:25:06.283Z"
+}

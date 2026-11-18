@@ -1,0 +1,12 @@
+{
+  "source": "f70545aa016c923097c03cd1189130e213566961",
+  "command": [
+    "node",
+    "/workspace/reference-village-work/polish-handover/docs/evidence/village-polish-review/verify-comparison.mjs",
+    "/workspace/reference-village-work/polish-comparison-native"
+  ],
+  "started": "2026-11-18T01:24:59.195188+00:00",
+  "exitCode": 0,
+  "seconds": 7.11,
+  "finished": "2026-11-18T01:25:06.304065+00:00"
+}

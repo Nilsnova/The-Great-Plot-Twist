@@ -2,10 +2,10 @@
 
 Used by Johannes Franz Lang (`frcola`) and reviewers of [Draft #432](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/432) and [documentation Draft #433](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/433).
 
-**Combined checks in progress.** The final actual-game captures, terrain, first
-renderer matrix and both paid-tier walkthroughs have completed. The
-caption-corrected matrix, comparison-page browser run and fresh application
-checks remain pending. The directory does not
+**The last QA-only application run is in progress.** Final actual-game captures,
+terrain parity, the corrected matrix, comparison-page browser proof and both
+paid-tier walkthroughs have completed. The first two full command sequences keep
+their mixed results below; the final VIS60 run remains pending. The directory does not
 inherit a pass from older sources. The documentation writer runs static checks
 only; it does not run Chrome or application tests.
 
@@ -23,11 +23,13 @@ workspace origins plus the inventory of all twenty original before PNGs.
 | Before actual game | `6c87b8dc`: 20 original captures from the actual paid fixture, exit 0 in 215.30s. Six comparison images will be copied unchanged; all original source PNG hashes are retained in provenance. |
 | Final actual game | [Actual receipt](actual-after/execution.json) on `7fab8866`: passed in 192.03s (wrapper 192.13s), 20 original PNGs, both sizes at High/density 1/DPR 1. Product code matches `9fa15494`; no historical-image substitution. |
 | Paid wall progression | [Functional receipt](paid-functional/execution.json) on `9fa15494`: 223.56s, 492 real local upgrades per viewport, 18 adaptive-density PNGs. [High-density receipt](paid-hires/wrapper.json) on `7fab8866`: passed in 305.36s, 18 original PNGs, High/density 1/exact drawing dimensions. |
-| Art/renderer matrix | [Initial receipt](native-matrix-initial/execution.json) on `9fa15494`: 22 developer-only sheets, 100 defense bindings, 12.29s; actual compiled frames/shared WebGL walls, not normal gameplay. Caption-only final follow-up pending. |
+| Art/renderer matrix | [Initial receipt](native-matrix-initial/execution.json): 22 sheets, 12.29s on `9fa15494`. [Corrected final receipt](native-matrix-final/execution.json): 22 sheets, 11.78s on `0a461c47`, with phone label-width assertion. All 100 defense bindings and real shared walls; fixtures, not normal gameplay. |
 | Landscape boundary | Native painter proof passed: exact 2,408,448 alpha bytes/coast mask/profile/source PNG/fallback RGBA retained while RGB changed. |
 | Source invariants | [Coordinator's static record](checks/static-invariants.json): exactly five changed presentation files relative to `6c87b8dc`; backend, migrations, public assets and package/lock files unchanged, required histories retained and original checkout untouched. |
-| Fresh application checks | First `7fab8866` frontend: 4,639 passed / 2 failed, 424 files, 563.75s (564.43s process). Known input timeout plus obsolete observer expectations; [VIS59 #435](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/435) is QA-only. Final sequence/rerun receipts remain pending. |
-| Comparison document | [Native checker](verify-comparison.mjs) prepared; root run pending. It verifies exact served HTML/image bytes, 12 decoded images, three tablists and 33 real keyboard/click actions per viewport, with no page/console/external errors permitted. |
+| First application sequence | [Raw report](checks/first-7fab/report.json) on `7fab8866`: frontend 4,639 passed / 2 failed; a11y 33/demo 34/layout 21 passed; build/budget/text passed; multiplayer coverage failed. Overall exit 1. |
+| Post-VIS59 sequence | [Raw report](checks/post-vis59-0a/report.json) on `0a461c47`: frontend 4,760 passed / one input timeout; multiplayer failed at own-musket pose 1 versus 2; build/budget/text passed. Overall exit 1. |
+| Final VIS60 sequence | [Draft #437](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/437) changes the strict observation collector only. Source `6c1cda17` full/native results are pending; no product-code or final-green claim. |
+| Comparison document | [Native receipt](comparison-browser/report.json) passed in 7.11s: exact served HTML and 13 response hashes, 12 decoded images, 3 tablists / 33 real actions at each viewport, zero page/console/external errors. |
 
 The generated concepts remain in their [original design folder](../../design/reference-village/approved-2026-11-17/README.md).
 Official reference screenshots are studied externally, not copied into this
@@ -71,8 +73,12 @@ CHROME_PATH=/usr/bin/chromium node docs/evidence/village-polish-review/verify-co
 
 It owns a loopback HTTP server and browser, verifies the exact HTML and all twelve
 image response hashes against the manifest, exercises real tab input and closes
-its resources in `finally`. `manifest-used.json` in its eventual proof records the
-input snapshot even if the final package manifest later adds the browser receipt.
+its resources in `finally`. [manifest-used.json](comparison-browser/manifest-used.json)
+records the exact tested input snapshot, SHA-256
+`1fe6f68db48e21f263e03426c5e212cf225f8f337bb51f5e9cec24bb885cdc71`.
+The outer package manifest is extended with later immutable receipts and updated
+metadata. Tested HTML, checker and all twelve original image bytes stay unchanged:
+HTML `5c00049b…`, checker `c9fd2bf8…`.
 This check proves that the review page works; it does not add game test coverage.
 
 ## Inspect the paid wall levels
@@ -113,10 +119,27 @@ captures remain historical. Final evidence must identify corrected source
 the accepted runtime from each coordinator receipt. Application trees remain
 unchanged across the later helper-only revisions.
 
-The `b8444070` high-density helper attempt failed after 26.70s before its first
+The [b8444070 high-density helper attempt](paid-hires-attempt-01/execution.json)
+failed after 26.70s before its first
 intended capture: it read `selection.spotId` while selection was null. The helper
 null handling is corrected in `7fab8866`. Preserve this failed attempt separately;
 it is not a product failure or a successful high-density pass.
+
+The first full multiplayer run on `7fab8866` stopped at line 816 after 341.53s:
+the sampled comparison had only **one matching pair**, below its minimum of three.
+Worst recorded ship/boarder drift was zero; unobserved arrays are unavailable.
+This is insufficient coverage, not a proved state mismatch. Its prior pose
+assertions passed. The later `0a461c47` run stopped after 358.28s at line 809:
+**one own-musket pose versus two expected**, the known issue-421 family. These
+are different outcomes and neither is a complete multiplayer pass. Later
+boss/finisher steps remain unproved.
+
+VIS59's strict profile observer resolves the obsolete level-three `1.45` versus
+`1.25`/buttress expectation without changing the game. Its complete frontend run
+has 4,760 passes and one known input timeout. VIS60 then considers all distinct
+tick pairs, exact before ±1, with no sample reuse or duplicate inflation. Minimum
+three comparisons, tolerances, native actions and exact heart/militia checks stay
+in force. Its final frozen-source native run is still pending.
 
 Documentation at `13c10cdc` has the same frontend source/public/backend and
 migrations subtree as `9fa15494`, while top-level Supabase differs through README
@@ -130,3 +153,5 @@ Physical devices/Safari, sustained FPS, balance/high-score comparability, live
 database application, deployment and automatic island growth are not proven.
 World art and terrain still transfer 12,554,858 bytes against the unchanged 8MiB
 effort target. All work remains Draft; no PR/main merge or rollout is represented.
+
+Original frontend reporter logs retain their final blank line. The [two Git whitespace diagnostics](checks/original-log-whitespace.txt) are recorded rather than changing those raw bytes; authored text and checker whitespace checks pass.
