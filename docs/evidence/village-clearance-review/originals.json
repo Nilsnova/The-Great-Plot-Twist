@@ -1,5 +1,5 @@
 {
-  "status": "final_frontend_paid_and_interim_originals_other_results_pending",
+  "status": "frontend_native_and_capture_originals_other_command_and_backend_results_pending",
   "copiedOriginalArtifacts": [
     {
       "path": "progress-paid-bcf/houses-0-1280x720.png",
@@ -482,8 +482,386 @@
       "origin": "/workspace/reference-village-work/clearance-pass/fixture-backend.log",
       "bytes": 99,
       "sha256": "d5321c7120d4a46b3aa806d204b8fc89d2425266898c863e7bb19370278806cf"
+    },
+    {
+      "path": "actual-final/reference-arranged-1280x720.png",
+      "origin": "/workspace/reference-village-work/clearance-actual-final/reference-arranged-1280x720.png",
+      "bytes": 1139676,
+      "sha256": "f6e74309fbfa55392b6ca60817c4931c1834785d90f14608d92caa9450a2ed10",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "actual-final/reference-arranged-375x812.png",
+      "origin": "/workspace/reference-village-work/clearance-actual-final/reference-arranged-375x812.png",
+      "bytes": 428060,
+      "sha256": "0c3b4542a7cb0bd6a82139c793b38288f95ff2b2b92cff5b6b12ecd699d3c154",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "actual-final/reference-entry-1280x720.png",
+      "origin": "/workspace/reference-village-work/clearance-actual-final/reference-entry-1280x720.png",
+      "bytes": 1135445,
+      "sha256": "5f2e48c27cc581029af503d614813c372f8fc38b29a8338f92c0c7eda17bf8eb",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "actual-final/reference-entry-375x812.png",
+      "origin": "/workspace/reference-village-work/clearance-actual-final/reference-entry-375x812.png",
+      "bytes": 428360,
+      "sha256": "af60e8c6151b45665660ce2dfa10bba805a2b1ff2867542cd35beeb375341342",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "actual-final/reference-fit-1280x720.png",
+      "origin": "/workspace/reference-village-work/clearance-actual-final/reference-fit-1280x720.png",
+      "bytes": 1104260,
+      "sha256": "c5c656aa751fa7fd611ea08ff114a071e69ceb97f203bc5f71f5221aa05cf729",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "actual-final/reference-fit-375x812.png",
+      "origin": "/workspace/reference-village-work/clearance-actual-final/reference-fit-375x812.png",
+      "bytes": 314696,
+      "sha256": "98958fdec5929856ab1ed8eaca80d9c650f5fb40ac02c7ef1cb3822dca81ed96",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "actual-final/reference-move-level3-1280x720.png",
+      "origin": "/workspace/reference-village-work/clearance-actual-final/reference-move-level3-1280x720.png",
+      "bytes": 1096844,
+      "sha256": "0f7149f5bf353f79b848a021c1349bf7427f872412ce95224d4f3ffedd295eb8",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "actual-final/reference-move-level3-375x812.png",
+      "origin": "/workspace/reference-village-work/clearance-actual-final/reference-move-level3-375x812.png",
+      "bytes": 334147,
+      "sha256": "350a3a0d160b681ed25df8fc8163f00a6f83273e72316e3fe4b48ff2aa265438",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "actual-final/reference-selected-level3-1280x720.png",
+      "origin": "/workspace/reference-village-work/clearance-actual-final/reference-selected-level3-1280x720.png",
+      "bytes": 1113979,
+      "sha256": "28490be5c6c6989744e408bcf1953d396907206358d275e42464a0be7bdcc39b",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "actual-final/reference-selected-level3-375x812.png",
+      "origin": "/workspace/reference-village-work/clearance-actual-final/reference-selected-level3-375x812.png",
+      "bytes": 305814,
+      "sha256": "aca3b5bbff1ea5ae725a915e72b7a1192282de39ae7ba961694f45264d9d07dd",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "actual-final/reference-wall-draft-1280x720.png",
+      "origin": "/workspace/reference-village-work/clearance-actual-final/reference-wall-draft-1280x720.png",
+      "bytes": 901995,
+      "sha256": "c21085b7090239bca5a29158a8ba7af13547983fe0a98cf68e03159673a096f8",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "actual-final/reference-wall-draft-375x812.png",
+      "origin": "/workspace/reference-village-work/clearance-actual-final/reference-wall-draft-375x812.png",
+      "bytes": 349584,
+      "sha256": "d8f9851a7bc5cfb588150879f559c6c79b00f7b239d019d03e373f29d064030e",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "actual-final/reference-wall-draft-fine-1280x720.png",
+      "origin": "/workspace/reference-village-work/clearance-actual-final/reference-wall-draft-fine-1280x720.png",
+      "bytes": 883902,
+      "sha256": "7541e335a39986dea46b901f9e712cace3d8b1d137f19830225d448ece97c8e3",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "actual-final/reference-wall-draft-fine-375x812.png",
+      "origin": "/workspace/reference-village-work/clearance-actual-final/reference-wall-draft-fine-375x812.png",
+      "bytes": 271624,
+      "sha256": "a4d0079c1e13cd029c3129f52defd3a9c99e8ee13ba9abfed85ddeef7a97657b",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "actual-final/wave-breach-1280x720.png",
+      "origin": "/workspace/reference-village-work/clearance-actual-final/wave-breach-1280x720.png",
+      "bytes": 1111846,
+      "sha256": "994244d773ef477cf87186ef948ff62388e65ae01c1cfd49ea25d82e738a3470",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "actual-final/wave-breach-375x812.png",
+      "origin": "/workspace/reference-village-work/clearance-actual-final/wave-breach-375x812.png",
+      "bytes": 301098,
+      "sha256": "e42661f94c4c8efa111dd55a8d5bb91ec533f4afaf111b461d76803cbaa8d058",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "actual-final/wave-projectiles-1280x720.png",
+      "origin": "/workspace/reference-village-work/clearance-actual-final/wave-projectiles-1280x720.png",
+      "bytes": 1023642,
+      "sha256": "3cfbfa85121004692a19bb4fc5c29d43feff5bd5d954955157edd6590eef353d",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "actual-final/wave-projectiles-375x812.png",
+      "origin": "/workspace/reference-village-work/clearance-actual-final/wave-projectiles-375x812.png",
+      "bytes": 249135,
+      "sha256": "603699a11ccaa31022a266700ddc4830a226e094b4c93dbdcf419e4338915e6a",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "actual-final/wave-standing-1280x720.png",
+      "origin": "/workspace/reference-village-work/clearance-actual-final/wave-standing-1280x720.png",
+      "bytes": 1024295,
+      "sha256": "b4ee58480da6182472f3b62b3aff958dc0d14e098ac003b75bddc4c12ba7840b",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "actual-final/wave-standing-375x812.png",
+      "origin": "/workspace/reference-village-work/clearance-actual-final/wave-standing-375x812.png",
+      "bytes": 253024,
+      "sha256": "d650cecf16f3e21429af2bc19b92a9a3b453694d996d785e77d09577b403a4a9",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "actual-final/execution.json",
+      "origin": "/workspace/reference-village-work/clearance-actual-final/execution.json",
+      "bytes": 501,
+      "sha256": "6fe684d667c396396b5575c5d35dd23786a70b2c82159acf49097bb4e3da772b"
+    },
+    {
+      "path": "actual-final/report.json",
+      "origin": "/workspace/reference-village-work/clearance-actual-final/report.json",
+      "bytes": 4591656,
+      "sha256": "f297054739c8deebf0988468a0f416fc5a4c77db15bd748abaef5d9b2b922602"
+    },
+    {
+      "path": "actual-final/run.log",
+      "origin": "/workspace/reference-village-work/clearance-actual-final/run.log",
+      "bytes": 201,
+      "sha256": "512b2d752d5fde7d4b05e170a5f703bb209b5f8547651ca79a3797853769e5dd"
+    },
+    {
+      "path": "native-matrix/art-buildings-1280x720.png",
+      "origin": "/workspace/reference-village-work/clearance-native-matrix/art-buildings-1280x720.png",
+      "bytes": 364705,
+      "sha256": "9f014cd5c7b10c0f3159da64b812727230e94077933414893b0cf7441b48903b",
+      "width": 1280,
+      "height": 1120
+    },
+    {
+      "path": "native-matrix/art-buildings-375x812.png",
+      "origin": "/workspace/reference-village-work/clearance-native-matrix/art-buildings-375x812.png",
+      "bytes": 123364,
+      "sha256": "20aa5bc2d17dfe56fd213efa5506fb6f619fa68fe7333a73385bc017c702da54",
+      "width": 375,
+      "height": 862
+    },
+    {
+      "path": "native-matrix/art-cannon-1280x720.png",
+      "origin": "/workspace/reference-village-work/clearance-native-matrix/art-cannon-1280x720.png",
+      "bytes": 318409,
+      "sha256": "f5541b2e2a6901502dbe564b79869cf6816ee2dce24ba0f1867884fe76aeabb3",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "native-matrix/art-cannon-375x812.png",
+      "origin": "/workspace/reference-village-work/clearance-native-matrix/art-cannon-375x812.png",
+      "bytes": 85534,
+      "sha256": "ef429ae8799fa01a452b896a747ce7bffc98419d065d00cfc19c504e070d339a",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "native-matrix/art-culverin-1280x720.png",
+      "origin": "/workspace/reference-village-work/clearance-native-matrix/art-culverin-1280x720.png",
+      "bytes": 335063,
+      "sha256": "e15cf9405d80349dfecb30f677fa8474c0a5f56f170efd23589105e5be889055",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "native-matrix/art-culverin-375x812.png",
+      "origin": "/workspace/reference-village-work/clearance-native-matrix/art-culverin-375x812.png",
+      "bytes": 87823,
+      "sha256": "0745066bbf28d462e03e71d33443e85b1db28676057e646e4dda3da2897f3bec",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "native-matrix/art-harpoon-1280x720.png",
+      "origin": "/workspace/reference-village-work/clearance-native-matrix/art-harpoon-1280x720.png",
+      "bytes": 284488,
+      "sha256": "ba3cfa70b88119b936997abec54e2bb557e532b1d09300ec540fabff58dea61d",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "native-matrix/art-harpoon-375x812.png",
+      "origin": "/workspace/reference-village-work/clearance-native-matrix/art-harpoon-375x812.png",
+      "bytes": 78539,
+      "sha256": "de08c1eaf2a2e163a8ab78e90127e53ca4b472999a7e7e976e95e3690640b608",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "native-matrix/art-mortar-1280x720.png",
+      "origin": "/workspace/reference-village-work/clearance-native-matrix/art-mortar-1280x720.png",
+      "bytes": 291989,
+      "sha256": "d3ba16da94de1c3e6c0a551ffe88d351ce986434404d2927ab6fcaff2cb3455a",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "native-matrix/art-mortar-375x812.png",
+      "origin": "/workspace/reference-village-work/clearance-native-matrix/art-mortar-375x812.png",
+      "bytes": 79611,
+      "sha256": "9386af5705f6aac4058d569db798dc4f1308a2a16fb616c026fed3d974119b39",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "native-matrix/art-swivel-1280x720.png",
+      "origin": "/workspace/reference-village-work/clearance-native-matrix/art-swivel-1280x720.png",
+      "bytes": 308694,
+      "sha256": "de4166fc7fa853eb774936d6ec9f4b2abeded52290aaf2f30a26fe35169aee06",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "native-matrix/art-swivel-375x812.png",
+      "origin": "/workspace/reference-village-work/clearance-native-matrix/art-swivel-375x812.png",
+      "bytes": 81883,
+      "sha256": "34c345fa4f4929ca3e83a1581698a7dc32b49ffb1a8b0f83cd7acbdb0a7ab071",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "native-matrix/wall-1-1280x720.png",
+      "origin": "/workspace/reference-village-work/clearance-native-matrix/wall-1-1280x720.png",
+      "bytes": 574249,
+      "sha256": "802d8b3311c5dcf4ec9dda290cc751bdb04731929dfe4aeb55d28d64cd9f88cb",
+      "width": 1280,
+      "height": 1068
+    },
+    {
+      "path": "native-matrix/wall-1-375x812.png",
+      "origin": "/workspace/reference-village-work/clearance-native-matrix/wall-1-375x812.png",
+      "bytes": 326357,
+      "sha256": "b2f0b4aed98df1c2d07c56a13dc06951c9f0ee5d445b6b0cc74e761c74b8b85f",
+      "width": 375,
+      "height": 1219
+    },
+    {
+      "path": "native-matrix/wall-2-1280x720.png",
+      "origin": "/workspace/reference-village-work/clearance-native-matrix/wall-2-1280x720.png",
+      "bytes": 599855,
+      "sha256": "336690ad73a7b9443d4e022760ebc37c902b276f3540b1ce6801f30e4ea80c68",
+      "width": 1280,
+      "height": 1068
+    },
+    {
+      "path": "native-matrix/wall-2-375x812.png",
+      "origin": "/workspace/reference-village-work/clearance-native-matrix/wall-2-375x812.png",
+      "bytes": 333441,
+      "sha256": "97e41707ae28fbb1654a4528da16ab93b01d3ca921cd8a9af163771ca703fc9b",
+      "width": 375,
+      "height": 1219
+    },
+    {
+      "path": "native-matrix/wall-3-1280x720.png",
+      "origin": "/workspace/reference-village-work/clearance-native-matrix/wall-3-1280x720.png",
+      "bytes": 613017,
+      "sha256": "0d9b76b5637a5185f6def71007656edc8efe6397bbcfeb492dd40ff476fed81f",
+      "width": 1280,
+      "height": 1068
+    },
+    {
+      "path": "native-matrix/wall-3-375x812.png",
+      "origin": "/workspace/reference-village-work/clearance-native-matrix/wall-3-375x812.png",
+      "bytes": 339667,
+      "sha256": "3ce7593c6e6d0a19a106d17757828e9d6d7dec799794c23d3bc5d297d2a9c2d5",
+      "width": 375,
+      "height": 1219
+    },
+    {
+      "path": "native-matrix/wall-4-1280x720.png",
+      "origin": "/workspace/reference-village-work/clearance-native-matrix/wall-4-1280x720.png",
+      "bytes": 614993,
+      "sha256": "20b558a024814175e4c0be32db98f283ddd9f337e39fb8d9f6a4bd49185430b4",
+      "width": 1280,
+      "height": 1068
+    },
+    {
+      "path": "native-matrix/wall-4-375x812.png",
+      "origin": "/workspace/reference-village-work/clearance-native-matrix/wall-4-375x812.png",
+      "bytes": 341447,
+      "sha256": "bf5dcee3119bb43218340e328cd2cdcc760aceb6f9c3fb63df7b5360ad154cf0",
+      "width": 375,
+      "height": 1219
+    },
+    {
+      "path": "native-matrix/wall-5-1280x720.png",
+      "origin": "/workspace/reference-village-work/clearance-native-matrix/wall-5-1280x720.png",
+      "bytes": 617395,
+      "sha256": "b5fa97bab24c4dd5faf45002a20a697cb1963628be5984438ab5086bf230a038",
+      "width": 1280,
+      "height": 1068
+    },
+    {
+      "path": "native-matrix/wall-5-375x812.png",
+      "origin": "/workspace/reference-village-work/clearance-native-matrix/wall-5-375x812.png",
+      "bytes": 344562,
+      "sha256": "1e839edd01760c6c1a1cdf6e1de36d30d8b1a7ddb69e6e4d88dd9c0c1b518ad8",
+      "width": 375,
+      "height": 1219
+    },
+    {
+      "path": "native-matrix/execution.json",
+      "origin": "/workspace/reference-village-work/clearance-native-matrix/execution.json",
+      "bytes": 429,
+      "sha256": "10125d5a4d6a79063f1636cd5b1b4117241f66c5114003f25f1bafe25332aa2a"
+    },
+    {
+      "path": "native-matrix/report.json",
+      "origin": "/workspace/reference-village-work/clearance-native-matrix/report.json",
+      "bytes": 647263,
+      "sha256": "602f951fae9cdf4ea4ba1facaadb2b6cefe3fbfdc6bc661f694e6b66c61ef5a2"
+    },
+    {
+      "path": "native-matrix/run.log",
+      "origin": "/workspace/reference-village-work/clearance-native-matrix/run.log",
+      "bytes": 683,
+      "sha256": "8966dd288cf789606e7ebda4f84411f07d52b885242c6dbe54f1861f3c8dedde"
+    },
+    {
+      "path": "checks/final-frontend/frontend.log",
+      "origin": "/workspace/reference-village-work/clearance-final-checks/frontend.log",
+      "bytes": 688339,
+      "sha256": "61ae43d6792a3845aeb9a3d90fd1efc33d11ae0f165359ad917d069fa3b8558e"
     }
   ],
-  "pngCount": 52,
+  "pngCount": 94,
   "boundary": "Final frontend paid source68d is complete; progressbcf is retained separately. Final regular-build backend/SQL authority and broader application results are pending."
 }

@@ -1,0 +1,18 @@
+{
+  "source": "68d41990615bac98aac3b3ffb2225857c8707a81",
+  "name": "actual-final",
+  "command": [
+    "node",
+    "scripts/capture-village-composition.mjs",
+    "/workspace/reference-village-work/clearance-runtime-02/frontend",
+    "/workspace/reference-village-work/clearance-actual-final",
+    "reference",
+    "--arranged",
+    "--wave",
+    "--scenery"
+  ],
+  "started": "2026-11-18T10:40:50.392872+00:00",
+  "exitCode": 0,
+  "seconds": 210.61,
+  "finished": "2026-11-18T10:44:21.003413+00:00"
+}
