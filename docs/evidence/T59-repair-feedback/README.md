@@ -157,3 +157,14 @@ The full combined-source run on `35f91e0e` exposed an incoming selection-dock ex
 ```sh
 cd frontend && ./node_modules/.bin/vitest run --maxWorkers=1 tests/island/selection-dock.test.js
 ```
+
+
+### Full combined-source frontend result
+
+`npm test` on unchanged combined candidate `35f91e0e` (main `db573347` and all four repair fixes) completed **4,623 passed / 3 failed**, across 419 files, in 1087.44 seconds. This full run was not green. [Exact full output](current-main-checks/frontend-full.txt); [232-test focused output](current-main-checks/frontend-focused.txt).
+
+- The selection-dock failure was its obsolete helper string. The subsequent one-line expectation correction passed all four dock tests on this policy branch and the UI branch. The stale-HP and disabled-upgrade assertions remain.
+- The desktop nearby-game test exceeded its existing 20-second bound. On pristine main `db573347`, both cases also timed out under the same existing bounds: [baseline output](current-main-checks/baseline-nearby.txt). This does not establish passing full-game E/revive browser coverage.
+- The desktop village journey exceeded its existing 60-second bound during the full run. After the full run finished, the same combined-source desktop case passed within that unchanged bound (1 passed, 1 skipped by name filter, 53.44 seconds): [isolated output](current-main-checks/combined-village-desktop.txt). The phone case passed in the full run. Pristine main passed both village cases in 79.89 seconds: [baseline output](current-main-checks/baseline-village.txt). No timeout or assertion was widened.
+
+These are local fake-island/Chromium checks, not authenticated multiplayer or a live service result. The earlier 232 focused tests, build/spoiler/text checks and 398 disposable SQL tests retain their recorded source provenance; the complete frontend suite has not been relabelled as a pass. Final combined-source Ruff also passed. No gameplay changes were made to hide these timing observations.
