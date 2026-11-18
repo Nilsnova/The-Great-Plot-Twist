@@ -93,3 +93,23 @@ Resolve the dedicated legacy repair target without `service.target_island`: that
 open the actor's island and grant personal starting money before the target mutation. An actor
 who owns shared island A and repairs legacy island B must not initialize or mutate A. This
 change stays within the repair service; the global island service is not rewritten.
+
+## Follow-up: stale treasury reads and authentication retry
+
+A structure read may complete after the canonical same-origin account revision advances.
+Reject a reply whose treasury revision is below that current revision before returning a
+successful projection; declining only the account setter still exposes stale funds to cards.
+Keep the actor/origin completion guard and exact decimal revision comparison. An unavailable
+current envelope also fails closed. A regression first demonstrates an old 90-coin response
+arriving after the selected account advances to zero available coins.
+
+An HTTP 401 on a retained repair retry does not prove that its earlier unknown request had
+no effect. Keep that actor/account/run/instance's durable original payload and UID through
+reauthentication. A same-actor restored session must replay that exact intent and accept its
+owned immutable receipt instead of generating a new action. Test the full unknown-response,
+401, reload and same-actor restoration sequence before implementation. This follow-up changes
+only the dedicated helper, its tests and this spec; global client integration stays separate.
+
+Both new regressions failed before the helper changes and pass afterward. All 45 dedicated
+shared API, exact-funds and recovery-model tests and the production build with spoiler guard
+passed. No backend, SQL or complete repository suite was repeated for this client-only change.
