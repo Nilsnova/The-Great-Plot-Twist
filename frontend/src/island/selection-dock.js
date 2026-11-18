@@ -42,8 +42,9 @@ export function createSelectionDock({container, onClose, onDetails, loadPortrait
       const health = model.recovery, stale = model.recoveryLevel !== undefined && model.recoveryLevel !== model.level;
       const known = !stale && Number.isFinite(health?.actualHp) && Number.isFinite(health?.maxHP)
         && health.actualHp >= 0 && health.maxHP > 0 && health.actualHp <= health.maxHP;
+      const fallback = health ? '' : model.stats;
       hp.textContent = known ? health.hpLabel ?? `${health.actualHp} / ${health.maxHP} HP`
-        : health?.message ?? (stale ? 'Loading building health…' : 'Health is unavailable.');
+        : health?.message ?? (stale ? 'Loading building health…' : fallback || 'Health is unavailable.');
       if (health?.status === 'error') hp.setAttribute('role', 'alert'); else hp.removeAttribute('role');
       meter.hidden = !known;
       if (known) {

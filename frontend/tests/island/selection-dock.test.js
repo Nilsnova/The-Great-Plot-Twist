@@ -51,7 +51,8 @@ describe('management wall dock', () => {
     ui.buildCard(a, handlers, {dock: true}); expect(ui.active).toBe(false); expect(ui.open).toBe('build');
     expect(text(ui.selectionElement)).toContain('60 / 60 HP'); expect(button(ui.selectionElement, 'upgrade').textContent).toBe('Upgrade · 🪙 37');
     const first = ui.selectionElement; ui.buildCard({...wall('wall_2'), message: 'Payment could not be checked.'}, handlers, {dock: true});
-    expect(ui.selectionElement).toBe(first); expect(text(first)).toContain('Health is unavailable.'); expect(text(first)).toContain('Payment could not be checked.');
+    expect(ui.selectionElement).toBe(first); expect(text(first)).toContain(wall('wall_2').stats); expect(text(first)).toContain('Payment could not be checked.');
+    expect(all(first).find(node => node.role === 'meter')?.hidden).toBe(true);
     button(first, 'move').click(); button(first, 'upgrade').click();
     expect(handlers.move).toHaveBeenCalledWith('wall_2'); expect(handlers.upgrade).toHaveBeenCalledWith('wall_2');
     ui.buildCard({...wall('wall_2'), recovery: {status: 'error', message: 'Building health could not be loaded.'}}, handlers, {dock: true});
