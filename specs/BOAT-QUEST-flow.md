@@ -4,7 +4,7 @@ What this is: the scope and verification handover for [issue #462](https://githu
 
 - Responsible teammate: Ianno Hollensteiner (`Iannomh123456`); agent assistance: Codex, one writer and read-only reviewers.
 - Branch: `fix/boat-quest-flow`, based on main `48aee0e7`.
-- Status: implementation and verification in progress; independent human review remains required.
+- Status: implemented as [Draft PR #467](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/467); full frontend/build checks passed, general multiplayer gate remains open at the separately tracked musket-pose check. Independent human review remains required.
 
 ## Scope and agreed behavior
 
@@ -19,9 +19,9 @@ What this is: the scope and verification handover for [issue #462](https://githu
 ## Verification
 
 - Tests first: the three saved-achievement regressions failed before implementation. The real Chromium boat test reproduced retained scene/input at countdown; the delayed-launch regression also failed.
-- Focused result before the final pending-payout case: 3 files, 18 tests passed. Final commands/results and screenshots will be added after verification.
+- Final frontend result: **349 files / 3847 tests passed**; production build/spoiler guard and text lint passed. The general four-page multiplayer check stopped at the musket-pose assertion tracked by #421. [Exact commands, results and desktop/phone screenshots](../docs/evidence/boat-quest-flow/README.md).
 - Browser coverage uses production controllers/scenes with the local fake transport. It does not prove real Supabase delivery, live payment settlement or a second physical device.
-- Required checks: focused regressions, full `npm test`, `npm run build`, `npm run test:mp`, diff review; record any failure without claiming it passed.
+- Completed checks: focused regressions, full `npm test`, `npm run build`, component captures, text lint and diff review. `npm run test:mp -- /tmp/boat-quest-mp` was run and remains failing at the separately tracked presentation assertion; no timeout or assertion was relaxed. No merge or deployment was performed.
 
 ## Explain-back
 
