@@ -43,6 +43,7 @@ FUNCTIONS = frozenset(
         "recovery_wave_events_page",
         "recovery_wave_report_health",
         "recovery_wave_finish",
+        "recovery_wave_recover_rewards",
         "recovery_wave_revive",
         "wave_revive",
     }

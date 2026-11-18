@@ -99,6 +99,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   // ownRetry: your own island's read failed for a passing reason, so the next reread (the wave wiring's
   // 15 s timer, the bell or a build card) reads it again instead of leaving the island empty for good.
   let disposed = false, own = null, ownMessage = '', ownRetry = false, visiting = null, visitCode = readVisit(visitStorage), busySpot = null, cardMessage = '';
+  let pendingWallet = null;
   let world = null, cutscene = null, openSpot = null, loadTicket = 0, battle = false;
   const coreState = createCoreState();
   let coreWorld = null, coreContextKey = null, coreTravelGeneration = 0, coreRejoin = null;
@@ -169,6 +170,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   // A fresh island answer: coins and captain to the HUD, and the campaign of your own island (§4).
   const setOwn = next => {
     const before = own;
+    pendingWallet = null;
     if (before?.code !== next?.code || before?.recoveryVersion !== next?.recoveryVersion) {
       recoveryReadId++; recoveryState = null; recoveryIslandCode = next?.code ?? null; recoveryCombat = null; recoveryStatus = next?.code ? 'loading' : 'disabled';
       clearRecoveryError();
@@ -205,6 +207,11 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     return () => { if (mine < turn.used || turn.wrote !== wrote) return false; turn.used = mine; return true; };
   };
   const wrote = kind => { turns[kind].wrote++; };
+  const setOwnRead = next => {
+    // Only reads already in flight when the fresh account balance arrived may hold older coins.
+    if (pendingWallet && turns.own.used <= pendingWallet.through) next = {...next, coins: pendingWallet.coins};
+    setOwn(next);
+  };
   // The fake answers at once; the live transport is the signed-in session's, read at every call.
   const live = {get: path => (getTransport()?.get?.(path) ?? notReady()), post: (path, body) => (getTransport()?.post?.(path, body) ?? notReady())};
   const islandTransport = transport ?? live;
@@ -269,7 +276,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     if (endedHere && Number.isSafeInteger(event.coins)) ui.toast(ALL_REPAIRED, 'info');
     // A won wave may open something (GAME-V3.md §4): read the island again; setOwn (or the visit) tells what is new.
     if (event.survived === true) {
-      const current = reading('own'); void api.getIsland().then(fresh => { if (!disposed && fresh.ok && current()) { setOwn(fresh.data); refreshCard(); } });
+      const current = reading('own'); void api.getIsland().then(fresh => { if (!disposed && fresh.ok && current()) { setOwnRead(fresh.data); refreshCard(); } });
       if (visiting) void reloadVisit().then(() => { if (!disposed) refreshCard(); });
     }
   });
@@ -378,7 +385,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       const answer = await api.getIsland();
       if (disposed || ticket !== loadTicket) return answer;
       if (answer.ok) {
-        if (current()) { setOwn(answer.data); if (!visiting) loadedTarget = own; }
+        if (current()) { setOwnRead(answer.data); if (!visiting) loadedTarget = own; }
         ownMessage = ''; ownRetry = false;
       } else { ownMessage = answer.message; ownRetry = mayPass(answer); }
     }
@@ -474,7 +481,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     const answer = await api.piratePoint();
     if (disposed) return answer;
     if (answer.ok) { if (current()) { point = answer.data; tookCoins(answer.data.coins); } pointMessage = ''; } else pointMessage = answer.message;
-    if (!own) { const check = reading('own'), mine = await api.getIsland(); if (!disposed && mine.ok && check()) setOwn(mine.data); }
+    if (!own) { const check = reading('own'), mine = await api.getIsland(); if (!disposed && mine.ok && check()) setOwnRead(mine.data); }
     applyWorld(); refreshCard();
     return answer;
   }
@@ -790,7 +797,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   async function freshOwn() {
     if (own) return null;
     const current = reading('own'), answer = await api.getIsland();
-    if (!disposed && answer.ok && current()) { setOwn(answer.data); refreshCard(); }
+    if (!disposed && answer.ok && current()) { setOwnRead(answer.data); refreshCard(); }
     return answer;
   }
   function openCrew() { openSpot = null; cardMessage = ''; ui.crewCard(crew(), hire); void freshOwn(); }
@@ -845,7 +852,13 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   // The answer of a write: the island, or (on Pirate Point) the shared spots plus your fresh coins.
   // Where a build goes: Pirate Point's shared spots, the friend's island you visit, or your own.
   const placeOf = spotId => (isPointSpot(spotId) ? 'point' : visiting ? 'visit' : 'own');
-  const tookCoins = coins => { if (own && Number.isSafeInteger(coins)) setOwn({...own, coins}); else tellCoins(coins); };
+  const tookCoins = coins => {
+    if (own && Number.isSafeInteger(coins)) setOwn({...own, coins});
+    else {
+      if (Number.isSafeInteger(coins)) pendingWallet = {coins, through: turns.own.asked};
+      tellCoins(coins);
+    }
+  };
   async function reloadVisit() {
     if (!visiting) return;
     const current = reading('visit'), fresh = await api.visit(visiting.code);
@@ -854,7 +867,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   async function reloadOwn() {
     const current = reading('own'), mine = await api.getIsland();
     if (disposed) return;
-    if (mine.ok) { ownRetry = false; ownMessage = ''; if (current()) setOwn(mine.data); } else if (!own) { ownMessage = mine.message; ownRetry = mayPass(mine); }
+    if (mine.ok) { ownRetry = false; ownMessage = ''; if (current()) setOwnRead(mine.data); } else if (!own) { ownMessage = mine.message; ownRetry = mayPass(mine); }
   }
   // The island being defended, read again: after a friend built or upgraded there (island_changed in
   // the island's room, src/pirates/game-wiring.js) and before every wave, so all defenders agree.
@@ -1414,6 +1427,13 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     // for Pirate Point, the island's room place (isle_<code>), joining a running wave, and the battle look.
     defenses: () => defenses(target()?.spots ?? [], campaign()?.research?.tiers),
     get api() { return api; },
+    // A fresh account read after background reward settlement, guarded by its service owner and write order.
+    setWalletCoins(value) {
+      if (disposed || !Number.isSafeInteger(value) || value < 0) return;
+      if (own) wrote('own');
+      tookCoins(value); refreshCard();
+    },
+    resetWalletRecovery() { pendingWallet = null; },
     get recoveryTransport() { return recoveryTransport; },
     get recoveryVersion() { return recoveryModelVersion(); },
     roomPlace: () => islandRoom(visiting?.code ?? visitCode ?? own?.code ?? '') || null,

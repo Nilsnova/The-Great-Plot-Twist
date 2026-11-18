@@ -8,6 +8,19 @@ simulation runs in every browser (frontend/src/pirates/sim.js, BUILD-PLAN 3.5) f
 Every route needs a signed-in player (guests admitted with the class code too), then the flag
 "islands" (404 feature_off), like routes/island.py. start, join and finish share one budget of
 20 requests a minute per player; current has its own of 30 (a friend sailing in may ask often).
+The exception is saved reward recovery: it retains authentication and guest admission while
+working independently of the islands flag, and shares the 20-per-minute wave budget.
+
+POST /api/waves/recover {}
+    -> {"coins": 115, "wonWaveBest": 5,
+        "recovered": [{"waveId": "6f1c...", "wave": 5, "survived": true, "loot": 15}],
+        "hasMore": false}
+    At most 20 previously unpaid, canonically closed protocol-2 participations per call.
+    No player/island/outcome/amount/checkpoint input. The first close's saved result and loot
+    decide payment, using the original wallet reference. Current membership, epoch, wave and
+    catalogue never change that saved obligation; legacy/open/malformed closes are excluded.
+    Repeats return fresh totals even when recovered is empty. Errors: 401, 403 demo_closed,
+    404 player_not_set_up, 422 validation_error, 429 too_many_requests, database errors.
 
 The wave shape (start, join, current):
     {"waveId": "6f1c...", "wave": 1, "seed": 123456789, "startsAt": "2026-11-10T12:00:10Z",
@@ -126,7 +139,7 @@ from secrets import randbelow
 from typing import Annotated, Literal
 from uuid import UUID
 
-from fastapi import APIRouter, Query, Request
+from fastapi import APIRouter, Query, Request, Response
 from pydantic import (
     BaseModel,
     ConfigDict,
@@ -137,9 +150,10 @@ from pydantic import (
     model_validator,
 )
 
+from server.auth import PlayerDep
 from server.errors import ApiError
 from server.flags import is_enabled
-from server.island import service, wall_repair, wave_rules, waves
+from server.island import service, wall_repair, wave_rewards, wave_rules, waves
 from server.island import wave_recovery as recovery
 from server.island.service import IslandCatalogueDep
 from server.island.wave_weather import wave_weather
@@ -162,6 +176,26 @@ MAX_SHIPS_SUNK = 1000
 WALL_SPOT = Annotated[str, Field(pattern=r"^wall_[0-9]{1,2}$")]
 WALL_HEALTH = Annotated[StrictInt, Field(ge=0, le=100)]
 MAX_WALLS = 24
+
+
+class RewardRecoveryRequest(BaseModel):
+    """No client state decides a historical reward."""
+
+    model_config = ConfigDict(extra="forbid")
+
+
+@router.post("/waves/recover")
+async def post_recover_rewards(
+    body: RewardRecoveryRequest,
+    player: PlayerDep,
+    admin: AdminDep,
+    request: Request,
+    response: Response,
+) -> wave_rewards.RewardRecoveryResponse:
+    # An existing obligation stays recoverable when new island play is disabled.
+    request.app.state.wave_budget.spend(player.id)
+    response.headers["Cache-Control"] = "private, no-store"
+    return await wave_rewards.recover_rewards(admin, player.id)
 
 
 class StartRequest(BaseModel):
