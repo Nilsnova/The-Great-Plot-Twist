@@ -266,7 +266,7 @@ describe('recovery-v1 controller replay', () => {
         return { ok: false, status: 409, code: 'health_sync_required' };
       }
       if (body.checkpoint.throughTick < paidEvent.effectiveTick) return { ok: false, status: 409, code: 'health_sync_required' };
-      return { ok: true, data: { loot: 10, recovery: { waveId: body.waveId, islandEpoch: body.checkpoint.islandEpoch,
+      return { ok: true, data: { survived: body.survived, loot: 10, recovery: { waveId: body.waveId, islandEpoch: body.checkpoint.islandEpoch,
         closedAt: new Date(now).toISOString(), closedHp: body.checkpoint.hpUnits, checkpointUid: 'canonical-close-uid1',
         throughTick: body.checkpoint.throughTick, inputHeadSeq: body.checkpoint.inputHeadSeq,
         lastRepairSeq: body.checkpoint.lastRepairSeq, basisRepairSeq: body.checkpoint.basisRepairSeq } } };

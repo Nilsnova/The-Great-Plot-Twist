@@ -19,7 +19,7 @@ function snapshot() {
 }
 
 function setup() {
-  let now = START;
+  let now = START, latest = null;
   const journal = [], drawn = [], sent = [];
   const room = createRoomProxy();
   room.attach({ send: (type, payload) => { sent.push({ type, payload }); return true; }, on: () => () => {} });
@@ -41,7 +41,7 @@ function setup() {
     emit(event) { for (const fn of listeners.get(event.type) ?? []) fn(event); },
   };
   const renderer = { events: list => { for (const event of list) if (event.type === 'captain_fired' || event.type === 'captain_struck') drawn.push({ ...event, at: now }); },
-    update() {}, setVisible() {}, dispose() {} };
+    update(value) { latest = value; }, setVisible() {}, dispose() {} };
   const world = { scene: {}, player: { position: { x: 0, z: 0 } } };
   const controller = createWaveController({ bus, now: () => now, recoveryTransport: transport, world, room, getDefenses: () => [],
     recoveryPlayoutMs: 0, createRenderer: () => renderer, createHud: () => null, setTimer: () => ({}), clearTimer: () => {}, accept: () => true });
@@ -57,10 +57,46 @@ function setup() {
   const journalShot = (by, ship, counter) => journal.push({ serverSeq: journal.length + 1, effectiveTick: seal() + 1, type: 'captain_input',
     participantToken: by, payload: { inputUid: `mate-${counter}`, actorCounter: counter, participantToken: by,
       command: { type: 'captain_shot', targetId: ship.id, x: ship.x + 2, z: ship.z }, captain: { level: 1, skills: [], weapon: 'musket' } } });
-  return { controller, drawn, sent, journal, step, untilShip, shot, hear, journalShot, seal, world, at: () => now };
+  return { controller, drawn, sent, journal, step, untilShip, shot, hear, journalShot, seal, world,
+    get latest() { return latest; }, at: () => now };
 }
 
 describe("a teammate's actions over the room (drawing only)", () => {
+  it('keeps contextual range local when teammate cosmetics and journal attacks arrive', async () => {
+    const h = setup();
+    try {
+      const ship = await h.untilShip();
+      expect(h.controller.playerId).toBe(ME);
+      expect(h.latest.combatFeedback.range).toBeNull();
+      h.hear(h.shot(MATE, ship));
+      h.journalShot(MATE, ship, 1);
+      for (let i = 0; i < 12; i++) await h.step(100);
+      expect(h.drawn.some(event => event.type === 'captain_fired' && event.by === MATE)).toBe(true);
+      expect(h.latest.combatFeedback.range).toBeNull();
+
+      // A remote presence figure must never supply the local range origin.
+      h.controller.setFigures(new Map([[MATE, { x: 60, z: 40 }]]));
+      h.world.player.position = { x: 80, z: -20 };
+      expect(h.controller.shoot(ship.id)).toBe(false); // a local refused attempt still reveals local reach
+      await h.step(50);
+      expect(h.latest.captain.id).toBe(ME);
+      expect(h.latest.combatFeedback.range).toMatchObject({ x: 80, z: -20, radius: 14 });
+      h.hear(h.shot(MATE, ship, { seq: 2 }));
+      await h.step(50);
+      expect(h.latest.combatFeedback.range).toMatchObject({ x: 80, z: -20, radius: 14 });
+      h.world.player.position = null;
+      await h.step(50);
+      expect(h.latest.captain).toBeNull();
+      expect(h.latest.combatFeedback.range).toBeNull(); // no fallback to a teammate's presence figure
+      h.world.player.position = { x: 80, z: -20 };
+      for (let i = 0; i < 18; i++) await h.step(100);
+      expect(h.latest.combatFeedback.range).toBeNull();
+      h.hear(h.shot(MATE, ship, { seq: 3 }));
+      await h.step(50);
+      expect(h.latest.combatFeedback.range).toBeNull();
+    } finally { h.controller.dispose(); }
+  });
+
   it('draws a valid teammate shot at once and ignores another wave, a stranger, yourself and a bad shape', async () => {
     const h = setup();
     const ship = await h.untilShip();

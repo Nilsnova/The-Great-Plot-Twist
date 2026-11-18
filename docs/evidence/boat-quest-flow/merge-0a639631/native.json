@@ -1,0 +1,2269 @@
+{
+  "source": "8dec5628e668ce231c3ddf1c3b9948df74f7696b",
+  "dirty": true,
+  "sourceFiles": {
+    "frontend/src/island/ui.js": "cfc2927f5c5012b043b4f4f6e27b8a8ddc7fd4a4ed0fac04f6fd9ca9dff41ce4",
+    "frontend/src/island/boat-card.css": "aa6ae515746dd52744f7f1b4261ee463a8e3deef9905ca893d05c4a4396f5f11",
+    "frontend/src/pirates/pirates.css": "bbed7e77191b2b245c85ded395527fd9f417ba83c64000ec7d21e7e7b2745c4e",
+    "frontend/src/pirates/hud.js": "2057492aceea180ee50464fe21c5e804e93be12def4cd76c42623a31649ebb96",
+    "frontend/src/ui/toasts.js": "0a554bd2851e226a08f743215a8d5a053c288cf7a42477c3ddedd9e55683a36a",
+    "frontend/src/ui/hud.js": "238bd25dd76798189ab6349bd45de968649986f50c82d67b843db68e129b2d24",
+    "frontend/src/island/index.js": "677593fa0facf0c1ee19e85729225a0593fbe5df2f7318942274cc9d152921a6",
+    "frontend/src/island/wave-flow.js": "ad0076dcf6539ff93722908a96bd40697196eecd1785c2c8da577d4b6bfe914c",
+    "frontend/src/game.js": "5bc17debc460d31e0cbb6cb6ab5f555797f1aec21b23254300c587fbbccd13a0"
+  },
+  "sourcesStable": true,
+  "results": [
+    {
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "bounds": {
+        "bar": {
+          "x": 12,
+          "y": 93,
+          "width": 296,
+          "height": 188.671875,
+          "right": 308,
+          "bottom": 281.671875,
+          "zIndex": "auto",
+          "text": "Wave 31 · 30 ships left · ♥ 100❤️100🌊31⛵30You have fallen☁Fog bankShips show up late and towers see 20% less. Near the watchtower the fog clears.🏝️Land→🧱Block→❤️Protect"
+        },
+        "countdown": {
+          "x": 83.1171875,
+          "y": 472,
+          "width": 153.765625,
+          "height": 48,
+          "right": 236.8828125,
+          "bottom": 520,
+          "zIndex": "auto",
+          "text": "Pirates in9"
+        },
+        "countNumber": {
+          "x": 206.6671905517578,
+          "y": 467.20001220703125,
+          "width": 32.96250915527344,
+          "height": 57.5999755859375,
+          "right": 239.62969970703125,
+          "bottom": 524.7999877929688,
+          "zIndex": "auto",
+          "text": "9"
+        },
+        "narrator": {
+          "x": 16,
+          "y": 420.046875,
+          "width": 288,
+          "height": 131.953125,
+          "right": 304,
+          "bottom": 552,
+          "zIndex": "48",
+          "text": "The lighthouse of the Saltreach Isles has gone dark. And out on the black water, Captain Redtide's pirate fleet has noticed.×"
+        },
+        "soundCaption": {
+          "x": 52.1015625,
+          "y": 337,
+          "width": 215.796875,
+          "height": 55,
+          "right": 267.8984375,
+          "bottom": 392,
+          "zIndex": "50",
+          "text": "The pirate bell rings"
+        },
+        "islandBanner": null,
+        "notice": {
+          "x": 16,
+          "y": 368,
+          "width": 288,
+          "height": 87.5625,
+          "right": 304,
+          "bottom": 455.5625,
+          "zIndex": "51",
+          "text": "Wave starting. Back to the island.Boat round interrupted. No coins were spent and this attempt did not use a reward."
+        },
+        "toast": {
+          "x": 12,
+          "y": 292,
+          "width": 296,
+          "height": 66.375,
+          "right": 308,
+          "bottom": 358.375,
+          "zIndex": "90",
+          "text": "✦Tap a ship to fire your musket (F)."
+        },
+        "boss": null
+      },
+      "overlap": {
+        "bar": {
+          "x": 288,
+          "y": 0
+        },
+        "countdown": {
+          "x": 153.765625,
+          "y": 0
+        },
+        "countNumber": {
+          "x": 32.96250915527344,
+          "y": 0
+        },
+        "toast": {
+          "x": 288,
+          "y": 0
+        }
+      },
+      "withinViewport": {
+        "notice": true,
+        "countdown": true,
+        "countNumber": true
+      },
+      "hudZIndex": "52",
+      "wave": 31,
+      "phase": "countdown",
+      "boatCount": 0,
+      "modal": null,
+      "islandActive": false,
+      "keyConsumed": true,
+      "variables": {
+        "--pirate-bar-bottom": "292px",
+        "--pirate-count-space": "56px",
+        "--toast-stack-height": "76px",
+        "--boat-notice-space": "104px"
+      },
+      "variant": "normal"
+    },
+    {
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "bounds": {
+        "bar": {
+          "x": 12,
+          "y": 93,
+          "width": 296,
+          "height": 188.671875,
+          "right": 308,
+          "bottom": 281.671875,
+          "zIndex": "auto",
+          "text": "Wave 31 · 30 ships left · ♥ 100❤️100🌊31⛵30You have fallen☁Fog bankShips show up late and towers see 20% less. Near the watchtower the fog clears.🏝️Land→🧱Block→❤️Protect"
+        },
+        "countdown": {
+          "x": 83.1171875,
+          "y": 492,
+          "width": 153.765625,
+          "height": 48,
+          "right": 236.8828125,
+          "bottom": 540,
+          "zIndex": "auto",
+          "text": "Pirates in9"
+        },
+        "countNumber": {
+          "x": 209.4140625,
+          "y": 492,
+          "width": 27.46875,
+          "height": 48,
+          "right": 236.8828125,
+          "bottom": 540,
+          "zIndex": "auto",
+          "text": "9"
+        },
+        "narrator": {
+          "x": 16,
+          "y": 420.046875,
+          "width": 288,
+          "height": 131.953125,
+          "right": 304,
+          "bottom": 552,
+          "zIndex": "48",
+          "text": "The lighthouse of the Saltreach Isles has gone dark. And out on the black water, Captain Redtide's pirate fleet has noticed.×"
+        },
+        "soundCaption": {
+          "x": 52.1015625,
+          "y": 337,
+          "width": 215.796875,
+          "height": 55,
+          "right": 267.8984375,
+          "bottom": 392,
+          "zIndex": "50",
+          "text": "The pirate bell rings"
+        },
+        "islandBanner": null,
+        "notice": {
+          "x": 16,
+          "y": 388,
+          "width": 288,
+          "height": 87.5625,
+          "right": 304,
+          "bottom": 475.5625,
+          "zIndex": "51",
+          "text": "Wave starting. Back to the island.Boat round interrupted. No coins were spent and this attempt did not use a reward."
+        },
+        "toast": {
+          "x": 12,
+          "y": 292,
+          "width": 296,
+          "height": 85.78125,
+          "right": 308,
+          "bottom": 377.78125,
+          "zIndex": "90",
+          "text": "!Connection interrupted.Check your connection and try again."
+        },
+        "boss": null
+      },
+      "overlap": {
+        "bar": {
+          "x": 288,
+          "y": 0
+        },
+        "countdown": {
+          "x": 153.765625,
+          "y": 0
+        },
+        "countNumber": {
+          "x": 27.46875,
+          "y": 0
+        },
+        "toast": {
+          "x": 288,
+          "y": 0
+        }
+      },
+      "withinViewport": {
+        "notice": true,
+        "countdown": true,
+        "countNumber": true
+      },
+      "hudZIndex": "52",
+      "wave": 31,
+      "phase": "countdown",
+      "boatCount": 0,
+      "modal": null,
+      "islandActive": false,
+      "keyConsumed": true,
+      "variables": {
+        "--pirate-bar-bottom": "292px",
+        "--pirate-count-space": "56px",
+        "--toast-stack-height": "96px",
+        "--boat-notice-space": "104px"
+      },
+      "variant": "error"
+    },
+    {
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "bounds": {
+        "bar": {
+          "x": 172,
+          "y": 96,
+          "width": 500,
+          "height": 142.1875,
+          "right": 672,
+          "bottom": 238.1875,
+          "zIndex": "auto",
+          "text": "Wave 31 · 30 ships left · ♥ 100❤️100🌊31⛵30You have fallen☁Fog bankShips show up late and towers see 20% less. Near the watchtower the fog clears.🏝️Land→🧱Block→❤️Protect"
+        },
+        "countdown": {
+          "x": 628,
+          "y": 311,
+          "width": 204,
+          "height": 48,
+          "right": 832,
+          "bottom": 359,
+          "zIndex": "auto",
+          "text": "Pirates in9"
+        },
+        "countNumber": {
+          "x": 754.296875,
+          "y": 311,
+          "width": 27.46875,
+          "height": 48,
+          "right": 781.765625,
+          "bottom": 359,
+          "zIndex": "auto",
+          "text": "9"
+        },
+        "narrator": {
+          "x": 12,
+          "y": 328.21875,
+          "width": 300,
+          "height": 45.78125,
+          "right": 312,
+          "bottom": 374,
+          "zIndex": "48",
+          "text": "The lighthouse of the Saltreach Isles has gone dark. And out on the black water, Captain Redtide's pirate fleet has noticed.×"
+        },
+        "soundCaption": {
+          "x": 314.1015625,
+          "y": 245,
+          "width": 215.796875,
+          "height": 55,
+          "right": 529.8984375,
+          "bottom": 300,
+          "zIndex": "50",
+          "text": "The pirate bell rings"
+        },
+        "islandBanner": null,
+        "notice": {
+          "x": 12,
+          "y": 311,
+          "width": 592,
+          "height": 49.78125,
+          "right": 604,
+          "bottom": 360.78125,
+          "zIndex": "51",
+          "text": "Wave starting. Back to the island.Boat round interrupted. No coins were spent and this attempt did not use a reward."
+        },
+        "toast": {
+          "x": 12,
+          "y": 249,
+          "width": 820,
+          "height": 51.78125,
+          "right": 832,
+          "bottom": 300.78125,
+          "zIndex": "90",
+          "text": "!Connection interrupted.Check your connection and try again."
+        },
+        "boss": null
+      },
+      "overlap": {
+        "bar": {
+          "x": 432,
+          "y": 0
+        },
+        "countdown": {
+          "x": 0,
+          "y": 48
+        },
+        "countNumber": {
+          "x": 0,
+          "y": 48
+        },
+        "toast": {
+          "x": 592,
+          "y": 0
+        }
+      },
+      "withinViewport": {
+        "notice": true,
+        "countdown": true,
+        "countNumber": true
+      },
+      "hudZIndex": "52",
+      "wave": 31,
+      "phase": "countdown",
+      "boatCount": 0,
+      "modal": null,
+      "islandActive": false,
+      "keyConsumed": true,
+      "variables": {
+        "--pirate-bar-bottom": "249px",
+        "--pirate-count-space": "56px",
+        "--toast-stack-height": "62px",
+        "--boat-notice-space": "66px"
+      },
+      "variant": "rotation-from-320x568",
+      "inputMovement": {
+        "before": {
+          "x": 0,
+          "z": 12
+        },
+        "after": {
+          "x": 1.2005999999999803,
+          "z": 12
+        },
+        "distance": 1.2005999999999803
+      },
+      "popSamples": [
+        {
+          "at": 19974.5,
+          "number": "10",
+          "transform": "matrix(1.5, 0, 0, 1.5, 0, 0)",
+          "notice": {
+            "top": 348,
+            "bottom": 435.5625,
+            "left": 16,
+            "right": 304
+          },
+          "numberBounds": {
+            "top": 440,
+            "bottom": 512,
+            "left": 171.34765625,
+            "right": 253.73046875
+          },
+          "overlapX": 82.3828125,
+          "overlapY": 0
+        },
+        {
+          "at": 19998.10000000149,
+          "number": "10",
+          "transform": "matrix(1.5, 0, 0, 1.5, 0, 0)",
+          "notice": {
+            "top": 368,
+            "bottom": 455.5625,
+            "left": 16,
+            "right": 304
+          },
+          "numberBounds": {
+            "top": 460,
+            "bottom": 532,
+            "left": 171.34765625,
+            "right": 253.73046875
+          },
+          "overlapX": 82.3828125,
+          "overlapY": 0
+        },
+        {
+          "at": 20015.5,
+          "number": "10",
+          "transform": "matrix(1.5, 0, 0, 1.5, 0, 0)",
+          "notice": {
+            "top": 368,
+            "bottom": 455.5625,
+            "left": 16,
+            "right": 304
+          },
+          "numberBounds": {
+            "top": 460,
+            "bottom": 532,
+            "left": 171.34765625,
+            "right": 253.73046875
+          },
+          "overlapX": 82.3828125,
+          "overlapY": 0
+        },
+        {
+          "at": 20032.10000000149,
+          "number": "10",
+          "transform": "matrix(1.5, 0, 0, 1.5, 0, 0)",
+          "notice": {
+            "top": 368,
+            "bottom": 455.5625,
+            "left": 16,
+            "right": 304
+          },
+          "numberBounds": {
+            "top": 460,
+            "bottom": 532,
+            "left": 171.34765625,
+            "right": 253.73046875
+          },
+          "overlapX": 82.3828125,
+          "overlapY": 0
+        },
+        {
+          "at": 20050.39999999851,
+          "number": "10",
+          "transform": "matrix(1.5, 0, 0, 1.5, 0, 0)",
+          "notice": {
+            "top": 368,
+            "bottom": 455.5625,
+            "left": 16,
+            "right": 304
+          },
+          "numberBounds": {
+            "top": 460,
+            "bottom": 532,
+            "left": 171.34765625,
+            "right": 253.73046875
+          },
+          "overlapX": 82.3828125,
+          "overlapY": 0
+        },
+        {
+          "at": 20072.5,
+          "number": "9",
+          "transform": "matrix(1.5, 0, 0, 1.5, 0, 0)",
+          "notice": {
+            "top": 368,
+            "bottom": 455.5625,
+            "left": 16,
+            "right": 304
+          },
+          "numberBounds": {
+            "top": 460,
+            "bottom": 532,
+            "left": 202.546875,
+            "right": 243.75
+          },
+          "overlapX": 41.203125,
+          "overlapY": 0
+        },
+        {
+          "at": 20092.39999999851,
+          "number": "9",
+          "transform": "matrix(1.4, 0, 0, 1.4, 0, 0)",
+          "notice": {
+            "top": 368,
+            "bottom": 455.5625,
+            "left": 16,
+            "right": 304
+          },
+          "numberBounds": {
+            "top": 462.3999938964844,
+            "bottom": 529.5999755859375,
+            "left": 203.92031860351562,
+            "right": 242.37655639648438
+          },
+          "overlapX": 38.45623779296875,
+          "overlapY": 0
+        },
+        {
+          "at": 20109,
+          "number": "9",
+          "transform": "matrix(1.4, 0, 0, 1.4, 0, 0)",
+          "notice": {
+            "top": 368,
+            "bottom": 455.5625,
+            "left": 16,
+            "right": 304
+          },
+          "numberBounds": {
+            "top": 462.3999938964844,
+            "bottom": 529.5999755859375,
+            "left": 203.92031860351562,
+            "right": 242.37655639648438
+          },
+          "overlapX": 38.45623779296875,
+          "overlapY": 0
+        },
+        {
+          "at": 20129.10000000149,
+          "number": "9",
+          "transform": "matrix(1.4, 0, 0, 1.4, 0, 0)",
+          "notice": {
+            "top": 368,
+            "bottom": 455.5625,
+            "left": 16,
+            "right": 304
+          },
+          "numberBounds": {
+            "top": 462.3999938964844,
+            "bottom": 529.5999755859375,
+            "left": 203.92031860351562,
+            "right": 242.37655639648438
+          },
+          "overlapX": 38.45623779296875,
+          "overlapY": 0
+        },
+        {
+          "at": 20152.10000000149,
+          "number": "9",
+          "transform": "matrix(1.4, 0, 0, 1.4, 0, 0)",
+          "notice": {
+            "top": 368,
+            "bottom": 455.5625,
+            "left": 16,
+            "right": 304
+          },
+          "numberBounds": {
+            "top": 462.3999938964844,
+            "bottom": 529.5999755859375,
+            "left": 203.92031860351562,
+            "right": 242.37655639648438
+          },
+          "overlapX": 38.45623779296875,
+          "overlapY": 0
+        },
+        {
+          "at": 20267.10000000149,
+          "number": "9",
+          "transform": "matrix(1.4, 0, 0, 1.4, 0, 0)",
+          "notice": {
+            "top": 368,
+            "bottom": 455.5625,
+            "left": 16,
+            "right": 304
+          },
+          "numberBounds": {
+            "top": 462.3999938964844,
+            "bottom": 529.5999755859375,
+            "left": 203.92031860351562,
+            "right": 242.37655639648438
+          },
+          "overlapX": 38.45623779296875,
+          "overlapY": 0
+        },
+        {
+          "at": 20294.10000000149,
+          "number": "9",
+          "transform": "matrix(1.3, 0, 0, 1.3, 0, 0)",
+          "notice": {
+            "top": 368,
+            "bottom": 455.5625,
+            "left": 16,
+            "right": 304
+          },
+          "numberBounds": {
+            "top": 464.79998779296875,
+            "bottom": 527.2000122070312,
+            "left": 205.2937469482422,
+            "right": 241.00311279296875
+          },
+          "overlapX": 35.70936584472656,
+          "overlapY": 0
+        },
+        {
+          "at": 20315.89999999851,
+          "number": "9",
+          "transform": "matrix(1.2, 0, 0, 1.2, 0, 0)",
+          "notice": {
+            "top": 368,
+            "bottom": 455.5625,
+            "left": 16,
+            "right": 304
+          },
+          "numberBounds": {
+            "top": 467.20001220703125,
+            "bottom": 524.7999877929688,
+            "left": 206.6671905517578,
+            "right": 239.62969970703125
+          },
+          "overlapX": 32.96250915527344,
+          "overlapY": 0
+        },
+        {
+          "at": 20339.199999999255,
+          "number": "9",
+          "transform": "matrix(1.2, 0, 0, 1.2, 0, 0)",
+          "notice": {
+            "top": 368,
+            "bottom": 455.5625,
+            "left": 16,
+            "right": 304
+          },
+          "numberBounds": {
+            "top": 467.20001220703125,
+            "bottom": 524.7999877929688,
+            "left": 206.6671905517578,
+            "right": 239.62969970703125
+          },
+          "overlapX": 32.96250915527344,
+          "overlapY": 0
+        },
+        {
+          "at": 20366.60000000149,
+          "number": "9",
+          "transform": "matrix(1.2, 0, 0, 1.2, 0, 0)",
+          "notice": {
+            "top": 368,
+            "bottom": 455.5625,
+            "left": 16,
+            "right": 304
+          },
+          "numberBounds": {
+            "top": 467.20001220703125,
+            "bottom": 524.7999877929688,
+            "left": 206.6671905517578,
+            "right": 239.62969970703125
+          },
+          "overlapX": 32.96250915527344,
+          "overlapY": 0
+        },
+        {
+          "at": 20388.89999999851,
+          "number": "9",
+          "transform": "matrix(1.2, 0, 0, 1.2, 0, 0)",
+          "notice": {
+            "top": 368,
+            "bottom": 455.5625,
+            "left": 16,
+            "right": 304
+          },
+          "numberBounds": {
+            "top": 467.20001220703125,
+            "bottom": 524.7999877929688,
+            "left": 206.6671905517578,
+            "right": 239.62969970703125
+          },
+          "overlapX": 32.96250915527344,
+          "overlapY": 0
+        },
+        {
+          "at": 20410.300000000745,
+          "number": "9",
+          "transform": "matrix(1.1, 0, 0, 1.1, 0, 0)",
+          "notice": {
+            "top": 368,
+            "bottom": 455.5625,
+            "left": 16,
+            "right": 304
+          },
+          "numberBounds": {
+            "top": 469.6000061035156,
+            "bottom": 522.4000244140625,
+            "left": 208.04061889648438,
+            "right": 238.25625610351562
+          },
+          "overlapX": 30.21563720703125,
+          "overlapY": 0
+        },
+        {
+          "at": 20435.300000000745,
+          "number": "9",
+          "transform": "matrix(1.1, 0, 0, 1.1, 0, 0)",
+          "notice": {
+            "top": 368,
+            "bottom": 455.5625,
+            "left": 16,
+            "right": 304
+          },
+          "numberBounds": {
+            "top": 469.6000061035156,
+            "bottom": 522.4000244140625,
+            "left": 208.04061889648438,
+            "right": 238.25625610351562
+          },
+          "overlapX": 30.21563720703125,
+          "overlapY": 0
+        },
+        {
+          "at": 20454.39999999851,
+          "number": "9",
+          "transform": "matrix(1.1, 0, 0, 1.1, 0, 0)",
+          "notice": {
+            "top": 368,
+            "bottom": 455.5625,
+            "left": 16,
+            "right": 304
+          },
+          "numberBounds": {
+            "top": 469.6000061035156,
+            "bottom": 522.4000244140625,
+            "left": 208.04061889648438,
+            "right": 238.25625610351562
+          },
+          "overlapX": 30.21563720703125,
+          "overlapY": 0
+        },
+        {
+          "at": 20489.60000000149,
+          "number": "9",
+          "transform": "matrix(1.1, 0, 0, 1.1, 0, 0)",
+          "notice": {
+            "top": 368,
+            "bottom": 455.5625,
+            "left": 16,
+            "right": 304
+          },
+          "numberBounds": {
+            "top": 469.6000061035156,
+            "bottom": 522.4000244140625,
+            "left": 208.04061889648438,
+            "right": 238.25625610351562
+          },
+          "overlapX": 30.21563720703125,
+          "overlapY": 0
+        },
+        {
+          "at": 20514.300000000745,
+          "number": "9",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "notice": {
+            "top": 368,
+            "bottom": 455.5625,
+            "left": 16,
+            "right": 304
+          },
+          "numberBounds": {
+            "top": 472,
+            "bottom": 520,
+            "left": 209.4140625,
+            "right": 236.8828125
+          },
+          "overlapX": 27.46875,
+          "overlapY": 0
+        },
+        {
+          "at": 20537.199999999255,
+          "number": "9",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "notice": {
+            "top": 388,
+            "bottom": 475.5625,
+            "left": 16,
+            "right": 304
+          },
+          "numberBounds": {
+            "top": 492,
+            "bottom": 540,
+            "left": 209.4140625,
+            "right": 236.8828125
+          },
+          "overlapX": 27.46875,
+          "overlapY": 0
+        },
+        {
+          "at": 20539.89999999851,
+          "number": "9",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "notice": {
+            "top": 388,
+            "bottom": 475.5625,
+            "left": 16,
+            "right": 304
+          },
+          "numberBounds": {
+            "top": 492,
+            "bottom": 540,
+            "left": 209.4140625,
+            "right": 236.8828125
+          },
+          "overlapX": 27.46875,
+          "overlapY": 0
+        },
+        {
+          "at": 20563.199999999255,
+          "number": "9",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "notice": {
+            "top": 388,
+            "bottom": 475.5625,
+            "left": 16,
+            "right": 304
+          },
+          "numberBounds": {
+            "top": 492,
+            "bottom": 540,
+            "left": 209.4140625,
+            "right": 236.8828125
+          },
+          "overlapX": 27.46875,
+          "overlapY": 0
+        },
+        {
+          "at": 20583.89999999851,
+          "number": "9",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "notice": {
+            "top": 388,
+            "bottom": 475.5625,
+            "left": 16,
+            "right": 304
+          },
+          "numberBounds": {
+            "top": 492,
+            "bottom": 540,
+            "left": 209.4140625,
+            "right": 236.8828125
+          },
+          "overlapX": 27.46875,
+          "overlapY": 0
+        },
+        {
+          "at": 20604.10000000149,
+          "number": "9",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "notice": {
+            "top": 388,
+            "bottom": 475.5625,
+            "left": 16,
+            "right": 304
+          },
+          "numberBounds": {
+            "top": 492,
+            "bottom": 540,
+            "left": 209.4140625,
+            "right": 236.8828125
+          },
+          "overlapX": 27.46875,
+          "overlapY": 0
+        },
+        {
+          "at": 20622,
+          "number": "9",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "notice": {
+            "top": 388,
+            "bottom": 475.5625,
+            "left": 16,
+            "right": 304
+          },
+          "numberBounds": {
+            "top": 492,
+            "bottom": 540,
+            "left": 209.4140625,
+            "right": 236.8828125
+          },
+          "overlapX": 27.46875,
+          "overlapY": 0
+        },
+        {
+          "at": 20641.39999999851,
+          "number": "9",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "notice": {
+            "top": 388,
+            "bottom": 475.5625,
+            "left": 16,
+            "right": 304
+          },
+          "numberBounds": {
+            "top": 492,
+            "bottom": 540,
+            "left": 209.4140625,
+            "right": 236.8828125
+          },
+          "overlapX": 27.46875,
+          "overlapY": 0
+        },
+        {
+          "at": 20675,
+          "number": "9",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "notice": {
+            "top": 388,
+            "bottom": 475.5625,
+            "left": 16,
+            "right": 304
+          },
+          "numberBounds": {
+            "top": 492,
+            "bottom": 540,
+            "left": 209.4140625,
+            "right": 236.8828125
+          },
+          "overlapX": 27.46875,
+          "overlapY": 0
+        },
+        {
+          "at": 20697.10000000149,
+          "number": "9",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "notice": {
+            "top": 388,
+            "bottom": 475.5625,
+            "left": 16,
+            "right": 304
+          },
+          "numberBounds": {
+            "top": 492,
+            "bottom": 540,
+            "left": 209.4140625,
+            "right": 236.8828125
+          },
+          "overlapX": 27.46875,
+          "overlapY": 0
+        },
+        {
+          "at": 20718.699999999255,
+          "number": "9",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "notice": {
+            "top": 388,
+            "bottom": 475.5625,
+            "left": 16,
+            "right": 304
+          },
+          "numberBounds": {
+            "top": 492,
+            "bottom": 540,
+            "left": 209.4140625,
+            "right": 236.8828125
+          },
+          "overlapX": 27.46875,
+          "overlapY": 0
+        },
+        {
+          "at": 20754.39999999851,
+          "number": "9",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "notice": {
+            "top": 345,
+            "bottom": 394.78125,
+            "left": 12,
+            "right": 604
+          },
+          "numberBounds": {
+            "top": 345,
+            "bottom": 393,
+            "left": 754.296875,
+            "right": 781.765625
+          },
+          "overlapX": 0,
+          "overlapY": 48
+        },
+        {
+          "at": 20798.39999999851,
+          "number": "9",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "notice": {
+            "top": 311,
+            "bottom": 360.78125,
+            "left": 12,
+            "right": 604
+          },
+          "numberBounds": {
+            "top": 311,
+            "bottom": 359,
+            "left": 754.296875,
+            "right": 781.765625
+          },
+          "overlapX": 0,
+          "overlapY": 48
+        },
+        {
+          "at": 20828.199999999255,
+          "number": "9",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "notice": {
+            "top": 311,
+            "bottom": 360.78125,
+            "left": 12,
+            "right": 604
+          },
+          "numberBounds": {
+            "top": 311,
+            "bottom": 359,
+            "left": 754.296875,
+            "right": 781.765625
+          },
+          "overlapX": 0,
+          "overlapY": 48
+        },
+        {
+          "at": 20831.199999999255,
+          "number": "9",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "notice": {
+            "top": 311,
+            "bottom": 360.78125,
+            "left": 12,
+            "right": 604
+          },
+          "numberBounds": {
+            "top": 311,
+            "bottom": 359,
+            "left": 754.296875,
+            "right": 781.765625
+          },
+          "overlapX": 0,
+          "overlapY": 48
+        },
+        {
+          "at": 20871.39999999851,
+          "number": "9",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "notice": {
+            "top": 311,
+            "bottom": 360.78125,
+            "left": 12,
+            "right": 604
+          },
+          "numberBounds": {
+            "top": 311,
+            "bottom": 359,
+            "left": 754.296875,
+            "right": 781.765625
+          },
+          "overlapX": 0,
+          "overlapY": 48
+        },
+        {
+          "at": 20919.5,
+          "number": "9",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "notice": {
+            "top": 311,
+            "bottom": 360.78125,
+            "left": 12,
+            "right": 604
+          },
+          "numberBounds": {
+            "top": 311,
+            "bottom": 359,
+            "left": 754.296875,
+            "right": 781.765625
+          },
+          "overlapX": 0,
+          "overlapY": 48
+        },
+        {
+          "at": 20987.89999999851,
+          "number": "9",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "notice": {
+            "top": 311,
+            "bottom": 360.78125,
+            "left": 12,
+            "right": 604
+          },
+          "numberBounds": {
+            "top": 311,
+            "bottom": 359,
+            "left": 754.296875,
+            "right": 781.765625
+          },
+          "overlapX": 0,
+          "overlapY": 48
+        },
+        {
+          "at": 21067.39999999851,
+          "number": "9",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "notice": {
+            "top": 311,
+            "bottom": 360.78125,
+            "left": 12,
+            "right": 604
+          },
+          "numberBounds": {
+            "top": 311,
+            "bottom": 359,
+            "left": 754.296875,
+            "right": 781.765625
+          },
+          "overlapX": 0,
+          "overlapY": 48
+        },
+        {
+          "at": 21142,
+          "number": "8",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "notice": {
+            "top": 311,
+            "bottom": 360.78125,
+            "left": 12,
+            "right": 604
+          },
+          "numberBounds": {
+            "top": 311,
+            "bottom": 359,
+            "left": 754.296875,
+            "right": 781.765625
+          },
+          "overlapX": 0,
+          "overlapY": 48
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "bounds": {
+        "bar": {
+          "x": 172,
+          "y": 96,
+          "width": 500,
+          "height": 142.1875,
+          "right": 672,
+          "bottom": 238.1875,
+          "zIndex": "auto",
+          "text": "Wave 31 · 30 ships left · ♥ 100❤️100🌊31⛵30You have fallen☁Fog bankShips show up late and towers see 20% less. Near the watchtower the fog clears.🏝️Land→🧱Block→❤️Protect"
+        },
+        "countdown": {
+          "x": 628,
+          "y": 293,
+          "width": 204,
+          "height": 48,
+          "right": 832,
+          "bottom": 341,
+          "zIndex": "auto",
+          "text": "Pirates in9"
+        },
+        "countNumber": {
+          "x": 752.9234619140625,
+          "y": 290.6000061035156,
+          "width": 30.215576171875,
+          "height": 52.79998779296875,
+          "right": 783.1390380859375,
+          "bottom": 343.3999938964844,
+          "zIndex": "auto",
+          "text": "9"
+        },
+        "narrator": {
+          "x": 12,
+          "y": 328.21875,
+          "width": 300,
+          "height": 45.78125,
+          "right": 312,
+          "bottom": 374,
+          "zIndex": "48",
+          "text": "Welcome back, captains. Your island waited for you, and every wall is still standing. Ring the bell when you are ready.×"
+        },
+        "soundCaption": {
+          "x": 314.1015625,
+          "y": 245,
+          "width": 215.796875,
+          "height": 55,
+          "right": 529.8984375,
+          "bottom": 300,
+          "zIndex": "50",
+          "text": "The pirate bell rings"
+        },
+        "islandBanner": null,
+        "notice": {
+          "x": 12,
+          "y": 293,
+          "width": 592,
+          "height": 49.78125,
+          "right": 604,
+          "bottom": 342.78125,
+          "zIndex": "51",
+          "text": "Wave starting. Back to the island.Boat round interrupted. No coins were spent and this attempt did not use a reward."
+        },
+        "toast": {
+          "x": 12,
+          "y": 249,
+          "width": 820,
+          "height": 34,
+          "right": 832,
+          "bottom": 283,
+          "zIndex": "90",
+          "text": "✓The wreck is repaired! Your ship sails: tap her to play."
+        },
+        "boss": null
+      },
+      "overlap": {
+        "bar": {
+          "x": 432,
+          "y": 0
+        },
+        "countdown": {
+          "x": 0,
+          "y": 48
+        },
+        "countNumber": {
+          "x": 0,
+          "y": 49.78125
+        },
+        "toast": {
+          "x": 592,
+          "y": 0
+        }
+      },
+      "withinViewport": {
+        "notice": true,
+        "countdown": true,
+        "countNumber": true
+      },
+      "hudZIndex": "52",
+      "wave": 31,
+      "phase": "countdown",
+      "boatCount": 0,
+      "modal": null,
+      "islandActive": false,
+      "keyConsumed": true,
+      "variables": {
+        "--pirate-bar-bottom": "249px",
+        "--pirate-count-space": "56px",
+        "--toast-stack-height": "44px",
+        "--boat-notice-space": "66px"
+      },
+      "variant": "normal"
+    },
+    {
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "bounds": {
+        "bar": {
+          "x": 172,
+          "y": 96,
+          "width": 500,
+          "height": 142.1875,
+          "right": 672,
+          "bottom": 238.1875,
+          "zIndex": "auto",
+          "text": "Wave 31 · 30 ships left · ♥ 100❤️100🌊31⛵30You have fallen☁Fog bankShips show up late and towers see 20% less. Near the watchtower the fog clears.🏝️Land→🧱Block→❤️Protect"
+        },
+        "countdown": {
+          "x": 628,
+          "y": 311,
+          "width": 204,
+          "height": 48,
+          "right": 832,
+          "bottom": 359,
+          "zIndex": "auto",
+          "text": "Pirates in8"
+        },
+        "countNumber": {
+          "x": 754.296875,
+          "y": 311,
+          "width": 27.46875,
+          "height": 48,
+          "right": 781.765625,
+          "bottom": 359,
+          "zIndex": "auto",
+          "text": "8"
+        },
+        "narrator": {
+          "x": 12,
+          "y": 328.21875,
+          "width": 300,
+          "height": 45.78125,
+          "right": 312,
+          "bottom": 374,
+          "zIndex": "48",
+          "text": "Welcome back, captains. Your island waited for you, and every wall is still standing. Ring the bell when you are ready.×"
+        },
+        "soundCaption": {
+          "x": 314.1015625,
+          "y": 245,
+          "width": 215.796875,
+          "height": 55,
+          "right": 529.8984375,
+          "bottom": 300,
+          "zIndex": "50",
+          "text": "The pirate bell rings"
+        },
+        "islandBanner": null,
+        "notice": {
+          "x": 12,
+          "y": 311,
+          "width": 592,
+          "height": 49.78125,
+          "right": 604,
+          "bottom": 360.78125,
+          "zIndex": "51",
+          "text": "Wave starting. Back to the island.Boat round interrupted. No coins were spent and this attempt did not use a reward."
+        },
+        "toast": {
+          "x": 12,
+          "y": 249,
+          "width": 820,
+          "height": 51.78125,
+          "right": 832,
+          "bottom": 300.78125,
+          "zIndex": "90",
+          "text": "!Connection interrupted.Check your connection and try again."
+        },
+        "boss": null
+      },
+      "overlap": {
+        "bar": {
+          "x": 432,
+          "y": 0
+        },
+        "countdown": {
+          "x": 0,
+          "y": 48
+        },
+        "countNumber": {
+          "x": 0,
+          "y": 48
+        },
+        "toast": {
+          "x": 592,
+          "y": 0
+        }
+      },
+      "withinViewport": {
+        "notice": true,
+        "countdown": true,
+        "countNumber": true
+      },
+      "hudZIndex": "52",
+      "wave": 31,
+      "phase": "countdown",
+      "boatCount": 0,
+      "modal": null,
+      "islandActive": false,
+      "keyConsumed": true,
+      "variables": {
+        "--pirate-bar-bottom": "249px",
+        "--pirate-count-space": "56px",
+        "--toast-stack-height": "62px",
+        "--boat-notice-space": "66px"
+      },
+      "variant": "error"
+    },
+    {
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "bounds": {
+        "bar": {
+          "x": 12,
+          "y": 93,
+          "width": 296,
+          "height": 188.671875,
+          "right": 308,
+          "bottom": 281.671875,
+          "zIndex": "auto",
+          "text": "Wave 31 · 30 ships left · ♥ 100❤️100🌊31⛵30You have fallen☁Fog bankShips show up late and towers see 20% less. Near the watchtower the fog clears.🏝️Land→🧱Block→❤️Protect"
+        },
+        "countdown": {
+          "x": 83.1171875,
+          "y": 492,
+          "width": 153.765625,
+          "height": 48,
+          "right": 236.8828125,
+          "bottom": 540,
+          "zIndex": "auto",
+          "text": "Pirates in7"
+        },
+        "countNumber": {
+          "x": 209.4140625,
+          "y": 492,
+          "width": 27.46875,
+          "height": 48,
+          "right": 236.8828125,
+          "bottom": 540,
+          "zIndex": "auto",
+          "text": "7"
+        },
+        "narrator": {
+          "x": 16,
+          "y": 420.046875,
+          "width": 288,
+          "height": 131.953125,
+          "right": 304,
+          "bottom": 552,
+          "zIndex": "48",
+          "text": "Welcome back, captains. Your island waited for you, and every wall is still standing. Ring the bell when you are ready.×"
+        },
+        "soundCaption": {
+          "x": 52.1015625,
+          "y": 337,
+          "width": 215.796875,
+          "height": 55,
+          "right": 267.8984375,
+          "bottom": 392,
+          "zIndex": "50",
+          "text": "The pirate bell rings"
+        },
+        "islandBanner": null,
+        "notice": {
+          "x": 16,
+          "y": 388,
+          "width": 288,
+          "height": 87.5625,
+          "right": 304,
+          "bottom": 475.5625,
+          "zIndex": "51",
+          "text": "Wave starting. Back to the island.Boat round interrupted. No coins were spent and this attempt did not use a reward."
+        },
+        "toast": {
+          "x": 12,
+          "y": 292,
+          "width": 296,
+          "height": 85.78125,
+          "right": 308,
+          "bottom": 377.78125,
+          "zIndex": "90",
+          "text": "!Connection interrupted.Check your connection and try again."
+        },
+        "boss": null
+      },
+      "overlap": {
+        "bar": {
+          "x": 288,
+          "y": 0
+        },
+        "countdown": {
+          "x": 153.765625,
+          "y": 0
+        },
+        "countNumber": {
+          "x": 27.46875,
+          "y": 0
+        },
+        "toast": {
+          "x": 288,
+          "y": 0
+        }
+      },
+      "withinViewport": {
+        "notice": true,
+        "countdown": true,
+        "countNumber": true
+      },
+      "hudZIndex": "52",
+      "wave": 31,
+      "phase": "countdown",
+      "boatCount": 0,
+      "modal": null,
+      "islandActive": false,
+      "keyConsumed": true,
+      "variables": {
+        "--pirate-bar-bottom": "292px",
+        "--pirate-count-space": "56px",
+        "--toast-stack-height": "96px",
+        "--boat-notice-space": "104px"
+      },
+      "variant": "rotation-from-844x390",
+      "inputMovement": {
+        "before": {
+          "x": 0,
+          "z": 12
+        },
+        "after": {
+          "x": 0.6002999999999739,
+          "z": 12
+        },
+        "distance": 0.6002999999999739
+      },
+      "popSamples": [
+        {
+          "at": 14521.39999999851,
+          "number": "9",
+          "transform": "matrix(1.5, 0, 0, 1.5, 0, 0)",
+          "notice": {
+            "top": 293,
+            "bottom": 342.78125,
+            "left": 12,
+            "right": 604
+          },
+          "numberBounds": {
+            "top": 281,
+            "bottom": 353,
+            "left": 747.4296875,
+            "right": 788.6328125
+          },
+          "overlapX": 0,
+          "overlapY": 49.78125
+        },
+        {
+          "at": 14564.39999999851,
+          "number": "9",
+          "transform": "matrix(1.5, 0, 0, 1.5, 0, 0)",
+          "notice": {
+            "top": 293,
+            "bottom": 342.78125,
+            "left": 12,
+            "right": 604
+          },
+          "numberBounds": {
+            "top": 281,
+            "bottom": 353,
+            "left": 747.4296875,
+            "right": 788.6328125
+          },
+          "overlapX": 0,
+          "overlapY": 49.78125
+        },
+        {
+          "at": 14602.89999999851,
+          "number": "9",
+          "transform": "matrix(1.5, 0, 0, 1.5, 0, 0)",
+          "notice": {
+            "top": 293,
+            "bottom": 342.78125,
+            "left": 12,
+            "right": 604
+          },
+          "numberBounds": {
+            "top": 281,
+            "bottom": 353,
+            "left": 747.4296875,
+            "right": 788.6328125
+          },
+          "overlapX": 0,
+          "overlapY": 49.78125
+        },
+        {
+          "at": 14634.300000000745,
+          "number": "9",
+          "transform": "matrix(1.5, 0, 0, 1.5, 0, 0)",
+          "notice": {
+            "top": 293,
+            "bottom": 342.78125,
+            "left": 12,
+            "right": 604
+          },
+          "numberBounds": {
+            "top": 281,
+            "bottom": 353,
+            "left": 747.4296875,
+            "right": 788.6328125
+          },
+          "overlapX": 0,
+          "overlapY": 49.78125
+        },
+        {
+          "at": 14669.199999999255,
+          "number": "9",
+          "transform": "matrix(1.4, 0, 0, 1.4, 0, 0)",
+          "notice": {
+            "top": 293,
+            "bottom": 342.78125,
+            "left": 12,
+            "right": 604
+          },
+          "numberBounds": {
+            "top": 283.3999938964844,
+            "bottom": 350.6000061035156,
+            "left": 748.8031005859375,
+            "right": 787.2593994140625
+          },
+          "overlapX": 0,
+          "overlapY": 49.78125
+        },
+        {
+          "at": 14721.5,
+          "number": "9",
+          "transform": "matrix(1.4, 0, 0, 1.4, 0, 0)",
+          "notice": {
+            "top": 293,
+            "bottom": 342.78125,
+            "left": 12,
+            "right": 604
+          },
+          "numberBounds": {
+            "top": 283.3999938964844,
+            "bottom": 350.6000061035156,
+            "left": 748.8031005859375,
+            "right": 787.2593994140625
+          },
+          "overlapX": 0,
+          "overlapY": 49.78125
+        },
+        {
+          "at": 14758.60000000149,
+          "number": "9",
+          "transform": "matrix(1.4, 0, 0, 1.4, 0, 0)",
+          "notice": {
+            "top": 293,
+            "bottom": 342.78125,
+            "left": 12,
+            "right": 604
+          },
+          "numberBounds": {
+            "top": 283.3999938964844,
+            "bottom": 350.6000061035156,
+            "left": 748.8031005859375,
+            "right": 787.2593994140625
+          },
+          "overlapX": 0,
+          "overlapY": 49.78125
+        },
+        {
+          "at": 14878.800000000745,
+          "number": "9",
+          "transform": "matrix(1.3, 0, 0, 1.3, 0, 0)",
+          "notice": {
+            "top": 293,
+            "bottom": 342.78125,
+            "left": 12,
+            "right": 604
+          },
+          "numberBounds": {
+            "top": 285.79998779296875,
+            "bottom": 348.20001220703125,
+            "left": 750.1765747070312,
+            "right": 785.8859252929688
+          },
+          "overlapX": 0,
+          "overlapY": 49.78125
+        },
+        {
+          "at": 14928.10000000149,
+          "number": "9",
+          "transform": "matrix(1.2, 0, 0, 1.2, 0, 0)",
+          "notice": {
+            "top": 293,
+            "bottom": 342.78125,
+            "left": 12,
+            "right": 604
+          },
+          "numberBounds": {
+            "top": 288.20001220703125,
+            "bottom": 345.79998779296875,
+            "left": 751.5499877929688,
+            "right": 784.5125122070312
+          },
+          "overlapX": 0,
+          "overlapY": 49.78125
+        },
+        {
+          "at": 15000.39999999851,
+          "number": "9",
+          "transform": "matrix(1.1, 0, 0, 1.1, 0, 0)",
+          "notice": {
+            "top": 293,
+            "bottom": 342.78125,
+            "left": 12,
+            "right": 604
+          },
+          "numberBounds": {
+            "top": 290.6000061035156,
+            "bottom": 343.3999938964844,
+            "left": 752.9234619140625,
+            "right": 783.1390380859375
+          },
+          "overlapX": 0,
+          "overlapY": 49.78125
+        },
+        {
+          "at": 15076.5,
+          "number": "8",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "notice": {
+            "top": 293,
+            "bottom": 342.78125,
+            "left": 12,
+            "right": 604
+          },
+          "numberBounds": {
+            "top": 293,
+            "bottom": 341,
+            "left": 754.296875,
+            "right": 781.765625
+          },
+          "overlapX": 0,
+          "overlapY": 48
+        },
+        {
+          "at": 15139.39999999851,
+          "number": "8",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "notice": {
+            "top": 293,
+            "bottom": 342.78125,
+            "left": 12,
+            "right": 604
+          },
+          "numberBounds": {
+            "top": 293,
+            "bottom": 341,
+            "left": 754.296875,
+            "right": 781.765625
+          },
+          "overlapX": 0,
+          "overlapY": 48
+        },
+        {
+          "at": 15187.10000000149,
+          "number": "8",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "notice": {
+            "top": 293,
+            "bottom": 342.78125,
+            "left": 12,
+            "right": 604
+          },
+          "numberBounds": {
+            "top": 293,
+            "bottom": 341,
+            "left": 754.296875,
+            "right": 781.765625
+          },
+          "overlapX": 0,
+          "overlapY": 48
+        },
+        {
+          "at": 15258.300000000745,
+          "number": "8",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "notice": {
+            "top": 293,
+            "bottom": 342.78125,
+            "left": 12,
+            "right": 604
+          },
+          "numberBounds": {
+            "top": 293,
+            "bottom": 341,
+            "left": 754.296875,
+            "right": 781.765625
+          },
+          "overlapX": 0,
+          "overlapY": 48
+        },
+        {
+          "at": 15341.39999999851,
+          "number": "8",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "notice": {
+            "top": 293,
+            "bottom": 342.78125,
+            "left": 12,
+            "right": 604
+          },
+          "numberBounds": {
+            "top": 293,
+            "bottom": 341,
+            "left": 754.296875,
+            "right": 781.765625
+          },
+          "overlapX": 0,
+          "overlapY": 48
+        },
+        {
+          "at": 15387.800000000745,
+          "number": "8",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "notice": {
+            "top": 293,
+            "bottom": 342.78125,
+            "left": 12,
+            "right": 604
+          },
+          "numberBounds": {
+            "top": 293,
+            "bottom": 341,
+            "left": 754.296875,
+            "right": 781.765625
+          },
+          "overlapX": 0,
+          "overlapY": 48
+        },
+        {
+          "at": 15391.5,
+          "number": "8",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "notice": {
+            "top": 293,
+            "bottom": 342.78125,
+            "left": 12,
+            "right": 604
+          },
+          "numberBounds": {
+            "top": 293,
+            "bottom": 341,
+            "left": 754.296875,
+            "right": 781.765625
+          },
+          "overlapX": 0,
+          "overlapY": 48
+        },
+        {
+          "at": 15466.89999999851,
+          "number": "8",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "notice": {
+            "top": 293,
+            "bottom": 342.78125,
+            "left": 12,
+            "right": 604
+          },
+          "numberBounds": {
+            "top": 293,
+            "bottom": 341,
+            "left": 754.296875,
+            "right": 781.765625
+          },
+          "overlapX": 0,
+          "overlapY": 48
+        },
+        {
+          "at": 15541.39999999851,
+          "number": "8",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "notice": {
+            "top": 293,
+            "bottom": 342.78125,
+            "left": 12,
+            "right": 604
+          },
+          "numberBounds": {
+            "top": 293,
+            "bottom": 341,
+            "left": 754.296875,
+            "right": 781.765625
+          },
+          "overlapX": 0,
+          "overlapY": 48
+        },
+        {
+          "at": 15595.39999999851,
+          "number": "8",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "notice": {
+            "top": 293,
+            "bottom": 342.78125,
+            "left": 12,
+            "right": 604
+          },
+          "numberBounds": {
+            "top": 293,
+            "bottom": 341,
+            "left": 754.296875,
+            "right": 781.765625
+          },
+          "overlapX": 0,
+          "overlapY": 48
+        },
+        {
+          "at": 15653.60000000149,
+          "number": "8",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "notice": {
+            "top": 311,
+            "bottom": 360.78125,
+            "left": 12,
+            "right": 604
+          },
+          "numberBounds": {
+            "top": 311,
+            "bottom": 359,
+            "left": 754.296875,
+            "right": 781.765625
+          },
+          "overlapX": 0,
+          "overlapY": 48
+        },
+        {
+          "at": 15656.5,
+          "number": "8",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "notice": {
+            "top": 311,
+            "bottom": 360.78125,
+            "left": 12,
+            "right": 604
+          },
+          "numberBounds": {
+            "top": 311,
+            "bottom": 359,
+            "left": 754.296875,
+            "right": 781.765625
+          },
+          "overlapX": 0,
+          "overlapY": 48
+        },
+        {
+          "at": 15698.800000000745,
+          "number": "8",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "notice": {
+            "top": 311,
+            "bottom": 360.78125,
+            "left": 12,
+            "right": 604
+          },
+          "numberBounds": {
+            "top": 311,
+            "bottom": 359,
+            "left": 754.296875,
+            "right": 781.765625
+          },
+          "overlapX": 0,
+          "overlapY": 48
+        },
+        {
+          "at": 15744.10000000149,
+          "number": "8",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "notice": {
+            "top": 311,
+            "bottom": 360.78125,
+            "left": 12,
+            "right": 604
+          },
+          "numberBounds": {
+            "top": 311,
+            "bottom": 359,
+            "left": 754.296875,
+            "right": 781.765625
+          },
+          "overlapX": 0,
+          "overlapY": 48
+        },
+        {
+          "at": 15794.60000000149,
+          "number": "8",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "notice": {
+            "top": 311,
+            "bottom": 360.78125,
+            "left": 12,
+            "right": 604
+          },
+          "numberBounds": {
+            "top": 311,
+            "bottom": 359,
+            "left": 754.296875,
+            "right": 781.765625
+          },
+          "overlapX": 0,
+          "overlapY": 48
+        },
+        {
+          "at": 15847.800000000745,
+          "number": "8",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "notice": {
+            "top": 311,
+            "bottom": 360.78125,
+            "left": 12,
+            "right": 604
+          },
+          "numberBounds": {
+            "top": 311,
+            "bottom": 359,
+            "left": 754.296875,
+            "right": 781.765625
+          },
+          "overlapX": 0,
+          "overlapY": 48
+        },
+        {
+          "at": 15890.199999999255,
+          "number": "8",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "notice": {
+            "top": 311,
+            "bottom": 360.78125,
+            "left": 12,
+            "right": 604
+          },
+          "numberBounds": {
+            "top": 311,
+            "bottom": 359,
+            "left": 754.296875,
+            "right": 781.765625
+          },
+          "overlapX": 0,
+          "overlapY": 48
+        },
+        {
+          "at": 15949.89999999851,
+          "number": "8",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "notice": {
+            "top": 311,
+            "bottom": 360.78125,
+            "left": 12,
+            "right": 604
+          },
+          "numberBounds": {
+            "top": 311,
+            "bottom": 359,
+            "left": 754.296875,
+            "right": 781.765625
+          },
+          "overlapX": 0,
+          "overlapY": 48
+        },
+        {
+          "at": 15995.800000000745,
+          "number": "8",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "notice": {
+            "top": 311,
+            "bottom": 360.78125,
+            "left": 12,
+            "right": 604
+          },
+          "numberBounds": {
+            "top": 311,
+            "bottom": 359,
+            "left": 754.296875,
+            "right": 781.765625
+          },
+          "overlapX": 0,
+          "overlapY": 48
+        },
+        {
+          "at": 16051.199999999255,
+          "number": "7",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "notice": {
+            "top": 311,
+            "bottom": 360.78125,
+            "left": 12,
+            "right": 604
+          },
+          "numberBounds": {
+            "top": 311,
+            "bottom": 359,
+            "left": 754.296875,
+            "right": 781.765625
+          },
+          "overlapX": 0,
+          "overlapY": 48
+        },
+        {
+          "at": 16093.10000000149,
+          "number": "7",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "notice": {
+            "top": 311,
+            "bottom": 360.78125,
+            "left": 12,
+            "right": 604
+          },
+          "numberBounds": {
+            "top": 311,
+            "bottom": 359,
+            "left": 754.296875,
+            "right": 781.765625
+          },
+          "overlapX": 0,
+          "overlapY": 48
+        },
+        {
+          "at": 16161.89999999851,
+          "number": "7",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "notice": {
+            "top": 354,
+            "bottom": 441.5625,
+            "left": 16,
+            "right": 304
+          },
+          "numberBounds": {
+            "top": 420,
+            "bottom": 468,
+            "left": 209.4140625,
+            "right": 236.8828125
+          },
+          "overlapX": 27.46875,
+          "overlapY": 21.5625
+        },
+        {
+          "at": 16207.60000000149,
+          "number": "7",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "notice": {
+            "top": 388,
+            "bottom": 475.5625,
+            "left": 16,
+            "right": 304
+          },
+          "numberBounds": {
+            "top": 492,
+            "bottom": 540,
+            "left": 209.4140625,
+            "right": 236.8828125
+          },
+          "overlapX": 27.46875,
+          "overlapY": 0
+        },
+        {
+          "at": 16233.60000000149,
+          "number": "7",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "notice": {
+            "top": 388,
+            "bottom": 475.5625,
+            "left": 16,
+            "right": 304
+          },
+          "numberBounds": {
+            "top": 492,
+            "bottom": 540,
+            "left": 209.4140625,
+            "right": 236.8828125
+          },
+          "overlapX": 27.46875,
+          "overlapY": 0
+        },
+        {
+          "at": 16258.800000000745,
+          "number": "7",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "notice": {
+            "top": 388,
+            "bottom": 475.5625,
+            "left": 16,
+            "right": 304
+          },
+          "numberBounds": {
+            "top": 492,
+            "bottom": 540,
+            "left": 209.4140625,
+            "right": 236.8828125
+          },
+          "overlapX": 27.46875,
+          "overlapY": 0
+        },
+        {
+          "at": 16283.89999999851,
+          "number": "7",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "notice": {
+            "top": 388,
+            "bottom": 475.5625,
+            "left": 16,
+            "right": 304
+          },
+          "numberBounds": {
+            "top": 492,
+            "bottom": 540,
+            "left": 209.4140625,
+            "right": 236.8828125
+          },
+          "overlapX": 27.46875,
+          "overlapY": 0
+        },
+        {
+          "at": 16302.800000000745,
+          "number": "7",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "notice": {
+            "top": 388,
+            "bottom": 475.5625,
+            "left": 16,
+            "right": 304
+          },
+          "numberBounds": {
+            "top": 492,
+            "bottom": 540,
+            "left": 209.4140625,
+            "right": 236.8828125
+          },
+          "overlapX": 27.46875,
+          "overlapY": 0
+        },
+        {
+          "at": 16325.39999999851,
+          "number": "7",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "notice": {
+            "top": 388,
+            "bottom": 475.5625,
+            "left": 16,
+            "right": 304
+          },
+          "numberBounds": {
+            "top": 492,
+            "bottom": 540,
+            "left": 209.4140625,
+            "right": 236.8828125
+          },
+          "overlapX": 27.46875,
+          "overlapY": 0
+        },
+        {
+          "at": 16345.300000000745,
+          "number": "7",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "notice": {
+            "top": 388,
+            "bottom": 475.5625,
+            "left": 16,
+            "right": 304
+          },
+          "numberBounds": {
+            "top": 492,
+            "bottom": 540,
+            "left": 209.4140625,
+            "right": 236.8828125
+          },
+          "overlapX": 27.46875,
+          "overlapY": 0
+        },
+        {
+          "at": 16367.60000000149,
+          "number": "7",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "notice": {
+            "top": 388,
+            "bottom": 475.5625,
+            "left": 16,
+            "right": 304
+          },
+          "numberBounds": {
+            "top": 492,
+            "bottom": 540,
+            "left": 209.4140625,
+            "right": 236.8828125
+          },
+          "overlapX": 27.46875,
+          "overlapY": 0
+        }
+      ]
+    }
+  ],
+  "pageErrors": [],
+  "consoleErrors": [],
+  "external": []
+}

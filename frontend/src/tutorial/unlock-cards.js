@@ -45,10 +45,13 @@ export function cardsOpenAt(wave, flags = {}) {
   return ordered(CARDS.filter(card => card.wave <= wave && flagAllows(card, flags)));
 }
 // The words a card shows, as one plain object (the card's DOM only lays them out).
-export function cardText(card) {
+export function cardText(card, recoveryVersion = 0) {
   if (!card) return null;
   const wave = card.wave > 0 ? `New after wave ${card.wave}` : 'From the start';
-  return {eyebrow: wave, title: card.title, what: card.what, how: card.how,
+  const recoveryCopy = recoveryVersion === 1 && card.id === 'house_roles';
+  return {eyebrow: wave, title: card.title,
+    what: recoveryCopy ? 'A level-2 house picks a job: Barracks sends out militia, and a Tavern heals captains.' : card.what,
+    how: card.how,
     menu: card.menu ? `In the Menu: ${card.menu}` : '', practice: card.practice === true
       ? 'Practice first: when the finisher starts, choose Practice to try it. Practice never counts.' : '',
     showMe: card.where !== null};

@@ -47,7 +47,7 @@ describe('pirate wave renderer', () => {
     for (const seed of [1, 2, 3]) {
       const renderer = createWaveRenderer({ scene, atlas: shared, defenses: DEFENSES, fx: () => null });
       const layers = renderer.root.children.length;
-      expect(layers).toBe(3 + BOARDER_BANDS + 5 + 1 + 1); // sea/air, boarder bands, defense posts, fog, owned wall connections
+      expect(layers).toBe(3 + BOARDER_BANDS + 5 + 1 + 1 + 1); // sea/air, bands, posts, fog, wall connections, captain feedback
       expect(renderer.root.children.filter(child => child.name === 'pirates:wall-connections')).toHaveLength(1);
       const run = play(renderer, seed);
       expect(run.state.total).toBe(CONFIG.fleet.max);
@@ -74,6 +74,64 @@ describe('pirate wave renderer', () => {
     expect(renderer.root.visible).toBe(false);
     renderer.dispose();
   });
+  it('pools one selected defense overlay below the captain range and clears it at every handoff', () => {
+    const scene = new THREE.Scene(), record = {id: 'mortar_1', kind: 'mortar', level: 3, x: 4, z: -6};
+    const renderer = createWaveRenderer({scene, atlas: atlas(), defenses: [record], fx: () => null});
+    const state = {ships: [], walls: [], towers: [], fog: .3, sight: 6};
+    const combatFeedback = {range: {x: 0, z: 0, radius: 5, alpha: 1}};
+    const coverage = {...record, status: 'ready', range: 6, minRange: 3, litRange: 8};
+    const ringName = 'pirates:defense-range', selectionName = 'island-selection-bracket';
+    renderer.update({state, combatFeedback});
+    expect(renderer.root.getObjectByName(ringName)).toBeUndefined();
+    expect(renderer.root.getObjectByName(selectionName)).toBeUndefined();
+
+    const draw = defenseCoverage => renderer.update({combatFeedback, defenseCoverage});
+    draw(coverage);
+    const ring = renderer.root.getObjectByName(ringName), marker = renderer.root.getObjectByName(selectionName);
+    const captain = renderer.root.getObjectByName('captain-range-arcs'), fog = renderer.root.getObjectByName('pirates:fog');
+    const resources = [ring.geometry, ring.material, ...marker.children.flatMap(mesh => [mesh.geometry, mesh.material])];
+    const release = new Map(resources.map(resource => [resource, 0]));
+    resources.forEach(resource => resource.addEventListener('dispose', () => release.set(resource, release.get(resource) + 1)));
+    expect([ring.visible, marker.visible, captain.visible, fog.visible]).toEqual([true, true, true, true]);
+    expect(ring.position.toArray()).toEqual(marker.position.toArray());
+    expect(marker.userData).toMatchObject({spotId: record.id, level: record.level});
+    expect(ring.renderOrder).toBeLessThan(marker.children[0].renderOrder);
+    expect(marker.children[1].renderOrder).toBeLessThan(captain.renderOrder);
+    expect(ring.material.uniforms.inner.value).toBeCloseTo(3 / 8);
+    expect(ring.material.uniforms.outer.value).toBeCloseTo(6 / 8);
+    expect(ring.material.uniforms.conditional.value).toBe(1);
+
+    draw({...coverage, range: 2, litRange: 3});
+    expect([ring.visible, marker.visible]).toEqual([false, true]);
+    draw({...coverage, range: 2});
+    expect([ring.visible, marker.visible]).toEqual([true, true]);
+    expect(ring.material.uniforms.outer.value).toBe(0);
+    for (const status of ['jammed', 'silenced', 'destroyed']) {
+      draw({...coverage, status});
+      expect([ring.visible, marker.visible, captain.visible]).toEqual([false, true, true]);
+    }
+    const next = {...coverage, id: 'cannon_2', kind: 'cannon', x: 2, z: 6, range: 9, minRange: 0, litRange: 9};
+    draw(next);
+    expect(renderer.root.getObjectByName(ringName)).toBe(ring);
+    expect(renderer.root.getObjectByName(selectionName)).toBe(marker);
+    expect(ring.material.uniforms.conditional.value).toBe(0);
+    expect([ring.userData.spotId, marker.userData.spotId]).toEqual([next.id, next.id]);
+    renderer.setVisible(false);
+    expect([ring.visible, marker.visible]).toEqual([false, false]);
+    draw(next);
+    renderer.setVisible(true);
+    expect([ring.visible, marker.visible]).toEqual([false, false]);
+    draw(coverage);
+    renderer.setDefenses([record]);
+    expect([ring.visible, marker.visible]).toEqual([false, false]);
+    draw(coverage);
+    draw(null);
+    expect([ring.visible, marker.visible]).toEqual([false, false]);
+    expect(captain.visible).toBe(true);
+    renderer.dispose();
+    renderer.dispose();
+    expect([...release.values()]).toEqual(resources.map(() => 1));
+  });
   it.each([false, true])('throws fire bombs without a muzzle flash or bloom (reduced motion: %s)', reducedMotion => {
     const blooms = [], scene = new THREE.Scene(), shared = atlas();
     scene.userData.characterScale = 1.4;
@@ -95,6 +153,61 @@ describe('pirate wave renderer', () => {
       // The hand offset is a display distance, added after projecting the logical flight.
       expect(positions[ballIndex * 4]).toBeCloseTo(projectGround(2 + 6 * progress, 3 - 5 * progress).x + .6 * 1.4 * (1 - progress));
     }
+    renderer.dispose();
+  });
+
+  it('keeps standard cannon wakes on the projected arc and leaves only the core under reduced motion', () => {
+    const scene = new THREE.Scene(), pack = packAtlas();
+    let reduced = false;
+    const renderer = createWaveRenderer({ scene, atlas: { texture: new THREE.Texture(), ...pack },
+      reducedMotion: () => reduced, fx: () => null });
+    const air = renderer.root.getObjectByName('pirates:air').geometry;
+    const data = (name, index) => [...air.getAttribute(name).array.slice(index * 4, (index + 1) * 4)];
+    const uvOf = (name, index) => (pack.rects[name].x + .01) / pack.width - data('iUv', index)[0];
+    const state = { ships: [], boarders: [], walls: [], towers: [] };
+    const path = { x: 4, z: 7, toX: 13, toZ: -5, t: 0, impactAt: 1, hit: true };
+    const point = progress => projectGround(path.x + (path.toX - path.x) * progress, path.z + (path.toZ - path.z) * progress);
+    const height = (p, enemy) => (enemy ? .8 : 1.2) + 4 * 15 * (enemy ? .03 : .07) * p * (1 - p);
+
+    function testShot(enemy, from) {
+      renderer.events([{ ...path, t: from, impactAt: from + 1, type: enemy ? 'ship_fired' : 'cannon_fired',
+        cannonId: 'c', shipId: 's', target: 'heart' }]);
+      renderer.update({ state, simTime: from + .5 });
+      expect(air.instanceCount).toBe(4); // Two trail segments, the ball and its shadow.
+      expect(uvOf('pirate-cannonball', 2)).toBeCloseTo(0, 6);
+      const [x, y] = data('iPos', 2), [nearX, nearY, angle] = data('iPos', 0), [farX, farY] = data('iPos', 1);
+      expect(x).toBeCloseTo(point(.5).x);
+      expect(y).toBeCloseTo(point(.5).y + height(.5, enemy));
+      expect(nearX).toBeCloseTo(x);
+      expect(nearY).toBeCloseTo(y);
+      const progress = .5 * (farX - point(0).x) / (x - point(0).x);
+      expect(progress).toBeLessThan(.5);
+      expect(farY).toBeCloseTo(point(progress).y + height(progress, enemy));
+      expect(angle).toBeCloseTo(Math.atan2(y - farY, x - farX) - Math.PI / 2);
+      const [width, length] = data('iSize', 0), [backWidth, backLength] = data('iSize', 1);
+      expect(width).toBeGreaterThan(backWidth);
+      expect(Math.max(length, backLength)).toBeLessThanOrEqual(1);
+      const tint = data('iTint', 0), coreLight = air.getAttribute('iFlash').array[2];
+      expect(coreLight).toBeGreaterThan(0);
+
+      reduced = true;
+      renderer.update({ state, simTime: from + .5 });
+      expect(air.instanceCount).toBe(1);
+      expect(uvOf('pirate-cannonball', 0)).toBeCloseTo(0, 6);
+      expect(data('iPos', 0)[1]).toBeCloseTo(point(.5).y + .8);
+      expect(air.getAttribute('iFlash').array[0]).toBe(coreLight);
+      renderer.update({ state, simTime: from + 1 });
+      expect(air.instanceCount).toBe(0);
+      reduced = false;
+      return tint;
+    }
+
+    const islandTint = testShot(false, 0);
+    // Roll a specialist projectile through the pool before a normal ship shot reuses the entry.
+    renderer.events([{ ...path, type: 'culverin_fired', towerId: 'c', t: 2, impactAt: 3 }]);
+    renderer.update({ state, simTime: 3 });
+    const shipTint = testShot(true, 4);
+    expect(shipTint[1]).toBeLessThan(islandTint[1]); // Incoming fire has the copper wake.
     renderer.dispose();
   });
 
