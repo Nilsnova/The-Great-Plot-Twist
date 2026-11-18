@@ -1,4 +1,4 @@
-// Contextual range lifetime and confirmed damage; used by the captain feedback review.
+// Contextual range lifetime and firing direction; used by the captain feedback review.
 import { describe, expect, it } from 'vitest';
 import { captainStats } from '../../src/pirates/captain-stats.js';
 import { createRangeFeedback } from '../../src/pirates/range-feedback.js';
@@ -32,26 +32,21 @@ describe('contextual captain range', () => {
     expect(view(feedback, { stats, nowMs: 2700, preview: true })).toMatchObject({ radius: stats.range, label: 'Fire bombs throw range' });
   });
 
-  it('confirms only positive own authoritative damage and sums a sweep', () => {
+  it('forgets the firing direction after the attempt expires, even while preview remains visible', () => {
     const feedback = createRangeFeedback();
-    feedback.note([{ type: 'ship_hit', by: 'captain:friend', damage: 99 },
-      { type: 'ship_hit', by: 'captain:me', damage: 0, blocked: true },
-      { type: 'captain_fired', by: 'me', damage: 30 }], 'me', 1000);
-    expect(view(feedback)).toBeNull();
-    feedback.note([{ type: 'boarder_hit', boarderId: 'a', by: 'captain:me', damage: 14 },
-      { type: 'boarder_hit', boarderId: 'b', by: 'captain:me', damage: 14 }], 'me', 1000);
-    expect(view(feedback)).toMatchObject({ hit: 'Hit · 28 damage · 2 enemies' });
-    expect(view(feedback, { nowMs: 2700 })).toBeNull();
+    feedback.attempt({ nowMs: 1000, message: 'Shot fired', point: { x: 40, z: 0 } });
+    expect(view(feedback).point).toEqual({ x: 40, z: 0 });
+    expect(view(feedback, { nowMs: 2700, preview: true }).point).toBeNull();
   });
 
-  it('counts one enemy when several hits on the same target arrive together', () => {
+  it('does not invent a firing direction during hover or a targetless attempt', () => {
     const feedback = createRangeFeedback();
-    feedback.note([{ type: 'ship_hit', shipId: 's', by: 'captain:me', damage: 3 },
-      { type: 'ship_hit', shipId: 's', by: 'captain:me', damage: 3 }], 'me', 1000);
-    expect(view(feedback).hit).toBe('Hit · 6 damage');
+    expect(view(feedback, { preview: true }).point).toBeNull();
+    feedback.attempt({ nowMs: 1000, message: 'No enemy in range' });
+    expect(view(feedback).point).toBeNull();
   });
 
-  it('clears intent and confirmations when combat is inactive', () => {
+  it('clears intent when combat is inactive', () => {
     const feedback = createRangeFeedback();
     feedback.attempt({ nowMs: 1000, message: 'Reloading' });
     expect(view(feedback, { active: false, preview: true })).toBeNull();

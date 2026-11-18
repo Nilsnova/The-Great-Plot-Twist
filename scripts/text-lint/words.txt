@@ -2800,6 +2800,7 @@ discount
 fully
 upgrading
 # CF1: reviewed combat feedback terms.
+bullets
 attacking
 attacks
 bomb

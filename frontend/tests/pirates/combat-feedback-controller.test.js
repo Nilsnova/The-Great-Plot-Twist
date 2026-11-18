@@ -4,10 +4,10 @@ import { createWaveController } from '../../src/pirates/controller.js';
 
 async function setup() {
   let now = 100000, latest = null, callbacks = null, range = null, blocked = false;
-  const player = { x: 90, z: 0 };
+  const player = { x: 90, z: 0 }, events = [];
   const controller = createWaveController({ playerId: 'me', now: () => now, listen: false,
     world: { scene: {}, container: {}, player: { position: player }, isBlocked: () => blocked },
-    createRenderer: () => ({ events() {}, setVisible() {}, update(value) { latest = value; }, dispose() {} }),
+    createRenderer: () => ({ events(list) { events.push(...list); }, setVisible() {}, update(value) { latest = value; }, dispose() {} }),
     createHud: options => { callbacks = options; return { countdown() {}, bar() {}, prompt() {},
       banner() {}, setVisible() {}, rangeFeedback(value) { range = value; }, dispose() {} }; },
     setTimer: () => 0, clearTimer() {} });
@@ -16,7 +16,7 @@ async function setup() {
     for (let i = 0; i < ms; i += 50) { now += 50; controller.update(.05); await Promise.resolve(); }
   }
   await advance(2000);
-  return { controller, player, advance, get range() { return range; }, get latest() { return latest; },
+  return { controller, player, advance, events, get range() { return range; }, get latest() { return latest; },
     get callbacks() { return callbacks; }, block(value) { blocked = value; } };
 }
 
@@ -37,7 +37,7 @@ it('reveals an out-of-range attempt and follows the actual equipped weapon', asy
   h.controller.dispose();
 });
 
-it('shows a successful shot, reload and confirmed own damage separately', async () => {
+it('preserves firing and impact animation events without written damage feedback', async () => {
   const h = await setup(), target = h.controller.state.ships[0];
   h.player.x = target.x - 8; h.player.z = target.z;
   expect(h.controller.shoot(target.id)).toBe(true);
@@ -45,7 +45,9 @@ it('shows a successful shot, reload and confirmed own damage separately', async 
   await h.advance(50);
   expect(h.range.status).toBe('Reloading');
   await h.advance(1000);
-  expect(h.range.hit).toContain('damage');
+  expect(h.events.some(event => event.type === 'captain_fired' && event.by === 'me')).toBe(true);
+  expect(h.events.some(event => event.type === 'ship_hit' && event.by === 'captain:me' && event.damage > 0)).toBe(true);
+  expect(h.range).not.toHaveProperty('hit');
   h.controller.dispose();
 });
 

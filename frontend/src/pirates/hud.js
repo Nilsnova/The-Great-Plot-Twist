@@ -106,8 +106,7 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
   rangeAnnouncement.setAttribute('aria-live', 'polite'); rangeAnnouncement.setAttribute('aria-atomic', 'true');
   layer.append(rangeAnnouncement);
   const rangeLabel = node('span', 'pirate-range-label'), rangeStatus = node('span', 'pirate-range-status');
-  const hit = node('strong', 'pirate-hit-confirmation'); hit.hidden = true;
-  rangePanel.append(rangeLabel, rangeStatus, hit); musket.append(rangePanel);
+  rangePanel.append(rangeLabel, rangeStatus); musket.append(rangePanel);
   let hovering = false, focused = false, lastRange = '', lastDanger = '';
   const preview = () => onRangePreview(hovering || focused);
   musket.addEventListener('pointerenter', event => { if (event.pointerType !== 'touch') { hovering = true; preview(); } });
@@ -261,12 +260,12 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
       rangePanel.hidden = !info;
       if (!info) { lastRange = ''; rangeAnnouncement.textContent = ''; musket.removeAttribute('aria-description'); return; }
       rangePanel.style.opacity = String(reducedMotion() ? 1 : info.alpha);
-      const key = `${info.label}|${info.radius}|${info.status}|${info.hit}`;
+      const key = `${info.label}|${info.radius}|${info.status}`;
       if (key === lastRange) return;
       lastRange = key;
       rangeLabel.textContent = `${info.label} · ${info.radius}`;
-      rangeStatus.textContent = info.status; hit.textContent = info.hit; hit.hidden = !info.hit;
-      const spoken = `${rangeLabel.textContent}. ${info.status}.${info.hit ? ` ${info.hit}.` : ''}`;
+      rangeStatus.textContent = info.status;
+      const spoken = `${rangeLabel.textContent}. ${info.status}.`;
       musket.setAttribute('aria-description', spoken); rangeAnnouncement.textContent = spoken;
     },
     danger(info) {

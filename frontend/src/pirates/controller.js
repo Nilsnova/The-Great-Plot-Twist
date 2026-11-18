@@ -1284,7 +1284,6 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
 
   function handle(events, current, fresh) {
     if (current.shown && !blocked() && !current.catchingUp) {
-      rangeFeedback.note(fresh, actorId(current), now());
       dangerFeedback.note(fresh, actorId(current), now());
     }
     if (current.predicted?.length) {

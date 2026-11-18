@@ -30,7 +30,7 @@ export const TUTORIAL_PAGES = Object.freeze([
   {id: 'captain', title: 'Your captain fights',
     text: ['Click a spot to aim your musket and fire there; its range ring shows how far you can shoot.',
       'Press F to fire at the nearest ship, and hold F to keep firing.',
-      'On a phone, tap where to fire or use the musket button; Hit confirms damage and warnings show danger.'],
+      'On a phone, tap where to fire or use the musket button; bullets and impact flashes show your shots.'],
     alt: 'Your captain fires a musket at a pirate sloop',
     art: [art('captain-musket-2', 48, 32, 3), art('pirate-sloop-1', 64, 64, 2)]},
   {id: 'ashore', title: 'Pirates come ashore',

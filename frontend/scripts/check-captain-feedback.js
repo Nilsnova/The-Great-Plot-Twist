@@ -86,11 +86,20 @@ try {
   const ship = await game(g => g.waves.island.state.ships.find(item => item.state === 'attacking'));
   await stand(ship.x * .55, ship.z * .55); await page.keyboard.press('f');
   if (!baseline) {
+    const before = await game(g => { const state = g.waves.island.state;
+      return { health: Object.fromEntries([...state.ships, ...state.boarders].map(item => [item.id, item.hp])),
+        killed: state.boardersKilled, sunk: state.sunk }; });
     await page.keyboard.down('f');
-    await page.locator('.pirate-hit-confirmation:not([hidden])').waitFor();
-    await capture('hit', 1280, 720);
+    await page.waitForFunction(before => {
+      const state = window.__island.waves.island.state;
+      return state && ([...state.ships, ...state.boarders].some(item => item.hp < before.health[item.id])
+        || state.boardersKilled > before.killed || state.sunk > before.sunk);
+    }, before);
+    await capture('impact', 1280, 720);
+    await capture('impact', 375, 812);
     await page.keyboard.up('f');
-    check(true, 'Native F shot receives confirmed own simulation damage');
+    check(await page.locator('.pirate-hit-confirmation').count() === 0, 'Native F preserves damage and impact events without a written confirmation');
+    check(!/\bHit\b|\bdamage\b/.test(await page.locator('.pirate-musket').textContent()), 'Fire control has no hit label or damage number');
   }
   // Stay near the heart with automatic slash disabled so actual incoming danger remains observable.
   await stand(0, 5);

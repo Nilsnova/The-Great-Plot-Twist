@@ -1,6 +1,6 @@
 # CF1 Captain combat feedback
 
-What this is: contextual weapon range, confirmed damage and urgent battle warnings.
+What this is: contextual weapon range, visual shot feedback and urgent battle warnings.
 Who uses it: Ianno, the frontend implementation agent and the human reviewer.
 
 - Status: implemented and scoped checks verified; manual review, explain-back and publication confirmation pending.
@@ -19,7 +19,9 @@ Show current weapon reach while the fire button is hovered, focused or held and
 briefly after a firing attempt, including refused attempts. The ring follows the
 captain, uses `captainStats()` and fades after release. A contextual slash shows
 melee reach. State whether the target is beyond reach, the weapon is reloading,
-or a shot was fired. Confirm damage only from fresh own simulation hit events.
+or a shot was fired. Per Ianno's visual review, use quiet broken parchment arcs
+with a short direction cap at the true range boundary. Remove the written Hit
+and damage confirmation: the existing bullet arrival and impact flash convey shots.
 Bomb reach means landing distance; blast and rifle pierce can extend beyond it.
 
 Prioritize one actionable warning from current enemy targeting or fresh captain
@@ -45,7 +47,9 @@ state; predicted cosmetic effects never confirm damage or trigger warnings.
 ## Acceptance and verification plan
 
 - Write failing tests first for range lifetime, exact weapon/skill boundaries,
-  rejected attempts, reload, hit ownership, contextual melee and cleanup.
+  rejected attempts, reload, preserved visual impact events, contextual melee and cleanup.
+- Check actual gaps, exact arc/cap radius, direction before flat projection,
+  hidden/expired caps, and the absence of written damage feedback.
 - Test danger priority, teammate distinction, source direction, expiry, inactive
   transitions and sound cooldown; verify effects mute and reduced motion.
 - Run the full frontend tests and build, budget/text checks and applicable

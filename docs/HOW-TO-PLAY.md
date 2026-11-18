@@ -91,7 +91,7 @@ You carry a musket.
 - Press **F** to fire at the nearest ship or pirate. Hold F to keep firing. On a phone, use the musket button at the bottom right.
 - Up close to a pirate on foot, F swings your **cutlass** instead.
 - Hover or focus the fire button, hold F, or try a shot to see your current weapon's **range ring**. It fades after firing. The message explains when enemies are out of range or your weapon is reloading. Fire bombs show throw distance; their blast can reach beyond the ring.
-- **Hit · damage** confirms damage from your own attacks. A shot being fired or a target being in range does not guarantee a hit.
+- Bullets and small impact flashes show where your shots land. The range marker uses quiet broken arcs, with a short mark at the boundary in your firing direction.
 - A warning beneath the wave bar calls out attacks on you or the island heart. The arrow beside your captain points toward the danger. A brief warning sound respects your effects volume.
 
 Open **Menu**, then **Captain and skills**. There you raise your captain's level (🪙 20, 40, 80 and 160), spend skill points and buy other guns. You earn skill points by winning new waves.
