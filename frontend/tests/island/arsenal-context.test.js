@@ -90,7 +90,7 @@ it('a same-island delayed success still updates coins and emits the existing eve
   reply.resolve({ok: true, data: answer});
   await settle();
   expect(f.arsenal.answer).toEqual(answer);
-  expect(f.onCoins).toHaveBeenCalledExactlyOnceWith(940);
+  expect(f.onCoins).toHaveBeenCalledExactlyOnceWith(940, expect.any(Function));
   expect(f.emit.mock.calls.map(([event]) => event.type)).toEqual(['island_spots_changed', 'arsenal_changed']);
   expect(f.ui.toast).toHaveBeenCalledExactlyOnceWith('Pistols #1 bought: you carry it now.', 'success');
 });

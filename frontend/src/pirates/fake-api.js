@@ -17,8 +17,6 @@
 //   await api.captain({actionUid});              // POST /api/island/captain      (§10)
 //   await api.learnSkill({skill, actionUid});    // POST /api/island/skill        (§14)
 //   await api.pickRole({role}); await api.respec({actionUid}); // POST /api/island/role, /respec (GAME-V3.md, Captain tree and roles)
-//   await api.buyWeapon({weapon, actionUid});    // POST /api/island/weapon/buy   (§15)
-//   await api.equipWeapon({weapon});             // POST /api/island/weapon/equip
 //   await api.demolishQuote({spot, code?});      // GET  /api/island/demolish     (GAME-V3.md §4.2: half back to each payer)
 //   await api.demolish({spot, actionUid, code?}); // POST /api/island/demolish    (between waves, any member; not the heart)
 //   await api.move({spot, x, z, code?});           // POST /api/island/move        (T36: a spot to a grid cell, between waves, free)
@@ -54,7 +52,7 @@ import { bonusLoot, eventFor } from './wave-events.js';
 import { rescueAllowed } from './finisher/rescue.js'; // T38: which lost waves a rescue can soften
 import { createRandom, hasTavern, revivePrice } from './sim.js';
 import { BUILDINGS, CREW, CAPTAIN, readUnlocks, unlockWave, SLOT_KINDS } from '../island/td-rules.js';
-import { ROLES, ROLE_BY_ID, ROLE_LEVEL, SKILLS, SKILL_BY_ID, WEAPONS, WEAPON_BY_ID, isRole, respecPrice, pointsEarned, pointsSpent, readSkills, readWeapon, skillNeeds } from './captain-ids.js';
+import { ROLES, ROLE_BY_ID, ROLE_LEVEL, SKILLS, SKILL_BY_ID, WEAPONS, isRole, respecPrice, pointsEarned, pointsSpent, readSkills, readWeapon, skillNeeds } from './captain-ids.js';
 import { STEPS as CAMPAIGN_STEPS, spotWave, waveOf } from '../campaign/index.js';
 import { BRANCHES, BRANCH_BY_ID, SPECS, TOP_TIER, isCapstone, optionName, optionsOf, readSpec, skillPrice } from '../campaign/tech.js';
 import { TOWER_TREES, TREE_LEVEL, TREE_STEPS, treeStep } from './tower-trees.js';
@@ -542,28 +540,6 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
       player.coins -= price; island.skills = []; island.role = null; player.actions.set(`respec:${actionUid}`, true);
       return view();
     },
-    async buyWeapon({ weapon, actionUid } = {}) {
-      if (!uid(actionUid)) invalid('Send the weapon and an action id.');
-      if (!Object.hasOwn(WEAPON_BY_ID, weapon ?? '')) refuse(400, 'bad_weapon', 'There is no such weapon.');
-      // D042, as backend/server/routes/island.py: with the flag "arsenal" on, weapons are bought at the arsenal.
-      if (flags?.arsenal === true) refuse(409, 'use_arsenal', 'Weapons are in the arsenal now. Walk to the arsenal.');
-      const player = me(), island = world.islands.get(player.code), info = WEAPON_BY_ID[weapon];
-      if (player.actions.has(`weapon:${actionUid}`)) return view();
-      if (weaponsOf(island).owned.includes(weapon)) refuse(409, 'owned', `You own the ${info.name.toLowerCase()} already.`);
-      const wave = unlocking ? Math.max(island.waveBest, player.pointBest ?? 0) : 99;
-      if (wave < info.unlockWave) refuse(409, 'locked', lockedMessage(info.unlockWave));
-      if (player.coins < info.price) refuse(409, 'insufficient_funds', `The ${info.name.toLowerCase()} costs ${info.price} coins. You need more coins.`);
-      player.coins -= info.price; island.weapons = [...(island.weapons ?? []), weapon]; island.equipped = weapon;
-      player.actions.set(`weapon:${actionUid}`, true);
-      return view();
-    },
-    async equipWeapon({ weapon } = {}) {
-      if (!Object.hasOwn(WEAPON_BY_ID, weapon ?? '')) refuse(400, 'bad_weapon', 'There is no such weapon.');
-      const player = me(), island = world.islands.get(player.code);
-      if (!weaponsOf(island).owned.includes(weapon)) refuse(409, 'not_owned', `Buy the ${WEAPON_BY_ID[weapon].name.toLowerCase()} first.`);
-      island.equipped = weapon;
-      return view();
-    },
     // GAME-V3.md §5, §5.1: one research step for the island (yours, or the game of `code`), with coins: tier 1 of
     // a branch, or one of the two options of tier 2 or 3 (change: true switches from the other one, at the tier's
     // price again; switching tier 3 takes the old capstone off every tower that picked it).
@@ -971,8 +947,6 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
         if (route === 'POST /api/island/role') return reply(200, await api.pickRole(body));
         if (route === 'POST /api/island/respec') return reply(200, await api.respec(body));
         if (route === 'POST /api/island/fresh-start') return reply(200, await api.freshStart(body));
-        if (route === 'POST /api/island/weapon/buy') return reply(200, await api.buyWeapon(body));
-        if (route === 'POST /api/island/weapon/equip') return reply(200, await api.equipWeapon(body));
         if (route === 'GET /api/island/arsenal') return reply(200, await api.arsenal({ code: searchParams.get('code') }));
         if (route === 'POST /api/island/arsenal/buy') return reply(200, await api.arsenalBuy(body));
         if (route === 'POST /api/island/arsenal/take') return reply(200, await api.arsenalTake(body));
@@ -1027,7 +1001,7 @@ const FAILURES = Object.freeze({
 });
 const BODY_KEYS = Object.freeze({ '/api/island/build': ['spot', 'kind', 'actionUid'], '/api/waves/start': ['where', 'actionUid'],
   '/api/island/upgrade': ['spot', 'actionUid'], '/api/island/hire': ['crew', 'actionUid'], '/api/island/captain': ['actionUid'],
-  '/api/island/skill': ['skill', 'actionUid'], '/api/island/weapon/buy': ['weapon', 'actionUid'], '/api/island/weapon/equip': ['weapon'],
+  '/api/island/skill': ['skill', 'actionUid'],
   '/api/island/invite/join': ['code', 'actionUid'], '/api/pirate-point/build': ['spot', 'kind', 'actionUid'], '/api/pirate-point/upgrade': ['spot', 'actionUid'],
   '/api/waves/join': ['waveId'], '/api/waves/finish': ['waveId', 'survived', 'shipsSunk'], '/api/waves/revive': ['waveId', 'fallen', 'downAt', 'actionUid'],
   '/api/games': [], '/api/games/join': ['code', 'actionUid'], '/api/games/leave': ['code'],
@@ -1148,8 +1122,6 @@ export function createFakeIslandTransport({ coins = ISLAND_RULES.startingCoins, 
       if (method === 'POST' && pathname === '/api/island/role') return ok(await api.pickRole(body));
       if (method === 'POST' && pathname === '/api/island/respec') return ok(await api.respec(body));
       if (method === 'POST' && pathname === '/api/island/fresh-start') return ok(await api.freshStart(body));
-      if (method === 'POST' && pathname === '/api/island/weapon/buy') return ok(await api.buyWeapon(body));
-      if (method === 'POST' && pathname === '/api/island/weapon/equip') return ok(await api.equipWeapon(body));
       if (method === 'GET' && pathname === '/api/island/arsenal') return ok(await api.arsenal({ code: new URLSearchParams(query).get('code') }));
       if (method === 'POST' && pathname === '/api/island/arsenal/buy') return ok(await api.arsenalBuy(body));
       if (method === 'POST' && pathname === '/api/island/arsenal/take') return ok(await api.arsenalTake(body));
