@@ -79,7 +79,8 @@ export function createActions(isl) {
       emit({type: SPOTS_CHANGED, place, spot: spotId});
       // Close the card so the new building and the toast can be seen.
       if (isl.ui.open === 'build' && isl.openSpot === spotId) { isl.ui.close(); isl.openSpot = null; }
-      isl.ui.toast(`${BUILDINGS[choice].name} built${onWhere(place)} · ${coinText(currentFunds().coins)}`, 'success');
+      const context = place === 'own' && choice === 'cannon' ? 'guided-cannon-build' : null;
+      isl.ui.toast(`${BUILDINGS[choice].name} built${onWhere(place)} · ${coinText(currentFunds().coins)}`, 'success', '', context);
     } else await refused(answer, place, spotId);
     refreshCard();
     showWallPurchase(action, answer);

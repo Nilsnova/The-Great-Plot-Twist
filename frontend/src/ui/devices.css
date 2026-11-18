@@ -10,7 +10,12 @@
 #game>canvas:focus-visible{outline:3px solid #f3d58c;outline-offset:-4px}html[data-colourblind=true] #game>canvas:focus-visible{outline-offset:-6px!important}
 .touch-stick-group{display:grid;justify-items:center;gap:8px}.touch-move-help{font:600 16px/1.2 system-ui,sans-serif;color:#fff1cc;background:#183b35;padding:5px 8px;border-radius:8px;white-space:nowrap}.tap-destination{position:fixed;z-index:7;width:30px;height:18px;transform:translate(-50%,-50%);border:3px solid #ffe0a0;border-radius:50%;box-shadow:0 0 0 3px #183b35a6;pointer-events:none}.tap-destination:after{content:'';position:absolute;inset:5px 10px;background:#fff1cc;border-radius:50%}
 
-@media(max-width:600px) and (pointer:coarse){.touch-controls{bottom:82px}}
+@media(max-width:600px) and (pointer:coarse){
+  :root{--touch-controls-bottom:82px}
+  .touch-controls{bottom:var(--touch-controls-bottom)}
+}
 .touch-actions button{border:1px solid #b5ba92;border-radius:9px;background:#183b39ed;color:#fff0c5;font-family:system-ui,sans-serif;box-shadow:0 3px 12px #071e2926}.touch-thumb{border-radius:50%;box-shadow:0 3px 10px #071e2955}
 .touch-actions button.touch-context-action{max-width:9rem;font-size:15px;line-height:1.2;overflow-wrap:anywhere}
 @media(max-width:600px) and (pointer:coarse){.hud.hud-play .interact{bottom:230px}}
+/* The guide leaves the action label on the usable button during portrait preparation. */
+html:has(.touch-controls:not([hidden]) .touch-preparation-action:not([hidden])) .hud.hud-play .interact.floating{display:none}

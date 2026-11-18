@@ -113,14 +113,17 @@ export function createNarratorCard(container = document.body, {onSkip = () => {}
     const style = getComputedStyle(card);
     const enlarged = card.classList.contains('is-large');
     const wasReader = card.classList.contains('is-large-touch-reader');
-    const largeReader = enlarged && style.getPropertyValue('--narrator-reader-enabled').trim() === '1'
-      && dockLargeReader(touchAction);
+    const preparing = !enlarged && style.getPropertyValue('--narrator-preparation-reader').trim() === '1'
+      && !!container.querySelector('.coach-panel:not([hidden],.is-combat-guide)');
+    if (preparing) card.classList.remove('is-combat-docked');
+    const touchReader = (enlarged || preparing) && style.getPropertyValue('--narrator-reader-enabled').trim() === '1'
+      && dockTouchReader(touchAction);
     const focused = wasReader && card.contains(document.activeElement);
     const wasDormant = card.classList.contains('is-reader-dormant');
-    const dormant = retained && !largeReader;
-    card.classList.toggle('is-large-touch-reader', !!largeReader);
+    const dormant = retained && !touchReader;
+    card.classList.toggle('is-large-touch-reader', !!touchReader);
     card.classList.toggle('is-reader-dormant', dormant);
-    if (largeReader) {
+    if (touchReader) {
       reader.tabIndex = 0;
       reader.setAttribute('role', 'region');
       reader.setAttribute('aria-label', 'Narrator subtitles');
@@ -141,7 +144,7 @@ export function createNarratorCard(container = document.body, {onSkip = () => {}
       }
       card.classList.remove('has-unread-subtitles');
     }
-    const dock = !enlarged && !!(combatHud || touchAction)
+    const dock = !touchReader && !enlarged && !!(combatHud || touchAction)
       && style.getPropertyValue('--narrator-dock-enabled').trim() === '1';
     const waveBreak = dock && !!touchAction && !!container.querySelector(WAVE_BREAK);
     // The wave event details can resize the bar without changing any control's hidden flag.
@@ -150,10 +153,10 @@ export function createNarratorCard(container = document.body, {onSkip = () => {}
     card.classList.remove('is-combat-fallback');
     const footer = waveBreak && style.getPropertyValue('--narrator-footer-enabled').trim() === '1' && fitFooter(touchAction);
     card.classList.toggle('is-wave-footer', footer);
-    const placed = largeReader || footer || (dock && dockBesideControls());
+    const placed = touchReader || footer || (dock && dockBesideControls());
     card.classList.toggle('is-wave-touch-docked', waveBreak && placed);
-    if (!footer && !largeReader) document.documentElement.style.removeProperty('--narrator-sound-bottom');
-    if (!largeReader) document.documentElement.style.removeProperty('--narrator-sound-left');
+    if (!footer && !touchReader) document.documentElement.style.removeProperty('--narrator-sound-bottom');
+    if (!touchReader) document.documentElement.style.removeProperty('--narrator-sound-left');
     if (!placed) {
       card.classList.remove('is-combat-docked');
       card.classList.toggle('is-combat-fallback', dock);
@@ -168,7 +171,7 @@ export function createNarratorCard(container = document.body, {onSkip = () => {}
     document.documentElement.style.setProperty('--narrator-card-height', `${suppressed ? 0 : Math.round(card.getBoundingClientRect().height)}px`);
   }
 
-  function dockLargeReader(action) {
+  function dockTouchReader(action) {
     const stick = container.querySelector('.touch-stick-group')?.getBoundingClientRect();
     if (!stick?.height) return false;
     const target = action?.getBoundingClientRect();
@@ -205,7 +208,7 @@ export function createNarratorCard(container = document.body, {onSkip = () => {}
   const controlsChange = typeof MutationObserver === 'function' ? new MutationObserver(records => { if (records.some(flipped)) position(); }) : null;
   const watch = on => { controlsChange?.disconnect(); if (on) controlsChange?.observe(container, {subtree: true, attributes: true, attributeOldValue: true, attributeFilter: ['hidden']}); };
   function hide({keepReading = false} = {}) {
-    if (keepReading && reading && card.classList.contains('is-large') && !card.hidden) {
+    if (keepReading && reading && !card.hidden) {
       retained = true;
       skip.setAttribute('aria-label', 'Close narrator subtitles');
       skip.title = 'Close';
@@ -239,7 +242,7 @@ export function createNarratorCard(container = document.body, {onSkip = () => {}
       if (!card.isConnected) container.append(card);
       const enlarged = !!large();
       let scrollTop = 0;
-      if (reading && text.textContent && enlarged) {
+      if (reading && text.textContent && (enlarged || card.classList.contains('is-large-touch-reader'))) {
         scrollTop = savedScroll;
         const previous = document.createElement('p');
         previous.className = 'narrator-text';
