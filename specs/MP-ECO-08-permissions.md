@@ -84,3 +84,5 @@ These commands ran from `backend/` with a writable UV cache and the already inst
 - **Coding agent:** Codex; the responsible teammate remains accountable.
 - **Reviewer:** a different human teammate before merge, following CONTRIBUTING.md.
 - **Last updated:** 2026-11-18
+
+After merging current main (`77a9e34d`), the same focused permission/authority/co-op suite passed **152 tests in 5.29s**; targeted Ruff, documentation and diff checks passed. No policy source changed during that merge.
