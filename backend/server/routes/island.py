@@ -429,6 +429,7 @@ class IslandResponse(BaseModel):
     waveBest: int
     nextWave: int
     flags: int
+    recoveryVersion: int
     spots: list[SpotOut]
     crew: CrewOut
     captain: CaptainOut
@@ -444,6 +445,7 @@ class VisitResponse(BaseModel):
     code: str
     ownerName: str
     waveBest: int
+    recoveryVersion: int
     spots: list[SpotOut]
     crew: CrewOut
     campaign: CampaignOut
@@ -701,6 +703,7 @@ def island_out(view: IslandView, catalogue: IslandCatalogue) -> IslandResponse:
         waveBest=view.wave_best,
         nextWave=view.next_wave,
         flags=view.flags,
+        recoveryVersion=view.recovery_version,
         spots=spots_out(view.spots),
         crew=CrewOut(**view.crew),
         captain=CaptainOut(level=view.captain_level, nextPrice=view.captain_next_price),
@@ -1016,6 +1019,7 @@ async def get_visit(
         code=view.code,
         ownerName=view.owner_name,
         waveBest=view.wave_best,
+        recoveryVersion=view.recovery_version,
         spots=spots_out(view.spots),
         crew=CrewOut(**view.crew),
         campaign=campaign_out(view.campaign, catalogue),
