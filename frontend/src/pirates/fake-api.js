@@ -353,6 +353,10 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     if (unlocks && (unlocks.levels[kind] ?? 0) < 1) refuse(409, 'locked', lockedMessage(unlockWave({ kind, level: 1 })));
     // A spot of a later campaign step (the inner wall ring after wave 5), on an island only.
     if ((unlocking || isExtraSpot(spot)) && place.waveBest !== undefined && spotWave(spot) > place.waveBest) refuse(409, 'locked', lockedMessage(spotWave(spot)));
+    if (ids === islandSpots && kind === 'wall') {
+      const placed = positionsOf(spots(place)), at = placed[spot], verdict = checkMove(spot, at.x, at.z, placed, layoutOf(place, islandSpots));
+      if (!verdict.ok) refuse(409, verdict.code, verdict.message);
+    }
     if (player.coins < price) refuse(409, 'insufficient_funds', `A ${name.toLowerCase()} costs ${price} coins. You need more coins.`);
     player.coins -= price; place.built.add(spot); place.levels.set(spot, 1); place.kinds.set(spot, kind); once(player, `build:${actionUid}`);
     paidFor(place, spot, 1, price);
@@ -495,7 +499,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
       const mine = world.islands.get(me().code), island = code === undefined ? mine : visited(code);
       if (island.wallPolicy?.wallRuleVersion === 1 && !me().actions.has(`build:${body.actionUid}`)) waveGuard(island, 'Build between waves.');
       if (isInventoryWallId(body.spot) && island.wallPolicy?.wallRuleVersion === 1) refuse(409, 'position_required', 'Place new walls with Build walls.');
-      if (island.wallPolicy?.wallRuleVersion === 1 && islandSpots.includes(body.spot) && !island.built.has(body.spot)) {
+      if (island.wallPolicy?.wallRuleVersion === 1 && kindOfSpot(body.spot) !== 'wall' && islandSpots.includes(body.spot) && !island.built.has(body.spot)) {
         const placed = positionsOf(spots(island)), at = placed[body.spot], verdict = checkMove(body.spot, at.x, at.z, placed, layoutOf(island, islandSpots));
         if (!verdict.ok) refuse(409, verdict.code, verdict.message);
       }
