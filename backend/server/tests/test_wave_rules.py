@@ -35,7 +35,10 @@ def test_with_every_rule_flag_off_the_answer_is_the_same_as_when_keeping_fails()
     # Keeping failing is the old path (no rules looked at): the answers must match exactly.
     kept, failing = world_with("islands"), world_with("islands")
     failing.database.wave_rules_reply = httpx.Response(500, json={"message": "down"})
-    assert kept.start().json() == failing.start().json()
+    answers = [world.start().json() for world in (kept, failing)]
+    for answer in answers:
+        answer.pop("serverNow")  # the server's clock moves on between answers
+    assert answers[0] == answers[1]
 
 
 def test_a_rule_flag_switched_on_mid_wave_gives_later_joiners_no_rules():

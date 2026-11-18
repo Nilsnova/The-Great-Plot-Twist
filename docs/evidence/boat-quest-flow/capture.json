@@ -1,0 +1,39 @@
+{
+  "kind": "Controlled component fixture, local fake transport",
+  "shots": [
+    {
+      "name": "desktop",
+      "width": 1280,
+      "height": 720,
+      "goals": 10,
+      "boats": 0,
+      "active": false,
+      "card": null,
+      "consumed": false,
+      "notice": "Wave starting. Back to the island.Boat round interrupted. No coins were spent and this attempt did not use a reward.",
+      "noticeVisible": true,
+      "withinViewport": true,
+      "countdownOverlap": false,
+      "overflow": false
+    },
+    {
+      "name": "phone",
+      "width": 375,
+      "height": 812,
+      "goals": 10,
+      "boats": 0,
+      "active": false,
+      "card": null,
+      "consumed": false,
+      "notice": "Wave starting. Back to the island.Boat round interrupted. No coins were spent and this attempt did not use a reward.",
+      "noticeVisible": true,
+      "withinViewport": true,
+      "countdownOverlap": false,
+      "overflow": false
+    }
+  ],
+  "pageErrors": [],
+  "external": [],
+  "consoleErrorCount": 8,
+  "consoleLimit": "Local Vite HMR WebSocket errors; no application page errors."
+}

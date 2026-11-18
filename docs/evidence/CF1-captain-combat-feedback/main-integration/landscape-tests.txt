@@ -1,0 +1,18 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run tests/ui/combat-feedback.test.js tests/ui/combat-hud.test.js tests/ui/reference-hud.test.js
+
+
+ RUN  v5.1.0 /workspace/captain-combat-feedback/frontend
+
+
+ Test Files  3 passed (3)
+      Tests  10 passed (10)
+   Start at  14:18:04
+   Duration  18.63s (tests 89%, import 10%, transform 1%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.3
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.3
+npm notice To update run: npm install -g npm@12.2.3
+npm notice

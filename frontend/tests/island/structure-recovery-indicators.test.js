@@ -37,3 +37,33 @@ it('shows damaged and tiny-positive rows in preparation, hides full HP and defer
   expect(result.combatVisible).toBe(0);
   expect(result.filtered).toBe(0);
 });
+
+it('hides the bar of a structure repaired to full health while others stay damaged (preparation view)', async () => {
+  const result = await browser.withPage(page => page.evaluate(async () => {
+    const {createStructureRecoveryIndicators} = await window.g20Import('/src/island/structure-recovery-indicators.js');
+    const root = {children: [], add(item) { this.children.push(item); }, remove(item) { this.children = this.children.filter(child => child !== item); }};
+    const positions = {wall_1: {x: 1, z: 2}, wall_2: {x: 3, z: 4}};
+    const indicators = createStructureRecoveryIndicators({root, locate: spot => positions[spot]});
+    const visible = () => root.children.filter(item => item.visible).map(item => item.name).sort();
+    const wall = (spot, hpUnits) => ({spot, kind: 'wall', hpUnits, maxHP: 60});
+    indicators.setState({displayPhase: 'preparing', structures: [wall('wall_1', 400_000), wall('wall_2', 200_000)]});
+    indicators.update(); indicators.update();
+    const before = visible();
+    // Instant full repair of one wall at wave end; the other is still damaged.
+    indicators.setState({displayPhase: 'between_waves', structures: [wall('wall_1', 1_000_000), wall('wall_2', 200_000)]});
+    indicators.update(); indicators.update();
+    const betweenWaves = visible();
+    indicators.setState({displayPhase: 'preparing', structures: [wall('wall_1', 1_000_000), wall('wall_2', 200_000)]});
+    indicators.update(); indicators.update();
+    const oneRepaired = visible();
+    indicators.setState({displayPhase: 'preparing', structures: [wall('wall_1', 1_000_000), wall('wall_2', 1_000_000)]});
+    indicators.update();
+    const allRepaired = visible();
+    indicators.dispose();
+    return {before, betweenWaves, oneRepaired, allRepaired};
+  }));
+  expect(result.before).toEqual(['structure-recovery:wall_1', 'structure-recovery:wall_2']);
+  expect(result.betweenWaves).toEqual(['structure-recovery:wall_2']);
+  expect(result.oneRepaired).toEqual(['structure-recovery:wall_2']);
+  expect(result.allRepaired).toEqual([]);
+});

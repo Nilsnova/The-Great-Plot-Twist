@@ -17,12 +17,18 @@ import {drawArsenal} from './arsenal-ui.js';
 import {drawSkills, drawTech, drawTowerTree, iconOf} from './skill-tree.js';
 import {drawUpgradeOverview} from './upgrade-overview-view.js';
 import {renderStructureRecoveryView} from './structure-recovery-view.js';
+import {createSelectionDock} from './selection-dock.js';
 
 // The cards of the island's buildings: a spot's build or upgrade card (houses too), the wreck, the Harbor and
 // the arsenal. They dock at the right side on a desktop and come up as a bottom sheet on a phone
 // (island.css), so the island stays in view; the menus (crew, captain, lobby, invite) stay centred. The Tech
 // hub is a big centred tree card like the captain's skills (skill-tree.js), so it is not docked.
 export const DOCKED = new Set(['build', 'wreck', 'harbor', 'arsenal']);
+const WALL_RECEIPT_PULSE = 'island-wall-level-receipt';
+
+function cancelWallReceiptPulse(header) {
+  header.getAnimations().find(animation => animation.id === WALL_RECEIPT_PULSE)?.cancel();
+}
 
 function button(label, onClick, quiet = false) {
   const element = node('button', `kit-button${quiet ? ' kit-quiet' : ''}`, label); element.type = 'button';
@@ -30,8 +36,9 @@ function button(label, onClick, quiet = false) {
   return element;
 }
 
-export function createIslandUi({container, focus = () => {}, resetInput = () => {}, toasts = gameToasts} = {}) {
-  let modal = null, kind = null, render = null, disposed = false, lastToast = null;
+export function createIslandUi({container, focus = () => {}, resetInput = () => {}, toasts = gameToasts, onSelection = () => {}} = {}) {
+  let modal = null, kind = null, render = null, disposed = false, lastToast = null, boatNoticeTimer = null;
+  let selection = null, selectionModel = null, selectionHandlers = null, returnToDock = null;
   // The Tech hub tile the player tapped (kept while the page lives); the tree shows its detail.
   let techPicked = null;
   let overviewKind = 'all', overviewState = 'all';
@@ -40,21 +47,35 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
   bannerEyebrow.setAttribute('aria-hidden', 'true');
   banner.append(bannerEyebrow, bannerText);
   const visit = node('div', 'island-visit'); visit.hidden = true;
-  container.append(banner, visit);
+  const boatNotice = node('p', 'island-boat-notice');boatNotice.hidden = true;
+  boatNotice.setAttribute('role', 'status');boatNotice.setAttribute('aria-live', 'polite');boatNotice.setAttribute('aria-atomic', 'true');
+  container.append(banner, visit, boatNotice);
+  // The real wave countdown follows this measured slot, including wrapped text and viewport changes.
+  function measureBoatNotice() {
+    const height = boatNotice.hidden ? 0 : boatNotice.offsetHeight;
+    // Leave room for the countdown number's existing 1.5x pop and the panel's frame.
+    document.documentElement?.style.setProperty('--boat-notice-space', height > 0 ? `${height + 16}px` : '0px');
+  }
+  const boatNoticeSize = typeof ResizeObserver === 'function' ? new ResizeObserver(measureBoatNotice) : null;
+  boatNoticeSize?.observe(boatNotice);
 
-  function close() {
-    if (!modal) return false;
+  function close(restore = false) {
+    if (!modal && !selection) return false;
+    const back = restore === true ? returnToDock : null; returnToDock = null;
     const current = modal; modal = null; kind = null; render = null;
-    current.dispose(); resetInput(); focus();
+    current?.dispose(); selection?.dispose(); selection = null; onSelection(false); resetInput(); focus();
+    if (back) { back(); selection?.focusDetails(); }
     return true;
   }
   // Opens (or re-renders) the card of one kind. draw(body) fills it and returns the element to focus.
   function open(nextKind, title, draw) {
     if (disposed) return;
+    if (nextKind !== 'build') returnToDock = null;
+    if (selection) close();
     resetInput();
     if (modal && kind !== nextKind) close();
     if (!modal) {
-      modal = createModal({title, onCancel: close});
+      modal = createModal({title, onCancel: () => close(true)});
       modal.element.classList.add('island-card', `island-card-${nextKind}`);
       // The island's own cards dock at the side (a bottom sheet on phones), so the island stays in view.
       if (DOCKED.has(nextKind)) modal.element.classList.add('island-card-docked');
@@ -93,14 +114,30 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
   //   treeSelect(spotId, id), tree(spotId, path, tier)}
   // D055: a tower with an upgrade tree (model.tree) gets a bigger, centred card like the captain's, with the tree
   // (skill-tree.js) in place of the plain Upgrade: the trunk tile upgrades the level, the path tiles buy the tree.
-  function buildCard(model, handlers) {
+  function buildCard(model, handlers, {dock = false, details = false} = {}) {
+    if (disposed) return;
     const on = typeof handlers === 'function' ? {build: handlers} : handlers ?? {};
+    if (selectionModel?.spotId !== model.spotId) returnToDock = null;
+    selectionModel = model; selectionHandlers = on;
+    if (!dock && !details) returnToDock = null;
+    if (dock && returnToDock) returnToDock = () => buildCard(model, on, {dock: true});
+    else if (dock) {
+      if (modal) close();
+      selection ??= createSelectionDock({container, onClose: close, onDetails: () => {
+        const current = selectionModel, actions = selectionHandlers;
+        returnToDock = () => buildCard(current, actions, {dock: true});
+        selection.dispose(); selection = null; onSelection(false);
+        buildCard(current, actions, {details: true});
+      }});
+      kind = 'build'; selection.render(model, on); onSelection(true); return;
+    }
     open('build', model.title, body => {
       let focusable = null;
       const treeCard = !!model.tree;
       modal.element.classList.toggle('island-card-docked', !treeCard);
       modal.element.classList.toggle('island-card-wide', treeCard);
       modal.element.classList.toggle('island-card-tree', treeCard);
+      prepareWallReceipt(model);
       if (!treeCard) body.append(line('island-purpose', model.purpose));
       if (model.pips.length && !treeCard) { const row = node('div', 'island-level'); row.append(pips(model.pips), line('island-stats', model.stats)); body.append(row); }
       if (model.owner) body.append(line('island-owner', model.owner));
@@ -336,19 +373,18 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
       return focusable ?? done;
     });
   }
-  // Menu › Captain and skills (§10, §14, §15): three tabs. model: {tab, captain, skills, weapons} of
-  // card-model.js (or a lone captainModel); handlers: {upgrade(), tab(id), pick(id), learn(id), buy(id), equip(id)}.
+  // Menu › Captain and skills (§10, §14): two tabs. model: {tab, captain, skills} of card-model.js (or a lone
+  // captainModel); handlers: {upgrade(), tab(id), pick(id), learn(id)}. Weapons are in the arsenal (D042).
   function captainCard(model, handlers) {
     const on = typeof handlers === 'function' ? {upgrade: handlers} : handlers ?? {};
-    const parts = model?.captain ? model : {captain: model, skills: null, weapons: null, tab: 'captain'};
+    const parts = model?.captain ? model : {captain: model, skills: null, tab: 'captain'};
     open('captain', 'Captain and skills', body => {
       let focusable = null;
       const musket = node('div', 'island-captain-musket');
       focusable = musketPart(musket, parts.captain, on);
-      if (!parts.skills && !parts.weapons) { modal.element.classList.remove('island-card-wide'); body.append(...musket.childNodes); return closing(body, focusable); }
+      if (!parts.skills) { modal.element.classList.remove('island-card-wide'); body.append(...musket.childNodes); return closing(body, focusable); }
       const items = [{id: 'captain', label: 'Captain', body: musket}];
       if (parts.skills) items.push({id: 'skills', label: parts.skills.points > 0 ? `Skills (${parts.skills.points})` : 'Skills', body: drawSkills(parts.skills, on, {button, line})});
-      if (parts.weapons) items.push({id: 'weapons', label: 'Weapons', body: weaponsPart(parts.weapons, on)});
       const selected = Math.max(0, items.findIndex(item => item.id === parts.tab));
       // The skill tree takes most of the screen; the other tabs keep the small card.
       const wide = id => modal?.element.classList.toggle('island-card-wide', id === 'skills');
@@ -379,25 +415,6 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
     }
     footer(body, model, act);
     return act && !act.disabled ? act : null;
-  }
-  // The weapon shop (§15): buy once, equip one.
-  function weaponsPart(model, on) {
-    const part = node('div', 'island-weapons');
-    const list = node('ul', 'island-crew island-shop');
-    for (const row of model.rows) {
-      const item = node('li', `island-crew-row island-weapon${row.equipped ? ' is-equipped' : ''}`); item.dataset.weapon = row.id;
-      const text = node('div', 'island-crew-text');
-      const head = node('p', 'island-crew-head');
-      head.append(node('strong', '', row.name), node('span', 'island-crew-owned', row.equipped ? 'Equipped' : row.owned ? 'Yours' : row.priceText));
-      text.append(head, node('p', 'island-crew-line', row.line));
-      if (row.reason) text.append(node('p', 'island-crew-reason', row.reason));
-      const act = button(row.button, () => (row.action === 'equip' ? on.equip?.(row.id) : row.action === 'buy' ? on.buy?.(row.id) : null));
-      act.dataset.focus = `weapon-${row.id}`; act.disabled = row.disabled;
-      act.setAttribute('aria-label', `${row.button} ${row.name}`);
-      item.append(text, act); list.append(item);
-    }
-    part.append(line('island-purpose', model.lead), list, line('island-message', model.message, 'alert'), line('island-coins', model.coins));
-    return part;
   }
   function captainsCard(model) {
     open('captains', model.title, body => {
@@ -559,11 +576,56 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
     open('overview', model.title, body => drawUpgradeOverview(body, model, {kind: overviewKind, state: overviewState,
       choose: (kind, state) => { overviewKind = kind; overviewState = state; overviewCard(model); }}));
   }
+  // Keep the live receipt in the stable header when a wall details sheet redraws its body.
+  function prepareWallReceipt(model) {
+    const header = modal.element.querySelector('.kit-modal-header');
+    const heading = header.querySelector('.kit-heading');
+    let receipt = header.querySelector('.island-wall-purchase-receipt');
+    if (model.kind !== 'wall') {
+      if (receipt) {
+        cancelWallReceiptPulse(header);
+        const group = receipt.parentElement;
+        group.before(heading);
+        group.remove();
+      }
+      return;
+    }
+    if (!receipt) {
+      const group = node('div', 'island-wall-receipt-heading');
+      receipt = node('p', 'island-wall-purchase-receipt');
+      receipt.setAttribute('role', 'status');
+      heading.before(group);
+      group.append(heading, receipt);
+    }
+    if (receipt.dataset.spot !== model.spotId) {
+      if (receipt.textContent) cancelWallReceiptPulse(header);
+      receipt.dataset.spot = model.spotId;
+      receipt.textContent = '';
+    }
+  }
+  function showWallReceipt(spotId, message, reduced) {
+    if (kind !== 'build' || !modal?.element.open || selectionModel?.spotId !== spotId) return false;
+    const header = modal.element.querySelector('.kit-modal-header');
+    const receipt = header.querySelector('.island-wall-purchase-receipt');
+    if (!receipt) return false;
+    receipt.textContent = message;
+    cancelWallReceiptPulse(header);
+    const styles = getComputedStyle(header);
+    const glow = {boxShadow: styles.getPropertyValue('--wall-receipt-glow').trim()};
+    header.animate([glow, {boxShadow: styles.boxShadow}],
+      {id: WALL_RECEIPT_PULSE, duration: reduced ? 520 : 620, easing: reduced ? 'steps(1, end)' : 'ease-out'});
+    return true;
+  }
   return {
     overviewCard, leaderboardCard, buildCard, bellCard, inviteCard, lobbyCard, crewCard, captainCard, captainsCard, harborCard, techCard, wreckCard, arsenalCard, demolishCard, close, copyLink,
+    cancel: () => close(true),
+    get selectionElement() { return selection?.element ?? null; },
+    get selectionSpot() { return selection ? selectionModel.spotId : null; },
+    get selectionRange() { return selection?.coverage ?? null; },
     // Re-draw the open card from fresh models (the island controller calls this on every change).
     get open() { return kind; },
     get active() { return !!modal; },
+    showWallReceipt,
     banner(text) { bannerText.textContent = text ?? ''; banner.hidden = !text; },
     // The chip of the game on screen ({text, label} from one-island.js visitChip), or null to hide it.
     visit(chip, onAction) {
@@ -576,6 +638,15 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
       visit.append(node('span', '', chip.text), go);
     },
     // tone: 'info', 'success' (a building, loot) or 'error' (the server's plain message).
+    // Independent of the one-toast queue: a pending payout or existing error must not hide why play stopped.
+    boatNotice(details) {
+      if (disposed) return;
+      clearTimeout(boatNoticeTimer);
+      boatNotice.replaceChildren(node('strong', '', 'Wave starting. Back to the island.'), node('span', '', details));
+      boatNotice.hidden = false;
+      measureBoatNotice();
+      boatNoticeTimer = setTimeout(() => { boatNotice.hidden = true; measureBoatNotice(); }, 7000);
+    },
     toast(text, tone = 'info', next = '') {
       if (disposed || !text) return;
       const id = toasts().show(next ? {text, tone, next} : {text, tone});
@@ -584,8 +655,10 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
     get toastText() { return lastToast && toasts().shown.some(item => item.id === lastToast.id) ? lastToast.text : ''; },
     dispose() {
       if (disposed) return; disposed = true;
+      returnToDock = null; selection?.dispose(); selection = null;
       if (modal) { const current = modal; modal = null; current.dispose(); }
-      banner.remove(); visit.remove();
+      clearTimeout(boatNoticeTimer);boatNoticeSize?.disconnect();boatNotice.remove();banner.remove(); visit.remove();
+      document.documentElement?.style.removeProperty('--boat-notice-space');
     },
   };
 }

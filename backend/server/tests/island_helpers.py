@@ -10,6 +10,8 @@ FakeIslandDatabase answers exactly the calls the island and wave routes make, an
   * GET islands, GET profiles                a visit by code and the owner's captain name
   * POST rpc/wave_start, rpc/wave_finish     start_reply and finish_reply
   * POST rpc/wave_join, rpc/wave_current     join_reply and current_reply (None: no wave)
+  * POST rpc/recovery_wave_current           recovery_current_reply as given, else current_reply
+                                             as a legacy (version 0) wave
   * POST rpc/wave_revive                     revive_reply (captain health, default REVIVED)
   * GET islands?player_id=                   the tower defense columns (progress)
   * GET wallet_transactions                  the repeat check of a paid action (ledger_refs)
@@ -214,6 +216,7 @@ class FakeIslandDatabase:
         self.finish_reply: dict | httpx.Response = FINISHED
         self.join_reply: dict | httpx.Response = {**STARTED, "status": "joined"}
         self.current_reply: dict | None = None
+        self.recovery_current_reply: dict | None = None
         self.revive_reply: dict | httpx.Response = REVIVED
         self.progress = {
             "wave_best": 0,
@@ -239,6 +242,8 @@ class FakeIslandDatabase:
         self.paid_replies: dict[str, dict | httpx.Response] = {}
         self.recovery_state_reply: dict | httpx.Response = {"status": "missing"}
         self.recovery_policy_version = 0
+        self.recovery_start_as_v1 = False
+        self.recovery_policy_versions: dict[str, int] = {}
         self.recovery_policy_revision = 0
         self.repair_reply: dict | httpx.Response = {
             "status": "refused",
@@ -287,6 +292,7 @@ class FakeIslandDatabase:
             "POST /rpc/wave_current": lambda _: httpx.Response(200, json=self.current_reply),
             "POST /rpc/recovery_wave_current": self.recovery_current,
             "POST /rpc/wave_revive": lambda _: self.answer(self.revive_reply),
+            "POST /rpc/recovery_wave_revive": lambda _: self.answer(self.revive_reply),
             "GET /wallet_transactions": self.read_ledger,
             "GET /captain_skill_learns": lambda request: httpx.Response(
                 200,
@@ -351,7 +357,31 @@ class FakeIslandDatabase:
     def answer(reply: dict | httpx.Response) -> httpx.Response:
         return reply if isinstance(reply, httpx.Response) else httpx.Response(200, json=reply)
 
-    def recovery_start(self, _request: httpx.Request) -> httpx.Response:
+    def recovery_start(self, request: httpx.Request) -> httpx.Response:
+        if self.recovery_start_as_v1:
+            command = json.loads(request.content)
+            rules = command["p_rules"]
+            snapshot = {
+                **command["p_snapshot_template"],
+                "recoveryVersion": 1,
+                "waveProtocol": 2,
+                "rules": rules,
+                "createWave": {
+                    **command["p_snapshot_template"]["createWave"],
+                    "rules": rules,
+                },
+            }
+            return httpx.Response(
+                200,
+                json={
+                    **self.start_reply,
+                    "recoveryVersion": 1,
+                    "waveProtocol": 2,
+                    "initialSnapshot": snapshot,
+                    "participantToken": "1f5d8c2a-5ec7-4e3a-becd-48c0db9a81c7",
+                    "lastActorCounter": 0,
+                },
+            )
         reply = self.start_reply
         if isinstance(reply, httpx.Response) or reply.get("status") == "refused":
             return self.answer(reply)
@@ -382,6 +412,8 @@ class FakeIslandDatabase:
         )
 
     def recovery_current(self, _request: httpx.Request) -> httpx.Response:
+        if self.recovery_current_reply is not None:
+            return self.answer(self.recovery_current_reply)
         if self.current_reply is None:
             return httpx.Response(200, json={"status": "empty"})
         return self.answer(
@@ -447,12 +479,14 @@ class FakeIslandDatabase:
         return httpx.Response(200, json=[row] if row else [])
 
     def read_recovery_state(self, request: httpx.Request) -> httpx.Response:
+        owner = request.url.params.get("island_owner", "").removeprefix("eq.")
+        version = self.recovery_policy_versions.get(owner, self.recovery_policy_version)
         return httpx.Response(
             200,
             json=[
                 {
-                    "recovery_version": self.recovery_policy_version,
-                    "wave_protocol": 2 if self.recovery_policy_version == 1 else 1,
+                    "recovery_version": version,
+                    "wave_protocol": 2 if version == 1 else 1,
                     "revision": self.recovery_policy_revision,
                 }
             ],

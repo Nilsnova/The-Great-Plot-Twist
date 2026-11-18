@@ -1,5 +1,5 @@
 // Starting live presence and stopping it while the Supabase library is still loading. The library is
-// loaded on demand (`await import('@supabase/supabase-js')`), so that it stays out of the title screen's
+// loaded on demand (`await import('src/online/supabase-sdk.js')`), so that it stays out of the title screen's
 // budget. Here the library is a stand-in module that "is still loading" until the test lets it finish,
 // so that a test can call stop() inside that gap. Real timers: the gap is a few milliseconds, and the
 // start delay is switched off by a random() that always says 0. There is no network.
@@ -11,17 +11,17 @@ const ME = playerId(1);
 const URL = 'https://example.supabase.co';
 const KEY = 'test-publishable-key'; // a stand-in: the module never checks the key's form
 
-// The stand-in for '@supabase/supabase-js': `started` says that somebody asked for it, and it arrives
+// The stand-in for src/online/supabase-sdk.js: `started` says that somebody asked for it, and it arrives
 // when the test calls finishLoading().
 const library = vi.hoisted(() => {
   const standIn = { started: false, createClient: null };
   standIn.loaded = new Promise(resolve => { standIn.finishLoading = resolve; });
   return standIn;
 });
-vi.mock('@supabase/supabase-js', async () => {
+vi.mock('../src/online/supabase-sdk.js', async () => {
   library.started = true;
   await library.loaded;
-  return { createClient: (...args) => library.createClient(...args) };
+  return { createRealtimeClient: (...args) => library.createClient(...args) };
 });
 
 const pause = ms => new Promise(resolve => setTimeout(resolve, ms));

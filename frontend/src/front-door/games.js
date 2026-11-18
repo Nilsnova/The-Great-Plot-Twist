@@ -10,7 +10,7 @@ import './games.css';
 import {createModal} from '../ui/kit/modal.js';
 import {createButton} from '../ui/kit/button.js';
 import {node, uniqueId} from '../ui/kit/dom.js';
-import {gamesCopy, gameLine, readGameCode} from './logic.js';
+import {gamesCopy, readGameCode} from './logic.js';
 
 const button = (label, onClick, quiet = false) => createButton({label, onClick, variant: quiet ? 'quiet' : 'primary'}).element;
 

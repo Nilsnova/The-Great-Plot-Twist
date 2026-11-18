@@ -104,6 +104,17 @@ class AlreadyApplied(SupabaseAdminError):
         super().__init__(409, "already_applied", "This was already done.")
 
 
+class RecoveryOptionRetired(SupabaseAdminError):
+    """A persisted recovery-v1 island rejected a newly retired progression choice."""
+
+    def __init__(self) -> None:
+        super().__init__(
+            409,
+            "recovery_option_retired",
+            "That recovery option is no longer available on this island.",
+        )
+
+
 def build_headers(secret_key: str) -> dict[str, str]:
     """The HTTP headers that prove to Supabase that the server is calling.
 
@@ -167,6 +178,11 @@ def read_reply(response: httpx.Response) -> Any:
         raise AlreadyApplied()
     if is_insufficient_funds(body):
         raise InsufficientFunds()
+    retired_option = body.get("code") == RAISED_BY_SQL_FUNCTION and (
+        body.get("message") == "recovery_option_retired"
+    )
+    if retired_option:
+        raise RecoveryOptionRetired()
 
     # Log the status and the database's short error code. Never the key, never the body.
     logger.warning(

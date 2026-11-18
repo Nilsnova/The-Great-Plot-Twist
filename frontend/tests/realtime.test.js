@@ -1594,7 +1594,7 @@ describe('the real library', () => {
     const socketUsed = vi.fn();
     vi.stubGlobal('fetch', fetchUsed);
     vi.stubGlobal('WebSocket', class { constructor() { socketUsed(); throw new Error('This test must not open a WebSocket.'); } });
-    const { createClient } = await import('@supabase/supabase-js');
+    const { createRealtimeClient: createClient } = await import('../src/online/supabase-sdk.js');
     const client = createClient(URL, KEY, { accessToken: async () => 'token-1' });
     try {
       const room = client.channel('live:world', { config: { private: true, presence: { key: ME, enabled: true } } });

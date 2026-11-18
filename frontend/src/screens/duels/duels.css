@@ -54,8 +54,6 @@
 .duel-glyph[data-signal=mirror] { color: #d9ecf5; }
 
 /* The rules card. */
-.duel-signal-list { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 10px; }
-.duel-signal-row { display: flex; align-items: center; gap: 12px; }
 .duel-rules p { margin-bottom: 10px; }
 
 /* The reveal. */
