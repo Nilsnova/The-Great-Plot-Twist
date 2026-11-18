@@ -90,6 +90,9 @@ You carry a musket.
 - **Click** anywhere to aim and fire there. On a phone, tap where to fire.
 - Press **F** to fire at the nearest ship or pirate. Hold F to keep firing. On a phone, use the musket button at the bottom right.
 - Up close to a pirate on foot, F swings your **cutlass** instead.
+- Hover or focus the fire button, hold F, or try a shot to see your current weapon's **range ring**. It fades after firing. The message explains when enemies are out of range or your weapon is reloading. Fire bombs show throw distance; their blast can reach beyond the ring.
+- Bullets and small impact flashes show where your shots land. The range marker uses quiet broken arcs, with a short mark at the boundary in your firing direction.
+- A warning beneath the wave bar calls out attacks on you or the island heart. The arrow beside your captain points toward the danger. A warning sounds once when it appears, then stays visual. If that threat clears and later returns, it can sound once again. Sounds respect your effects volume.
 
 Open **Menu**, then **Captain and skills**. There you raise your captain's level (🪙 20, 40, 80 and 160), spend skill points and buy other guns. You earn skill points by winning new waves.
 
@@ -108,7 +111,7 @@ Ships that reach the shore let **boarders** climb out. They walk to the heart of
 
 - Damaged **walls, cannons, mortars, harpoons, culverins and swivels** show a small health bar and exact HP in the structure card. Houses and watchtowers have no structure HP and are excluded. Full-health bars and repair offers are hidden. A destroyed structure shows an empty bar, a small **!** and its broken appearance; during a reserved wave it stays inactive until a paid repair succeeds. It is whole again the moment the wave ends. Base level upgrades are available between waves.
 - **When a wave ends, every wall and tower is repaired at once** (won or lost, finished or timed out; owner, 18 Nov). The break starts with everything whole: no waiting, nothing to pay between waves.
-- During a wave nothing heals by itself. The card shows **Repair now: pay N coins** (three uses a wave, shared by the crew) and that everything is repaired when the wave ends.
+- During a wave nothing heals by itself. The card shows exact HP and **Repair now: pay N coins**; during a reservation it also shows the shared uses remaining. The card has no countdown or wave-end explanatory sentence.
 - A successful **Repair now** restores one structure immediately. Its server-quoted price is the current level's catalogue price, independent of damage or who pays. The team shares three successful repairs per island and wave, including preparation/countdown; repairs outside the reserved wave are unlimited. Failed requests do not charge coins or use a slot.
 - In recovery v1, Captain **E** structure repair/rebuild and repair-only Captain skills are removed. Carpenter hiring, the Workshop house role, **Quick Mend** and **Mason Drill** are being retired because there is no gradual repair to speed up. **Bastion** keeps +50% maximum wall HP; **Engineer** keeps the 10% construction/upgrade discount. Other crew/house abilities and Captain/Tavern healing remain. See [current implementation tasks](OPEN-TODOS.md#11-unified-defense-recovery--unassigned-follow-ups-16-nov) for review/release status.
 
@@ -182,7 +185,8 @@ The Harbor is a building on the east beach. Walk up to it and press **E** (or **
 - **Your ship** (after wave 30, once the wreck is repaired): walk to her on the west beach and press **E**. Between waves, pick one of her games. A round lasts 20 seconds and ends with 0 to 3 stars:
   - **💥 Broadside duel:** enemy ships sail across. Fire when one is inside the gold band: in its middle is a bullseye (+2), inside it a hit (+1), a miss costs 1. The guns reload after every shot. **Space**, **F**, a click or tap on the sea, or **Fire**.
   - **🪙 Treasure dash:** steer your boat left and right to grab coins (+1) and dodge cannonballs (−2; a red arrow shows where one lands). **← →** or **A D**, drag on the sea, or hold **◀ ▶**.
-  - Each game pays coins **once per won wave**: ★ × (6 + wave ÷ 5), so ★★★ is 🪙 36 at wave 30 and 🪙 78 at wave 100. After that you can keep playing for fun until your crew wins the next wave. Every player is paid into their own wallet. Settings › **Easier finishers** widens the gold band and the catch.
+  - Attempts are free. If a friend rings the bell, your unfinished boat round ends and you return to defend the island; an on-screen notice explains that no coins were spent and no reward was used. Completed rounds keep their earned coins.
+  - Only the first round with at least one star pays for each game at each won wave. A later better score pays nothing extra. Each game pays coins **once per won wave**: ★ × (6 + wave ÷ 5), so ★★★ is 🪙 36 at wave 30 and 🪙 78 at wave 100. After that you can keep playing for fun until your crew wins the next wave. Every player is paid into their own wallet. Settings › **Easier finishers** widens the gold band and the catch.
 
 ## Controls
 

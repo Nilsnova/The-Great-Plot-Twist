@@ -5,6 +5,9 @@
 .island-card-body p{margin:0}
 .island-card-body>.kit-button{justify-self:start;min-width:160px}
 .island-purpose{color:var(--u-ink)}
+.island-card-build .kit-modal-header{--wall-receipt-glow:inset 0 -4px #e6a63c,inset 0 0 26px #efb84bcc}
+.island-wall-purchase-receipt{margin:4px 0 0;color:#573807;font-size:var(--u-sm);font-weight:750}
+.island-wall-purchase-receipt:empty{margin:0}
 .island-cost{font:800 var(--u-lg)/1.2 var(--u-font);color:var(--u-gold)}
 .island-reason{color:var(--u-mute)}
 .island-message{padding:var(--u-2) var(--u-3);background:#f3d9c8;color:var(--u-pink);border:2px solid #8a3b2a;font-weight:600}

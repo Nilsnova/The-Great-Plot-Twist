@@ -329,11 +329,12 @@ export function createIslandApi({transport, makeUid = makeActionUid, waveProtoco
   async function write(key, send, accept) {
     const context = readEconomy(selectedEconomy());
     if (context) key = `${context.islandOwner}:${context.accountId}:${context.runEpoch}:${key}`;
-    const actionUid = held.get(key) ?? makeUid();
+    const heldUid = held.get(key), actionUid = heldUid ?? makeUid();
     held.set(key, actionUid);
     const answer = await ask(() => send(actionUid), data => accept(data, actionUid));
     if (answer.ok || !outcomeUnknown(answer)) held.delete(key);
-    return answer;
+    // A successful retry can be a replay of a purchase that already landed.
+    return heldUid && answer.ok ? {...answer, reconciled: true} : answer;
   }
   // The server's own spelling of each spot id, learnt from its answers (spots.js SPOT_ALIASES).
   const serverIds = new Map();
@@ -593,11 +594,17 @@ export function createIslandApi({transport, makeUid = makeActionUid, waveProtoco
     },
     // A fallen teammate stood up (captain health): you pay 20 + 5 × wave; fallen is their id in the wave's sim,
     // downAt the tick of their fall (one fall is paid once: a second helper is refused 409 already_up).
-    reviveCaptain({waveId, fallen, downAt} = {}) {
+    reviveCaptain({waveId, fallen, downAt, waveProtocol = 1, x, z} = {}) {
       if (!isText(waveId)) return refuse(404, 'no_such_wave', MESSAGES.badWave);
       if (typeof fallen !== 'string' || !/^[A-Za-z0-9_.:-]{1,64}$/.test(fallen)) return refuse(422, 'validation_error', MESSAGES.unknown);
       if (!Number.isSafeInteger(downAt) || downAt < 0 || downAt > 100000) return refuse(422, 'validation_error', MESSAGES.unknown);
-      return write(`revive:${waveId}:${fallen}:${downAt}`, actionUid => transport.post(PATHS.revive, {waveId, fallen, downAt, actionUid}), isRevive);
+      const recovery = waveProtocol === 2;
+      if (recovery && ![x, z].every(value => Number.isFinite(value) && Math.abs(value) <= 499.999)) {
+        return refuse(422, 'validation_error', MESSAGES.unknown);
+      }
+      const position = recovery ? {waveProtocol: 2, x, z} : {};
+      return write(`revive:${waveId}:${fallen}:${downAt}`, actionUid => transport.post(PATHS.revive,
+        {waveId, fallen, downAt, actionUid, ...position}), data => isRevive(data) && (!recovery || data.journaled === true));
     },
     // For tests and the console: the click id kept for an unknown outcome, if any.
     heldActionUid: key => held.get(key) ?? null,

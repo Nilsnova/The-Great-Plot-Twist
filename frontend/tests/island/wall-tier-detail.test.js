@@ -25,25 +25,25 @@ const posts = (layers, art, id) => quads(layers).filter(quad => JSON.stringify(q
 
 describe('connected wall tier detail', () => {
   it.each([
-    [1,1.69,1.46,1.71], [2,1.94,1.71,1.96], [3,2.19,1.96,2.21],
-    [4,2.34,2.11,2.36], [5,2.44,2.21,2.46],
+    [1,1.018,.85,1.038], [2,1.118,.95,1.138], [3,1.268,1.10,1.288],
+    [4,1.368,1.20,1.388], [5,1.468,1.30,1.488],
   ])('keeps actual projected level %i span and straight-cap vertices below the authored post top', (level, horizontalTop, verticalTop, capTop) => {
     const art=atlas(), maxY=rows=>Math.max(...rows.flatMap(({positions:p})=>p.filter((_,i)=>i%3===1)));
     for(const vertical of [false,true]) {
       const rows=[wall('a',0,0,level),wall('b',vertical?0:2,vertical?2:0,level),wall('c',vertical?0:4,vertical?4:0,level)];
       const links=wallTopology(rows).links;
       const spans=quads(texturedWallBatches([links[0]],[],art));
-      expect(maxY(spans)).toBeLessThanOrEqual(2.625);
+      expect(maxY(spans)).toBeLessThanOrEqual(1.70625);
       const layers=draw(rows,art), centreX=vertical?.4:2.6, centreY=vertical?-1.2:0;
       const cap=quads(layers).filter(({positions:p,uvs})=>
         JSON.stringify(uvs)===JSON.stringify(frameUV(art,wallSurfaceFrame(level,'top')))
         && Math.abs((p[0]+p[3]+p[6]+p[9])/4-centreX)<1e-10);
       expect(cap).toHaveLength(1);
-      expect(maxY(cap)-centreY).toBeLessThanOrEqual(2.625);
+      expect(maxY(cap)-centreY).toBeLessThanOrEqual(1.70625);
       expect(maxY(spans)).toBeCloseTo(vertical?verticalTop:horizontalTop,10);
       expect(maxY(cap)-centreY).toBeCloseTo(capTop,10);
       const buttress=posts(layers,art,wallFrame(level)).find(({positions:p})=>Math.abs((p[0]+p[3])/2)<1e-10);
-      expect(maxY([buttress])).toBe(2.625);
+      expect(maxY([buttress])).toBeCloseTo(1.70625,12);
     }
     art.texture.dispose();
   });
@@ -52,9 +52,27 @@ describe('connected wall tier detail', () => {
     const art = atlas(), rows = [wall('a',0,0,level),wall('b',2,0,level),wall('c',4,0,level)];
     const before = structuredClone(rows), layers = draw(rows, art, 'b');
     const actual = posts(layers, art, wallFrame(level)); expect(actual).toHaveLength(1);
-    expect(actual[0].positions).toEqual([1.475,-.375,0,3.725,-.375,0,3.725,2.625,0,1.475,2.625,0].map(value=>expect.closeTo(value,10)));
+    expect(actual[0].positions).toEqual([1.7,-.24375,0,3.5,-.24375,0,3.5,1.70625,0,1.7,1.70625,0].map(value=>expect.closeTo(value,10)));
     expect(quads(layers)).toHaveLength(9); expect(rows).toEqual(before);
     expect([...layers.keys()].sort((a,b)=>a-b)).toEqual([99.98,100]); art.texture.dispose();
+  });
+
+  it.each([1,2,3,4,5])('keeps level %i post scale and exact ground foot through damage, a breach and selection', level => {
+    const art=atlas(), original=[wall('a',0,0,level),wall('b',2,0,level),wall('c',4,0,level)];
+    const before=structuredClone(original);
+    for(const look of ['intact','damaged','broken']) {
+      const rows=original.map(row=>row.id==='b'?{...row,look,...(look==='broken'?{hp:0}:{})}:row);
+      const batch=draw(rows,art,'b'), [post]=posts(batch,art,wallFrame(level,look));
+      expect(post).toBeDefined();
+      const p=post.positions;
+      // Same1.8×1.95 drawing box for every state, scaled about the accepted foot(2.6,0).
+      expect(p[3]-p[0]).toBeCloseTo(1.8,12); expect(p[7]-p[1]).toBeCloseTo(1.95,12);
+      expect((p[0]+p[3])/2).toBeCloseTo(2.6,12);
+      expect(p[1]+.24375).toBeCloseTo(0,12);
+      expect([...batch.keys()].every(order=>order<150)).toBe(true);
+      expect(wallTopology(rows).links).toHaveLength(look==='broken'?0:2);
+    }
+    expect(original).toEqual(before); art.texture.dispose();
   });
 
   it.each(['horizontal','vertical'])('retains sparse coordinate-based buttresses on %s runs after reordering and renaming', axis => {
@@ -100,7 +118,10 @@ describe('connected wall tier detail', () => {
       battle.show(rows,rows.map(({id})=>({id,hp,maxHp:100})));
       const buffers=group=>{const result=[];group.traverse(mesh=>{if(mesh.geometry)result.push([mesh.renderOrder,
         Array.from(mesh.geometry.attributes.position.array),Array.from(mesh.geometry.attributes.uv.array),Array.from(mesh.geometry.index.array)]);});return result;};
-      expect(buffers(battle.root??root.getObjectByName('pirates:wall-connections'))).toEqual(buffers(world.root));
+      const battleGroup = root.getObjectByName('pirates:wall-connections');
+      expect(buffers(battleGroup.getObjectByName('island-wall-connections'))).toEqual(buffers(world.root));
+      expect(Array.from(battleGroup.getObjectByName('wall-ground-contact').geometry.attributes.position.array))
+        .toEqual(Array.from(root.children.find(object => object.name === 'wall-ground-contact').geometry.attributes.position.array));
       world.dispose();battle.dispose();
     }
     art.texture.dispose();

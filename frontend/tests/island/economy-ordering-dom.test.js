@@ -76,3 +76,38 @@ it.each(['hire', 'research'])('ignores a shared visited-island %s reply after sa
   expect(result.visiting).toBe(null);
   expect(result.card).not.toContain('Island treasury');
 });
+
+it('reconciles a late legacy own-build through a fresh read without restoring its old money after adoption', async () => {
+  const result = await evaluate(async () => {
+    const {createIsland} = await window.g20Import('/src/island/index.js');
+    const {createFakeIslandTransport} = await window.g20Import('/src/pirates/fake-api.js');
+    const {sharedEconomy} = await window.g20Import('/tests/island/economy-fixture.js');
+    const {on, emit} = await window.g20Import('/src/core/events.js');
+    const base = createFakeIslandTransport(); base.dev.setCoins(100); base.dev.setWaveBest(9);
+    let economy = null, release;
+    const transport = {get: async (path, options) => {
+      const answer = await base.get(path, options);
+      return answer.ok && path === '/api/island' && economy
+        ? {...answer, data: {...answer.data, economy}} : answer;
+    }, post: (path, body) => {
+      const answer = base.post(path, body);
+      return path === '/api/island/build'
+        ? new Promise(resolve => { release = async () => { const old = await answer; resolve({...old, data: {...old.data, coins: 1}}); }; })
+        : answer;
+    }};
+    const island = createIsland({container: document.body, emit, on, mode: 'fake', transport, storage: null, visitStorage: null,
+      menu: () => () => {}, settings: () => () => {}});
+    await island.load();
+    const building = island.build('wall_1', 'wall');
+    island.visit('ISLE-FR3ND'); await island.load();
+    economy = sharedEconomy({accountId: '44444444-4444-4444-8444-444444444444', runEpoch: '55555555-5555-4555-8555-555555555555',
+      treasury: {balanceCoins: '60', committedCoins: '0', availableCoins: '60'}});
+    await release(); await building;
+    const answer = {home: island.island, visiting: island.visiting?.code};
+    island.dispose(); return answer;
+  });
+  expect(result.home.economy?.runEpoch).toBe('55555555-5555-4555-8555-555555555555');
+  expect(result.home.economy?.treasury.availableCoins).toBe('60');
+  expect(result.home.coins).toBe(90);
+  expect(result.visiting).toBe('FR3ND');
+});

@@ -43,8 +43,8 @@ describe('shared island purchase cards', () => {
     expect(crewModel({crew: {}, economy, unlocks: unlocksFor(9), battle: true}).rows.every(row => row.disabled)).toBe(true);
   });
 
-  it('shows preserved owned crew below the current unlock without allowing another hire', () => {
-    const model = crewModel({crew: {carpenter: 2, gunner: 1}, economy: funds('999'), unlocks: unlocksFor(0)});
+  it.each([0, 1])('shows preserved owned crew below the current unlock without allowing another hire, recoveryVersion=%s', recoveryVersion => {
+    const model = crewModel({crew: {carpenter: 2, gunner: 1}, economy: funds('999'), unlocks: unlocksFor(0), recoveryVersion});
     expect(model.rows.find(row => row.id === 'carpenter')).toMatchObject({owned: '2 of 2', disabled: true, button: 'Unavailable', line: ''});
     expect(model.rows.find(row => row.id === 'gunner')).toMatchObject({owned: '1 of 2', disabled: true});
   });
