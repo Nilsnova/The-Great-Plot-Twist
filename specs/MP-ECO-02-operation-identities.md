@@ -7,7 +7,7 @@
 - **Status:** foundation extension; no public route or admission activation.
 - **Responsible teammate:** Ianno Hollensteiner (`Iannomh123456`), assisted by Codex.
 - **Issue:** [MP-ECO-02 #494](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/494).
-- **Branch:** `feat/mp-eco-02-operations`.
+- **Branch:** `feat/mp-eco-02-treasury`.
 - **Dependency:** the [treasury foundation](MP-ECO-02-island-treasury.md), including its scope guard, account/ledger tables and private-helper privilege model.
 
 ## Problem and boundary
@@ -111,6 +111,16 @@ Verification on 18 Nov 2026, from `backend/` with a writable uv cache:
 - The documented pglast check: **67 migration files parsed**.
 - Relative documentation links, content and `git diff --check`: passed.
 
+Treasury and operation race modules register their own cached instances of the existing full-chain scratch fixture. Their deliberately committed race seeds therefore remain in module-private clusters; the legacy fixture and all test assertions remain unchanged. Cutover cases continue to use their separate per-test clusters.
+
+The ordered treasury purchase/all-in race followed by the legacy empty-database host-console check reproduced **1 passed, 1 failed** before isolation and **2 passed** afterward. The final mixed-order command from `backend/` was:
+
+```sh
+CASE_PG_SCRATCH=1 uv run --no-sync --with pgserver --with 'psycopg[binary]' --with pglast pytest -q --tb=short server/tests/island_sql/test_island_treasury_sql.py server/tests/island_sql/test_economy_operations_sql.py server/tests/island_sql/test_economy_operations_cutover_sql.py server/tests/island_sql/test_host_console_v3_sql.py server/tests/island_sql/test_islands_and_waves_sql.py
+```
+
+Result: **89 passed in 26.76s**, including all 54 treasury/registry/cutover cases and 35 legacy host-console/island cases. Full Ruff and whitespace checks passed after the fixture correction. No production source or migration changed for this test-isolation correction.
+
 The initial plain test collection failed on the absent new module before implementation. No full-backend, public route, authenticated browser, deployed database or activation test is claimed by these focused checks.
 
-Runtime integration must document the operation/child contracts in INTERFACES and the Supabase policy matrix. No old production module, public endpoint, feature flag or existing personal-wallet contract is changed by this extension.
+The operation/child contracts are documented in INTERFACES and the Supabase policy matrix. No old production module, public endpoint, feature flag or existing personal-wallet contract is changed by this extension.

@@ -1,0 +1,9 @@
+
+ RUN  v5.1.0 /workspace/repair-baseline-db573347/frontend
+
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  13:51:10
+   Duration  79.89s (tests 98%, import 2%)
+
