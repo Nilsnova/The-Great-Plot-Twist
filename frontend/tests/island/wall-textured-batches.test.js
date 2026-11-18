@@ -30,10 +30,10 @@ describe('dimensional wall artwork contract', () => {
     const rows = [wall('a', 4, 3, 5)], before = structuredClone(rows), atlas = art();
     const layers = texturedWallBatches([], wallVisualRows(rows), atlas), batch = layers.get(103);
     const corners = batch.positions.slice(-12);
-    // Foot(4,3) projects to(5.8,−1.8); image width48/16=3 and anchor6/16=.375 stay upright.
-    expect(corners.filter((_, i) => i % 3 === 0)).toEqual([4.3,7.3,7.3,4.3].map(x=>expect.closeTo(x,10)));
-    expect(corners[1]).toBeCloseTo(-2.175,10); expect(corners[4]).toBeCloseTo(-2.175,10);
-    expect(corners[7]).toBeCloseTo(.825,10); expect(corners[10]).toBeCloseTo(.825,10);
+    // Foot(4,3) stays at(5.8,−1.8); the post is1.8 wide with a.24375 foot margin.
+    expect(corners.filter((_, i) => i % 3 === 0)).toEqual([4.9,6.7,6.7,4.9].map(x=>expect.closeTo(x,10)));
+    expect(corners[1]).toBeCloseTo(-2.04375,10); expect(corners[4]).toBeCloseTo(-2.04375,10);
+    expect(corners[7]).toBeCloseTo(-.09375,10); expect(corners[10]).toBeCloseTo(-.09375,10);
     expect(rows).toEqual(before); expect(batch.indices.slice(-6).map(value => value - batch.positions.length/3 + 4)).toEqual([0, 1, 2, 0, 2, 3]);
     expect(batch.uvs.every(value => value >= 0 && value <= 1)).toBe(true);
   });
@@ -48,24 +48,24 @@ describe('dimensional wall artwork contract', () => {
   // Fixed arithmetic receipts: x'=1.3x+.2z, y'=-.6z+lift. No runtime height/projection helper.
   // The legacy fallback's independent position/hash receipts remain in wall-span-batches.test.js.
   it.each([
-    [1, [1.69,1.21,1.07,1.22], [1.45,.25,1.31,.11,.26,1.46]],
-    [2, [1.94,1.46,1.32,1.47], [1.70,.50,1.56,.36,.51,1.71]],
-    [3, [2.19,1.71,1.57,1.72], [1.95,.75,1.81,.61,.76,1.96]],
-    [4, [2.34,1.86,1.72,1.87], [2.10,.90,1.96,.76,.91,2.11]],
-    [5, [2.44,1.96,1.82,1.97], [2.20,1.00,2.06,.86,1.01,2.21]],
+    [1, [1.018,.682,.542,.692], [.85,-.35,.71,-.49,-.34,.86]],
+    [2, [1.118,.782,.642,.792], [.95,-.25,.81,-.39,-.24,.96]],
+    [3, [1.268,.932,.792,.942], [1.10,-.10,.96,-.24,-.09,1.11]],
+    [4, [1.368,1.032,.892,1.042], [1.20,0,1.06,-.14,.01,1.21]],
+    [5, [1.468,1.132,.992,1.142], [1.30,.10,1.16,-.04,.11,1.31]],
   ])('draws level %i spans with fixed projected feet, tier profile, upright trim and unchanged indices', (level, h, v) => {
     const cases = [
       {end: [2, 0], order: 99.98, points: [
-        [-.08,h[0]],[2.52,h[0]],[2.68,h[1]],[.08,h[1]],
-        [.08,-.24],[2.68,-.24],[2.68,h[1]],[.08,h[1]],
-        [2.52,.24],[2.68,-.24],[2.68,h[1]],[2.52,h[0]],
-        [.08,h[2]],[2.68,h[2]],[2.68,h[3]],[.08,h[3]],
+        [-.056,h[0]],[2.544,h[0]],[2.656,h[1]],[.056,h[1]],
+        [.056,-.168],[2.656,-.168],[2.656,h[1]],[.056,h[1]],
+        [2.544,.168],[2.656,-.168],[2.656,h[1]],[2.544,h[0]],
+        [.056,h[2]],[2.656,h[2]],[2.656,h[3]],[.056,h[3]],
       ]},
       {end: [0, 2], order: 100.98, points: [
-        [-.52,v[0]],[.52,v[0]],[.92,v[1]],[-.12,v[1]],
-        [-.12,-1.2],[.92,-1.2],[.92,v[1]],[-.12,v[1]],
-        [.52,0],[.92,-1.2],[.92,v[1]],[.52,v[0]],
-        [.52,v[2]],[.92,v[3]],[.92,v[4]],[.52,v[5]],
+        [-.364,v[0]],[.364,v[0]],[.764,v[1]],[.036,v[1]],
+        [.036,-1.2],[.764,-1.2],[.764,v[1]],[.036,v[1]],
+        [.364,0],[.764,-1.2],[.764,v[1]],[.364,v[0]],
+        [.364,v[2]],[.764,v[3]],[.764,v[4]],[.364,v[5]],
       ]},
     ];
     for (const {end: [x, z], order, points} of cases) {
