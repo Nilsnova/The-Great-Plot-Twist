@@ -16,7 +16,7 @@ A recovery finish already in flight is skipped by the handoff when the next wave
 
 ## What
 
-- Keep an old wave's finish request and retry it independently of the wave on screen, preserving its checkpoint UID and the existing refusal delays.
+- Keep an old wave's finish request independently of the wave on screen. Unknown outcomes retain the checkpoint UID; explicit stale-state refusals refresh the original journal before generating a new checkpoint. Preserve pacing and isolate detached replay from current battle effects.
 - Return the database's boolean `survived` on protocol-2 finishes; preserve the legacy response shape.
 - Announce recovery victory or defeat only after a valid canonical receipt. Use that result for the banner, sound, cutscene and quest event.
 - Keep the defense report neutral until confirmation, then use the saved outcome while retaining its local damage observations. Late old results cannot end the current battle's narration.

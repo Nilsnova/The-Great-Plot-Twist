@@ -103,3 +103,7 @@ Final stacked publication evidence: [combined handover](../docs/handoff/return-r
 It records 4,659 passing frontend tests, 13,236 passing backend tests and one reproduced
 unchanged-main Group3 failure, plus the excluded exhaustive settings suite, build and synthetic
 reload captures. Different human approval remains pending.
+
+The two-read review correction is now part of #485 after #486/#490 were merged into its task
+branch. See [the current review handover](../docs/handoff/coop-review-fixes-2026-11-18.md) for
+lasting wallet watermarks, arsenal ordering, coherent fixtures and current verification.

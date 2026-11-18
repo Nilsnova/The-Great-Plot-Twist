@@ -1207,3 +1207,18 @@ backend with optional PostgreSQL tools and the unchanged exhaustive settings sui
 **13,236 passed / 1 failed**. The sole Group3 fixture assertion fails identically on clean main;
 no setup errors or skipped selected tests. Full logs, old-development versus current-source
 provenance, and the untouched live-operation boundary are in the linked handover.
+
+Ianno / 2026-11-18 — Co-op review corrections in [#485](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/485):
+incorporated main `03e660fe`, preserved both lifecycle cleanup paths, main's arsenal/rejoin guards
+and both STATUS histories. Detached stale finishes refresh their old sealed journal silently;
+unknown outcomes retain the same checkpoint UID. Wallet watermarks cover multiple old reads,
+purchases, arsenal responses and account reset. The paid revival migration is uniquely
+`20261118051000` after main's retirement50000; SQL body unchanged. Recovery decision references
+use D067, preserving main D066. Full frontend **4,729 / 430 files passed**; broad backend with
+optional PostgreSQL tools and unchanged exhaustive settings matrix excluded **13,264 passed**.
+Three inherited backend expectation failures were reproduced on clean main and corrected without
+runtime changes. Build/budget/Ruff pass. Same-script desktop/phone captures show the old
+120→100 rollback fixed at120 while newer80 is accepted. The lifecycle smoke still times out
+identically on main before its assertions; no new native full-multiplayer/live/physical-device
+pass is claimed. [Exact handover/evidence](handoff/coop-review-fixes-2026-11-18.md).
+Different human re-review remains pending. No main merge, deployment, live migration or refund.

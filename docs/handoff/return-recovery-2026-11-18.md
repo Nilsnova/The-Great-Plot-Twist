@@ -1,5 +1,8 @@
 # Reward return and historical revival recovery
 
+Current review corrections and results: [18 November review handover](coop-review-fixes-2026-11-18.md).
+The checkpoints below retain their original source and verification scope.
+
 English implementation and review handover for Ianno Hollensteiner and the different human reviewer.
 
 Responsible teammate: Ianno (`Iannomh123456`), assisted by Codex. Publication uses a linear

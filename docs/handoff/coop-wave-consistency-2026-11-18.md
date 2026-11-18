@@ -1,5 +1,8 @@
 # Co-op wave consistency fixes
 
+Current review corrections and results: [18 November review handover](coop-review-fixes-2026-11-18.md).
+The checkpoints below retain their original source and verification scope.
+
 English implementation handover for Ianno Hollensteiner and the human reviewer of four confirmed race conditions.
 
 Responsible teammate: Ianno (`Iannomh123456`), assisted by Codex. The development evidence below
