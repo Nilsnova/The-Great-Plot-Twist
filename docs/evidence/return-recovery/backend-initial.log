@@ -1,0 +1,405 @@
+Using CPython 3.12.14 interpreter at: /opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3.12
+Creating virtual environment at: .venv
+warning: Failed to hardlink files; falling back to full copy. This may lead to degraded performance.
+         If the cache and target directories are on different filesystems, hardlinking may not be supported.
+         If this is intentional, set `export UV_LINK_MODE=copy` or use `--link-mode=copy` to suppress this warning.
+Installed 26 packages in 208ms
+........................................................................ [  0%]
+........................................................................ [  1%]
+........................................................................ [  1%]
+..............................s.........s...............s............... [  2%]
+........................................................................ [  2%]
+........................................................................ [  3%]
+........................................................................ [  3%]
+........................................................................ [  4%]
+........................................................................ [  4%]
+............................EEEEEEEEEEEEEEEsss.......................... [  5%]
+........................................................................ [  5%]
+........................................................................ [  6%]
+........................................................................ [  7%]
+........................................................................ [  7%]
+........................................................................ [  8%]
+........................................................................ [  8%]
+.......................................s................................ [  9%]
+........................................................................ [  9%]
+........................................................................ [ 10%]
+........................................................................ [ 10%]
+........................................................................ [ 11%]
+........................................................................ [ 11%]
+........................................................................ [ 12%]
+........................................................................ [ 13%]
+........................................................................ [ 13%]
+........................................................................ [ 14%]
+........................................................................ [ 14%]
+........................................................................ [ 15%]
+........................................................................ [ 15%]
+........................................................................ [ 16%]
+........................................................................ [ 16%]
+........................................................................ [ 17%]
+........................................................................ [ 17%]
+........................................................................ [ 18%]
+........................................................................ [ 19%]
+........................................................................ [ 19%]
+........................................................................ [ 20%]
+........................................................................ [ 20%]
+........................................................................ [ 21%]
+........................................................................ [ 21%]
+........................................................................ [ 22%]
+........................................................................ [ 22%]
+........................................................................ [ 23%]
+........................................................................ [ 23%]
+........................................................................ [ 24%]
+........................................................................ [ 25%]
+........................................................................ [ 25%]
+........................................................................ [ 26%]
+........................................................................ [ 26%]
+........................................................................ [ 27%]
+........................................................................ [ 27%]
+........................................................................ [ 28%]
+........................................................................ [ 28%]
+........................................................................ [ 29%]
+........................................................................ [ 29%]
+........................................................................ [ 30%]
+........................................................................ [ 31%]
+........................................................................ [ 31%]
+........................................................................ [ 32%]
+........................................................................ [ 32%]
+........................................................................ [ 33%]
+........................................................................ [ 33%]
+........................................................................ [ 34%]
+........................................................................ [ 34%]
+........................................................................ [ 35%]
+........................................................................ [ 35%]
+........................................................................ [ 36%]
+........................................................................ [ 36%]
+........................................................................ [ 37%]
+........................................................................ [ 38%]
+........................................................................ [ 38%]
+........................................................................ [ 39%]
+........................................................................ [ 39%]
+........................................................................ [ 40%]
+........................................................................ [ 40%]
+........................................................................ [ 41%]
+........................................................................ [ 41%]
+........................................................................ [ 42%]
+........................................................................ [ 42%]
+........................................................................ [ 43%]
+........................................................................ [ 44%]
+........................................................................ [ 44%]
+........................................................................ [ 45%]
+........................................................................ [ 45%]
+........................................................................ [ 46%]
+........................................................................ [ 46%]
+........................................................................ [ 47%]
+........................................................................ [ 47%]
+........................................................................ [ 48%]
+........................................................................ [ 48%]
+........................................................................ [ 49%]
+........................................................................ [ 50%]
+........................................................................ [ 50%]
+........................................................................ [ 51%]
+........................................................................ [ 51%]
+........................................................................ [ 52%]
+........................................................................ [ 52%]
+........................................................................ [ 53%]
+........................................................................ [ 53%]
+........................................................................ [ 54%]
+........................................................................ [ 54%]
+........................................................................ [ 55%]
+......F................................................................. [ 56%]
+........................................................................ [ 56%]
+........................................................................ [ 57%]
+........................................................................ [ 57%]
+........................................................................ [ 58%]
+........................................................................ [ 58%]
+........................................................................ [ 59%]
+........................................................................ [ 59%]
+........................................................................ [ 60%]
+........................................................................ [ 60%]
+........................................................................ [ 61%]
+........................................................................ [ 62%]
+........................................................................ [ 62%]
+........................................................................ [ 63%]
+........................................................................ [ 63%]
+........................................................................ [ 64%]
+........................................................................ [ 64%]
+........................................................................ [ 65%]
+........................................................................ [ 65%]
+........................................................................ [ 66%]
+........................................................................ [ 66%]
+........................................................................ [ 67%]
+........................................................................ [ 67%]
+........................................................................ [ 68%]
+........................................................................ [ 69%]
+........................................................................ [ 69%]
+........................................................................ [ 70%]
+........................................................................ [ 70%]
+........................................................................ [ 71%]
+........................................................................ [ 71%]
+........................................................................ [ 72%]
+........................................................................ [ 72%]
+........................................................................ [ 73%]
+........................................................................ [ 73%]
+........................................................................ [ 74%]
+........................................................................ [ 75%]
+........................................................................ [ 75%]
+........................................................................ [ 76%]
+........................................................................ [ 76%]
+........................................................................ [ 77%]
+........................................................................ [ 77%]
+........................................................................ [ 78%]
+........................................................................ [ 78%]
+........................................................................ [ 79%]
+........................................................................ [ 79%]
+........................................................................ [ 80%]
+........................................................................ [ 81%]
+........................................................................ [ 81%]
+........................................................................ [ 82%]
+........................................................................ [ 82%]
+........................................................................ [ 83%]
+........................................................................ [ 83%]
+........................................................................ [ 84%]
+........................................................................ [ 84%]
+........................................................................ [ 85%]
+........................................................................ [ 85%]
+........................................................................ [ 86%]
+........................................................................ [ 87%]
+........................................................................ [ 87%]
+........................................................................ [ 88%]
+........................................................................ [ 88%]
+........................................................................ [ 89%]
+........................................................................ [ 89%]
+........................................................................ [ 90%]
+........................................................................ [ 90%]
+........................................................................ [ 91%]
+........................................................................ [ 91%]
+........................................................................ [ 92%]
+........................................................................ [ 93%]
+........................................................................ [ 93%]
+........................................................................ [ 94%]
+........................................................................ [ 94%]
+........................................................................ [ 95%]
+........................................................................ [ 95%]
+........................................................................ [ 96%]
+........................................................................ [ 96%]
+........................................................................ [ 97%]
+........................................................................ [ 97%]
+........................................................................ [ 98%]
+........................................................................ [ 98%]
+........................................................................ [ 99%]
+.............................................................            [100%]
+==================================== ERRORS ====================================
+_ ERROR at setup of test_owner_handover_and_freed_seat_increment_the_crew_once _
+
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x7f359214ac00>, _basetemp=PosixPath('/tmp/pytest-of-agent/pytest-23'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope="session")
+    def scratch_server(tmp_path_factory):
+        if os.environ.get("CASE_PG_SCRATCH") != "1":
+            pytest.skip("Set CASE_PG_SCRATCH=1 with the test-only PostgreSQL tools to run SQL checks.")
+>       import pglast
+E       ModuleNotFoundError: No module named 'pglast'
+
+server/tests/followups_sql/conftest.py:20: ModuleNotFoundError
+__ ERROR at setup of test_nonowner_seat_removal_increments_the_surviving_crew __
+
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x7f359214ac00>, _basetemp=PosixPath('/tmp/pytest-of-agent/pytest-23'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope="session")
+    def scratch_server(tmp_path_factory):
+        if os.environ.get("CASE_PG_SCRATCH") != "1":
+            pytest.skip("Set CASE_PG_SCRATCH=1 with the test-only PostgreSQL tools to run SQL checks.")
+>       import pglast
+E       ModuleNotFoundError: No module named 'pglast'
+
+server/tests/followups_sql/conftest.py:20: ModuleNotFoundError
+_ ERROR at setup of test_an_owner_without_a_seat_still_hands_over_and_increments _
+
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x7f359214ac00>, _basetemp=PosixPath('/tmp/pytest-of-agent/pytest-23'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope="session")
+    def scratch_server(tmp_path_factory):
+        if os.environ.get("CASE_PG_SCRATCH") != "1":
+            pytest.skip("Set CASE_PG_SCRATCH=1 with the test-only PostgreSQL tools to run SQL checks.")
+>       import pglast
+E       ModuleNotFoundError: No module named 'pglast'
+
+server/tests/followups_sql/conftest.py:20: ModuleNotFoundError
+_ ERROR at setup of test_every_affected_crew_changes_but_an_unrelated_crew_does_not _
+
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x7f359214ac00>, _basetemp=PosixPath('/tmp/pytest-of-agent/pytest-23'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope="session")
+    def scratch_server(tmp_path_factory):
+        if os.environ.get("CASE_PG_SCRATCH") != "1":
+            pytest.skip("Set CASE_PG_SCRATCH=1 with the test-only PostgreSQL tools to run SQL checks.")
+>       import pglast
+E       ModuleNotFoundError: No module named 'pglast'
+
+server/tests/followups_sql/conftest.py:20: ModuleNotFoundError
+_ ERROR at setup of test_a_crew_without_another_player_is_deleted_with_its_owner _
+
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x7f359214ac00>, _basetemp=PosixPath('/tmp/pytest-of-agent/pytest-23'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope="session")
+    def scratch_server(tmp_path_factory):
+        if os.environ.get("CASE_PG_SCRATCH") != "1":
+            pytest.skip("Set CASE_PG_SCRATCH=1 with the test-only PostgreSQL tools to run SQL checks.")
+>       import pglast
+E       ModuleNotFoundError: No module named 'pglast'
+
+server/tests/followups_sql/conftest.py:20: ModuleNotFoundError
+_______ ERROR at setup of test_a_repeated_deletion_changes_no_crew_again _______
+
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x7f359214ac00>, _basetemp=PosixPath('/tmp/pytest-of-agent/pytest-23'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope="session")
+    def scratch_server(tmp_path_factory):
+        if os.environ.get("CASE_PG_SCRATCH") != "1":
+            pytest.skip("Set CASE_PG_SCRATCH=1 with the test-only PostgreSQL tools to run SQL checks.")
+>       import pglast
+E       ModuleNotFoundError: No module named 'pglast'
+
+server/tests/followups_sql/conftest.py:20: ModuleNotFoundError
+_ ERROR at setup of test_concurrent_retries_do_not_increment_a_surviving_crew_twice _
+
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x7f359214ac00>, _basetemp=PosixPath('/tmp/pytest-of-agent/pytest-23'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope="session")
+    def scratch_server(tmp_path_factory):
+        if os.environ.get("CASE_PG_SCRATCH") != "1":
+            pytest.skip("Set CASE_PG_SCRATCH=1 with the test-only PostgreSQL tools to run SQL checks.")
+>       import pglast
+E       ModuleNotFoundError: No module named 'pglast'
+
+server/tests/followups_sql/conftest.py:20: ModuleNotFoundError
+_ ERROR at setup of test_concurrent_different_member_deletions_keep_fresh_owners_and_versions[owner_member] _
+
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x7f359214ac00>, _basetemp=PosixPath('/tmp/pytest-of-agent/pytest-23'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope="session")
+    def scratch_server(tmp_path_factory):
+        if os.environ.get("CASE_PG_SCRATCH") != "1":
+            pytest.skip("Set CASE_PG_SCRATCH=1 with the test-only PostgreSQL tools to run SQL checks.")
+>       import pglast
+E       ModuleNotFoundError: No module named 'pglast'
+
+server/tests/followups_sql/conftest.py:20: ModuleNotFoundError
+_ ERROR at setup of test_concurrent_different_member_deletions_keep_fresh_owners_and_versions[members] _
+
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x7f359214ac00>, _basetemp=PosixPath('/tmp/pytest-of-agent/pytest-23'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope="session")
+    def scratch_server(tmp_path_factory):
+        if os.environ.get("CASE_PG_SCRATCH") != "1":
+            pytest.skip("Set CASE_PG_SCRATCH=1 with the test-only PostgreSQL tools to run SQL checks.")
+>       import pglast
+E       ModuleNotFoundError: No module named 'pglast'
+
+server/tests/followups_sql/conftest.py:20: ModuleNotFoundError
+_ ERROR at setup of test_concurrent_different_member_deletions_keep_fresh_owners_and_versions[last_members] _
+
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x7f359214ac00>, _basetemp=PosixPath('/tmp/pytest-of-agent/pytest-23'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope="session")
+    def scratch_server(tmp_path_factory):
+        if os.environ.get("CASE_PG_SCRATCH") != "1":
+            pytest.skip("Set CASE_PG_SCRATCH=1 with the test-only PostgreSQL tools to run SQL checks.")
+>       import pglast
+E       ModuleNotFoundError: No module named 'pglast'
+
+server/tests/followups_sql/conftest.py:20: ModuleNotFoundError
+_ ERROR at setup of test_concurrent_different_member_deletions_keep_fresh_owners_and_versions[multiple_crews] _
+
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x7f359214ac00>, _basetemp=PosixPath('/tmp/pytest-of-agent/pytest-23'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope="session")
+    def scratch_server(tmp_path_factory):
+        if os.environ.get("CASE_PG_SCRATCH") != "1":
+            pytest.skip("Set CASE_PG_SCRATCH=1 with the test-only PostgreSQL tools to run SQL checks.")
+>       import pglast
+E       ModuleNotFoundError: No module named 'pglast'
+
+server/tests/followups_sql/conftest.py:20: ModuleNotFoundError
+_______ ERROR at setup of test_only_the_server_may_delete_a_player[anon] _______
+
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x7f359214ac00>, _basetemp=PosixPath('/tmp/pytest-of-agent/pytest-23'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope="session")
+    def scratch_server(tmp_path_factory):
+        if os.environ.get("CASE_PG_SCRATCH") != "1":
+            pytest.skip("Set CASE_PG_SCRATCH=1 with the test-only PostgreSQL tools to run SQL checks.")
+>       import pglast
+E       ModuleNotFoundError: No module named 'pglast'
+
+server/tests/followups_sql/conftest.py:20: ModuleNotFoundError
+__ ERROR at setup of test_only_the_server_may_delete_a_player[authenticated] ___
+
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x7f359214ac00>, _basetemp=PosixPath('/tmp/pytest-of-agent/pytest-23'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope="session")
+    def scratch_server(tmp_path_factory):
+        if os.environ.get("CASE_PG_SCRATCH") != "1":
+            pytest.skip("Set CASE_PG_SCRATCH=1 with the test-only PostgreSQL tools to run SQL checks.")
+>       import pglast
+E       ModuleNotFoundError: No module named 'pglast'
+
+server/tests/followups_sql/conftest.py:20: ModuleNotFoundError
+_ ERROR at setup of test_function_stays_a_definer_with_empty_search_path_and_server_permission _
+
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x7f359214ac00>, _basetemp=PosixPath('/tmp/pytest-of-agent/pytest-23'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope="session")
+    def scratch_server(tmp_path_factory):
+        if os.environ.get("CASE_PG_SCRATCH") != "1":
+            pytest.skip("Set CASE_PG_SCRATCH=1 with the test-only PostgreSQL tools to run SQL checks.")
+>       import pglast
+E       ModuleNotFoundError: No module named 'pglast'
+
+server/tests/followups_sql/conftest.py:20: ModuleNotFoundError
+_____ ERROR at setup of test_the_new_kit_comment_records_the_decided_rule ______
+
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x7f359214ac00>, _basetemp=PosixPath('/tmp/pytest-of-agent/pytest-23'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope="session")
+    def scratch_server(tmp_path_factory):
+        if os.environ.get("CASE_PG_SCRATCH") != "1":
+            pytest.skip("Set CASE_PG_SCRATCH=1 with the test-only PostgreSQL tools to run SQL checks.")
+>       import pglast
+E       ModuleNotFoundError: No module named 'pglast'
+
+server/tests/followups_sql/conftest.py:20: ModuleNotFoundError
+=================================== FAILURES ===================================
+______________ test_the_latest_wave_revive_keeps_the_tavern_rule _______________
+
+    def test_the_latest_wave_revive_keeps_the_tavern_rule():
+        latest = next(
+            path
+            for path in sorted(MIGRATIONS.glob("*.sql"), reverse=True)
+            if re.search(r"function public\.wave_revive\(", path.read_text())
+        )
+>       assert latest.name == ROLES.name
+E       AssertionError: assert '202611180500...e_journal.sql' == '202611120900...use_roles.sql'
+E
+E         - 20261112090000_house_roles.sql
+E         + 20261118050000_paid_revive_journal.sql
+
+server/tests/test_house_roles_match_migration.py:109: AssertionError
+=========================== short test summary info ============================
+FAILED server/tests/test_house_roles_match_migration.py::test_the_latest_wave_revive_keeps_the_tavern_rule
+ERROR server/tests/followups_sql/test_delete_versions.py::test_owner_handover_and_freed_seat_increment_the_crew_once
+ERROR server/tests/followups_sql/test_delete_versions.py::test_nonowner_seat_removal_increments_the_surviving_crew
+ERROR server/tests/followups_sql/test_delete_versions.py::test_an_owner_without_a_seat_still_hands_over_and_increments
+ERROR server/tests/followups_sql/test_delete_versions.py::test_every_affected_crew_changes_but_an_unrelated_crew_does_not
+ERROR server/tests/followups_sql/test_delete_versions.py::test_a_crew_without_another_player_is_deleted_with_its_owner
+ERROR server/tests/followups_sql/test_delete_versions.py::test_a_repeated_deletion_changes_no_crew_again
+ERROR server/tests/followups_sql/test_delete_versions.py::test_concurrent_retries_do_not_increment_a_surviving_crew_twice
+ERROR server/tests/followups_sql/test_delete_versions.py::test_concurrent_different_member_deletions_keep_fresh_owners_and_versions[owner_member]
+ERROR server/tests/followups_sql/test_delete_versions.py::test_concurrent_different_member_deletions_keep_fresh_owners_and_versions[members]
+ERROR server/tests/followups_sql/test_delete_versions.py::test_concurrent_different_member_deletions_keep_fresh_owners_and_versions[last_members]
+ERROR server/tests/followups_sql/test_delete_versions.py::test_concurrent_different_member_deletions_keep_fresh_owners_and_versions[multiple_crews]
+ERROR server/tests/followups_sql/test_delete_versions.py::test_only_the_server_may_delete_a_player[anon]
+ERROR server/tests/followups_sql/test_delete_versions.py::test_only_the_server_may_delete_a_player[authenticated]
+ERROR server/tests/followups_sql/test_delete_versions.py::test_function_stays_a_definer_with_empty_search_path_and_server_permission
+ERROR server/tests/followups_sql/test_delete_versions.py::test_the_new_kit_comment_records_the_decided_rule
+1 failed, 13214 passed, 7 skipped, 15 errors in 315.97s (0:05:15)

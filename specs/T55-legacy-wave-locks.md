@@ -1,5 +1,7 @@
 # T55 Legacy wave database locks
 
+**18 Nov rule update:** this subslice records its original implementation/evidence. Current [T54](T54-recovery-implementation-plan.md) and [D059](../docs/DECISIONS.md#d059--shared-gradual-hp-recovery-and-paid-instant-repair--2026-11-16) replace gradual repair/rate-change expectations with full current-health restoration at canonical wave end. Keep immutable closed combat HP and frozen history. Obsolete new-v1 purchase retirement is tracked by [#456](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/456); earlier test results below do not verify that later revision.
+
 > **What this is:** the independent compatibility slice of T55's approved persistence work.
 >
 > **Who uses it:** Ianno and the wave/recovery implementers and reviewers.

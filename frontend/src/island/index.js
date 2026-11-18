@@ -9,14 +9,14 @@
 //   placeName(id)                             the arrival banner's name in a friend's game ("Nils's game")
 //   active / handleEscape() / dispose()
 //   decoratePoint(place, cleanups, adapters)  Pirate Point's shared build spots (TOWER-DEFENSE.md §5)
-//   openCrew() / openCaptain() / openInvite()  the Menu's Crew, Captain and skills (the musket, the skill
-//                                             tree §14 and the weapon shop §15), and the invite card
+//   openCrew() / openCaptain() / openInvite()  the Menu's Crew, Captain and skills (the musket and the skill
+//                                             tree §14; weapons are in the arsenal, D042), and the invite card
 //   setPresence(presence)                     the captains in the room, for the arrival toasts (§11)
 //   enterGame({code, role}) / openLobby()       the games of GAME-V3.md §2: which game Play opens, its lobby
 //   attachGame(room)                           the game's room state (game-room.js, from the wave wiring)
 //   openHarbor(id) / openTechHub() / openWreck()  the campaign's buildings (GAME-V3.md §4, §5)
 //   startMove(spotId) / moving                 T36 Move mode: a spot to another square of the build grid
-//   arsenal                                    the shared weapon rack (T41, D042, flag "arsenal": arsenalOn()), arsenal.js
+//   arsenal                                    the shared weapon rack (T41, D042; always on), arsenal.js
 //   resetIsland(typed)                         T53: Settings › Reset my island (reset.js), your own island only
 // Events it emits on the game's bus: island_built {kind, spot}, island_upgraded {kind, spot, level},
 // campaign_unlocked {wave, ids, code} (a won wave opened something on the island on screen, once per
@@ -37,13 +37,13 @@ import {SPOTS, KINDS, BELL, CABIN, ISLAND_PLACE, POINT_PLACE, PP_SPOTS, isIsland
   campaignBuilding, placedSpot, ARSENAL} from './spots.js';
 import {createArsenal} from './arsenal.js';
 import {createArsenalApi} from './arsenal-api.js';
-import {buildCardModel, bellModel, inviteModel, crewModel, captainModel, captainsModel, skillsModel, weaponsModel, coinText,
+import {buildCardModel, bellModel, inviteModel, crewModel, captainModel, captainsModel, skillsModel, coinText,
   harborModel, techModel, wreckModel, demolishModel, refundToast} from './card-model.js';
 import {campaignOf, isOpen, openedBetween, opensText, waveOf} from '../campaign/index.js';
 import {BRANCH_BY_ID, SPECS, optionName} from '../campaign/tech.js';
 import {TOWER_TREES} from '../pirates/tower-trees.js';
 import {ROLES, activeRole, roleRadius} from '../campaign/houses.js';
-import {ROLE_BY_ID, SKILL_BY_ID, WEAPON_BY_ID, WEAPONS, isRole, readSkills, readWeapon} from '../pirates/captain-ids.js';
+import {ROLE_BY_ID, SKILL_BY_ID, WEAPONS, isRole, readSkills} from '../pirates/captain-ids.js';
 import {displayIslandCode, islandCode, islandRoom, storeVisit, readVisit, forgetVisit} from './codes.js';
 import {ISLAND_BUILT, ISLAND_INVITE_OPENED, ISLAND_UPGRADED, CREW_HIRED, WAVE_FINISHED} from '../ui/quest-events.js';
 import {readUnlocks, CREW, BUILDINGS, maxLevel} from './td-rules.js';
@@ -93,12 +93,13 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   onCoins = () => {}, onCaptain = () => {}, menu = addMenuExtras, settings = addSettingsSection, now, setTimer, clearTimer, openHarborStall = () => {},
   travel = () => travelAllowed({islandsMode: mode}), villageCamera = () => {},
   // D039 (proposed): whether /api/config says the flag wall_recovery is on (lasting wall damage, Repair/Rebuild).
-  wallRecovery = () => false, structureRecoveryOn = () => false, arsenalOn = () => false,
+  wallRecovery = () => false, structureRecoveryOn = () => false,
   // T43 (D048 proposed): whether /api/config says the flag defenses_v2 is on (a tower spot then offers the culverin).
   defensesV2On = () => false} = {}) {
   // ownRetry: your own island's read failed for a passing reason, so the next reread (the wave wiring's
   // 15 s timer, the bell or a build card) reads it again instead of leaving the island empty for good.
   let disposed = false, own = null, ownMessage = '', ownRetry = false, visiting = null, visitCode = readVisit(visitStorage), busySpot = null, cardMessage = '';
+  let pendingWallet = null, walletGeneration = 0;
   let world = null, cutscene = null, openSpot = null, loadTicket = 0, battle = false;
   const coreState = createCoreState();
   let coreWorld = null, coreContextKey = null, coreTravelGeneration = 0, coreRejoin = null;
@@ -108,7 +109,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   let waveOver = false, demolishSpot = null, demolishQuote = null, busyDemolish = false;
   let busyKind = null, point = null, pointWorld = null, pointMessage = '', busyCrew = null, busyCaptain = false, here = new Map(), presenceReady = false;
   // The Captain and skills card: the open tab, the skill shown below the tree, a learn, buy or equip under way.
-  let captainTab = 'captain', pickedSkill = null, busySkill = null, busyWeapon = null;
+  let captainTab = 'captain', pickedSkill = null, busySkill = null;
   // D039: the walls of the island on screen (spot -> {health, recoversAt, repairCost}), read when a wall card opens.
   let walls = new Map(), wallsFor = null; // wallsFor: the island code they belong to
   let recoveryState = null, recoveryIslandCode = null, recoveryStatus = 'disabled', recoveryError = null;
@@ -167,8 +168,12 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     }
   }
   // A fresh island answer: coins and captain to the HUD, and the campaign of your own island (§4).
-  const setOwn = next => {
+  const setOwn = (next, {fromRead = false} = {}) => {
     const before = own;
+    if (!fromRead) {
+      if (pendingWallet) wrote('own');
+      pendingWallet = null; walletGeneration++;
+    }
     if (before?.code !== next?.code || before?.recoveryVersion !== next?.recoveryVersion) {
       recoveryReadId++; recoveryState = null; recoveryIslandCode = next?.code ?? null; recoveryCombat = null; recoveryStatus = next?.code ? 'loading' : 'disabled';
       clearRecoveryError();
@@ -178,8 +183,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     if (!before || !next) return;
     // A won wave may bring a skill point (§14) or a weapon in the shop (§15).
     const from = readUnlocks(before).wonWave, to = readUnlocks(next).wonWave;
-    const shop = arsenalOn() === true ? 'the arsenal' : 'the weapon shop';
-    for (const weapon of WEAPONS) if (weapon.unlockWave > from && weapon.unlockWave <= to) ui.toast(`New in ${shop}: ${weapon.name}!`, 'success');
+    for (const weapon of WEAPONS) if (weapon.unlockWave > from && weapon.unlockWave <= to) ui.toast(`New in the arsenal: ${weapon.name}!`, 'success');
     const gained = (next.skills?.points ?? 0) - (before.skills?.points ?? 0);
     if (gained > 0 && (next.skills?.spent ?? 0) === (before.skills?.spent ?? 0)) {
       ui.toast(gained === 1 ? 'New skill point!' : `${gained} new skill points!`, 'success', firstTime('skill_point') ? 'Spend it in Menu › Captain and skills.' : '');
@@ -205,6 +209,21 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     return () => { if (mine < turn.used || turn.wrote !== wrote) return false; turn.used = mine; return true; };
   };
   const wrote = kind => { turns[kind].wrote++; };
+  const setOwnRead = next => {
+    // Only reads already in flight when the fresh account balance arrived may hold older coins.
+    if (pendingWallet && turns.own.used <= pendingWallet.through) next = {...next, coins: pendingWallet.coins};
+    // Consuming the highest covered read fences every smaller ID; earlier reads must keep the guard.
+    if (pendingWallet && turns.own.used >= pendingWallet.through) pendingWallet = null;
+    setOwn(next, {fromRead: true});
+  };
+  // Coins that another answer carries (the arsenal's): stale once an island read asked later was shown or a
+  // write answered. Unlike reading('own') it does not use the turn, so a load's island read still lands.
+  const coinsAsked = () => {
+    const turn = turns.own, asked = turn.asked, wrote = turn.wrote, wallet = walletGeneration;
+    const fresh = () => turn.used <= asked && turn.wrote === wrote && walletGeneration === wallet;
+    fresh.through = asked;
+    return fresh;
+  };
   // The fake answers at once; the live transport is the signed-in session's, read at every call.
   const live = {get: path => (getTransport()?.get?.(path) ?? notReady()), post: (path, body) => (getTransport()?.post?.(path, body) ?? notReady())};
   const islandTransport = transport ?? live;
@@ -231,13 +250,17 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     if (moving.active && !ui.active && !event.defaultPrevented && !buttonEnter && !isTextEntry(event.target)) moving.handleKey(event);
   };
   globalThis.addEventListener?.('keydown', moveKeys, true);
-  // The arsenal (T41, D042): only while the server's flag "arsenal" is on; off, the old weapon shop stays.
-  const arsenal = createArsenal({api: createArsenalApi({transport: transport ?? live}), ui, emit, enabled: () => arsenalOn() === true,
+  // The arsenal (T41, D042): the crew's weapons (the server's flag "arsenal" is always on; the old shop is gone).
+  const arsenal = createArsenal({api: createArsenalApi({transport: transport ?? live}), ui, emit, enabled: () => true,
     code: () => (visiting ? displayIslandCode(visiting.code) : visitCode ? displayIslandCode(visitCode) : null),
     place: () => (visiting ? 'visit' : 'own'), level: () => own?.captain?.level ?? 1,
-    skills: () => readSkills([...(own?.skills?.known ?? []), ...(isRole(own?.skills?.role) ? [own.skills.role] : [])]), onCoins: coins => tookCoins(coins)});
+    skills: () => readSkills([...(own?.skills?.known ?? []), ...(isRole(own?.skills?.role) ? [own.skills.role] : [])]),
+    asking: coinsAsked, onCoins: (coins, fresh) => arsenalCoins(coins, fresh)});
   const placeholder = mode === 'fake' || new URLSearchParams(search).get('wavedebug') === '1';
   const target = () => visiting ?? own;
+  // Which island is on screen (a visit or your own, and its code), not which answer object: a fresh read of
+  // the same island (a crewmate's change, a finished wave) replaces the object but not the island.
+  const shownIsland = () => (target() ? JSON.stringify([visiting ? 'visit' : 'own', target().code]) : null);
   const recoveryPolicyOn = () => {
     const code = target()?.code;
     if (!code) return false;
@@ -258,16 +281,18 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   const stopFinished = on(WAVE_FINISHED, event => {
     if (disposed) return;
     tellCoins(event.coins, {tick: true}); // the loot counts up in the HUD
-    waveOver = true; // its break: buildings may come down again
+    const activeWaveId = flow.current?.wave.waveId;
+    const endedHere = !activeWaveId || activeWaveId === event.waveId;
+    if (endedHere) waveOver = true; // An old receipt must not open the next wave's break.
     if (!own) return;
     if (!visiting && Number.isSafeInteger(event.coins)) own = {...own, coins: event.coins, flags: event.flags ?? own.flags};
     refreshCard();
     void readStructureRecovery();
     // The owner's rule (fix/playtest-1117): the server repairs every building when a wave ends.
-    if (Number.isSafeInteger(event.coins)) ui.toast(ALL_REPAIRED, 'info');
+    if (endedHere && Number.isSafeInteger(event.coins)) ui.toast(ALL_REPAIRED, 'info');
     // A won wave may open something (GAME-V3.md §4): read the island again; setOwn (or the visit) tells what is new.
     if (event.survived === true) {
-      const current = reading('own'); void api.getIsland().then(fresh => { if (!disposed && fresh.ok && current()) { setOwn(fresh.data); refreshCard(); } });
+      const current = reading('own'); void api.getIsland().then(fresh => { if (!disposed && fresh.ok && current()) { setOwnRead(fresh.data); refreshCard(); } });
       if (visiting) void reloadVisit().then(() => { if (!disposed) refreshCard(); });
     }
   });
@@ -295,7 +320,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   function applyWorld() {
     syncCoreContext();
     world?.apply({spots: target()?.spots ?? [], visitor: !!visiting, battle, unlocks: islandUnlocks(), crew: target()?.crew ?? null, campaign: campaign(),
-      arsenal: arsenalOn() === true});
+      arsenal: true});
     const replaying = recoveryCombat && flow.current?.wave?.waveId === recoveryCombat.waveId;
     world?.setRecoveryState?.(recoveryState && recoveryPolicyOn() ? {...recoveryState, displayPhase: replaying ? 'combat' : recoveryState.displayPhase} : null);
     pointWorld?.apply({spots: point?.spots ?? [], visitor: false, battle: pointBattle, unlocks: unlocks()});
@@ -364,7 +389,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       const answer = await api.visit(visitCode);
       if (disposed || ticket !== loadTicket) return answer;
       if (answer.ok) {
-        if (current() || !visiting) { visiting = {...answer.data, code: islandCode(answer.data.code)}; loadedTarget = visiting; noteCampaign(visiting); }
+        if (current() || !visiting) { visiting = {...answer.data, code: islandCode(answer.data.code)}; loadedTarget = shownIsland(); noteCampaign(visiting); }
         showVisit();
       } else {
         endVisit(); ui.toast(answer.message, 'error');
@@ -376,7 +401,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       const answer = await api.getIsland();
       if (disposed || ticket !== loadTicket) return answer;
       if (answer.ok) {
-        if (current()) { setOwn(answer.data); if (!visiting) loadedTarget = own; }
+        if (current()) { setOwnRead(answer.data); if (!visiting) loadedTarget = shownIsland(); }
         ownMessage = ''; ownRetry = false;
       } else { ownMessage = answer.message; ownRetry = mayPass(answer); }
     }
@@ -389,7 +414,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       const answer = await flow.look(where());
       // A retained controller may resume only after this landing confirms its actual server wave.
       // Reject a late load across travel, another load, target change or reset.
-      if (!disposed && ticket === loadTicket && travelGeneration === coreTravelGeneration && loadedTarget === target()
+      if (!disposed && ticket === loadTicket && travelGeneration === coreTravelGeneration && loadedTarget !== null && loadedTarget === shownIsland()
           && context.key && context.key === syncCoreContext().key && answer?.ok
           && typeof answer.data?.waveId === 'string' && answer.data.waveId
           && flow.current?.wave?.waveId === answer.data.waveId) {
@@ -472,7 +497,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     const answer = await api.piratePoint();
     if (disposed) return answer;
     if (answer.ok) { if (current()) { point = answer.data; tookCoins(answer.data.coins); } pointMessage = ''; } else pointMessage = answer.message;
-    if (!own) { const check = reading('own'), mine = await api.getIsland(); if (!disposed && mine.ok && check()) setOwn(mine.data); }
+    if (!own) { const check = reading('own'), mine = await api.getIsland(); if (!disposed && mine.ok && check()) setOwnRead(mine.data); }
     applyWorld(); refreshCard();
     return answer;
   }
@@ -489,7 +514,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     // On a friend's island you build with your own coins (and your own unlocks); it stays theirs.
     const island = target(), spot = island?.spots.find(item => item.id === spotId) ?? null;
     const recoveryEnabled = recoveryControlsOn() && !!spot?.built && ['wall', 'cannon', 'mortar', 'harpoon', 'culverin', 'swivel'].includes(spot.kind);
-    const recoveryReady = recoveryEnabled && recoveryPolicyOn() && recoveryIslandCode === island?.code && !!recoveryState;
+    const recoveryReady = recoveryEnabled && recoveryStatus === 'ready' && recoveryPolicyOn()
+      && recoveryIslandCode === island?.code && !!recoveryState;
     const recoveryRow = recoveryReady ? recoveryState.structures.find(item => item.spot === spotId) : null;
     const replayActive = !!recoveryCombat && flow.current?.wave?.waveId === recoveryCombat.waveId;
     const live = recoveryReady && replayActive
@@ -524,15 +550,12 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       captain: captainModel({captain: own?.captain ?? null, coins: own?.coins ?? null, unlocks: own ? unlocks() : null, busy: busyCaptain, message: captainTab === 'captain' ? message : ''}),
       skills: skillsModel({skills: own?.skills ?? null, wonWave, picked: pickedSkill, busy: busySkill, message: captainTab === 'skills' ? message : '',
         coins: own?.coins ?? null, captainLevel: own?.captain?.level ?? 1, pickedRole, busyRole, respecAsk, busyRespec,
-        battle: battle && !waveOver, recoveryVersion: recoveryModelVersion()}),
-      // With the arsenal on (D042) weapons live there: the Weapons tab goes away.
-      weapons: arsenalOn() === true ? null : weaponsModel({weapons: own?.weapons ?? null, coins: own?.coins ?? null, wonWave, busy: busyWeapon, message: captainTab === 'weapons' ? message : ''})};
+        battle: battle && !waveOver, recoveryVersion: recoveryModelVersion()})};
   };
   const captainHandlers = {upgrade: () => void upgradeCaptain(), tab: id => { captainTab = id; },
     pick: id => { pickedSkill = id; cardMessage = ''; refreshCard(); }, learn: id => void learnSkill(id),
     pickRole: id => { pickedRole = id; cardMessage = ''; refreshCard(); }, role: id => void takeRole(id),
-    respec: () => void respecCaptain(), respecCancel: () => { respecAsk = false; refreshCard(); },
-    buy: id => void buyWeapon(id), equip: id => void equipWeapon(id)};
+    respec: () => void respecCaptain(), respecCancel: () => { respecAsk = false; refreshCard(); }};
   const handlers = {build: (spotId, kind) => void build(spotId, kind), upgrade: spotId => void upgrade(spotId), repair: spotId => void repairWall(spotId),
     repairStructure: (spotId, quote) => void repairStructure(spotId, quote), hire: () => openCrew(),
     specialise: (spotId, spec) => void specialise(spotId, spec), demolish: spotId => void askDemolish(spotId), move: spotId => startMove(spotId),
@@ -676,7 +699,11 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       if (disposed || askedId !== recoveryReadId || askedCode !== target()?.code) return;
       if (!answer.ok) {
         if (answer.code === 'feature_off') {
-          recoveryState = null; recoveryIslandCode = askedCode; recoveryStatus = 'disabled'; clearRecoveryError();
+          const persistedV1 = (recoveryState?.recoveryVersion === 1 && recoveryIslandCode === askedCode)
+            || target()?.recoveryVersion === 1;
+          recoveryIslandCode = askedCode;
+          if (persistedV1) { recoveryStatus = 'error'; setRecoveryReadError(answer.code); }
+          else { recoveryState = null; recoveryStatus = 'disabled'; clearRecoveryError(); }
         } else {
           recoveryIslandCode = askedCode; recoveryStatus = 'error'; setRecoveryReadError(answer.code);
         }
@@ -788,14 +815,14 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   async function freshOwn() {
     if (own) return null;
     const current = reading('own'), answer = await api.getIsland();
-    if (!disposed && answer.ok && current()) { setOwn(answer.data); refreshCard(); }
+    if (!disposed && answer.ok && current()) { setOwnRead(answer.data); refreshCard(); }
     return answer;
   }
   function openCrew() { openSpot = null; cardMessage = ''; ui.crewCard(crew(), hire); void freshOwn(); }
   const overview = () => upgradeOverviewModel({island: own, battle: battle && !waveOver, message: ownMessage});
   function openOverview() { openSpot = null; cardMessage = ''; ui.overviewCard(overview()); void freshOwn(); }
   function openCaptain(tab = null) {
-    openSpot = null; cardMessage = ''; if (['captain', 'skills', 'weapons'].includes(tab)) captainTab = tab;
+    openSpot = null; cardMessage = ''; if (['captain', 'skills'].includes(tab)) captainTab = tab;
     ui.captainCard(captain(), captainHandlers); void freshOwn();
   }
   // T7/T45: the Leaderboard card. It remembers the chosen tab (this week or all time) while the game runs.
@@ -836,14 +863,30 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     else if (id === 'island_harbor') openHarbor();
     else if (id === 'island_techhub') openTechHub();
     else if (id === 'island_wreck') openWreck();
-    else if (id === ARSENAL.id && arsenalOn() === true) { openSpot = null; arsenal.open(); }
+    else if (id === ARSENAL.id) { openSpot = null; arsenal.open(); }
     else if (spotById(id) || isPointSpot(id)) openBuild(id);
   }
 
   // The answer of a write: the island, or (on Pirate Point) the shared spots plus your fresh coins.
   // Where a build goes: Pirate Point's shared spots, the friend's island you visit, or your own.
   const placeOf = spotId => (isPointSpot(spotId) ? 'point' : visiting ? 'visit' : 'own');
-  const tookCoins = coins => { if (own && Number.isSafeInteger(coins)) setOwn({...own, coins}); else tellCoins(coins); };
+  const tookCoins = coins => {
+    if (own && Number.isSafeInteger(coins)) setOwn({...own, coins});
+    else {
+      if (Number.isSafeInteger(coins)) pendingWallet = {coins, through: turns.own.asked};
+      tellCoins(coins);
+    }
+  };
+  // The arsenal's coins go into the island object as it is: replacing it would make a load still waiting for
+  // its wave answer take the island for another one and drop a returning player's rejoin proof.
+  const arsenalCoins = (coins, fresh = () => true) => {
+    if (!Number.isSafeInteger(coins) || !fresh()) return;
+    // An arsenal read confirms coins after these own reads started, while later own reads stay authoritative.
+    if (fresh.through > turns.own.used) pendingWallet = {coins, through: fresh.through};
+    if (own?.coins === coins) return;
+    if (own) own.coins = coins;
+    tellCoins(coins);
+  };
   async function reloadVisit() {
     if (!visiting) return;
     const current = reading('visit'), fresh = await api.visit(visiting.code);
@@ -852,7 +895,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   async function reloadOwn() {
     const current = reading('own'), mine = await api.getIsland();
     if (disposed) return;
-    if (mine.ok) { ownRetry = false; ownMessage = ''; if (current()) setOwn(mine.data); } else if (!own) { ownMessage = mine.message; ownRetry = mayPass(mine); }
+    if (mine.ok) { ownRetry = false; ownMessage = ''; if (current()) setOwnRead(mine.data); } else if (!own) { ownMessage = mine.message; ownRetry = mayPass(mine); }
   }
   // The island being defended, read again: after a friend built or upgraded there (island_changed in
   // the island's room, src/pirates/game-wiring.js) and before every wave, so all defenders agree.
@@ -1180,34 +1223,6 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     } else { cardMessage = answer.message; if (answer.code === 'nothing_to_reset') await reloadOwn(); }
     refreshCard();
   }
-  // §15: buy a weapon once with coins (the server equips it at once), or equip one you own.
-  async function buyWeapon(id) {
-    if (busyWeapon || !WEAPON_BY_ID[id]) return;
-    busyWeapon = id; cardMessage = ''; refreshCard();
-    const answer = await api.buyWeapon({weapon: id});
-    if (disposed) return;
-    busyWeapon = null;
-    if (answer.ok) {
-      setOwn(answer.data);
-      emit({type: 'captain_weapon_bought', weapon: id});
-      ui.toast(`${WEAPON_BY_ID[id].name} bought and equipped · ${coinText(own.coins)}`, 'success');
-      if (readWeapon(own.weapons?.equipped) !== id) await equipWeapon(id, true);
-    } else await refused(answer, false);
-    refreshCard();
-  }
-  async function equipWeapon(id, quiet = false) {
-    if ((busyWeapon && !quiet) || !WEAPON_BY_ID[id]) return;
-    busyWeapon = id; cardMessage = ''; refreshCard();
-    const answer = await api.equipWeapon({weapon: id});
-    if (disposed) return;
-    busyWeapon = null;
-    if (answer.ok) {
-      setOwn(answer.data);
-      emit({type: 'captain_weapon_equipped', weapon: id});
-      ui.toast(`${WEAPON_BY_ID[id].name} equipped. Your captain shoots with it now.`, 'success');
-    } else { cardMessage = answer.message; if (answer.code === 'not_owned') await reloadOwn(); }
-    refreshCard();
-  }
   // The captains in your island's room (§11): a toast for each one who arrives, a list for the Menu.
   function setPresence(presence) {
     if (disposed) return;
@@ -1268,7 +1283,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   async function bellAction(action) {
     cardMessage = '';
     const answer = action === 'join' ? await flow.join(where()) : action === 'ring' ? await flow.ring(where()) : null;
-    if (disposed || !answer) return;
+    if (disposed || !answer || answer.ignored) return;
     if (answer.ok) { world?.ring(); ui.close(); return; }
     cardMessage = answer.message; refreshCard();
   }
@@ -1379,11 +1394,11 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       if (place !== ISLAND_PLACE) return null;
       return islandRoom(visiting?.code ?? visitCode ?? own?.code ?? '');
     },
-    load, loadPoint, playArrival, visit, sailHome, resetIsland, pick, build, upgrade, hire, upgradeCaptain, learnSkill, takeRole, respecCaptain, buyWeapon, equipWeapon, setPresence,
+    load, loadPoint, playArrival, visit, sailHome, resetIsland, pick, build, upgrade, hire, upgradeCaptain, learnSkill, takeRole, respecCaptain, setPresence,
     setRecoveryCombatState, setRecoveryCheckpointHandler, setCoreCombatState,
     get coreContext() { return {...syncCoreContext(), rejoin: coreRejoin ? {...coreRejoin} : null}; },
     // Your captain for the wave (src/pirates/game-wiring.js): level, learnt skills (§14), equipped weapon (§15).
-    captainLoadout: () => ({level: own?.captain?.level ?? 1, skills: readSkills([...(own?.skills?.known ?? []), ...(isRole(own?.skills?.role) ? [own.skills.role] : [])]), weapon: arsenal.weapon() ?? readWeapon(own?.weapons?.equipped),
+    captainLoadout: () => ({level: own?.captain?.level ?? 1, skills: readSkills([...(own?.skills?.known ?? []), ...(isRole(own?.skills?.role) ? [own.skills.role] : [])]), weapon: arsenal.weapon(),
       colour: captainColour()}),
     // The arsenal of the island on screen (T41): open(), refresh(), weapon(), answer.
     arsenal,
@@ -1412,6 +1427,14 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     // for Pirate Point, the island's room place (isle_<code>), joining a running wave, and the battle look.
     defenses: () => defenses(target()?.spots ?? [], campaign()?.research?.tiers),
     get api() { return api; },
+    // A fresh account read after background reward settlement, guarded by its service owner and write order.
+    setWalletCoins(value) {
+      if (disposed || !Number.isSafeInteger(value) || value < 0) return;
+      if (own) wrote('own');
+      else walletGeneration++;
+      tookCoins(value); refreshCard();
+    },
+    resetWalletRecovery() { pendingWallet = null; walletGeneration++; wrote('own'); },
     get recoveryTransport() { return recoveryTransport; },
     get recoveryVersion() { return recoveryModelVersion(); },
     roomPlace: () => islandRoom(visiting?.code ?? visitCode ?? own?.code ?? '') || null,
@@ -1422,13 +1445,17 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       if (disposed || !target()) return null;
       if (visitCode && !(await joinFirst(visitCode))) return null; // a friend's wave: join the game first
       if (disposed || !target()) return null;
-      await flow.look(where());
-      return flow.current && !flow.current.joined ? flow.join(where()) : null;
+      const looked = await flow.look(where());
+      if (flow.current && !flow.current.joined) return flow.join(where());
+      // A newer read of the current wave (the landing's own, after a reload) made this answer stale before it
+      // was shown: 'busy' makes the wave wiring try again in a moment instead of never joining.
+      if (!flow.current && looked?.ok && looked.data) return {ok: false, status: 0, code: 'busy', message: 'The wave is still being read.'};
+      return null;
     },
     refreshDefended,
     // Captain health (GAME-V3.md §3): you stand a fallen teammate up and pay for it (your coins follow).
-    async reviveCaptain({waveId, fallen, downAt} = {}) {
-      const answer = await api.reviveCaptain({waveId, fallen, downAt});
+    async reviveCaptain(body = {}) {
+      const answer = await api.reviveCaptain(body);
       if (!disposed && answer.ok) tookCoins(answer.data.coins);
       return answer;
     },
@@ -1442,7 +1469,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     async ringBell() {
       if (disposed || !target()) return {ok: false, status: 0, code: 'not_ready', message: 'Your island is still loading.'};
       const answer = await flow.ring(where(), {joinRunning: true});
-      if (!disposed && answer.ok) world?.ring();
+      if (!disposed && answer.ok && !answer.ignored) world?.ring();
       return answer;
     },
     chartVisible: id => Object.hasOwn(CHART_NAMES, id),

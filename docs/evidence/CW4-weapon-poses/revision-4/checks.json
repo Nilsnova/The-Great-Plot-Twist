@@ -1,0 +1,44 @@
+{
+  "focused": {
+    "filesPassed": 6,
+    "testsPassed": 63,
+    "durationSeconds": 5.71
+  },
+  "browser": {
+    "posedViews": 400,
+    "musketRgbaFingerprints": 220,
+    "passed": true
+  },
+  "build": {
+    "passed": true,
+    "durationSeconds": 2.39,
+    "spoilerTextFiles": 243,
+    "protectedLines": 12
+  },
+  "budget": {
+    "passed": true,
+    "initial": {
+      "javaScript": 18899,
+      "javaScriptGzip": 8881,
+      "css": 9410,
+      "cssGzip": 3488,
+      "titleImage": null
+    },
+    "limits": {
+      "titleJavaScript": 21080,
+      "titleCss": 12000,
+      "titleImage": 0
+    }
+  },
+  "textLint": {
+    "candidates": 4429,
+    "sourceFiles": 489,
+    "errors": 0,
+    "reportOnly": 8
+  },
+  "notRerunForRevision4": [
+    "full frontend suite",
+    "accessibility",
+    "demo journey"
+  ]
+}

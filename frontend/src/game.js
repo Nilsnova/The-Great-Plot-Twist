@@ -29,6 +29,7 @@ import {createIsletHost} from './online/islet-host.js';
 import {createMarketHost} from './online/market-host.js';
 import {createHarbor,loadMarketCard,loadMatchCard} from './harbor/host.js';
 import {findPanelServices} from './online/panel-services.js';
+import {createWaveRewardRecovery} from './online/wave-reward-recovery.js';
 import {islandsMode as quickIslandsMode,resolveIslandsMode,startPlace,frontScene} from './island/mode.js';
 import {PLACE_ARRIVED} from './ui/quest-events.js';
 import {readVisit} from './island/codes.js';
@@ -99,7 +100,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     narrator=module.createNarrator({container,on,audio,getGame:()=>{const visit=island?.visiting,own=island?.island;return visit?{code:visit.code,waveBest:0}:own?{code:own.code,waveBest:own.waveBest??0}:null;}});
     tutorials=module.createTutorials({container,on,reducedMotion,probe:tutorialHooks.probe,locate:tutorialHooks.locate,spotTarget:tutorialHooks.spotTarget,anchor:tutorialHooks.anchor,tour:tutorialHooks.tour,
       say:trigger=>narrator.say(trigger),setGuide:view=>hud.setGuide(view),hudParent:()=>container.querySelector('.hud-play .hud-right'),
-      focusGame:()=>graphics.renderer.domElement.focus({preventScroll:true}),flags:{arsenal:()=>islandFlags.arsenal?.()===true,defenses_v2:()=>islandFlags.defenses_v2?.()===true,
+      focusGame:()=>graphics.renderer.domElement.focus({preventScroll:true}),flags:{defenses_v2:()=>islandFlags.defenses_v2?.()===true,
         // D060: the server offers the extra tower spots (its flag more_tower_spots) when the island answer lists them.
         more_tower_spots:()=>(island?.island?.spots??[]).some(item=>item?.id==='cannon_8')}});
     return true;
@@ -161,6 +162,9 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   const applyView=view=>{noteAdapterView(view);classDemo?.apply(view);hud.setCaptain(view);experience.apply(view);island?.setPresence(view?.presence);};
   const stopView=adapter?adapter.subscribe(event=>applyView(event.view)):()=>{};
   if(adapter)applyView(adapter.read());
+  const rewardRecovery=adapter?.read?.().mode==='online'?createWaveRewardRecovery({session,emit,
+    onReset:()=>{hud.resetRecoveredWins();island?.resetWalletRecovery();},
+    onWallet:value=>{if(island)island.setWalletCoins(value);else hud.setCoins(value);}}):null;
   // Public prices and private trading share the factory's explicit-session capabilities.
   marketUi=createMarketHost({session,container,resetInput:resetControls,
     focusGame:()=>graphics.renderer.domElement.focus(),notify:message=>hud.message(message),
@@ -200,7 +204,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   const stopVisitNamed = on('island_visit_named', event => {if(event.place===world.current?.id)hud.renamePlace();});
   try { await world.goTo('saltreach_harbor'); }
   catch (error) {
-    disposed=true;guide.dispose();container.removeEventListener('close',panelClosed,true);stopView();stopListening();for(const stopOne of stopScale)stopOne?.(); stopArrivals(); stopVisitNamed(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
+    disposed=true;rewardRecovery?.dispose();guide.dispose();container.removeEventListener('close',panelClosed,true);stopView();stopListening();for(const stopOne of stopScale)stopOne?.(); stopArrivals(); stopVisitNamed(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
     createLifetime(scene, art)(); graphics.renderer.dispose();graphics.renderer.domElement.remove(); throw error;
   }
   // T51: until the player is on a game's island, the front door shows open water only (src/island/mode.js frontScene).
@@ -274,9 +278,6 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
         // T55/T59: only show persistent structure recovery once the server enables its versioned rules.
         structureRecoveryOn:()=>{if(fakeTransport)return fakeTransport.flags.structure_recovery===true;
           const services=findPanelServices(session);return services?.isReady()?services.getFlags()?.structure_recovery===true:false;},
-        // The arsenal (T41, D042): the server's flag "arsenal"; in the dev fake ?fakeflags=arsenal (or ?arsenal=1).
-        arsenalOn:islandFlags.arsenal=()=>fakeTransport?(fakeTransport.flags.arsenal===true||new URLSearchParams(location.search).get('arsenal')==='1')
-          :findPanelServices(session)?.getFlags?.()?.arsenal===true,
         // T43 (D048 proposed): the culverin on the tower spots, only while the server's flag defenses_v2 is on
         // (in the dev fake ?fakeflags=defenses_v2).
         defensesV2On:islandFlags.defenses_v2=()=>fakeTransport?fakeTransport.flags.defenses_v2===true:findPanelServices(session)?.getFlags?.()?.defenses_v2===true});
@@ -294,7 +295,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     wavesLoad??=Promise.all([import('./pirates/game-wiring.js'),import('./net/wave-rooms.js'),!island||islandsMode==='fake'?import('./pirates/room.js'):null,
       island?null:import('./pirates/fake-api.js')]).then(([module,rooms,local,fake])=>{
       if(disposed)return null;
-      waves=module.wireWaves({scene,camera:view.camera,canvas:graphics.renderer.domElement,container,player:controller.player,world,input,audio,reducedMotion,
+      waves=module.wireWaves({scene,camera:view.camera,canvas:graphics.renderer.domElement,container,player:controller.player,world,input,audio,reducedMotion,loop:false,
         getPracticeToken:session.getToken,quality:()=>settings.quality,isBlocked:()=>!active||outsideBlocked(),on,emit,island,fakeApi:fake?fake.createFakeIslandApi():null,
         rehearsal:!island,host:!island,openRoom:local?topic=>local.createLocalRoom(topic):topic=>rooms.openRoom(topic),notify:text=>hud.message(text)});
       return waves;
@@ -349,6 +350,12 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   function applyPreferences(value){quality(value.quality);if(active&&!shell.blocked)view.start(reducedMotion());}
   const stopPreferences=onPreferences(applyPreferences),stopMotion=watchSystemMotion();applyPreferences(getPreferences());graphics.resize(view.camera);
   const resize = () => graphics.resize(view.camera); window.addEventListener('resize', resize);
+  let framePoses=null;
+  function combatAfterMove(delta){
+    waves?.update?.(delta);
+    controller.player.visible=!isCaptainDown();
+    framePoses=waves?.poses?.()??null;character.pose(framePoses?.own??null);
+  }
   const stop = startLoop((delta, time) => {
     gamepad.update();adapter?.tick?.(delta);perf?.update();
     if (!outsideBlocked()) {
@@ -360,10 +367,10 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     settings.hour = (settings.hour + (shell.blocked && !followLocalTime ? 0 : delta) * (settings.fastTime ? 0.8 : followLocalTime ? 1 / 3600 : 0.003)) % 24;
     mapTouch.update(delta);
     // Captain health (GAME-V3.md §3): a fallen captain cannot walk, and lies as the wave draws them.
-    const captainDown=isCaptainDown();controller.player.visible=!captainDown;
+    const captainDown=isCaptainDown();
     // A shot or a cutlass blow poses your own body (and a teammate's figure), never a second captain (pirates/poses.js).
-    const poses=waves?.poses?.()??null;character.pose(poses?.own??null);
-    const speed=captainDown?controller.update(delta,false):controller.update(delta, active && !captainBlocked());
+    const speed=controller.update(delta,!captainDown&&active&&!captainBlocked(),combatAfterMove);
+    const poses=framePoses;
     const state = weather.update(reducedMotion()?0:delta, controller.player.position, settings.quality);
     const night = sky.update(settings.hour, state, reducedMotion()?0:time); lightPools.update(reducedMotion()?0:time, night); pixelFx.update(delta);
     audio.update(delta,{weather:state,weatherAnswer,isletBuilt:isletState.getBuilt(),speed,night,active:active&&!isAppBlocked?.()&&!world.busy&&!(marketUi?.active||sportsUi.active)&&!chart.open,place:world.current?.id});
@@ -406,7 +413,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     camera: view.camera, view, player: controller.player, settings, quality:setUserQuality, setWeather, emit, on, world, chart, sailing, shell, audio, adapter, get marketUi(){return marketUi;},sportsUi, get marketLoad(){return marketLoad;},mapTouch, experience,isletState,get classDemo(){return classDemo;},get waves(){return waves;},get tutorials(){return tutorials;}, soundcheck:()=>soundcheck??=import('./audio/soundcheck.js').then(m=>m.mountSoundcheck({audio})) };
   if (import.meta.env.DEV && new URLSearchParams(location.search).get('soundcheck')==='1') window.__island.soundcheck();
   function dispose() {
-    if(disposed)return;disposed=true;guide.dispose();container.removeEventListener('close',panelClosed,true);classDemo?.dispose();classDemo=null;waves?.dispose();waves=null;island?.dispose();island=null;void pirates?.then(harness=>harness?.dispose());
+    if(disposed)return;disposed=true;rewardRecovery?.dispose();guide.dispose();container.removeEventListener('close',panelClosed,true);classDemo?.dispose();classDemo=null;waves?.dispose();waves=null;island?.dispose();island=null;void pirates?.then(harness=>harness?.dispose());
     harbor?.dispose();mapTouch?.dispose();touch.dispose();gamepad.dispose();marketUi?.dispose();sportsUi.dispose();stopLiveWeather();stopPreferences();stopMotion();stop();stopView();stopListening();for(const stopOne of stopScale)stopOne?.(); stopArrivals(); stopVisitNamed(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
     villageNavigation.dispose();window.removeEventListener('resize', resize); createLifetime(scene, art)();
     setMenuTravel(null);disposeDiagnostics();character.dispose();graphics.renderer.dispose();graphics.renderer.domElement.remove(); delete window.__island;

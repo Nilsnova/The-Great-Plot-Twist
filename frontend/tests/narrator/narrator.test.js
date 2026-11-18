@@ -139,6 +139,19 @@ describe('the narrator on the bus', () => {
     narrator.dispose();
   });
 
+  it('keeps narrating the current battle when an older wave result arrives', async () => {
+    const {narrator, events} = make();
+    events.emit({type: 'wave_started_server', waveId: 'old', wave: 2, where: 'own'});
+    events.emit({type: 'wave_started_server', waveId: 'new', wave: 3, where: 'own'});
+    events.emit({type: 'wave_finished', waveId: 'old', wave: 2, survived: false});
+    await flush(10000);
+    expect(card.shown).toEqual([]);
+    events.emit({type: 'wave_finished', waveId: 'new', wave: 3, survived: false});
+    await flush(0);
+    expect(narrator.speaking).toBe('wave_lost_1');
+    narrator.dispose();
+  });
+
   it('waits for the island code, and treats a saved island with waves as a returning crew', async () => {
     game = null;
     const {narrator} = make();

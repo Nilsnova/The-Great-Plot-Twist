@@ -1,0 +1,79 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run tests/pirates/combat-overlay.test.js tests/pirates/combat-feedback-controller.test.js tests/ui/combat-feedback.test.js
+
+
+ RUN  v5.1.0 /workspace/captain-combat-feedback/frontend
+
+ ❯ tests/ui/combat-feedback.test.js (2 tests | 1 failed) 1807ms
+   × exposes contextual range to keyboard users and announces changing danger only once 712ms
+ ❯ tests/pirates/combat-feedback-controller.test.js (3 tests | 1 failed) 42ms
+   × preserves firing and impact animation events without written damage feedback 12ms
+ ❯ tests/pirates/combat-overlay.test.js (3 tests | 1 failed) 14ms
+   × places the direction cap at true range in logical coordinates before flattening the world 4ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/pirates/combat-feedback-controller.test.js > preserves firing and impact animation events without written damage feedback
+AssertionError: expected { Object (x, z, ...) } to not have property "hit"
+
+- Expected:
+undefined
+
++ Received:
+"Hit · 6 damage"
+
+ ❯ tests/pirates/combat-feedback-controller.test.js:50:23
+     48|   expect(h.events.some(event => event.type === 'captain_fired' && even…
+     49|   expect(h.events.some(event => event.type === 'ship_hit' && event.by …
+     50|   expect(h.range).not.toHaveProperty('hit');
+       |                       ^
+     51|   h.controller.dispose();
+     52| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  tests/pirates/combat-overlay.test.js > places the direction cap at true range in logical coordinates before flattening the world
+AssertionError: expected 1 to be close to 17, received difference is 16, but expected 0.005
+ ❯ tests/pirates/combat-overlay.test.js:46:21
+     44|     const point = sample.clone().applyMatrix4(marker.matrix), length =…
+     45|     expect(marker.visible).toBe(true);
+     46|     expect(point.x).toBeCloseTo(range.x + range.radius * dx / length);
+       |                     ^
+     47|     expect(point.y).toBeCloseTo(-(range.z + range.radius * dz / length…
+     48|   }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  tests/ui/combat-feedback.test.js > exposes contextual range to keyboard users and announces changing danger only once
+AssertionError: expected 1 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ ❯ tests/ui/combat-feedback.test.js:22:68
+     20|     expect(await page.evaluate(() => window.previews.at(-1))).toBe(tru…
+     21|     expect(await page.locator('.pirate-musket').getAttribute('aria-des…
+     22|     expect(await page.locator('.pirate-hit-confirmation').count()).toB…
+       |                                                                    ^
+     23|     expect(await page.locator('.pirate-musket').textContent()).not.toM…
+     24|     expect(await page.locator('.pirate-quiet[role=status]').textConten…
+ ❯ evaluate tests/g20-browser.js:44:24
+ ❯ tests/ui/combat-feedback.test.js:7:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  3 failed (3)
+      Tests  3 failed | 5 passed (8)
+   Start at  11:57:52
+   Duration  3.25s (tests 65%, import 29%, transform 6%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.3
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.3
+npm notice To update run: npm install -g npm@12.2.3
+npm notice

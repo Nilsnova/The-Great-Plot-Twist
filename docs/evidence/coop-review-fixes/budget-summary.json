@@ -1,0 +1,22 @@
+{
+  "limits": {
+    "titleJavaScript": 21080,
+    "titleCss": 12000,
+    "titleImage": 0
+  },
+  "initial": {
+    "javaScript": 19011,
+    "javaScriptGzip": 8947,
+    "css": 9248,
+    "cssGzip": 3451,
+    "titleImage": null
+  },
+  "totals": {
+    "javaScript": 2154003,
+    "images": 3694537,
+    "audio": 2902465,
+    "files": 741,
+    "bytes": 9190332
+  },
+  "unshippedInDist": []
+}

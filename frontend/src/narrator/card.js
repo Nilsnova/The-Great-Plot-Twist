@@ -5,6 +5,8 @@ import './narrator.css';
 // The E prompt floating over a building (.interact.floating) moves with the world, so the card does not dodge it
 // (the overlap audit: dodging it pushed the card into the wave bar).
 const CONTROLS = '.bottom-bar,.interact:not([hidden]):not(.floating),.pirate-musket:not([hidden])';
+const WAVE_BAR = '.pirate-hud:not([hidden]) .pirate-bar:not([hidden])';
+const WARNING = `${WAVE_BAR} .pirate-danger:not([hidden])`;
 const ACTIVE_COMBAT = '.pirate-hud:not([hidden]):has(.pirate-bar:not([hidden])):not(:has(.pirate-countdown:not([hidden]),.pirate-break:not([hidden])))';
 const COMBAT_CONTROLS = [CONTROLS, '.touch-stick-group', '.touch-actions button',
   '.pirate-bar', '.pirate-prompt', '.pirate-point-prompt', '.pirate-boss'].join(',');
@@ -37,11 +39,23 @@ export function createNarratorCard(container = document.body, {onSkip = () => {}
 
   function watchWaveBar(bar) {
     if (!barSize || observedBar === bar) return;
-    barSize.disconnect();
-    if (layoutFrame !== null) cancelAnimationFrame(layoutFrame);
-    layoutFrame = null;
+    if (observedBar) barSize.unobserve(observedBar);
     observedBar = bar;
     if (bar) barSize.observe(bar);
+  }
+
+  function protectWarning() {
+    const own = card.getBoundingClientRect();
+    const suppressed = [...container.querySelectorAll(WARNING)].some(warning => {
+      const bounds = warning.getBoundingClientRect();
+      return bounds.width > 0 && bounds.height > 0 && own.left < bounds.right && own.right > bounds.left
+        && own.top < bounds.bottom && own.bottom > bounds.top;
+    });
+    // Measure the final dock or fallback position. Even large captions yield to an acute instruction.
+    card.classList.toggle('is-danger-suppressed', suppressed);
+    card.inert = suppressed;
+    if (suppressed) card.setAttribute('aria-hidden', 'true'); else card.removeAttribute('aria-hidden');
+    return suppressed;
   }
 
   function dockInCombat() {
@@ -67,7 +81,7 @@ export function createNarratorCard(container = document.body, {onSkip = () => {}
     const dock = !card.classList.contains('is-large') && !!combatHud
       && getComputedStyle(card).getPropertyValue('--narrator-dock-enabled').trim() === '1';
     // The wave event details can resize the bar without changing any control's hidden flag.
-    watchWaveBar(dock ? combatHud.querySelector('.pirate-bar:not([hidden])') : null);
+    watchWaveBar(container.querySelector(WAVE_BAR));
     card.classList.toggle('is-combat-docked', dock);
     card.classList.remove('is-combat-fallback');
     if (!dock || !dockInCombat()) {
@@ -80,7 +94,8 @@ export function createNarratorCard(container = document.body, {onSkip = () => {}
       const bottom = Math.max(16, innerHeight - top + 12);
       card.style.bottom = `${dock ? Math.min(bottom, Math.max(8, innerHeight - own.height - 8)) : bottom}px`;
     }
-    document.documentElement.style.setProperty('--narrator-card-height', `${Math.round(card.getBoundingClientRect().height)}px`);
+    const suppressed = protectWarning();
+    document.documentElement.style.setProperty('--narrator-card-height', `${suppressed ? 0 : Math.round(card.getBoundingClientRect().height)}px`);
   }
   addEventListener('resize', position);
   // A control that appears or goes while the card shows (the Musket button at the start of a wave) moves it too
@@ -97,12 +112,17 @@ export function createNarratorCard(container = document.body, {onSkip = () => {}
       card.dataset.line = line.id;
       card.hidden = false;
       text.textContent = line.text;
+      barSize?.observe(card);
       position(); watch(true);
     },
     hide() {
       watch(false);
-      watchWaveBar(null);
+      barSize?.disconnect();
+      observedBar = null;
+      if (layoutFrame !== null) cancelAnimationFrame(layoutFrame);
+      layoutFrame = null;
       card.hidden = true;
+      card.classList.remove('is-danger-suppressed'); card.inert = false; card.removeAttribute('aria-hidden');
       delete card.dataset.line;
       text.textContent = '';
       document.documentElement.style.removeProperty('--narrator-card-height');
