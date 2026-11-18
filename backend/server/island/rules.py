@@ -21,6 +21,7 @@ Used by: service.py, pirate_point.py and the tests.
 """
 
 from dataclasses import dataclass
+from math import floor
 
 from server.errors import ApiError
 from server.island.catalogue import (
@@ -748,18 +749,32 @@ def loot_rates(loot: Loot, wave: int) -> tuple[int, int, int]:
     return loot.base + lift, loot.late_per_wave, loot.pirate_point_base + lift
 
 
+def island_loot_rates(loot: Loot, wave: int) -> tuple[int, int, int]:
+    """(base, per wave, per house) of an island wave: loot_rates, and past loot.raise_from each
+    times loot.raise_times, the base rounded down; the rates stay whole (catalogue.read_raise), so
+    base + per_wave x n + per_house x h is the raised loot rounded down, exactly."""
+    base, per_wave, _ = loot_rates(loot, wave)
+    per_house = loot.per_house
+    if loot.raise_from and wave > loot.raise_from and loot.raise_times != 1:
+        times = loot.raise_times
+        return floor(base * times), int(per_wave * times), int(per_house * times)
+    return base, per_wave, per_house
+
+
 def loot_cap(
     loot: Loot, wave: int, house_levels: int, pirate_point: bool = False, boss: bool = False
 ) -> int:
     """The loot for surviving wave `wave`: 25 + 10 x wave + 10 x house levels on an island, and
     40 + 10 x wave on Pirate Point (which has no houses), 4 a wave instead of 10 past wave 30; a
-    boss wave pays twice that."""
-    base, per_wave, point_base = loot_rates(loot, wave)
+    island waves past 40 pay 1.5 times that (rounded down); a boss wave pays
+    loot.multiplier_for(wave) times it (3, the boss wave 40: 5)."""
     if pirate_point:
+        _, per_wave, point_base = loot_rates(loot, wave)
         amount = point_base + per_wave * wave
     else:
-        amount = base + per_wave * wave + loot.per_house * house_levels
-    return amount * loot.boss_multiplier if boss else amount
+        base, per_wave, per_house = island_loot_rates(loot, wave)
+        amount = base + per_wave * wave + per_house * house_levels
+    return amount * loot.multiplier_for(wave) if boss else amount
 
 
 def weather_for(catalogue: IslandCatalogue, state: str | None) -> Weather:

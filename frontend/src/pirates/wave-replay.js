@@ -92,11 +92,31 @@ export function createWaveReplay() {
       .sort((a, b) => a.effectiveTick - b.effectiveTick || a.serverSeq - b.serverSeq);
   }
 
+  // The highest actor counter the journal holds for one participant: the server's last accepted one.
+  function maxActorCounter(participantToken) {
+    let most = 0;
+    for (const event of events.values()) {
+      const counter = event.payload?.actorCounter;
+      if (event.type === 'captain_input' && event.participantToken === participantToken
+        && Number.isSafeInteger(counter) && counter > most) most = counter;
+    }
+    return most;
+  }
+
+  // Participants who joined after the start (participant_joined events): their tokens.
+  function participantTokens() {
+    const tokens = new Set();
+    for (const event of events.values()) if (event.type === 'participant_joined' && typeof event.participantToken === 'string') tokens.add(event.participantToken);
+    return tokens;
+  }
+
   return {
+    participantTokens,
     addPage,
     complete,
     canAdvanceThrough,
     through,
+    maxActorCounter,
     get headSeq() { return headSeq; },
     get sealedThroughTick() { return sealedThroughTick; },
     get contiguousSeq() { return contiguousSeq; },
@@ -131,9 +151,16 @@ export function createReplayDriver(replay) {
 }
 
 /** Fetch every page through one fixed head; resume partial pages before opening a newer head. */
-export async function fetchSealedEvents(replay, readPage, after) {
+// onRefusal: told about an answer that is a refusal ({refused: true, ...}) instead of a page.
+// onPage: told about every accepted page (for fields the replay does not keep, such as closed).
+export async function fetchSealedEvents(replay, readPage, after, onRefusal = null, onPage = null) {
   if (typeof readPage !== 'function' || !replay || !Number.isInteger(replay.contiguousSeq)) return false;
   const alreadyComplete = replay.complete();
+  const refused = answer => {
+    if (answer?.refused) { onRefusal?.(answer); return true; }
+    if (answer && typeof answer === 'object') onPage?.(answer);
+    return false;
+  };
   const cursor = after ?? replay.contiguousSeq;
   if (!validWatermark(cursor) || cursor !== replay.contiguousSeq) return false;
   let page;
@@ -144,11 +171,13 @@ export async function fetchSealedEvents(replay, readPage, after) {
     fixedSeal = replay.sealedThroughTick;
     if (!validWatermark(fixedHead) || !validSeal(fixedSeal)) return false;
     page = await readPage({ after: cursor, through: fixedHead, sealedThroughTick: fixedSeal });
+    if (refused(page)) return false;
     if (!page || page.through !== fixedHead || !Array.isArray(page.events) || !page.events.length
       || !advanceCursor(page.events, cursor, fixedHead) || !replay.addPage(page)) return false;
   } else {
     const requestAfter = replay.headSeq ?? 0;
     page = await readPage({ after: requestAfter });
+    if (refused(page)) return false;
     if (!page || !validWatermark(page.headSeq) || !validSeal(page.sealedThroughTick)
       || page.headSeq < requestAfter || !Array.isArray(page.events) || !advanceCursor(page.events, requestAfter, page.headSeq)
       || !replay.addPage(page)) return false;
@@ -159,6 +188,7 @@ export async function fetchSealedEvents(replay, readPage, after) {
   let next = page.events.at(-1)?.serverSeq ?? cursor;
   while (next < fixedHead) {
     page = await readPage({ after: next, through: fixedHead, sealedThroughTick: fixedSeal });
+    if (refused(page)) return false;
     if (!page || page.through !== fixedHead || !Array.isArray(page.events) || page.events.length === 0
       || !advanceCursor(page.events, next, fixedHead) || !replay.addPage(page)) return false;
     next = page.events.at(-1).serverSeq;

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createWaveController } from '../../src/pirates/controller.js';
+import { RECOVERY_POLL_MIN_MS } from '../../src/pirates/recovery-transport.js';
 
 const START = Date.UTC(2026, 10, 14, 12, 0, 0);
 const TOKEN = '7165d60f-14f5-4b9e-96a0-2ed457b4c219';
@@ -92,7 +93,7 @@ describe('recovery-v1 controller replay', () => {
 
     paidEvent = { serverSeq: 1, effectiveTick: 1, type: 'structure_repaired', participantToken: null,
       payload: { spot: 'wall_1', instanceId: 'wall-instance', hpUnits: 1_000_000, maxHP: 60, repairSeq: 1, chargedPrice: 20 } };
-    now += 300;
+    now += RECOVERY_POLL_MIN_MS + 50; // the next regular read is no sooner than this after the checkpoint's own read
     controller.update(.05);
     await new Promise(resolve => setTimeout(resolve, 0));
     controller.update(.05);
@@ -154,8 +155,9 @@ describe('recovery-v1 controller replay', () => {
       lastVector = vector;
       await new Promise(resolve => setTimeout(resolve, 0));
     }
-    // After combat ends, a final 1s idle-render window persists its final dirty vector without more sim ticks.
-    now += 1000;
+    // After combat ends, a final idle-render window (the 3 s coalescing, integ/recovery-fixes) persists its
+    // final dirty vector without more sim ticks.
+    now += 3000;
     controller.update(0);
     await new Promise(resolve => setTimeout(resolve, 0));
     await new Promise(resolve => setTimeout(resolve, 0));
@@ -164,8 +166,8 @@ describe('recovery-v1 controller replay', () => {
     expect(damageChanges.length).toBeGreaterThan(4);
     expect(damageChanges.at(-1) - damageChanges[0]).toBeGreaterThanOrEqual(3000);
     expect(checkpointCalls.length).toBeGreaterThanOrEqual(3);
-    expect(checkpointCalls.at(-1).at - checkpointCalls.at(-2).at).toBeGreaterThanOrEqual(950);
-    expect(checkpointCalls.at(-1).at - checkpointCalls.at(-2).at).toBeLessThanOrEqual(1100);
+    expect(checkpointCalls.at(-1).at - checkpointCalls.at(-2).at).toBeGreaterThanOrEqual(2950);
+    expect(checkpointCalls.at(-1).at - checkpointCalls.at(-2).at).toBeLessThanOrEqual(3300);
     expect(checkpointCalls.at(-1).hpUnits).toEqual(latestHp);
     expect(maxActiveCheckpoints).toBe(1);
     controller.dispose();
@@ -257,7 +259,9 @@ describe('recovery-v1 controller replay', () => {
       finishCalls.push(body);
       if (finishCalls.length === 1) {
         expect(controller.state.walls.find(item => item.id === 'wall_1').hp).toBe(0);
-        paidEvent = { serverSeq: 1, effectiveTick: body.checkpoint.throughTick + 1, type: 'structure_repaired', participantToken: null,
+        // Like the server: a paid event lands after the current seal (not only after this finisher's prefix).
+        paidEvent = { serverSeq: 1, effectiveTick: Math.max(body.checkpoint.throughTick, Math.floor((now - (START + 1000)) / 50)) + 1,
+          type: 'structure_repaired', participantToken: null,
           payload: { spot: 'wall_1', instanceId: 'wall-instance', hpUnits: 1_000_000, maxHP: 60, repairSeq: 6, chargedPrice: 50 } };
         return { ok: false, status: 409, code: 'health_sync_required' };
       }
@@ -285,7 +289,8 @@ describe('recovery-v1 controller replay', () => {
       controller.update(.05);
       await new Promise(resolve => setTimeout(resolve, 0));
     }
-    expect(finishCalls.length).toBeGreaterThanOrEqual(3);
+    // integ/recovery-fixes: the retry names its own prefix after the next read, so one refresh is enough.
+    expect(finishCalls.length).toBeGreaterThanOrEqual(2);
     expect(controller.state.walls.find(item => item.id === 'wall_1').hp).toBe(60);
     expect(controller.recoveryCombatState).toBeNull(); // After canonical close, the server's between-wave HP is authoritative.
     expect(finishCalls[0].survived).toBe(finishCalls[1].survived);

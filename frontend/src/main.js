@@ -16,7 +16,8 @@ const container=document.querySelector('#game'),backdrop=node('div','title-backd
 const captions=createCaptions(container),audio=createLazyAudio({container,on,caption:captions.show});
 let stopMotion=null;
 const adapter=await createClientAdapter();
-async function ensureMotion(){if(!stopMotion)stopMotion=(await import('./settings/preferences.js')).watchSystemMotion();}
+let motionLoad=null;
+function ensureMotion(){return motionLoad??=import('./settings/preferences.js').then(module=>{if(!stopMotion&&!disposed)stopMotion=module.watchSystemMotion();}).catch(error=>{motionLoad=null;throw error;});}
 let runtime=null,pending=null,disposed=false,loading=false,playRequest=0,shell,lastAccount='',noticedAccount='',door=null;
 const focus=()=>container.querySelector('canvas[tabindex="0"]')?.focus();
 let background=null;
@@ -46,8 +47,9 @@ async function send(name,...args){
 }
 async function loadGame(){
   if(runtime)return runtime;if(pending)return pending;
-  await ensureMotion();loading=true;const status=node('p','shell-loading','Preparing the coast…');status.setAttribute('role','status');container.append(status);
-  pending=loadWorld().then(module=>module.loadGameModule()).then(module=>module.startGame({container,shell,audio,captions,adapter,openAccount,isAppBlocked:()=>accountHost.active||!!door?.active}));
+  loading=true;const status=node('p','shell-loading','Preparing the coast…');status.setAttribute('role','status');container.append(status);
+  // The motion setting and the world chunk download side by side, not one after the other.
+  pending=Promise.all([loadWorld().then(module=>module.loadGameModule()),ensureMotion()]).then(([module])=>module.startGame({container,shell,audio,captions,adapter,openAccount,isAppBlocked:()=>accountHost.active||!!door?.active}));
   try{
     runtime=await pending;if(disposed){runtime.dispose();return null;}
     runtime.setMode(shell.mode);backdrop.hidden=shell.mode!=='title';return runtime;
@@ -60,6 +62,8 @@ async function play(){
   shell.play();const game=await loadGame();
   if(!disposed&&token===playRequest&&shell.mode==='playing')await game?.begin(false,{kind:'world',place:'saltreach_harbor',demo:true});
 }
+// Play starts the world download beside the front door's own chunks; loadGame() reuses it (errors are handled there).
+function prefetchGame(){if(!runtime&&!pending){void loadWorld().then(module=>module.loadGameModule()).catch(()=>null);void ensureMotion().catch(()=>null);}}
 // Play and the intro replay load their routes only when chosen.
 const routes=()=>import('./shell/routes.js'),flow={adapter,container,focus,loadGame,play,openAccount,
   claim(){const token=++playRequest;return ()=>!disposed&&token===playRequest&&shell.mode==='playing';},
@@ -76,7 +80,7 @@ shell=createShell({container,readAccount:()=>adapter.read().account,adapter,send
   demo:new URLSearchParams(location.search).get('demo')==='1',settingsView:async()=>{try{await ensureMotion();const loader=await loadWorld();return (await loader.loadSettingsModule()).createSettingsView(adapter.read());}catch(error){reloadForNewBuild(error);throw error;}},
   hasOverlay:()=>loading||!!door?.active||accountHost.active||!!runtime?.hasOverlay(),
   onState(mode){if(mode==='title'){playRequest++;door?.cancel();}audio.setScreen(mode);runtime?.setMode(mode);backdrop.hidden=mode!=='title'&&!!runtime;},
-  onPlay:play,onStart:()=>routes().then(m=>m.start(flow)),onReplay:()=>routes().then(m=>m.start(flow,true)),
+  onPlay:play,onStart:()=>{prefetchGame();return routes().then(m=>m.start(flow));},onReplay:()=>{prefetchGame();return routes().then(m=>m.start(flow,true));},
 });
 function updateAccount(view){
   const key=JSON.stringify(view.account);if(key===lastAccount)return;lastAccount=key;

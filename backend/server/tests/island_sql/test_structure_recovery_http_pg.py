@@ -99,6 +99,19 @@ def test_accepted_bell_member_join_and_paid_repair_match_committed_state(databas
         assert structure["hpUnits"] >= before_bell["hpUnits"]
         assert initial["waveId"] == wave_id
 
+        # The teammate discovers the running wave before joining it (no token, no snapshot yet).
+        joinable_response = client.get(
+            f"/api/waves/current?where=ISLE-{ISLAND_CODE}&waveProtocol=2",
+            headers=HEADERS["member"],
+        )
+        assert joinable_response.status_code == 200, joinable_response.text
+        joinable = joinable_response.json()
+        assert joinable["waveId"] == wave_id
+        assert joinable["recoveryVersion"] == 1 and joinable["waveProtocol"] == 2
+        assert "participantToken" not in joinable
+        assert "initialSnapshot" not in joinable
+        assert "lastActorCounter" not in joinable
+
         joined_response = client.post(
             "/api/waves/join",
             headers=HEADERS["member"],
@@ -118,6 +131,12 @@ def test_accepted_bell_member_join_and_paid_repair_match_committed_state(databas
         current = current_response.json()
         assert current["waveId"] == wave_id
         assert current["participantToken"] == started["participantToken"]
+        member_current = client.get(
+            f"/api/waves/current?where=ISLE-{ISLAND_CODE}&waveProtocol=2",
+            headers=HEADERS["member"],
+        ).json()
+        assert member_current["participantToken"] == joined["participantToken"]
+        assert member_current["initialSnapshot"] == initial
 
         reserved_response = client.get(
             f"/api/island/structures?code=ISLE-{ISLAND_CODE}", headers=HEADERS["member"]
@@ -426,14 +445,8 @@ def test_accepted_bell_member_join_and_paid_repair_match_committed_state(databas
         between = between_response.json()
         assert between["repairWindow"] == "between_waves"
         assert between["remainingPaidUses"] is None
-        hp_at_finish = between["structures"][0]["hpUnits"]
-        time.sleep(1.05)
-        resumed_response = client.get(
-            f"/api/island/structures?code=ISLE-{ISLAND_CODE}", headers=HEADERS["member"]
-        )
-        assert resumed_response.status_code == 200, resumed_response.text
-        resumed = resumed_response.json()
-        assert resumed["structures"][0]["hpUnits"] > hp_at_finish
+        # fix/playtest-1117 (owner): the finish made every structure whole at once.
+        assert between["structures"][0]["hpUnits"] == 1_000_000
 
         # Saved v1 islands remain readable and can ring the next bell with admission off.
         client.app.state.settings = replace(settings, flags=parse_flags("islands"))

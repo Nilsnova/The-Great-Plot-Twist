@@ -9,12 +9,13 @@ import re
 from typing import Any
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr
 
 from server.errors import ApiError
 from server.island import layout, service, store, wall_health, wave_events
 from server.island import rules as island_rules
 from server.island.catalogue import (
+    RESEARCH_CAPSTONES,
     IslandCatalogue,
     Weather,
     catalogue_for_existing_structures,
@@ -71,6 +72,8 @@ class RecoveryEventPage(BaseModel):
     sealed_through_tick: StrictInt = Field(alias="sealedThroughTick", ge=-1)
     through: StrictInt | None = Field(default=None, ge=0)
     events: list[RecoveryEvent] = Field(max_length=MAX_PAGE)
+    # 20261118030000: whether the wave is closed (its seal no longer moves); older SQL omits it.
+    closed: StrictBool | None = None
 
 
 class RecoveryHealthRequest(BaseModel):
@@ -126,11 +129,12 @@ _COMMAND_FIELDS: dict[str, set[str]] = {
         "z",
         "ax",
         "az",
+        "seen",
         "level",
         "skills",
         "weapon",
     },
-    "captain_strike": {"type", "targetId", "x", "z", "level", "skills"},
+    "captain_strike": {"type", "targetId", "x", "z", "seen", "level", "skills"},
     "captain_move": {"type", "x", "z", "colour", "away"},
     "captain_revive": {"type", "targetId", "x", "z", "skills"},
     "finisher_ready": {"type", "shipId"},
@@ -194,6 +198,13 @@ def validate_command(command: dict[str, Any]) -> dict[str, Any]:
             "ax" in command and not (_number(command["ax"]) and _number(command["az"]))
         ):
             raise ApiError(422, "validation_error", "Captain aim is invalid.")
+    if "seen" in command and (
+        not isinstance(command["seen"], int)
+        or isinstance(command["seen"], bool)
+        or not 0 <= command["seen"] <= 18_000
+    ):
+        # The tick the shooter saw (fix/playtest-1117): reach is checked there, 2 s back at most.
+        raise ApiError(422, "validation_error", "The seen tick is invalid.")
     if kind == "captain_move":
         if "colour" in command and (
             not isinstance(command["colour"], int)
@@ -233,6 +244,16 @@ def _refusal(reply: Any) -> None:
     if not isinstance(reply, dict):
         raise SupabaseRejected("The recovery journal could not be read.")
     reason = reply.get("reason")
+    if reason == "too_early":
+        # A protocol-2 finish before the wave's minimum: the same 409 as the legacy finish.
+        wait = reply.get("waitSeconds")
+        wait = wait if isinstance(wait, int) and not isinstance(wait, bool) and wait > 0 else 1
+        raise ApiError(
+            409,
+            "wave_too_early",
+            f"The wave is not over yet. Try again in {wait} seconds.",
+            headers={"Retry-After": str(wait)},
+        )
     mapped = {
         "no_such_wave": (404, "no_such_wave", "There is no such wave."),
         "not_in_wave": (403, "not_in_wave", "Join the wave first: you are not in this wave."),
@@ -374,10 +395,24 @@ async def build_snapshot_template(
             "x": spot.x,
             "z": spot.z,
         }
-        if spot.spec is not None:
-            item["spec"] = spot.spec
+        # The defense in the legacy client's shape (frontend island/spots.js defenses()), so both
+        # wave systems fight the same island (fix/playtest-1117): a capstone counts only while it is
+        # the island's tier-3 pick, the tier-2 pick of the kind rides as `bonus`, and the upgrade
+        # tree is {a, b} (it was [a, b], which the sim's readTree read as no tree at all).
+        tier = view.campaign.tiers.get(spot.kind)
+        spec = spot.spec
+        if (
+            spec is not None
+            and spec in RESEARCH_CAPSTONES.get(spot.kind, ())
+            and (tier is None or tier.choice_3 != spec)
+        ):
+            spec = None
+        if spec is not None:
+            item["spec"] = spec
+        if tier is not None and tier.choice_2 is not None:
+            item["bonus"] = tier.choice_2
         if spot.tree is not None:
-            item["tree"] = list(spot.tree)
+            item["tree"] = {"a": spot.tree[0], "b": spot.tree[1]}
         defenses.append(item)
         if spot.kind in SUPPORTED_KINDS:
             nearby_workshops = sum(
@@ -389,7 +424,7 @@ async def build_snapshot_template(
                 and spot.z is not None
                 and (house.x - spot.x) ** 2 + (house.z - spot.z) ** 2 <= 10**2
             )
-            selected_wall_spec = spot.spec if spot.kind == "wall" else None
+            selected_wall_spec = spec if spot.kind == "wall" else None
             selected_wall_research = wall_research if spot.kind == "wall" else None
             max_hp = max_structure_hp(
                 spot.kind, spot.level, selected_wall_spec, selected_wall_research
@@ -510,8 +545,15 @@ async def read_owner_island(admin: SupabaseAdmin, owner: str) -> Island:
 
 
 async def append_inputs(
-    admin: SupabaseAdmin, player_id: str, wave_id: UUID, inputs: list[RecoveryInput]
+    admin: SupabaseAdmin,
+    player_id: str,
+    wave_id: UUID,
+    inputs: list[RecoveryInput],
+    *,
+    arsenal: bool = False,
 ) -> RecoveryInputResult:
+    """Append commands; `arsenal` (the flag) makes the journal carry the arsenal copy the shooter
+    carries on the defended island, the gun their own screen uses (20261118040000)."""
     body = [
         {
             "inputUid": item.inputUid,
@@ -526,7 +568,12 @@ async def append_inputs(
         raise ApiError(422, "validation_error", "The input batch is too large.")
     reply = await admin.call_function(
         "recovery_wave_inputs",
-        {"p_player_id": player_id, "p_wave_id": str(wave_id), "p_inputs": body},
+        {
+            "p_player_id": player_id,
+            "p_wave_id": str(wave_id),
+            "p_inputs": body,
+            "p_arsenal": arsenal,
+        },
     )
     _refusal(reply)
     if not isinstance(reply, dict) or reply.get("status") != "accepted":

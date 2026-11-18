@@ -173,7 +173,11 @@ describe('the island room for every defender', () => {
       { spot: 'wall_1', instanceId: 'instance-a', hpUnits: 500_000, maxHP: 60, repairSeq: 2 },
     ] };
     Object.defineProperty(h.waves.island, 'recoveryCombatState', { configurable: true, get: () => state });
+    // Driven by the controller while a recovery wave runs (no 250 ms timer): its change event publishes.
+    const before = h.island.setRecoveryCombatState.mock.calls.length;
     h.tick();
+    expect(h.island.setRecoveryCombatState.mock.calls.length).toBe(before);
+    h.emit({ type: 'recovery_combat_changed', waveId: 'wave-a' });
     expect(h.island.setRecoveryCombatState).toHaveBeenLastCalledWith(state);
     h.waves.dispose();
     expect(h.island.setRecoveryCombatState).toHaveBeenLastCalledWith(null);

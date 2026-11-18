@@ -92,7 +92,8 @@ def test_the_prices_and_the_starting_coins_are_the_economy_table():
     }
     assert catalogue.captain.prices == (0, 20, 40, 80, 160)
     assert (catalogue.waves.highest_wave, catalogue.waves.boss_every) == (100, 5)
-    assert (catalogue.waves.restart_back, catalogue.loot.boss_multiplier) == (2, 2)
+    assert (catalogue.waves.restart_back, catalogue.loot.boss_multiplier) == (2, 3)
+    assert catalogue.loot.boss_multiplier_by_wave == ((40, 5),)
 
 
 def test_the_spots_are_the_spots_of_the_contract():
@@ -117,12 +118,18 @@ def test_the_loot_is_twenty_five_plus_ten_per_wave_plus_ten_per_house(wave, hous
     assert rules.loot_cap(load_island().loot, wave, houses) == loot
 
 
-def test_a_boss_wave_is_every_fifth_and_pays_twice():
+def test_a_boss_wave_is_every_fifth_and_pays_three_times_and_wave_40_five_times():
+    # fix/playtest-1117 (owner): more loot after boss waves, especially 40 (was 2 times for all).
     catalogue = load_island()
 
     assert [wave for wave in range(1, 21) if rules.is_boss(catalogue, wave)] == [5, 10, 15, 20]
-    assert rules.loot_cap(catalogue.loot, 5, 3, boss=True) == (25 + 50 + 30) * 2
-    assert rules.loot_cap(catalogue.loot, 10, 0, pirate_point=True, boss=True) == 280
+    assert rules.is_boss(catalogue, 40)
+    assert rules.loot_cap(catalogue.loot, 5, 3, boss=True) == (25 + 50 + 30) * 3
+    assert rules.loot_cap(catalogue.loot, 10, 0, pirate_point=True, boss=True) == 140 * 3
+    # 25 + 10 x 30 + 4 x 10 past wave 30 = 365 at wave 40.
+    assert rules.loot_cap(catalogue.loot, 40, 0) == 365
+    assert rules.loot_cap(catalogue.loot, 40, 0, boss=True) == 365 * 5
+    assert rules.loot_cap(catalogue.loot, 45, 0, boss=True) == (385 * 3 // 2) * 3
 
 
 @pytest.mark.parametrize(
@@ -577,12 +584,27 @@ def test_pirate_point_pays_its_own_base_and_no_houses():
 @pytest.mark.parametrize(("wave", "loot"), [(30, 325), (31, 329), (40, 365), (100, 605)])
 def test_the_loot_grows_four_a_wave_past_wave_thirty(wave, loot):
     # GAME-V3 section 4: 100 waves, and the coins stay worth something (the prices do not grow).
+    # Island waves past 40 pay 1.5 times this line on top (the next test); Pirate Point keeps it.
     catalogue = load_island()
 
-    assert rules.loot_cap(catalogue.loot, wave, 0) == loot
     base, per_wave, point_base = rules.loot_rates(catalogue.loot, wave)
     assert base + per_wave * wave == loot  # the line wave_finish draws, with plain arguments
     assert (
         rules.loot_cap(catalogue.loot, wave, 0, pirate_point=True) == point_base + per_wave * wave
     )
     assert rules.loot_rates(catalogue.loot, 12) == (25, 10, 40)
+
+
+@pytest.mark.parametrize(
+    ("wave", "houses"), [(41, 0), (41, 3), (45, 1), (60, 0), (77, 5), (100, 2)]
+)
+def test_island_waves_past_forty_pay_half_again_rounded_down_through_plain_arguments(wave, houses):
+    # fix/playtest-1117 (owner): every island wave above 40 pays 50% more, rounded down; the rates
+    # folded for wave_finish give exactly floor(1.5 x (base + per_wave x n + per_house x houses)).
+    loot = load_island().loot
+    base, per_wave, _ = rules.loot_rates(loot, wave)
+    normal = base + per_wave * wave + loot.per_house * houses
+    raised_base, raised_wave, raised_house = rules.island_loot_rates(loot, wave)
+    assert raised_base + raised_wave * wave + raised_house * houses == normal * 3 // 2
+    assert rules.loot_cap(loot, wave, houses) == normal * 3 // 2
+    assert rules.island_loot_rates(loot, 40) == rules.loot_rates(loot, 40)[:2] + (loot.per_house,)

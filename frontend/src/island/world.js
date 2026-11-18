@@ -21,6 +21,7 @@ import {decorateProgress} from './decorations.js';
 import {makeWallConnections} from './wall-connections.js';
 import {createStructureRecoveryIndicators} from './structure-recovery-indicators.js';
 import {towerStateFrame} from '../art/tower-states.js';
+import {MARK_IDS, buildingMarks} from '../art/path-marks.js';
 
 const UNIT = 16;
 const FULL_HP_UNITS = 1_000_000;
@@ -281,9 +282,11 @@ export function decorateIsland(place, ctx = {}) {
     const normalId = kind ? buildingArt(kind, level, answer?.spec) : null;
     const id = appearance && art?.[appearance.frame] ? appearance.frame : normalId;
     const pips = kind && !appearance?.suppressPips ? pipCount(kind, level) : 0;
+    // D055/D051: the path plates and skill emblem over the sprite (src/art/path-marks.js); a ruin wears none.
+    const marks = kind && appearance?.look !== 'broken' ? buildingMarks(kind, level, answer?.tree, answer?.spec) : [];
     // A recovery ruin frame stands alone; only the normal level art is drawn as posts of a joined wall.
     const joined = kind === 'wall' && id === normalId && joinedWalls.has(spot.id);
-    const where = whereOf(spot), key = !id || hidden ? '' : `${id}:${pips}:${joined}@${where.x},${where.z}`;
+    const where = whereOf(spot), key = !id || hidden ? '' : `${id}:${pips}:${joined}:${marks.map(mark => mark.art).join('+')}@${where.x},${where.z}`;
     if (shown.get(spot.id)?.key === key) return;
     clear(spot.id);
     if (!key) return;
@@ -297,6 +300,10 @@ export function decorateIsland(place, ctx = {}) {
     row.offsets.forEach((offset, i) => {
       const pip = put(pipArt(level), where.x + offset * pipWidth, where.z, top, .01, row.scale); pip.name = `island-pip:${spot.id}:${i + 1}`; meshes.push(pip);
     });
+    for (const mark of marks) {
+      if (!art[mark.art]) continue;
+      const plate = put(mark.art, where.x + mark.dx, where.z, mark.dy, .015); plate.name = `island-mark:${spot.id}:${mark.part}`; plate.userData.mark = mark.art; meshes.push(plate);
+    }
     shown.set(spot.id, {key, meshes});
   }
   function showCrew(spots, crew, hidden) {
@@ -362,7 +369,7 @@ export function decorateIsland(place, ctx = {}) {
   apply(state);
 
   // The real art (every level, the pips and the crew) replaces the drawn sprites once it has loaded.
-  const wanted = [...new Set([...SPOTS.flatMap(kindsOf).flatMap(kind => LEVEL_ART[kind] ?? []), ...Object.values(ROLE_ART).flatMap(id => [id, `${id}-l3`]), PIP_ART, PIP_TIER_ART, ...Object.values(crewArt)])]
+  const wanted = [...new Set([...SPOTS.flatMap(kindsOf).flatMap(kind => LEVEL_ART[kind] ?? []), ...Object.values(ROLE_ART).flatMap(id => [id, `${id}-l3`]), PIP_ART, PIP_TIER_ART, ...Object.values(crewArt), ...MARK_IDS])]
     .concat(RECOVERY_ART)
     .filter(id => Object.hasOwn(artSizes, id));
   (ctx.loadArt ?? loadArt)(wanted).then(loaded => {

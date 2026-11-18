@@ -33,7 +33,7 @@ from server.game.islet_store import player_not_set_up
 from server.island import games, permissions, rescue, store, wave_events, wave_recovery
 from server.island.catalogue import IslandCatalogue, Weather
 from server.island.codes import read_code
-from server.island.rules import is_boss, loot_rates, weather_for
+from server.island.rules import is_boss, island_loot_rates, loot_rates, weather_for
 from server.island.service import no_such_island
 from server.island.store import Refusal, WaveRow
 from server.supabase_admin import SupabaseAdmin, SupabaseRejected
@@ -200,8 +200,13 @@ def wave_of(catalogue: IslandCatalogue, row: WaveRow) -> WaveStart:
     return WaveStart(row.waveId, row.wave, row.seed, row.startsAt, weather, flagship, boss)
 
 
-def recovery_wave_of(catalogue: IslandCatalogue, reply: object) -> WaveStart:
-    """Validate a versioned lifecycle reply while retaining the legacy wave metadata parser."""
+def recovery_wave_of(
+    catalogue: IslandCatalogue, reply: object, *, joinable: bool = False
+) -> WaveStart:
+    """Validate a versioned lifecycle reply while retaining the legacy wave metadata parser.
+
+    joinable (current reads only): a protocol-2 wave the caller may join but has not joined yet
+    comes without snapshot, token and counter (joined false); the join reply carries them."""
     if not isinstance(reply, dict):
         raise SupabaseRejected("The database sent an unreadable recovery wave.")
     row = store.read_model(
@@ -221,7 +226,15 @@ def recovery_wave_of(catalogue: IslandCatalogue, reply: object) -> WaveStart:
     snapshot = reply.get("initialSnapshot")
     token = reply.get("participantToken")
     counter = reply.get("lastActorCounter")
-    if version == 1 and not isinstance(snapshot, dict):
+    not_joined = (
+        joinable
+        and version == 1
+        and reply.get("joined") is False
+        and snapshot is None
+        and token is None
+        and counter is None
+    )
+    if version == 1 and not not_joined and not isinstance(snapshot, dict):
         raise SupabaseRejected("The database sent an incomplete recovery snapshot.")
     if token is not None:
         try:
@@ -327,7 +340,7 @@ async def current_protocol2(
     )
     if reply["status"] == "empty":
         return None
-    return recovery_wave_of(catalogue, reply)
+    return recovery_wave_of(catalogue, reply, joinable=True)
 
 
 def no_such_wave() -> ApiError:
@@ -354,6 +367,55 @@ def finish_refusal(refusal: Refusal) -> ApiError:
     return SupabaseRejected()
 
 
+def loot_arguments(
+    catalogue: IslandCatalogue,
+    where: object,
+    bonuses: list[str] | None,
+    survived: bool,
+    rescued: bool,
+) -> dict:
+    """The loot arguments of wave_finish / recovery_wave_finish for the wave at `where` (its place,
+    number and seed; None: the catalogue's plain rates). The database works out the coins:
+    (p_loot_base + p_loot_per_wave x n + p_loot_per_house x house levels) x p_boss_multiplier on a
+    boss wave (Pirate Point: p_point_loot_base instead of the base and houses). So every rule is
+    folded into these plain numbers here: the taper past lateFrom (rules.loot_rates), the late-wave
+    raise past lootRaiseFrom (rules.island_loot_rates, island waves), the allowed bonuses (added to
+    the base after the raise) and the boss multiplier of the wave (loot.multiplier_for)."""
+    loot = catalogue.loot
+    base, per_wave, per_house = loot.base, loot.per_wave, loot.per_house
+    point_base, multiplier, back = (
+        loot.pirate_point_base,
+        loot.boss_multiplier,
+        catalogue.waves.restart_back,
+    )
+    wave = getattr(where, "wave", None)
+    if wave is not None:
+        multiplier = loot.multiplier_for(wave)
+        _, _, point_base = loot_rates(loot, wave)
+        if getattr(where, "place", None) == "island":
+            base, per_wave, per_house = island_loot_rates(loot, wave)
+        else:
+            base, per_wave, _ = loot_rates(loot, wave)
+        allowed = wave_events.allowed_bonuses(
+            bonuses,
+            place=where.place,
+            wave=wave,
+            seed=where.seed,
+            boss_every=catalogue.waves.boss_every,
+        )
+        base += wave_events.bonus_base(allowed, wave)
+        counts = rescue.rescue_counts(rescued, survived, where.place, wave)
+        back = rescue.restart_back(back, counts)
+    return {
+        "p_loot_base": base,
+        "p_loot_per_wave": per_wave,
+        "p_loot_per_house": per_house,
+        "p_point_loot_base": point_base,
+        "p_boss_multiplier": multiplier,
+        "p_restart_back": back,
+    }
+
+
 async def finish(
     admin: SupabaseAdmin,
     catalogue: IslandCatalogue,
@@ -371,36 +433,15 @@ async def finish(
     seed allow (wave_events.allowed_bonuses); the boss multiplier applies after, like all loot.
     T38: `rescued` (a won last-chance rescue, passed only with the flag `rescue` on) makes a lost
     island wave from wave 4 fall back one wave below the best instead of two (rescue.py)."""
-    loot = catalogue.loot
-    base, per_wave, point_base = loot.base, loot.per_wave, loot.pirate_point_base
-    back = catalogue.waves.restart_back
-    if loot.late_from or bonuses or rescued:
-        where = await store.read_wave_place(admin, str(wave_id))
-        if where is not None and where.wave is not None:
-            if loot.late_from:
-                base, per_wave, point_base = loot_rates(loot, where.wave)
-            allowed = wave_events.allowed_bonuses(
-                bonuses,
-                place=where.place,
-                wave=where.wave,
-                seed=where.seed,
-                boss_every=catalogue.waves.boss_every,
-            )
-            base += wave_events.bonus_base(allowed, where.wave)
-            counts = rescue.rescue_counts(rescued, survived, where.place, where.wave)
-            back = rescue.restart_back(back, counts)
+    where = await store.read_wave_place(admin, str(wave_id))
+    rates = loot_arguments(catalogue, where, bonuses, survived, rescued)
     arguments = {
         "p_player_id": player_id,
         "p_wave_id": str(wave_id),
         "p_survived": survived,
         "p_ships_sunk": ships_sunk,
-        "p_loot_base": base,
-        "p_loot_per_wave": per_wave,
-        "p_loot_per_house": loot.per_house,
-        "p_point_loot_base": point_base,
+        **rates,
         "p_boss_every": catalogue.waves.boss_every,
-        "p_boss_multiplier": loot.boss_multiplier,
-        "p_restart_back": back,
     }
     reply = await store.finish_wave(admin, arguments)
     if isinstance(reply, Refusal):
@@ -420,35 +461,15 @@ async def finish_protocol2(
     checkpoint: dict,
 ) -> dict:
     """Atomically validate the recovery checkpoint, close canonical HP and settle loot."""
-    loot = catalogue.loot
-    base, per_wave, point_base = loot.base, loot.per_wave, loot.pirate_point_base
-    back = catalogue.waves.restart_back
     where = await store.read_wave_place(admin, str(wave_id))
-    if where is not None and where.wave is not None:
-        if loot.late_from:
-            base, per_wave, point_base = loot_rates(loot, where.wave)
-        allowed = wave_events.allowed_bonuses(
-            bonuses,
-            place=where.place,
-            wave=where.wave,
-            seed=where.seed,
-            boss_every=catalogue.waves.boss_every,
-        )
-        base += wave_events.bonus_base(allowed, where.wave)
-        counts = rescue.rescue_counts(rescued, survived, where.place, where.wave)
-        back = rescue.restart_back(back, counts)
+    rates = loot_arguments(catalogue, where, bonuses, survived, rescued)
     arguments = {
         "p_player_id": player_id,
         "p_wave_id": str(wave_id),
         "p_survived": survived,
         "p_ships_sunk": ships_sunk,
-        "p_loot_base": base,
-        "p_loot_per_wave": per_wave,
-        "p_loot_per_house": loot.per_house,
-        "p_point_loot_base": point_base,
+        **rates,
         "p_boss_every": catalogue.waves.boss_every,
-        "p_boss_multiplier": loot.boss_multiplier,
-        "p_restart_back": back,
         "p_island_epoch": str(checkpoint["islandEpoch"]),
         "p_checkpoint_uid": checkpoint["checkpointUid"],
         "p_through_tick": checkpoint["throughTick"],

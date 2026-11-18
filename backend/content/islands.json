@@ -860,7 +860,12 @@
     "perWave": 10,
     "perHouse": 10,
     "piratePointBase": 40,
-    "bossMultiplier": 2,
+    "bossMultiplier": 3,
+    "bossMultiplierByWave": {
+      "40": 5
+    },
+    "raiseFrom": 40,
+    "raiseTimes": 1.5,
     "lateFrom": 30,
     "latePerWave": 4
   },

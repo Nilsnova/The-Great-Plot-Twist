@@ -204,8 +204,9 @@ def test_a_finish_hands_its_walls_to_the_database():
     world.database.walls[PLAYER_ID] = [wall_row(100, None), wall_row(100, None, plot="wall_2")]
 
     assert world.finish(walls={"wall_1": 40, "wall_2": 0}).status_code == 200
+    # fix/playtest-1117 (owner): the wave's end repairs every wall at once, whatever the report.
     assert world.database.calls("island_walls_record") == [
-        {"p_player_id": PLAYER_ID, "p_wave_id": WAVE_ID, "p_walls": {"wall_1": 40, "wall_2": 0}}
+        {"p_player_id": PLAYER_ID, "p_wave_id": WAVE_ID, "p_walls": {"wall_1": 100, "wall_2": 100}}
     ]
 
 
@@ -223,25 +224,25 @@ def test_cap_to_start_keeps_damage_and_never_heals_or_invents_a_wall():
     assert wall_health.cap_to_start(reported, start) == {"wall_1": 40, "wall_2": 30}
 
 
-def test_a_finish_cannot_heal_a_wall_above_the_health_it_started_with():
+def test_the_wave_end_leaves_every_wall_whole_even_one_that_started_broken():
+    # fix/playtest-1117 (owner): once a round is done every building is whole again at once.
     world = World(settings=ON)
     world.database.walls[PLAYER_ID] = [started_damaged(40), started_damaged(0, plot="wall_2")]
 
-    assert world.finish(walls={"wall_1": 100, "wall_2": 100}).status_code == 200
+    assert world.finish(walls={"wall_1": 10, "wall_2": 0}).status_code == 200
 
-    # The wave started with wall_1 at 40 and wall_2 destroyed: that is all a finish may keep.
     [recorded] = world.database.calls("island_walls_record")
-    assert recorded["p_walls"] == {"wall_1": 40, "wall_2": 0}
+    assert recorded["p_walls"] == {"wall_1": 100, "wall_2": 100}
 
 
-def test_a_finish_may_lower_a_wall_and_walls_that_are_not_built_are_dropped():
+def test_walls_that_are_not_built_are_dropped_and_the_rest_end_whole():
     world = World(settings=ON)
     world.database.walls[PLAYER_ID] = [started_damaged(40)]
 
     assert world.finish(walls={"wall_1": 10, "wall_7": 0}).status_code == 200
 
     [recorded] = world.database.calls("island_walls_record")
-    assert recorded["p_walls"] == {"wall_1": 10}
+    assert recorded["p_walls"] == {"wall_1": 100}  # whole at the end; wall_7 is not built
 
 
 def test_a_finish_on_an_island_with_no_walls_records_nothing():

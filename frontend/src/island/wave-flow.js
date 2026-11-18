@@ -56,6 +56,7 @@ export function createWaveFlow({api, emit, notify = () => {}, banner = () => {},
       ...(wave.initialSnapshot && typeof wave.initialSnapshot === 'object' ? {initialSnapshot: wave.initialSnapshot} : {}),
       ...(typeof wave.participantToken === 'string' ? {participantToken: wave.participantToken} : {}),
       ...(Number.isSafeInteger(wave.lastActorCounter) ? {lastActorCounter: wave.lastActorCounter} : {}),
+      ...(Number.isSafeInteger(wave.clockOffsetMs) ? {clockOffsetMs: wave.clockOffsetMs} : {}), // api.js clockOffset
       ...(Array.isArray(wave.rules) ? {rules: wave.rules} : {})}); // the wave's sim rules (tower_health, …) from the server
     countdown(wave, fresh);
     changed();
@@ -122,12 +123,36 @@ export function createWaveFlow({api, emit, notify = () => {}, banner = () => {},
     changed();
     return answer;
   }
+  // A recovery wave finishes through its own journal transport, not finish() above: when it is over on this
+  // screen (answered, or ended without an answer) it lets go of the bell here, and an answered close tells
+  // the island like finish() does (loot toast, coins, wave_finished).
+  function ended(waveId, data = null) {
+    const number = current?.wave.waveId === waveId ? current.wave.wave : undefined;
+    if (number !== undefined) { current.finished = true; stopTimers(); banner(null); current = null; }
+    if (data) {
+      if (data.away) notify('This wave ended while you were away. The bell is free again.', 'info');
+      else if (data.survived) notify(lootText(data), 'success');
+      else if (Number.isSafeInteger(data.coins)) notify(`The pirates broke through. You have ${coinText(data.coins)}.`, 'error');
+      emit({type: WAVE_FINISHED, survived: data.survived === true, waveId, ...(number ? {wave: number} : {}), ...data});
+    }
+    if (number !== undefined || data) changed();
+    return number !== undefined;
+  }
   const stopFinisher = setWaveFinisher(args => finish(args, {retry: false}));
   return {
-    ring, join, look, finish,
+    ring, join, look, finish, ended,
     get busy() { return busy; },
     get current() { return current ? {...current} : null; },
     secondsLeft: () => (current ? Math.max(0, Math.ceil((current.startAt - now()) / 1000)) : null),
+    // The wave on screen ended here (its controller stopped) but no finish got through: the bell must not say
+    // "Under way" for good. The server decides: a closed or expired wave goes, an open one can be joined again
+    // (the replay catches up at once and finishes once more).
+    release(waveId) {
+      if (disposed || !current || current.wave.waveId !== waveId || !current.joined || current.finished) return false;
+      current = {...current, joined: false}; changed();
+      void look(current.where);
+      return true;
+    },
     // Leaving the island ends the countdown on screen; the wave itself keeps its server time.
     reset() { stopTimers(); current = null; banner(null); changed(); },
     dispose() { if (disposed) return; disposed = true; stopTimers(); stopFinisher(); current = null; banner(null); },

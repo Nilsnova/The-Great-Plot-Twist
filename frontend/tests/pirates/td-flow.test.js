@@ -224,7 +224,7 @@ describe('the v2 fake API', () => {
     const world = api; void world;
   });
 
-  it('runs waves to 100 with boss flags, double boss loot and the restart rule, plus Pirate Point builds and invites', async () => {
+  it('runs waves to 100 with boss flags, triple boss loot and the restart rule, plus Pirate Point builds and invites', async () => {
     const time = clock(), transport = createFakeIslandTransport({ now: time.now, version: 2, coins: 2000 });
     const api = transport.api;
     transport.dev.setWaveBest(8);
@@ -237,7 +237,7 @@ describe('the v2 fake API', () => {
     expect(ninth.wave).toMatchObject({ wave: 9, boss: false });
     const tenth = await pay(true);
     expect(tenth.wave).toMatchObject({ wave: 10, boss: true });
-    expect(tenth.done.loot).toBe((10 + 5 * 10) * 2);
+    expect(tenth.done.loot).toBe((10 + 5 * 10) * 3); // fix/playtest-1117: a boss wave pays 3 times
     const lost = await pay(false);
     expect(lost.wave.wave).toBe(11); expect(lost.done.loot).toBe(0);
     expect((await api.island()).nextWave).toBe(8); // best 10 − 2

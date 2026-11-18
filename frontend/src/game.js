@@ -63,8 +63,14 @@ import {createNarrator} from './narrator/index.js';
 import {createTutorials} from './tutorial/tutorials.js';
 import {createTutorialHooks} from './tutorial/game-hooks.js';
 
+const FLAGS_WAIT_MS=12000,FLAGS_NOTICE_MS=1500;
 export async function startGame({container,shell,audio,captions,adapter,isAppBlocked,openAccount,session=defaultSession}) {
   startDiagnostics();noteAdapterView(adapter?.read());
+  const currentFlags=()=>{const services=findPanelServices(session);return services?.isReady()?services.getFlags():null;};
+  // With /api/config already saying "islands", the island game's chunks download now, beside the harbor
+  // art, instead of after it; ensureIsland()/ensureWaves() below reuse these same imports (and their retry).
+  if(quickIslandsMode({search:location.search,dev:import.meta.env.DEV,flags:currentFlags()})==='live')
+    for(const load of [()=>import('./island/index.js'),()=>import('./pirates/game-wiring.js'),()=>import('./net/wave-rooms.js')])void load().catch(()=>null);
   const shortcuts=createShortcutsHost(container);
   // Menu › How to play (src/tutorial/): the paged card, loaded on first use; the one-island pages while the
   // sea chart is closed (travelOpen below, read when the card opens).
@@ -86,7 +92,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   const narrator=createNarrator({container,on,audio,getGame:()=>{const visit=island?.visiting,own=island?.island;return visit?{code:visit.code,waveBest:0}:own?{code:own.code,waveBest:own.waveBest??0}:null;}});
   let mapTouch=null;
   let tutorials=null,tutorialHooks=null,islandFlags={},introUntil=0;
-  let classDemo=null,classDemoLoad=null,island=null,islandLoad=null,islandsMode=null,pirates=null,waves=null,wavesLoad=null;
+  let classDemo=null,classDemoLoad=null,island=null,islandLoad=null,islandsMode=null,islandsDecision=null,pirates=null,waves=null,wavesLoad=null;
   let harbor=null, farHint=null, active = false, disposed=false, hud, chart, perf, marketUi=null, marketLoad=null, experience,beginRequest=0, fpsFrames = 0, fpsStart = performance.now(), fps = 0,weatherAnswer=null;
   const externalOverlay=()=>!!(harbor?.active||island?.active||waves?.reportActive||classDemo?.active||shortcuts.active||tutorial.active||!!tutorials?.active||shell?.blocked||isAppBlocked?.()||marketUi?.active||sportsUi.active||chart?.open||sailing.active||stopPlots?.active);
   const worldBlocked=()=>!!(harbor?.active||island?.active||waves?.reportActive||classDemo?.active||shortcuts.active||tutorial.active||!!tutorials?.active||shell?.blocked||isAppBlocked?.()||marketUi?.active||sportsUi.active);
@@ -221,11 +227,27 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   }
   // The island game (src/island/, flag "islands" or ?islands=fake in dev): decided once, at the first
   // Play, then loaded in its own chunk. Off keeps the old home islet and the harbor start.
+  // /api/config can be slow when several players start at once (a cold server). An online start waits up to
+  // FLAGS_WAIT_MS for the flags (the API's own timeout is 10 s), says so on screen after the old 1.5 s, and keeps
+  // only a real answer: without one this Play takes the old start and the next Play asks again (it never stays off).
+  function decideIslandsMode(){
+    if(islandsMode)return Promise.resolve(islandsMode);
+    return islandsDecision??=(async()=>{
+      const online=adapter?.read?.().mode==='online';let status=null;
+      const timer=online&&!currentFlags()?setTimeout(()=>{if(disposed)return;status=document.createElement('p');status.className='shell-loading';
+        status.setAttribute('role','status');status.textContent='Waiting for the island server…';container.append(status);},FLAGS_NOTICE_MS):null;
+      try{
+        const mode=await resolveIslandsMode({search:location.search,dev:import.meta.env.DEV,online,readFlags:currentFlags,timeoutMs:FLAGS_WAIT_MS});
+        if(!online||mode!=='off'||currentFlags()!==null)islandsMode=mode;
+        else if(!disposed)hud.message('The island server did not answer. Go back to the title and press Play to try again.');
+        return mode;
+      }finally{clearTimeout(timer);status?.remove();islandsDecision=null;}
+    })();
+  }
   async function ensureIsland(){
-    islandsMode??=await resolveIslandsMode({search:location.search,dev:import.meta.env.DEV,online:adapter?.read?.().mode==='online',
-      readFlags:()=>{const services=findPanelServices(session);return services?.isReady()?services.getFlags():null;}});
+    const decided=await decideIslandsMode();
     hud.refreshQuests?.();
-    if(islandsMode==='off'||disposed)return islandsMode;
+    if(!islandsMode||islandsMode==='off'||disposed)return islandsMode??decided;
     islandLoad??=Promise.all([import('./island/index.js'),islandsMode==='fake'&&import.meta.env.DEV?import('./pirates/fake-api.js'):null]).then(([module,fake])=>{
       if(disposed)return null;
       const fakeTransport=fake?fake.createFakeIslandTransport():null;
