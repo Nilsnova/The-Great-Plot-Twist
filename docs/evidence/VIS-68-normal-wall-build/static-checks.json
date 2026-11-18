@@ -1,7 +1,7 @@
 {
   "migrationVersionsUnique": 72,
   "frozenFrontendTreeMatches": true,
-  "originalArtifactsByteVerified": 17,
+  "originalArtifactsByteVerified": 22,
   "relativeTargetsChecked": 6,
   "unchangedRuntimeAndDependencyPaths": [
     "frontend/public",
@@ -15,11 +15,16 @@
     "backend/server/island/layout.py",
     "backend/content/island_layout.json"
   ],
-  "independentAudit": "Read-only strict-source audit clear ated9c0f14; reviewer ran no tests/browser/DB. Root owns final combined verification.",
+  "independentAudit": "Both stricted9c0f14 and compatible670402d6 read-only source audits clear; reviewers ran no tests/browser/DB. Root owns repeated combined verification.",
   "authoredWhitespace": "passed",
   "rawReporterWhitespace": {
     "exitCode": 2,
     "diagnostics": 79,
     "scope": "Unchanged raw reporter output; copied bytes preserved."
+  },
+  "compatibleDocsUpdateWhitespace": {
+    "authored": "passed",
+    "originalReporterDiagnostics": 99,
+    "reportersPreservedByteExact": true
   }
 }

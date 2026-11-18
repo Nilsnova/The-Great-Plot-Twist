@@ -63,14 +63,18 @@ The service-only transaction wrapper:
 4. Checks the same fourteen static ground reserves again in SQL. A real Node
    import and the Python catalogue are compared with the SQL values in a
    disposable test; their contents must agree.
-5. In one bounded subtransaction, creates transaction-local proof, materializes
-   only this **fresh purchase's** checked cell and invokes the original paid
-   function. A refused JSON result rolls the coordinate change back too.
+5. In one bounded subtransaction, creates transaction-local proof and invokes the
+   original paid function. A checked cell is materialized **only if it differs**
+   from the saved cell or absent-row canonical default. A matching saved row keeps
+   its exact `moved_by` and `moved_at`; an absent default stays absent, preserving
+   the layout version. A refusal rolls any necessary cell change back too.
 6. Restores the previous proof after success. Error/refusal rolls the proof back
    with the subtransaction. No proof remains accidentally usable by a later call.
 
 The fresh-original-wall INSERT trigger requires exact bounded proof: owner,
-payer, plot, ref and checked half-grid coordinates matching the actual row. The
+payer, plot, ref and checked half-grid coordinates matching the actual row or its
+canonical default when absent. That fallback is read after the owner lock and
+full snapshot comparison. The
 existing positioned-chain context is also accepted for its matching original
 pieces; its owner, payer, UID, bounded plot list, ref suffix and saved policy must
 fit. Both paths retain the static clearance check. The trigger takes no late
@@ -106,8 +110,9 @@ Targeted setup changes keep the intended scenarios real:
 - A shared-island visitor joins through the existing game API before buying.
 - Workshop movement supplies the actual complete snapshot rather than assuming
   an empty layout after a fresh wall has materialized its checked coordinate.
-- Fresh-start setup upserts its declared later moved cell instead of inserting a
-  duplicate original-wall row.
+- Fresh-start setup retains its original INSERT: a normal default purchase must
+  not create a gratuitous layout row. Eight new regressions also check absent
+  defaults and unchanged saved movement metadata across both policies/payers.
 - The demolition contention case rebuilds through a real paid purchase by the
   other member. Its wallet is locked before the owner row, avoiding an artificial
   reversed-lock setup while retaining all original busy/refund assertions.
@@ -132,8 +137,10 @@ stricter contract.
 | Concrete raw/effective gap before strict proof | `2 failed / 22 deselected`, 4.98s: both old signatures wrongly inserted a displayed overlap. |
 | First strict fixture run | `54 passed / 2 failed`, 6.87s: old fresh-start setup inserted an already materialized row. |
 | Broader strict fixture run | `139 passed / 2 failed`, 17.09s: missing visitor membership and an obsolete empty-CAS setup. |
-| Final strict affected PostgreSQL | **`141 passed in 15.31s`**, eight files, zero skips. Includes actual two-connection lock contention, complete policy/layout CAS, replay, successful/refused materialization, proof lifetime and malformed/wrong-owner/plot/ref/coordinate cases. All 72 migrations execute twice. |
-| Whole backend Ruff after root's formatting dependency | **`All checks passed!`** The earlier unrelated long fixture line and its correction remain recorded. |
+| Strict affected PostgreSQL before broad compatibility feedback | `141 passed in 15.31s`, eight files, zero skips. This still wrote gratuitous default/matching layout rows. |
+| Coordinator wider run on the preceding source | `1,758 passed / 5 failed / 21 setup errors`, 141.77s. Repeated setup errors and one admission failure exposed the gratuitous row write; three old fresh-construction profiles crossed a tree, and one positive kind-pair fixture lacked the newly required proof. The original failed log is retained. |
+| Current compatible affected PostgreSQL | **`292 passed in 9.72s`**, seven files, zero skips, covering every failed file above. Includes eight new no-write regressions, true off-lane materialization, the raw/effective bypass, actual two-connection lock contention, policy/layout CAS, proof lifetime and malformed/wrong-owner/plot/ref/coordinate cases. All 72 migrations execute twice. |
+| Whole backend Ruff after the compatibility fix | **`All checks passed!`** Earlier unrelated and new formatting diagnostics are retained separately. |
 
 Frontend command from `frontend/`:
 
@@ -145,7 +152,7 @@ PostgreSQL command from `backend/` (existing dependencies plus ephemeral test-on
 packages; no environment file and only the fixture's private Unix socket):
 
 ```bash
-CASE_PG_SCRATCH=1 UV_CACHE_DIR=/workspace/.cache/uv UV_PROJECT_ENVIRONMENT=/workspace/The-Great-Plot-Twist/backend/.venv uv run --frozen --no-env-file --no-sync --with pgserver --with 'psycopg[binary]' pytest -q server/tests/island_sql/test_normal_wall_build_clearance_sql.py server/tests/island_sql/test_islands_and_waves_sql.py server/tests/island_sql/test_tower_defense_sql.py server/tests/island_sql/test_structure_recovery_schema_sql.py server/tests/island_sql/test_structure_recovery_mutations_sql.py server/tests/island_sql/test_structure_recovery_api_sql.py server/tests/island_sql/test_recovery_finish_checkpoint_guard_sql.py server/tests/island_sql/test_demolish_sql.py
+CASE_PG_SCRATCH=1 UV_CACHE_DIR=/workspace/.cache/uv UV_PROJECT_ENVIRONMENT=/workspace/The-Great-Plot-Twist/backend/.venv uv run --frozen --no-env-file --no-sync --with pgserver --with 'psycopg[binary]' pytest -q server/tests/island_sql/test_normal_wall_build_clearance_sql.py server/tests/island_sql/test_islands_and_waves_sql.py server/tests/island_sql/test_island_fresh_start_sql.py server/tests/island_sql/test_wall_policy_sql.py server/tests/island_sql/test_wall_cohort_sql.py server/tests/island_sql/test_perimeter_v1_lifecycle_sql.py server/tests/island_sql/test_structure_recovery_mutations_sql.py
 ```
 
 ## Evidence and remaining work
@@ -155,7 +162,13 @@ CASE_PG_SCRATCH=1 UV_CACHE_DIR=/workspace/.cache/uv UV_PROJECT_ENVIRONMENT=/work
 The final frontend runtime tree is identical to the frozen `0d745a26` tree.
 Documentation commits and build stamps are separate from that source identity.
 
-The coordinator owns combined regression/build/budget/text/accessibility/demo
+The final fresh 11-piece lifecycle setup uses a slice of the separately measured
+scenery-clear profile; its original paid wall, immutable wave template, IDs,
+contributions, amounts and all assertions remain unchanged. The cohort's positive
+original-wall kind pairs now use a real guarded purchase and assert success;
+negative raw-insertion tests still exercise the constraint directly.
+
+The coordinator owns the repeated wider selection and combined regression/build/budget/text/accessibility/demo
 checks and actual desktop/phone captures. No Chrome, new app dependency, full
 backend suite, live SQL, deployment, production persistence or physical-device
 check was performed by this writer. This component does not claim complete-suite

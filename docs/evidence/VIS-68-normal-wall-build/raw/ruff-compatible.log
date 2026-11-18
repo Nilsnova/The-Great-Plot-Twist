@@ -1,0 +1,12 @@
+E501 Line too long (101 > 100)
+   --> server/tests/island_sql/test_wall_cohort_sql.py:114:101
+    |
+112 |         with database.transaction(force_rollback=True):
+113 |             if kind == "wall":
+114 |                 assert build(database, OWNER, plot, kind, f"island:{UID}:{plot}")["status"] == "done"
+    |                                                                                                     ^
+115 |             else:
+116 |                 insert(database, plot, kind)
+    |
+
+Found 1 error.

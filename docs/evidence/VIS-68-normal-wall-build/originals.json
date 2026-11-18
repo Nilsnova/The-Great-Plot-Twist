@@ -100,5 +100,35 @@
     "origin": "/workspace/reference-village-work/normal-wall-build-results/strict-source.json",
     "bytes": 331,
     "sha256": "1fd2bc756166c5cf178a5e7ec315a5000876b43e6f388855934e6da635520de2"
+  },
+  {
+    "path": "raw/ruff-compatible-final.log",
+    "origin": "/workspace/reference-village-work/normal-wall-build-results/ruff-compatible-final.log",
+    "bytes": 19,
+    "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+  },
+  {
+    "path": "raw/ruff-compatible.log",
+    "origin": "/workspace/reference-village-work/normal-wall-build-results/ruff-compatible.log",
+    "bytes": 512,
+    "sha256": "828032351f3a75c16e3bd20fde6534c199f490568255a94b4295b7103ed74003"
+  },
+  {
+    "path": "raw/sql-compatible-focused.log",
+    "origin": "/workspace/reference-village-work/normal-wall-build-results/sql-compatible-focused.log",
+    "bytes": 420,
+    "sha256": "0dda5a4b265bf64734d9af2f3e782a3a563f7fa94a49976bcee3bcd7a6fb1767"
+  },
+  {
+    "path": "raw/coordinator-wide-initial.log",
+    "origin": "/workspace/reference-village-work/clearance-backend-checks/backend.log",
+    "bytes": 62220,
+    "sha256": "311942138df43b5006aff79ed3a20c6f1014720d8054b996480c6e20929878cc"
+  },
+  {
+    "path": "raw/coordinator-wide-initial-report.json",
+    "origin": "/workspace/reference-village-work/clearance-backend-checks/report.json",
+    "bytes": 4660,
+    "sha256": "8fd560ceb8e28873cbce5373543b170a9ca9a14eb366eb1683e05ef10c83bc81"
   }
 ]

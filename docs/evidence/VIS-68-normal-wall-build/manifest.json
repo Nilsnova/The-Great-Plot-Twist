@@ -1,13 +1,13 @@
 {
-  "source": "ed9c0f14e723034da47e7a2dc6e91a4e590c887a",
+  "source": "670402d658bcba411df08e859ab88661587c8bc7",
   "files": {
     "README.md": {
-      "bytes": 11387,
-      "sha256": "55678e2052cd13382d40d6e748987ecadb10b7c9ff16a97060a03b432429a23c"
+      "bytes": 12729,
+      "sha256": "41c84fcd9e1900354f577c303e1cbb67e1873c6bbbdc1bbbc97244b2d1403179"
     },
     "originals.json": {
-      "bytes": 4189,
-      "sha256": "00ee2b2fada423620630dd50e4fcfb8e85a04a7f0557741b6a13e5b8964116f0"
+      "bytes": 5445,
+      "sha256": "f8a0c60f182a9bc8d48e0c3fbffd6d58b4c6269b4c258818fe23a99335c222d3"
     },
     "raw/backend-focused.log": {
       "bytes": 261,
@@ -25,6 +25,14 @@
       "bytes": 99,
       "sha256": "b762aeccee7e4dba827cb6284321888475ab042d5182cc6b3325ed0adad4c3d3"
     },
+    "raw/coordinator-wide-initial-report.json": {
+      "bytes": 4660,
+      "sha256": "8fd560ceb8e28873cbce5373543b170a9ca9a14eb366eb1683e05ef10c83bc81"
+    },
+    "raw/coordinator-wide-initial.log": {
+      "bytes": 62220,
+      "sha256": "311942138df43b5006aff79ed3a20c6f1014720d8054b996480c6e20929878cc"
+    },
     "raw/frontend-green-corrected.log": {
       "bytes": 887,
       "sha256": "b8156fef06349cc5cd0690b723827455e18025e80ef748afde4e434c12c85e2e"
@@ -41,6 +49,14 @@
       "bytes": 79959,
       "sha256": "b93e4b6ec613539820bef01bb21196d4622af48ebd4c48672bea45e7915dec7d"
     },
+    "raw/ruff-compatible-final.log": {
+      "bytes": 19,
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    "raw/ruff-compatible.log": {
+      "bytes": 512,
+      "sha256": "828032351f3a75c16e3bd20fde6534c199f490568255a94b4295b7103ed74003"
+    },
     "raw/ruff-final.log": {
       "bytes": 19,
       "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
@@ -48,6 +64,10 @@
     "raw/ruff.log": {
       "bytes": 397,
       "sha256": "0c0e1e22ef98300ea00781e21b9f5f63e51e2a2f494fc51c02507630a90dc6a0"
+    },
+    "raw/sql-compatible-focused.log": {
+      "bytes": 420,
+      "sha256": "0dda5a4b265bf64734d9af2f3e782a3a563f7fa94a49976bcee3bcd7a6fb1767"
     },
     "raw/sql-context-focused-final.log": {
       "bytes": 181,
@@ -78,12 +98,12 @@
       "sha256": "1fd2bc756166c5cf178a5e7ec315a5000876b43e6f388855934e6da635520de2"
     },
     "source.json": {
-      "bytes": 1458,
-      "sha256": "bb4de3b7a5d98aec448b5b8d0bd6adff0e090bfe42934857b468ec6dbdb88db5"
+      "bytes": 1822,
+      "sha256": "5fe50d46a06772383d321d1347ed09636d0bc14beae8c8105c4be5c7932a5953"
     },
     "static-checks.json": {
-      "bytes": 855,
-      "sha256": "670bc13568ca315fc0c0162aa8232f8ca0e6c0af3e8871535cc674a670077202"
+      "bytes": 1033,
+      "sha256": "f1abf46b6b30d973ae0c718b72709b6c7c56811100eacc9176978f68e96bf920"
     }
   },
   "scope": "Original evidence bytes; earlier attempts are historical. No production or complete-suite green claim."
