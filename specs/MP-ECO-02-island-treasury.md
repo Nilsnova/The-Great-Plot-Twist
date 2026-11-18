@@ -105,3 +105,7 @@ findings from incoming main evidence files remain unchanged and are recorded in 
 The committed-diff entropy scanner initially flagged the deterministic public test alphabet used to
 make repeatable island codes. It is explicitly allowlisted at that one literal with its purpose; the
 committed-diff scan then reports zero findings. No credential is embedded.
+
+After the narrowly scoped allowlist annotation, `python3 scripts/check-diff-secrets.py` reported
+**0 findings** and Ruff passed on the annotated test file. This comment-only annotation did not
+change the fixture's alphabet; the functional suites above remain the results for that same code.
