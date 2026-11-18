@@ -5,7 +5,7 @@
 > **Who uses it:** Ianno, the T55 agent and dependent repair-task implementers.
 
 - **Status:** core implementation merged through PR #203. Full wave-end restoration is on main as of 18 Nov; saved gated-defense compatibility remains on `fix/recovery-gated-defenses`, pending review.
-- **Branch:** `feat/t55-structure-health`
+- **Current branch:** `fix/recovery-gated-defenses` (original core: `feat/t55-structure-health`)
 - **Issue:** [#121](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/121)
 
 ## Why
