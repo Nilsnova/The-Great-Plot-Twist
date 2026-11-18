@@ -4,8 +4,9 @@
 >
 > **Who uses it:** Johannes Franz Lang (`frcola`) and multiplayer reviewers.
 
-- **Status:** in progress; Draft only.
+- **Status:** verifier implemented and pure checks passed; coordinator native/full run and human review pending; Draft only.
 - **Issue:** [#434](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/434).
+- **Pull request:** [Draft #435](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/435).
 - **Branch:** `test/vis-59-wall-profile-observer`.
 - **Base:** coordinator review `480d636d`, containing current-main gameplay.
 
@@ -27,6 +28,10 @@ Update only `frontend/scripts/multiplayer-map-observer.js` and its focused test.
 ## Responsibility and limits
 
 Johannes Franz Lang remains responsible for the agent-assisted output. Keep Draft pending exact evidence, explain-back and different-human review. No main/PR merge, deployment, live migration, feature flag, package or environment changes.
+
+## Exact result
+
+[Original red and final evidence](../docs/evidence/VIS-59-wall-profile-observer/README.md) retains the initial 30-pass/one-failure reproduction and the tests-first expanded 52-pass/99-failure run. The eight-line observer correction passes all 151 focused cases. The committed seven-file wall/observer selection passes **197 tests / 7 files in 5.13 s**. All 31 original test cases remain byte-for-byte; 120 new cases cover every tier, orientation and cap/buttress form, stale diagnostics, corrupted buffers and teardown. Product/native/dependency file identities are unchanged from base `480d636d`. This does not close the separate native input timeout or claim a native multiplayer/full-suite pass.
 
 ## Explain-back
 

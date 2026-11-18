@@ -1,0 +1,39 @@
+{
+  "base": "480d636d3e18b879f51126804d8c76e2720265e2",
+  "source": "3584c38692fe7672309b56c417641339c9eb5bd7",
+  "originalTestsRetainedByteForByte": true,
+  "originalTestBytes": 6075,
+  "retainedPrefixSha256": "07f39681d53241e38afeb8b2df9346e0c92858bed69248d0ba7fe20972e88ecc",
+  "originalTestSha256": "07f39681d53241e38afeb8b2df9346e0c92858bed69248d0ba7fe20972e88ecc",
+  "observerLines": 109,
+  "unchangedProductNativeAndDependencyTrees": {
+    "frontend/src": {
+      "base": "e191d9290088908ee27e82e03a15847d4a73a38e",
+      "current": "e191d9290088908ee27e82e03a15847d4a73a38e"
+    },
+    "frontend/public": {
+      "base": "9306942db1050d728799cee2fbdc8e8960f14ad2",
+      "current": "9306942db1050d728799cee2fbdc8e8960f14ad2"
+    },
+    "backend": {
+      "base": "3956a73d76f537fd7c85259afa4bf9280a6e0ecd",
+      "current": "3956a73d76f537fd7c85259afa4bf9280a6e0ecd"
+    },
+    "supabase": {
+      "base": "5dfb7a3d506568b2e344c795360a562580854c33",
+      "current": "5dfb7a3d506568b2e344c795360a562580854c33"
+    },
+    "frontend/package.json": {
+      "base": "9666ba96eafa20d8cfb64d11862e57f3c238bb1f",
+      "current": "9666ba96eafa20d8cfb64d11862e57f3c238bb1f"
+    },
+    "frontend/package-lock.json": {
+      "base": "b37c781f13fa933c454a99f1c8c06db732546596",
+      "current": "b37c781f13fa933c454a99f1c8c06db732546596"
+    },
+    "frontend/scripts/check-multiplayer.js": {
+      "base": "de90cd6cb7ab59b0955626c510b74b85590cb55b",
+      "current": "de90cd6cb7ab59b0955626c510b74b85590cb55b"
+    }
+  }
+}

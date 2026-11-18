@@ -1,0 +1,49 @@
+{
+  "source": "3584c38692fe7672309b56c417641339c9eb5bd7",
+  "files": {
+    "README.md": {
+      "bytes": 7077,
+      "sha256": "3b56a0ffcb3f7ffa21314641fdb4e55c2c81a102e4a7f25d9a5dbe9877defd53"
+    },
+    "expanded-red.json": {
+      "bytes": 458,
+      "sha256": "832fcb1bd75857ce9774f294bbee08a799039449eadb6c9c34f307c7f3742f64"
+    },
+    "expanded-red.log": {
+      "bytes": 32763,
+      "sha256": "dc3c35e5c70208012cf0a8f601fbc837712382eb885e25a7f7956ef68823ab66"
+    },
+    "final-pure.json": {
+      "bytes": 739,
+      "sha256": "5d332c935e18697f8ac6d830a70e145635b9695ed3bd90f03bbc80a1dd1014c5"
+    },
+    "final-pure.log": {
+      "bytes": 31957,
+      "sha256": "c0152a4b7b225ecc0e5c9a4d2adaa9ac716620200d44eabd1aed43474180f960"
+    },
+    "focused-green.json": {
+      "bytes": 480,
+      "sha256": "59868252fe4b022b9ab12b6ccfdeca4006fbc6afead7fc029bdf9cc3a53ea151"
+    },
+    "focused-green.log": {
+      "bytes": 23675,
+      "sha256": "bee57403a7bbe538426a958f7abf2d2dbbdc505991d5f8791fbb658687eff30d"
+    },
+    "observer-change.patch": {
+      "bytes": 1756,
+      "sha256": "adef2e3fac4bbb6b3528d8c300a5cc8352067865e225940d125f50ce05609d96"
+    },
+    "original-red.json": {
+      "bytes": 462,
+      "sha256": "8875fe6b41b6bd6b183c374c53cabbe84152fd581fe81b824f4b0b1023925aa6"
+    },
+    "original-red.log": {
+      "bytes": 5674,
+      "sha256": "fc9d4a2c473652933a1fa4a9052dd2f44dcb22fab40118be947860c7240fffa1"
+    },
+    "scope-identity.json": {
+      "bytes": 1519,
+      "sha256": "073111c145bc24eea6a9bcc8ee8ffc73172c873735f9b6d43b4dc4b84472a534"
+    }
+  }
+}

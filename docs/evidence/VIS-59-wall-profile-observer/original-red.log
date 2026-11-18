@@ -1,0 +1,77 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run --maxWorkers=1 --reporter=verbose tests/multiplayer-map-observer.test.js
+
+
+ RUN  v5.1.0 /workspace/reference-village-work/wall-profile-observer/frontend
+
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > observes tier 1 in real indexed wall buffers without inventing pips 9ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > observes tier 2 in real indexed wall buffers without inventing pips 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > observes tier 3 in real indexed wall buffers without inventing pips 2ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > observes tier 4 in real indexed wall buffers without inventing pips 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > observes tier 5 in real indexed wall buffers without inventing pips 1ms
+ × tests/multiplayer-map-observer.test.js > actual multiplayer map observer > observes the actual cap of a straight same-level wall, and changed level after repaint 15ms
+   → expected { level: +0, pips: +0, …(1) } to deeply equal { level: 3, pips: +0, …(1) }
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > does not trust a fresh diagnostic level over stale drawn UVs 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects a corrupted actual position buffer 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects a corrupted actual uv buffer 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects a corrupted actual index buffer 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects missing mesh 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects hidden mesh 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects hidden ancestor 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects moved mesh 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects moved scene 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects manual matrix 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects scaled group 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects empty draw range 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects excluded post 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects no texture 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects transparent material 0ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects wrong texture size 0ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects placeholder receipt 0ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects empty metrics 0ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects missing receipt 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > does not report a torn-down row from another wall in the same layer 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > refuses teardown success when fresh rows disappear but the last observed quad is still drawn 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects a stale teardown remnant despite wrong UV 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects a stale teardown remnant despite no texture 0ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects a stale teardown remnant despite moved ancestor 0ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > preserves legacy walls, towers and real pip counts, refusing duplicate renderers 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/multiplayer-map-observer.test.js > actual multiplayer map observer > observes the actual cap of a straight same-level wall, and changed level after repaint
+AssertionError: expected { level: +0, pips: +0, …(1) } to deeply equal { level: 3, pips: +0, …(1) }
+
+- Expected
++ Received
+
+  {
+-   "level": 3,
+-   "mode": "wall-batch",
++   "level": 0,
++   "mode": "invalid-wall-batch",
+    "pips": 0,
+  }
+
+ ❯ tests/multiplayer-map-observer.test.js:26:25
+     24|   it('observes the actual cap of a straight same-level wall, and chang…
+     25|     const rows = [wall('a', 2, 3, 3), wall('wall_2', 4, 3, 3), wall('c…
+     26|     expect(read(state)).toEqual({level: 3, pips: 0, mode: 'wall-batch'…
+       |                         ^
+     27|     state.walls.show(rows.map(row => row.id === 'wall_2' ? {...row, le…
+     28|     expect(read(state)).toEqual({level: 4, pips: 0, mode: 'wall-batch'…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 30 passed (31)
+   Start at  00:49:30
+   Duration  1.12s (transform 57%, import 35%, tests 7%, worker 1%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.3
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.3
+npm notice To update run: npm install -g npm@12.2.3
+npm notice
