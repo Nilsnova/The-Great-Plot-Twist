@@ -42,7 +42,7 @@ Private aliases are captured only if absent; a wrapper must never be captured as
 
 ## Dependencies and boundaries
 
-Use the current MP-ECO-02 treasury/scope primitives and MP-ECO-07 global personal guard. The tested dependency cut is published treasury `feca459f` (schema migration version `20261118050050`), personal Captain `4005fb53`, construction `9191a698` with its grant protection in `6646a842`, and main `3482c281`. MP-ECO-04 provides its self-contained `20261118050401` construction/kit guards and actor/target ordering protection; this migration does not define a kit wrapper or kit alias. This migration does not rewrite those functions or install the separate coherent snapshot migration.
+Use the current MP-ECO-02 treasury/scope primitives and MP-ECO-07 global personal guard. The tested dependency cut is published treasury `feca459f` (schema migration version `20261118050050`), personal Captain `4005fb53`, construction `42f1b880` with its grant protection in `6646a842`, and main `3482c281`. MP-ECO-04 provides its self-contained `20261118050401` construction/kit guards and actor/target ordering protection; this migration does not define a kit wrapper or kit alias. This migration does not rewrite those functions or install the separate coherent snapshot migration.
 
 No wave, arsenal, paid-repair, deletion or historical completion API is invented. Their canonical session, frozen loadout, source settlement and retention integrations remain explicit gates. Unsupported legacy personal/reset actions may refuse after adoption while their stored historical receipts remain unchanged. Kit grants are ordinary original private-origin rewards and never transfer into a treasury.
 
