@@ -1,5 +1,7 @@
 """Original harbor and home sprites with selective outlines and clustered pixels."""
+from PIL import Image, ImageDraw
 from common import canvas, shadow, poly
+from place_materials import index_region, tile_surface
 INK='#393c30'
 def window(d,x,y,w=12,h=15,bars=False):
     d.rectangle((x,y,x+w,y+h),fill=INK);d.rectangle((x+2,y+2,x+w-2,y+h-2),fill='#7a9b87')
@@ -122,8 +124,34 @@ def windmill():
     d.ellipse((50,52,62,64),fill='#8b7351',outline=INK);d.ellipse((54,56,58,60),fill='#bbaa79')
     return im
 
+def build_plot(root):
+    im,d=canvas(144,96)
+    # Low sandstone edging and packed soil borrow the colors of the village paths.
+    poly(d, [(5,22),(120,8),(139,68),(24,89)], '#746944')
+    poly(d, [(6,22),(120,8),(137,65),(24,85)], '#be9b62')
+    with Image.open(root/'public'/'village'/'terrain-materials-v1.png') as atlas:
+        sand=tile_surface(atlas.convert('RGB'), 'sand', im.size)
+    packed=Image.blend(Image.new('RGB', im.size, '#a88c60'), sand, .5)
+    packed=packed.quantize(colors=16, dither=Image.Dither.NONE).convert('RGB')
+    inner=Image.new('L', im.size)
+    ImageDraw.Draw(inner).polygon([(12,24),(117,13),(131,63),(28,79)], fill=255)
+    im.paste(packed, mask=inner)
+    d.line((9,22,119,9),fill='#dbbc85',width=2)
+    d.line((9,25,26,83,135,66),fill='#9f8252')
+    d.line((28,82,134,65),fill='#d3ad73')
+    for start_x,start_y,run,rise,count in [(10,22,108,-13,9),(29,84,108,-17,9),(8,25,17,56,6),(121,13,15,48,5)]:
+        for index in range(1,count):
+            x=start_x+round(index*run/count); y=start_y+round(index*rise/count)
+            d.line((x,y,x+2,y+3),fill='#9b8054')
+    # Small cedar stakes frame the same parcel corners as the original marker.
+    for x,y in [(7,24),(120,11),(136,67),(25,86)]:
+        d.rectangle((x-2,y-6,x+2,y+2),fill='#6e5738')
+        d.rectangle((x-1,y-5,x+1,y),fill='#c5a376')
+        d.line((x-1,y-5,x+1,y-5),fill='#ead2a0')
+    return index_region(im)
+
 def furniture(kind):
-    w,h={'notice-board':(48,64),'captains-table':(64,48),'build-plot':(144,96),'harbour-office-glow':(128,160)}[kind]
+    w,h={'notice-board':(48,64),'captains-table':(64,48),'harbour-office-glow':(128,160)}[kind]
     im,d=canvas(w,h)
     if kind=='harbour-office-glow':
         for x in [29,85]:d.rectangle((x,112,x+13,128),fill=(245,202,101,235))
@@ -139,15 +167,11 @@ def furniture(kind):
         poly(d,[(6,14),(52,11),(59,31),(10,34)],'#98744b',INK);d.line((10,16,50,13),fill='#bea073')
         poly(d,[(19,17),(43,16),(45,27),(20,29)],'#d0c298',INK)
         d.line((23,23,29,20,36,25,40,20),fill='#68876a');d.rectangle((10,23,15,27),fill='#4e6c5e')
-    else:
-        poly(d,[(5,22),(120,8),(139,68),(24,89)],'#607548');poly(d,[(9,25),(118,12),(134,65),(26,84)],'#b59c70')
-        for x,y in [(7,24),(120,11),(136,67),(25,86)]:d.rectangle((x-2,y-6,x+2,y+2),fill=INK);d.rectangle((x-1,y-5,x+1,y),fill='#c7b78a')
-        d.line((7,20,120,7,137,63),fill='#d1c49b');d.line((7,24,25,82,136,67),fill='#b7b68a')
     return im
 
-def assets():
+def assets(root):
     result={kind:house(kind) for kind in ['jail','prediction-kiosk','sports-pavilion','cabin','workshop']}
     result['market-hall']=market_hall()
-    result.update({'greenhouse':greenhouse(),'windmill':windmill()})
-    result.update({kind:furniture(kind) for kind in ['notice-board','captains-table','build-plot','harbour-office-glow']})
+    result.update({'greenhouse':greenhouse(),'windmill':windmill(),'build-plot':build_plot(root)})
+    result.update({kind:furniture(kind) for kind in ['notice-board','captains-table','harbour-office-glow']})
     return result

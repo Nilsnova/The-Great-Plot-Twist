@@ -43,7 +43,7 @@ Every row is a distinct original PNG in `public/pixel/`. Dimensions and anchors 
 | `workshop` | 112 × 112 | Home workshop and crossed tools; settlements.py |
 | `windmill` | 112 × 160 | Static native-pixel sails, home plot; settlements.py |
 | `greenhouse` | 112 × 96 | Glass panels and planted pots; settlements.py |
-| `build-plot` | 144 × 96 | Ground parcel and low corner posts; settlements.py |
+| `build-plot` | 144 × 96 | Shared village sand, low sandstone edging and cedar stakes; settlements.py |
 | `back-room` | 96 × 96 | Cove outbuilding; case_places.py, original boathouse source reused |
 | `low-tide-cave` | 112 × 96 | Stone cave entrance; case_places.py |
 | `arena-gate` | 112 × 96 | Stone arch with timber gate; case_places.py |
@@ -239,8 +239,8 @@ Four original additions in `scripts/pixel_art/islet.py`, registered in `src/pixe
 
 | Sprite id | Native pixels | Purpose |
 | --- | --- | --- |
-| `islet-empty-plot` | 56 × 64 | Timber parcel marker, without miniature text |
-| `islet-locked-sign` | 64 × 72 | Closed padlock sign for plots coming later |
+| `islet-empty-plot` | 56 × 64 | Amber timber sign with a build symbol |
+| `islet-locked-sign` | 64 × 72 | Muted timber sign with a closed padlock |
 | `islet-signal-station` | 80 × 128 | Small stone station and cedar signal mast, unlit |
 | `islet-signal-station-lit` | 80 × 128 | Matching station with a steady gold lens at night |
 
