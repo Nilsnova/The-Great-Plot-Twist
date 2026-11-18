@@ -1,0 +1,24 @@
+{
+  "source": "bcf8f1bce5458cfb9c5d07e063ea0c2f3d57c44f",
+  "trees": {
+    "frontend/src": "5d9e86ce5cc9ce9d0ee5fccb97975282c392505f",
+    "frontend/public": "c21b9328134b71786fe733994cd27510d3839cc9",
+    "backend": "cc81737e8e84ede4a6d123b34e1fbfd07d3e57ec",
+    "supabase/migrations": "ae31ac50221be83070e7f46580d66a70eedbad20",
+    "frontend/scripts": "d24e1872ed851dc97ca0fa1bb179d73e87c41184",
+    "frontend/tests": "0481f4b97335406d7b4814834a0dd31c74e64329"
+  },
+  "started": "2026-11-18T10:16:23.503678+00:00",
+  "command": [
+    "node",
+    "scripts/capture-paid-wall-tiers.mjs",
+    "/workspace/reference-village-work/clearance-runtime-01/frontend",
+    "/workspace/reference-village-work/clearance-paid-progress",
+    ".7",
+    "--scenery"
+  ],
+  "scope": "Native actual local fake API paid progression on the new obstacle-aware fixtures; not live persistence.",
+  "finished": "2026-11-18T10:21:58.969701+00:00",
+  "seconds": 335.47,
+  "exitCode": 0
+}
