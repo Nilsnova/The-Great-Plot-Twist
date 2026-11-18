@@ -16,6 +16,7 @@ from server.tests.island_sql.test_islands_and_waves_sql import (  # noqa: E402
     as_owner,
     as_server,
     balance,
+    build,
     call,
     ledger,
     open_island,
@@ -109,7 +110,12 @@ def test_legacy_pairs_and_all_d060_tower_kinds_are_preserved(database):
     ]
     for plot, kind in pairs:
         with database.transaction(force_rollback=True):
-            insert(database, plot, kind)
+            if kind == "wall":
+                assert (
+                    build(database, OWNER, plot, kind, f"island:{UID}:{plot}")["status"] == "done"
+                )
+            else:
+                insert(database, plot, kind)
 
 
 @pytest.mark.parametrize(

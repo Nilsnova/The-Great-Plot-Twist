@@ -1,6 +1,7 @@
 """Actual priced perimeter construction and value lifecycle on an old immutable v1 template."""
 
 import json
+from pathlib import Path
 
 import pytest
 
@@ -21,18 +22,13 @@ from server.tests.island_sql.test_structure_recovery_mutations_sql import (  # n
     seed_v1,
 )
 
+# Fresh construction follows the separately measured scenery-clear profile.
+# The existing paid wall and immutable old recovery template below remain unchanged.
 LEGACY_CELLS = [
-    (-18.5, -4),
-    (-18.5, -6),
-    (-18.5, -8),
-    (-18.5, -10),
-    (-16.5, -10),
-    (-16.5, -12),
-    (-14.5, -12),
-    (-12.5, -12),
-    (-10.5, -12),
-    (-10.5, -14),
-    (-10.5, -16),
+    tuple(cell)
+    for cell in json.loads(
+        (Path(__file__).parent / "../fixtures/perimeter-scenery-ring.json").read_text()
+    )["cells"][3:14]
 ]
 ADDED_CELLS = [(2.5, -16), (4.5, -16)]
 BUILD_SQL = "select public.island_wall_build(%s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,%s,%s)"

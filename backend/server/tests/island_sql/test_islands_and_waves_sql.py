@@ -525,8 +525,7 @@ def seed_progress(database):
     # One row in each table of the 14 Nov sprint, written straight as the database owner.
     database.execute(
         "insert into public.island_layout (island_owner, plot, x_half, z_half)"
-        " values (%s, 'wall_1', 4, 6) on conflict (island_owner,plot) "
-        "do update set x_half=excluded.x_half,z_half=excluded.z_half",
+        " values (%s, 'wall_1', 4, 6)",
         (OWNER,),
     )
     database.execute(

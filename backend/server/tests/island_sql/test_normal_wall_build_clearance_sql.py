@@ -102,6 +102,12 @@ def test_sql_obstacle_catalogue_exactly_matches_the_trusted_source(database):
         )
     )
     assert actual_client == expected
+    defaults = {
+        row[0]: row[2:4]
+        for row in json.loads(layout.CONTENT_FILE.read_text())["spots"]
+        if row[1] == "wall"
+    }
+    assert call(database, "select public.island_wall_default_positions()") == defaults
 
 
 def test_guarded_overloads_are_service_only(database):
@@ -353,6 +359,39 @@ def test_successful_legacy_purchase_materializes_only_its_checked_effective_cell
     after = snapshot(database)
     assert len(after["rows"]) == len(before["rows"]) == 1
     assert (after["rows"][0]["x_half"] / 2, after["rows"][0]["z_half"] / 2) == expected
+
+
+@pytest.mark.parametrize("policy", [0, 1])
+@pytest.mark.parametrize("friend", [False, True])
+def test_default_purchase_keeps_absent_layout_rows_absent(database, policy, friend):
+    ready(database, policy)
+    database.execute("delete from public.island_layout where island_owner=%s", (OWNER,))
+    assert snapshot(database)["rows"] == []
+    assert purchase(database, friend)["status"] == "done"
+    assert snapshot(database)["rows"] == []
+
+
+@pytest.mark.parametrize("policy", [0, 1])
+@pytest.mark.parametrize("friend", [False, True])
+def test_matching_saved_cell_keeps_its_metadata_exactly(database, policy, friend):
+    ready(database, policy)
+    as_owner(database)
+    database.execute(
+        "update public.island_layout set moved_by=%s,moved_at=now()-interval '2 days' "
+        "where island_owner=%s",
+        (FRIEND, OWNER),
+    )
+    before = database.execute(
+        "select x_half,z_half,moved_by,moved_at from public.island_layout where island_owner=%s",
+        (OWNER,),
+    ).fetchone()
+    as_server(database)
+    assert purchase(database, friend)["status"] == "done"
+    after = database.execute(
+        "select x_half,z_half,moved_by,moved_at from public.island_layout where island_owner=%s",
+        (OWNER,),
+    ).fetchone()
+    assert after == before
 
 
 def test_real_owner_lock_wait_rechecks_the_snapshot_after_a_concurrent_change(scratch_server):
