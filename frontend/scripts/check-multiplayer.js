@@ -232,7 +232,6 @@ async function compare(a, b, waveId) {
   try { observed = compareSyncSamples(left, right); }
   catch (error) {
     receipt.error = {name: error.name, message: error.message};
-    await saveSyncReceipts().catch(writeError => log('sync receipt write failed:', writeError.message));
     throw error;
   }
   const {pairs, ...comparison} = observed;
@@ -254,7 +253,6 @@ async function compare(a, b, waveId) {
   }
   const metrics = {...comparison, landed, militiaChecked, sameMilitia, fighting, heartChecked, sameHeart};
   receipt.metrics = metrics;
-  await saveSyncReceipts();
   return metrics;
 }
 
@@ -896,6 +894,7 @@ try {
   const audio = env.errors.filter(text => /AudioContext|audio device/i.test(text));
   const errors = env.errors.filter(text => !/Failed to load resource/.test(text) && !audio.includes(text));
   assert.deepEqual(errors, [], 'no browser errors');
+  await saveSyncReceipts();
   log('\nRESULTS'); for (const line of results) log(`  ${line}`);
   log(`\ncheck-multiplayer: OK (${pages.length} pages), screenshots in ${out}`);
 } catch (error) {
