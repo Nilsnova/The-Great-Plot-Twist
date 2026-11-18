@@ -1,0 +1,1373 @@
+{
+ "plain:w1:s1": {
+  "hash": "6b59611e96152fe711434fbe",
+  "ticks": 393,
+  "reason": "all_sunk"
+ },
+ "plain:w2:s1": {
+  "hash": "1353182190ea02611805dab2",
+  "ticks": 446,
+  "reason": "all_sunk"
+ },
+ "plain:w3:s1": {
+  "hash": "843fd3a9dde47bdaaa4d55ba",
+  "ticks": 585,
+  "reason": "all_sunk"
+ },
+ "plain:w4:s1": {
+  "hash": "12407f3f296c363e270dd7da",
+  "ticks": 783,
+  "reason": "all_sunk"
+ },
+ "plain:w5:s1": {
+  "hash": "b88146e313c0044ed58c6168",
+  "ticks": 1715,
+  "reason": "all_sunk"
+ },
+ "plain:w6:s1": {
+  "hash": "7c87bdf74c453e3465f1dbe8",
+  "ticks": 705,
+  "reason": "all_sunk"
+ },
+ "plain:w7:s1": {
+  "hash": "51aa87b8cb8d338d0c809a85",
+  "ticks": 796,
+  "reason": "all_sunk"
+ },
+ "plain:w8:s1": {
+  "hash": "c371cb2b463df0f22b025083",
+  "ticks": 575,
+  "reason": "all_sunk"
+ },
+ "plain:w9:s1": {
+  "hash": "d400bfa43f7a4fbe7cc083e2",
+  "ticks": 830,
+  "reason": "all_sunk"
+ },
+ "plain:w10:s1": {
+  "hash": "4a295a153638bf930d3c4d6e",
+  "ticks": 2684,
+  "reason": "all_sunk"
+ },
+ "plain:w11:s1": {
+  "hash": "6251c444ca9ef6a196bd0ed3",
+  "ticks": 712,
+  "reason": "all_sunk"
+ },
+ "plain:w12:s1": {
+  "hash": "a5a96db730f453565825b815",
+  "ticks": 445,
+  "reason": "all_sunk"
+ },
+ "plain:w13:s1": {
+  "hash": "8e301b15a34ff05fa7a1d8c7",
+  "ticks": 545,
+  "reason": "all_sunk"
+ },
+ "plain:w14:s1": {
+  "hash": "be2272783a7d7ee96d6de299",
+  "ticks": 788,
+  "reason": "all_sunk"
+ },
+ "plain:w15:s1": {
+  "hash": "62efab04dc9f20a37f73fd7e",
+  "ticks": 536,
+  "reason": "island_lost"
+ },
+ "plain:w16:s1": {
+  "hash": "3f90963ac7e7fc2db47c8a76",
+  "ticks": 799,
+  "reason": "all_sunk"
+ },
+ "plain:w17:s1": {
+  "hash": "8f2b04186ba657b630dae077",
+  "ticks": 662,
+  "reason": "all_sunk"
+ },
+ "plain:w18:s1": {
+  "hash": "917abeb9a1b83a13fe3d6961",
+  "ticks": 694,
+  "reason": "all_sunk"
+ },
+ "plain:w19:s1": {
+  "hash": "e1b5f933b29f6303fa54bdf4",
+  "ticks": 623,
+  "reason": "island_lost"
+ },
+ "plain:w20:s1": {
+  "hash": "6a94e0600b5e205eb7985a44",
+  "ticks": 2820,
+  "reason": "all_sunk"
+ },
+ "plain:w21:s1": {
+  "hash": "ce3f51ed79d7a16085a56b23",
+  "ticks": 883,
+  "reason": "all_sunk"
+ },
+ "plain:w22:s1": {
+  "hash": "cf0c888a7c0e7b8c75a65c52",
+  "ticks": 736,
+  "reason": "all_sunk"
+ },
+ "plain:w23:s1": {
+  "hash": "c764fe84d272fb72ee2fbb9b",
+  "ticks": 584,
+  "reason": "all_sunk"
+ },
+ "plain:w24:s1": {
+  "hash": "51b115ecd7cd5c5e8a2c06c7",
+  "ticks": 1163,
+  "reason": "all_sunk"
+ },
+ "plain:w25:s1": {
+  "hash": "7b47abfe947f6a1aa55b4c3b",
+  "ticks": 1729,
+  "reason": "all_sunk"
+ },
+ "plain:w26:s1": {
+  "hash": "a63181516b4df1ce1d920575",
+  "ticks": 840,
+  "reason": "all_sunk"
+ },
+ "plain:w27:s1": {
+  "hash": "4f448141122a14ed149be017",
+  "ticks": 834,
+  "reason": "all_sunk"
+ },
+ "plain:w28:s1": {
+  "hash": "61c2483f54486546a0eb6127",
+  "ticks": 786,
+  "reason": "all_sunk"
+ },
+ "plain:w29:s1": {
+  "hash": "d62f8533445fdf6b4894518e",
+  "ticks": 797,
+  "reason": "all_sunk"
+ },
+ "plain:w30:s1": {
+  "hash": "808f7340497ede7f9376b7f9",
+  "ticks": 2968,
+  "reason": "all_sunk"
+ },
+ "plain:w31:s1": {
+  "hash": "ad5e27b70fe5c45e3e8f5d5b",
+  "ticks": 764,
+  "reason": "all_sunk"
+ },
+ "plain:w32:s1": {
+  "hash": "1da4a41a668202482b1e7cad",
+  "ticks": 749,
+  "reason": "all_sunk"
+ },
+ "plain:w33:s1": {
+  "hash": "d640f41d17ca508f1608472b",
+  "ticks": 1073,
+  "reason": "all_sunk"
+ },
+ "plain:w34:s1": {
+  "hash": "43874e535d5fb32af945e7cf",
+  "ticks": 1125,
+  "reason": "all_sunk"
+ },
+ "plain:w35:s1": {
+  "hash": "ae567b9f0bd8ae516b20d9c2",
+  "ticks": 1828,
+  "reason": "all_sunk"
+ },
+ "plain:w36:s1": {
+  "hash": "c0df5e9294ac95be2c87addc",
+  "ticks": 991,
+  "reason": "all_sunk"
+ },
+ "plain:w37:s1": {
+  "hash": "8e88d25742ea5a156bbe7c35",
+  "ticks": 1192,
+  "reason": "all_sunk"
+ },
+ "plain:w38:s1": {
+  "hash": "e5ef40cc0a76846ce3ebb0e3",
+  "ticks": 1306,
+  "reason": "all_sunk"
+ },
+ "plain:w39:s1": {
+  "hash": "062549cf8c73a6f27d38f07c",
+  "ticks": 1237,
+  "reason": "all_sunk"
+ },
+ "plain:w40:s1": {
+  "hash": "2de168824bc4bcd2bd103b2f",
+  "ticks": 3293,
+  "reason": "all_sunk"
+ },
+ "plain:w41:s1": {
+  "hash": "f0f174b9c4ba3d252d2ab964",
+  "ticks": 821,
+  "reason": "all_sunk"
+ },
+ "plain:w42:s1": {
+  "hash": "c7b3ddd6a7475e8b7658a3c1",
+  "ticks": 677,
+  "reason": "all_sunk"
+ },
+ "plain:w43:s1": {
+  "hash": "b9214402dd1a210b9870fd44",
+  "ticks": 1155,
+  "reason": "all_sunk"
+ },
+ "plain:w44:s1": {
+  "hash": "c096e5c671fa27203b080813",
+  "ticks": 1035,
+  "reason": "all_sunk"
+ },
+ "plain:w45:s1": {
+  "hash": "fd503962305dc005b7f2f08a",
+  "ticks": 2112,
+  "reason": "all_sunk"
+ },
+ "plain:w46:s1": {
+  "hash": "b3ef2e4aeb5c9032b1b527ae",
+  "ticks": 1180,
+  "reason": "all_sunk"
+ },
+ "plain:w47:s1": {
+  "hash": "c829fb84052a0028d57b003d",
+  "ticks": 1351,
+  "reason": "all_sunk"
+ },
+ "plain:w48:s1": {
+  "hash": "5071143f654c600bf71ef708",
+  "ticks": 1730,
+  "reason": "all_sunk"
+ },
+ "plain:w49:s1": {
+  "hash": "6603a64a6fbd76ebd1ef53ae",
+  "ticks": 1420,
+  "reason": "all_sunk"
+ },
+ "plain:w50:s1": {
+  "hash": "f0457eee9d33e10186ceac8e",
+  "ticks": 2923,
+  "reason": "island_lost"
+ },
+ "plain:w51:s1": {
+  "hash": "1b7b700939a8f3c0127ac63f",
+  "ticks": 1300,
+  "reason": "all_sunk"
+ },
+ "plain:w52:s1": {
+  "hash": "9146d9f1e38ea3b877e7a23f",
+  "ticks": 1439,
+  "reason": "all_sunk"
+ },
+ "plain:w53:s1": {
+  "hash": "fe06cecd80a63f5fe74e29af",
+  "ticks": 1492,
+  "reason": "all_sunk"
+ },
+ "plain:w54:s1": {
+  "hash": "f211da6a4b8554ece1abf1b4",
+  "ticks": 1586,
+  "reason": "all_sunk"
+ },
+ "plain:w55:s1": {
+  "hash": "7aa8109b0b7e93840c876634",
+  "ticks": 2402,
+  "reason": "all_sunk"
+ },
+ "plain:w56:s1": {
+  "hash": "bddd5f130cb2e11b203b1a0b",
+  "ticks": 1190,
+  "reason": "all_sunk"
+ },
+ "plain:w57:s1": {
+  "hash": "063a3e12c0b9f77a6a66e5bc",
+  "ticks": 1435,
+  "reason": "all_sunk"
+ },
+ "plain:w58:s1": {
+  "hash": "ce02d18bffbc634b40b7c580",
+  "ticks": 1751,
+  "reason": "all_sunk"
+ },
+ "plain:w59:s1": {
+  "hash": "f6fd6be496fefe311158894f",
+  "ticks": 1383,
+  "reason": "all_sunk"
+ },
+ "plain:w60:s1": {
+  "hash": "4a557342d658dd9c75c5f08c",
+  "ticks": 884,
+  "reason": "island_lost"
+ },
+ "plain:w2:s2": {
+  "hash": "bbf00613ff9c0ca62c8426cb",
+  "ticks": 294,
+  "reason": "all_sunk"
+ },
+ "plain:w7:s2": {
+  "hash": "053396425a79d9a5f701df45",
+  "ticks": 515,
+  "reason": "all_sunk"
+ },
+ "plain:w12:s2": {
+  "hash": "23fff8a8f572c0b3f5e27b60",
+  "ticks": 361,
+  "reason": "all_sunk"
+ },
+ "plain:w17:s2": {
+  "hash": "2caff996ce9149e18a365700",
+  "ticks": 426,
+  "reason": "all_sunk"
+ },
+ "plain:w22:s2": {
+  "hash": "87c65d91b4fba9c89c49de06",
+  "ticks": 530,
+  "reason": "all_sunk"
+ },
+ "plain:w27:s2": {
+  "hash": "c84df79d8491589367292057",
+  "ticks": 615,
+  "reason": "all_sunk"
+ },
+ "plain:w32:s2": {
+  "hash": "dfd63c7786eacc6c3de57b0c",
+  "ticks": 616,
+  "reason": "all_sunk"
+ },
+ "plain:w37:s2": {
+  "hash": "4c61a22914a381f43f0b2d6f",
+  "ticks": 901,
+  "reason": "all_sunk"
+ },
+ "plain:w42:s2": {
+  "hash": "694425394868a5b81fb4ab33",
+  "ticks": 1264,
+  "reason": "all_sunk"
+ },
+ "plain:w47:s2": {
+  "hash": "444f9ecc815283fc29c3aaae",
+  "ticks": 1198,
+  "reason": "all_sunk"
+ },
+ "plain:w52:s2": {
+  "hash": "b8573abe17efe3c1be98250a",
+  "ticks": 1269,
+  "reason": "all_sunk"
+ },
+ "plain:w57:s2": {
+  "hash": "397838b8aa34cfcb91a42938",
+  "ticks": 1577,
+  "reason": "all_sunk"
+ },
+ "plain:w2:s3": {
+  "hash": "0d010fe4c2561357a3977a44",
+  "ticks": 565,
+  "reason": "all_sunk"
+ },
+ "plain:w7:s3": {
+  "hash": "be52cca911143227fab96c5a",
+  "ticks": 697,
+  "reason": "all_sunk"
+ },
+ "plain:w12:s3": {
+  "hash": "0907dce423f381bdd70fd4f8",
+  "ticks": 520,
+  "reason": "all_sunk"
+ },
+ "plain:w17:s3": {
+  "hash": "75da6163c92092bd60e2fc30",
+  "ticks": 983,
+  "reason": "all_sunk"
+ },
+ "plain:w22:s3": {
+  "hash": "92ed146ee0487e52f75a307e",
+  "ticks": 804,
+  "reason": "all_sunk"
+ },
+ "plain:w27:s3": {
+  "hash": "9ccc75f2844130cba4fecaa1",
+  "ticks": 676,
+  "reason": "all_sunk"
+ },
+ "plain:w32:s3": {
+  "hash": "9d2d537d2a82882f49a840e4",
+  "ticks": 652,
+  "reason": "all_sunk"
+ },
+ "plain:w37:s3": {
+  "hash": "bd6a2fad0800cfca8537a18e",
+  "ticks": 1157,
+  "reason": "all_sunk"
+ },
+ "plain:w42:s3": {
+  "hash": "010e0759a575373fc18c83a5",
+  "ticks": 1131,
+  "reason": "all_sunk"
+ },
+ "plain:w47:s3": {
+  "hash": "3f973b95603cb6c8284e1c19",
+  "ticks": 1354,
+  "reason": "all_sunk"
+ },
+ "plain:w52:s3": {
+  "hash": "e69492a1a8be741c601daaee",
+  "ticks": 1464,
+  "reason": "all_sunk"
+ },
+ "plain:w57:s3": {
+  "hash": "a74b68b88f0ef41b25e20fdc",
+  "ticks": 1459,
+  "reason": "all_sunk"
+ },
+ "plain:w75:s1": {
+  "hash": "e944c050a109320952163611",
+  "ticks": 889,
+  "reason": "island_lost"
+ },
+ "plain:w90:s1": {
+  "hash": "e8e595400e82eceec4a2dea1",
+  "ticks": 615,
+  "reason": "captains_fallen"
+ },
+ "plain:w100:s1": {
+  "hash": "34d4236845b4c26e16043628",
+  "ticks": 834,
+  "reason": "island_lost"
+ },
+ "production:w1:s1": {
+  "hash": "791f3c645b92b3921a5148be",
+  "ticks": 393,
+  "reason": "all_sunk"
+ },
+ "production:w2:s1": {
+  "hash": "c6f83d2caa9f57f842e8eae5",
+  "ticks": 446,
+  "reason": "all_sunk"
+ },
+ "production:w3:s1": {
+  "hash": "0b674140d7078dcf68f16a24",
+  "ticks": 585,
+  "reason": "all_sunk"
+ },
+ "production:w4:s1": {
+  "hash": "c714fa4c6a005821718f630f",
+  "ticks": 783,
+  "reason": "all_sunk"
+ },
+ "production:w5:s1": {
+  "hash": "1701189453ae87adfe1aedc1",
+  "ticks": 1702,
+  "reason": "all_sunk"
+ },
+ "production:w6:s1": {
+  "hash": "270bb7f4b99edf9f42f9ed8a",
+  "ticks": 705,
+  "reason": "all_sunk"
+ },
+ "production:w7:s1": {
+  "hash": "d8ea03c6be6e21167a0fd9c8",
+  "ticks": 796,
+  "reason": "all_sunk"
+ },
+ "production:w8:s1": {
+  "hash": "5c6a12349bbb589c5c80a38d",
+  "ticks": 575,
+  "reason": "all_sunk"
+ },
+ "production:w9:s1": {
+  "hash": "d452c52180d68363131bafb8",
+  "ticks": 851,
+  "reason": "all_sunk"
+ },
+ "production:w10:s1": {
+  "hash": "b206c52671fd164d4e04afb8",
+  "ticks": 2752,
+  "reason": "all_sunk"
+ },
+ "production:w11:s1": {
+  "hash": "ef938e49d6f4620a00df1f64",
+  "ticks": 669,
+  "reason": "all_sunk"
+ },
+ "production:w12:s1": {
+  "hash": "7dc2908bec731ffade2ddcf8",
+  "ticks": 445,
+  "reason": "all_sunk"
+ },
+ "production:w13:s1": {
+  "hash": "84f5f024b12450309c3c49ed",
+  "ticks": 545,
+  "reason": "all_sunk"
+ },
+ "production:w14:s1": {
+  "hash": "5f5a6f4622acdf3c8180761b",
+  "ticks": 759,
+  "reason": "all_sunk"
+ },
+ "production:w15:s1": {
+  "hash": "ded1a5818b8cae852aaca35e",
+  "ticks": 1913,
+  "reason": "island_lost"
+ },
+ "production:w16:s1": {
+  "hash": "7273a632897870832364db01",
+  "ticks": 722,
+  "reason": "all_sunk"
+ },
+ "production:w17:s1": {
+  "hash": "589d78f14f35474c4d99c9f6",
+  "ticks": 633,
+  "reason": "all_sunk"
+ },
+ "production:w18:s1": {
+  "hash": "e2b7a59db90c838fcb0348c0",
+  "ticks": 532,
+  "reason": "all_sunk"
+ },
+ "production:w19:s1": {
+  "hash": "71a2e5f5fed84cce8229efe5",
+  "ticks": 680,
+  "reason": "island_lost"
+ },
+ "production:w20:s1": {
+  "hash": "1044451e209075aafd4174ed",
+  "ticks": 2698,
+  "reason": "all_sunk"
+ },
+ "production:w21:s1": {
+  "hash": "c63bd36667bc810c3e3b79e3",
+  "ticks": 635,
+  "reason": "all_sunk"
+ },
+ "production:w22:s1": {
+  "hash": "d014fb92f88f340d9dcb56ec",
+  "ticks": 581,
+  "reason": "all_sunk"
+ },
+ "production:w23:s1": {
+  "hash": "a8cce8d1a8f3f9b7a4a48721",
+  "ticks": 562,
+  "reason": "all_sunk"
+ },
+ "production:w24:s1": {
+  "hash": "5172e0e18b726bc74ff25a7c",
+  "ticks": 951,
+  "reason": "all_sunk"
+ },
+ "production:w25:s1": {
+  "hash": "db3820daf72e246024d483be",
+  "ticks": 1613,
+  "reason": "all_sunk"
+ },
+ "production:w26:s1": {
+  "hash": "f696df651991f97a97b2242c",
+  "ticks": 648,
+  "reason": "all_sunk"
+ },
+ "production:w27:s1": {
+  "hash": "49f4195b954b50255e0f8f43",
+  "ticks": 659,
+  "reason": "all_sunk"
+ },
+ "production:w28:s1": {
+  "hash": "7ca9f3a029bfe4faf6b5eadc",
+  "ticks": 653,
+  "reason": "all_sunk"
+ },
+ "production:w29:s1": {
+  "hash": "c3d901be73f6288fd2b6d115",
+  "ticks": 705,
+  "reason": "all_sunk"
+ },
+ "production:w30:s1": {
+  "hash": "9a1990f2d0812ed077857837",
+  "ticks": 2869,
+  "reason": "all_sunk"
+ },
+ "production:w31:s1": {
+  "hash": "1b128f4ae12ec30100de2206",
+  "ticks": 715,
+  "reason": "all_sunk"
+ },
+ "production:w32:s1": {
+  "hash": "5238598e944898e9a4b2f79d",
+  "ticks": 714,
+  "reason": "all_sunk"
+ },
+ "production:w33:s1": {
+  "hash": "d846a50a46af8b9209bb924b",
+  "ticks": 803,
+  "reason": "all_sunk"
+ },
+ "production:w34:s1": {
+  "hash": "7577cdf13af18e069e7518ff",
+  "ticks": 1022,
+  "reason": "all_sunk"
+ },
+ "production:w35:s1": {
+  "hash": "1237800711b4f05c711eb15b",
+  "ticks": 1756,
+  "reason": "all_sunk"
+ },
+ "production:w36:s1": {
+  "hash": "bfd64fe290dbb51ab0e12691",
+  "ticks": 810,
+  "reason": "all_sunk"
+ },
+ "production:w37:s1": {
+  "hash": "d0daf2032c60431b79ee1c83",
+  "ticks": 1080,
+  "reason": "all_sunk"
+ },
+ "production:w38:s1": {
+  "hash": "0f67eb38aa4d44f8503300f8",
+  "ticks": 1168,
+  "reason": "all_sunk"
+ },
+ "production:w39:s1": {
+  "hash": "6a49c7edb17b30ba7bae485d",
+  "ticks": 1131,
+  "reason": "all_sunk"
+ },
+ "production:w40:s1": {
+  "hash": "99498344a970234c67726058",
+  "ticks": 3101,
+  "reason": "all_sunk"
+ },
+ "production:w41:s1": {
+  "hash": "79c9275f001a4962aba72289",
+  "ticks": 775,
+  "reason": "all_sunk"
+ },
+ "production:w42:s1": {
+  "hash": "0b89a7a44cf9da1a736e3969",
+  "ticks": 618,
+  "reason": "all_sunk"
+ },
+ "production:w43:s1": {
+  "hash": "210ec12194a91d5fb1562235",
+  "ticks": 914,
+  "reason": "all_sunk"
+ },
+ "production:w44:s1": {
+  "hash": "a6e41957c3132f864691e178",
+  "ticks": 819,
+  "reason": "all_sunk"
+ },
+ "production:w45:s1": {
+  "hash": "80dfd86bfd7ec51832f6c5b4",
+  "ticks": 1713,
+  "reason": "all_sunk"
+ },
+ "production:w46:s1": {
+  "hash": "3a674faa13c0086e62ed1e32",
+  "ticks": 832,
+  "reason": "all_sunk"
+ },
+ "production:w47:s1": {
+  "hash": "3c820d9f9acbc1482afe2bae",
+  "ticks": 845,
+  "reason": "all_sunk"
+ },
+ "production:w48:s1": {
+  "hash": "4ae8a67a4aeb561f4498879f",
+  "ticks": 1156,
+  "reason": "all_sunk"
+ },
+ "production:w49:s1": {
+  "hash": "628fd92303a723e31c4e24e2",
+  "ticks": 1154,
+  "reason": "all_sunk"
+ },
+ "production:w50:s1": {
+  "hash": "bf1a321c4a322df62e56c9f5",
+  "ticks": 3115,
+  "reason": "all_sunk"
+ },
+ "production:w51:s1": {
+  "hash": "fbf080a4d4ffdb4234b1ec0a",
+  "ticks": 1178,
+  "reason": "all_sunk"
+ },
+ "production:w52:s1": {
+  "hash": "dcba5b944de418dc7efea67f",
+  "ticks": 1188,
+  "reason": "all_sunk"
+ },
+ "production:w53:s1": {
+  "hash": "fe4edfa5b3a01428cffddf22",
+  "ticks": 1157,
+  "reason": "all_sunk"
+ },
+ "production:w54:s1": {
+  "hash": "e0cb4ecc0700c09b02d7b2e4",
+  "ticks": 1447,
+  "reason": "all_sunk"
+ },
+ "production:w55:s1": {
+  "hash": "ca133f5251dad9284b0f5e72",
+  "ticks": 1537,
+  "reason": "island_lost"
+ },
+ "production:w56:s1": {
+  "hash": "0cd6c1c4aea6cf5e7e558b56",
+  "ticks": 928,
+  "reason": "all_sunk"
+ },
+ "production:w57:s1": {
+  "hash": "c8d4a5376e11fde220d50148",
+  "ticks": 1101,
+  "reason": "all_sunk"
+ },
+ "production:w58:s1": {
+  "hash": "6769804be1c6c0a643df58be",
+  "ticks": 2343,
+  "reason": "island_lost"
+ },
+ "production:w59:s1": {
+  "hash": "29b2f8c3e454960204a0ac47",
+  "ticks": 1097,
+  "reason": "all_sunk"
+ },
+ "production:w60:s1": {
+  "hash": "4e5565c5a5ffa89af5a9fe7d",
+  "ticks": 3780,
+  "reason": "island_lost"
+ },
+ "production:w2:s2": {
+  "hash": "0e7f3d8c317b74b29d609932",
+  "ticks": 294,
+  "reason": "all_sunk"
+ },
+ "production:w7:s2": {
+  "hash": "57d680534e1bb8e830f676fd",
+  "ticks": 515,
+  "reason": "all_sunk"
+ },
+ "production:w12:s2": {
+  "hash": "f83fdd4a86c8a83edda9e9b9",
+  "ticks": 361,
+  "reason": "all_sunk"
+ },
+ "production:w17:s2": {
+  "hash": "99f3890422cd0f75ccf14aaa",
+  "ticks": 378,
+  "reason": "all_sunk"
+ },
+ "production:w22:s2": {
+  "hash": "d91257e3616a69a366bd3bfa",
+  "ticks": 451,
+  "reason": "all_sunk"
+ },
+ "production:w27:s2": {
+  "hash": "f2d02c53fbf54365e8b671a1",
+  "ticks": 450,
+  "reason": "all_sunk"
+ },
+ "production:w32:s2": {
+  "hash": "8de88be2a914d83eb6a7e0e4",
+  "ticks": 542,
+  "reason": "all_sunk"
+ },
+ "production:w37:s2": {
+  "hash": "c1838beb3771e9d106204f22",
+  "ticks": 839,
+  "reason": "all_sunk"
+ },
+ "production:w42:s2": {
+  "hash": "0d952f1fc8e4d9386118a1d0",
+  "ticks": 1023,
+  "reason": "all_sunk"
+ },
+ "production:w47:s2": {
+  "hash": "319bc29bd01e8ad521cfff74",
+  "ticks": 715,
+  "reason": "all_sunk"
+ },
+ "production:w52:s2": {
+  "hash": "afbb97ac6ec94a2a253b3490",
+  "ticks": 1090,
+  "reason": "all_sunk"
+ },
+ "production:w57:s2": {
+  "hash": "3693c0d050214c1e28787635",
+  "ticks": 1286,
+  "reason": "all_sunk"
+ },
+ "production:w2:s3": {
+  "hash": "6451bedc0349b022ab12ed42",
+  "ticks": 566,
+  "reason": "all_sunk"
+ },
+ "production:w7:s3": {
+  "hash": "b6c0214bc9774abc8811e3dc",
+  "ticks": 697,
+  "reason": "all_sunk"
+ },
+ "production:w12:s3": {
+  "hash": "bc2733dfc578e69736a8bead",
+  "ticks": 515,
+  "reason": "all_sunk"
+ },
+ "production:w17:s3": {
+  "hash": "c969f8cfa0b52dca1cced9ef",
+  "ticks": 731,
+  "reason": "island_lost"
+ },
+ "production:w22:s3": {
+  "hash": "9f39703788932983b379d9c2",
+  "ticks": 553,
+  "reason": "all_sunk"
+ },
+ "production:w27:s3": {
+  "hash": "6170963573094a8e4203e461",
+  "ticks": 590,
+  "reason": "all_sunk"
+ },
+ "production:w32:s3": {
+  "hash": "5499137c7f3e2dad79c26eec",
+  "ticks": 625,
+  "reason": "all_sunk"
+ },
+ "production:w37:s3": {
+  "hash": "ac5e20d8c12fe7974e2cb48d",
+  "ticks": 998,
+  "reason": "all_sunk"
+ },
+ "production:w42:s3": {
+  "hash": "f17a3b80db6255630db2175b",
+  "ticks": 989,
+  "reason": "all_sunk"
+ },
+ "production:w47:s3": {
+  "hash": "90d98edfda22e9f1cff7b2b9",
+  "ticks": 1078,
+  "reason": "all_sunk"
+ },
+ "production:w52:s3": {
+  "hash": "63b016f51c20e8e2cf0ad10a",
+  "ticks": 1084,
+  "reason": "island_lost"
+ },
+ "production:w57:s3": {
+  "hash": "4db9f027f484f9435d95242e",
+  "ticks": 1085,
+  "reason": "all_sunk"
+ },
+ "production:w75:s1": {
+  "hash": "38aed5ec9f57fa2ee16fb413",
+  "ticks": 1497,
+  "reason": "island_lost"
+ },
+ "production:w90:s1": {
+  "hash": "307e610a564a2991f5367fe2",
+  "ticks": 1795,
+  "reason": "island_lost"
+ },
+ "production:w100:s1": {
+  "hash": "70ca6bc03c23142b237264d2",
+  "ticks": 3698,
+  "reason": "island_lost"
+ },
+ "recovery:w1:s1": {
+  "hash": "2e97a9b2cf8cef103190d9f5",
+  "ticks": 393,
+  "reason": "all_sunk"
+ },
+ "recovery:w2:s1": {
+  "hash": "1eedbec8b1f8aa30509a9eb4",
+  "ticks": 446,
+  "reason": "all_sunk"
+ },
+ "recovery:w3:s1": {
+  "hash": "da74569db256b6376e68ef57",
+  "ticks": 590,
+  "reason": "all_sunk"
+ },
+ "recovery:w4:s1": {
+  "hash": "a2a3d628ec58b024041c00f4",
+  "ticks": 783,
+  "reason": "all_sunk"
+ },
+ "recovery:w5:s1": {
+  "hash": "f3943a9643c9e51b4150710b",
+  "ticks": 1715,
+  "reason": "all_sunk"
+ },
+ "recovery:w6:s1": {
+  "hash": "afdfb9c68116ab1e948f6e70",
+  "ticks": 705,
+  "reason": "all_sunk"
+ },
+ "recovery:w7:s1": {
+  "hash": "be3e39b927770048a8737370",
+  "ticks": 796,
+  "reason": "all_sunk"
+ },
+ "recovery:w8:s1": {
+  "hash": "6e7a699c006add75e2335b9a",
+  "ticks": 575,
+  "reason": "all_sunk"
+ },
+ "recovery:w9:s1": {
+  "hash": "c1423d706b314ff4936d4a40",
+  "ticks": 1509,
+  "reason": "island_lost"
+ },
+ "recovery:w10:s1": {
+  "hash": "6e867b48e1d8337428da1f85",
+  "ticks": 3894,
+  "reason": "island_lost"
+ },
+ "recovery:w11:s1": {
+  "hash": "1c3a931c00c6440a827756e9",
+  "ticks": 669,
+  "reason": "all_sunk"
+ },
+ "recovery:w12:s1": {
+  "hash": "f4c6b86b5e2579c77f7993cc",
+  "ticks": 445,
+  "reason": "all_sunk"
+ },
+ "recovery:w13:s1": {
+  "hash": "2392595076f02acaa8584947",
+  "ticks": 560,
+  "reason": "all_sunk"
+ },
+ "recovery:w14:s1": {
+  "hash": "627a1e411239871c6cdc1a48",
+  "ticks": 759,
+  "reason": "all_sunk"
+ },
+ "recovery:w15:s1": {
+  "hash": "b12ea4a985fd75d2f84d41c0",
+  "ticks": 1896,
+  "reason": "island_lost"
+ },
+ "recovery:w16:s1": {
+  "hash": "418d2bf9f98489632cb367ec",
+  "ticks": 3000,
+  "reason": "timeout"
+ },
+ "recovery:w17:s1": {
+  "hash": "377a5600a8794335a24c9990",
+  "ticks": 666,
+  "reason": "all_sunk"
+ },
+ "recovery:w18:s1": {
+  "hash": "48add9006a724d7d0065313f",
+  "ticks": 536,
+  "reason": "all_sunk"
+ },
+ "recovery:w19:s1": {
+  "hash": "e1a74c22474c6f789a5185cc",
+  "ticks": 639,
+  "reason": "island_lost"
+ },
+ "recovery:w20:s1": {
+  "hash": "1ab14840bb217345e6b286ec",
+  "ticks": 3810,
+  "reason": "island_lost"
+ },
+ "recovery:w21:s1": {
+  "hash": "40a8f96a4c1ce1095d6d65b7",
+  "ticks": 635,
+  "reason": "all_sunk"
+ },
+ "recovery:w22:s1": {
+  "hash": "65940c2ef37115840e27fc61",
+  "ticks": 581,
+  "reason": "all_sunk"
+ },
+ "recovery:w23:s1": {
+  "hash": "d369839a07b2dbb1e663d0e0",
+  "ticks": 562,
+  "reason": "all_sunk"
+ },
+ "recovery:w24:s1": {
+  "hash": "3b99d766014c396770df9303",
+  "ticks": 894,
+  "reason": "island_lost"
+ },
+ "recovery:w25:s1": {
+  "hash": "3945d66756484e52a2beb70e",
+  "ticks": 2389,
+  "reason": "island_lost"
+ },
+ "recovery:w26:s1": {
+  "hash": "59e08ea40654db9a9e383f74",
+  "ticks": 648,
+  "reason": "all_sunk"
+ },
+ "recovery:w27:s1": {
+  "hash": "543dd15581c1812d66c0923f",
+  "ticks": 656,
+  "reason": "all_sunk"
+ },
+ "recovery:w28:s1": {
+  "hash": "84fbcd05f02c2e0b55cf47c6",
+  "ticks": 653,
+  "reason": "all_sunk"
+ },
+ "recovery:w29:s1": {
+  "hash": "a90ddc5c28d4004b2755ae7c",
+  "ticks": 705,
+  "reason": "all_sunk"
+ },
+ "recovery:w30:s1": {
+  "hash": "8712f7dc349f8dff3f4184d9",
+  "ticks": 3161,
+  "reason": "all_sunk"
+ },
+ "recovery:w31:s1": {
+  "hash": "60e171efa9ea209ba0502423",
+  "ticks": 715,
+  "reason": "all_sunk"
+ },
+ "recovery:w32:s1": {
+  "hash": "b1a0f53394990d65c6e8bb52",
+  "ticks": 714,
+  "reason": "all_sunk"
+ },
+ "recovery:w33:s1": {
+  "hash": "7c7de128d6c83f33705426a5",
+  "ticks": 816,
+  "reason": "all_sunk"
+ },
+ "recovery:w34:s1": {
+  "hash": "054f6622fa09bf525490fb03",
+  "ticks": 1109,
+  "reason": "all_sunk"
+ },
+ "recovery:w35:s1": {
+  "hash": "5614e06dd49cc9ec733955c8",
+  "ticks": 2174,
+  "reason": "island_lost"
+ },
+ "recovery:w36:s1": {
+  "hash": "e7bcaf938ef0bb7d24dde02b",
+  "ticks": 814,
+  "reason": "all_sunk"
+ },
+ "recovery:w37:s1": {
+  "hash": "bdf8d78e9725ae78c0975091",
+  "ticks": 1161,
+  "reason": "all_sunk"
+ },
+ "recovery:w38:s1": {
+  "hash": "f14532372157dd6af9a72cfb",
+  "ticks": 2499,
+  "reason": "island_lost"
+ },
+ "recovery:w39:s1": {
+  "hash": "b39b1133dfd9adc8a2fc0035",
+  "ticks": 763,
+  "reason": "island_lost"
+ },
+ "recovery:w40:s1": {
+  "hash": "279912e3041004eb9a4be5c5",
+  "ticks": 3904,
+  "reason": "island_lost"
+ },
+ "recovery:w41:s1": {
+  "hash": "51db4526281c793c34459450",
+  "ticks": 775,
+  "reason": "all_sunk"
+ },
+ "recovery:w42:s1": {
+  "hash": "11d471e52b4e2ab691bb426a",
+  "ticks": 619,
+  "reason": "all_sunk"
+ },
+ "recovery:w43:s1": {
+  "hash": "ff158b40c11934c8e093156a",
+  "ticks": 923,
+  "reason": "all_sunk"
+ },
+ "recovery:w44:s1": {
+  "hash": "f6ae6d9a6d96aa75be392e7a",
+  "ticks": 819,
+  "reason": "all_sunk"
+ },
+ "recovery:w45:s1": {
+  "hash": "9a0959d21eb7cf5248cc668c",
+  "ticks": 2268,
+  "reason": "island_lost"
+ },
+ "recovery:w46:s1": {
+  "hash": "a6c39c8d5c1f0cd52a75d9ff",
+  "ticks": 832,
+  "reason": "all_sunk"
+ },
+ "recovery:w47:s1": {
+  "hash": "58e30f61cd74a7abbd644a03",
+  "ticks": 845,
+  "reason": "all_sunk"
+ },
+ "recovery:w48:s1": {
+  "hash": "ff086dd81dbfa05319fc73ef",
+  "ticks": 1354,
+  "reason": "all_sunk"
+ },
+ "recovery:w49:s1": {
+  "hash": "b99ce85fff2667803b0ff94f",
+  "ticks": 1691,
+  "reason": "all_sunk"
+ },
+ "recovery:w50:s1": {
+  "hash": "73a6ac446545666f829e9b77",
+  "ticks": 3630,
+  "reason": "island_lost"
+ },
+ "recovery:w51:s1": {
+  "hash": "7ae22ffff8ed9cc596997e32",
+  "ticks": 866,
+  "reason": "island_lost"
+ },
+ "recovery:w52:s1": {
+  "hash": "c8072d0c541c6f12d39b8a32",
+  "ticks": 2157,
+  "reason": "island_lost"
+ },
+ "recovery:w53:s1": {
+  "hash": "7833b471d8f9cc6f7c5a705c",
+  "ticks": 1845,
+  "reason": "island_lost"
+ },
+ "recovery:w54:s1": {
+  "hash": "cf3c7e491ea54ec7c5b451eb",
+  "ticks": 859,
+  "reason": "island_lost"
+ },
+ "recovery:w55:s1": {
+  "hash": "e98b0a3a1773674d7edc87c5",
+  "ticks": 1357,
+  "reason": "captains_fallen"
+ },
+ "recovery:w56:s1": {
+  "hash": "d7626770d069f48e355de4f7",
+  "ticks": 981,
+  "reason": "all_sunk"
+ },
+ "recovery:w57:s1": {
+  "hash": "ac7000e6a94d73a1df83e4a3",
+  "ticks": 1946,
+  "reason": "island_lost"
+ },
+ "recovery:w58:s1": {
+  "hash": "2233bdac64cbcc0059fc11ca",
+  "ticks": 2100,
+  "reason": "island_lost"
+ },
+ "recovery:w59:s1": {
+  "hash": "e14f8f8edeee6f2dd7c395f3",
+  "ticks": 941,
+  "reason": "island_lost"
+ },
+ "recovery:w60:s1": {
+  "hash": "f1ca3f08149b7508f22939da",
+  "ticks": 1642,
+  "reason": "island_lost"
+ },
+ "recovery:w2:s2": {
+  "hash": "453d58d58090cd74fa93c6fa",
+  "ticks": 294,
+  "reason": "all_sunk"
+ },
+ "recovery:w7:s2": {
+  "hash": "76d71210db210b31fed47c51",
+  "ticks": 520,
+  "reason": "all_sunk"
+ },
+ "recovery:w12:s2": {
+  "hash": "3828fadc4f019a259a680ca0",
+  "ticks": 388,
+  "reason": "all_sunk"
+ },
+ "recovery:w17:s2": {
+  "hash": "d706417dbba3a944d4d18e9f",
+  "ticks": 378,
+  "reason": "all_sunk"
+ },
+ "recovery:w22:s2": {
+  "hash": "d755a385554f24784bc2e7fc",
+  "ticks": 451,
+  "reason": "all_sunk"
+ },
+ "recovery:w27:s2": {
+  "hash": "78e1eb07853786d4af1aeb0d",
+  "ticks": 450,
+  "reason": "all_sunk"
+ },
+ "recovery:w32:s2": {
+  "hash": "20ace95c0a60777fb00d2bf5",
+  "ticks": 553,
+  "reason": "all_sunk"
+ },
+ "recovery:w37:s2": {
+  "hash": "536b5ffa2dcba340756b1d57",
+  "ticks": 831,
+  "reason": "all_sunk"
+ },
+ "recovery:w42:s2": {
+  "hash": "c0da0e2d514bc453c66e8ff2",
+  "ticks": 2266,
+  "reason": "island_lost"
+ },
+ "recovery:w47:s2": {
+  "hash": "10d8cf72f29ca1573d6168d2",
+  "ticks": 709,
+  "reason": "all_sunk"
+ },
+ "recovery:w52:s2": {
+  "hash": "a72540034290c1feecf640af",
+  "ticks": 2047,
+  "reason": "island_lost"
+ },
+ "recovery:w57:s2": {
+  "hash": "394054594334665c4f6041d5",
+  "ticks": 1681,
+  "reason": "island_lost"
+ },
+ "recovery:w2:s3": {
+  "hash": "ac10bfd4bec9140856447049",
+  "ticks": 566,
+  "reason": "all_sunk"
+ },
+ "recovery:w7:s3": {
+  "hash": "af3c167a6946b3bc11bcf4cc",
+  "ticks": 697,
+  "reason": "all_sunk"
+ },
+ "recovery:w12:s3": {
+  "hash": "71452064b2be31bf9418bb09",
+  "ticks": 515,
+  "reason": "all_sunk"
+ },
+ "recovery:w17:s3": {
+  "hash": "2baf2563247654358e726bc0",
+  "ticks": 659,
+  "reason": "island_lost"
+ },
+ "recovery:w22:s3": {
+  "hash": "6860bc3d19c330df5b7c82cc",
+  "ticks": 553,
+  "reason": "all_sunk"
+ },
+ "recovery:w27:s3": {
+  "hash": "9e067b89782f2a602ecfb198",
+  "ticks": 590,
+  "reason": "all_sunk"
+ },
+ "recovery:w32:s3": {
+  "hash": "b9628d9629d8117e3739c209",
+  "ticks": 625,
+  "reason": "all_sunk"
+ },
+ "recovery:w37:s3": {
+  "hash": "36dfa08737e63835918e621f",
+  "ticks": 1037,
+  "reason": "all_sunk"
+ },
+ "recovery:w42:s3": {
+  "hash": "2c0f0e77403c03b78a6182f8",
+  "ticks": 989,
+  "reason": "all_sunk"
+ },
+ "recovery:w47:s3": {
+  "hash": "22875f7121b9fec9d509459c",
+  "ticks": 1109,
+  "reason": "all_sunk"
+ },
+ "recovery:w52:s3": {
+  "hash": "0518988e6970cdd1d478e257",
+  "ticks": 802,
+  "reason": "island_lost"
+ },
+ "recovery:w57:s3": {
+  "hash": "6954629ac40120cb796a9c7d",
+  "ticks": 896,
+  "reason": "island_lost"
+ },
+ "recovery:w75:s1": {
+  "hash": "e2eeb6371e5995a535897c90",
+  "ticks": 1297,
+  "reason": "island_lost"
+ },
+ "recovery:w90:s1": {
+  "hash": "c3e3aa6c224e3f4a00c135af",
+  "ticks": 1623,
+  "reason": "island_lost"
+ },
+ "recovery:w100:s1": {
+  "hash": "c4273e3ccab3ea9f233c2d4c",
+  "ticks": 1721,
+  "reason": "island_lost"
+ },
+ "towers:w10:s2": {
+  "hash": "927b15a7296ce10b3b149e66",
+  "ticks": 2526,
+  "reason": "all_sunk"
+ },
+ "towers:w25:s2": {
+  "hash": "a345372dda34c9fb0b7ffa9a",
+  "ticks": 1571,
+  "reason": "all_sunk"
+ },
+ "towers:w40:s2": {
+  "hash": "042e7df0f570ad00d4bfe1b0",
+  "ticks": 2858,
+  "reason": "all_sunk"
+ },
+ "paths:w10:s2": {
+  "hash": "d4be75015539dea301320676",
+  "ticks": 2526,
+  "reason": "all_sunk"
+ },
+ "paths:w25:s2": {
+  "hash": "fa9b77c0f0a29348dbdbc4a3",
+  "ticks": 1441,
+  "reason": "all_sunk"
+ },
+ "paths:w40:s2": {
+  "hash": "10adf4be78c60aad0fa43726",
+  "ticks": 2837,
+  "reason": "all_sunk"
+ },
+ "obstacles:w10:s2": {
+  "hash": "5b954ec0af706f5c341fb4cc",
+  "ticks": 2526,
+  "reason": "all_sunk"
+ },
+ "obstacles:w25:s2": {
+  "hash": "15a84a4dbaf903c0c0d5a3e2",
+  "ticks": 1441,
+  "reason": "all_sunk"
+ },
+ "obstacles:w40:s2": {
+  "hash": "cd3419c77506441df3186a8e",
+  "ticks": 2837,
+  "reason": "all_sunk"
+ },
+ "fire:w10:s2": {
+  "hash": "703fbc53d0106925f7ddb441",
+  "ticks": 2526,
+  "reason": "all_sunk"
+ },
+ "fire:w25:s2": {
+  "hash": "9cd70965bdec6962a99c3106",
+  "ticks": 1571,
+  "reason": "all_sunk"
+ },
+ "fire:w40:s2": {
+  "hash": "76bb24b19fd95d7ecb5f805c",
+  "ticks": 2858,
+  "reason": "all_sunk"
+ },
+ "uneven:plain:w5": "621a02b5d23f7549242ef0c4",
+ "uneven:production:w5": "33b1d92836be411293c6d1d7",
+ "uneven:plain:w12": "a9bc1b57227126662581ae8a",
+ "uneven:production:w12": "2a7795c336c0e6b3c3716894",
+ "uneven:plain:w30": "f279e6f93af3f8d4567a4be5",
+ "uneven:production:w30": "c43075b0f88cbd327aaf3c4b"
+}
