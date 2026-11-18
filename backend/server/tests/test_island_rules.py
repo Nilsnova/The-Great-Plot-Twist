@@ -381,12 +381,9 @@ def test_existing_recovery_structures_expand_runtime_catalogue_only_for_built_it
     runtime = catalogue_for_existing_structures(purchase_catalogue, built)
     runtime_spots = {spot.id: spot for spot in runtime.spots}
 
-    assert "culverin" not in {kind.kind for kind in purchase_catalogue.kinds}
     assert "cannon_8" not in {spot.id for spot in purchase_catalogue.spots}
     with pytest.raises(rules.BuildRefused):
         rules.check_build(purchase_catalogue, "cannon_8", "cannon", {}, 100)
-    with pytest.raises(rules.BuildRefused):
-        rules.check_build(purchase_catalogue, "cannon_1", "culverin", {}, 100)
     assert {spot for spot in runtime_spots if spot.startswith("cannon_") and int(spot[7:]) > 7} == {
         "cannon_8",
         "cannon_10",
@@ -394,8 +391,6 @@ def test_existing_recovery_structures_expand_runtime_catalogue_only_for_built_it
     assert "cannon_9" not in runtime_spots
     assert "cannon_11" not in runtime_spots
     assert "culverin" in runtime_spots["cannon_8"].kinds
-    assert "culverin" not in runtime_spots["cannon_10"].kinds
-    assert "culverin" not in runtime_spots["cannon_1"].kinds
     assert runtime.more_tower_spots
 
 

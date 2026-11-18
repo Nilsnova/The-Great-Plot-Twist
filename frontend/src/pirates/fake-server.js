@@ -8,8 +8,8 @@ import { SKILLS, skillNeeds, ROLES, readSkills, isRole, pointsSpent, pointsEarne
 import { spotWave } from '../campaign/index.js';
 import { createFakeArsenal } from '../island/arsenal-fake.js';
 import { createFakeWorld, ISLAND_RULES, readIslandCode, CODE_ALPHABET, spotView, refuse, MAX_MEMBERS, GAME_FULL,
-  unlocksAt, PRICES_V2, PRICES, campaignAt, layoutOf, invalid, slotOfSpot, kindsOfSpot, kindOfSpot, lockedMessage,
-  WALL_RECOVERY_MS, iso, restorePrice, rebuildPrice, SIM_RULES, ALWAYS_ON_RULES, isBoss, FakeApiError } from './fake-rules.js';
+  unlocksAt, PRICES_V2, campaignAt, layoutOf, invalid, slotOfSpot, kindsOfSpot, kindOfSpot, lockedMessage,
+  WALL_RECOVERY_MS, iso, restorePrice, rebuildPrice, SIM_RULES, isBoss, FakeApiError } from './fake-rules.js';
 import { createIslandRoutes } from './fake-island.js';
 import { createResearchRoutes } from './fake-research.js';
 import { createWaveRoutes } from './fake-waves.js';
@@ -17,15 +17,11 @@ import { createWaveRoutes } from './fake-waves.js';
 export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me', ownerName = 'You',
   now = () => Date.now(), weather = 'calm', code: wantedCode = null, version = 1, unlocking = version === 2, flags = {} } = {}) {
   // unlocking: the server's §9 locks (409 locked). Off by default here; the game's transport and version 2 turn it on.
-  // flags: the server's feature flags this fake follows (wall_recovery, D039; the wave rules below); all off by default.
+  // flags: the server's feature flags this fake follows (wall_recovery, D039; more_tower_spots, D060); all off by default.
   const wallsOn = flags?.wall_recovery === true;
-  const culverinOn = flags?.defenses_v2 === true; // T43: the culverin, and the wave rule defenses_v2 on every wave answer
   // D060: the extra tower spots (cannon_8..cannon_11) join the island only while the flag more_tower_spots is on
   // (?fakeflags=more_tower_spots), as the real server's catalogue_for_flags(); each opens after its won wave.
   const islandSpots = flags?.more_tower_spots === true ? Object.freeze([...ISLAND_RULES.spots, ...EXTRA_SPOT_IDS]) : ISLAND_RULES.spots;
-  // The wave rules (backend/server/island/wave_rules.py): the always-on rules (ALWAYS_ON_RULES) and the rule flags on
-  // at the wave's first answer, in SIM_RULES order. That answer keeps its set (wave_rules_keep()), an empty set too, and every later answer serves it whatever
-  // the flags say then (a test may change `flags` mid-wave); an empty set leaves `rules` out.
   const v2 = version === 2; // the answers' tower defense extras (boss, nextWave on finish), as the real server sends them
   // A new island, as island_open() makes it (and as a reset leaves it, T53).
   const newIsland = (code, owner, name) => ({ code, owner, ownerName: name, waveBest: 0, flags: 0, built: new Set(),
@@ -42,7 +38,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     }
     return player;
   };
-  const spots = island => islandSpots.map(id => spotView(island, id, culverinOn));
+  const spots = island => islandSpots.map(id => spotView(island, id, true));
   // --- the games (GAME-V3.md §2): the SQL rules of game_join and game_leave, in memory ---
   const membersOf = code => {
     if (!(world.members instanceof Map)) world.members = new Map();
@@ -72,12 +68,12 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     return island;
   };
   // The answer's unlocks (the backend's shape); the checks below read them back through readUnlocks.
-  const unlocksOf = island => unlocksAt(unlocking ? Math.max(island.waveBest, island.owner === playerId ? me().pointBest ?? 0 : 0) : 99, { culverin: culverinOn });
+  const unlocksOf = island => unlocksAt(unlocking ? Math.max(island.waveBest, island.owner === playerId ? me().pointBest ?? 0 : 0) : 99, { culverin: true });
   const allowed = island => readUnlocks({ unlocks: unlocksOf(island) });
   // GAME-V3.md §4: what may be built on an island follows that island's own best won wave, whoever pays.
-  const islandAllowed = island => readUnlocks({ unlocks: unlocksAt(unlocking ? island.waveBest : 99, { culverin: culverinOn }) });
+  const islandAllowed = island => readUnlocks({ unlocks: unlocksAt(unlocking ? island.waveBest : 99, { culverin: true }) });
   const answerUnlocks = island => {
-    const mine = unlocksOf(island), there = unlocksAt(unlocking ? island.waveBest : 99, { culverin: culverinOn });
+    const mine = unlocksOf(island), there = unlocksAt(unlocking ? island.waveBest : 99, { culverin: true });
     const personal = id => id.startsWith('crew:') || id.startsWith('captain:');
     return { wave: mine.wave, unlocked: [...mine.unlocked.filter(personal), ...there.unlocked.filter(id => !personal(id))],
       locked: Object.fromEntries([...Object.entries(mine.locked).filter(([id]) => personal(id)), ...Object.entries(there.locked).filter(([id]) => !personal(id))]) };
@@ -85,7 +81,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
   const view = () => {
     const player = me(), island = world.islands.get(player.code), captain = island.captain ?? 1;
     return { code: `ISLE-${island.code}`, coins: player.coins, waveBest: island.waveBest, flags: island.flags, spots: spots(island),
-      crew: { ...island.crew }, prices: culverinOn ? PRICES_V2 : PRICES, nextWave: island.nextWave ?? island.waveBest + 1,
+      crew: { ...island.crew }, prices: PRICES_V2, nextWave: island.nextWave ?? island.waveBest + 1,
       captain: { level: captain, nextPrice: CAPTAIN.price[captain] ?? null }, unlocks: answerUnlocks(island),
       skills: skillsOf(player, island), weapons: weaponsOf(island), campaign: campaignAt(island), layout: layoutOf(island) };
   };
@@ -123,7 +119,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     if (player.actions.has(`build:${actionUid}`)) return;
     if (spot === 'cabin') refuse(409, 'spot_taken', 'Your cabin already stands there.');
     if (!ids.includes(spot)) refuse(404, 'no_such_spot', 'There is no such build spot here.');
-    const slot = slotOfSpot(spot), allowed = kindsOfSpot(spot, culverinOn && ids === islandSpots);
+    const slot = slotOfSpot(spot), allowed = kindsOfSpot(spot, ids === islandSpots);
     if (!allowed.includes(kind)) refuse(422, 'wrong_kind', slot === 'tower' ? `Only ${allowed.includes('harpoon') ? 'a cannon, a mortar or a harpoon tower' : 'a cannon or a mortar'} can stand on this spot.`
       : `Only a ${ISLAND_RULES.kinds[allowed[0]][0].toLowerCase()} can stand on this spot.`);
     const [name, price] = ISLAND_RULES.kinds[kind];
@@ -225,23 +221,18 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     }
   }
   const running = run => !run.finishedAt && nowMs() <= run.startsAtMs + ISLAND_RULES.waves.maximumSeconds * 1000;
-  // The wave's sim rules (backend/server/island/wave_rules.py): the always-on rules and the rule flags on now, in SIM_RULES order; the
-  // first answer keeps its set for the wave (an empty set too), every later one serves the kept set.
-  // world.liveFlags (dev.setFlag) switches a flag for every tab of a shared world, like a redeploy.
-  const flagOn = name => (world.liveFlags && Object.hasOwn(world.liveFlags, name) ? world.liveFlags[name] : flags?.[name]) === true;
-  const ruleOn = name => ALWAYS_ON_RULES.includes(name) || flagOn(name);
+  // The wave's sim rules (backend/server/island/wave_rules.py): every rule of SIM_RULES (their flags are retired, always
+  // on); the first answer keeps its set for the wave (wave_rules_keep), every later one serves the kept set.
   const rulesOf = run => {
-    // Kept by the wave's first answer, even when empty (the server's wave_rules_keep), whatever the flags say later.
-    if (!Array.isArray(run.rules)) run.rules = SIM_RULES.filter(ruleOn);
-    const rules = SIM_RULES.filter(name => run.rules.includes(name));
-    return rules.length ? rules : null;
+    if (!Array.isArray(run.rules)) run.rules = [...SIM_RULES];
+    return SIM_RULES.filter(name => run.rules.includes(name));
   };
   const shape = run => {
     const walls = waveWalls(run); // D039: only while the flag is on, as the server
     const rules = rulesOf(run);
     return { waveId: run.waveId, wave: run.wave, seed: run.seed, startsAt: iso(run.startsAtMs),
       weather: { ...run.weather }, flagship: run.flagship, ...(v2 ? { boss: isBoss(run) } : {}), ...(walls ? { walls } : {}),
-      ...(rules ? { rules } : {}) };
+      rules };
   };
   const uid = value => typeof value === 'string' && value.length > 0 && value.length <= 64;
   // The shared island arsenal (T40, D042): copies of an island, stored (20 at most) or carried by one captain.

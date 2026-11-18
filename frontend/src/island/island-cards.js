@@ -18,7 +18,7 @@ import {preparationModel} from './preparation-model.js';
 
 export function createCards(isl) {
   const {emit, on, focus, resetInput, reducedMotion, preferences, loadBoatScene, openHarborStall, villageCamera,
-    wallRecovery, defensesV2On} = isl;
+    wallRecovery} = isl;
   // From the other parts (island-*.js), linked once every part exists.
   let clearRecoveryError, recoveryPolicyOn, recoveryControlsOn, recoveryModelVersion, readStructureRecovery,
     repairStructure, tellCoins, unlocks, islandUnlocks, campaign, target, where, applyWorld, freshOwn, reloadOwn,
@@ -55,7 +55,7 @@ export function createCards(isl) {
     const model = buildCardModel({spotId, slot: spotById(spotId)?.slot, spot, coins: isl.own?.coins ?? null,
       visitor: !!isl.visiting, ownerName: isl.visiting?.ownerName, busy: isl.busySpot === spotId ? isl.busyKind : false, message: isl.cardMessage || (!island ? isl.ownMessage : ''),
       unlocks: isl.own ? islandUnlocks() : null, prices: isl.own?.prices ?? null, campaign: campaign(), battle: isl.battle && !isl.waveOver,
-      movable: island?.layout?.movable === true, flags: {defenses_v2: defensesV2On() === true}, treePicked: isl.treePicked.get(spotId) ?? null,
+      movable: island?.layout?.movable === true, treePicked: isl.treePicked.get(spotId) ?? null,
       recoveryState: recoveryView, recoveryStatus: recoveryEnabled ? (recoveryReady ? 'ready' : isl.recoveryStatus) : 'disabled',
       recoveryError: isl.recoveryError, recoveryPending: isl.recoveryPendingSpot === spotId, recoveryVersion: recoveryModelVersion()});
     if (recoveryEnabled && isl.recoveryState?.displayPhase === 'combat' && !live) {
@@ -197,8 +197,7 @@ export function createCards(isl) {
     const destroyed = model.recovery?.actualHp === 0 && model.recoveryLevel === model.level;
     if (dock && model.slot === 'tower' && !destroyed) {
       const installed = defenses(target()?.spots ?? [], campaign()?.research?.tiers);
-      // Keep coverage for an installed recovery-v1 Culverin when new purchases are disabled.
-      model.coverage = previewDefenseCoverage(installed, spotId, {defensesV2: defensesV2On() === true || recoveryPolicyOn()});
+      model.coverage = previewDefenseCoverage(installed, spotId, {defensesV2: true});
     }
     isl.ui.buildCard(model, handlers, {dock});
   }

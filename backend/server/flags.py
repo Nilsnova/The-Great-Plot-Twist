@@ -32,8 +32,7 @@ FLAG_NAMES = (
     # Needs supabase/migrations/20261114100000_wall_recovery.sql applied first.
     "wall_recovery",
     "placement",  # T36 flexible placement: retired, always on (the name is still accepted)
-    # T43 (D048, proposed): the second wave of defenses, starting with the culverin. Keep it off
-    # until its sim wiring and its migration are merged (specs/T43-new-defenses.md).
+    # T43 (D048): the second wave of defenses, starting with the culverin. Retired: always on.
     "defenses_v2",
     # T40/T41 (D042): the shared island arsenal. Off: the old personal weapon shop, as before.
     "arsenal",

@@ -90,7 +90,7 @@ def test_the_island_answer_carries_the_tree_of_each_tower_and_the_prices():
     assert shown["tree"] == {"a": 2, "b": 1}
     assert next(spot for spot in body["spots"] if spot["id"] == "wall_1")["tree"] is None
     trees = body["prices"]["towerTrees"]
-    assert set(trees) == {"cannon", "mortar", "harpoon", "swivel"}  # the culverin: flag off
+    assert set(trees) == {"cannon", "mortar", "harpoon", "swivel", "culverin"}
     assert trees["cannon"] == {
         "prices": [1000, 2200, 4800],
         "waves": [20, 35, 45],

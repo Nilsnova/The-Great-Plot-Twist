@@ -35,7 +35,6 @@ CAMPAIGN_FILE = CONTENT_FILE.with_name("campaign.json")
 DEFENSES_V2_FILE = CONTENT_FILE.with_name("defenses_v2.json")
 # D055: the upgrade trees of the towers after level 5 (two paths of three tiers each).
 TOWER_TREES_FILE = CONTENT_FILE.with_name("tower_trees.json")
-DEFENSES_V2_FLAG = "defenses_v2"
 # D060: the extra tower spots that open with progress (islands.json "extraTowerSpots"). Offered
 # only while this flag is on (the database rule: migrations/20261117010000_more_tower_spots.sql).
 MORE_TOWER_SPOTS_FLAG = "more_tower_spots"
@@ -1029,11 +1028,11 @@ def island_or_none() -> IslandCatalogue | None:
 
 # --- the second wave of defenses (T43, decision D048 proposed) ---
 #
-# defenses_v2.json holds new tower kinds that are not part of the live game yet. While the flag
-# defenses_v2 is off the file is never read and the catalogue stays exactly as loaded above. While
-# it is on, catalogue_for_flags() returns a copy with each new kind added to the kinds, to the tower
-# spots it names and to the campaign steps of its levels, so every rule, price and unlock of the
-# existing code (rules.py, service.py) treats it like the harpoon tower. specs/T43-new-defenses.md.
+# defenses_v2.json holds the tower kinds of the second wave of defenses (the flag defenses_v2 is
+# retired: always on). catalogue_for_flags() returns a copy with each new kind added to the kinds,
+# to the tower spots it names and to the campaign steps of its levels, so every rule, price and
+# unlock of the existing code (rules.py, service.py) treats it like the harpoon tower.
+# specs/T43-new-defenses.md.
 
 
 @dataclass(frozen=True)
@@ -1134,15 +1133,14 @@ def with_more_tower_spots(catalogue: IslandCatalogue) -> IslandCatalogue:
 def catalogue_for_flags(
     catalogue: IslandCatalogue, flags: Mapping[str, bool], path: Path = DEFENSES_V2_FILE
 ) -> IslandCatalogue:
-    """The catalogue the server runs with. Flag defenses_v2 off: the same object, untouched (the
-    file is not even read). On: the copy of with_defenses_v2(). A broken file with the flag on
-    is logged and the island keeps running without the new kinds. Then, with the flag
-    more_tower_spots on (D060), the extra tower spots join (off: nothing changes)."""
-    if flags.get(DEFENSES_V2_FLAG, False):
-        try:
-            catalogue = with_defenses_v2(catalogue, read_defenses_v2(catalogue, path))
-        except IslandFileError as error:
-            logger.error("The %s defenses cannot start: %s", DEFENSES_V2_FLAG, error)
+    """The catalogue the server runs with: the copy of with_defenses_v2() (the flag defenses_v2
+    is retired, always on). A broken file is logged and the island keeps running without the new
+    kinds. Then, with the flag more_tower_spots on (D060), the extra tower spots join (off:
+    nothing changes)."""
+    try:
+        catalogue = with_defenses_v2(catalogue, read_defenses_v2(catalogue, path))
+    except IslandFileError as error:
+        logger.error("The defenses_v2 defenses cannot start: %s", error)
     if flags.get(MORE_TOWER_SPOTS_FLAG, False) and catalogue.extra_tower_spots:
         catalogue = with_more_tower_spots(catalogue)
     return catalogue

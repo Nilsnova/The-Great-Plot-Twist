@@ -399,12 +399,6 @@ async def post_start(
                 seed,
                 requested_rules,
             )
-            if template["createWave"].get("defensesV2"):
-                requested_rules = [
-                    name
-                    for name in wave_rules.SIM_RULES
-                    if name in requested_rules or name == "defenses_v2"
-                ]
     started = await waves.start_protocol2(
         admin,
         catalogue,

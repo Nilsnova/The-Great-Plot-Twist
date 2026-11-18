@@ -34,8 +34,6 @@ export const CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 // The run of TOWER-DEFENSE.md §1: waves to 100, a boss every 5th, a lost run restarts 2 waves back.
 // The simulation rules of the wave answers, in their fixed order (SIM_RULES in backend/server/island/wave_rules.py).
 export const SIM_RULES = Object.freeze(['tower_health', 'pathing', 'tower_obstacles', 'rescue', 'defenses_v2', 'ship_fire']);
-// The rules every new wave plays whatever the flags say: their flags are retired (ALWAYS_ON in wave_rules.py).
-export const ALWAYS_ON_RULES = Object.freeze(['tower_health', 'pathing', 'tower_obstacles', 'rescue', 'ship_fire']);
 export const TD_RULES = Object.freeze({ highestWave: 100, bossEvery: 5, restartBack: 2,
   spots: Object.freeze(['wall_1', 'wall_2', 'wall_3', 'wall_4', 'wall_5', 'wall_6', 'cannon_1', 'cannon_2', 'cannon_3', 'cannon_4',
     'cannon_5', 'cannon_6', 'cannon_7', 'tower_1', 'house_1', 'house_2', 'wall_7', 'wall_8', 'wall_9', 'wall_10', 'wall_11', 'wall_12']),
@@ -46,8 +44,8 @@ export const canonicalSpot = spot => (typeof spot === 'string' ? spot.replace(/^
 export const kindOfSpot = spot => (/^(pp_)?wall_/.test(spot) ? 'wall' : /^(cannon_|pp_tower_)/.test(spot) ? 'cannon' : spot === 'tower_1' ? 'watchtower' : 'house');
 // The slot of a spot: a tower spot accepts a cannon or a mortar (§2), on the island also a harpoon tower (GAME-V3.md §5).
 export const slotOfSpot = spot => (kindOfSpot(spot) === 'cannon' ? 'tower' : kindOfSpot(spot));
-// T43 (D048 proposed): the culverin joins the island's tower spots, prices and unlocks only while the fake's flag
-// defenses_v2 is on (?fakeflags=defenses_v2), as the real server's catalogue_for_flags(); off, every answer is as before.
+// T43 (D048): the culverin joins the island's tower spots, prices and unlocks (culverin: true; the flag defenses_v2 is
+// retired, always on), as the real server's catalogue_for_flags(); Pirate Point never gets it.
 export const V2_KINDS = Object.freeze(['culverin']);
 export const kindsOfSpot = (spot, culverin = false) => [...SLOT_KINDS[slotOfSpot(spot)].filter(kind => (kind !== 'harpoon' && kind !== 'swivel') || !/^pp_/.test(spot)),
   ...(culverin && slotOfSpot(spot) === 'tower' && !/^pp_/.test(spot) ? V2_KINDS : [])];
@@ -57,10 +55,10 @@ export const pricesOf = kinds => Object.freeze({ kinds: Object.fromEntries(kinds
   crew: Object.fromEntries(Object.entries(CREW).map(([id, info]) => [id, { price: info.price, max: info.max }])), captain: [...CAPTAIN.price],
   // D051: what one tower's skill costs, per research branch (islands.json skillCoins).
   towerSkills: Object.fromEntries(BRANCHES.map(item => [item.branch, { ...item.skillCoins }])),
-  // D055: the upgrade trees of the tower kinds on the island (tower_trees.json), the culverin's only with its flag.
+  // D055: the upgrade trees of the tower kinds on the island (tower_trees.json).
   towerTrees: Object.fromEntries(Object.entries(TOWER_TREES).filter(([kind]) => kinds.some(([name]) => name === kind)).map(([kind, tree]) => [kind,
     { prices: [...tree.prices], waves: TREE_STEPS.map(id => waveOf(id)), level: TREE_LEVEL, a: { id: tree.a.id, name: tree.a.name }, b: { id: tree.b.id, name: tree.b.name } }])) });
-export const PRICES = pricesOf(KINDS_V1), PRICES_V2 = pricesOf(Object.entries(BUILDINGS));
+export const PRICES_V2 = pricesOf(Object.entries(BUILDINGS));
 // Every unlock id with the wave it needs (§9): "<kind>:<level>", "crew:<crew>", "captain:<level>".
 export const unlockIds = kinds => Object.freeze([
   ...kinds.flatMap(([kind, info]) => info.price.map((_, index) => [`${kind}:${index + 1}`, unlockWave({ kind, level: index + 1 })])),

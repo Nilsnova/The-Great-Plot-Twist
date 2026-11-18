@@ -117,7 +117,7 @@
       "what": "From wave 16 small gunboats stop far out and jam a tower for a few seconds.",
       "how": "Mortars and your musket reach them. Sink them fast.",
       "where": null},
-    {"id": "culverin", "wave": 15, "flag": "defenses_v2", "title": "The culverin",
+    {"id": "culverin", "wave": 15, "title": "The culverin",
       "what": "A long gun for a tower spot. It reaches the gunboats and siege barges that shoot your towers from far out.",
       "how": "Walk to an empty tower spot, press E and choose Culverin.",
       "where": "cannon_2"},

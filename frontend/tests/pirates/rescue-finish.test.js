@@ -5,7 +5,7 @@
 import { describe, expect, it } from 'vitest';
 import { createIslandApi } from '../../src/island/api.js';
 import { createFakeIslandTransport } from '../../src/pirates/fake-api.js';
-import { plays } from './wave-rules-plays.js';
+import { SIM_RULES } from '../../src/pirates/fake-rules.js';
 
 const clock = () => { let now = Date.UTC(2026, 10, 14, 12); return { now: () => now, advance: s => { now += s * 1000; } }; };
 
@@ -30,23 +30,11 @@ describe('the finish with a rescue', () => {
       expect(island.waveBest).toBe(10);
     }
   });
-  it('the fake wave answers carry the rules of the flags on, kept by the wave\'s first answer', async () => {
-    const time = clock(), world = createFakeIslandTransport({ now: time.now, version: 2, flags: { defenses_v2: true } });
+  it('the fake wave answers carry every sim rule (their flags are retired), kept by the wave\'s first answer', async () => {
+    const time = clock(), world = createFakeIslandTransport({ now: time.now, version: 2 });
     const wave = await world.api.startWave({ where: 'own', actionUid: 'startrules1' });
-    expect(wave.rules).toEqual(plays('defenses_v2'));
-    expect(wave.rules).toContain('rescue');
-    expect((await world.api.currentWave('own')).rules).toEqual(plays('defenses_v2'));
-  });
-  it('the fake keeps a wave\'s first rule set, whatever the flags say later', async () => {
-    const flags = {}, time = clock(), world = createFakeIslandTransport({ now: time.now, version: 2, flags });
-    const wave = await world.api.startWave({ where: 'own', actionUid: 'startempty1' });
-    expect(wave.rules ?? []).toEqual(plays());
-    flags.defenses_v2 = true; // switched on mid-wave: every later answer keeps the starter's set
-    expect((await world.api.currentWave('own')).rules ?? []).toEqual(plays());
-    const onFlags = { defenses_v2: true }, other = createFakeIslandTransport({ now: time.now, version: 2, flags: onFlags });
-    await other.api.startWave({ where: 'own', actionUid: 'startkept01' });
-    delete onFlags.defenses_v2; // the flag off mid-wave: the wave keeps the starter's rules
-    expect((await other.api.currentWave('own')).rules).toEqual(plays('defenses_v2'));
+    expect(wave.rules).toEqual(SIM_RULES);
+    expect((await world.api.currentWave('own')).rules).toEqual(SIM_RULES);
   });
   it('the fake server ignores a rescue below wave 4 (both rules ring wave 1 there)', async () => {
     const time = clock(), transport = createFakeIslandTransport({ now: time.now, version: 2 }), api = transport.api;

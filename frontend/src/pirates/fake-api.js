@@ -303,11 +303,6 @@ export function createFakeIslandTransport({ coins = ISLAND_RULES.startingCoins, 
         if (!Number.isSafeInteger(ms) || ms < 0) throw new TypeError('ms must be a whole number from 0 up.');
         world.clockShiftMs = (world.clockShiftMs ?? 0) + ms;
       },
-      // A feature flag switched on or off on the fake server (a redeploy with other flags), for every tab of a shared world.
-      setFlag(name, on) {
-        if (typeof name !== 'string' || !FLAG_NAME.test(name)) throw new TypeError('setFlag needs a flag name.');
-        world.liveFlags = { ...(world.liveFlags ?? {}), [name]: on === true };
-      },
       reset() { reset(); failures.length = 0; },
     }),
   };

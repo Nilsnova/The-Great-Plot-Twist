@@ -193,7 +193,7 @@ def create_app(
     if island_catalogue is None:
         island_catalogue = island_or_none()  # None if islands.json is broken
     if island_catalogue is not None:
-        # T43 (D048 proposed): the flag defenses_v2 adds the culverin; off, nothing changes.
+        # T43 (D048): the culverin (defenses_v2, always on) and, by flag, the extra tower spots.
         island_catalogue = catalogue_for_flags(island_catalogue, settings.flags)
 
     if case_service is None:

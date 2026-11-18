@@ -184,22 +184,20 @@ def test_a_build_pays_the_price_of_the_file_in_coins_only_and_answers_the_island
     }
 
 
-def test_gated_plot_and_culverin_purchases_stay_blocked_after_saved_recovery_v1():
+def test_gated_plot_purchases_stay_blocked_after_saved_recovery_v1():
     world = World(settings=replace(ISLAND_SETTINGS, flags=parse_flags("islands")))
     world.database.recovery_policy_version = 1
     before = world.database.balance
 
     extra_plot = world.build(spot="cannon_8", kind="cannon")
-    culverin = world.build(spot="cannon_1", kind="culverin")
 
     assert_error(extra_plot, 404, "no_such_spot")
-    assert_error(culverin, 422, "wrong_kind")
     assert world.database.calls("islet_build") == []
     assert world.database.balance == before
     assert world.database.buildings == {}
 
 
-def test_saved_v1_existing_culverin_can_upgrade_with_defenses_flag_off():
+def test_saved_v1_existing_culverin_on_an_extra_plot_can_upgrade():
     world = World(settings=replace(ISLAND_SETTINGS, flags=parse_flags("islands")))
     world.database.recovery_policy_version = 1
     world.database.progress.update({"wave_best": 40, "won_wave_best": 40})

@@ -98,7 +98,7 @@ describe('the fake server follows the flag', () => {
     expect([error.status, error.code]).toEqual([404, 'no_such_spot']);
   });
   it('on: four more tower spots, locked until their wave, then any tower kind', async () => {
-    const world = createFakeWorld(), api = createFakeIslandApi({world, version: 2, flags: {more_tower_spots: true, defenses_v2: true}});
+    const world = createFakeWorld(), api = createFakeIslandApi({world, version: 2, flags: {more_tower_spots: true}});
     const answer = await api.island();
     expect(answer.spots.map(spot => spot.id).slice(22)).toEqual(IDS);
     expect(answer.spots[22].kinds).toEqual(['cannon', 'mortar', 'harpoon', 'swivel', 'culverin']);

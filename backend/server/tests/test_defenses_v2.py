@@ -1,8 +1,7 @@
-"""Tests for the second wave of defenses (T43, decision D048 proposed): the culverin, a long gun.
+"""Tests for the second wave of defenses (T43, decision D048): the culverin, a long gun.
 
 The culverin lives in its own file, backend/content/defenses_v2.json, and joins the island's
-catalogue only while the feature flag defenses_v2 is on (catalogue.catalogue_for_flags). With the
-flag off the live game must not change at all: the same catalogue object, the same API answers.
+catalogue through catalogue.catalogue_for_flags() (the flag defenses_v2 is retired: always on).
 
 Nothing here uses the network: the API tests use the FakeIslandDatabase of island_helpers.py.
 
@@ -23,12 +22,11 @@ from server.island.catalogue import (
     read_defenses_v2,
 )
 from server.tests.helpers import assert_error
-from server.tests.island_helpers import ISLAND_SETTINGS, PLAYER_ID, World
+from server.tests.island_helpers import ISLAND_SETTINGS, World
 
 CATALOGUE = load_island()
 TOWER_SPOTS = tuple(f"cannon_{n}" for n in range(1, 8))
-FLAG_ON = parse_flags("islands,defenses_v2")
-FLAG_OFF = parse_flags("islands")
+FLAG_ON = parse_flags("islands")  # the culverin needs no flag any more
 
 
 def write(tmp_path, change) -> object:
@@ -78,19 +76,7 @@ def test_a_broken_file_is_refused_with_a_clear_message(tmp_path, change, message
 # --- merging into the catalogue ---
 
 
-def test_with_the_flag_off_the_catalogue_is_unchanged():
-    assert catalogue_for_flags(CATALOGUE, FLAG_OFF) is CATALOGUE
-    assert "culverin" not in {kind.kind for kind in CATALOGUE.kinds}
-    assert all("culverin" not in spot.kinds for spot in CATALOGUE.spots)
-    assert all(not item.startswith("culverin") for item, _, _ in CATALOGUE.campaign.ids())
-
-
-def test_with_the_flag_off_a_broken_file_is_never_read(tmp_path):
-    missing = tmp_path / "nowhere.json"
-    assert catalogue_for_flags(CATALOGUE, FLAG_OFF, missing) is CATALOGUE
-
-
-def test_with_the_flag_on_the_culverin_joins_the_tower_spots_and_the_campaign():
+def test_the_culverin_joins_the_tower_spots_and_the_campaign():
     merged = catalogue_for_flags(CATALOGUE, FLAG_ON)
     assert [kind.kind for kind in merged.kinds] == [kind.kind for kind in CATALOGUE.kinds] + [
         "culverin"
@@ -111,7 +97,7 @@ def test_with_the_flag_on_the_culverin_joins_the_tower_spots_and_the_campaign():
     assert "culverin" not in {kind.kind for kind in CATALOGUE.kinds}
 
 
-def test_with_the_flag_on_a_broken_file_leaves_the_island_as_it_was(tmp_path, caplog):
+def test_a_broken_file_leaves_the_island_as_it_was(tmp_path, caplog):
     broken = write(tmp_path, lambda d: d["kinds"][0].update(spots=["wall_1"]))
     assert catalogue_for_flags(CATALOGUE, FLAG_ON, broken) is CATALOGUE
     assert "defenses_v2" in caplog.text
@@ -126,28 +112,7 @@ def world_at(wave: int, flags) -> World:
     return world
 
 
-def test_flag_off_island_answer_and_build_are_as_before():
-    world = world_at(30, FLAG_OFF)
-    body = world.island().json()
-    assert "culverin" not in body["prices"]["kinds"]
-    assert all("culverin" not in spot["kinds"] for spot in body["spots"])
-    assert not any(item.startswith("culverin") for item in body["unlocks"]["unlocked"])
-    assert not any(item.startswith("culverin") for item in body["unlocks"]["locked"])
-    refused = world.build(spot="cannon_1", kind="culverin")
-    assert_error(refused, 422, "wrong_kind")
-    assert world.database.calls("islet_build") == []
-
-
-def test_flag_off_hides_a_culverin_row_already_in_the_database():
-    world = world_at(30, FLAG_OFF)
-    world.database.buildings[PLAYER_ID] = [
-        {"plot": "cannon_1", "building_type": "culverin", "level": 2}
-    ]
-    spot = next(spot for spot in world.island().json()["spots"] if spot["id"] == "cannon_1")
-    assert (spot["built"], spot["kind"]) == (False, "cannon")
-
-
-def test_flag_on_island_answer_lists_and_locks_the_culverin():
+def test_the_island_answer_lists_and_locks_the_culverin():
     early = world_at(14, FLAG_ON)
     body = early.island().json()
     assert body["prices"]["kinds"]["culverin"] == [80, 160, 320, 640, 1280]
@@ -162,7 +127,7 @@ def test_flag_on_island_answer_lists_and_locks_the_culverin():
     assert_error(world_at(30, FLAG_ON).build(spot="wall_1", kind="culverin"), 422, "wrong_kind")
 
 
-def test_flag_on_build_asks_the_database_with_the_culverin_price():
+def test_a_build_asks_the_database_with_the_culverin_price():
     world = world_at(15, FLAG_ON)
     world.database.build_reply = {"status": "done", "balance": 20, "timber": 0, "level": 1}
     assert world.build(spot="cannon_5", kind="culverin").status_code == 200
