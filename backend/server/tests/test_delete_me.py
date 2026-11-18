@@ -53,9 +53,9 @@ def test_delete_calls_delete_player_once_with_the_verified_id():
     assert response.json() == {"deleted": True}
     assert response.headers["cache-control"] == "private, no-store"
     assert [(request.method, request.url.path) for request in seen] == [
-        ("POST", "/rest/v1/rpc/delete_player")
+        ("POST", "/rest/v1/rpc/island_lifecycle_delete_player")
     ]
-    assert sent_arguments(seen[0]) == {"p_player_id": PLAYER_ID}
+    assert sent_arguments(seen[0]) == {"p_actor_id": PLAYER_ID, "p_confirm_owned_island": False}
     assert accounts.deleted == [PLAYER_ID]
 
 
@@ -83,7 +83,7 @@ def test_the_player_id_comes_from_the_login_and_never_from_the_request():
     )
 
     assert delete_sneakily.status_code == 200
-    assert sent_arguments(seen[0]) == {"p_player_id": PLAYER_ID}
+    assert sent_arguments(seen[0]) == {"p_actor_id": PLAYER_ID, "p_confirm_owned_island": False}
     assert OTHER_PLAYER_ID in accounts.profiles
 
 
@@ -199,7 +199,7 @@ def test_the_route_never_deletes_rows_itself():
     delete(client, headers=RIGHT_HEADER, json=CONFIRM)
 
     assert [(request.method, request.url.path) for request in seen] == [
-        ("POST", "/rest/v1/rpc/delete_player")
+        ("POST", "/rest/v1/rpc/island_lifecycle_delete_player")
     ]
     assert not any(request.method == "DELETE" for request in seen)
 
@@ -245,7 +245,9 @@ def test_a_database_timeout_is_503_and_says_deleting_twice_is_safe(error_class):
 
 def test_a_server_error_of_the_database_is_503_with_the_same_message():
     database = scripted_database(
-        functions={"delete_player": lambda arguments: database_error(500, "XX000", "internal")}
+        functions={"island_lifecycle_delete_player": lambda arguments: database_error(
+            500, "XX000", "internal"
+        )}
     )
     client, _ = make_client(database)
 
@@ -258,7 +260,9 @@ def test_a_server_error_of_the_database_is_503_with_the_same_message():
 
 def test_a_database_that_refuses_the_function_gives_502_and_hides_its_text():
     refusal = database_error(403, "42501", "permission denied for function delete_player")
-    client, _ = make_client(scripted_database(functions={"delete_player": lambda a: refusal}))
+    client, _ = make_client(scripted_database(functions={
+        "island_lifecycle_delete_player": lambda a: refusal,
+    }))
 
     response = delete(client, headers=RIGHT_HEADER, json=CONFIRM)
 
@@ -268,7 +272,9 @@ def test_a_database_that_refuses_the_function_gives_502_and_hides_its_text():
 
 def test_a_unique_violation_is_a_bug_on_our_side_and_not_already_applied():
     database = scripted_database(
-        functions={"delete_player": lambda arguments: database_error(409, "23505", "duplicate")}
+        functions={"island_lifecycle_delete_player": lambda arguments: database_error(
+            409, "23505", "duplicate"
+        )}
     )
     client, _ = make_client(database)
 
@@ -279,7 +285,9 @@ def test_a_unique_violation_is_a_bug_on_our_side_and_not_already_applied():
 
 @pytest.mark.parametrize("reply", ["deleted", {}, {"status": "something_new"}, {"status": None}])
 def test_an_answer_of_delete_player_that_we_cannot_read_gives_502(reply):
-    database = scripted_database(functions={"delete_player": lambda arguments: reply})
+    database = scripted_database(functions={
+        "island_lifecycle_delete_player": lambda arguments: reply,
+    })
     client, _ = make_client(database)
 
     response = delete(client, headers=RIGHT_HEADER, json=CONFIRM)

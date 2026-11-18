@@ -30,7 +30,7 @@ A GitHub or email user who did not play Act 1 is never given a kit: POST /api/cr
 Cleaning up (cleanup_guests). The host's "Clean up guests" button, and the automatic clean-up that
 runs after the host reads GET /api/host/demo (AutoCleanup, at most once every 10 minutes per server
 instance and 25 deletions per run), delete every anonymous user whose account is older than 24
-hours, through the database function delete_player (the same as "Delete my data", so a shared
+hours, through the atomic lifecycle transaction (the same as "Delete my data", so a shared
 crew is handed over and nothing is left half-deleted). The list of users comes from Supabase Auth's
 admin list, because only it knows today whether a user is still anonymous. A user counts as a
 guest only if ALL of these hold, so a GitHub or email user is never deleted:
@@ -59,7 +59,6 @@ from datetime import datetime, timedelta
 from typing import Any
 
 from plot_twist.engine import STORY_PATH
-from server.account.deletion import delete_player
 from server.account.name_store import assign_name
 from server.account.names import load_word_lists, pick_name, placeholder_name
 from server.clock import Clock
@@ -67,6 +66,7 @@ from server.errors import ApiError
 from server.game.entry_kits import ENTRY_KITS_PATH, kit_by_id, load_entry_kits
 from server.game.entry_profile_store import KIT_REASON, KIT_REF, grant_entry_kit
 from server.game.referee import Verdict, story_fingerprint
+from server.island.shared_lifecycle import delete_player
 from server.supabase_admin import SupabaseAdmin
 from server.wallet import validate_transaction
 
@@ -198,15 +198,26 @@ async def cleanup_guests(
     hosts: frozenset[str],
     max_deletions: int = MAX_DELETIONS,
 ) -> CleanupResult:
-    """Delete anonymous users older than 24 hours, at most `max_deletions` per call."""
+    """Delete old guests safely; owned shared islands require separate owner confirmation."""
     guests, checked, listing_went_on = await find_old_guests(admin, now - GUEST_MAX_AGE, hosts)
     deleted = 0
-    for player_id in guests[:max_deletions]:
-        if await delete_player(admin, player_id) == "deleted":
+    processed = 0
+    for player_id in guests:
+        if deleted >= max_deletions:
+            break
+        processed += 1
+        try:
+            status = await delete_player(admin, player_id)
+        except ApiError as error:
+            # An owned admitted island needs its owner's explicit confirmation.
+            if error.code == "owned_island_confirmation_required":
+                continue
+            raise
+        if status == "deleted":
             deleted += 1
     # A count only: the log never names a player.
     logger.info("Demo cleanup deleted %s guest(s).", deleted)
-    more = listing_went_on or len(guests) > max_deletions
+    more = listing_went_on or len(guests) > processed
     return CleanupResult(checked=checked, deleted=deleted, more=more)
 
 

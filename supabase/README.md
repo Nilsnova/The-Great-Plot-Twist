@@ -3574,3 +3574,30 @@ The SQL fixture applies the entire migration chain twice. Checks cover both wave
 descriptors, actual personal/Engineer hooks, same-attempt and legacy-finish races, exact large
 rewards, immutable receipts, reserved principal, departed participants and old-origin replay.
 These tests do not establish live combat-result authority or authenticated browser integration.
+
+## Canonical control and lifecycle integration
+
+These additive migrations compose the retained foundations; they do not admit
+islands, configure a hosted worker or activate a release.
+
+| Migration | Data and execution boundary |
+| --- | --- |
+| `20261118223055_canonical_wave_sessions.sql` | Real six-field economy authority, one global controller lease, frozen wave slots, session settings/receipts and nonce topics. New tables have RLS, no browser rights and service SELECT only; service execution is granted only to named public boundary functions. Private lock/withdraw/retire/revival helpers are unavailable directly. |
+| `20261118223655_shared_arsenal_holder_lifecycle.sql` | Replaces accidental holder-profile cascades with checked profile existence/deletion guards and private exact-tenure holder disposition, frozen loadout and owner asset-reset hooks. Historical copy/move identity is preserved; no browser execution is added. |
+| `20261118223730_shared_player_deletion_guard.sql` | Minimal immutable UUID/time deletion dispositions, RLS and service SELECT only; the service-only active/deleted read grants no initialization or other authority. |
+| `20261118224038_shared_free_revival_runtime.sql` | RLS-protected timed hold/immutable receipt records, private canonical context/hold helpers and service-only replay/completion entry points. No browser table access or money function is granted. |
+| `20261118225937_shared_legacy_wave_fences.sql` | Preserves sixteen public old signatures/defaults behind sorted scope/profile guards. Captured original bodies have no browser or service execution. Genuine retained closed personal settlement remains possible; shared-accounting sources cannot enter legacy reward recovery. |
+| `20261118230046_shared_lifecycle_transactions.sql` | One atomic owner reset or account deletion, original-origin replay and grants, sorted actor/island/wallet/profile fencing, holder disposition and Auth deletion. Historical shared UUID origins are deliberately detached from five destructive foreign keys; live-origin checks and explicit legacy purging preserve their separate semantics. Only named service boundary functions execute directly. |
+
+The four session tables are not a second wave or assignment system: operational
+waves/recovery journals and `personal_captain_profiles.assignment_wave_id` remain
+canonical. Controller loss has one fixed sixty-second return deadline; unrelated
+spectator reads cannot renew it. Nonce topics follow
+`isle_<five-letter-lowercase-code>_<24-hex-nonce>` and reuse the existing private
+Realtime predicate without exposing its schema through PostgREST. Current-data
+revocation and the autonomous worker still need final multi-client acceptance.
+
+Public reset replies intentionally omit a replacement treasury projection;
+original account references remain usable for legitimate old wager settlement.
+Account deletion requires explicit confirmation when it deletes an admitted
+owned island. Guest cleanup cannot silently supply that owner confirmation.

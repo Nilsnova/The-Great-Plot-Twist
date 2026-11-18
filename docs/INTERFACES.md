@@ -2022,3 +2022,45 @@ anchors use `FOR NO KEY UPDATE` to remain compatible with unrelated legacy forei
 This guard does not replace future route context checks or full canonical lifecycle integration.
 Missing personal hooks/state fail closed; deletion dispositions and continuing-island closure
 must be explicitly integrated before affected account deletion is admitted.
+
+## Canonical wave transport and lifecycle composition
+
+The [shared wave boundary](../specs/MP-ECO-11-shared-wave-http.md) extends the
+existing start/join/current/finish and protocol-two journal paths. Shared write
+bodies carry the exact four-field economy intent plus UUID `sessionId` and a
+canonical decimal-string `connectionGeneration`. Journal GET uses paired
+`islandOwner`/`runEpoch` query fields and optional complete session proof. A valid
+member may spectate without controlling a Captain. Persisted mode is discovered
+before any legacy island initializer; old requests cannot choose shared money or
+restore old control for a globally adopted Captain. Native transport requires
+the common version-one header and protocol two. The combined native producer
+and client must be installed before these capabilities are advertised.
+
+`POST /api/island/revive` uses the [free revival contract](../specs/MP-ECO-12-free-revival-runtime.md).
+Its strict body captures origin, action UID, wave, target token, fall, hold and
+controller proof. The existing ordered input journal alone starts/cancels a hold.
+Completion returns an immutable receipt and journal identity; no coins, payment
+receipt or fresh HP patch is returned. Ordinary and Medic hold duration, reach,
+fall identity and sealed journal state are checked in the canonical transaction.
+
+`POST /api/island/fresh-start` retains its legacy body and additionally accepts
+`{economy,actionUid,confirmCode}` for an admitted shared island. The server selects
+the once-only starting grant. The public shared reply keeps the original reset
+receipt with `currentEconomy:null`; a fresh GET alone adopts its replacement
+account/epoch. Old bets remain bound to the retired account. Reset preserves all
+personal Captain progress and never transfers the old cash into the new run.
+
+`DELETE /api/me` retains mandatory strict `confirm:true` and adds optional strict
+`confirmOwnedIslandDeletion` (default false). One atomic service-only lifecycle
+RPC classifies the actor's persisted ownership and disposes held copies, controls,
+owned assets, crew handover and Auth deletion. An admitted owned island requires
+the separate true confirmation (`409 owned_island_confirmation_required`). A
+member's visited island and other players' personal progress survive. Automatic
+guest cleanup uses the same transaction and skips owners needing confirmation
+while continuing later eligible guests. Legacy-only accounts retain their purge.
+See [lifecycle composition](../specs/MP-ECO-16-lifecycle-compatibility-integration.md).
+
+Valid island/journal requests check the live deleted-actor guard after their
+request budget. Malformed bodies/queries and incompatible native requests reach
+no domain transaction. Historical exact retries still belong to their original
+actor/account/epoch; an Auth cache cannot resurrect a deleted player.

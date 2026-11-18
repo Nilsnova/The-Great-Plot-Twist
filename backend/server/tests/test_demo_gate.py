@@ -264,5 +264,7 @@ def test_a_guest_may_always_delete_their_own_data():
 
     assert response.status_code == 200
     assert response.json() == {"deleted": True}
-    assert database.paths() == ["POST /rest/v1/rpc/delete_player"]
-    assert database.calls("delete_player") == [{"p_player_id": GUEST_ID}]
+    assert database.paths() == ["POST /rest/v1/rpc/island_lifecycle_delete_player"]
+    assert database.calls("island_lifecycle_delete_player") == [
+        {"p_actor_id": GUEST_ID, "p_confirm_owned_island": False}
+    ]
