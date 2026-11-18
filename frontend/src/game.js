@@ -92,17 +92,18 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   const character = createCharacter(art, { reducedMotion }); scene.add(character.sprite);
   const controller = createController(character, input, []), view = createCamera(input);
   const isletState=createIsletState({on});
-  // The narrator (src/narrator/: voiced lines and captions for the story and every new thing, keyed by island code)
+  // The narrator (src/narrator/: voiced lines and captions for every new thing, keyed by island code)
   // and the tutorials (src/tutorial/tutorials.js) load in their own chunk right after the first frame (the loop below);
   // until then the events they listen to are kept and replayed to them (core/lazy-part.js).
   let narrator=null,tutorials=null;
   const guide=createLazyPart({on,load:()=>import('./tutorial/guide.js'),build:(module,on)=>{
-    narrator=module.createNarrator({container,on,audio,getGame:()=>{const visit=island?.visiting,own=island?.island;return visit?{code:visit.code,waveBest:0}:own?{code:own.code,waveBest:own.waveBest??0}:null;}});
+    narrator=module.createNarrator({container,on,audio,getGame:()=>{const visit=island?.visiting,own=island?.island;return visit?{code:visit.code,waveBest:0,recoveryVersion:visit.recoveryVersion??0}:own?{code:own.code,waveBest:own.waveBest??0,recoveryVersion:own.recoveryVersion??0}:null;}});
     tutorials=module.createTutorials({container,on,reducedMotion,probe:tutorialHooks.probe,locate:tutorialHooks.locate,spotTarget:tutorialHooks.spotTarget,anchor:tutorialHooks.anchor,tour:tutorialHooks.tour,
       say:trigger=>narrator.say(trigger),setGuide:view=>hud.setGuide(view),hudParent:()=>container.querySelector('.hud-play .hud-right'),
       focusGame:()=>graphics.renderer.domElement.focus({preventScroll:true}),flags:{defenses_v2:()=>islandFlags.defenses_v2?.()===true,
         // D060: the server offers the extra tower spots (its flag more_tower_spots) when the island answer lists them.
-        more_tower_spots:()=>(island?.island?.spots??[]).some(item=>item?.id==='cannon_8')}});
+        more_tower_spots:()=>(island?.island?.spots??[]).some(item=>item?.id==='cannon_8')},
+      recoveryVersion:()=>island?.recoveryVersion??0});
     return true;
   },dispose:()=>{tutorials?.dispose();narrator?.dispose();}});
   let mapTouch=null;

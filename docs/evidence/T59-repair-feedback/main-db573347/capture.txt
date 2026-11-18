@@ -1,0 +1,1 @@
+Production island card preview passed: wave-end repair, reserved-wave quota, loading upgrade guard and retired v1 choices. Fixtures did not call an API.
