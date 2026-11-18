@@ -157,7 +157,8 @@ void main(){
     float sheen=smoothstep(.35,.85,ripple);
     colour=mix(colour,uDeep,(1.0-broad)*.09);
     colour=mix(colour,uLight,sheen*.05);
-    colour=mix(colour,uStroke,crest*.16);
+    // Reserve the brightest surface strokes for the shallows. Broad swells still show offshore depth.
+    colour=mix(colour,uStroke,crest*mix(.16,.10,depth));
     vec2 q=p*2.2+vec2(broad,pxNoise(p*.65-drift))*.8;
     float cells=pxNoise(q+drift)+pxNoise(q*1.95-drift)*.2;
     float caustic=(1.0-band(abs(cells-.6),.02))*smoothstep(.6,1.2,d)*(1.0-smoothstep(1.5,3.0,d));
