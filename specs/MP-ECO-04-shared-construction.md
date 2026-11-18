@@ -18,7 +18,7 @@ This task adds isolated Python construction rules/adapter code, additive SQL and
 
 ## Server and transaction contract
 
-The server builds a trusted construction manifest from its flag-filtered catalogue: each kind has exact positive integral prices and required island wave per level; each permitted spot has allowed kinds and its required wave. Browser input cannot choose a payer, price table, actor role or unlock level. Client quote fields identify action, spot/kind, expected instance/level and exact quoted charge/refund. SQL repeats the domain checks against the current island record and personal Captain state.
+The server builds a trusted construction manifest: each kind has exact positive integral prices and required island wave per level; each permitted spot has allowed kinds and its required wave. Builds and rebuilds use the flag-filtered catalogue. For upgrade and demolition, the existing-structure catalogue helper restores only known saved kinds/plots for the intent's target; SQL must still match its actual instance, kind, level and payment basis. This preserves an owned culverin or extra tower spot after new offers close, without authorizing a new gated purchase. Browser input cannot choose a payer, price table, actor role or unlock level. Client quote fields identify action, spot/kind, expected instance/level and exact quoted charge/refund. SQL repeats the domain checks against the current island record and personal Captain state.
 
 `island_economy_construct(actor, account, epoch, actionUid, intent, catalogue)` is service-only. The intent is one of `build`, `upgrade` or `demolish`. It binds the operation identity to the original account/epoch, exact instance/level and quote. Successful responses separate an immutable domain receipt from fresh originating-account state. A repeated identical action returns that receipt before validating the current catalogue or structure; changed target/quote/payload returns SQL `action_conflict` (`idempotency_conflict` at the adapter boundary). No retry may silently act on a replacement structure. Fresh `currentEconomy` requires current membership and the original active account/epoch to remain the current active admission pointer. Departed actors and retries after retirement, pointer replacement or admission pause receive their original receipt with `currentEconomy: null`.
 
@@ -112,5 +112,12 @@ and negative totals are rejected; a wide legacy bookkeeping total cannot inflate
 After the current-main compatibility merge, **135 real PostgreSQL checks** passed in
 10.35 seconds and **51 focused Python checks** passed. New cases cover managed actors on
 legacy build/upgrade targets, preserved unadopted legacy behavior, and actual blocked-lock
-interleavings with personal adoption and respec. New committed transition races use their
-own disposable cluster, so their records cannot change other tests' global counts.
+interleavings with personal adoption and respec.
+
+The saved-defense compatibility follow-up passed **138 relevant PostgreSQL cases** in
+8.64 seconds and **53 focused Python cases**. Three real recovery-v1 cases preserve
+culverin, extra-spot cannon and extra-spot culverin upgrade/demolition when their offer
+flags are off, while new builds and same-slot rebuilds remain refused. All actual payment
+and refund receipts reconcile. The new construction test module registers a module-local
+instance of the existing scratch fixture; a mixed **82-case PostgreSQL** run with legacy
+host-console and fresh-start counts passed, without changing the shared legacy fixture.

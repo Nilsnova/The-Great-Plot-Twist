@@ -94,6 +94,32 @@ def test_sends_one_combined_rpc_with_server_catalogue_and_authenticated_scope():
     assert arguments["p_catalogue"]["kinds"]["wall"]["prices"][0] == "10"
 
 
+@pytest.mark.parametrize("action", ["upgrade", "demolish"])
+def test_existing_gated_intent_reaches_sql_with_known_kind_and_extra_spot(action):
+    request = ConstructionIntent(
+        action=action,
+        spot="cannon_8",
+        kind="culverin",
+        instanceId=INSTANCE,
+        expectedLevel=1,
+        quotedCoins="10",
+    )
+    response = answer()
+    response["receipt"]["action"] = action
+    response["receipt"]["result"].update(
+        spot="cannon_8",
+        kind="culverin",
+        level=2 if action == "upgrade" else 1,
+        chargedCoins="10" if action == "upgrade" else "0",
+        refundedCoins="0" if action == "upgrade" else "10",
+    )
+    admin = Admin(response)
+    execute(admin, context(), "build001", request, load_island())
+    manifest = admin.calls[0][1]["p_catalogue"]
+    assert "culverin" in manifest["kinds"]
+    assert "culverin" in manifest["spots"]["cannon_8"]["kinds"]
+
+
 @pytest.mark.parametrize(
     "path,value",
     [
