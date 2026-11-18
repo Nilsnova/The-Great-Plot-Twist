@@ -16,8 +16,9 @@ export const UNSHIPPED = Object.freeze([
   'village/walls-posts-v1.png', 'village/walls-surfaces-v1.png',
   'village/core-v1.png', 'village/progress-v1.png', 'village/mortars-v1.png',
   'village/harpoons-v1.png', 'village/culverins-v1.png', 'village/swivels-v1.png',
-  // The pre-VIS64 compiled wall sheet: kept only for the transport proof (village-baked-output.test.js).
-  'village/compiled/walls-4x-1-cf3e4db5982f.png',
+  // The proved 4x PNG masters (the pre-VIS64 wall sheet among them, kept for the transport proof) and the
+  // authored terrain atlas: the game downloads their WebP from village/shipped/ (scripts/ship-village-art.mjs).
+  'village/compiled/', 'village/terrain-materials-v1.png',
 ]);
 
 /** True when a path under public/ ('places/title.webp') stays out of the build. */
