@@ -3,7 +3,7 @@ import {WALL_ATLAS_IDS, frames, wallFrame, wallSurfaceFrame} from '../src/art/vi
 import {projectGround} from '../src/world/projection.js';
 
 // Independent presentation contract: tier cap heights, not imported renderer implementation values.
-const CAP_HEIGHTS = [.95, 1.15, 1.25, 1.35, 1.43];
+const CAP_HEIGHTS = [1.45, 1.70, 1.95, 2.10, 2.20];
 // The existing wall atlas uses 256 logical pixels and three pixels of shelf padding.
 const rects = {}; let x = 3, y = 3, shelf = 0;
 for (const id of [...WALL_ATLAS_IDS].sort((a, b) => frames[b].logical[1] - frames[a].logical[1])) {
@@ -51,7 +51,7 @@ function expectedPost(post, group) {
   const buttress = straight && Math.floor((neighbors[0].x === neighbors[1].x ? post.z : post.x) / 2) % 3 === 0;
   if (straight && !buttress) {
     const height = CAP_HEIGHTS[post.level - 1];
-    return {id: wallSurfaceFrame(post.level, 'top'), points: [[-.28,-.28],[.28,-.28],[.28,.28],[-.28,.28]].map(([dx,dz]) => {
+    return {id: wallSurfaceFrame(post.level, 'top'), points: [[-.40,-.40],[.40,-.40],[.40,.40],[-.40,.40]].map(([dx,dz]) => {
       const p = projectGround(post.x + dx, post.z + dz); return [p.x, p.y + height + .02, 0];
     })};
   }

@@ -136,3 +136,41 @@ describe('independent current cap and buttress contract', () => {
     state.walls.dispose();
   });
 });
+
+// VIS67 retains the earlier 151 cases above byte-for-byte. These independent replacements
+// prove that old presentation buffers cannot satisfy a fresh upright-wall diagnostic row.
+const uprightHeights = [1.45, 1.70, 1.95, 2.10, 2.20];
+const oldHeights = [.95, 1.15, 1.25, 1.35, 1.43];
+function capPoints(post, height, half) {
+  return [[-half,-half],[half,-half],[half,half],[-half,half]].flatMap(([dx,dz]) => [
+    1.3 * (post.x + dx) + .2 * (post.z + dz), -.6 * (post.z + dz) + height + .02, 0,
+  ]);
+}
+function replaceActualCap(state, post, points) {
+  const expected = capPoints(post, uprightHeights[post.level - 1], .40);
+  for (const mesh of state.group.children) {
+    const position = mesh.geometry.getAttribute('position');
+    for (let first = 0; first + 12 <= position.array.length; first += 12) {
+      if (!expected.every((value, at) => Math.abs(position.array[first + at] - value) < 1e-5)) continue;
+      position.array.set(points, first);
+      return {position, first, original: expected};
+    }
+  }
+  throw Error('The actual center cap must exist before its buffer can be challenged.');
+}
+
+describe('upright wall profile rejection', () => {
+  const cases = [1,2,3,4,5].flatMap(level => ['horizontal','vertical'].flatMap(axis =>
+    ['old height','old width'].map(fault => ({level,axis,fault}))));
+  it.each(cases)('rejects $fault with fresh tier $level $axis diagnostics', ({fault,...profile}) => {
+    const rows = straightRows({...profile,form:'cap'}), post = rows[1], state = drawing(rows);
+    expect(read(state)).toEqual({level:post.level,pips:0,mode:'wall-batch'});
+    const wrong = capPoints(post, fault === 'old height' ? oldHeights[post.level - 1] : uprightHeights[post.level - 1],
+      fault === 'old width' ? .28 : .40);
+    const changed = replaceActualCap(state, post, wrong);
+    invalid(state);
+    changed.position.array.set(changed.original, changed.first);
+    expect(read(state)).toEqual({level:post.level,pips:0,mode:'wall-batch'});
+    state.walls.dispose();
+  });
+});
