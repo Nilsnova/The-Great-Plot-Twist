@@ -1,0 +1,10 @@
+{
+  "beforeCommit": "0706a18cf36414fc09dd875ade0058cb0559a51a",
+  "beforeMeaning": "Published revision-3 candidate, not live production; before images copied unchanged from its committed revision-3 after artifacts.",
+  "testedPainterSha256": "328c234d278ec1c54f5db1cd97188a6851c724b172ada0d94d888fe64a6d214e",
+  "finalPainterSha256": "e7cddc225867012e86dd27a3478aa016611e089fe81b40cf57c8fd2bb7e16722",
+  "commentOnlyDifferenceVerified": true,
+  "commentProof": "Restoring the previous single Compact sleeves comment in the final file reproduces testedPainterSha256 exactly. Functional code is identical.",
+  "testSha256": "b15b38f90b59008857b24a28a823bd8b7319e0e918d6a20fc162f35c1e30314d",
+  "noLiveAccounts": true
+}
