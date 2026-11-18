@@ -3263,3 +3263,29 @@ change is performed by this fix. Opt-in checks: `test_recovery_revive_sql.py` an
 For a backend/client candidate that contains T55/T60 recovery code, review and apply the required files in timestamp order: `20261117020000_structure_recovery.sql`, `20261117025000_legacy_wave_locks.sql`, `20261117030000_paid_structure_repair.sql`, `20261117040000_structure_recovery_api.sql`, then `20261117050000_structure_recovery_mutations.sql`. Include any earlier candidate prerequisite, such as `20261117010000_more_tower_spots.sql`, before this set. The integration tests only apply/reapply this chain in disposable Unix-socket PostgreSQL; no live application or activation is recorded here.
 
 The recovery feature flag remains off by default and governs admission of new v1 waves on legacy islands. It does not make the migrations optional for a deployed server or protocol-2 client that can read or mutate a saved v1 island. If a release must stop admitting new v1 waves, turn the flag off and preserve saved v1 state. Admission off does not downgrade saved v1 policy, which persists between waves; no safe policy downgrade is implemented. Keep a v1-capable backend and protocol-2 client while any saved v1 island remains, even when no wave is active. Do not reverse the migrations or delete receipts to roll back. Fix forward with reviewed code and migrations; any future saved-policy data transition needs separate review. See the [release checklist](../docs/RELEASE-CHECKLIST.md#t55t60-structure-recovery-release-gate). No live migration, deployment or flag activation was performed by T60.
+
+### Saved reward recovery after returning
+
+`migrations/20261118060000_reward_recovery.sql` adds the partial
+`wave_participants_pending_player_idx` and service-only closed-result functions:
+`recovery_wave_reward_is_closed(wave_id)`,
+`recovery_wave_recover_reward_locked(player_id,wave_id)` and
+`recovery_wave_recover_rewards(player_id)`. The unchanged `recovery_wave_finish` signature
+becomes a wrapper over the same exact-wave settlement helper and the retained
+`recovery_wave_finish_before_reward_recovery` implementation. All five function names allow
+only `service_role`; `anon` and `authenticated` receive no execute grant. No table, wallet
+reason or browser database privilege is added.
+
+The authenticated `POST /api/waves/recover` route takes no player, wave, amount or checkpoint
+input. It settles up to 20 retained unpaid, canonically closed protocol-2 participations using
+the saved first-close result and exact per-participant loot. Membership, current island,
+current epoch, later waves and feature admission do not erase a past entitlement. Ordinary
+late finish and return recovery share the existing `pirate_loot` reference and `finished_at`
+gate; neither repeats host flags, next-wave progress or structure restoration. Malformed,
+open and unsupported legacy results are excluded before the batch limit. An empty repeat
+still returns the current wallet and persisted personal win progress after a lost response.
+
+Apply the migration and refresh the PostgREST schema before deploying the API/client that uses
+it. Review in timestamp order after `20261118050000_paid_revive_journal.sql`; the historical
+reconciliation migration follows at `20261118070000`. These files were applied and reapplied
+only in disposable test databases. No live application, refund or feature activation is claimed.
