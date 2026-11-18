@@ -10,7 +10,7 @@ from server.tests.test_wall_build_routes import intent, ready
 from server.tests.test_wall_offer_routes import post
 
 TRUNKS = [(-16, 0), (-13, -12), (-9, -17), (9, -17), (15, -8), (16, 2), (14, 11), (-12, 13)]
-PROPS = [(4, 13), (-12, 7), (-3, 12), (-3.5, 2.5), (4, 5.5)]
+PROPS = [(row.x, row.z) for row in layout.island_layout().wall_obstacles if not row.radius]
 
 
 @pytest.mark.parametrize("x,z", TRUNKS + PROPS)
@@ -48,6 +48,9 @@ def test_explicit_legacy_wall_move_still_requires_its_lane_and_clear_ground():
 
 def test_existing_coordinates_and_route_admission_do_not_depend_on_scenery_reserves():
     rules = layout.island_layout(True)
+    assert {row.id for row in rules.wall_obstacles} == {
+        *[f"tree_{n}" for n in range(1, 10)], "bench", "barrel", "lantern", "record", "statue"
+    }
     old = {"wall_13": (-13, -12), "wall_10": (-16, 0)}
     placed = layout.positions_of(rules, old, wall_rule_version=1, wall_capacity=128)
     assert placed["wall_13"] == old["wall_13"]
