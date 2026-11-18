@@ -1,0 +1,34 @@
+{
+  "source": "918aaa5f06ab989ec772e8753d2b57343063b095",
+  "base": "1bce43099cc4e78781faa0b74051d331bfe85e24",
+  "trees": {
+    "frontend/src": "df1cd69d47af9713078f8b163a48cd87124f3093",
+    "backend": "de7ecc4bbe891decd1af5f75d2df5c06dafe96f9",
+    "frontend/tests": "5f397afbd141652fdebf3f2773740b317c72fc41",
+    "supabase/migrations": "ae31ac50221be83070e7f46580d66a70eedbad20",
+    "frontend/public": "9306942db1050d728799cee2fbdc8e8960f14ad2"
+  },
+  "unchangedBackendProceduresSha256": {
+    "positions_of": "78cb8deec4f93d1a6c1b33e0183f51096566f2b5673a7b1a0b0cc4528683d2d7",
+    "settle_walls": "9fc5f13c0a41f2ec727ce8256bb1de64498b94a54377454cf236136c5c88ff7a",
+    "wall_fits": "4e4b8cac905513c019250f84dce7023e0b5c1b7b0dfbb4d3efe965a45b4a7919",
+    "route_open": "88fd4b102bec3b551db5752a1bf7d27128131239179627c7b50288da205559d1",
+    "blocked_cells": "35996b93f1f3b025acbe388470bb08ca7af5783691898202094c7ae53518519b"
+  },
+  "unchangedPaths": [
+    "supabase/migrations",
+    "frontend/public",
+    "frontend/package.json",
+    "frontend/package-lock.json",
+    "backend/pyproject.toml",
+    "backend/uv.lock",
+    "frontend/src/pirates/sim.js",
+    "backend/server/island/wall_build.py",
+    "backend/server/island/placement.py",
+    "frontend/src/island/wall-runs-fake.js",
+    "frontend/src/world/places/layouts.js",
+    "frontend/src/island/decorations.js"
+  ],
+  "identity": "Johannes Franz Lang <83476@novasbe.pt>",
+  "scope": "Prospective explicit wall validation only. No live database, browser or SQL execution by this agent. Existing historical fixture wiring remains coordinator follow-up."
+}

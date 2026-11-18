@@ -1,0 +1,201 @@
+........................................................................ [ 41%]
+........................................................F.F............. [ 82%]
+.F............................                                           [100%]
+=================================== FAILURES ===================================
+____ test_selected_old_reservations_move_together_and_keep_input_id_pairing ____
+
+    def test_selected_old_reservations_move_together_and_keep_input_id_pairing():
+>       q = quote([tuple(p) for p in RING[:12]])
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+server/tests/test_wall_chain.py:45: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+server/tests/test_wall_chain.py:33: in quote
+    return quote_chain(
+server/island/wall_chain.py:128: in quote_chain
+    layout.check_move(geometry, final, p.spot, p.x, p.z, wall_rule_version=1, wall_capacity=128)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+rules = LayoutRules(version=2, grid=0.5, rx=20.0, rz=22.0, seed=3.0, heart=(0.0, 2.0), footprints={'wall': 2.0, 'tower': 2.0, ...-3.5, z=2.5, w=1.5, d=0.75, radius=0), WallObstacle(id='statue', name='the statue', x=4, z=5.5, w=2.5, d=1, radius=0)))
+positions = {'cannon_1': (-12.5, -14.5), 'cannon_2': (13.0, -15.0), 'cannon_3': (15.5, 14.0), 'cannon_4': (-15.5, 14.5), ...}
+spot_id = 'wall_11', x = -12.5, z = -12.0, wall_rule_version = 1
+wall_capacity = 128
+
+    def check_move(
+        rules: LayoutRules,
+        positions: dict[str, Position],
+        spot_id: str,
+        x: float,
+        z: float,
+        *,
+        wall_rule_version: int = 0,
+        wall_capacity: int = LEGACY_WALL_CAPACITY,
+    ) -> None:
+        """Raise MoveRefused when `spot_id` may not stand at (x, z). The first failing rule wins:
+        404 no_such_spot, 422 off_grid, 409 not_on_land, 409 off_path (a wall off every pirate
+        path, D056), 409 place_taken, 409 blocks_route."""
+        check_wall_policy(wall_rule_version, wall_capacity)
+        spot = spot_named(rules, spot_id)
+        inventory = wall_rule_version == 1 and is_inventory_wall_id(spot_id, wall_capacity)
+        if spot is None and not inventory:
+            raise MoveRefused(404, "no_such_spot", "There is no such build spot.")
+        if not (on_grid(rules, x) and on_grid(rules, z)):
+            raise MoveRefused(422, "off_grid", "Pick a square of the build grid.")
+        if surface_class(rules, x, z) == SEA:
+            raise MoveRefused(409, "not_on_land", "Buildings stand on land, not in the sea.")
+        if wall_rule_version == 0 and spot.slot == WALL_SLOT and not on_wall_lane(rules, x, z):
+            raise MoveRefused(409, "off_path", "Walls go on a pirate path.")
+        moved = box_of(rules, spot_id, (x, z), wall_capacity=wall_capacity)
+        for other in rules.keep_out:
+            if overlaps(moved, other):
+                raise MoveRefused(409, "place_taken", f"That is too close to {other.name}.")
+        if inventory or spot.slot == WALL_SLOT:
+            for other in rules.wall_obstacles:
+                hit = (
+                    math.hypot(
+                        max(abs(x - other.x) - moved.w / 2, 0),
+                        max(abs(z - other.z) - moved.d / 2, 0),
+                    ) < other.radius
+                    if other.radius
+                    else overlaps(moved, other)
+                )
+                if hit:
+>                   raise MoveRefused(409, "place_taken", f"That is too close to {other.name}.")
+E                   server.island.layout.MoveRefused: That is too close to a tree.
+
+server/island/layout.py:395: MoveRefused
+_____________ test_per_piece_rounding_is_not_an_aggregate_discount _____________
+
+    def test_per_piece_rounding_is_not_an_aggregate_discount():
+        kinds = tuple(
+            replace(k, prices=(11, *k.prices[1:])) if k.kind == "wall" else k for k in CATALOGUE.kinds
+        )
+>       q = quote(
+            [tuple(p) for p in RING[:32]], role="engineer", catalogue=replace(CATALOGUE, kinds=kinds)
+        )
+
+server/tests/test_wall_chain.py:62: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+server/tests/test_wall_chain.py:33: in quote
+    return quote_chain(
+server/island/wall_chain.py:128: in quote_chain
+    layout.check_move(geometry, final, p.spot, p.x, p.z, wall_rule_version=1, wall_capacity=128)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+rules = LayoutRules(version=2, grid=0.5, rx=20.0, rz=22.0, seed=3.0, heart=(0.0, 2.0), footprints={'wall': 2.0, 'tower': 2.0, ...-3.5, z=2.5, w=1.5, d=0.75, radius=0), WallObstacle(id='statue', name='the statue', x=4, z=5.5, w=2.5, d=1, radius=0)))
+positions = {'cannon_1': (-12.5, -14.5), 'cannon_2': (13.0, -15.0), 'cannon_3': (15.5, 14.0), 'cannon_4': (-15.5, 14.5), ...}
+spot_id = 'wall_11', x = -12.5, z = -12.0, wall_rule_version = 1
+wall_capacity = 128
+
+    def check_move(
+        rules: LayoutRules,
+        positions: dict[str, Position],
+        spot_id: str,
+        x: float,
+        z: float,
+        *,
+        wall_rule_version: int = 0,
+        wall_capacity: int = LEGACY_WALL_CAPACITY,
+    ) -> None:
+        """Raise MoveRefused when `spot_id` may not stand at (x, z). The first failing rule wins:
+        404 no_such_spot, 422 off_grid, 409 not_on_land, 409 off_path (a wall off every pirate
+        path, D056), 409 place_taken, 409 blocks_route."""
+        check_wall_policy(wall_rule_version, wall_capacity)
+        spot = spot_named(rules, spot_id)
+        inventory = wall_rule_version == 1 and is_inventory_wall_id(spot_id, wall_capacity)
+        if spot is None and not inventory:
+            raise MoveRefused(404, "no_such_spot", "There is no such build spot.")
+        if not (on_grid(rules, x) and on_grid(rules, z)):
+            raise MoveRefused(422, "off_grid", "Pick a square of the build grid.")
+        if surface_class(rules, x, z) == SEA:
+            raise MoveRefused(409, "not_on_land", "Buildings stand on land, not in the sea.")
+        if wall_rule_version == 0 and spot.slot == WALL_SLOT and not on_wall_lane(rules, x, z):
+            raise MoveRefused(409, "off_path", "Walls go on a pirate path.")
+        moved = box_of(rules, spot_id, (x, z), wall_capacity=wall_capacity)
+        for other in rules.keep_out:
+            if overlaps(moved, other):
+                raise MoveRefused(409, "place_taken", f"That is too close to {other.name}.")
+        if inventory or spot.slot == WALL_SLOT:
+            for other in rules.wall_obstacles:
+                hit = (
+                    math.hypot(
+                        max(abs(x - other.x) - moved.w / 2, 0),
+                        max(abs(z - other.z) - moved.d / 2, 0),
+                    ) < other.radius
+                    if other.radius
+                    else overlaps(moved, other)
+                )
+                if hit:
+>                   raise MoveRefused(409, "place_taken", f"That is too close to {other.name}.")
+E                   server.island.layout.MoveRefused: That is too close to a tree.
+
+server/island/layout.py:395: MoveRefused
+_ test_measured_full_perimeter_is_constructible_in_four_real_bounded_quote_runs _
+
+    def test_measured_full_perimeter_is_constructible_in_four_real_bounded_quote_runs():
+        built, stored, payments = {}, {}, 0
+        for start in range(0, len(RING), 32):
+>           q = quote([tuple(p) for p in RING[start : start + 32]], built=built, stored=stored)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+server/tests/test_wall_chain.py:131: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+server/tests/test_wall_chain.py:33: in quote
+    return quote_chain(
+server/island/wall_chain.py:128: in quote_chain
+    layout.check_move(geometry, final, p.spot, p.x, p.z, wall_rule_version=1, wall_capacity=128)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+rules = LayoutRules(version=2, grid=0.5, rx=20.0, rz=22.0, seed=3.0, heart=(0.0, 2.0), footprints={'wall': 2.0, 'tower': 2.0, ...-3.5, z=2.5, w=1.5, d=0.75, radius=0), WallObstacle(id='statue', name='the statue', x=4, z=5.5, w=2.5, d=1, radius=0)))
+positions = {'cannon_1': (-12.5, -14.5), 'cannon_2': (13.0, -15.0), 'cannon_3': (15.5, 14.0), 'cannon_4': (-15.5, 14.5), ...}
+spot_id = 'wall_11', x = -12.5, z = -12.0, wall_rule_version = 1
+wall_capacity = 128
+
+    def check_move(
+        rules: LayoutRules,
+        positions: dict[str, Position],
+        spot_id: str,
+        x: float,
+        z: float,
+        *,
+        wall_rule_version: int = 0,
+        wall_capacity: int = LEGACY_WALL_CAPACITY,
+    ) -> None:
+        """Raise MoveRefused when `spot_id` may not stand at (x, z). The first failing rule wins:
+        404 no_such_spot, 422 off_grid, 409 not_on_land, 409 off_path (a wall off every pirate
+        path, D056), 409 place_taken, 409 blocks_route."""
+        check_wall_policy(wall_rule_version, wall_capacity)
+        spot = spot_named(rules, spot_id)
+        inventory = wall_rule_version == 1 and is_inventory_wall_id(spot_id, wall_capacity)
+        if spot is None and not inventory:
+            raise MoveRefused(404, "no_such_spot", "There is no such build spot.")
+        if not (on_grid(rules, x) and on_grid(rules, z)):
+            raise MoveRefused(422, "off_grid", "Pick a square of the build grid.")
+        if surface_class(rules, x, z) == SEA:
+            raise MoveRefused(409, "not_on_land", "Buildings stand on land, not in the sea.")
+        if wall_rule_version == 0 and spot.slot == WALL_SLOT and not on_wall_lane(rules, x, z):
+            raise MoveRefused(409, "off_path", "Walls go on a pirate path.")
+        moved = box_of(rules, spot_id, (x, z), wall_capacity=wall_capacity)
+        for other in rules.keep_out:
+            if overlaps(moved, other):
+                raise MoveRefused(409, "place_taken", f"That is too close to {other.name}.")
+        if inventory or spot.slot == WALL_SLOT:
+            for other in rules.wall_obstacles:
+                hit = (
+                    math.hypot(
+                        max(abs(x - other.x) - moved.w / 2, 0),
+                        max(abs(z - other.z) - moved.d / 2, 0),
+                    ) < other.radius
+                    if other.radius
+                    else overlaps(moved, other)
+                )
+                if hit:
+>                   raise MoveRefused(409, "place_taken", f"That is too close to {other.name}.")
+E                   server.island.layout.MoveRefused: That is too close to a tree.
+
+server/island/layout.py:395: MoveRefused
+=========================== short test summary info ============================
+FAILED server/tests/test_wall_chain.py::test_selected_old_reservations_move_together_and_keep_input_id_pairing
+FAILED server/tests/test_wall_chain.py::test_per_piece_rounding_is_not_an_aggregate_discount
+FAILED server/tests/test_wall_chain.py::test_measured_full_perimeter_is_constructible_in_four_real_bounded_quote_runs
+3 failed, 171 passed in 7.98s

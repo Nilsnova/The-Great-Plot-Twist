@@ -1,0 +1,151 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run --maxWorkers=1 tests/island/scenery-clearance.test.js
+
+
+ RUN  v5.1.0 /workspace/reference-village-work/clearance-placement/frontend
+
+ ❯ tests/island/scenery-clearance.test.js (18 tests | 16 failed) 250ms
+   ❯ prospective wall clearance (16)
+     × refuses a paid wall through the tree at -16,0 49ms
+     × refuses a paid wall through the tree at -13,-12 13ms
+     × refuses a paid wall through the tree at -9,-17 29ms
+     × refuses a paid wall through the tree at 9,-17 5ms
+     × refuses a paid wall through the tree at 15,-8 7ms
+     × refuses a paid wall through the tree at 16,2 15ms
+     × refuses a paid wall through the tree at 14,11 16ms
+     × refuses a paid wall through the tree at -12,13 12ms
+     × keeps the bench ground reserve free at 4,13 3ms
+     × keeps the barrel ground reserve free at -12,7 4ms
+     × keeps the lantern ground reserve free at -3,12 13ms
+     × keeps the record ground reserve free at -3.5,2.5 17ms
+     × keeps the statue ground reserve free at 4,5.5 12ms
+     × matches server geometry and the actual unchanged scenery anchors 1ms
+     × leaves half-grid clearance beside a trunk and full-side wall contact valid 6ms
+   × refuses an obstructed fake quote/build before any coin, wall or receipt mutation 23ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 16 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/island/scenery-clearance.test.js > prospective wall clearance > refuses a paid wall through the tree at -16,0
+ FAIL  tests/island/scenery-clearance.test.js > prospective wall clearance > refuses a paid wall through the tree at -13,-12
+ FAIL  tests/island/scenery-clearance.test.js > prospective wall clearance > refuses a paid wall through the tree at -9,-17
+ FAIL  tests/island/scenery-clearance.test.js > prospective wall clearance > refuses a paid wall through the tree at 9,-17
+ FAIL  tests/island/scenery-clearance.test.js > prospective wall clearance > refuses a paid wall through the tree at 15,-8
+ FAIL  tests/island/scenery-clearance.test.js > prospective wall clearance > refuses a paid wall through the tree at 16,2
+ FAIL  tests/island/scenery-clearance.test.js > prospective wall clearance > refuses a paid wall through the tree at 14,11
+ FAIL  tests/island/scenery-clearance.test.js > prospective wall clearance > refuses a paid wall through the tree at -12,13
+AssertionError: expected { ok: true } to match object { ok: false, code: 'place_taken' }
+
+- Expected
++ Received
+
+  {
+-   "code": "place_taken",
+-   "ok": false,
++   "ok": true,
+  }
+
+ ❯ tests/island/scenery-clearance.test.js:17:25
+     15| describe('prospective wall clearance', () => {
+     16|   it.each(trunks)('refuses a paid wall through the tree at %s,%s', (x,…
+     17|     expect(check(x, z)).toMatchObject({ok: false, code: 'place_taken'}…
+       |                         ^
+     18|   });
+     19|   it.each(props)('keeps the %s ground reserve free at %s,%s', (_, x, z…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/16]⎯
+
+ FAIL  tests/island/scenery-clearance.test.js > prospective wall clearance > keeps the bench ground reserve free at 4,13
+ FAIL  tests/island/scenery-clearance.test.js > prospective wall clearance > keeps the barrel ground reserve free at -12,7
+ FAIL  tests/island/scenery-clearance.test.js > prospective wall clearance > keeps the lantern ground reserve free at -3,12
+ FAIL  tests/island/scenery-clearance.test.js > prospective wall clearance > keeps the record ground reserve free at -3.5,2.5
+ FAIL  tests/island/scenery-clearance.test.js > prospective wall clearance > keeps the statue ground reserve free at 4,5.5
+AssertionError: expected { ok: true } to match object { ok: false, code: 'place_taken' }
+
+- Expected
++ Received
+
+  {
+-   "code": "place_taken",
+-   "ok": false,
++   "ok": true,
+  }
+
+ ❯ tests/island/scenery-clearance.test.js:20:25
+     18|   });
+     19|   it.each(props)('keeps the %s ground reserve free at %s,%s', (_, x, z…
+     20|     expect(check(x, z)).toMatchObject({ok: false, code: 'place_taken'}…
+       |                         ^
+     21|   });
+     22|   it('matches server geometry and the actual unchanged scenery anchors…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/16]⎯
+
+ FAIL  tests/island/scenery-clearance.test.js > prospective wall clearance > matches server geometry and the actual unchanged scenery anchors
+TypeError: Cannot read properties of undefined (reading 'filter')
+ ❯ tests/island/scenery-clearance.test.js:24:33
+     22|   it('matches server geometry and the actual unchanged scenery anchors…
+     23|     expect(placement.WALL_OBSTACLES).toEqual(server.wallObstacles);
+     24|     expect(server.wallObstacles.filter(row => row.radius).map(({x, z})…
+       |                                 ^
+     25|     for (const prop of layouts.home_islet) expect(server.wallObstacles…
+     26|     expect(placement.KEEP_OUT).toEqual(server.keepOut);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/16]⎯
+
+ FAIL  tests/island/scenery-clearance.test.js > prospective wall clearance > leaves half-grid clearance beside a trunk and full-side wall contact valid
+AssertionError: expected { ok: true } to match object { code: 'place_taken' }
+(1 matching property omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "code": "place_taken",
++   "ok": true,
+  }
+
+ ❯ tests/island/scenery-clearance.test.js:30:29
+     28|   it('leaves half-grid clearance beside a trunk and full-side wall con…
+     29|     expect(check(-13, -10.5)).toEqual({ok: true});
+     30|     expect(check(-13, -11)).toMatchObject({code: 'place_taken'});
+       |                             ^
+     31|     expect(check(-13, -10.5, {...positions, wall_14: {x: -11, z: -10.5…
+     32|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/16]⎯
+
+ FAIL  tests/island/scenery-clearance.test.js > refuses an obstructed fake quote/build before any coin, wall or receipt mutation
+AssertionError: expected { ok: true, status: 200, …(1) } to match object { ok: false, code: 'place_taken' }
+(9 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "code": "place_taken",
+-   "ok": false,
++   "ok": true,
+  }
+
+ ❯ tests/island/scenery-clearance.test.js:51:83
+     49| it('refuses an obstructed fake quote/build before any coin, wall or re…
+     50|   const game = await fake(), before = await game.api.island();
+     51|   expect(await game.post('/api/island/walls/quote', {cells: [{x: -13, …
+       |                                                                                   ^
+     52|   const island = game.world.islands.get(readIslandCode(before.code));
+     53|   const intent = body({placements: [{spot: 'wall_1', x: -13, z: -12}],…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/16]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  16 failed | 2 passed (18)
+   Start at  09:57:41
+   Duration  833ms (tests 45%, transform 28%, import 25%, worker 2%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.3
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.3
+npm notice To update run: npm install -g npm@12.2.3
+npm notice

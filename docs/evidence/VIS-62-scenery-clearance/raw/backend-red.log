@@ -1,0 +1,315 @@
+FFFFFFFFFFFFFFFFFF                                                       [100%]
+=================================== FAILURES ===================================
+_______ test_new_wall_cannot_share_a_tree_or_prop_ground_reserve[-16-0] ________
+
+x = -16, z = 0
+
+    @pytest.mark.parametrize("x,z", TRUNKS + PROPS)
+    def test_new_wall_cannot_share_a_tree_or_prop_ground_reserve(x, z):
+        rules = layout.island_layout(True)
+        placed = layout.positions_of(rules, {}, wall_rule_version=1, wall_capacity=128)
+>       with pytest.raises(layout.MoveRefused) as error:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE MoveRefused
+
+server/tests/test_wall_scenery_clearance.py:20: Failed
+______ test_new_wall_cannot_share_a_tree_or_prop_ground_reserve[-13--12] _______
+
+x = -13, z = -12
+
+    @pytest.mark.parametrize("x,z", TRUNKS + PROPS)
+    def test_new_wall_cannot_share_a_tree_or_prop_ground_reserve(x, z):
+        rules = layout.island_layout(True)
+        placed = layout.positions_of(rules, {}, wall_rule_version=1, wall_capacity=128)
+>       with pytest.raises(layout.MoveRefused) as error:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE MoveRefused
+
+server/tests/test_wall_scenery_clearance.py:20: Failed
+_______ test_new_wall_cannot_share_a_tree_or_prop_ground_reserve[-9--17] _______
+
+x = -9, z = -17
+
+    @pytest.mark.parametrize("x,z", TRUNKS + PROPS)
+    def test_new_wall_cannot_share_a_tree_or_prop_ground_reserve(x, z):
+        rules = layout.island_layout(True)
+        placed = layout.positions_of(rules, {}, wall_rule_version=1, wall_capacity=128)
+>       with pytest.raises(layout.MoveRefused) as error:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE MoveRefused
+
+server/tests/test_wall_scenery_clearance.py:20: Failed
+_______ test_new_wall_cannot_share_a_tree_or_prop_ground_reserve[9--17] ________
+
+x = 9, z = -17
+
+    @pytest.mark.parametrize("x,z", TRUNKS + PROPS)
+    def test_new_wall_cannot_share_a_tree_or_prop_ground_reserve(x, z):
+        rules = layout.island_layout(True)
+        placed = layout.positions_of(rules, {}, wall_rule_version=1, wall_capacity=128)
+>       with pytest.raises(layout.MoveRefused) as error:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE MoveRefused
+
+server/tests/test_wall_scenery_clearance.py:20: Failed
+_______ test_new_wall_cannot_share_a_tree_or_prop_ground_reserve[15--8] ________
+
+x = 15, z = -8
+
+    @pytest.mark.parametrize("x,z", TRUNKS + PROPS)
+    def test_new_wall_cannot_share_a_tree_or_prop_ground_reserve(x, z):
+        rules = layout.island_layout(True)
+        placed = layout.positions_of(rules, {}, wall_rule_version=1, wall_capacity=128)
+>       with pytest.raises(layout.MoveRefused) as error:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE MoveRefused
+
+server/tests/test_wall_scenery_clearance.py:20: Failed
+________ test_new_wall_cannot_share_a_tree_or_prop_ground_reserve[16-2] ________
+
+x = 16, z = 2
+
+    @pytest.mark.parametrize("x,z", TRUNKS + PROPS)
+    def test_new_wall_cannot_share_a_tree_or_prop_ground_reserve(x, z):
+        rules = layout.island_layout(True)
+        placed = layout.positions_of(rules, {}, wall_rule_version=1, wall_capacity=128)
+>       with pytest.raises(layout.MoveRefused) as error:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE MoveRefused
+
+server/tests/test_wall_scenery_clearance.py:20: Failed
+_______ test_new_wall_cannot_share_a_tree_or_prop_ground_reserve[14-11] ________
+
+x = 14, z = 11
+
+    @pytest.mark.parametrize("x,z", TRUNKS + PROPS)
+    def test_new_wall_cannot_share_a_tree_or_prop_ground_reserve(x, z):
+        rules = layout.island_layout(True)
+        placed = layout.positions_of(rules, {}, wall_rule_version=1, wall_capacity=128)
+>       with pytest.raises(layout.MoveRefused) as error:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE MoveRefused
+
+server/tests/test_wall_scenery_clearance.py:20: Failed
+_______ test_new_wall_cannot_share_a_tree_or_prop_ground_reserve[-12-13] _______
+
+x = -12, z = 13
+
+    @pytest.mark.parametrize("x,z", TRUNKS + PROPS)
+    def test_new_wall_cannot_share_a_tree_or_prop_ground_reserve(x, z):
+        rules = layout.island_layout(True)
+        placed = layout.positions_of(rules, {}, wall_rule_version=1, wall_capacity=128)
+>       with pytest.raises(layout.MoveRefused) as error:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE MoveRefused
+
+server/tests/test_wall_scenery_clearance.py:20: Failed
+________ test_new_wall_cannot_share_a_tree_or_prop_ground_reserve[4-13] ________
+
+x = 4, z = 13
+
+    @pytest.mark.parametrize("x,z", TRUNKS + PROPS)
+    def test_new_wall_cannot_share_a_tree_or_prop_ground_reserve(x, z):
+        rules = layout.island_layout(True)
+        placed = layout.positions_of(rules, {}, wall_rule_version=1, wall_capacity=128)
+>       with pytest.raises(layout.MoveRefused) as error:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE MoveRefused
+
+server/tests/test_wall_scenery_clearance.py:20: Failed
+_______ test_new_wall_cannot_share_a_tree_or_prop_ground_reserve[-12-7] ________
+
+x = -12, z = 7
+
+    @pytest.mark.parametrize("x,z", TRUNKS + PROPS)
+    def test_new_wall_cannot_share_a_tree_or_prop_ground_reserve(x, z):
+        rules = layout.island_layout(True)
+        placed = layout.positions_of(rules, {}, wall_rule_version=1, wall_capacity=128)
+>       with pytest.raises(layout.MoveRefused) as error:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE MoveRefused
+
+server/tests/test_wall_scenery_clearance.py:20: Failed
+_______ test_new_wall_cannot_share_a_tree_or_prop_ground_reserve[-3-12] ________
+
+x = -3, z = 12
+
+    @pytest.mark.parametrize("x,z", TRUNKS + PROPS)
+    def test_new_wall_cannot_share_a_tree_or_prop_ground_reserve(x, z):
+        rules = layout.island_layout(True)
+        placed = layout.positions_of(rules, {}, wall_rule_version=1, wall_capacity=128)
+>       with pytest.raises(layout.MoveRefused) as error:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE MoveRefused
+
+server/tests/test_wall_scenery_clearance.py:20: Failed
+______ test_new_wall_cannot_share_a_tree_or_prop_ground_reserve[-3.5-2.5] ______
+
+x = -3.5, z = 2.5
+
+    @pytest.mark.parametrize("x,z", TRUNKS + PROPS)
+    def test_new_wall_cannot_share_a_tree_or_prop_ground_reserve(x, z):
+        rules = layout.island_layout(True)
+        placed = layout.positions_of(rules, {}, wall_rule_version=1, wall_capacity=128)
+>       with pytest.raises(layout.MoveRefused) as error:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE MoveRefused
+
+server/tests/test_wall_scenery_clearance.py:20: Failed
+_______ test_new_wall_cannot_share_a_tree_or_prop_ground_reserve[4-5.5] ________
+
+x = 4, z = 5.5
+
+    @pytest.mark.parametrize("x,z", TRUNKS + PROPS)
+    def test_new_wall_cannot_share_a_tree_or_prop_ground_reserve(x, z):
+        rules = layout.island_layout(True)
+        placed = layout.positions_of(rules, {}, wall_rule_version=1, wall_capacity=128)
+>       with pytest.raises(layout.MoveRefused) as error:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE MoveRefused
+
+server/tests/test_wall_scenery_clearance.py:20: Failed
+________ test_clear_half_grid_cells_and_touching_wall_edges_still_work _________
+
+    def test_clear_half_grid_cells_and_touching_wall_edges_still_work():
+        rules = layout.island_layout(True)
+        placed = layout.positions_of(rules, {"wall_14": (-11, -10.5)}, wall_rule_version=1, wall_capacity=128)
+        layout.check_move(rules, placed, "wall_13", -13, -10.5, wall_rule_version=1, wall_capacity=128)
+>       with pytest.raises(layout.MoveRefused):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE MoveRefused
+
+server/tests/test_wall_scenery_clearance.py:29: Failed
+_ test_existing_coordinates_and_route_admission_do_not_depend_on_scenery_reserves _
+
+    def test_existing_coordinates_and_route_admission_do_not_depend_on_scenery_reserves():
+        rules = layout.island_layout(True)
+        old = {"wall_13": (-13, -12), "wall_10": (-16, 0)}
+        placed = layout.positions_of(rules, old, wall_rule_version=1, wall_capacity=128)
+        assert placed["wall_13"] == old["wall_13"]
+>       without = replace(rules, wall_obstacles=())
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+server/tests/test_wall_scenery_clearance.py:38: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+obj = LayoutRules(version=2, grid=0.5, rx=20.0, rz=22.0, seed=3.0, heart=(0.0, 2.0), footprints={'wall': 2.0, 'tower': 2.0, ...LayoutSpot(spot='cannon_10', slot='tower', x=5.0, z=10.0), LayoutSpot(spot='cannon_11', slot='tower', x=-3.5, z=-7.5)))
+changes = {'wall_obstacles': (), 'version': 2, 'grid': 0.5, 'rx': 20.0, ...}
+
+    def replace(obj, /, **changes):
+        """Return a new object replacing specified fields with new values.
+    
+        This is especially useful for frozen classes.  Example usage::
+    
+          @dataclass(frozen=True)
+          class C:
+              x: int
+              y: int
+    
+          c = C(1, 2)
+          c1 = replace(c, x=3)
+          assert c1.x == 3 and c1.y == 2
+        """
+    
+        # We're going to mutate 'changes', but that's okay because it's a
+        # new dict, even if called with 'replace(obj, **my_changes)'.
+    
+        if not _is_dataclass_instance(obj):
+            raise TypeError("replace() should be called on dataclass instances")
+    
+        # It's an error to have init=False fields in 'changes'.
+        # If a field is not in 'changes', read its value from the provided obj.
+    
+        for f in getattr(obj, _FIELDS).values():
+            # Only consider normal fields or InitVars.
+            if f._field_type is _FIELD_CLASSVAR:
+                continue
+    
+            if not f.init:
+                # Error if this field is specified in changes.
+                if f.name in changes:
+                    raise ValueError(f'field {f.name} is declared with '
+                                     'init=False, it cannot be specified with '
+                                     'replace()')
+                continue
+    
+            if f.name not in changes:
+                if f._field_type is _FIELD_INITVAR and f.default is MISSING:
+                    raise ValueError(f"InitVar {f.name!r} "
+                                     'must be specified with replace()')
+                changes[f.name] = getattr(obj, f.name)
+    
+        # Create the new object, which calls __init__() and
+        # __post_init__() (if defined), using all of the init fields we've
+        # added and/or left in 'changes'.  If there are values supplied in
+        # changes that aren't fields, this will correctly raise a
+        # TypeError.
+>       return obj.__class__(**changes)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: LayoutRules.__init__() got an unexpected keyword argument 'wall_obstacles'
+
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/dataclasses.py:1588: TypeError
+_________ test_quote_and_uncommitted_build_refuse_before_any_paid_rpc __________
+
+    def test_quote_and_uncommitted_build_refuse_before_any_paid_rpc():
+        game = ready()
+        quoted = post(game, "quote", cells=[{"x": -13, "z": -12}])
+>       assert quoted.status_code == 409 and quoted.json()["error"]["code"] == "place_taken"
+E       assert (200 == 409)
+E        +  where 200 = <Response [200 OK]>.status_code
+
+server/tests/test_wall_scenery_clearance.py:47: AssertionError
+------------------------------ Captured log call -------------------------------
+INFO     uvicorn.error.requests:request_policy.py:56 {"route": "/api/island/walls/enable", "status": 200, "duration_ms": 69.932}
+INFO     uvicorn.error.requests:request_policy.py:56 {"route": "/api/island/walls/quote", "status": 200, "duration_ms": 14.076}
+________________ test_explicit_move_refuses_before_atomic_save _________________
+
+    def test_explicit_move_refuses_before_atomic_save():
+        game = ready()
+        moved = move(game, spot="wall_1", x=-13, z=-12)
+>       assert moved.status_code == 409 and moved.json()["error"]["code"] == "place_taken"
+E       assert (200 == 409)
+E        +  where 200 = <Response [200 OK]>.status_code
+
+server/tests/test_wall_scenery_clearance.py:60: AssertionError
+------------------------------ Captured log call -------------------------------
+INFO     uvicorn.error.requests:request_policy.py:56 {"route": "/api/island/walls/enable", "status": 200, "duration_ms": 144.676}
+INFO     uvicorn.error.requests:request_policy.py:56 {"route": "/api/island/move", "status": 200, "duration_ms": 12.63}
+_____ test_historical_overlapping_receipt_replays_before_current_geometry ______
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f0f60b97c50>
+
+    def test_historical_overlapping_receipt_replays_before_current_geometry(monkeypatch):
+        game = ready()
+        original = layout.island_layout
+        monkeypatch.setattr(layout, "island_layout", lambda more=False: replace(original(more), wall_obstacles=()))
+        quoted = post(game, "quote", cells=[{"x": -13, "z": -12}])
+>       assert quoted.status_code == 200
+E       assert 500 == 200
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+server/tests/test_wall_scenery_clearance.py:69: AssertionError
+------------------------------ Captured log call -------------------------------
+INFO     uvicorn.error.requests:request_policy.py:56 {"route": "/api/island/walls/enable", "status": 200, "duration_ms": 42.883}
+ERROR    server.errors:errors.py:106 Unexpected server error: TypeError
+INFO     uvicorn.error.requests:request_policy.py:56 {"route": "/api/island/walls/quote", "status": 500, "duration_ms": 4.452}
+=========================== short test summary info ============================
+FAILED server/tests/test_wall_scenery_clearance.py::test_new_wall_cannot_share_a_tree_or_prop_ground_reserve[-16-0]
+FAILED server/tests/test_wall_scenery_clearance.py::test_new_wall_cannot_share_a_tree_or_prop_ground_reserve[-13--12]
+FAILED server/tests/test_wall_scenery_clearance.py::test_new_wall_cannot_share_a_tree_or_prop_ground_reserve[-9--17]
+FAILED server/tests/test_wall_scenery_clearance.py::test_new_wall_cannot_share_a_tree_or_prop_ground_reserve[9--17]
+FAILED server/tests/test_wall_scenery_clearance.py::test_new_wall_cannot_share_a_tree_or_prop_ground_reserve[15--8]
+FAILED server/tests/test_wall_scenery_clearance.py::test_new_wall_cannot_share_a_tree_or_prop_ground_reserve[16-2]
+FAILED server/tests/test_wall_scenery_clearance.py::test_new_wall_cannot_share_a_tree_or_prop_ground_reserve[14-11]
+FAILED server/tests/test_wall_scenery_clearance.py::test_new_wall_cannot_share_a_tree_or_prop_ground_reserve[-12-13]
+FAILED server/tests/test_wall_scenery_clearance.py::test_new_wall_cannot_share_a_tree_or_prop_ground_reserve[4-13]
+FAILED server/tests/test_wall_scenery_clearance.py::test_new_wall_cannot_share_a_tree_or_prop_ground_reserve[-12-7]
+FAILED server/tests/test_wall_scenery_clearance.py::test_new_wall_cannot_share_a_tree_or_prop_ground_reserve[-3-12]
+FAILED server/tests/test_wall_scenery_clearance.py::test_new_wall_cannot_share_a_tree_or_prop_ground_reserve[-3.5-2.5]
+FAILED server/tests/test_wall_scenery_clearance.py::test_new_wall_cannot_share_a_tree_or_prop_ground_reserve[4-5.5]
+FAILED server/tests/test_wall_scenery_clearance.py::test_clear_half_grid_cells_and_touching_wall_edges_still_work
+FAILED server/tests/test_wall_scenery_clearance.py::test_existing_coordinates_and_route_admission_do_not_depend_on_scenery_reserves
+FAILED server/tests/test_wall_scenery_clearance.py::test_quote_and_uncommitted_build_refuse_before_any_paid_rpc
+FAILED server/tests/test_wall_scenery_clearance.py::test_explicit_move_refuses_before_atomic_save
+FAILED server/tests/test_wall_scenery_clearance.py::test_historical_overlapping_receipt_replays_before_current_geometry
+18 failed in 2.27s

@@ -1,0 +1,31 @@
+[
+  {
+    "name": "build",
+    "command": [
+      "npm",
+      "run",
+      "build"
+    ],
+    "exitCode": 0,
+    "seconds": 2.21
+  },
+  {
+    "name": "budget",
+    "command": [
+      "node",
+      "scripts/report-budget.js",
+      "--check"
+    ],
+    "exitCode": 0,
+    "seconds": 0.43
+  },
+  {
+    "name": "text-lint",
+    "command": [
+      "node",
+      "../scripts/text-lint/index.mjs"
+    ],
+    "exitCode": 0,
+    "seconds": 1.75
+  }
+]
