@@ -1,4 +1,5 @@
-// Short-lived range intent. Used by the wave controller; impacts stay in the existing visual renderer.
+// Browser-local range intent for the wave controller's own captain. Never populated from teammate events.
+// Impacts stay in the existing visual renderer.
 const HOLD_MS = 1200, FADE_MS = 400;
 
 export function createRangeFeedback() {

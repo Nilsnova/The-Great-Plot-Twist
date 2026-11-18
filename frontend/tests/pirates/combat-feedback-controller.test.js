@@ -1,11 +1,12 @@
 // Real wave/controller integration for range feedback. No browser or network is needed.
 import { expect, it } from 'vitest';
 import { createWaveController } from '../../src/pirates/controller.js';
+import { createRoomProxy } from '../../src/pirates/room.js';
 
-async function setup() {
+async function setup({ playerId = 'me', room = null } = {}) {
   let now = 100000, latest = null, callbacks = null, range = null, blocked = false;
   const player = { x: 90, z: 0 }, events = [];
-  const controller = createWaveController({ playerId: 'me', now: () => now, listen: false,
+  const controller = createWaveController({ playerId, room, now: () => now, listen: false,
     world: { scene: {}, container: {}, player: { position: player }, isBlocked: () => blocked },
     createRenderer: () => ({ events(list) { events.push(...list); }, setVisible() {}, update(value) { latest = value; }, dispose() {} }),
     createHud: options => { callbacks = options; return { countdown() {}, bar() {}, prompt() {},
@@ -64,4 +65,49 @@ it('handles fire-control preview and queued touch/keyboard attempts, clearing in
   h.block(false); await h.advance(50);
   expect(h.range).toBeNull();
   h.controller.dispose();
+});
+
+it('keeps host and visitor range private while their shots are shared', async () => {
+  const hostRoom = createRoomProxy(), visitorRoom = createRoomProxy();
+  hostRoom.attach({ send(type, payload) { visitorRoom.receive(type, payload); return true; } });
+  visitorRoom.attach({ send(type, payload) { hostRoom.receive(type, payload); return true; } });
+  const host = await setup({ playerId: 'host', room: hostRoom });
+  const visitor = await setup({ playerId: 'visitor', room: visitorRoom });
+  try {
+    host.controller.setCaptainWeapon('long_rifle');
+    visitor.controller.setCaptainWeapon('fire_bombs');
+    const target = host.controller.state.ships[0];
+    Object.assign(host.player, { x: target.x - 8, z: target.z });
+    Object.assign(visitor.player, { x: target.x + 8, z: target.z });
+    const advance = async ms => { for (let t = 0; t < ms; t += 50) { await host.advance(50); await visitor.advance(50); } };
+
+    expect(host.controller.shoot(target.id)).toBe(true);
+    await advance(300);
+    expect(visitor.events.some(event => event.type === 'captain_fired' && event.by === 'host')).toBe(true);
+    expect(visitor.range).toBeNull();
+    expect(visitor.latest.combatFeedback.range).toBeNull();
+    expect(host.range).toMatchObject({ x: host.player.x, z: host.player.z, radius: 22, label: 'Long rifle range' });
+
+    visitor.callbacks.onRangePreview(true);
+    await advance(50);
+    expect(visitor.range).toMatchObject({ x: visitor.player.x, z: visitor.player.z, radius: 14, label: 'Fire bombs throw range' });
+    const hostOrigin = { x: host.range.x, z: host.range.z, radius: host.range.radius };
+    expect(visitor.controller.shoot(target.id)).toBe(true);
+    visitor.player.x += 1;
+    await advance(300);
+    expect(host.events.some(event => event.type === 'captain_fired' && event.by === 'visitor')).toBe(true);
+    expect(host.range).toMatchObject(hostOrigin);
+    expect(visitor.range.x).toBe(visitor.player.x);
+
+    visitor.callbacks.onRangePreview(false);
+    await advance(1700);
+    expect(host.range).toBeNull();
+    expect(visitor.range).toBeNull();
+    host.callbacks.onRangePreview(true);
+    await advance(50);
+    expect(host.range.radius).toBe(22);
+    expect(visitor.range).toBeNull();
+  } finally {
+    host.controller.dispose(); visitor.controller.dispose(); hostRoom.close(); visitorRoom.close();
+  }
 });
