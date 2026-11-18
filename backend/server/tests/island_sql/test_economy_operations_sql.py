@@ -10,6 +10,8 @@ import pytest
 psycopg = pytest.importorskip("psycopg")
 from psycopg.types.json import Jsonb  # noqa: E402
 
+# Register this fixture here so committed races cannot populate the legacy cluster.
+from server.tests.case_sql.conftest import scratch_server as scratch_server  # noqa: E402
 from server.tests.island_sql.test_island_treasury_sql import (  # noqa: E402
     as_owner,
     keys,
