@@ -1,0 +1,103 @@
+{
+  "started": "2026-11-18T10:44:33.846891+00:00",
+  "source": "68d41990615bac98aac3b3ffb2225857c8707a81",
+  "frontendTree": "cf4837fbec45e9cace371878fd8459e2dfd9c24b",
+  "publicTree": "c21b9328134b71786fe733994cd27510d3839cc9",
+  "backendTree": "cc81737e8e84ede4a6d123b34e1fbfd07d3e57ec",
+  "checks": [
+    {
+      "name": "frontend",
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "--maxWorkers=1",
+        "--reporter=verbose"
+      ],
+      "exitCode": 1,
+      "seconds": 623.58,
+      "log": "frontend.log"
+    },
+    {
+      "name": "a11y",
+      "command": [
+        "npm",
+        "run",
+        "test:a11y"
+      ],
+      "exitCode": 0,
+      "seconds": 407.0,
+      "log": "a11y.log"
+    },
+    {
+      "name": "demo",
+      "command": [
+        "npm",
+        "run",
+        "test:demo"
+      ],
+      "exitCode": 0,
+      "seconds": 86.98,
+      "log": "demo.log"
+    },
+    {
+      "name": "overlaps",
+      "command": [
+        "npm",
+        "run",
+        "test:overlaps",
+        "--",
+        "--shots",
+        "/workspace/reference-village-work/clearance-final-checks/overlap-captures"
+      ],
+      "exitCode": 0,
+      "seconds": 89.37,
+      "log": "overlaps.log"
+    },
+    {
+      "name": "build",
+      "command": [
+        "npm",
+        "run",
+        "build"
+      ],
+      "exitCode": 0,
+      "seconds": 2.32,
+      "log": "build.log"
+    },
+    {
+      "name": "budget",
+      "command": [
+        "node",
+        "scripts/report-budget.js",
+        "--check"
+      ],
+      "exitCode": 0,
+      "seconds": 0.29,
+      "log": "budget.log"
+    },
+    {
+      "name": "text-lint",
+      "command": [
+        "node",
+        "../scripts/text-lint/index.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 2.01,
+      "log": "text-lint.log"
+    },
+    {
+      "name": "multiplayer",
+      "command": [
+        "node",
+        "scripts/check-multiplayer.js",
+        "/workspace/reference-village-work/clearance-final-checks/multiplayer-captures"
+      ],
+      "exitCode": 1,
+      "seconds": 371.1,
+      "log": "multiplayer.log"
+    }
+  ],
+  "finished": "2026-11-18T11:10:56.545749+00:00",
+  "exitCode": 1
+}

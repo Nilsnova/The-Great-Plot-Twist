@@ -1,0 +1,43 @@
+{
+  "checkedAt": "2026-11-18T11:24:42.990306+00:00",
+  "checkedReviewHead": "456960d02169d508a5cb6f6c6d5d316e06cd5d47",
+  "frontendRuntime": "68d41990615bac98aac3b3ffb2225857c8707a81",
+  "backendRuntime": "456960d02169d508a5cb6f6c6d5d316e06cd5d47",
+  "trees": {
+    "frontend/src": "cf4837fbec45e9cace371878fd8459e2dfd9c24b",
+    "frontend/public": "c21b9328134b71786fe733994cd27510d3839cc9",
+    "frontend/scripts": "9ed27682388540a029046ce03cac936979fe4018",
+    "frontend/tests": "8d7e5565b6a27a1f45b1881dba063e6ef89326e1",
+    "backend": "8232794a485d1b8a0dafe65519d9b9415f950090",
+    "supabase/migrations": "9b32d17cd66a6a8fcc2844b3fedf30c8461bf2ef"
+  },
+  "originalCheckoutCleanAndUnchanged": true,
+  "schoolIdentityVerified": true,
+  "requiredAncestorCutoffs": [
+    "48aee0e7",
+    "2a2e9651"
+  ],
+  "onlyAddedPublicFile": "village/compiled/walls-4x-1-4905aac4841a.png",
+  "onlyMigrationChange": [
+    "A\tsupabase/migrations/20261118060000_wall_single_build_clearance.sql"
+  ],
+  "migrationVersions": 72,
+  "oldLayoutFieldsUnchangedExceptNewWallObstacles": true,
+  "oldFixturesUnchanged": [
+    "frontend/tests/fixtures/perimeter-ring.json",
+    "frontend/tests/fixtures/reference-court.json",
+    "frontend/tests/pirates/fixtures/perimeter-ring.json",
+    "backend/server/tests/fixtures/perimeter-ring.json"
+  ],
+  "gameplayDependencySecurityFilesUnchanged": [
+    "frontend/package.json",
+    "frontend/package-lock.json",
+    "backend/pyproject.toml",
+    "backend/uv.lock",
+    "vercel.json",
+    "frontend/src/pirates/sim.js",
+    "frontend/src/pirates/controller.js",
+    "backend/content/islands.json"
+  ],
+  "boundary": "Tested frontend and backend snapshots are recorded separately; later documentation-only commits may change HEAD/buildstamp without changing these code trees. No live migration or deployment."
+}

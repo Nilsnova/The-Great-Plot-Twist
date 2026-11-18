@@ -4,13 +4,14 @@ For **Johannes Franz Lang (`frcola`)** and a different human reviewer. This guid
 explains the follow-up after the user reported walls crossing objects and an
 appearance still below the approved island reference.
 
-**Status: native captures are complete; the full frontend has one unchanged failure.**
-Source `68d41990`: **4,906 frontend passes / one 20-second input timeout**. Other
-application and strict backend/SQL results are still being collected.
-The coordinator is capturing the actual game and will supply exact fresh command
-results. The focused branch checks below do not establish a complete-suite pass.
-All PRs stay Draft. No human visual acceptance, readiness, PR merge or deployment
-is recorded here.
+**The review package is complete; application checks are not fully green.**
+The final frontend has **4,906 passes / one unchanged 20-second input timeout**.
+Native multiplayer stops at the known own-musket-pose check, **0 versus 2**.
+Paid tiers, actual-game captures, native art fixtures and the stated accessibility,
+demo, measured-layout, build, budget and text checks passed. The final targeted
+backend run passed **1,792 checks with zero skips**, plus whole-backend Ruff.
+All PRs remain Draft; visual acceptance, explain-back and different-human review
+are open. No PR merge, live migration or deployment is recorded.
 
 ## Review order and ownership
 
@@ -26,7 +27,7 @@ records the bounded presentation and clearance revision.
 | VIS64: upright wall volume | [#447](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/447) | Do normalized original pixels, tier profiles, health labels and shared world/combat geometry agree? |
 | VIS65: sea material | [#446](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/446) | Are stronger surface/depth colors confined to the existing material and controls? |
 | VIS66: one decorative corridor move | [#450](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/450) | Do the single barrel foot and both prospective reserves move together, with existing saves retained? |
-| VIS68: original-wall normal purchases | [#455](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/455) | Does the ordinary owner/friend purchase guard protect both policies atomically, while preserving retries? Final backend/SQL proof is pending. |
+| VIS68: original-wall normal purchases | [#455](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/455) | Does the ordinary owner/friend purchase guard protect both policies atomically, while preserving retries? Final targeted backend/SQL proof passed; migration and coordinated deployment remain human steps. |
 | VIS67: independent wall observer | [#451](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/451) | Do unchanged negative cases still reject stale/wrong buffers under the revised presentation contract? |
 | VIS61: assembled review | [#445](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/445) | Does the actual combined game match the evidence and retain current-main behavior? |
 | VIS61: documentation | [#452](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/452) | Are original captures, exact sources, failed attempts and limits stated accurately? |
@@ -41,6 +42,9 @@ Issues are [VIS61 #438](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/
 [VIS68 #454](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/454).
 
 The aggregate preview contains earlier dependencies and is an inspection branch.
+VIS63/#444 and VIS64/#447 share the changed batching API and must be reviewed as a
+coordinated rendering stack with VIS67/#451 and the tested assembled preview.
+Neither leaf is a standalone deployment recommendation.
 Review the focused changes rather than treating the aggregate as a blanket merge
 recommendation. Suggested review split: Nico for rendering/readability and Ianno
 for the preserved placement/recovery boundary, subject to the team's assignment.
@@ -79,8 +83,8 @@ browser's immutable copy of `wallObstacles` from
 The local fake uses the same client rules. The trusted quote and move paths use
 the Python validator, and positioned construction re-quotes before its atomic
 snapshot-fenced RPC. A separate normal-build follow-up, [VIS68 #454](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/454),
-is being implemented to close the original-wall purchase bypass; its final authority
-and local-fake checks are not established by the intermediate paid capture. VIS62's positioned quote/Move guard needs no new migration; the separate regular-build
+closes the original-wall purchase bypass with separately tested atomic authority.
+The intermediate paid capture alone does not establish that server/SQL guarantee. VIS62's positioned quote/Move guard needs no new migration; the separate regular-build
 follow-up owns any required atomic SQL change. An exact paid receipt is
 reconciled before revalidation: it remains the same receipt rather than charging
 again or reconstructing a demolished/reset piece. See
@@ -93,14 +97,16 @@ an ordinary owner/friend purchase could still buy an old empty original wall
 site on scenery. A raw stored coordinate cannot authorize that fresh purchase:
 legacy settlement can display the site somewhere else. [VIS68/Draft #455](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/455)
 and [D066](https://github.com/Nilsnova/The-Great-Plot-Twist/blob/chore/vis-61-clearance-review/docs/DECISIONS.md#d066--atomic-authority-for-every-fresh-original-wall-purchase--2026-11-18)
-define the mandatory checked normal-build wrappers needed to close this path.
-The strict context revision and its final PostgreSQL proof are still in progress.
+define the mandatory checked normal-build wrappers that close this path.
+The final strict implementation passed the targeted real PostgreSQL/HTTP selection.
 
 The wall-only service path supplies the effective displayed cell and complete
 atomic layout snapshot. Under the existing payer-wallet then owner-island lock
 order, the wrapper preserves original UID replay/already-built results first,
 fences policy/capacity/every raw row, materializes only the fresh purchase's checked
-cell and performs the original payment/build in the same transaction. A refusal
+cell only when it differs from the current raw/default coordinate, then performs
+the original payment/build in the same transaction. A default purchase adds no
+layout row, and matching raw metadata stays unchanged. A refusal
 must roll back that materialization too. Fresh insertion requires transaction-local
 authority matching owner, plot and checked coordinate; raw rows alone are insufficient.
 Old-signature fresh purchases fail closed. Existing paid reads, retries and health
@@ -111,7 +117,8 @@ written for review/private tests only. The human owner applies it before deployi
 the corresponding backend; missing mandatory overloads fail closed without an
 old-signature fallback. No agent applies it live. The earlier 41 new / 182 broader SQL
 passes on the initial e57 source do not establish closure of the later raw/effective
-authority gap. Final strict transaction/context and PostgreSQL results are pending.
+authority gap. The final strict compatibility source `456960d0` passed all 1,792
+selected checks with zero skips in 76.98s; the earlier wide failure is preserved.
 
 ## What selection now draws
 
@@ -181,6 +188,9 @@ foot, normal depth, nine unchanged tree colliders and both corridor cells.
 
 ## Saved layouts and the comparison's exact meaning
 
+The large perimeter fixtures explicitly enable the local `perimeter_walls`
+policy. They do not establish production flag/cohort admission or live rollout.
+
 Clearance is prospective. Old paid walls remain at their stored coordinates,
 including any historical conflicts. The decoration change also cannot guarantee
 that every old possible layout is clear: VIS66 retains actual examples where
@@ -213,6 +223,50 @@ The [original selected-check logs](../evidence/village-clearance-review/integrat
 retain 80 passes / 2 failures and then 82 passes across eight files in 11.63s, plus
 38 targeted backend passes in 3.75s. These working-tree checks precede the final
 frozen runtime and are not relabeled as complete application verification.
+
+## Exact final verification and remaining gates
+
+The frontend UI source is `68d41990`. Its application, public, script and test
+trees match the final backend snapshot `456960d0`; backend and migration identities
+match the separate targeted PostgreSQL receipt. See the [source record](../evidence/village-clearance-review/source.json).
+
+| Check | Exact result and scope |
+|---|---|
+| Full frontend | **4,906 passed / one failed**, 435 files (434 passed / one failed); **622.73s Vitest / 623.58s process**. Only the unchanged input-ownership case times out at 20 seconds; no retry, skip or timeout relaxation. |
+| Accessibility | **33 screens**, failures/errors empty; **407.00s**. |
+| Demo | **34 checks**, errors/external requests empty; **86.98s**. |
+| Measured layout | **21 cases passed**, three nonapplicable rows retained; **89.37s**. This does not prove every transient battle-HUD timing is clear. |
+| Build/spoiler guard | Passed, **2.32s process / 1.34s Vite**; 245 text files / 12 protected lines. |
+| Title budget | Passed, **18,959 / 21,080 JS bytes**, **9,410 / 12,000 CSS bytes**, no title image; **0.29s**. The separate world-art effort target remains unmet. |
+| Text lint | **0 errors / 8 report-only findings**, 4,579 strings / 535 source files; **2.01s**. Root's final static text check is retained separately. |
+| Paid game progression | Passed, **335.84s**, **28 original PNGs**, **984 paid upgrade receipts** across both viewports; all 123 walls reach levels 1–5. Five real Fit overviews per viewport supplement Work views. |
+| Actual game journey | Passed, **210.61s / 20 PNGs**; declared 8,000 coins end at **5,150**, 123 paid walls, selection, canceled Move, unpaid ghosts, firing and real breach. |
+| Native renderer matrix | Passed, **12.79s / 22 labeled sheets**; existing 100 defense poses and five wall tiers/states, real-buffer negative controls. These are fixtures, not gameplay/progression proof. |
+| Native multiplayer | **Failed after 371.10s**, own musket pose **0 versus 2**, `check-multiplayer.js:814`. Only `fake-wave-1` owner/Ben has **113 distinct matching ship/boarder pairs**, worst drift 0/0, 20 with boarders; heart/militia **84/84** each. Ana/Max joined, but later-wave comparisons, boss and finisher were not reached. |
+| Targeted backend/SQL | **1,792 passed / zero skips**, 36 selected route/unit files plus all 51 island-SQL modules; **76.98s pytest / 78.38s process**. Whole-backend Ruff passed in **0.22s**. Private disposable PostgreSQL/HTTP only; not a complete-backend rerun. |
+
+The first wide backend attempt on `a76e9ccc` had **1,758 passes, five failures and
+21 setup errors in 141.77s**, with Ruff passing. Its original report/log remain.
+The conditional fresh-cell materialization fix retained matching raw/default
+metadata, added eight PostgreSQL regressions and passed the identical wide target.
+Fresh-purchase fixture coordinates were also adapted where the new scenery
+constraints made the old values invalid; assertions were not relaxed.
+Earlier partial SQL passes are not relabeled as proof of the final authority boundary.
+
+Paid snapshots retain High and use a normal viewport refresh to establish drawing
+density 1 / DPR 1. The ordinary actual-game helper retains its inherited Low-to-High
+reset before snapshots. Both establish full-resolution stills rather than sustained
+FPS, physical-phone/Retina behavior or Safari support. Contact sheets can exceed
+their declared viewport height because they record the whole fixture page.
+
+The phone bell-hint/countdown-toast overlap remains visible and was also present
+in source `7fab8866`; [the original before/current views](../evidence/village-clearance-review/README.md)
+are retained. It is an inherited HUD gap, not a claim of complete battle-HUD acceptance.
+Wall damage remains subtle at small scale; the existing watchtower level-1-to-3
+art reuse and wider scenery/defense proportions are not redesigned here. The
+new source remains below the reference's full detail and needs human visual acceptance.
+Live persistence/provider behavior, physical devices, sustained performance,
+production admission and owner-applied migration/deployment remain unverified.
 
 ## Evidence and walkthrough
 

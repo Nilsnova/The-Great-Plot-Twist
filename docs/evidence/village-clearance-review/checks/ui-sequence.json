@@ -1,0 +1,87 @@
+{
+  "source": "68d41990615bac98aac3b3ffb2225857c8707a81",
+  "trees": {
+    "frontend/src": "cf4837fbec45e9cace371878fd8459e2dfd9c24b",
+    "frontend/public": "c21b9328134b71786fe733994cd27510d3839cc9",
+    "backend": "cc81737e8e84ede4a6d123b34e1fbfd07d3e57ec",
+    "supabase/migrations": "ae31ac50221be83070e7f46580d66a70eedbad20",
+    "frontend/scripts": "9ed27682388540a029046ce03cac936979fe4018",
+    "frontend/tests": "8d7e5565b6a27a1f45b1881dba063e6ef89326e1"
+  },
+  "started": "2026-11-18T10:35:14.541316+00:00",
+  "boundary": "Final frontend candidate; VIS68 atomic backend/SQL work is separate and pending. No backend/native-live proof inferred.",
+  "steps": [
+    {
+      "name": "paid-final",
+      "command": [
+        "node",
+        "scripts/capture-paid-wall-tiers.mjs",
+        "/workspace/reference-village-work/clearance-runtime-02/frontend",
+        "/workspace/reference-village-work/clearance-paid-final",
+        ".7",
+        "--scenery"
+      ],
+      "started": "2026-11-18T10:35:14.544223+00:00",
+      "exitCode": 0,
+      "seconds": 335.84,
+      "finished": "2026-11-18T10:40:50.382477+00:00"
+    },
+    {
+      "name": "actual-final",
+      "command": [
+        "node",
+        "scripts/capture-village-composition.mjs",
+        "/workspace/reference-village-work/clearance-runtime-02/frontend",
+        "/workspace/reference-village-work/clearance-actual-final",
+        "reference",
+        "--arranged",
+        "--wave",
+        "--scenery"
+      ],
+      "started": "2026-11-18T10:40:50.392872+00:00",
+      "exitCode": 0,
+      "seconds": 210.61,
+      "finished": "2026-11-18T10:44:21.003413+00:00"
+    },
+    {
+      "name": "matrix-final",
+      "command": [
+        "node",
+        "scripts/capture-visual-matrix.mjs",
+        "/workspace/reference-village-work/clearance-runtime-02/frontend",
+        "/workspace/reference-village-work/clearance-native-matrix"
+      ],
+      "started": "2026-11-18T10:44:21.012537+00:00",
+      "exitCode": 0,
+      "seconds": 12.79,
+      "finished": "2026-11-18T10:44:33.803701+00:00"
+    },
+    {
+      "name": "application-checks",
+      "command": [
+        "python",
+        "/workspace/reference-village-work/run-candidate-checks.py",
+        "--repo",
+        "/workspace/reference-village-work/clearance-runtime-02",
+        "--out",
+        "/workspace/reference-village-work/clearance-final-checks",
+        "--checks",
+        "frontend",
+        "a11y",
+        "demo",
+        "overlaps",
+        "build",
+        "budget",
+        "text-lint",
+        "multiplayer",
+        "--continue-on-failure"
+      ],
+      "started": "2026-11-18T10:44:33.807770+00:00",
+      "exitCode": 1,
+      "seconds": 1582.76,
+      "finished": "2026-11-18T11:10:56.571101+00:00"
+    }
+  ],
+  "exitCode": 1,
+  "finished": "2026-11-18T11:10:56.576755+00:00"
+}
