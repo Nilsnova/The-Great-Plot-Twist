@@ -114,8 +114,8 @@
       "sha256": "1517c6b013a481542edfbf8fe5df9dcac801fb0af566fdc211f6f8743a4bf5d7"
     },
     "static-checks.json": {
-      "bytes": 1180,
-      "sha256": "ba2746f78391d27374449831756da2352e9d5f24452f4c7b2f8fb9d65a10cd7e"
+      "bytes": 1308,
+      "sha256": "8ce439aaed098a4b111e9090dab209da27eeb50d556f51ce76fa7b9baab80bd0"
     }
   },
   "scope": "Original evidence bytes; historical failed attempts retained. Final1792selection is targeted, not complete backend or production proof."
