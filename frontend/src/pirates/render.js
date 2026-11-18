@@ -403,6 +403,8 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     for (const mark of marks) { const r = rect[mark.art]; if (r) layer.push(r, x + mark.dx, y + mark.dy, r.w, r.h, .5, r.anchor); }
   }
   const posts = defenses.filter(hasPost).map(makePost);
+  // The wall state carries health by ID; the frozen defense vector owns its combat coordinates.
+  const frozenWallPositions = recoveryV1 ? new Map(defenses.filter(item => item.kind === 'wall').map(item => [item.id, item])) : null;
   const wallConnections = makeCombatWallConnections(root, atlas.wallArt);
   let inBreak = false;
   let cannonsList = defenses.filter(item => item.kind === 'cannon' || item.kind === 'mortar');
@@ -1055,8 +1057,9 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     layers.air.push(rect[WHITE], x - w / 2 - .0625, top - .0625, w + .125, .3125, 0, 0, tinted(DARK, .8));
     layers.air.push(rect[WHITE], x - w / 2, top, w * share, .1875, 0, 0, opt(1, share > .5 ? GREEN : share > .25 ? GOLD : RED));
   }
-  function drawRecoveryHealthBar(item, kind) {
-    const { z, hp, maxHp } = item, x = drawnX(item.x, z);
+  function drawRecoveryHealthBar({hp, maxHp}, position, kind) {
+    if (!position) return;
+    const {z} = position, x = drawnX(position.x, z);
     if (!Number.isFinite(x) || !Number.isFinite(z) || !Number.isFinite(hp) || !(maxHp > 0) || hp >= maxHp) return;
     const { width, height, units, fillInset, fillHeight } = RECOVERY_BADGE;
     const destroyed = hp <= 0, badge = rect[destroyed ? RUIN_BADGE : HEALTH_BADGE];
@@ -1186,8 +1189,8 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       drawCaptain();
       drawParty(state);
       if (recoveryV1) {
-        for (const wall of state.walls ?? []) drawRecoveryHealthBar(wall, 'wall');
-        for (const tower of state.towers ?? []) drawRecoveryHealthBar(tower, tower.kind);
+        for (const wall of state.walls ?? []) drawRecoveryHealthBar(wall, frozenWallPositions.get(wall.id), 'wall');
+        for (const tower of state.towers ?? []) drawRecoveryHealthBar(tower, tower, tower.kind);
       } else {
         // T33: a bar over every tower with hp that has taken damage (none while the wave has no tower health).
         for (const tower of state.towers ?? []) if (tower.maxHp > 0 && tower.hp > 0 && tower.hp < tower.maxHp) drawHealthBar(tower.x, tower.z, tower.hp, tower.maxHp, TOWER_BAR_LIFT);
