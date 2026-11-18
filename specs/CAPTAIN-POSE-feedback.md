@@ -4,7 +4,7 @@ What this is: presentation correction and review handover for [issue #476](https
 
 - Responsible teammate: Ianno Hollensteiner (`Iannomh123456`), with Codex assistance and separate read-only reviews.
 - Branch: `fix/captain-pose-feedback`, based on current main `37eb70fa`.
-- Status: implementation and final verification in progress; human review is required before merge.
+- Status: implemented in [Draft PR #481](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/481); unchanged four-player native journey passes. Joint validation passed **4627 tests / 421 files**, build and refreshed boat captures; human review is required before merge.
 
 ## Scope and evidence
 
@@ -22,7 +22,7 @@ The unchanged current-main multiplayer check reproduced the owner musket pose at
 
 - Tests first: accepted live feedback under a visible 1.8 s stall failed; an older promoted event replacing a newer fresh event failed; movement/combat/draw phase ordering failed. All were corrected without changing expected outcomes/time budgets.
 - Focused controller, pose, multiplayer/recovery and movement checks: **7 files / 83 tests passed**.
-- Pending: final full frontend/build checks and the unchanged full native multiplayer journey. Preserve all failures, source boundaries and unrun later phases in the final evidence.
+- Native `npm run test:mp -- /tmp/captain-pose-final-mp`: **OK (4 pages)**, including the previously failing pose gate and later boss/practice/finisher phases. Joint candidate `9ff8cd8b` passed **4627 tests / 421 files** and its build/spoiler guard. Exact source boundaries, the aligned source guard and logs are in the evidence.
 - No new dependency, backend/schema, live flag, service or account. No merge or deployment.
 
 ## Explain-back

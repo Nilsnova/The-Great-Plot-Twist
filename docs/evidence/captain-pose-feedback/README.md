@@ -29,13 +29,26 @@ This opens two real game pages with local fake accounts, starts a real fake-serv
 
 The original short-form startup probe encountered a self-closing intro before its Skip click; the final helper handles that existing transition. The final probe completed with `accepted:true`, `drawn:true`, high quality and zero application page errors, console errors or external requests. [Rendered accepted frame](native-accepted-frame.png) is a local synthetic game, not authenticated online multiplayer.
 
+## Native multiplayer images
+
+| Viewport | Own captain | Teammate figure |
+|---|---|---|
+| Desktop 1280×720 | [Crop](own-desktop.png) | [Crop](teammate-desktop.png) |
+| Phone 375×812 | [Crop](own-phone.png) | [Crop](teammate-phone.png) |
+
+These are the original native checker's screenshots, not a new pose fixture or changed assertion.
+
 ## Checks
 
 - Meaningful red regressions: accepted live shot under a visible 1.8 s stall; original chronological pose order across promoted/fresh events; movement/combat/draw phase order. The expected behavior was preserved when implementing fixes.
 - `npm test -- --maxWorkers=1 tests/redesign-movement.test.js tests/pirates/live-attack-feedback.test.js tests/pirates/controller.test.js tests/pirates/poses.test.js tests/pirates/multiplayer.test.js tests/pirates/recovery-controller.test.js tests/pirates/recovery-wave-end.test.js`: **7 files / 83 tests passed**, 3.05 s.
 - `node scripts/text-lint/index.mjs`: **0 errors / 8 existing report-only findings**.
 - An intermediate multiplayer run was deliberately interrupted to preserve movement-before-combat ordering before continuing final verification; it is not a passing result.
-- Final original multiplayer, complete frontend, build and diff checks: in progress; update this record with exact outcomes before handover.
+- `npm run test:mp -- /tmp/captain-pose-final-mp` on application `0b714732`: **OK (4 pages)**, exit 0. The unchanged journey passed own/teammate poses at both viewports, four-player joining, synchronized combat/ship fire/HP, revive, pause/resume, shared next wave, boss-wave admission, T28 personal practice separation and a shared four-page finisher result. [Exact raw log](final-multiplayer.log).
+- Joint `npm test` on `9ff8cd8b` (latest main + pose + boat/quest): **421 files / 4627 tests passed**, 388.98 s, exit 0. [Exact full-suite log](joint-frontend.log).
+- Joint `npm run build`: **passed**, 698 ms, including the spoiler guard (**245 text files / 12 protected lines**). [Build log](joint-build.log). Application files are identical at `465c8e39` and `9ff8cd8b`; the latter includes the source-guard alignment.
+- The first joint run had 4626 passes and one source-string guard expecting the old two-argument movement call. That guard now recognizes the callback-bearing gated call and retains its overlay assertion. Targeted guard/movement/live-feedback checks: **3 files / 98 tests passed**, 908 ms. The subsequent complete suite passed.
+- Final application source, diff and document-link checks passed; independent read-only review found no actionable integration defect. Components remain separately reviewable in Drafts #481 then #467.
 
 ## Limits
 
