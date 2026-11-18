@@ -16,7 +16,7 @@ it('reads personal adoption separately on a legacy island and keeps the island w
     const writes = [], commitment = {id: '55555555-5555-4555-8555-555555555555', state: 'pending', waveId: null};
     let profile = personalReply({captain: personalCaptain({engineerCommitment: commitment, roleLockedReason: 'engineer_bound'})});
     const transport = {get: path => path === '/api/captain'
-      ? Promise.resolve(absent ? {ok: false, status: 404, code: 'not_found'} : {ok: true, data: profile}) : base.get(path),
+      ? Promise.resolve(absent ? {ok: false, status: 409, code: 'captain_not_initialized'} : {ok: true, data: profile}) : base.get(path),
       post: (path, body) => {
         if (path !== '/api/captain/respec') return base.post(path, body);
         writes.push({path, body});
@@ -82,3 +82,31 @@ it('shows an idle Engineer commitment and skill-only respec without a coin price
     await page.evaluate(() => window.personalFixtureUi.dispose());
   });
 });
+
+
+it.each([['captain_not_initialized', true], ['captain_context_required', false]])(
+  'initial personal GET %s only permits the specified unadopted legacy fallback', async (code, legacy) => {
+    const result = await evaluate(async code => {
+      const {createIsland} = await window.g20Import('/src/island/index.js');
+      const {createFakeIslandTransport} = await window.g20Import('/src/pirates/fake-api.js');
+      const {on, emit} = await window.g20Import('/src/core/events.js');
+      const base = createFakeIslandTransport(); base.dev.setCoins(9000); base.dev.setWaveBest(9);
+      const transport = {post: (path, body) => base.post(path, body), get: path => path === '/api/captain'
+        ? Promise.resolve({ok: false, status: 409, code}) : base.get(path)};
+      const island = createIsland({container: document.body, emit, on, mode: 'fake', transport, storage: null,
+        menu: () => () => {}, settings: () => () => {}});
+      await island.load(); island.openCaptain();
+      const result = {captain: island.island.captain, text: document.querySelector('.island-card[open]').textContent};
+      island.dispose(); return result;
+    }, code);
+    if (legacy) {
+      expect(result.captain).not.toHaveProperty('progressionVersion', 1);
+      expect(result.text).toContain('Upgrade');
+      expect(result.text).not.toContain('Captain progress unavailable');
+    } else {
+      expect(result.captain).toEqual({progressionVersion: 1});
+      expect(result.text).toContain('Captain progress unavailable');
+      expect(result.text).not.toContain('Upgrade');
+    }
+  },
+);

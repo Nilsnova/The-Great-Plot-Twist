@@ -239,7 +239,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     const [answer, personal] = await Promise.all([api.getIsland(), api.getCaptain()]);
     if (!answer.ok) return answer;
     if (personal.ok) return {...answer, data: {...answer.data, ...personal.data}, personalReadState: 'v1'};
-    const legacy = !personalPinned.has(islandCode(answer.data?.code ?? '')) && (personal.status === 404 || personal.code === 'captain_context_required');
+    const legacy = !personalPinned.has(islandCode(answer.data?.code ?? '')) && (personal.status === 404 || personal.code === 'captain_not_initialized');
     if (legacy && !currentFunds().shared && !declaresEconomy(answer.data)) return {...answer, personalReadState: 'legacy'};
     return {...answer, data: {...answer.data, captain: {progressionVersion: 1}, skills: null}, personalReadState: 'unavailable'};
   }
