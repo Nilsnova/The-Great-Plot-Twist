@@ -313,7 +313,7 @@ Only its claim `survived` and `shipsSunk` (a whole number from 0 to 1000) in `PO
 - The flagship and the three lamps are decided in the browsers; the server only flags the wave (`flagship: true`).
 - The weather follows whoever rings the bell, because the server stores no place ([D032](DECISIONS.md)).
 - The budgets live in memory per server instance (part 2).
-- The numbers exist in more than one place: `islands.json` (the rule), the tower stats in the simulation's `CONFIG` ([frontend/src/pirates/sim.js](../frontend/src/pirates/sim.js)), the dev fake's copy of the prices ([frontend/src/pirates/fake-api.js](../frontend/src/pirates/fake-api.js)) and the docs. The `about` line of `islands.json` says they change together, by pull request.
+- The numbers exist in more than one place: `islands.json` (the rule), the tower stats in the simulation's `CONFIG` ([frontend/src/pirates/sim-config.js](../frontend/src/pirates/sim-config.js)), the dev fake's copy of the prices ([frontend/src/pirates/fake-api.js](../frontend/src/pirates/fake-api.js)) and the docs. The `about` line of `islands.json` says they change together, by pull request.
 
 ### How it could change
 Replay the seeded simulation on the server to check `survived` (the simulation is pure JavaScript, so it could run in a Node function); a weekly leaderboard of best waves (task T7 in [OPEN-TODOS.md](OPEN-TODOS.md)); a new tower kind needs `islands.json`, the simulation's `CONFIG`, a sprite and a new migration for the spot check rule.
@@ -375,8 +375,8 @@ Pin Python exactly (E2); remove the case routes (C1) to shrink the attack surfac
 Runs and draws each wave: pirate ships sail in on up to three sea lanes, cannons fire on their own, mortars hit an area, walls hold the shore, crew help, and every captain fires a musket (click or tap a ship, or press F). Every 5th wave brings a warship. After a won wave a 15-second break shows a big **Next wave** button; with **Auto next wave** on, the next wave starts by itself. A lost wave ends the run.
 
 ### Where it lives
-- [frontend/src/pirates/](../frontend/src/pirates/): `sim.js` (the simulation and every balance number in `CONFIG`), `controller.js` (one wave from the bell to the loot, the break, the musket), `render.js` (ships, shots, fog), `hud.js`, `interact.js`, `pirate-point.js` (the armada and the lamps), `game-wiring.js` (the wiring into the running game), `fake-api.js` (`?islands=fake`), `index.js` (`mountPirates`).
-- The island side: [frontend/src/island/](../frontend/src/island/): `index.js` (cards and the Menu entries Play with a friend, Crew, Captain), `spots.js` (the 16 spots, the bell, the cabin), `td-rules.js`, `wave-flow.js` and `wave-hooks.js` (start, join, finish routes), `api.js`, `mode.js`.
+- [frontend/src/pirates/](../frontend/src/pirates/): `sim.js` (the simulation's entry point; its parts `sim-*.js`: `sim-config.js` holds every balance number in `CONFIG`, then setup, weapons, structures, captains, boarders and the tick), `controller.js` (one wave from the bell to the loot, the break, the musket; its parts `controller-*.js`: shared helpers, transport and the recovery journal, prediction, the captain, the frame, the finish), `render.js` (ships, shots, fog), `hud.js`, `interact.js`, `pirate-point.js` (the armada and the lamps), `game-wiring.js` (the wiring into the running game), `fake-api.js` (`?islands=fake`), `index.js` (`mountPirates`).
+- The island side: [frontend/src/island/](../frontend/src/island/): `index.js` (the island screen's wiring and the Menu entries Play with a friend, Crew, Captain; its parts `island-*.js`: loading, structure recovery, cards, actions, games), `spots.js` (the 16 spots, the bell, the cabin), `td-rules.js`, `wave-flow.js` and `wave-hooks.js` (start, join, finish routes), `api.js`, `mode.js`.
 - The contract: [TOWER-DEFENSE.md](TOWER-DEFENSE.md), section 8.
 
 ### Why it was built this way
@@ -542,7 +542,7 @@ A games table so one player can host several games; a kick button and a new code
 Up to 10 players on one island watch the same pirates at the same moment. Every shot, repair and rebuild from any player appears on every screen, and the fight comes out the same.
 
 ### Where it lives
-- [pirates/sim.js](../frontend/src/pirates/sim.js): the simulation and `CONFIG`, every balance number (1,367 lines).
+- [pirates/sim.js](../frontend/src/pirates/sim.js): the simulation's entry point (`createWave`), split into parts of one job each since 18 Nov 2026: `CONFIG`, every balance number, in [sim-config.js](../frontend/src/pirates/sim-config.js); the fleet math in [sim-fleet.js](../frontend/src/pirates/sim-fleet.js); a wave's start in [sim-setup.js](../frontend/src/pirates/sim-setup.js); guns, structures, captains, boarders and the tick in `sim-weapons.js`, `sim-structures.js`, `sim-captains.js`, `sim-boarders.js` and `sim-tick.js`.
 - [pirates/sync.js](../frontend/src/pirates/sync.js): `toMessage`, `readMessage`, `createInputSchedule`, `INPUT_LEAD_TICKS = 4`, `MAX_PLAYERS = 10`.
 - [net/live-rules.js](../frontend/src/net/live-rules.js): `WAVE_EVENTS` (14 message kinds), `readWaveMessage`, `waveGapMs`, the room names.
 - [pirates/room.js](../frontend/src/pirates/room.js): `createRoomProxy` and `createLocalRoom` (the stand-in room for tests and `?islands=fake`).
@@ -589,8 +589,8 @@ Screens compare a hash of the state every few seconds and warn on drift; the hos
 Every captain has 100 hit points. Pirates who come ashore attack the nearest captain. At 0 hp the captain falls and cannot act. A teammate who stands next to them and holds E for 2 seconds helps them up and pays 20 + 5 × the wave number in coins. If every captain is down, the wave is lost.
 
 ### Where it lives
-- Simulation: `CONFIG.health` and the captain code in [pirates/sim.js](../frontend/src/pirates/sim.js).
-- Controller: [pirates/controller.js](../frontend/src/pirates/controller.js) (`MOVE_EVERY_MS`, the E hold, `reviveCaptain`); look: [pirates/figures.js](../frontend/src/pirates/figures.js), the `captain-down-N` drawings in [art/people.js](../frontend/src/art/people.js).
+- Simulation: `CONFIG.health` in [pirates/sim-config.js](../frontend/src/pirates/sim-config.js) and the captain code in [pirates/sim-captains.js](../frontend/src/pirates/sim-captains.js).
+- Controller: [pirates/controller.js](../frontend/src/pirates/controller.js) (`reviveCaptain`; `MOVE_EVERY_MS` in [controller-shared.js](../frontend/src/pirates/controller-shared.js), the E hold in [controller-captain.js](../frontend/src/pirates/controller-captain.js)); look: [pirates/figures.js](../frontend/src/pirates/figures.js), the `captain-down-N` drawings in [art/people.js](../frontend/src/art/people.js).
 - Server: `POST /api/waves/revive` in [routes/waves.py](../backend/server/routes/waves.py); price in [islands.json](../backend/content/islands.json) `revive`.
 - Database: [20261112050000_captain_revive.sql](../supabase/migrations/20261112050000_captain_revive.sql): table `captain_revives`, function `wave_revive()`, wallet reason `captain_revive`.
 
@@ -679,7 +679,7 @@ After wave 8 a Tech hub opens. The crew researches each tower kind in three tier
 ### Where it lives
 - Data: `research` in [islands.json](../backend/content/islands.json) (prices, option ids), [campaign/tech.js](../frontend/src/campaign/tech.js) (the same ids in the browser), steps `tech_hub`, `research_2`, `research_3` in [campaign.json](../backend/content/campaign.json).
 - Server: [routes/island.py](../backend/server/routes/island.py) (`POST /api/island/research`, `POST /api/island/tower-skill`), [island/service.py](../backend/server/island/service.py) (`research()`).
-- Browser: the docked card in [island/card-model.js](../frontend/src/island/card-model.js) and [island/ui.js](../frontend/src/island/ui.js); effects in `CONFIG.specs` and `CONFIG.research` in [sim.js](../frontend/src/pirates/sim.js).
+- Browser: the docked card in [island/card-model.js](../frontend/src/island/card-model.js) and [island/ui.js](../frontend/src/island/ui.js); effects in `CONFIG.specs` and `CONFIG.research` in [sim-config.js](../frontend/src/pirates/sim-config.js).
 - Database: [20261112060000_tech_hub.sql](../supabase/migrations/20261112060000_tech_hub.sql) (table `island_research`, `island_research()`, `island_specialise()`), [20261112100000_research_tiers.sql](../supabase/migrations/20261112100000_research_tiers.sql) (tiers and choices), [20261113010000_respec_and_wave_guards.sql](../supabase/migrations/20261113010000_respec_and_wave_guards.sql) (no research during a wave).
 
 ### How it works
@@ -720,7 +720,7 @@ Cannons, mortars, walls and the watchtower go up to level 4 and 5 (the watchtowe
 
 ### Where it lives
 - Prices: `kinds[].prices` in [islands.json](../backend/content/islands.json) (five per tower kind). Unlock waves: `cannon:4`, `tier_12` ... in [campaign.json](../backend/content/campaign.json).
-- Stats and the difficulty curve: `CONFIG.levels`, `CONFIG.tiers` and `curve.hpSteps` in [pirates/sim.js](../frontend/src/pirates/sim.js); `threatOf(wave)`.
+- Stats and the difficulty curve: `CONFIG.levels`, `CONFIG.tiers` and `curve.hpSteps` in [pirates/sim-config.js](../frontend/src/pirates/sim-config.js); `threatOf(wave)` in [pirates/sim-fleet.js](../frontend/src/pirates/sim-fleet.js).
 - Cards: [island/td-rules.js](../frontend/src/island/td-rules.js). Drawings for levels 4 and 5: [art/island.js](../frontend/src/art/island.js).
 - Server: `check_upgrade` in [island/rules.py](../backend/server/island/rules.py); loot in [island/waves.py](../backend/server/island/waves.py).
 - Database: [20261112070000_tower_tiers.sql](../supabase/migrations/20261112070000_tower_tiers.sql).
@@ -804,7 +804,7 @@ An undo within a few seconds; a different refund share by changing the server's 
 A house adds loot after every won wave. From level 2 it also picks one **role**, free and changeable between waves: **Barracks** (militia fight pirates who come ashore), **Tavern** (captains nearby heal, and helping a fallen captain up costs 25% less on the island) or **Workshop** (walls nearby repair faster, are rebuilt sooner and mend themselves). A house has three levels (50, 100 and 200 coins, level 3 after wave 5).
 
 ### Where it lives
-- Browser: [campaign/houses.js](../frontend/src/campaign/houses.js) (ids, lines, reach), `CONFIG.houses` in [pirates/sim.js](../frontend/src/pirates/sim.js), looks in [art/island.js](../frontend/src/art/island.js), militia in [art/people.js](../frontend/src/art/people.js), the card in [island/card-model.js](../frontend/src/island/card-model.js).
+- Browser: [campaign/houses.js](../frontend/src/campaign/houses.js) (ids, lines, reach), `CONFIG.houses` in [pirates/sim-config.js](../frontend/src/pirates/sim-config.js), looks in [art/island.js](../frontend/src/art/island.js), militia in [art/people.js](../frontend/src/art/people.js), the card in [island/card-model.js](../frontend/src/island/card-model.js).
 - Server: `POST /api/island/tower-skill {spot, spec}` in [routes/island.py](../backend/server/routes/island.py) takes `barracks`, `tavern` or `workshop` for a house. `revive.tavernPercent` in [islands.json](../backend/content/islands.json).
 - Database: [20261112090000_house_roles.sql](../supabase/migrations/20261112090000_house_roles.sql): the check rule `islet_buildings_spec_fits_kind`, `island_specialise()`, `wave_revive()`.
 
@@ -1085,7 +1085,7 @@ and disposes it when the scene ends; Pirate Point does not use these decorations
 only turns those values into drawings; a loss or a lower next-wave number does not
 change the record. On a visit, the existing island controller supplies the visited
 island’s campaign. No extra request, saved value, reward or collision rule is needed.
-[The existing controller](../frontend/src/island/index.js) selects that state.
+[The existing controller](../frontend/src/island/index.js) selects that state (`applyWorld` in [island-load.js](../frontend/src/island/island-load.js)).
 
 **The drawing.** [milestones.js](../frontend/src/art/milestones.js) uses the same
 Canvas paint kit as the island. `waveRank` chooses unranked at 0, wood at 1–9, then
@@ -1116,7 +1116,7 @@ See [the test map](TEST-MAP.md#t5--ianno-hollensteiner--island-milestones) and
 
 **What and where.** Menu → Leaderboard (named "Weekly leaderboard" before T45) opens the read-only card in
 [island/ui.js](../frontend/src/island/ui.js). The controller in
-[island/index.js](../frontend/src/island/index.js) loads it through
+[island/index.js](../frontend/src/island/index.js) loads it (`openLeaderboard` in [island-cards.js](../frontend/src/island/island-cards.js)) through
 [island/api.js](../frontend/src/island/api.js). The signed-in
 [route](../backend/server/routes/island.py) calls
 [leaderboard.weekly](../backend/server/island/leaderboard.py).
@@ -1160,7 +1160,7 @@ the active/down/action state and gives the wave's button priority over generic U
 
 **Why this way.** Reusing [the existing zones](../frontend/src/island/spots.js) avoids inventing
 a second distance. A nearby bell must not grant permission to click a distant cannon: the check
-uses only the clicked target's zone. The existing [revival controller](../frontend/src/pirates/controller.js)
+uses only the clicked target's zone. The existing [revival controller](../frontend/src/pirates/controller-captain.js)
 keeps its hold timing, price and server call. This change does not rewrite login, APIs or movement.
 
 **Tests and limits.** [Pointer tests](../frontend/tests/island/nearby-interactions.test.js) cover the
@@ -1255,7 +1255,7 @@ retries or another networking layer. Live networks/physical phones remain unveri
 **Limits / possible change:** Filters last for this controller session, not browser storage. They do not change stock, reclaim another captain weapon or grant permission. Real multi-client races/SQL, physical phones and screen readers are not covered by these controlled UI tests. Broader server snapshots or navigation state would need a separately reviewed contract. [Evidence](evidence/U-arsenal-filters/README.md); [PR #98](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/98). Codex drafted/verified the implementation; Johannes's own review and independent human review remain pending.
 ## Johannes: Wave preparation at the bell (U)
 **What:** The existing bell card shows built towers/walls, last known persistent wall damage and up to three upcoming campaign unlocks in an optional disclosure. Its next-wave line uses the server nextWave, including restarts after defeat; the old-answer fallback stops at the existing wave-100 limit.
-**Where/how:** preparation-model.js derives descriptive lines from the current island and a matching-code wall snapshot; it never blocks starting. bellModel accepts nextWave/preparation, and index.js supplies them. Opening the bell reuses the existing flag-gated walls GET; late reads/repair replies are not assigned to a different island. ui.js retains the unlock disclosure and its focus during redraws. Source: [island/preparation-model.js](../frontend/src/island/preparation-model.js), [island/card-model.js](../frontend/src/island/card-model.js), [island/index.js](../frontend/src/island/index.js), [island/ui.js](../frontend/src/island/ui.js), [island/island.css](../frontend/src/island/island.css).
+**Where/how:** preparation-model.js derives descriptive lines from the current island and a matching-code wall snapshot; it never blocks starting. bellModel accepts nextWave/preparation, and the island's `bell()` (island-cards.js, part of index.js) supplies them. Opening the bell reuses the existing flag-gated walls GET; late reads/repair replies are not assigned to a different island. ui.js retains the unlock disclosure and its focus during redraws. Source: [island/preparation-model.js](../frontend/src/island/preparation-model.js), [island/card-model.js](../frontend/src/island/card-model.js), [island/island-cards.js](../frontend/src/island/island-cards.js), [island/ui.js](../frontend/src/island/ui.js), [island/island.css](../frontend/src/island/island.css).
 **Why:** Read the existing server answers and campaign table instead of duplicating unlock rules or introducing a readiness score. Missing, invalid, partial or other-island health stays unknown; last-known health is labeled as such. The server still decides start/join and every repair.
 **Tests:** [preparation.test.js](../frontend/tests/island/preparation.test.js), [preparation-dom.test.js](../frontend/tests/island/preparation-dom.test.js). 15 new cases: nextWave after defeat, older-answer/final-wave fallback, built-only counts, campaign boundaries, partial/invalid/foreign health, running-wave behavior, native keyboard/phone disclosure and preserved focus, unchanged ring callback, and delayed wall read after an actual fake-island visit.
 **Limits / possible change:** Wall health is the last successful read, not a live guarantee; a failed read may leave labeled last-known data. The late-repair UI guard does not undo a completed server repair. Physical phones, live Realtime and SQL are not proven by controlled fixtures or the fake-server run. Broader server snapshots or navigation state would need a separately reviewed contract. [Evidence](evidence/U-wave-preparation/README.md); [PR #94](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/94). Codex drafted/verified the implementation; Johannes's own review and independent human review remain pending.
@@ -1346,7 +1346,7 @@ practice are separate choices; Redtide queues only unfamiliar task kinds.
 [guidance memory](../frontend/src/pirates/finisher/practice.js) looks up that
 player/island/task combination. Practice writes into a private Map through the
 same scene controls. Finish or Skip marks just that combination seen. The
-[controller](../frontend/src/pirates/controller.js) sends readiness, then uses
+[controller](../frontend/src/pirates/controller-frame.js) sends readiness, then uses
 its real recorder only after preparation. Practice cannot pay loot: no practice
 samples or finish requests leave this component. A different player or island
 gets its own first-time introduction.
@@ -1568,7 +1568,7 @@ the actual wave route also accounts for standing damageable towers.
 
 **Where the behavior lives.** [tower-obstacles.js](../frontend/src/pirates/tower-obstacles.js) derives its geometry
 from the [placement footprints](../frontend/src/island/placement.js). [boarder-paths.js](../frontend/src/pirates/boarder-paths.js)
-adds towers to the weighted field, while [sim.js](../frontend/src/pirates/sim.js) applies boundary targeting and
+adds towers to the weighted field, while [sim-boarders.js](../frontend/src/pirates/sim-boarders.js) applies boundary targeting and
 movement collision. [battle-guide.js](../frontend/src/pirates/battle-guide.js) uses the same route and tower HP.
 The server filters the optional rule in [wave_rules.py](../backend/server/island/wave_rules.py); migration
 [`20261115160000_tower_obstacles.sql`](../supabase/migrations/20261115160000_tower_obstacles.sql) adds its allowed
