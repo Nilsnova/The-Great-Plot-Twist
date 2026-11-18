@@ -5,6 +5,8 @@ import {projectPoint} from '../world/art.js';
 const GROUND_ORDER = 20;
 const CONTACT_COLOUR = 0x1a2a2a;
 const SIDES = 12;
+const STRIP_EDGES = [-.70, -.34, .38, .72];
+const STRIP_ALPHA = [0, .22, .26, 0];
 
 function wallShades(posts, links) {
   const alongX = new Set(), alongZ = new Set();
@@ -16,11 +18,11 @@ function wallShades(posts, links) {
   return posts.map(({id, x, z, look}) => {
     if (look === 'broken') return [x, z, .5, .4];
     const carriesDepth = alongZ.has(id), carriesWidth = alongX.has(id) || !carriesDepth;
-    return [x, z, carriesWidth ? .99 : .49, carriesDepth ? .99 : .51];
+    return [x, z, carriesWidth ? .99 : .70, carriesDepth ? .99 : .72];
   });
 }
 
-function shadeGeometry(shades) {
+function shadeGeometry(shades, links) {
   const positions = [], colours = [], indices = [];
   function vertex(x, z, alpha) {
     const p = projectPoint(x, z);
@@ -34,6 +36,21 @@ function shadeGeometry(shades) {
       const angle = side * Math.PI * 2 / SIDES;
       vertex(x + width * Math.cos(angle), z + depth * Math.sin(angle), 0);
       indices.push(centre, centre + side + 1, centre + (side + 1) % SIDES + 1);
+    }
+  }
+  // The center-to-center shadow strip grounds the actual connectors, including mixed tiers.
+  // Endpoint ellipses cover the short free ends and leave broken cells open.
+  for (const {x0, z0, x1, z1} of links) {
+    const start = positions.length / 3, vertical = x0 === x1;
+    for (const [x,z] of [[x0,z0],[x1,z1]]) {
+      for (const [index, edge] of STRIP_EDGES.entries()) {
+        vertex(x + (vertical ? edge : 0), z + (vertical ? 0 : edge), STRIP_ALPHA[index]);
+      }
+    }
+    const width = STRIP_EDGES.length;
+    for (let i = 0; i < width - 1; i++) {
+      const a = start + i, b = a + width;
+      indices.push(a, a + 1, b + 1, a, b + 1, b);
     }
   }
   const geometry = new THREE.BufferGeometry();
@@ -51,9 +68,11 @@ export function makeWallFooting(root) {
         if (mesh) mesh.visible = false;
         return;
       }
-      const shades = wallShades(posts, links), next = JSON.stringify(shades);
+      const shades = wallShades(posts, links);
+      const joins = links.map(({x0, z0, x1, z1}) => [x0, z0, x1, z1]);
+      const next = JSON.stringify([shades, joins]);
       if (next !== key) {
-        const geometry = shadeGeometry(shades);
+        const geometry = shadeGeometry(shades, links);
         if (!mesh) {
           const material = new THREE.MeshBasicMaterial({color: CONTACT_COLOUR, vertexColors: true,
             transparent: true, side: THREE.DoubleSide, depthTest: false, depthWrite: false, toneMapped: false});

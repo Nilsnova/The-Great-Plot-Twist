@@ -60,9 +60,11 @@ describe('upright original wall posts', () => {
       const values = batch.positions;
       expect(values).toHaveLength(48); expect(batch.indices).toHaveLength(24);
       expect(Math.max(...values.filter((_,i)=>i%3===1))).toBeCloseTo(height+.168,12);
-      const groundY = values.slice(12,18).filter((_,i)=>i%3===1);
-      expect(groundY).toEqual([-.168,-.168]);
-      expect(values.slice(0,12).filter((_,i)=>i%3===0)).toEqual([-.056,2.544,2.656,.056].map(x=>expect.closeTo(x,12)));
+      const groundY = values.slice(0,6).filter((_,i)=>i%3===1);
+      expect(groundY).toEqual([-.282,-.282].map(y=>expect.closeTo(y,12)));
+      expect(values.slice(-12).filter((_,i)=>i%3===0)).toEqual([-.056,2.544,2.656,.056].map(x=>expect.closeTo(x,12)));
+      expect(batch.ground).toHaveLength(values.length / 3 * 2);
+      expect(batch.ground.filter((_,i)=>i%2===1).every(z=>Math.abs(z)<=.47)).toBe(true);
       const rows = [wall('a',0,0,level),wall('b',2,0,level),wall('c',4,0,level)], before = structuredClone(rows);
       const topology = wallTopology(rows); texturedWallBatches(topology.links,wallVisualRows(rows),art);
       expect(rows).toEqual(before); expect(topology.links).toHaveLength(2);

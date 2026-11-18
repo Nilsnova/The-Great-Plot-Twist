@@ -8,14 +8,18 @@ vi.mock('../../src/island/building-portrait.js', () => ({createBuildingPortrait:
 })}));
 vi.mock('../../src/ui/kit/modal.js', () => ({createModal: ({onCancel}) => {
   const element = document.createElement('dialog'); element.cancel = onCancel;
-  return {element, setTitle() {}, setContent: body => element.replaceChildren(body),
+  const header = document.createElement('header'); header.className = 'kit-modal-header';
+  const heading = document.createElement('h2'); heading.className = 'kit-heading'; header.append(heading); element.append(header);
+  return {element, setTitle() {}, setContent: body => element.replaceChildren(header, body),
     open(parent, target) { element.open = true; parent.append(element); target?.focus(); },
     dispose() { element.open = false; element.remove(); }};
 }}));
 class Element {
   constructor(tag) { this.tagName = tag; this.children = []; this.dataset = {}; this.style = {}; this.className = ''; this.events = {};
     this.classList = {add: (...names) => { this.className += ` ${names.join(' ')}`; }, toggle: (name, on) => { if (on) this.className += ` ${name}`; }}; }
-  append(...children) { children.forEach(child => { child.parent = this; this.children.push(child); }); }
+  append(...children) { children.forEach(child => { child.remove(); child.parent = this; this.children.push(child); }); }
+  before(child) { child.remove(); child.parent = this.parent; this.parent.children.splice(this.parent.children.indexOf(this), 0, child); }
+  get parentElement() { return this.parent; }
   replaceChildren(...children) { this.children = []; this.append(...children); }
   remove() { if (this.parent) this.parent.children = this.parent.children.filter(child => child !== this); }
   setAttribute(key, value) { this[key] = String(value); }
@@ -23,7 +27,10 @@ class Element {
   addEventListener(name, callback) { this.events[name] = callback; }
   focus() { document.activeElement = this; }
   contains(element) { return all(this).includes(element); }
-  querySelector(selector) { return all(this).find(item => item.dataset.focus === selector.match(/data-focus="([^"]+)"/)?.[1]); }
+  querySelector(selector) {
+    if (selector.startsWith('.')) return all(this).find(item => item.className.split(/\s+/).includes(selector.slice(1)));
+    return all(this).find(item => item.dataset.focus === selector.match(/data-focus="([^"]+)"/)?.[1]);
+  }
   click() { if (!this.disabled) this.events.click?.(); }
 }
 const all = node => [node, ...node.children.flatMap(all)];

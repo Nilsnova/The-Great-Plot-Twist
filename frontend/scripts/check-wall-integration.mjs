@@ -128,7 +128,8 @@ async function buyWall(page,id,level,report) {
   const original = wallOf(before,id);
   // The regular phone details sheet can cover its wall. Use the app's village dock for a
   // proof of the map feedback without changing how the UI lays out or dismissing it mid-effect.
-  const viaVillageDock = id === 'wall_10' && level === 2;
+  const viaPhoneDetails = revision === 'revised' && id === 'wall_10' && level === 3 && report.isMobile;
+  const viaVillageDock = (id === 'wall_10' && level === 2) || viaPhoneDetails;
   if (viaVillageDock) {
     await dismissNarrator(page);
     await stand(page,-7,-1);
@@ -138,12 +139,14 @@ async function buyWall(page,id,level,report) {
     await page.waitForTimeout(950);
     await groundTap(page,report,original);
     assert.equal(await page.evaluate(() => window.__island.island.selection?.spotId),id,'selected correct wall to upgrade from its dock');
+    if (viaPhoneDetails) await page.locator('.island-selection-dock [data-focus="details"]').tap();
   } else {
     await page.evaluate(id => window.__island.island.pick(id),id);
   }
-  const panel = viaVillageDock ? '.island-selection-dock' : '.island-card[open]';
+  const panel = viaVillageDock && !viaPhoneDetails ? '.island-selection-dock' : '.island-card[open]';
   const action = page.locator(`${panel} [data-focus="${level === 1 ? 'build' : 'upgrade'}"]`);
-  await action.click();
+  if (viaPhoneDetails) await action.tap();
+  else await action.click();
   await page.waitForFunction(([id,level]) => {
     const row = window.__island.island.island.spots.find(spot => spot.id === id);
     return row?.built && row.level === level;
@@ -156,8 +159,10 @@ async function buyWall(page,id,level,report) {
       const samples = await page.evaluate(name => new Promise(resolve => {
         const ring = window.__island.world.current.group.getObjectByName(name), samples = [];
         function sample() {
-          if (samples.length === 5) return resolve(samples);
-          samples.push({visible:ring.visible, opacity:ring.material.opacity, radius:ring.scale.x, center:ring.position.toArray()});
+          if (samples.length === 10) return resolve(samples);
+          const motes = window.__island.world.current.group.getObjectByName('island-wall-feedback-motes');
+          samples.push({at:performance.now(), visible:ring.visible, opacity:ring.material.opacity,
+            radius:ring.scale.x, center:ring.position.toArray(), visibleMotes:motes?.visible === true});
           requestAnimationFrame(sample);
         }
         sample();
@@ -166,9 +171,11 @@ async function buyWall(page,id,level,report) {
       assert.ok(samples.every(sample => sample.center.every(Number.isFinite)));
       assert.ok(samples.every(sample => JSON.stringify(sample.center) === JSON.stringify(samples[0].center)), 'ground anchor remains fixed');
       if (report.isMobile) {
-        assert.ok(samples.every(sample => sample.radius === samples[0].radius && sample.opacity === samples[0].opacity), 'reduced motion holds the ring static');
+        assert.ok(samples.every(sample => sample.radius === samples[0].radius && sample.opacity === samples[0].opacity), 'reduced motion holds the receipt static');
+        assert.ok(samples.every(sample => !sample.visibleMotes), 'reduced motion avoids moving motes');
       } else {
         assert.ok(samples.some(sample => sample.radius !== samples[0].radius || sample.opacity !== samples[0].opacity), 'normal motion eases radius or opacity');
+        assert.ok(samples.some(sample => sample.visibleMotes), 'normal motion includes the particle reveal');
       }
       const unobscured = await page.evaluate(name => {
         const game=window.__island, canvas=game.renderer.domElement, rect=canvas.getBoundingClientRect();
@@ -183,6 +190,29 @@ async function buyWall(page,id,level,report) {
     if (revision === 'revised') {
       await page.waitForFunction(name => !window.__island.world.current.group.getObjectByName(name)?.visible,name,{timeout:3000});
     }
+  }
+  if (viaPhoneDetails) {
+    const handle = await page.waitForFunction(() => document.getAnimations().find(animation =>
+      animation.id === 'island-wall-level-receipt' && animation.playState === 'running'), null, {timeout:2500});
+    const header = await handle.evaluate(animation => {
+      const target = animation.effect.target;
+      const box = target.getBoundingClientRect();
+      const receipt = target.querySelector('.island-wall-purchase-receipt[role="status"]');
+      const duplicateToast = [...document.querySelectorAll('.u-toast-text')].some(item => item.textContent === receipt?.textContent);
+      const {duration,easing} = animation.effect.getTiming();
+      return {id:animation.id, duration, easing, duplicateToast, receipt:receipt?.textContent,
+        receiptVisible:receipt?.getBoundingClientRect().height > 0, visible:box.height > 0 && box.width > 0
+        && getComputedStyle(target).visibility === 'visible', modal:!!target.closest('.island-card[open]')};
+    });
+    await handle.dispose();
+    assert.ok(header.visible && header.modal && header.receiptVisible,'the receipt appears in the open phone Details sheet');
+    assert.match(header.receipt,/^Wall level 3\s*·/, 'the receipt confirms the purchased level');
+    assert.equal(header.duplicateToast,false,'the Details receipt is not duplicated by an overlapping toast');
+    assert.match(header.easing,/^steps\(1\b/,'reduced motion holds the header highlight static');
+    report.feedback.push({title:'details-upgrade-feedback',header});
+    await capture(page,report,'details-upgrade-feedback',{settleFrame:false});
+    await page.waitForFunction(() => !document.getAnimations().some(animation =>
+      animation.id === 'island-wall-level-receipt' && animation.playState === 'running'), null, {timeout:2500});
   }
   const after = await islandState(page), saved = wallOf(after, id);
   assert.equal(after.coins, before.coins - wallPrices[level - 1], `${id} level ${level} paid its exact listed price`);

@@ -24,7 +24,7 @@ export function wallTopology(spots = []) {
 
 // Level colours match art/island.js. The original level/banner sprites remain as the junction posts.
 const COLOURS = [0xc98a4e, 0xcfc8bb, 0xa9a39a, 0xffcf3f, 0xffcf3f];
-export function makeWallConnections(root) {
+export function makeWallConnections(root, {purchaseLight = null} = {}) {
   const group = new THREE.Group(); group.name = 'island-wall-connections'; root.add(group);
   const footing = makeWallFooting(root);
   let material = new THREE.MeshBasicMaterial({vertexColors: true, transparent: true, side: THREE.DoubleSide, depthTest: false, depthWrite: false, toneMapped: false});
@@ -47,10 +47,12 @@ export function makeWallConnections(root) {
     if (art) {
       footing.show(visual, current.links);
       // Selection retains its real tier post at the ordinary depth; the world owns the tile bracket.
-      for (const [order, {positions, uvs, indices}] of texturedWallBatches(current.links, visual, art, {selectedId})) {
+      for (const [order, {positions, ground, uvs, colors, indices}] of texturedWallBatches(current.links, visual, art, {selectedId})) {
         const geometry = new THREE.BufferGeometry();
         geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-        geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2)); geometry.setIndex(indices);
+        if (purchaseLight) geometry.setAttribute('wallGround', new THREE.Float32BufferAttribute(ground, 2));
+        geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+        geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3)); geometry.setIndex(indices);
         const mesh = new THREE.Mesh(geometry, material); mesh.name = `wall-art-layer:${order}`;
         mesh.renderOrder = order; mesh.frustumCulled = false; mesh.raycast = () => {}; group.add(mesh);
       }
@@ -103,7 +105,8 @@ export function makeWallConnections(root) {
       if (disposed || !value) return false;
       if (value === art) return true;
       clear(); material.dispose(); if (art?.ownsTexture) art.texture.dispose();
-      art = value; material = spriteMaterial(art.texture); material.side = THREE.DoubleSide;
+      art = value; material = spriteMaterial(art.texture); material.side = THREE.DoubleSide; material.vertexColors = true;
+      purchaseLight?.install(material);
       // These are camera-facing quads; a second transparent back-face pass adds no surface.
       material.forceSinglePass = true; key = null; show(lastSpots); return true;
     },

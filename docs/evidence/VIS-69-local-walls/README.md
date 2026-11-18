@@ -1,5 +1,7 @@
 # Local wall integration review
 
+See the [follow-up visual pass](reference-pass/README.md) for current comparisons and upgrade recordings. The evidence below records the first local pass.
+
 Reviewed on the Apple Silicon Mac with Chrome 157.0.8103.79. The browser comparisons use main `840549a5` and the revised renderer on `fix/vis-69-integrated-walls`. They use the in-memory island API and the same prices, fixture, controls and camera presets. Both viewports retain the real game interface.
 
 | View | Desktop 1280 × 720 | Phone 375 × 812 |

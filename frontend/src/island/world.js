@@ -23,6 +23,7 @@ import {frameCanvas, smoothTexture, spriteMaterial} from '../art/textures.js';
 import {clickVerdict, WALK_CLOSER} from '../world/reach.js';
 import {decorateProgress} from './decorations.js';
 import {makeWallConnections} from './wall-connections.js';
+import {makeWallPurchaseLight} from './wall-purchase-light.js';
 import {createStructureRecoveryIndicators} from './structure-recovery-indicators.js';
 import {towerStateFrame} from '../art/tower-states.js';
 import {MARK_IDS, buildingMarks} from '../art/path-marks.js';
@@ -274,14 +275,16 @@ export function decorateIsland(place, ctx = {}) {
   // The reach of a house's role while its card is open (GAME-V3.md "Houses"): a soft disc with a bright rim on
   // the ground, in the role's colour. ctx.range() says which ({x, z, radius, role} or null), read every frame.
   const rangeRing = makeRangeRing(root);
-  const wallConnections = makeWallConnections(root);
+  const homeWalls = layout.zones === islandZones;
+  const purchaseLight = homeWalls ? makeWallPurchaseLight() : null;
+  const wallConnections = makeWallConnections(root, {purchaseLight});
   let joinedWalls = new Set();
   const baseColliders = [...place.colliders];
   let preview = null;
   const footprint = makeFootprint(root), selectionBracket = makeSelectionBracket(root);
-  const wallFeedback = layout.zones === islandZones ? makeWallFeedback(root) : null;
+  const wallFeedback = homeWalls ? makeWallFeedback(root) : null;
   // D056: while a wall is moved, the cells where a wall stops pirates glow (home island only).
-  const wallLanes = layout.zones === islandZones ? makeWallLanes(root) : null;
+  const wallLanes = homeWalls ? makeWallLanes(root) : null;
   // Where a spot stands now: the cell of a move under way, the answer's x/z, else its fixed spot (Pirate Point's stay).
   const whereOf = spot => {
     if (preview?.spotId === spot.id) return {x: preview.x, z: preview.z};
@@ -290,6 +293,10 @@ export function decorateIsland(place, ctx = {}) {
   function builtWallAnchor(id, level) {
     const row = state.spots.find(item => item.id === id);
     return row?.built === true && row.kind === 'wall' && row.level === level ? placedSpot(id, state.spots) : null;
+  }
+  function clearWallFeedback() {
+    wallFeedback?.clear();
+    purchaseLight?.show(null, 0);
   }
   const recoveryIndicators = createStructureRecoveryIndicators({root, locate: id => {
     const spot = SPOTS.find(item => item.id === id);
@@ -356,12 +363,12 @@ export function decorateIsland(place, ctx = {}) {
   // their damage, so the island's own wall and cannon sprites step aside until it ends.
   function apply({spots = [], visitor = false, battle = false, unlocks = null, crew = null, campaign = null, arsenal = false, feedbackScope = null} = {}) {
     if (disposed) return;
-    if (battle || feedbackScope !== state.feedbackScope) wallFeedback?.clear();
+    if (battle || feedbackScope !== state.feedbackScope) clearWallFeedback();
     state = {spots, visitor, battle, unlocks, crew, campaign, arsenal: arsenal === true, feedbackScope};
     const pulse = wallFeedback?.current;
     if (pulse) {
       const anchor = builtWallAnchor(pulse.spotId, pulse.level);
-      if (anchor?.x !== pulse.x || anchor?.z !== pulse.z) wallFeedback.clear();
+      if (anchor?.x !== pulse.x || anchor?.z !== pulse.z) clearWallFeedback();
     }
     if (visitor || battle) wallConnections.select(null);
     joinedWalls = wallConnections.show(battle ? [] : spots.map(item => {
@@ -512,7 +519,7 @@ export function decorateIsland(place, ctx = {}) {
     preview(next) {
       if (disposed) return;
       preview = next && Number.isFinite(next.x) && Number.isFinite(next.z) ? {...next} : null;
-      if (preview) { wallConnections.select(null); wallFeedback?.clear(); }
+      if (preview) { wallConnections.select(null); clearWallFeedback(); }
       footprint.show(preview);
       wallLanes?.show(preview && SPOTS.find(spot => spot.id === preview.spotId)?.slot === 'wall');
       apply(state);
@@ -522,9 +529,12 @@ export function decorateIsland(place, ctx = {}) {
     showWallFeedback(spotId, level) {
       if (disposed || !wallFeedback || !state.feedbackScope || state.battle || preview) return;
       const anchor = builtWallAnchor(spotId, level);
-      if (anchor) wallFeedback.show(spotId, level, anchor, reduced());
+      if (anchor) {
+        wallFeedback.show(spotId, level, anchor, reduced());
+        purchaseLight.show(anchor, wallFeedback.light);
+      }
     },
-    clearWallFeedback() { wallFeedback?.clear(); },
+    clearWallFeedback,
     ring() { ringing = 1.2; },
     update(dt, time = 0, paused = false) {
       if (disposed) return;
@@ -535,7 +545,10 @@ export function decorateIsland(place, ctx = {}) {
       recoveryIndicators.update();
       const still = reduced();
       rangeRing.show(ctx.range?.() ?? null, still ? 0 : time);
-      wallFeedback?.update(dt, paused, still);
+      if (wallFeedback) {
+        wallFeedback.update(dt, paused, still);
+        purchaseLight.show(wallFeedback.current, wallFeedback.light);
+      }
       const glow = still ? 1 : .7 + .3 * Math.sin(time * 3.2), bob = still ? 0 : Math.sin(time * 2.4) * 2.4 / UNIT;
       // Calm markers (owner, 15 Nov: "limit the visual overload"): only the spots near the captain glow and bob;
       // the others stay on the map as faint, still rings and badges, so a dozen gold "+" never shout at once.

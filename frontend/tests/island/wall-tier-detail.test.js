@@ -25,8 +25,8 @@ const posts = (layers, art, id) => quads(layers).filter(quad => JSON.stringify(q
 
 describe('connected wall tier detail', () => {
   it.each([
-    [1,1.018,.86,1.038], [2,1.118,.96,1.138], [3,1.268,1.11,1.288],
-    [4,1.368,1.21,1.388], [5,1.468,1.31,1.488],
+    [1,1.018,.85,1.038], [2,1.118,.95,1.138], [3,1.268,1.10,1.288],
+    [4,1.368,1.20,1.388], [5,1.468,1.30,1.488],
   ])('keeps actual projected level %i span and straight-cap vertices below the authored post top', (level, horizontalTop, verticalTop, capTop) => {
     const art=atlas(), maxY=rows=>Math.max(...rows.flatMap(({positions:p})=>p.filter((_,i)=>i%3===1)));
     for(const vertical of [false,true]) {

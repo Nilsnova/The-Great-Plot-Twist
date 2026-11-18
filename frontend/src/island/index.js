@@ -901,12 +901,13 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     if (!scope || !before || before.built !== upgrading || (upgrading && before.kind !== 'wall')) return null;
     return {scope, world, spotId: spot.id, level: upgrading ? before.level + 1 : 1};
   }
-  function showWallPurchase(action, answer) {
+  function showWallPurchase(action, answer, receipt = '') {
     if (!action || !answer.ok || answer.reconciled || action.world !== world || action.scope !== wallFeedbackScope()
         || islandCode(answer.data.code ?? '') !== islandCode(target()?.code ?? '')) return;
     const confirmed = answer.data.spots.find(spot => spot.id === action.spotId);
     if (confirmed?.built === true && confirmed.kind === 'wall' && confirmed.level === action.level) {
       world.showWallFeedback(action.spotId, action.level);
+      return receipt && ui.showWallReceipt(action.spotId, receipt, reducedMotion());
     }
   }
   async function build(spotId, kind) {
@@ -966,6 +967,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     const place = placeOf(spotId);
     if (busySpot) return;
     const action = wallPurchaseAt(spotById(spotId), true);
+    let wallReceipt = '';
     busySpot = spotId; busyKind = 'upgrade'; cardMessage = ''; refreshCard();
     const answer = place === 'point' ? await api.pointUpgrade({spot: spotId})
       : await api.upgrade({spot: spotId, ...(place === 'visit' ? {code: visiting.code} : {})});
@@ -979,11 +981,13 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       const name = BUILDINGS[now?.kind]?.name ?? 'Building';
       if (place === 'own') emit({type: ISLAND_UPGRADED, kind: now?.kind, spot: spotId, level: now?.level});
       emit({type: SPOTS_CHANGED, place, spot: spotId});
-      ui.toast(`${name} level ${now?.level ?? '?'}${onWhere(place)} · ${coinText(own?.coins)}`, 'success');
+      const receipt = `${name} level ${now?.level ?? '?'}${onWhere(place)} · ${coinText(own?.coins)}`;
+      if (action) wallReceipt = receipt;
+      else ui.toast(receipt, 'success');
       if (recoveryControlsOn()) void readStructureRecovery(spotId);
     } else await refused(answer, place, spotId);
     refreshCard();
-    showWallPurchase(action, answer);
+    if (!showWallPurchase(action, answer, wallReceipt) && wallReceipt) ui.toast(wallReceipt, 'success');
   }
   // GAME-V3.md §4.2: Tear down asks the server who gets what back, then the confirmation card; Tear down there
   // takes the building down (between waves), every payer gets half of what they paid, and the room hears it.
