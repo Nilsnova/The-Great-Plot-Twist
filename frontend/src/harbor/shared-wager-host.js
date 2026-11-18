@@ -59,6 +59,7 @@ export function createSharedWagerHost({session, container, getEconomy, onEconomy
       return current(saved) ? result : unavailable();
     }
     return {container, resetInput, focusGame, onSignIn, notify,
+      onClose: () => {if (held === saved) close();},
       api: {get: (...args) => request('get', args), post: (...args) => request('post', args)},
       getEconomy: () => current(saved) ? economy() : null,
       getActorId: () => current(saved) ? saved.actor : null,

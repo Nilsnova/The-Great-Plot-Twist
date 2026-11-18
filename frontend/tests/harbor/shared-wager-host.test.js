@@ -13,7 +13,7 @@ function moduleFor(product = 'market', override) {
   const factory = vi.fn(context => {
     const entry = {active: false, open: vi.fn(async () => {entry.active = true;}),
       close: vi.fn(() => {entry.active = false;}), dispose: vi.fn(() => {entry.active = false;})};
-    override?.(entry); contexts.push(context); entries.push(entry); return entry;
+    override?.(entry, context); contexts.push(context); entries.push(entry); return entry;
   });
   return {[product === 'market' ? 'createSharedMarketEntry' : 'createSharedMatchEntry']: factory, factory, contexts, entries};
 }
@@ -138,6 +138,22 @@ describe('shared wager host deferred lifetime', () => {
     f.market.entries[0].close(); expect(f.host.active).toBe(false);
     expect(await f.host.open('market')).toBe(true); expect(f.market.entries[0].dispose).toHaveBeenCalledOnce();
     expect(f.market.entries).toHaveLength(2); expect(f.market.entries[1].active).toBe(true);
+  });
+  it('releases input immediately when its card closes during the initial read', async () => {
+    const reply = deferred(), started = deferred(), module = moduleFor('market', entry => {
+      entry.open.mockImplementation(async () => {entry.active = true; started.resolve(); await reply.promise;});
+    });
+    const f = fixture({loadMarket: async () => module}), opening = f.host.open('market');
+    await started.promise; expect(f.host.active).toBe(true);
+    module.entries[0].close(); module.contexts[0].onClose('close');
+    expect(f.host.active).toBe(false); expect(module.entries[0].dispose).toHaveBeenCalledOnce();
+    reply.resolve(); expect(await opening).toBe(false);
+  });
+  it('ignores a delayed old close after a newer product owns the host', async () => {
+    const f = fixture(); await f.host.open('market'); const oldClose = f.market.contexts[0].onClose;
+    await f.host.open('football'); oldClose('close');
+    expect(f.host.active).toBe(true); expect(f.match.entries[0].active).toBe(true);
+    expect(f.match.entries[0].close).not.toHaveBeenCalled(); expect(f.match.entries[0].dispose).not.toHaveBeenCalled();
   });
   it('discards entry opens completed after close and never constructs after disposal', async () => {
     const held = deferred(), started = deferred(), module = moduleFor('market', entry => {
