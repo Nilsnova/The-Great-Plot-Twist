@@ -1,0 +1,462 @@
+{
+  "source": "Original OpenAI image generation; unchanged output bytes",
+  "sha256": "f9ea99856f45b670f7f708b225c08ab819f393a2b1f4aa69515e2f446c4f5d78",
+  "encodedBytes": 2610002,
+  "width": 1536,
+  "height": 1024,
+  "mode": "RGBA",
+  "alphaZeroPixels": 809064,
+  "cornerAlpha": [
+    0,
+    0,
+    0,
+    0
+  ],
+  "alphaExtrema": [
+    0,
+    254
+  ],
+  "frames": {
+    "island-swivel": {
+      "nativeBounds": [
+        41,
+        58,
+        216,
+        192
+      ],
+      "sourceFoot": [
+        108,
+        186
+      ],
+      "band": [
+        0,
+        263
+      ],
+      "column": [
+        0,
+        290
+      ],
+      "edgeAlphaMaximum": 2,
+      "solidPixels": 25057
+    },
+    "island-swivel-fire": {
+      "nativeBounds": [
+        41,
+        315,
+        243,
+        191
+      ],
+      "sourceFoot": [
+        108,
+        185
+      ],
+      "band": [
+        263,
+        525
+      ],
+      "column": [
+        0,
+        300
+      ],
+      "edgeAlphaMaximum": 1,
+      "solidPixels": 25386
+    },
+    "island-swivel-damaged": {
+      "nativeBounds": [
+        38,
+        532,
+        223,
+        245
+      ],
+      "sourceFoot": [
+        112,
+        239
+      ],
+      "band": [
+        525,
+        800
+      ],
+      "column": [
+        0,
+        290
+      ],
+      "edgeAlphaMaximum": 1,
+      "solidPixels": 27390
+    },
+    "island-swivel-broken": {
+      "nativeBounds": [
+        25,
+        873,
+        260,
+        127
+      ],
+      "sourceFoot": [
+        130,
+        121
+      ],
+      "band": [
+        800,
+        1024
+      ],
+      "column": [
+        0,
+        300
+      ],
+      "edgeAlphaMaximum": 1,
+      "solidPixels": 19501
+    },
+    "island-swivel-l2": {
+      "nativeBounds": [
+        334,
+        52,
+        228,
+        202
+      ],
+      "sourceFoot": [
+        114,
+        196
+      ],
+      "band": [
+        0,
+        263
+      ],
+      "column": [
+        290,
+        600
+      ],
+      "edgeAlphaMaximum": 2,
+      "solidPixels": 29453
+    },
+    "island-swivel-fire-l2": {
+      "nativeBounds": [
+        334,
+        309,
+        248,
+        200
+      ],
+      "sourceFoot": [
+        114,
+        194
+      ],
+      "band": [
+        263,
+        525
+      ],
+      "column": [
+        300,
+        610
+      ],
+      "edgeAlphaMaximum": 2,
+      "solidPixels": 29896
+    },
+    "island-swivel-l2-damaged": {
+      "nativeBounds": [
+        328,
+        531,
+        242,
+        250
+      ],
+      "sourceFoot": [
+        121,
+        244
+      ],
+      "band": [
+        525,
+        800
+      ],
+      "column": [
+        290,
+        600
+      ],
+      "edgeAlphaMaximum": 2,
+      "solidPixels": 31904
+    },
+    "island-swivel-l2-broken": {
+      "nativeBounds": [
+        309,
+        863,
+        265,
+        139
+      ],
+      "sourceFoot": [
+        147,
+        133
+      ],
+      "band": [
+        800,
+        1024
+      ],
+      "column": [
+        300,
+        600
+      ],
+      "edgeAlphaMaximum": 1,
+      "solidPixels": 22586
+    },
+    "island-swivel-l3": {
+      "nativeBounds": [
+        627,
+        51,
+        240,
+        207
+      ],
+      "sourceFoot": [
+        120,
+        201
+      ],
+      "band": [
+        0,
+        263
+      ],
+      "column": [
+        600,
+        910
+      ],
+      "edgeAlphaMaximum": 1,
+      "solidPixels": 31763
+    },
+    "island-swivel-fire-l3": {
+      "nativeBounds": [
+        627,
+        309,
+        249,
+        204
+      ],
+      "sourceFoot": [
+        120,
+        198
+      ],
+      "band": [
+        263,
+        525
+      ],
+      "column": [
+        610,
+        910
+      ],
+      "edgeAlphaMaximum": 2,
+      "solidPixels": 32340
+    },
+    "island-swivel-l3-damaged": {
+      "nativeBounds": [
+        612,
+        531,
+        267,
+        251
+      ],
+      "sourceFoot": [
+        135,
+        245
+      ],
+      "band": [
+        525,
+        800
+      ],
+      "column": [
+        600,
+        910
+      ],
+      "edgeAlphaMaximum": 2,
+      "solidPixels": 34033
+    },
+    "island-swivel-l3-broken": {
+      "nativeBounds": [
+        606,
+        857,
+        290,
+        147
+      ],
+      "sourceFoot": [
+        146,
+        141
+      ],
+      "band": [
+        800,
+        1024
+      ],
+      "column": [
+        600,
+        910
+      ],
+      "edgeAlphaMaximum": 1,
+      "solidPixels": 24822
+    },
+    "island-swivel-l4": {
+      "nativeBounds": [
+        931,
+        31,
+        253,
+        227
+      ],
+      "sourceFoot": [
+        126,
+        221
+      ],
+      "band": [
+        0,
+        263
+      ],
+      "column": [
+        910,
+        1220
+      ],
+      "edgeAlphaMaximum": 2,
+      "solidPixels": 36722
+    },
+    "island-swivel-fire-l4": {
+      "nativeBounds": [
+        931,
+        287,
+        264,
+        227
+      ],
+      "sourceFoot": [
+        126,
+        221
+      ],
+      "band": [
+        263,
+        525
+      ],
+      "column": [
+        910,
+        1230
+      ],
+      "edgeAlphaMaximum": 3,
+      "solidPixels": 37214
+    },
+    "island-swivel-l4-damaged": {
+      "nativeBounds": [
+        928,
+        533,
+        257,
+        250
+      ],
+      "sourceFoot": [
+        129,
+        244
+      ],
+      "band": [
+        525,
+        800
+      ],
+      "column": [
+        910,
+        1220
+      ],
+      "edgeAlphaMaximum": 2,
+      "solidPixels": 38972
+    },
+    "island-swivel-l4-broken": {
+      "nativeBounds": [
+        916,
+        819,
+        296,
+        186
+      ],
+      "sourceFoot": [
+        141,
+        180
+      ],
+      "band": [
+        800,
+        1024
+      ],
+      "column": [
+        910,
+        1228
+      ],
+      "edgeAlphaMaximum": 2,
+      "solidPixels": 26030
+    },
+    "island-swivel-l5": {
+      "nativeBounds": [
+        1237,
+        28,
+        267,
+        230
+      ],
+      "sourceFoot": [
+        134,
+        224
+      ],
+      "band": [
+        0,
+        263
+      ],
+      "column": [
+        1220,
+        1536
+      ],
+      "edgeAlphaMaximum": 1,
+      "solidPixels": 41484
+    },
+    "island-swivel-fire-l5": {
+      "nativeBounds": [
+        1238,
+        280,
+        275,
+        233
+      ],
+      "sourceFoot": [
+        133,
+        227
+      ],
+      "band": [
+        263,
+        525
+      ],
+      "column": [
+        1230,
+        1536
+      ],
+      "edgeAlphaMaximum": 1,
+      "solidPixels": 41739
+    },
+    "island-swivel-l5-damaged": {
+      "nativeBounds": [
+        1230,
+        535,
+        279,
+        246
+      ],
+      "sourceFoot": [
+        141,
+        240
+      ],
+      "band": [
+        525,
+        800
+      ],
+      "column": [
+        1220,
+        1536
+      ],
+      "edgeAlphaMaximum": 2,
+      "solidPixels": 42193
+    },
+    "island-swivel-l5-broken": {
+      "nativeBounds": [
+        1233,
+        812,
+        288,
+        194
+      ],
+      "sourceFoot": [
+        140,
+        188
+      ],
+      "band": [
+        800,
+        1024
+      ],
+      "column": [
+        1228,
+        1536
+      ],
+      "edgeAlphaMaximum": 3,
+      "solidPixels": 28446
+    }
+  },
+  "limits": "Read-only native alpha/bounds audit, not GPU or decoded-pixel parity."
+}

@@ -67,9 +67,7 @@ export const BONUSES = freeze({
   high_tower: freeze({branch: 'watchtower', name: 'High tower', line: 'The watchtower lends every tower 30% more range.'}),
 });
 export const SPEC_IDS = freeze(Object.keys(SPECS));
-export const BONUS_IDS = freeze(Object.keys(BONUSES));
 export const isCapstone = spec => SPECS[spec]?.capstone === true;
-export const branchOf = spec => SPECS[spec]?.branch ?? null;
 // A spec a building of `kind` may carry, else null (an unknown or another kind's spec is no spec). A house's
 // spec is its role (src/campaign/houses.js).
 export const readSpec = (kind, spec) => (typeof spec === 'string' && SPECS[spec]?.branch === kind ? spec : readRole(kind, spec));
@@ -79,7 +77,6 @@ export const readBonus = (kind, bonus) => (typeof bonus === 'string' && BONUSES[
 export const optionsOf = (branch, tier) => (tier === 2 ? BRANCH_BY_ID[branch]?.tier2 : tier === 3 ? BRANCH_BY_ID[branch]?.tier3 : null) ?? [];
 export const optionName = id => SPECS[id]?.name ?? BONUSES[id]?.name ?? id;
 export const optionLine = id => SPECS[id]?.line ?? BONUSES[id]?.line ?? '';
-export const specKinds = freeze(BRANCHES.map(item => item.branch));
 // One branch's research on an island, read from an answer's {tier, tier2, tier3} (anything else: tier 0).
 export function readTier(branch, sent) {
   const tier = Number.isSafeInteger(sent?.tier) ? Math.max(0, Math.min(TOP_TIER, sent.tier)) : 0;

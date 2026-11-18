@@ -7,6 +7,7 @@ import { DETAIL_DENSITY, pixelArtIds, pixelById, titleBackdrop } from '../src/pi
 import { artSizes, loadArt, placeArt } from '../src/world/art.js';
 import { loadTexture } from '../src/world/texture.js';
 import { islandFrame } from '../src/art/registry.js';
+import { getRasterFrame } from '../src/art/village-raster.js';
 
 vi.mock('../src/world/texture.js', () => ({ loadTexture: vi.fn() }));
 afterEach(() => vi.resetAllMocks());
@@ -51,9 +52,13 @@ describe('detailed original artwork', () => {
     const legacy = await loadArt(['lighthouse']);
     expect(loadTexture).toHaveBeenCalledWith('/pixel/lighthouse.png', expect.any(THREE.TextureLoader));
     release(legacy);
-    // Cartoon frames (GAME-V3.md §7) are painted on first use: no PNG request, nothing painted yet.
+  });
+
+  it('keeps unregistered procedural actors lazy without requesting image files', async () => {
+    expect(islandFrame('explorer')).toBeTruthy(); expect(getRasterFrame('explorer')).toBeNull();
+    // Registered nature preparation/failure has separate real-registry coverage.
     loadTexture.mockClear();
-    const cartoon = await loadArt(['explorer', 'oak']);
+    const cartoon = await loadArt(['explorer']);
     expect(loadTexture).not.toHaveBeenCalled();
     expect('explorer' in cartoon && Object.keys(cartoon).length === 0).toBe(true);
   });

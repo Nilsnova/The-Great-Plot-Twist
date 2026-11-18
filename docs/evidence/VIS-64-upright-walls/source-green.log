@@ -1,0 +1,17 @@
+
+ RUN  v5.1.0 /workspace/reference-village-work/clearance-volume/frontend
+
+
+ Test Files  5 passed (5)
+      Tests  42 passed (42)
+   Start at  10:04:07
+   Duration  1.95s (import 61%, tests 19%, transform 18%, worker 2%)
+
+    Isolate  5 workers spawned · ~156ms startup each (spawn + environment, per file)
+             at least ~622ms faster with isolate: false — reuses workers across files instead of one per file
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.3
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.3
+npm notice To update run: npm install -g npm@12.2.3
+npm notice
