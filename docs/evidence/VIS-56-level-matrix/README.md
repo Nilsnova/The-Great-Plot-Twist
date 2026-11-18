@@ -32,6 +32,8 @@ CHROME_PATH=/usr/bin/chromium node scripts/capture-visual-matrix.mjs /absolute/c
 
 The command owns a temporary loopback Vite server and browser, loads the specified candidate's own modules, and closes both in `finally`. Before allocating those resources, it verifies that the actually executed capture script matches the candidate's script bytes. It captures 22 sheets across 1280×720 and 375×812 viewports. Contact sheets use full-page captures, so their recorded PNG height may exceed the viewport. `report.json` records exact source trees, candidate helper hashes, the actual executed helper hash, source bindings, topology, calls/triangles and image dimensions/hashes. A failed assertion remains failed and receives a failure record.
 
+A deliberate wrong-candidate probe of guard commit `015394e1` was refused with exit 1 in **0.78 seconds**, before any output or browser allocation. The [receipt](provenance-refusal.json) records the mismatch; its temporary candidate was removed. Helper syntax and whitespace checks passed after this guard. This refusal probe is a source-provenance check, not a native rendering pass.
+
 **Native run pending at this leaf checkpoint.** No native pass, screenshot acceptance or whole-suite pass is claimed here. The coordinator's full-game proof separately covers real paid placement, upgrades, camera input and combat. Tree positions/colliders and zero/one/two-house progress are covered by VIS54 and the combined actual-game review.
 
 ## Explain-back and limits
