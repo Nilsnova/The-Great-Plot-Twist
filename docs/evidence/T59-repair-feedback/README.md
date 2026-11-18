@@ -185,3 +185,14 @@ Local candidate `35f91e0e` combines the four repair follow-ups with main `db5733
 The full disposable island SQL suite passed 398 tests in 52.66 seconds on the preceding combined candidate `d25242e1`. The backend and migration trees are byte-identical in `35f91e0e`; the later main update changes artwork delivery. No live migration, deployment or activation was performed.
 
 After the unlock-toast wording adjustment, the focused narrator/tutorial/host command passed 39 tests across three files in 8.95 seconds on this UI branch.
+
+
+## Final current-main review
+
+UI source `d096e530` passed a fresh production build in 1.97 seconds, including the spoiler guard (245 text files, 12 protected lines). Text lint reported zero errors and eight unchanged report-only findings. Protected instructions, historical captures and both committed STATUS histories remain unchanged or preserved in order; local Markdown targets and the secret scan passed.
+
+The final local four-branch candidate `b908e34e` passed all 53 selection-dock, card-model, saved-policy and upgrade-DOM tests across four files in 26.69 seconds: [exact output](wave-end-20261118-integration/final-guard-tests.txt). Its backend/migration trees remain byte-identical to the earlier 398-test disposable-SQL candidate. This is combined-source evidence, not an isolated UI-branch full-suite result.
+
+The earlier complete combined frontend run on `35f91e0e` finished with 4,623 passed and three failed; it was not green. The old dock helper expectation was corrected without weakening its stale-HP/disabled-upgrade assertions. The village desktop case subsequently passed separately within its unchanged 60-second limit. The nearby-game timeout also reproduced on pristine main `db573347`, so full-game E/revive coverage remains a limit. [Exact full, baseline and isolated outputs with source provenance](https://github.com/Nilsnova/The-Great-Plot-Twist/blob/a3f06c3b/docs/evidence/T59-repair-feedback/README.md#full-combined-source-frontend-result).
+
+The current zero-HP world and preparation-offer phone captures were independently inspected: the broken wall, empty bar/marker, fixed price and shared quota are visible. No authenticated API, real charge, second client, live migration, activation or deployment is demonstrated. The approved rule-document alignment and backend refusal/target-policy metadata remain separate in PRs #468 and #478.
