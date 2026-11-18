@@ -1,6 +1,8 @@
 # Quest and boat flow evidence
 
-Controlled component evidence for issue #462, used by Ianno and the peer reviewer. Source baseline: main `48aee0e7`; task branch `fix/boat-quest-flow`.
+Controlled component evidence for issue #462, used by Ianno and the peer reviewer. Captured before latest-main integration, from baseline main `48aee0e7` on task branch `fix/boat-quest-flow`.
+
+Main `37eb70fa` was subsequently merged into this task branch on 18 Nov. The screenshots and full-suite/build results below belong to the earlier source. After integration, the pure first-quests/guide check passed 2 files / 19 tests, JavaScript syntax checks passed and `git diff origin/main --check` passed. Integrated browser, full-suite and build verification remain pending; no pose follow-up implementation is included at this checkpoint.
 
 ## Browser evidence
 

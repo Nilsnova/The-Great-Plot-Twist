@@ -282,7 +282,7 @@ export const EVENT_ICONS = Object.freeze({ fog_bank: '☁', storm: '⛈', night_
   siege_barge: '💣', treasure_galleon: '💰', smugglers: '🛶', kraken: '🐙' });
 const readEasy = () => { try { return getPreferences()?.easyFinishers === true; } catch { return false; } };
 
-export function createWaveController({ bus, world = {}, getDefenses = () => [], finishWave = async () => null, room = null,
+export function createWaveController({ bus, world = {}, getDefenses = () => [], getManaging = () => false, finishWave = async () => null, room = null,
   sound = null, reducedMotion = () => false, quality = () => 'high', playerId = `p-${Math.random().toString(36).slice(2, 10)}`,
   now = () => Date.now(), serverOffset = () => 0, place = null, accept = info => info.flagship !== true, listen = true,
   simOptions = {}, beamFrom = null, cutsceneFor = (result, summary) => (summary.lampsRelit ? 'lamps_relit' : result.survived ? 'wave_won' : 'wave_lost'),
@@ -340,6 +340,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     } else {
       const defenses = read(getDefenses, []) ?? [];
       guide.update({ mode: 'preview', lanes: null, defenses, stateWalls: null, stateTowers: null,
+        managing: read(getManaging, false) === true,
         towerObstacles: current?.info.rules?.towerObstacles ?? lastTowerObstacles, boarders: [], heart: null,
         wave: (current?.info.wave ?? lastWave) + 1, dt });
     }
@@ -1414,8 +1415,8 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     if (seconds !== current.lastCount) { current.lastCount = seconds; if (seconds > 0 && seconds <= 3) cue('pirate-tick'); }
     current.hud?.countdown(current.done ? 0 : Math.min(seconds, 99));
     current.hud?.boss?.(current.boss && !current.done && elapsed < BOSS_WARNING_SECONDS ? current.boss : '');
-    // The first-wave hint (guide on): the three pictures for HINT_SECONDS of the first wave this device plays.
-    if (guideOn && current.hud && current.hintShown === undefined) { current.hintShown = !readHint(); if (current.hintShown) writeHint(); }
+    // Only actual wave one consumes the device's first-wave hint, for its existing HINT_SECONDS window.
+    if (guideOn && current.info.wave === 1 && current.hud && current.hintShown === undefined) { current.hintShown = !readHint(); if (current.hintShown) writeHint(); }
     current.hud?.goalHint?.(current.hintShown === true && !current.done && elapsed > -3 && elapsed < HINT_SECONDS);
     // "+coins" is this round's: the server's loot for this wave and this player, shown once it answered.
     current.hud?.loot?.(Number.isFinite(current.roundLoot) ? current.roundLoot : null);

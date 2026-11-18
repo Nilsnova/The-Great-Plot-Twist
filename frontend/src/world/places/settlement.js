@@ -10,6 +10,7 @@ import { places } from './registry.js';
 import { layouts, edgeTrees } from './layouts.js';
 import { placeGround } from './surfaces.js';
 import { backdrop, createLifetime, loadBackdrop } from './resources.js';
+import {projectGround} from '../projection.js';
 
 // Compose all art, colliders and cleanup under one place root for predictable travel disposal.
 export async function createSettlement(ctx) {
@@ -42,6 +43,9 @@ export async function createSettlement(ctx) {
     });
     const foliage = trees.map(([x, z], i) => {
       const mesh = placeArt(group, art, ['oak', 'pine', 'birch'][i % 3], x, z);
+      // Smaller home canopies reveal walls; house growth multiplies this visual baseline.
+      // The ground foot, radius-.48 blocker and painter order remain unchanged.
+      if (id === 'home_islet') mesh.scale.setScalar(.7);
       mesh.material = swayMaterial(mesh.material.clone(), mesh.userData.asset); return mesh;
     });
     trees.forEach(([x, z], i) => {
@@ -110,8 +114,8 @@ export function stormFlagShouldShow(state={}){
   return state.weatherAnswer?.state==='storm';
 }
 function createStormFlag(group){
-  const flag=new THREE.Group();flag.name='storm-warning-flag';
-  const pole=new THREE.Mesh(new THREE.PlaneGeometry(.125,3),new THREE.MeshBasicMaterial({color:'#514637',depthTest:false,depthWrite:false,toneMapped:false}));pole.position.set(17,-13*.72+1.5,0);pole.renderOrder=930;
-  const cloth=new THREE.Mesh(new THREE.PlaneGeometry(1,.5),new THREE.MeshBasicMaterial({color:'#a94c3d',depthTest:false,depthWrite:false,toneMapped:false}));cloth.position.set(17.5625,-13*.72+2.625,0);cloth.renderOrder=931;
+  const flag=new THREE.Group(),foot=projectGround(17,13);flag.name='storm-warning-flag';
+  const pole=new THREE.Mesh(new THREE.PlaneGeometry(.125,3),new THREE.MeshBasicMaterial({color:'#514637',depthTest:false,depthWrite:false,toneMapped:false}));pole.position.set(foot.x,foot.y+1.5,0);pole.renderOrder=930;
+  const cloth=new THREE.Mesh(new THREE.PlaneGeometry(1,.5),new THREE.MeshBasicMaterial({color:'#a94c3d',depthTest:false,depthWrite:false,toneMapped:false}));cloth.position.set(foot.x+.5625,foot.y+2.625,0);cloth.renderOrder=931;
   flag.add(pole,cloth);flag.visible=false;flag.renderOrder=930;group.add(flag);return flag;
 }

@@ -1,14 +1,21 @@
 .island-village-mode {
   position: absolute; z-index: 35; bottom: calc(max(18px, env(safe-area-inset-bottom)) + var(--narrator-card-height, 0px) + 12px); left: 50%; transform: translateX(-50%);
-  box-sizing: border-box; width: min(520px, calc(100% - 24px)); display: flex; align-items: center; gap: 12px;
-  padding: 10px 12px; border: 2px solid #6b5132; border-radius: 10px;
-  background: #f4e7cb; color: #30271d; box-shadow: 0 3px 0 #30271d55;
+  box-sizing: border-box; width: min(940px, calc(100% - 24px)); display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px; border: 3px solid #b98238; border-radius: 16px;
+  background: linear-gradient(115deg, #fff0c9, #edcc91); color: #382817;
+  box-shadow: inset 0 0 0 2px #fff2be, 0 3px 0 #48301b, 0 8px 22px #142d35aa;
 }
-.island-village-mode[hidden] { display: none; }
+.island-village-mode[hidden], .island-village-mode button[hidden] { display: none; }
 .island-village-copy { flex: 1; min-width: 0; }
-.island-village-copy p { margin: 3px 0 0; font-size: 12px; line-height: 1.35; }
-.island-village-mode button { min-height: 44px; flex: none; }
-@media (max-width: 480px) {
-  .island-village-mode { align-items: flex-start; gap: 8px; }
-  .island-village-mode button { max-width: 112px; white-space: normal; }
+.island-village-copy strong { font: 700 20px/1.2 var(--u-serif); }
+.island-village-copy p { margin: 4px 0 0; font-size: 13px; line-height: 1.35; }
+.island-village-mode button { min-height: 44px; flex: none; padding: 8px 12px; border: 2px solid #846131; border-radius: 11px; box-shadow: inset 0 1px 1px #ffffff88, 0 2px 0 #533e22; }
+.island-village-mode .kit-quiet { background: linear-gradient(#28626a, #15414a); color: #fff4d7; }
+.island-village-camera { display: flex; gap: 4px; flex: none; }
+.island-village-camera button { min-width: 44px; padding: 8px; }
+@media (max-width: 620px) {
+  .island-village-mode { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; padding: 10px 12px; }
+  .island-village-copy { grid-column: 1 / -1; }
+  .island-village-camera { grid-column: 1; grid-row: 2; }
+  .island-village-exit { grid-column: 2; grid-row: 2; }
 }
