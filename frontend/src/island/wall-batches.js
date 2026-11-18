@@ -2,8 +2,8 @@
 import {projectPoint} from '../world/art.js';
 import {wallFrame, wallSurfaceFrame} from '../art/village/walls.js';
 const UNIT = 16;
-// All caps remain below the authored post top (32-6)/16 = 1.625 above its foot.
-const HEIGHTS = [.95, 1.15, 1.35, 1.45, 1.55];
+// Include rear projection (.6*.28) and cap lift (.02): 1.43+.168+.02=1.618 < post top 1.625.
+const HEIGHTS = [.95, 1.15, 1.25, 1.35, 1.43];
 export function wallVisualRows(spots = []) {
   return spots.filter(row => row?.built === true && row.kind === 'wall' && typeof row.id === 'string'
     && Number.isFinite(row.x) && Number.isFinite(row.z)).map(row => ({id: row.id, x: row.x, z: row.z,
