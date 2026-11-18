@@ -35,7 +35,7 @@
   "layoutMeaning": "New normal paid arrangement, not automatic migration or injected successful walls. Existing saved coordinates and receipt replay remain authoritative.",
   "results": {
     "fullFrontend": "pending coordinator",
-    "nativePaidProgression": "INTERIM bcf8 passed; final revised source pending",
+    "nativePaidProgression": "Final frontend68d passed28PNG/984upgrades335.84s; distinct interimbcf proof retained",
     "nativeActualJourney": "pending coordinator",
     "nativeMatrix": "pending coordinator",
     "backendTargetedPG": "pending coordinator",
@@ -72,7 +72,7 @@
   "finalFrontendCandidate": {
     "source": "68d41990615bac98aac3b3ffb2225857c8707a81",
     "runtime": "/workspace/reference-village-work/clearance-runtime-02",
-    "status": "coordinator native/full sequence running; no result claimed",
+    "status": "paid stage completed335.84s/exit0; actual/native/full application sequence still running",
     "includes": "revised water and early local-fake normal-purchase parity; final backend/SQL guard is tested separately after writer completion",
     "sequence": "/workspace/reference-village-work/clearance-ui-sequence/report.json",
     "plannedArtifacts": [
@@ -82,5 +82,49 @@
       "/workspace/reference-village-work/clearance-final-checks"
     ],
     "fitBoundary": "Final paid captures add genuine Fit overviews for each tier in addition to original Work captures; the older before images supply Work only, so Fit views are not falsely paired."
+  },
+  "finalPaidExecution": {
+    "source": "68d41990615bac98aac3b3ffb2225857c8707a81",
+    "name": "paid-final",
+    "command": [
+      "node",
+      "scripts/capture-paid-wall-tiers.mjs",
+      "/workspace/reference-village-work/clearance-runtime-02/frontend",
+      "/workspace/reference-village-work/clearance-paid-final",
+      ".7",
+      "--scenery"
+    ],
+    "started": "2026-11-18T10:35:14.544223+00:00",
+    "exitCode": 0,
+    "seconds": 335.84,
+    "finished": "2026-11-18T10:40:50.382477+00:00"
+  },
+  "finalPaidResult": {
+    "source": "68d41990615bac98aac3b3ffb2225857c8707a81",
+    "exitCode": 0,
+    "seconds": 335.84,
+    "pngs": 28,
+    "workPlusFit": "Each of five paid tiers has both native Work and separately captured real Fit at both sizes; no Fit substitution in the older Work comparison.",
+    "successfulPaidUpgrades": 984,
+    "coinsFinalEachViewport": 11570,
+    "sourceTree": "cf4837fbec45e9cace371878fd8459e2dfd9c24b",
+    "publicTree": "c21b9328134b71786fe733994cd27510d3839cc9",
+    "fixtureHashes": {
+      "perimeter-scenery-ring.json": "e76bf8b6ee60e8f8dd383ea1c6c2a521e482e2109ee4e7ad094580e5f70a9e67",
+      "scenery-court.json": "19c2c255f4bdfb398dbd58f2d084a0c953a12c32daa397c4ecf5c773adccf37c"
+    },
+    "captureMethod": "High setting; a normal viewport refresh precedes each snapshot to assert full drawing density1/DPR1. Does not establish sustained FPS or physical-device behavior.",
+    "boundary": "Actual local fake API paid actions, not production persistence. Normal original-wall server/SQL purchases are a separately verified path."
+  },
+  "finalFrontendTrees": {
+    "frontend/src": "cf4837fbec45e9cace371878fd8459e2dfd9c24b",
+    "frontend/public": "c21b9328134b71786fe733994cd27510d3839cc9",
+    "frontend/scripts": "9ed27682388540a029046ce03cac936979fe4018",
+    "frontend/tests": "8d7e5565b6a27a1f45b1881dba063e6ef89326e1"
+  },
+  "backendAtUiRuntime": {
+    "backendTree": "cc81737e8e84ede4a6d123b34e1fbfd07d3e57ec",
+    "migrationsTree": "ae31ac50221be83070e7f46580d66a70eedbad20",
+    "boundary": "These belong to the UI runtime fixture source. The final authoritative backend/SQL source is verified separately after the regular-build guard is complete."
   }
 }
