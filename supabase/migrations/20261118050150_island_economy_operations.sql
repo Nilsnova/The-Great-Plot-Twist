@@ -2,6 +2,35 @@
 -- Domain transactions claim after scope/accounts and before personal/domain locks.
 -- This migration activates no route, changes no balance and admits no island.
 
+-- Collect the migration's relation barriers before any DDL. NOWAIT plus the
+-- exception savepoint releases every partial set, so no runtime scope, account
+-- or nullable-FK writer can form a cycle with this transaction while it waits.
+do $$
+declare
+  v_deadline timestamptz := clock_timestamp() + interval '30 seconds';
+begin
+  if current_setting('transaction_isolation') <> 'read committed' then
+    raise exception using errcode = '25000',
+      message = 'island_economy_operation_cutover_requires_read_committed';
+  end if;
+  loop
+    begin
+      lock table public.island_economy_accounts in exclusive mode nowait;
+      if to_regclass('public.island_economy_operations') is not null then
+        lock table public.island_economy_operations in access exclusive mode nowait;
+      end if;
+      lock table public.island_treasury_transactions in share row exclusive mode nowait;
+      exit;
+    exception when lock_not_available then
+      if clock_timestamp() >= v_deadline then
+        raise exception using errcode = '55P03', message = 'island_economy_operation_cutover_busy';
+      end if;
+    end;
+    perform pg_sleep(0.05);
+  end loop;
+end;
+$$;
+
 create table if not exists public.island_economy_operations (
   id uuid primary key default gen_random_uuid(),
   actor_id uuid not null,
@@ -142,22 +171,6 @@ comment on function public.island_economy_claim_operation_locked(uuid, uuid, uui
 
 -- Old direct financial identities are opaque even when their text resembles an effect UID.
 -- On reapplication, skip only children already proven by a matching player operation.
--- Quiesce existing accounts in runtime order before the ledger cutover. Locking only
--- the ledger first could deadlock a writer holding an account needed by a backfill FK.
-do $$
-declare
-  v_scope bigint;
-begin
-  for v_scope in select distinct hashtextextended('island-economy:' || island_owner::text, 0)
-    from public.island_economy_accounts order by 1
-  loop
-    perform pg_advisory_xact_lock(v_scope);
-  end loop;
-  perform 1 from public.island_economy_accounts order by id for update;
-end;
-$$;
-lock table public.island_treasury_transactions in share row exclusive mode;
-
 insert into public.island_economy_operations
   (id, actor_id, action_uid, account_id, run_epoch, is_player_intent, domain_action, fingerprint)
 select t.id, t.actor_id, t.action_uid, t.account_id, t.run_epoch, false,
