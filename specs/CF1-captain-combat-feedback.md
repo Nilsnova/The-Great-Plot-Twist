@@ -3,7 +3,7 @@
 What this is: contextual weapon range, visual shot feedback and urgent battle warnings.
 Who uses it: Ianno, the frontend implementation agent and the human reviewer.
 
-- Status: implemented and scoped checks verified; manual review, explain-back and publication confirmation pending.
+- Status: implemented and scoped checks verified; all three explain-back questions and Ianno manual review completed; PR publication explicitly authorized on 18 November 2026; independent human peer review pending.
 - Responsible teammate: Ianno (`Iannomh123456`); agent assistance: Codex.
 - Task: [#453](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/453).
 - Branch: `feat/captain-combat-feedback`, from main `48aee0e7`.
@@ -72,3 +72,5 @@ one at a time. Ianno manually reviews and explicitly confirms publication before
 a pull request is opened, as requested in the established workflow. No agent
 merge, main edits or deployment. Verification results will be recorded in
 `docs/evidence/CF1-captain-combat-feedback/README.md`.
+
+Publication gate completed: Ianno stated "i reviewed, open PR" on 18 November 2026. Task #453 records the PR link and current peer-review state. No merge authorization was given.

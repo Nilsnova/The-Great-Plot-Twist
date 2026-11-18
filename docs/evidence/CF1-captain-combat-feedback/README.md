@@ -6,8 +6,9 @@ Who uses it: Ianno and the human peer reviewer, before publication and merge.
 Branch: `feat/captain-combat-feedback`. Current screenshot source: `72446cdd`.
 This revision follows Ianno's request for a quieter radius and visual-only shot confirmation.
 The original blue design, its reports and logs remain below as historical evidence.
-All three explain-back questions are completed. Manual review and explicit
-publication confirmation remain pending. No PR has been opened.
+All three explain-back questions are completed. Ianno reviewed the changes and
+explicitly authorized PR publication on 18 November 2026. [Task #453](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/453)
+tracks the published PR and its status. Independent human peer review and merge remain pending.
 
 ## What the player sees
 
@@ -132,4 +133,4 @@ All three questions are completed; do not restart the quiz. The walkthrough ques
 3. How does the warning choose between captain and heart danger and avoid repeated sound spam?
 
 The prepared [PR request](../../handoff/CF1-PR-request.md) includes these screenshots
-and verification limits. Open it only after Ianno explicitly confirms publication.
+and verification limits. Ianno explicitly confirmed publication on 18 November 2026; independent human peer review is the next step.

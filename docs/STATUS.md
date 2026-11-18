@@ -1148,3 +1148,6 @@ Ianno / 18 Nov 2026 — CF1 visual-review revision on `feat/captain-combat-feedb
 
 
 Ianno / 18 Nov 2026 — CF1 warning audio clarification, `feat/captain-combat-feedback`, D061 amendment. Ongoing warnings now get at most one sound attempt, followed by visuals only. Captain/heart episode tracking survives critical/wording/priority changes, menu hiding and unmute; an observed cleared threat can rearm if it returns. The audio bus guard only suppresses rapid separate alerts, without deferred replay. Existing visuals/screenshots are unchanged. All three explain-back questions are complete; manual review and explicit publication confirmation remain pending. No PR or merge. Verified 77 tests across six files, build/spoiler/budget and 0 reviewed-text errors; exact results are retained with the [audio evidence](evidence/CF1-captain-combat-feedback/README.md).
+
+
+Ianno / 18 Nov 2026 — CF1 publication authorized. All three explain-back questions and manual review are complete; Ianno explicitly requested opening the PR from `feat/captain-combat-feedback`, reviewed runtime head `79bb6762`. Current spec, evidence and PR request now record that authorization; task #453 records the eventual PR link/status. No runtime changes or new test results in this publication-status update. Independent human peer review and merge remain pending.

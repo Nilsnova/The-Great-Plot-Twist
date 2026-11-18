@@ -3,7 +3,7 @@
 What this is: the proposed pull-request description, including screenshots.
 Who uses it: Ianno for manual review and the publishing agent after explicit confirmation.
 
-**Not published.** All three explain-back questions are completed; manual review and publication confirmation are pending.
+**Publication authorized on 18 November 2026.** Ianno completed all three explain-back questions, reviewed the changes and explicitly requested opening the PR. Task #453 records its link and status.
 
 ## What changes and why?
 
@@ -50,12 +50,12 @@ Position setup is scripted; the bell, F attacks and simulation remain real.
 - Responsible teammate: Ianno (`Iannomh123456`). Agent assistance: Codex, with isolated danger-helper work and independent read-only review.
 - Decision: D061; one task branch from current main, separate helper branch, no main writes.
 - Scope: frontend presentation; existing attack inputs, simulation, balance, money, recovery and network authority remain unchanged.
-- Next step: Ianno manually reviews the screenshots/diff and explicitly confirms publication. All three explain-back questions are completed. A different human reviews the published change before merge.
+- Ianno completed the explain-back questions, manually reviewed the screenshots/diff and explicitly confirmed publication. Next step: a different human reviews the published change before merge.
 
 ## Ready for peer review
 
-- [ ] I reviewed the complete diff; the change stays within scope.
-- [ ] Relevant verification and screenshots are included and reviewed.
-- [ ] No credentials, private data or unrelated generated files are included.
+- [x] I reviewed the complete diff; the change stays within scope.
+- [x] Relevant verification and screenshots are included and reviewed.
+- [x] No credentials, private data or unrelated generated files are included.
 
-These human-review boxes remain unchecked until the responsible teammate confirms them.
+Ianno confirmed manual review and publication in this chat on 18 November 2026. A different human still reviews the published PR before merge.

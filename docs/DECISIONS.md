@@ -1110,3 +1110,8 @@ Successful attacks use the existing bullet arrival and impact flashes; remove th
 ### CF1 warning audio amendment · 2026-11-18
 
 Ianno explicitly replaced the repeated six-second alert rule with one sound attempt per continuous warning, followed only by visuals. Captain and heart warning episodes are tracked independently before display priority is selected. Critical-health/wording changes, priority switching, temporary menu hiding and unmuting cannot replay an ongoing episode. Only observing that family's threat clear during active play rearms it; a later return may sound once. A wave reset clears episode history. The existing six-second audio cue guard remains only as anti-burst suppression for separate new episodes, with no delayed retry. Consuming the warning onset even when audio is muted, locked or suppressed prevents a later replay. All three explain-back questions are completed; manual review and explicit PR publication confirmation remain pending.
+
+
+### CF1 publication authorization · 2026-11-18
+
+After completing all three explain-back questions and reviewing the branch, Ianno explicitly requested opening the PR: "i reviewed, open PR". This supersedes the earlier pending-publication status. Publish the reviewed runtime head `79bb6762` with the current screenshots, exact checks and verification limits; these publication-status updates are documentation only. Independent human peer review and any later merge remain separate; no merge is authorized.
