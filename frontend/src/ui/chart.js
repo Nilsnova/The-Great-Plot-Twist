@@ -18,6 +18,7 @@ export function createChart(container, world, travel, focusGame, {visible = () =
   const station=document.createElement('span');station.className='chart-station-marker';station.textContent='◆';station.setAttribute('role','img');station.setAttribute('aria-label','Built signal station');station.hidden=true;dialog.querySelector('.chart-illustration').append(station);
   const marker = dialog.querySelector('.chart-current-marker');
   const buttons = [...dialog.querySelectorAll('[data-place]')];
+  const currentDestination = () => buttons.find(button => !button.hidden && button.getAttribute('aria-current') === 'true');
   function positionOnChart(element, id) {
     const [x, y] = places[id].chart;
     element.style.left = `${x / 448 * 100}%`;
@@ -53,14 +54,19 @@ export function createChart(container, world, travel, focusGame, {visible = () =
     if (!['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp'].includes(event.code)) return;
     event.preventDefault(); event.stopPropagation();
     const direction = ['ArrowRight', 'ArrowDown'].includes(event.code) ? 1 : -1, shown = buttons.filter(button => !button.hidden);
-    shown[(shown.indexOf(document.activeElement) + direction + shown.length) % shown.length]?.focus();
+    const anchor = shown.includes(document.activeElement) ? document.activeElement : currentDestination();
+    const index = shown.indexOf(anchor);
+    const next = index < 0 ? (direction > 0 ? 0 : shown.length - 1) : (index + direction + shown.length) % shown.length;
+    shown[next]?.focus();
   });
   return {setIsletBuilt(built){stationBuilt=(built??[]).includes('islet_signal_station');station.hidden=!stationBuilt;if(dialog.open)refresh();}, get open() { return dialog.open; }, close,
     show() {
       if (world.busy || dialog.open) return;
       refresh(); const scale = Math.max(1, Math.floor(Math.min((innerWidth - 70) / 448, (innerHeight - 190) / 256)));
-      dialog.dataset.scale = String(scale); dialog.style.setProperty('--chart-scale', scale); dialog.showModal();
-      buttons.find(b => b.dataset.place === world.current?.id)?.focus();
+      dialog.dataset.scale = String(scale); dialog.style.setProperty('--chart-scale', scale);
+      const current = currentDestination();
+      for (const button of buttons) button.autofocus = button === current;
+      dialog.showModal();
     },
     dispose() { dialog.close(); dialog.remove(); },
   };
