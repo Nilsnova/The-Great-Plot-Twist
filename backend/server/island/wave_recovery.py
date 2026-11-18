@@ -17,6 +17,7 @@ from server.island.catalogue import (
     IslandCatalogue,
     Weather,
 )
+from server.island.legacy_wave_errors import control_refusal
 from server.island.store import Island, IslandRow
 from server.island.wave_snapshot_template import static_template
 from server.supabase_admin import SupabaseAdmin, SupabaseRejected
@@ -235,6 +236,8 @@ def _refusal(reply: Any) -> None:
     if not isinstance(reply, dict):
         raise SupabaseRejected("The recovery journal could not be read.")
     reason = reply.get("reason")
+    if error := control_refusal(reason):
+        raise error
     if reason == "too_early":
         # A protocol-2 finish before the wave's minimum: the same 409 as the legacy finish.
         wait = reply.get("waitSeconds")

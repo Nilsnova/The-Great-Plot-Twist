@@ -33,6 +33,7 @@ from server.game.islet_store import player_not_set_up
 from server.island import games, permissions, rescue, store, wave_events, wave_recovery
 from server.island.catalogue import IslandCatalogue, Weather
 from server.island.codes import read_code
+from server.island.legacy_wave_errors import control_refusal
 from server.island.rules import is_boss, island_loot_rates, loot_rates, weather_for
 from server.island.service import no_such_island
 from server.island.store import Refusal, WaveRow
@@ -103,6 +104,8 @@ async def find_place(
 
 
 def start_refusal(refusal: Refusal) -> ApiError:
+    if error := control_refusal(refusal.reason):
+        return error
     if refusal.reason == "no_such_island":
         return no_such_island()
     if refusal.reason == "wave_running":
@@ -275,6 +278,8 @@ async def join(
     await store.open_island(admin, player_id, catalogue.starting_coins)
     reply = await store.join_wave(admin, player_id, str(wave_id))
     if isinstance(reply, Refusal):
+        if error := control_refusal(reply.reason):
+            raise error
         if reply.reason == "no_such_wave":
             raise no_such_wave()
         if reply.reason == "wave_over":
@@ -349,6 +354,8 @@ def no_such_wave() -> ApiError:
 
 
 def finish_refusal(refusal: Refusal) -> ApiError:
+    if error := control_refusal(refusal.reason):
+        return error
     if refusal.reason == "player_not_set_up":
         return player_not_set_up()
     if refusal.reason == "no_such_wave":
@@ -487,8 +494,8 @@ async def finish_protocol2(
 
 
 def revive_refusal(refusal: Refusal) -> ApiError:
-    if refusal.reason == "economy_context_required":
-        return ApiError(409, "economy_context_required", "Reload this island's revival rules.")
+    if error := control_refusal(refusal.reason):
+        return error
     if refusal.reason == "client_update_required":
         return ApiError(409, "client_update_required", "Reload to help this captain up safely.")
     if refusal.reason == "action_conflict":
