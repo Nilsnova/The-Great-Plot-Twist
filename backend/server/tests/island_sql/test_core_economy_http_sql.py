@@ -13,10 +13,11 @@ from psycopg import sql  # noqa: E402
 from psycopg.types.json import Jsonb  # noqa: E402
 
 from server.errors import ApiError  # noqa: E402
-from server.island import economy_progression  # noqa: E402
+from server.island import economy_progression, shared_crew  # noqa: E402
 from server.island.catalogue import load_island  # noqa: E402
 from server.island.economy_http import shared_write  # noqa: E402
 from server.island.economy_http_models import parse_shared_body  # noqa: E402
+from server.island.shared_crew_rules import HireIntent  # noqa: E402
 from server.island.shared_snapshot import snapshot_from_row  # noqa: E402
 from server.island.treasury import EconomyContext  # noqa: E402
 from server.supabase_admin import SupabaseRejected  # noqa: E402
@@ -168,3 +169,34 @@ def test_research_tower_and_wreck_quotes_execute_actual_progression_transactions
         )
         assert result.status == "done" and result.receipt.action == action
         assert result.receipt.result.chargedCoins == intent["quotedCoins"]
+
+
+def test_departed_crew_buyer_replays_original_http_receipt_without_current_counts(database):
+    owner, member, _, initial, _ = initialized(database)
+    context = EconomyContext("island_shared", 1, str(member), str(owner), *keys(initial), None)
+    first = asyncio.run(
+        shared_crew.hire(
+            DatabaseAdmin(database), context, "crewhist1", HireIntent(crew="gunner"), CATALOGUE
+        )
+    )
+    assert first["currentCrew"]["gunner"] == 1
+    as_server(database)
+    rpc(database, "game_leave", member, owner)
+    body = parse_shared_body(
+        "hire",
+        {
+            "crew": "gunner",
+            "actionUid": "crewhist1",
+            "economy": {
+                "mode": "island_shared",
+                "version": 1,
+                "islandOwner": str(owner),
+                "runEpoch": keys(initial)[1],
+            },
+        },
+    )
+    admin = DatabaseAdmin(database)
+    replay = asyncio.run(shared_write(admin, str(member), "hire", body, CATALOGUE))
+    assert replay["repeat"] is True and replay["receipt"] == first["receipt"]
+    assert replay["currentEconomy"] is replay["currentCrew"] is replay["currentWaveBest"] is None
+    assert admin.calls == ["island_economy_operation_origin", "island_economy_hire"]
