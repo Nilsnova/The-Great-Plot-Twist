@@ -27,7 +27,7 @@ FLAG_NAMES = (
     "festival",
     "demo",
     "islands",
-    "rescue",  # T38 last-chance rescue (D044): the finish honours rescued; a wave rule for the sim
+    "rescue",  # T38 last-chance rescue (D044), a wave rule. Retired: always on
     # D039 (proposed): wall damage stays after a wave, paid Repair/Rebuild between waves.
     # Needs supabase/migrations/20261114100000_wall_recovery.sql applied first.
     "wall_recovery",

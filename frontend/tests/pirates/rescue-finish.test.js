@@ -1,7 +1,7 @@
 // T38: how a won last-chance rescue reaches the server. The island API client sends rescued: true only for a
 // won rescue (never false, never another value), and the fake server (?islands=fake) repeats the server rule of
-// backend/server/island/rescue.py: a rescued loss from wave 4 falls back to the best wave minus 1, not minus 2, and
-// only while the flag rescue is on (routes/waves.py); its wave answers then carry rules: ['rescue'] (wave_rules.py).
+// backend/server/island/rescue.py: a rescued loss from wave 4 falls back to the best wave minus 1, not minus 2
+// (routes/waves.py); its wave answers carry the rule rescue (always on, wave_rules.py).
 import { describe, expect, it } from 'vitest';
 import { createIslandApi } from '../../src/island/api.js';
 import { createFakeIslandTransport } from '../../src/pirates/fake-api.js';
@@ -19,7 +19,7 @@ describe('the finish with a rescue', () => {
   });
   it('the fake server falls back one wave less after a rescued loss, and keeps the best wave', async () => {
     for (const [rescued, next] of [[true, 9], [false, 8]]) {
-      const time = clock(), transport = createFakeIslandTransport({ now: time.now, version: 2, coins: 2000, flags: { rescue: true } }), api = transport.api;
+      const time = clock(), transport = createFakeIslandTransport({ now: time.now, version: 2, coins: 2000 }), api = transport.api;
       transport.dev.setWaveBest(10);
       const wave = await api.startWave({ where: 'own', actionUid: `start${rescued}x` });
       time.advance(40);
@@ -30,34 +30,26 @@ describe('the finish with a rescue', () => {
       expect(island.waveBest).toBe(10);
     }
   });
-  it('the fake server ignores a rescue with the flag off, as the server does', async () => {
-    const time = clock(), transport = createFakeIslandTransport({ now: time.now, version: 2, coins: 2000 }), api = transport.api;
-    transport.dev.setWaveBest(10);
-    const wave = await api.startWave({ where: 'own', actionUid: 'startoff01' });
-    expect(wave.rules ?? []).toEqual(plays());
-    time.advance(40);
-    await api.finishWave({ waveId: wave.waveId, survived: false, shipsSunk: 0, rescued: true });
-    expect((await api.island()).nextWave).toBe(8);
-  });
   it('the fake wave answers carry the rules of the flags on, kept by the wave\'s first answer', async () => {
-    const time = clock(), world = createFakeIslandTransport({ now: time.now, version: 2, flags: { rescue: true } });
+    const time = clock(), world = createFakeIslandTransport({ now: time.now, version: 2, flags: { defenses_v2: true } });
     const wave = await world.api.startWave({ where: 'own', actionUid: 'startrules1' });
-    expect(wave.rules).toEqual(plays('rescue'));
-    expect((await world.api.currentWave('own')).rules).toEqual(plays('rescue'));
+    expect(wave.rules).toEqual(plays('defenses_v2'));
+    expect(wave.rules).toContain('rescue');
+    expect((await world.api.currentWave('own')).rules).toEqual(plays('defenses_v2'));
   });
   it('the fake keeps a wave\'s first rule set, whatever the flags say later', async () => {
     const flags = {}, time = clock(), world = createFakeIslandTransport({ now: time.now, version: 2, flags });
     const wave = await world.api.startWave({ where: 'own', actionUid: 'startempty1' });
     expect(wave.rules ?? []).toEqual(plays());
-    flags.rescue = true; // switched on mid-wave: every later answer keeps the starter's set
+    flags.defenses_v2 = true; // switched on mid-wave: every later answer keeps the starter's set
     expect((await world.api.currentWave('own')).rules ?? []).toEqual(plays());
-    const onFlags = { rescue: true }, other = createFakeIslandTransport({ now: time.now, version: 2, flags: onFlags });
+    const onFlags = { defenses_v2: true }, other = createFakeIslandTransport({ now: time.now, version: 2, flags: onFlags });
     await other.api.startWave({ where: 'own', actionUid: 'startkept01' });
-    delete onFlags.rescue; // the flag off mid-wave: the wave keeps the starter's rules
-    expect((await other.api.currentWave('own')).rules).toEqual(plays('rescue'));
+    delete onFlags.defenses_v2; // the flag off mid-wave: the wave keeps the starter's rules
+    expect((await other.api.currentWave('own')).rules).toEqual(plays('defenses_v2'));
   });
   it('the fake server ignores a rescue below wave 4 (both rules ring wave 1 there)', async () => {
-    const time = clock(), transport = createFakeIslandTransport({ now: time.now, version: 2, flags: { rescue: true } }), api = transport.api;
+    const time = clock(), transport = createFakeIslandTransport({ now: time.now, version: 2 }), api = transport.api;
     const wave = await api.startWave({ where: 'own', actionUid: 'startearly1' });
     time.advance(40);
     await api.finishWave({ waveId: wave.waveId, survived: false, shipsSunk: 0, rescued: true });

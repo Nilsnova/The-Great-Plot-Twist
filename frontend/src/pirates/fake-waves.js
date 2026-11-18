@@ -9,7 +9,7 @@ import { ISLAND_RULES, invalid, refuse, readIslandCode, campaignAt, layoutOf, TD
 
 export function createWaveRoutes(srv, api) {
   const { weather, uid, world, playerId, me, enterGame, gameView, gameByCode, membersOf, isMember, mustBeMember,
-    nameOf, stamp, spots, shape, placeOf, running, nowMs, v2, recordWalls, rescueOn } = srv;
+    nameOf, stamp, spots, shape, placeOf, running, nowMs, v2, recordWalls } = srv;
   let weatherKind = weather;
   return {
     setWeather(kind) { weatherKind = Object.hasOwn(ISLAND_RULES.weather, kind) ? kind : 'calm'; },
@@ -138,7 +138,7 @@ export function createWaveRoutes(srv, api) {
         run.nextSet = true;
         // §1: carry on after a win; after a loss the next bell restarts at best − 2 (at least 1).
         // T38 (rescue.py): a won rescue on a lost wave from wave 4 to 100 falls back one wave less (flag rescue on).
-        const back = TD_RULES.restartBack - (rescueOn && !survived && !late && rescued === true && rescueAllowed(run.wave) ? 1 : 0);
+        const back = TD_RULES.restartBack - (!survived && !late && rescued === true && rescueAllowed(run.wave) ? 1 : 0);
         run.island.nextWave = survived && !late ? Math.min(run.wave + 1, TD_RULES.highestWave)
           : Math.max(1, run.island.waveBest - back);
       }

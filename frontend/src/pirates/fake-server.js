@@ -26,8 +26,6 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
   // The wave rules (backend/server/island/wave_rules.py): the always-on rules (ALWAYS_ON_RULES) and the rule flags on
   // at the wave's first answer, in SIM_RULES order. That answer keeps its set (wave_rules_keep()), an empty set too, and every later answer serves it whatever
   // the flags say then (a test may change `flags` mid-wave); an empty set leaves `rules` out.
-  // T38 (routes/waves.py): the server honours `rescued` only while the flag rescue is on.
-  const rescueOn = flags?.rescue === true;
   const v2 = version === 2; // the answers' tower defense extras (boss, nextWave on finish), as the real server sends them
   // A new island, as island_open() makes it (and as a reset leaves it, T53).
   const newIsland = (code, owner, name) => ({ code, owner, ownerName: name, waveBest: 0, flags: 0, built: new Set(),
@@ -258,7 +256,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
   const srv = { world, me, visited, buildOn, islandSpots, islandAllowed, view, visitedView, wallsOn, healthAt, nowMs,
     upgradeOn, uid, unlocking, demolishable, playerId, waveGuard, activeOf, newIsland, spots, wallsView, pointView,
     allowed, learnt, skillsOf, BETWEEN_WAVES, weather, enterGame, gameView, gameByCode, membersOf, isMember,
-    mustBeMember, nameOf, stamp, shape, placeOf, running, v2, recordWalls, rescueOn };
+    mustBeMember, nameOf, stamp, shape, placeOf, running, v2, recordWalls };
   const api = {
     arsenal: async ({ code = null } = {}) => arsenal.state(code ? readIslandCode(code) : null),
     arsenalBuy: async ({ weapon, actionUid, code = null } = {}) => arsenal.buy({ weapon, actionUid, code: code ? readIslandCode(code) : null }),
