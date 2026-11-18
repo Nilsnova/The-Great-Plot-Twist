@@ -8,7 +8,7 @@ from server.island.rules import engineer_price
 
 
 def cost_catalogue(catalogue: IslandCatalogue) -> dict:
-    """Report incremental and cumulative prices; exclude unresolved offers from target baskets."""
+    """Report catalogue prices; exclude retired offers from target purchase baskets."""
     return {
         "buildings": {
             kind.kind: {
@@ -26,7 +26,7 @@ def cost_catalogue(catalogue: IslandCatalogue) -> dict:
                 "price": row.coins,
                 "cap": row.max,
                 "unlockBest": row.unlock_wave,
-                "effectDecisionPending": row.crew == "carpenter",
+                "retiredUnderFullRecovery": row.crew == "carpenter",
             }
             for row in catalogue.crew
         },

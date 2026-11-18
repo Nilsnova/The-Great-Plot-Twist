@@ -8,11 +8,11 @@
     "backend/content/defenses_v2.json": "8e1e108688b81998d032b52fd7b0e11862a4b2ea7d3d2c4f81cbbd098503e47c",
     "backend/content/wave_events.json": "581a41a2768f2d1b670d226083fca829cdbf8349b03ca936d380d445d5db8f16",
     "backend/server/island/rules.py": "fd31535a94399ee4a45e99986a12fec59d2d5d1b3db53164492d21d80800cd52",
-    "backend/server/island/catalogue.py": "cdde6945a9fba2020cc389674add87be93b88f32f74eadeaf42bc5b2894dc5e8",
+    "backend/server/island/catalogue.py": "5de2c9619a557619421c74703045400d46f5ce2ac3c14de291dfc3c2e3172f9c",
     "backend/server/island/boat.py": "9b4d9693f6314a660a08115e9227d11bba721db72631da355e78314ff00a3b68",
     "backend/server/island/wave_events.py": "9fede25cc0d6a950ee379314449ea6b113ecf98a4eed0fe58c60e55713803450",
     "supabase/migrations/20261117025000_legacy_wave_locks.sql": "2572253fbb3b7cc09381719a897eb8b8970cabd984c184139611c7f62e105009",
-    "frontend/src/pirates/sim.js": "e19f09aed4a2e26fa5e205b86da16b3d932803d38f01ef545e9bad8b5cd8c451",
+    "frontend/src/pirates/sim.js": "d8b3ada47a6f7399fb1b7fe477ff14b3c7bd989f5e419546410c71d9ffef2098",
     "frontend/tests/pirates/balance-fixture.js": "d184d0151503dc33f122a3fbba11b017ed5cc81096455b1ede4c9e4e453fd029"
   },
   "assumptions": [
@@ -22,7 +22,7 @@
     "All wins are assumptions, including waves fought with incomplete planned defenses.",
     "Fixed-house bounds assume houses from wave1 and subtract no expenses.",
     "Base seven tower spots; extra spots/culverin remain separately flagged options.",
-    "Carpenter and repair-only effects remain undecided; no invented replacement."
+    "New Carpenter and repair-only offers are retired under recovery v1; no replacement."
   ],
   "catalogue": {
     "buildings": {
@@ -234,25 +234,25 @@
         "price": 40,
         "cap": 2,
         "unlockBest": 3,
-        "effectDecisionPending": false
+        "retiredUnderFullRecovery": false
       },
       "carpenter": {
         "price": 30,
         "cap": 2,
         "unlockBest": 5,
-        "effectDecisionPending": true
+        "retiredUnderFullRecovery": true
       },
       "lookout": {
         "price": 25,
         "cap": 1,
         "unlockBest": 8,
-        "effectDecisionPending": false
+        "retiredUnderFullRecovery": false
       },
       "guard": {
         "price": 60,
         "cap": 3,
         "unlockBest": 6,
-        "effectDecisionPending": false
+        "retiredUnderFullRecovery": false
       }
     },
     "research": {

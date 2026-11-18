@@ -83,7 +83,7 @@ Prices below come from the same current files; an incremental level price is cha
 | Mortar levels 1–5 | 60 / 120 / 240 / 480 / 960; 1,860 total | The mixed four-cannon/three-mortar bill is larger than seven cannons. |
 | Wall / watchtower / harpoon / swivel, all levels | 310 / 1,240 / 1,240 / 1,550 | These also compete with income houses and weapons. |
 | Full modeled building package | Level-3 main structures 3,920; level 4 7,600; level 5 14,960 | All three quotes include two max-level houses; no crew or research. |
-| Two Gunners + three Guards + one Lookout | 285 | Island-wide; more members do not multiply these caps or effects. Carpenter's current quote is 30 each, cap 2; its replacement effect and acceptance remain open. |
+| Two Gunners + three Guards + one Lookout | 285 | Island-wide; more members do not multiply these caps or effects. Carpenter's historical catalogue price is 30 each, cap 2; new hiring is retired under recovery v1, with no replacement effect or compensation. |
 | Cannon research tiers | 180 / 360 / 630 | All tiers 1,170; seven tier-1 tower selections add 1,050. A changed tier-2 decision charges another 360; a changed tier-3 decision another 630. |
 | All four research branches | 4,420 | Before any per-structure skill/capstone choices; repair-only benefits remain gated. |
 | One cannon tree, one full path + other tier 1 | 9,000 | [Tree tiers](../../../backend/content/tower_trees.json) open after records 20/35/45. Four cannon and three mortar packages alone cost 67,800, excluding base structures. |
@@ -125,7 +125,7 @@ All invited members may wager any positive whole-coin amount fitting currently a
 
 ## Measurements still required
 
-The arithmetic does not select a new starting grant, price, player-count multiplier or Carpenter effect. Obtain the following integrated evidence before tuning or claiming balance acceptance:
+The arithmetic does not select a new starting grant, price or player-count multiplier. Carpenter and repair-only offers are retired under recovery v1 without replacement effects. Obtain the following integrated evidence before tuning or claiming balance acceptance:
 
 | Experiment | Required record |
 |---|---|
@@ -144,3 +144,5 @@ Technical exactly-once ledger checks, race tests and replay protection remain in
 The new arithmetic tests first failed to collect because the assessment module did not exist. During input verification, an incorrect test expectation counted the starting grant twice; manual addition of wave 1–5 rewards (35+45+55+65+225=425) corrected that expectation. The output consistently separates earned loot from total resources.
 
 The [spec records the exact final checks](../../../specs/MP-ECO-19-balance-assessment.md#verification-and-remaining-evidence): **109 Python checks passed** (27 new), full Ruff passed, regeneration was byte-identical, and 19 relative documentation links/anchors resolved. Full backend, browser and PostgreSQL suites were not rerun for this offline assessment. No live migration, external service, game route, balance value or activation was changed.
+
+Verification after integrating `main` through `a195ec35` passed **111 focused Python checks in 1.57s**, full backend Ruff and byte-identical regeneration. The recovery-v1 retirement labels and changed input hashes were refreshed; numerical results are unchanged.

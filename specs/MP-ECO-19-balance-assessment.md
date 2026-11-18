@@ -57,9 +57,11 @@ Commands ran from `backend/` with the locked project dependencies and a writable
 - `uv run ruff check .`: **All checks passed**.
 - `git diff --check`: passed; **19 relative documentation links/anchors** checked.
 
+After integrating `main` through `a195ec35`, the same focused selection passed **111 checks in 1.57s**; full backend Ruff and byte-identical regeneration passed again. The refreshed report records the selected recovery-v1 retirement instead of an undecided Carpenter replacement. Catalogue and simulator source hashes were refreshed; all numerical evidence remains unchanged.
+
 Tests first failed on the missing tool module. An early checkpoint expectation was corrected after manually verifying that waves 1–5 earn 425 and the separate 200 grant makes 625; the tool was not changed to double-count the grant. Both purchase queues conserve coins and purchase only current unlocked levels. No runtime rules or dependencies were changed, so the full backend, browser and PostgreSQL suites were not rerun for this offline assessment.
 
-No integrated shared-mode play, browser interaction, live database or external wagering service was used. Canonical lifecycle/treasury/UI integration, actual combat outcomes and durations, mixed/veteran crews, Carpenter replacement, supported wager returns and human review remain open. The [report's experiment matrix](../docs/evidence/MP-ECO-19/README.md#measurements-still-required) defines the next evidence; this numerical baseline does not complete gameplay acceptance or choose new balance values.
+No integrated shared-mode play, browser interaction, live database or external wagering service was used. Canonical lifecycle/treasury/UI integration, actual combat outcomes and durations, mixed/veteran crews, supported wager returns and human review remain open. New Carpenter and repair-only offers are retired under recovery v1 without replacement effects or compensation. The [report's experiment matrix](../docs/evidence/MP-ECO-19/README.md#measurements-still-required) defines the next evidence; this numerical baseline does not complete gameplay acceptance or choose new balance values.
 
 ## Owner and reviewer
 

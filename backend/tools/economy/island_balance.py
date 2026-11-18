@@ -146,7 +146,7 @@ def run() -> dict:
             "All wins are assumptions, including waves fought with incomplete planned defenses.",
             "Fixed-house bounds assume houses from wave1 and subtract no expenses.",
             "Base seven tower spots; extra spots/culverin remain separately flagged options.",
-            "Carpenter and repair-only effects remain undecided; no invented replacement.",
+            "New Carpenter and repair-only offers are retired under recovery v1; no replacement.",
         ],
         "catalogue": cost_catalogue(catalogue),
         "flaggedOptionsOutsideBaseline": flagged_options(catalogue),
