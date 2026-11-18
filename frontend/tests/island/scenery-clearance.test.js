@@ -1,8 +1,11 @@
 import {readFileSync} from 'node:fs';
 import {describe, expect, it, vi} from 'vitest';
+import {Group} from 'three';
 import * as placement from '../../src/island/placement.js';
 import {EXTRA_SPOTS} from '../../src/island/spots.js';
 import {edgeTrees, layouts} from '../../src/world/places/layouts.js';
+import {projectGround} from '../../src/world/projection.js';
+import {decorateProgress} from '../../src/island/decorations.js';
 import {createFakeIslandTransport, readIslandCode} from '../../src/pirates/fake-api.js';
 
 const server = JSON.parse(readFileSync(new URL('../../../backend/content/island_layout.json', import.meta.url)));
@@ -23,6 +26,14 @@ describe('prospective wall clearance', () => {
     expect(placement.WALL_OBSTACLES).toEqual(server.wallObstacles);
     expect(server.wallObstacles.filter(row => row.radius).map(({x, z}) => [x, z])).toEqual(edgeTrees.home_islet);
     for (const prop of layouts.home_islet) expect(server.wallObstacles).toContainEqual(expect.objectContaining({id: prop.asset, x: prop.x, z: prop.z}));
+    const place = {group: new Group()}, progress = decorateProgress(place);
+    try {
+      for (const [id, name] of [['record', 'island-best-wave'], ['statue', 'island-wave-25']]) {
+        const data = server.wallObstacles.find(row => row.id === id), point = projectGround(data.x, data.z);
+        const mesh = place.group.getObjectByName(name);
+        expect([mesh.position.x, mesh.position.y]).toEqual([point.x, point.y]);
+      }
+    } finally { progress.dispose(); }
     expect(placement.KEEP_OUT).toEqual(server.keepOut);
   });
   it('leaves half-grid clearance beside a trunk and full-side wall contact valid', () => {
