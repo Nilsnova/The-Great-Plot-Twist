@@ -1,7 +1,7 @@
 {
   "migrationVersionsUnique": 72,
   "frozenFrontendTreeMatches": true,
-  "originalArtifactsByteVerified": 22,
+  "originalArtifactsByteVerified": 25,
   "relativeTargetsChecked": 6,
   "unchangedRuntimeAndDependencyPaths": [
     "frontend/public",
@@ -26,5 +26,11 @@
     "authored": "passed",
     "originalReporterDiagnostics": 99,
     "reportersPreservedByteExact": true
+  },
+  "coordinatorFinalWide": {
+    "passed": 1792,
+    "skips": 0,
+    "sameBackendAndMigrationTrees": true,
+    "notCompleteBackendSuite": true
   }
 }

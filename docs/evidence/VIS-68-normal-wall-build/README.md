@@ -140,6 +140,7 @@ stricter contract.
 | Strict affected PostgreSQL before broad compatibility feedback | `141 passed in 15.31s`, eight files, zero skips. This still wrote gratuitous default/matching layout rows. |
 | Coordinator wider run on the preceding source | `1,758 passed / 5 failed / 21 setup errors`, 141.77s. Repeated setup errors and one admission failure exposed the gratuitous row write; three old fresh-construction profiles crossed a tree, and one positive kind-pair fixture lacked the newly required proof. The original failed log is retained. |
 | Current compatible affected PostgreSQL | **`292 passed in 9.72s`**, seven files, zero skips, covering every failed file above. Includes eight new no-write regressions, true off-lane materialization, the raw/effective bypass, actual two-connection lock contention, policy/layout CAS, proof lifetime and malformed/wrong-owner/plot/ref/coordinate cases. All 72 migrations execute twice. |
+| Final coordinated wider selection | **`1,792 passed in 76.98s`**, zero skips; 78.38s process. The identical command selects 36 route/unit files plus all 51 island SQL modules. Source `456960d0` has the exact backend/migration trees of compatible source `670402d6`. This is targeted coverage, not the complete backend suite. |
 | Whole backend Ruff after the compatibility fix | **`All checks passed!`** Earlier unrelated and new formatting diagnostics are retained separately. |
 
 Frontend command from `frontend/`:
@@ -168,8 +169,11 @@ contributions, amounts and all assertions remain unchanged. The cohort's positiv
 original-wall kind pairs now use a real guarded purchase and assert success;
 negative raw-insertion tests still exercise the constraint directly.
 
-The coordinator owns the repeated wider selection and combined regression/build/budget/text/accessibility/demo
-checks and actual desktop/phone captures. No Chrome, new app dependency, full
+The coordinator completed the repeated wider selection above, with Ruff passing
+in 0.22s. Its [exact command/source receipt](raw/coordinator-wide-final-report.json)
+and [original result](raw/coordinator-wide-final.log) are retained. The coordinator
+also owns combined regression/build/budget/text/accessibility/demo checks and
+actual desktop/phone captures. No Chrome, new app dependency, full
 backend suite, live SQL, deployment, production persistence or physical-device
 check was performed by this writer. This component does not claim complete-suite
 green, human acceptance or permission to apply the migration.

@@ -2,12 +2,12 @@
   "source": "670402d658bcba411df08e859ab88661587c8bc7",
   "files": {
     "README.md": {
-      "bytes": 12729,
-      "sha256": "41c84fcd9e1900354f577c303e1cbb67e1873c6bbbdc1bbbc97244b2d1403179"
+      "bytes": 13262,
+      "sha256": "7e2eb7c0324765fee4444ccbd812e25abcbbc764be66ebfbb811502640dce2b3"
     },
     "originals.json": {
-      "bytes": 5445,
-      "sha256": "f8a0c60f182a9bc8d48e0c3fbffd6d58b4c6269b4c258818fe23a99335c222d3"
+      "bytes": 6200,
+      "sha256": "4b7c040d3970db9cada18ff69361f2060b2f29882809d52ec50e6fc5ca26407d"
     },
     "raw/backend-focused.log": {
       "bytes": 261,
@@ -24,6 +24,18 @@
     "raw/backend-sql-green-final.log": {
       "bytes": 99,
       "sha256": "b762aeccee7e4dba827cb6284321888475ab042d5182cc6b3325ed0adad4c3d3"
+    },
+    "raw/coordinator-wide-final-report.json": {
+      "bytes": 4735,
+      "sha256": "20ec046ba0feae2e9796919ed3cd75f998aa71116a3a1367d7264bdc15afc2a6"
+    },
+    "raw/coordinator-wide-final-ruff.log": {
+      "bytes": 19,
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    "raw/coordinator-wide-final.log": {
+      "bytes": 2216,
+      "sha256": "acad4fa5cf62449da95eb3c7b377a5c50ccf88596b5590f0fb804e5f59d1c2d7"
     },
     "raw/coordinator-wide-initial-report.json": {
       "bytes": 4660,
@@ -98,13 +110,13 @@
       "sha256": "1fd2bc756166c5cf178a5e7ec315a5000876b43e6f388855934e6da635520de2"
     },
     "source.json": {
-      "bytes": 1822,
-      "sha256": "5fe50d46a06772383d321d1347ed09636d0bc14beae8c8105c4be5c7932a5953"
+      "bytes": 2401,
+      "sha256": "1517c6b013a481542edfbf8fe5df9dcac801fb0af566fdc211f6f8743a4bf5d7"
     },
     "static-checks.json": {
-      "bytes": 1033,
-      "sha256": "f1abf46b6b30d973ae0c718b72709b6c7c56811100eacc9176978f68e96bf920"
+      "bytes": 1180,
+      "sha256": "ba2746f78391d27374449831756da2352e9d5f24452f4c7b2f8fb9d65a10cd7e"
     }
   },
-  "scope": "Original evidence bytes; earlier attempts are historical. No production or complete-suite green claim."
+  "scope": "Original evidence bytes; historical failed attempts retained. Final1792selection is targeted, not complete backend or production proof."
 }
