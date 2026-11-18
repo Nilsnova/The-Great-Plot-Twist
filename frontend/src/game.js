@@ -266,6 +266,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
       if(disposed)return null;
       const fakeTransport=fake?fake.createFakeIslandTransport():null;
       island=module.createIsland({container,emit,on,mode:islandsMode,transport:fakeTransport,
+        getActorId:()=>findPanelServices(session)?.getActorId()??null,
         getTransport:()=>findPanelServices(session)?.request,resetInput:resetControls,reducedMotion,preferences:getPreferences,
         focus:()=>graphics.renderer.domElement.focus({preventScroll:true}),onCoins:(value,options)=>{hud.setCoinSource('island');hud.setCoins(value,options);},onCaptain:level=>hud.setCaptainLevel(level),onQuestIsland:value=>hud.setQuestIsland(value),
         // The Harbor building (GAME-V3.md §4) opens the same stalls as the old Harbor overview.

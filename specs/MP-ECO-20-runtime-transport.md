@@ -59,3 +59,21 @@ factory. Their routes, authorization and queue contracts remain owned by
 must use ordinary `create_app()` registration rather than installing routers
 only inside a test fixture. Missing login/capability and unauthorized scheduler
 calls must still refuse before any domain mutation.
+
+## Boat screen wiring
+
+The existing island owner connects the boat runtime's guarded status, durable
+round session and scene wrapper. Live sailing chooses only the explicit server
+`rewardScope`; missing status or shared context does not select personal rewards.
+Fake mode retains its existing fixture protocol. Shared round context is read
+from the viewed island's canonical `economy` projection, and actor identity comes
+from the private panel service. There is no second economy store. Verified
+shared completions request a fresh canonical island read instead of copying a
+receipt balance into the personal coin display. Late status/scene work is fenced
+by the viewed island and launch generation. The existing wave-start interruption
+still closes the scene while retaining an already submitted claim.
+
+The ship card presents the server's island-wide cumulative cap and remaining
+improvement, while explicit legacy status retains its original payment wording.
+Component tests cover this connection separately from actual-provider game
+acceptance, which still requires the canonical context producer.

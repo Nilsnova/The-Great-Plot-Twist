@@ -61,6 +61,10 @@ import {preparationModel} from './preparation-model.js';
 import {isCurrentStructureRecoveryResponse} from './structure-recovery-model.js';
 import {createCoreState} from './core-state.js';
 import {decorateCore} from './core-world.js';
+import {createSharedBoatApi} from './shared-boat-api.js';
+import {createBoatRoundSession} from './shared-boat-session.js';
+import {launchSharedBoatScene} from './shared-boat-scene.js';
+import {boatOrigin, sameBoatOrigin} from './shared-boat-shapes.js';
 
 export const ARRIVAL_KEY = 'plot_twist_island_arrival_v1';
 // A build or upgrade went through: {place: 'own' | 'visit' | 'point', spot}. The wave wiring tells the
@@ -89,7 +93,8 @@ const mayPass = answer => !answer.ok && answer.code !== 'not_ready' && (answer.s
 
 export function createIsland({container, emit, on, mode = 'live', getTransport = () => null, transport = null,
   search = globalThis.location?.search ?? '', focus = () => {}, resetInput = () => {}, reducedMotion = () => false,
-  preferences = () => ({}), storage = safeLocal(), visitStorage = undefined, loadCutscenes = () => import('../cutscenes/player.js'),
+  preferences = () => ({}), storage = safeLocal(), visitStorage = undefined, getActorId = () => null,
+  loadCutscenes = () => import('../cutscenes/player.js'),
   loadBoatScene = () => import('../pirates/boat/scene.js'),
   onCoins = () => {}, onCaptain = () => {}, onQuestIsland = () => {}, menu = addMenuExtras, settings = addSettingsSection, now, setTimer, clearTimer, openHarborStall = () => {},
   travel = () => travelAllowed({islandsMode: mode}), villageCamera = () => {},
@@ -583,6 +588,12 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   // D057: the island's own boat after wave 30. boatStatus: GET /api/island/boat of the island on screen (null while
   // it loads); boatGame: the round on screen (pirates/boat/scene.js, loaded on the first sail).
   let boatStatus = null, boatGame = null, boatLoading = false, boatTicket = 0, boatLaunch = 0;
+  const getEconomy = () => target()?.economy ?? null;
+  const sharedBoatApi = createSharedBoatApi({transport: islandTransport, getEconomy,
+    onEconomy: (_economy, origin) => {
+      if (!disposed && sameBoatOrigin(getEconomy(), origin)) void refreshDefended();
+    }});
+  const sharedBoatSession = createBoatRoundSession({api: sharedBoatApi, getEconomy, getActorId, storage});
   const boatBlocked = () => (battle && !waveOver) || flow.busy || (!!flow.current && !waveOver);
   // Dispose directly: normal Close opens the wreck card and would keep captain input blocked.
   function interruptBoat(waveStarting = false) {
@@ -597,8 +608,11 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   }
   async function readBoat() {
     if (!isOpen(campaign(), 'ship')) { boatStatus = null; return; }
-    const ticket = ++boatTicket, answer = await api.boatStatus(placeCode());
-    if (disposed || ticket !== boatTicket) return;
+    const ticket = ++boatTicket, code = target()?.code;
+    if (mode !== 'fake') boatStatus = null;
+    const answer = await (mode === 'fake' ? api.boatStatus(placeCode()) : sharedBoatApi.status(placeCode()));
+    if (disposed || ticket !== boatTicket || code !== target()?.code) return;
+    if (getEconomy()?.mode === 'island_shared' && !sameBoatOrigin(answer.data?.economy, getEconomy())) return;
     boatStatus = answer.ok ? answer.data : null;
     if (ui.open === 'wreck') refreshCard();
   }
@@ -607,6 +621,18 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     boatLoading = true;
     const launch = ++boatLaunch;
     const at = campaign(), code = target()?.code ?? '', where = placeCode();
+    const economy = boatOrigin(getEconomy()), actorId = getActorId();
+    if (mode !== 'fake') {
+      await readBoat();
+      if (disposed || launch !== boatLaunch) return;
+      if (!boatStatus?.open || !['island', 'player'].includes(boatStatus.rewardScope)) {
+        boatLoading = false; ui.toast('Read the current ship rewards before sailing. Try again.', 'info'); return;
+      }
+      if (boatStatus.rewardScope === 'island' && (!sameBoatOrigin(economy, getEconomy())
+        || !sameBoatOrigin(boatStatus.economy, economy))) {
+        boatLoading = false; ui.toast('Read the current island treasury before sailing.', 'info'); return;
+      }
+    }
     let scene;
     try { scene = await loadBoatScene(); } catch {
       if (!disposed && launch === boatLaunch) { boatLoading = false; ui.toast('The boat could not load. Try again.', 'info'); }
@@ -615,7 +641,25 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     if (disposed || launch !== boatLaunch) return;
     boatLoading = false;
     if (boatBlocked() || code !== target()?.code || at?.wave !== campaign()?.wave) return;
+    if (mode !== 'fake' && (actorId !== getActorId()
+      || ((boatStatus?.rewardScope === 'island' || getEconomy()?.mode === 'island_shared')
+        && !sameBoatOrigin(economy, getEconomy())))) {
+      ui.toast('The island or sign-in changed. Read the ship rewards again.', 'info'); return;
+    }
     ui.close();
+    if (boatStatus?.rewardScope === 'island') {
+      boatLoading = true;
+      const answer = await launchSharedBoatScene({createBoatGame: scene.createBoatGame, session: sharedBoatSession,
+        game, container: document.body, code, reducedMotion, easy: () => preferences()?.easyFinishers === true,
+        isCurrent: () => !disposed && launch === boatLaunch && !boatBlocked() && code === target()?.code
+          && sameBoatOrigin(economy, getEconomy()) && actorId === getActorId(),
+        onSettled: () => { if (!disposed) void readBoat(); },
+        onClose: () => { boatGame = null; if (!disposed) { focus(); openWreck(); } }});
+      if (disposed || launch !== boatLaunch) { answer.data?.dispose(); return; }
+      boatLoading = false;
+      if (!answer.ok) { ui.toast(answer.message, 'error'); openWreck(); return; }
+      boatGame = answer.data; return;
+    }
     const round = scene.createBoatGame({container: document.body, game, wave: at?.wave ?? 0, code, reducedMotion,
       easy: () => preferences()?.easyFinishers === true,
       onFinish: async ({stars}) => {

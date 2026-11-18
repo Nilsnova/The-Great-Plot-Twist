@@ -9,6 +9,7 @@ import {isExtraSpot} from './extra-spots.js';
 import {opensText, spotWave, waveOf, isOpen, tierItem, tierWave} from '../campaign/index.js';
 import {BRANCH_BY_ID, SPECS, TOP_TIER, isCapstone, optionLine, optionName, optionsOf, readSpec, readTier, skillPrice} from '../campaign/tech.js';
 import {BOAT, GAME_TEXT as BOAT_TEXT, coinsFor} from '../pirates/boat/rules.js';
+import {sharedBoatPay} from './shared-boat-card.js';
 import {ROLES as HOUSE_ROLES, ROLE_IDS, ROLE_LEVEL as HOUSE_ROLE_LEVEL, readRole, roleLine} from '../campaign/houses.js';
 import {towerTreeModel} from './tree-model.js';
 import {nextWaveNumber} from './preparation-model.js';
@@ -452,7 +453,9 @@ export function wreckModel({campaign = null, coins = null, busy = null, message 
   const percent = Math.floor(paid / wreck.goal * 100);
   const sail = sailModel({campaign, done, boat, battle});
   const model = {title: sail.open ? 'Your ship' : 'The wreck', open, done, paid, goal: wreck.goal, percent, progress: `${coinText(paid)} of ${coinText(wreck.goal)}`,
-    line: !open ? lockedLine('wreck') : sail.open ? 'Attempts are free. Each game pays only for your first round with at least 1 star after a won wave. Later rounds pay no extra coins for a higher score. Win another wave to earn again.'
+    line: !open ? lockedLine('wreck') : sail.open && boat?.rewardScope === 'island'
+      ? 'Attempts are free. Each game pays the island only for positive improvements, up to its shared cap for this island wave record.'
+      : sail.open ? 'Attempts are free. Each game pays only for your first round with at least 1 star after a won wave. Later rounds pay no extra coins for a higher score. Win another wave to earn again.'
       : done ? 'Her hull is whole again, thanks to the whole crew.' : 'Pay a few coins into her repair after every wave. Anyone in the game can help.',
     gifts: [], message, coins: coins === null ? '' : `You have ${coinText(coins)}`, sail};
   if (!open || done) return model;
@@ -476,9 +479,13 @@ export function sailModel({campaign = null, done = false, boat = null, battle = 
     : battle ? 'Sail between waves.' : '';
   const paid = new Map((boat?.games ?? []).map(item => [item.id, item.paid === true]));
   const games = BOAT.games.map(id => {
-    const best = coinsFor(BOAT.stars, wave), isPaid = paid.get(id) === true;
+    const shared = boat?.rewardScope === 'island';
+    const reward = shared ? boat.games.find(game => game.id === id) : null;
+    const best = reward?.best ?? coinsFor(BOAT.stars, wave), isPaid = paid.get(id) === true;
     return {id, icon: BOAT_TEXT[id].icon, title: BOAT_TEXT[id].title, paid: isPaid, best,
-      pay: isPaid ? 'Paid ✓ · play for fun' : `★★★ = ${coinText(best)}`, disabled: !open || battle};
+      pay: reward ? sharedBoatPay(reward) : shared ? 'Loading island rewards…'
+        : isPaid ? 'Paid ✓ · play for fun' : `★★★ = ${coinText(best)}`,
+      disabled: !open || battle || (shared && !reward)};
   });
   return {open, note, wave, games: open ? games : []};
 }
