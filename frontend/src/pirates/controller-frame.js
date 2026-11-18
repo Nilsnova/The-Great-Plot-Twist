@@ -16,7 +16,7 @@ import { MAX_TICKS_PER_FRAME, PLAYOUT_SLEW_MS, recoveryPlayoutTarget, PREDICTION
 export function createFrame(ctl) {
   const { world, getDefenses, getManaging, reducedMotion, playerId, now, place, onEvents, startNextWave, breakSeconds,
     recoveryPlayoutMs, toggleHold, createFinisherScene, easyFinishers, practiceIdentity, guideOn, createGuide, poses,
-    myLevel, read, actorId, myStats, emit, cue, here, blocked } = ctl;
+    myLevel, read, actorId, myStats, emit, cue, here, blocked, clearLiveFeedback } = ctl;
   // From the other parts (controller-*.js), linked once every part exists.
   let submit, pumpRecovery, catchUp, predictedCopy, tagActors, shoot, autoStrike, captainShare, bladeShare, meIn,
     isDown, sendPosition, fallenNear, holdRevive, revivePrompt, helpPrice, fallenMarks, held, next, act, finishing,
@@ -50,7 +50,7 @@ export function createFrame(ctl) {
     }
   }
 
-  function handle(events, current, fresh) {
+  function handle(events, current, fresh, liveAttacks=[]) {
     if (current.predicted?.length) {
       fresh = fresh.filter(event => !(PREDICTED_KINDS.has(event.type) && predictedCopy(current, event)));
     }
@@ -69,7 +69,11 @@ export function createFrame(ctl) {
       }
       if (event.type === 'ship_sunk' && event.kind === 'flagship') { current.flagshipSunk = true; current.lampsRelit = event.by === 'lamps'; }
     }
-    if (current.shown) { current.renderer?.events(fresh); poses.note(fresh); }
+    if (current.shown) {
+      current.renderer?.events(fresh);
+      const posing=new Set([...fresh,...liveAttacks]);
+      poses.note(events.filter(event=>posing.has(event)));
+    }
     if (current.shown) current.eventArt?.events(fresh);
     // v3 waves, for the narrator: the wave's event (its line the first time in this game) and a boss finisher.
     for (const event of fresh) {
@@ -119,7 +123,9 @@ export function createFrame(ctl) {
       emit({ type: 'recovery_combat_changed', waveId: current.info.waveId });
     }
     ctl.lastWave = current.info.wave;
-    current.shown = here();
+    const shown=here();
+    if(!shown||!current.shown||globalThis.document?.hidden===true)clearLiveFeedback();
+    current.shown = shown;
     current.renderer?.setVisible(current.shown);
     current.hud?.setVisible(current.shown);
     const elapsed = (now() + current.offset - current.info.startsAtMs) / 1000;
@@ -131,7 +137,7 @@ export function createFrame(ctl) {
       const playout = current.recoveryReplay ? current.recoveryPlayoutMs / 1000 : 0;
       const due = Math.floor((elapsed - playout) / TICK_SECONDS + 1e-6);
       let budget = MAX_TICKS_PER_FRAME;
-      const events = [], recent = [];
+      const events = [], recent = [], liveAttacks=[];
       // v3 waves: an event is fresh by the tick it came from, not by its sim time (a finisher freezes the
       // sim's clock while real time runs on, so its outcome's t lies seconds behind).
       const lateTicks = Math.round(SHOWN_LATE_SECONDS / TICK_SECONDS);
@@ -162,13 +168,16 @@ export function createFrame(ctl) {
           });
           if (!advanced) break;
         } else {
-          const out = current.sim.step(TICK_SECONDS, current.schedule.take(current.ticks));
+          const inputs=current.schedule.take(current.ticks);
+          const out = current.sim.step(TICK_SECONDS, inputs);
+          liveAttacks.push(...current.liveFeedback.accepted(out,inputs));
           events.push(...out); if (current.ticks >= due - lateTicks) recent.push(...out);
         }
         current.ticks++;
       }
       current.state = current.sim.state();
-      if (events.length) handle(events, current, recent);
+      if(current.shown&&globalThis.document?.hidden!==true&&current.ticks>=due)current.feedbackReady=true;
+      if (events.length) handle(events, current, recent,liveAttacks);
       if (current.sim.done) end(current);
       if (current.recoveryReplay && !current.done) catchUp(current, due - current.ticks);
     }

@@ -1,0 +1,237 @@
+{
+  "source": "37eb70fa1f6fed7210eaabc128cd72181a0f5b2b",
+  "sourceFiles": {
+    "src/game.js": "08ba74fdad7f0145ce8dbcc785ff5fc7d4dfd3b0ea5c7a571b5bf6e8182c1449",
+    "src/player/controller.js": "f5c314fcba3c672103e3ddf8284b14e8fb8d5011220321ec66d02813fa578531",
+    "src/pirates/controller.js": "872b3cd987d69bed73ecbe6b89358cef0c7db2944cef1c550c9d3d31358b7de2",
+    "src/pirates/game-wiring.js": "c597067ba12811b498beb589cd44cdf1b3ed9272dd5a267963dbfbc08af2fe64",
+    "src/pirates/live-attack-feedback.js": "f50bd4be76dc38ef6e53542033a09ce555bff0a00ba68290a01b2cbc4d1d8bed",
+    "src/pirates/poses.js": "b73d2bf88a93515bfc391da4261d028d4019ba235652de0f1d4a2c89e1343186"
+  },
+  "dirty": true,
+  "accepted": true,
+  "drawn": true,
+  "trace": {
+    "submitted": true,
+    "events": [
+      {
+        "at": 44614.300000000745,
+        "event": {
+          "type": "captain_fired",
+          "by": "p-tr6qv8iz",
+          "level": 1,
+          "weapon": "musket",
+          "mode": "single",
+          "damage": 6,
+          "reload": 1.2,
+          "x": 14,
+          "z": 0.13,
+          "t": 7.35,
+          "targetId": "ship_1",
+          "toX": 21.75,
+          "toZ": 0.2,
+          "impactAt": 7.52,
+          "targets": [
+            {
+              "id": "ship_1",
+              "toX": 21.75,
+              "toZ": 0.2,
+              "impactAt": 7.52
+            }
+          ]
+        },
+        "ticks": 164,
+        "afterNoteAt": 44901.199999999255,
+        "pose": {
+          "kind": "musket",
+          "flip": false,
+          "angle": 0.004162925699317514,
+          "age": 0.2850000858306885
+        }
+      }
+    ],
+    "reads": [
+      {
+        "at": 44626.300000000745,
+        "by": "p-tr6qv8iz",
+        "value": {
+          "kind": "musket",
+          "flip": false,
+          "angle": 0.004162925699317514,
+          "age": 0.009999990463256836
+        }
+      },
+      {
+        "at": 45667.59999999963,
+        "by": "p-tr6qv8iz",
+        "value": null
+      },
+      {
+        "at": 45844.699999999255,
+        "by": "p-tr6qv8iz",
+        "value": null
+      },
+      {
+        "at": 45999.800000000745,
+        "by": "p-tr6qv8iz",
+        "value": null
+      },
+      {
+        "at": 46165.5,
+        "by": "p-tr6qv8iz",
+        "value": null
+      },
+      {
+        "at": 47231.90000000037,
+        "by": "p-tr6qv8iz",
+        "value": null
+      }
+    ],
+    "renders": [
+      {
+        "at": 44631.40000000037,
+        "meshes": [
+          {
+            "frame": "captain-1-musket-2",
+            "figure": false
+          }
+        ]
+      },
+      {
+        "at": 45668.199999999255,
+        "meshes": []
+      },
+      {
+        "at": 45845.199999999255,
+        "meshes": []
+      },
+      {
+        "at": 46000.40000000037,
+        "meshes": []
+      },
+      {
+        "at": 46166.09999999963,
+        "meshes": []
+      },
+      {
+        "at": 47232.300000000745,
+        "meshes": []
+      }
+    ],
+    "updates": [
+      {
+        "at": 44611.40000000037,
+        "end": 44626.300000000745,
+        "before": 143,
+        "after": 164
+      },
+      {
+        "at": 45659.5,
+        "end": 45667.59999999963,
+        "before": 164,
+        "after": 185
+      },
+      {
+        "at": 45842.59999999963,
+        "end": 45844.699999999255,
+        "before": 185,
+        "after": 189
+      },
+      {
+        "at": 45995.5,
+        "end": 45999.699999999255,
+        "before": 189,
+        "after": 192
+      },
+      {
+        "at": 46163,
+        "end": 46165.5,
+        "before": 192,
+        "after": 195
+      },
+      {
+        "at": 47225.90000000037,
+        "end": 47231.90000000037,
+        "before": 195,
+        "after": 217
+      }
+    ],
+    "raf": [
+      {
+        "at": 38371.5,
+        "gap": 778.8000000007451,
+        "hidden": false
+      },
+      {
+        "at": 39404.09999999963,
+        "gap": 1032.5999999996275,
+        "hidden": false
+      },
+      {
+        "at": 40448,
+        "gap": 1043.9000000003725,
+        "hidden": false
+      },
+      {
+        "at": 41480.40000000037,
+        "gap": 1032.4000000003725,
+        "hidden": false
+      },
+      {
+        "at": 42514.5,
+        "gap": 1034.0999999996275,
+        "hidden": false
+      },
+      {
+        "at": 43553.59999999963,
+        "gap": 1039.0999999996275,
+        "hidden": false
+      },
+      {
+        "at": 44901.199999999255,
+        "gap": 1347.5999999996275,
+        "hidden": false
+      },
+      {
+        "at": 45669.199999999255,
+        "gap": 768,
+        "hidden": false
+      },
+      {
+        "at": 45849.300000000745,
+        "gap": 180.10000000149012,
+        "hidden": false
+      },
+      {
+        "at": 46005.800000000745,
+        "gap": 156.5,
+        "hidden": false
+      },
+      {
+        "at": 46179.90000000037,
+        "gap": 174.09999999962747,
+        "hidden": false
+      },
+      {
+        "at": 47233.09999999963,
+        "gap": 1053.199999999255,
+        "hidden": false
+      }
+    ],
+    "quality": "high",
+    "eligible": {
+      "waveId": "fake-wave-1",
+      "by": "p-tr6qv8iz",
+      "targetId": "ship_1",
+      "targetHp": 24,
+      "actorHp": 100,
+      "down": false,
+      "distance": 7.750919520792677,
+      "range": 14
+    },
+    "shotAt": 43687.300000000745
+  },
+  "pageErrors": [],
+  "consoleErrorCount": 0,
+  "external": []
+}

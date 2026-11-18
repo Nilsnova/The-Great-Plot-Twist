@@ -83,7 +83,7 @@ export function createFinish(ctl) {
     if (!current) return;
     ctl.wave = null; current.finished = true;
     if (world.camera?.userData) { delete world.camera.userData.battleZoom; delete world.camera.userData.battleFocus; }
-    current.renderer?.dispose(); current.hud?.dispose(); current.schedule.clear(); poses.clear();
+    current.renderer?.dispose(); current.hud?.dispose(); current.schedule.clear(); current.liveFeedback.clear(); poses.clear();
     current.eventArt?.dispose(); current.finisher?.scene?.dispose(); current.finisher = null;
     emit({ type: 'wave_controller_stopped', waveId: current.info.waveId, ...(current.recoveryReplay ? { recovery: true } : {}) });
   }

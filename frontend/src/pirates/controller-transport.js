@@ -13,7 +13,7 @@ import { makeActionUid } from '../screens/islet/action-uid.js';
 import { MAX_TICKS_PER_FRAME, canonicalJson, validCanonicalClose, END_BEAT_MS, HEALTH_CHECKPOINT_COALESCE_MS } from './controller-shared.js';
 
 export function createTransport(ctl) {
-  const { room, now, recoveryTransport, actorId, later, emit } = ctl;
+  const { room, now, recoveryTransport, actorId, later, emit, noteLiveInput } = ctl;
   // From the other parts (controller-*.js), linked once every part exists.
   let tagActors, receiveCosmetic, handle, roundLoot, end, stop;
   function submit(input, lead = INPUT_LEAD_TICKS) {
@@ -34,6 +34,7 @@ export function createTransport(ctl) {
     }
     const entry = { by: actorId(ctl.wave), seq: ++ctl.wave.seq, tick: ctl.wave.ticks + lead, input };
     ctl.wave.schedule.add(entry, ctl.wave.ticks);
+    noteLiveInput(input);
     const message = toMessage(input, { ...entry, waveId: ctl.wave.info.waveId });
     if (message) try { room?.send?.(message.type, message.payload); } catch (error) { console.error(error); }
     return true;
@@ -457,7 +458,7 @@ export function createTransport(ctl) {
     const entry = readMessage(type, payload, ctl.wave.info.waveId);
     if (!entry || entry.by === actorId(ctl.wave)) return;
     if (entry.input.type === 'lamps_lit') ctl.wave.lampsSent = true; // somebody else lit them first
-    ctl.wave.schedule.add(entry, ctl.wave.ticks);
+    if(ctl.wave.schedule.add(entry, ctl.wave.ticks)!==null)noteLiveInput(entry.input);
   }
 
   function link() { // the names of the other parts, once every part exists (controller.js)

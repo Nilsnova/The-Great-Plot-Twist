@@ -12,7 +12,7 @@ export function createController(character, input, colliders) {
   return { player, setPlace(place) {
     colliders = place.colliders; groundAt = place.groundHeight;
     const [x, z] = place.spawn; player.position.set(x, groundAt(x, z), z);
-  }, update(delta, active) {
+  }, update(delta, active, beforeAnimate) {
     // A resumed/stalled frame must not teleport the explorer or poison its coordinates.
     const dt = Number.isFinite(delta) ? Math.max(0, Math.min(delta, .1)) : 0;
     let forward = active ? input.axis(['KeyW', 'ArrowUp'], ['KeyS', 'ArrowDown']) : 0;
@@ -27,6 +27,8 @@ export function createController(character, input, colliders) {
     const actualSpeed = Math.hypot(next.x - player.position.x, next.z - player.position.z) / Math.max(dt, 0.001);
     player.position.set(next.x, next.y, next.z);
     if (actualSpeed > 0.05) character.face(dx, dz);
+    // Sample combat at the moved position, then apply its pose before this frame is drawn.
+    beforeAnimate?.(dt);
     character.animate(dt, actualSpeed);return actualSpeed;
   } };
 }

@@ -52,6 +52,7 @@
 //   controller-frame.js      every frame: update(), the events of a tick (sound, narrator), the HUD, the guide
 //   controller-finish.js     a wave's end: settle, the finish call and its retries, the cutscene, stop
 import { createPoses } from './poses.js';
+import { createLiveAttackFeedback } from './live-attack-feedback.js';
 import { createWave } from './sim.js';
 import { waveGapMs } from '../net/live-rules.js';
 import { captainStats, readSkills, readWeapon } from './captain-stats.js';
@@ -113,13 +114,27 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   // No place on screen (null: the front door's open water) is not here; a world without place() always is.
   const here = () => !place || (world.place ? world.place() : place) === place;
   const blocked = () => !!world.isBlocked?.();
+  function clearLiveFeedback(){
+    if(ctl.wave){ctl.wave.liveFeedback.clear();ctl.wave.feedbackReady=false;}
+    poses.clear();
+  }
+  function noteLiveInput(input){
+    if(ctl.wave?.feedbackReady&&here()&&globalThis.document?.hidden!==true)ctl.wave.liveFeedback.note(input);
+  }
+  if(bus?.on)stops.push(bus.on('travel',clearLiveFeedback));
+  const feedbackDocument=globalThis.document;
+  if(feedbackDocument?.addEventListener){
+    const hidden=()=>{if(feedbackDocument.hidden)clearLiveFeedback();};
+    feedbackDocument.addEventListener('visibilitychange',hidden);
+    stops.push(()=>feedbackDocument.removeEventListener('visibilitychange',hidden));
+  }
   Object.assign(ctl, { bus, world, getDefenses, getManaging, finishWave, room, sound, reducedMotion, quality,
     playerId, now, serverOffset, place, accept, listen, simOptions, beamFrom, cutsceneFor, playCutscene,
     createRenderer, createHud, setTimer, clearTimer, onEvents, getCrew, captainLevel, captainSkills, captainWeapon,
     captainColour, startNextWave, breakSeconds, recoveryPlayoutMs, loadAuto, saveAuto, holdBreak, toggleHold,
     reviveCaptain, createEventArt, createFinisherScene, easyFinishers, practiceIdentity, guideOn, createGuide,
     recoveryTransport, poses, myLevel, read, mySkills, myWeapon, actorId, myStats, timers, stops, later, emit, cue,
-    here, blocked });
+    here, blocked, clearLiveFeedback, noteLiveInput });
   // The parts, each a closure over ctl; they call each other through names linked once all exist.
   const parts = [createTransport, createPrediction, createCaptainActions, createFrame, createFinish].map(create => create(ctl));
   for (const { link, ...part } of parts) Object.assign(ctl, part);
@@ -196,6 +211,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     const initialRecoveryHealth = recoveryReplay ? sim.recoveryHealthVector() : null;
     const initialRecoverySignature = initialRecoveryHealth ? canonicalJson(initialRecoveryHealth) : null;
     const current = ctl.wave = { info, sim, defenses, offset, ticks: 0, seq: 0, schedule: createInputSchedule(), done: false, finished: false,
+      liveFeedback:createLiveAttackFeedback(),feedbackReady:false,
       pause: null, boss: first.boss ? bossText(first.warships) : '', captainAt: -Infinity, bladeAt: -Infinity, handAt: -Infinity,
       result: null, renderer: null, hud: null, shown: false, lampsSent: false, lampsRelit: false, flagshipSunk: false,
       splashesAt: [], lastCount: null, state: sim.state(), action: null, lanes: [], lean: { x: 0, z: 0 },
