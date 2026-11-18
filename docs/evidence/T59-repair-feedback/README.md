@@ -110,3 +110,10 @@ The latest capture completed with 103 calls to the offline API fixture. It does 
 ### Independent follow-up verification
 
 On 17 Nov 2026, `npm exec vitest -- run tests/island/structure-recovery-model.test.js tests/island/structure-recovery-card-dom.test.js --maxWorkers=1` from `frontend/` passed 25 tests across 2 files. `npm run build` passed in 1.12 seconds and the spoiler guard passed across 241 text files. The corrected desktop/phone captures were inspected: Wall level-2 upgrade is 20 coins and Harpoon level-2 upgrade is 80 coins, with the existing current-level repair prices unchanged. The bell-pause explanation wraps legibly. These remain offline fixture screenshots and do not prove API/payment/database/multiplayer behavior.
+
+
+## Final review follow-ups · 18 Nov
+
+`057d3fde` limits unavailable-health upgrade blocking to the six supported damageable kinds. Affordable house/watchtower upgrades have no structure-health row and remain available; the affected card model suite passed 36 tests. `394ffab5` keeps the revised tutorial within the existing three-sentence/110-character limits, and `05fe4e40` updates the real-DOM assertions from obsolete ETA to full wave-end wording/shared quota. Paid intent/price, zero-HP marker, phone fit, 44-pixel action target and tiny-positive-HP checks remain. The affected DOM/tutorial command passed 44 tests across five files.
+
+The later local combined review candidate includes this UI branch, the saved-policy error guard and saved gated-defense fix: 19 frontend files / 207 tests passed in 62.70 seconds, followed by a production build and spoiler guard. This is combined-source evidence, not an isolated UI-branch or authenticated service/browser claim. Its first attempt had 204 passing / 3 failing tests (obsolete ETA expectation and revised tutorial limits); those failures were corrected without widening bounds. The text linter then identified seven correctly spelled words missing from its small project vocabulary; each was manually reviewed before adding it to `scripts/text-lint/words.txt`. The final linter reports zero errors and eight unchanged report-only findings. Historical captures are retained.

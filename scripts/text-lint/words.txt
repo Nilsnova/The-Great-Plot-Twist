@@ -2799,3 +2799,12 @@ catalog
 discount
 fully
 upgrading
+
+# T59: manually reviewed repair-policy words; max is the usual maximum abbreviation.
+retired
+max
+inactive
+structure
+six
+restored
+heals
