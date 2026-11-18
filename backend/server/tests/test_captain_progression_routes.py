@@ -35,9 +35,9 @@ def test_read_authenticates_personal_owner_and_does_not_import_or_resolve_an_isl
     assert seen[0].url.path.endswith("/personal_captain_context")
 
 
-def test_read_without_adoption_requires_personal_context_and_never_initializes():
+def test_read_without_adoption_returns_not_initialized_and_never_initializes():
     client, seen = client_for({"personal_captain_context": lambda params: {"status": "legacy"}})
-    assert_error(client.get("/api/captain", headers=RIGHT_HEADER), 409, "captain_context_required")
+    assert_error(client.get("/api/captain", headers=RIGHT_HEADER), 409, "captain_not_initialized")
     assert len(seen) == 1 and seen[0].url.path.endswith("/personal_captain_context")
 
 
@@ -143,3 +143,23 @@ def test_stale_revision_and_missing_profile_keep_standard_fail_closed_errors():
 def test_an_unregistered_application_has_no_new_route():
     client, _ = make_client(scripted_database())
     assert client.get("/api/captain", headers=RIGHT_HEADER).status_code == 404
+
+
+@pytest.mark.parametrize("uid", ["fx_reserved_charge", "sys_reserved_loot"])
+def test_personal_mutations_reject_financial_child_namespaces_without_database_access(uid):
+    client, seen = client_for({})
+    assert_error(client.post("/api/captain/respec", headers=RIGHT_HEADER,
+                             json=body(actionUid=uid)), 422, "invalid_transaction")
+    assert seen == []
+
+
+@pytest.mark.parametrize("reason,status,code", [
+    ("action_conflict", 409, "idempotency_conflict"),
+    ("invalid_change", 422, "invalid_transaction"),
+])
+def test_personal_registry_refusals_keep_the_shared_public_error_codes(reason, status, code):
+    client, _ = client_for({"personal_captain_change": lambda params: {
+        "status": "refused", "reason": reason,
+    }})
+    assert_error(client.post("/api/captain/respec", headers=RIGHT_HEADER,
+                             json=body()), status, code)

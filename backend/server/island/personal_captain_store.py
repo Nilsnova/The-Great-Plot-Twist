@@ -8,8 +8,9 @@ import re
 
 from server.errors import ApiError
 from server.island.catalogue import IslandCatalogue
+from server.island.economy_operations import root_action_uid
 from server.island.personal_captain import configuration, read_profile
-from server.island.treasury import EconomyContext, identifier, operation
+from server.island.treasury import EconomyContext, identifier
 from server.supabase_admin import SupabaseAdmin, SupabaseRejected
 
 REFUSALS = {
@@ -18,7 +19,7 @@ REFUSALS = {
     "captain_conversion_required", "captain_rules_mismatch", "economy_context_required",
     "economy_epoch_mismatch", "economy_path_unavailable", "not_member", "action_conflict",
     "captain_context_required", "captain_revision_mismatch",
-    "bad_skill",
+    "bad_skill", "invalid_change",
 }
 
 
@@ -28,8 +29,13 @@ async def _call(admin: SupabaseAdmin, name: str, arguments: dict) -> dict:
         reason = value.get("reason")
         if reason not in REFUSALS:
             raise SupabaseRejected("The database sent an unknown personal Captain refusal.")
-        code = "captain_context_required" if reason == "captain_not_initialized" else reason
-        status = 403 if reason == "not_member" else (400 if reason == "bad_skill" else 409)
+        status, code = {
+            "captain_not_initialized": (409, "captain_context_required"),
+            "action_conflict": (409, "idempotency_conflict"),
+            "invalid_change": (422, "invalid_transaction"),
+            "not_member": (403, "not_member"),
+            "bad_skill": (400, "bad_skill"),
+        }.get(reason, (409, reason))
         raise ApiError(status, code,
                        "Reload your Captain or finish the required wave before this change.")
     if not isinstance(value, dict):
@@ -68,7 +74,7 @@ async def change(
     admin: SupabaseAdmin, player_id: str, action_uid: str, action: str, value: str | None = None,
     *, expected_revision: str,
 ) -> dict:
-    operation(action_uid, "personal_captain")
+    root_action_uid(action_uid)
     if (not isinstance(expected_revision, str)
             or re.fullmatch(r"0|[1-9][0-9]*", expected_revision) is None):
         raise ApiError(422, "validation_error", "Use the current personal revision string.")
