@@ -77,3 +77,8 @@ The ship card presents the server's island-wide cumulative cap and remaining
 improvement, while explicit legacy status retains its original payment wording.
 Component tests cover this connection separately from actual-provider game
 acceptance, which still requires the canonical context producer.
+
+Capture the verified reward scope with the launching intent before loading the
+scene module; later status refreshes may clear their display snapshot but cannot
+select a different payment path. A live screen without verified status displays
+neutral unavailable rewards and disables sailing until status arrives.

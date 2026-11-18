@@ -19,6 +19,15 @@ it('shows cumulative island improvements and the exhausted shared cap', () => {
   expect(model.sail.games.find(game => game.id === 'broadside').pay).toContain('Island cap reached');
 });
 
+it('keeps live sailing unavailable until a reward scope is known', () => {
+  const campaign = campaignOf({waveBest: 30, campaign: {wave: 30, wreck: {paid: 500, goal: 500}}});
+  const model = wreckModel({campaign, requireRewardScope: true});
+  expect(model.line).toContain('Refresh the ship');
+  expect(model.line).not.toContain('first round');
+  expect(model.sail.games.every(game => game.disabled)).toBe(true);
+  expect(model.sail.games.every(game => !game.pay.includes('★★★'))).toBe(true);
+});
+
 async function mountSharedIsland(page, withContext, delayScene = false) {
     await page.evaluate(async ({withContext, delayScene}) => {
       const {createIsland} = await window.g20Import('/src/island/index.js');
@@ -35,10 +44,13 @@ async function mountSharedIsland(page, withContext, delayScene = false) {
       window.sharedBoatRequests = [];
       const transport = {
         async get(path) {
-          if (path === '/api/island/boat') return {ok: true, status: 200, data: {
+          if (path === '/api/island/boat') {
+            if (window.holdNextBoatStatus) await new Promise(resolve => {window.releaseSharedBoatStatus = resolve;});
+            return {ok: true, status: 200, data: {
             open: true, wave: 30, rewardScope: 'island', economy, games: ['dash', 'broadside'].map(id =>
               ({id, best: 36, paid: false, claimedCoins: '0', remainingCoins: '36', maximumCoins: '36'})),
-          }};
+            }};
+          }
           const answer = await base.get(path);
           return path === '/api/island' && withContext ? {...answer, data: {...answer.data, economy}} : answer;
         },
@@ -113,5 +125,25 @@ it('does not start a delayed shared scene for a replacement sign-in', async () =
     expect(await page.evaluate(() => window.sharedBoatRequests)).toEqual([]);
     expect(await page.locator('.shared-boat-scene-fixture').count()).toBe(0);
     await page.evaluate(() => {window.sharedBoatIsland.dispose(); localStorage.clear();});
+  });
+});
+
+it('keeps its verified shared reward scope while another status read is pending', async () => {
+  await browser.withPage(async page => {
+    await mountSharedIsland(page, true, true);
+    await page.waitForFunction(() => window.sharedBoatWaiting);
+    await page.evaluate(() => {
+      window.holdNextBoatStatus = true;
+      window.sharedBoatIsland.openWreck();
+      window.releaseSharedBoatScene();
+    });
+    await page.waitForSelector('.shared-boat-scene-fixture', {state: 'attached'});
+    expect(await page.evaluate(() => window.sharedBoatRequests.map(request => request.path)))
+      .toEqual(['/api/island/boat/start']);
+    await page.evaluate(() => {
+      window.sharedBoatIsland.dispose();
+      window.releaseSharedBoatStatus();
+      localStorage.clear();
+    });
   });
 });

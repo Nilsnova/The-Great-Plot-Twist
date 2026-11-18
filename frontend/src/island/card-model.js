@@ -447,13 +447,16 @@ export function techModel({campaign = null, coins = null, busy = null, message =
 
 // The wreck (after wave 6): members pay coins into her repair. D057: from wave 30 the repaired wreck is the
 // island's own boat: her card lists the boat's games (boat: GET /api/island/boat, null while it loads).
-export function wreckModel({campaign = null, coins = null, busy = null, message = '', boat = null, battle = false} = {}) {
+export function wreckModel({campaign = null, coins = null, busy = null, message = '', boat = null, battle = false,
+  requireRewardScope = false} = {}) {
   const open = isOpen(campaign, 'wreck'), wreck = campaign?.wreck ?? {paid: 0, goal: 500, gifts: [25, 100]};
   const paid = Math.min(wreck.goal, wreck.paid), left = wreck.goal - paid, done = left <= 0;
   const percent = Math.floor(paid / wreck.goal * 100);
-  const sail = sailModel({campaign, done, boat, battle});
+  const sail = sailModel({campaign, done, boat, battle, requireRewardScope});
+  const unknownRewards = requireRewardScope && !['island', 'player'].includes(boat?.rewardScope);
   const model = {title: sail.open ? 'Your ship' : 'The wreck', open, done, paid, goal: wreck.goal, percent, progress: `${coinText(paid)} of ${coinText(wreck.goal)}`,
-    line: !open ? lockedLine('wreck') : sail.open && boat?.rewardScope === 'island'
+    line: !open ? lockedLine('wreck') : sail.open && unknownRewards
+      ? 'Refresh the ship to read its current rewards before sailing.' : sail.open && boat?.rewardScope === 'island'
       ? 'Attempts are free. Each game pays the island only for positive improvements, up to its shared cap for this island wave record.'
       : sail.open ? 'Attempts are free. Each game pays only for your first round with at least 1 star after a won wave. Later rounds pay no extra coins for a higher score. Win another wave to earn again.'
       : done ? 'Her hull is whole again, thanks to the whole crew.' : 'Pay a few coins into her repair after every wave. Anyone in the game can help.',
@@ -473,19 +476,20 @@ export function wreckModel({campaign = null, coins = null, busy = null, message 
 
 // D057: the boat's part of the wreck card. Open once the ship step (wave 30) is reached and the repair is done;
 // one tile per game with what 3 stars pay at this wave, or "Paid ✓" once this player was paid at this wave.
-export function sailModel({campaign = null, done = false, boat = null, battle = false} = {}) {
+export function sailModel({campaign = null, done = false, boat = null, battle = false, requireRewardScope = false} = {}) {
   const wave = campaign?.wave ?? 0, shipOpen = isOpen(campaign, 'ship'), open = shipOpen && done && boat?.open !== false;
   const note = !shipOpen ? `She sails after wave ${waveOf('ship')}.` : !done ? 'Finish her repair and she sails.'
     : battle ? 'Sail between waves.' : '';
   const paid = new Map((boat?.games ?? []).map(item => [item.id, item.paid === true]));
+  const unknownRewards = requireRewardScope && !['island', 'player'].includes(boat?.rewardScope);
   const games = BOAT.games.map(id => {
     const shared = boat?.rewardScope === 'island';
     const reward = shared ? boat.games.find(game => game.id === id) : null;
     const best = reward?.best ?? coinsFor(BOAT.stars, wave), isPaid = paid.get(id) === true;
     return {id, icon: BOAT_TEXT[id].icon, title: BOAT_TEXT[id].title, paid: isPaid, best,
-      pay: reward ? sharedBoatPay(reward) : shared ? 'Loading island rewards…'
+      pay: unknownRewards ? 'Rewards unavailable · refresh the ship' : reward ? sharedBoatPay(reward) : shared ? 'Loading island rewards…'
         : isPaid ? 'Paid ✓ · play for fun' : `★★★ = ${coinText(best)}`,
-      disabled: !open || battle || (shared && !reward)};
+      disabled: !open || battle || unknownRewards || (shared && !reward)};
   });
   return {open, note, wave, games: open ? games : []};
 }

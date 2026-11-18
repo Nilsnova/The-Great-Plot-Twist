@@ -581,7 +581,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   const tech = () => techModel({campaign: campaign(), coins: own?.coins ?? null, busy: busyResearch, battle: battle && !waveOver,
     message: cardMessage || (!target() ? ownMessage : ''), recoveryVersion: recoveryModelVersion()});
   const wreck = () => wreckModel({campaign: campaign(), coins: own?.coins ?? null, busy: busyGift, message: cardMessage || (!target() ? ownMessage : ''),
-    boat: boatStatus, battle: battle && !waveOver});
+    boat: boatStatus, battle: battle && !waveOver, requireRewardScope: mode !== 'fake'});
   const harborHandlers = {open: id => { ui.close(); try { openHarborStall(id); } catch { /* The stall answers on its own. */ } }};
   const techHandlers = {research: step => void research(step)};
   const wreckHandlers = {give: amount => void giveWreck(amount), sail: game => void sail(game)};
@@ -622,12 +622,14 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     const launch = ++boatLaunch;
     const at = campaign(), code = target()?.code ?? '', where = placeCode();
     const economy = boatOrigin(getEconomy()), actorId = getActorId();
+    let rewardScope = mode === 'fake' ? 'player' : null;
     if (mode !== 'fake') {
       await readBoat();
       if (disposed || launch !== boatLaunch) return;
       if (!boatStatus?.open || !['island', 'player'].includes(boatStatus.rewardScope)) {
         boatLoading = false; ui.toast('Read the current ship rewards before sailing. Try again.', 'info'); return;
       }
+      rewardScope = boatStatus.rewardScope;
       if (boatStatus.rewardScope === 'island' && (!sameBoatOrigin(economy, getEconomy())
         || !sameBoatOrigin(boatStatus.economy, economy))) {
         boatLoading = false; ui.toast('Read the current island treasury before sailing.', 'info'); return;
@@ -642,12 +644,12 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     boatLoading = false;
     if (boatBlocked() || code !== target()?.code || at?.wave !== campaign()?.wave) return;
     if (mode !== 'fake' && (actorId !== getActorId()
-      || ((boatStatus?.rewardScope === 'island' || getEconomy()?.mode === 'island_shared')
+      || ((rewardScope === 'island' || getEconomy()?.mode === 'island_shared')
         && !sameBoatOrigin(economy, getEconomy())))) {
       ui.toast('The island or sign-in changed. Read the ship rewards again.', 'info'); return;
     }
     ui.close();
-    if (boatStatus?.rewardScope === 'island') {
+    if (rewardScope === 'island') {
       boatLoading = true;
       const answer = await launchSharedBoatScene({createBoatGame: scene.createBoatGame, session: sharedBoatSession,
         game, container: document.body, code, reducedMotion, easy: () => preferences()?.easyFinishers === true,
