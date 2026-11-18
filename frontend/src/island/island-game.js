@@ -150,8 +150,8 @@ export function createGames(isl) {
     interruptBoat();
     isl.village.leave();
     invalidateWallFeedback();
-    isl.selectionGeneration++; loadTicket++;
-    isl.moving.cancel(); demolishSpot = null; demolishQuote = null;
+    isl.selectionGeneration++; isl.loadTicket++;
+    isl.moving.cancel(); isl.demolishSpot = null; isl.demolishQuote = null;
     isl.visitCode = symbols; isl.visiting = null; isl.flow.reset(); isl.ui.close();
     return true;
   }

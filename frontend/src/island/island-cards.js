@@ -68,7 +68,7 @@ export function createCards(isl) {
     return holdOtherBuildingAction(recoveryControlsOn() ? model : withWallRecovery(model, {wall: shown, coins: isl.own?.coins ?? null,
       busy: isl.busySpot === spotId ? isl.busyKind : false, battle: isl.battle && !isl.waveOver}), isl.busySpot);
   }
-  // Hiring still changes the caller's own island when they are visiting.
+  // Shared hires use the defended island; legacy hires still use the caller's own island.
   const crew = () => {
     const island = currentFunds().shared ? target() : isl.own;
     return crewModel({crew: island?.crew ?? {}, coins: isl.own?.coins ?? null, ...sharedCard(),

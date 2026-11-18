@@ -355,7 +355,7 @@ export function createActions(isl) {
     } else { isl.cardMessage = answer.message; if (['locked', 'no_points', 'known', 'closed', 'wrong_role', 'captain_context_required', 'captain_revision_mismatch'].includes(answer.code)) await reloadOwn(); }
     refreshCard();
   }
-  // The role choice at captain level 3 (once), and the respec that clears skills and role (coins, asked twice).
+  // Role/respec asks twice; the personal profile version determines authorization and any legacy coin charge.
   async function takeRole(id) {
     if (isl.busyRole || !isRole(id)) return;
     isl.busyRole = true; isl.pickedRole = id; isl.cardMessage = ''; refreshCard();

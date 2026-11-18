@@ -36,7 +36,7 @@ export function createLoading(isl) {
     isl.news.add(id); try { storage?.setItem(NEWS_KEY, JSON.stringify([...isl.news])); } catch { /* Told again next time. */ }
     return true;
   }
-  // The player's balance is the island's `coins` (GET /api/island and every answer after it); the HUD shows it.
+  // Legacy islands show personal coins; a persisted shared island pins its own available treasury.
   const tellCoins = (coins, options = {}) => {
     if (isl.disposed) return;
     const source = currentFunds();
@@ -96,8 +96,7 @@ export function createLoading(isl) {
     }
   };
   const unlocks = () => (isl.own ? readUnlocks(isl.own) : null);
-  // What may be built on the island on screen (GAME-V3.md §4): its own campaign decides the kinds and levels;
-  // crew and captain levels stay the player's own.
+  // The defended island decides building unlocks and shared crew; legacy crew unlocks stay personal.
   const islandUnlocks = () => {
     const mine = unlocks();
     if (!isl.visiting) return mine;
@@ -165,7 +164,7 @@ export function createLoading(isl) {
   function endVisit(invalidateLoad = true) {
     invalidateWallFeedback();
     isl.selectionGeneration++; if (invalidateLoad) isl.loadTicket++;
-    moving.cancel(); demolishSpot = null; demolishQuote = null;
+    isl.moving.cancel(); isl.demolishSpot = null; isl.demolishQuote = null;
     isl.visiting = null; isl.visitCode = null; forgetVisit(visitStorage); isl.ui.visit(null);
   }
   // The chip of a friend's game: the old "Visiting … · Sail home" only where travel still applies (one
