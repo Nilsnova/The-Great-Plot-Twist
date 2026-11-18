@@ -8,6 +8,7 @@ treasury primitive owns settlement uniqueness and immutable replay checking.
 import re
 from uuid import UUID
 
+from server.island.treasury_models import decimal_string
 from server.island.wager_rules import invalid_transaction, nonnegative_whole
 
 ACTION_UID = re.compile(r"[A-Za-z0-9_-]{8,64}\Z")
@@ -32,7 +33,7 @@ def settlement_arguments(
         raise invalid_transaction()
     return {
         "p_reservation_id": str(reservation_id),
-        "p_returned_payout": str(payout),
+        "p_returned_payout": decimal_string(payout),
         "p_reference": reference,
         "p_action_uid": action_uid,
     }
