@@ -19,7 +19,7 @@ From `backend/`, the task agent ran:
 - Changed-file Ruff and `git diff --check`: passed.
 - Earlier broad `UV_CACHE_DIR=/tmp/wave-end-options-uv-cache uv run pytest -q`: **536,807 passed, 305 skipped in 1117.53 seconds**. It started before the serializer/test follow-ups; it is broad historical evidence and does not prove those final changes. Final changed paths are verified separately above.
 
-Root reviewed and combined this branch with saved-policy error handling, existing gated defenses, UI and current rules on a local test candidate. The complete disposable island SQL command passed **398 tests in 35.64 seconds**:
+Shared source review combined this branch with saved-policy error handling, existing gated defenses, UI and current rules on a local test candidate. The complete disposable island SQL command passed **398 tests in 35.64 seconds**:
 
 ```sh
 CASE_PG_SCRATCH=1 UV_CACHE_DIR=/tmp/wave-end-integration-uv-cache uv run --with pgserver --with 'psycopg[binary]' --with pglast pytest -q server/tests/island_sql
@@ -29,4 +29,4 @@ The first combined SQL attempt had 395 passed / 3 failed from committed race-fix
 
 ## Limits and risks
 
-All PostgreSQL/authentication data is synthetic and disposable. Backend tests are not rendered browser, real provider, live database or authenticated two-browser proof. Root's combined frontend fixtures are documented separately by T59. Frozen replay, closed combat history and paid receipts must stay immutable. New policy metadata is additive; old clients cannot choose or override it. There is no player compensation subsystem, role reassignment or replacement repair ability. Human review/publication confirmation and Franz's current-revision review remain before a human merge.
+All PostgreSQL/authentication data is synthetic and disposable. Backend tests are not rendered browser, real provider, live database or authenticated two-browser proof. The combined frontend fixtures are documented separately by T59. Frozen replay, closed combat history and paid receipts must stay immutable. New policy metadata is additive; old clients cannot choose or override it. There is no player compensation subsystem, role reassignment or replacement repair ability. Human review/publication confirmation and Franz's current-revision review remain before a human merge.
