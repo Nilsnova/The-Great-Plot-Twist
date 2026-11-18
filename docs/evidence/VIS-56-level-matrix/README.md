@@ -42,6 +42,8 @@ I use the same frame selector and renderer as the game, then check their outputs
 
 These checks do not prove live health, production payments, multiplayer, Safari, physical phones, sustained performance, balance or human acceptance. More game states can be added as explicit cases; progression and game rules must stay in their existing owners.
 
+The coordinator's review of the first 22 native sheets found no asset crops, state jumps, corner spikes or falsely closed breach, but the phone `watchtower` row label extended beyond its column. A helper-only follow-up allows long row labels to wrap and asserts their measured width after fonts settle; it does not shrink any artwork. Fresh native evidence must go in a new output folder, preserving the earlier sheets. Some damaged wall artwork remains visually subtle; this task does not redraw damage or change how damage works.
+
 Before readiness, Johannes should answer:
 
 1. Why do the world and combat frame selectors need to agree for every intact tier?

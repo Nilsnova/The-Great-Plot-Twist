@@ -20,7 +20,7 @@ function reset(title, className) {
     h1{font-size:22px;margin:0 0 6px}p{margin:0 0 16px;font-size:12px}h2{margin:0;font-size:15px}
     .art{display:grid;grid-template-columns:88px repeat(5,minmax(0,1fr));gap:10px;align-items:center}
     figure{margin:0;background:#345f50;border:1px solid #b99854;border-radius:8px;overflow:hidden}
-    .art canvas{display:block;width:100%;height:110px;object-fit:contain}.art figcaption{font-size:12px;padding:4px;text-align:center}
+    .art h2{min-width:0;overflow-wrap:anywhere}.art canvas{display:block;width:100%;height:110px;object-fit:contain}.art figcaption{font-size:12px;padding:4px;text-align:center}
     .walls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.walls h2{padding:8px}
     .walls canvas{display:block;width:100%}.walls p{margin:0;padding:6px 8px}
     @media(max-width:600px){body{padding:12px}h1{font-size:18px}.art{grid-template-columns:58px repeat(5,minmax(0,1fr));gap:4px}
@@ -50,7 +50,9 @@ export async function renderArtMatrix(kind) {
     }
     for (let n = row.cells.length; n < 5; n++) element('div', '', grid);
   }
-  await document.fonts.ready; return {fixture: 'compiled-art-contact-sheet', kind, frames: result};
+  await document.fonts.ready;
+  for (const label of grid.querySelectorAll('h2')) check(label.scrollWidth <= label.clientWidth + 1, `row label fits its column: ${label.textContent}`);
+  return {fixture: 'compiled-art-contact-sheet', kind, frames: result};
 }
 function ground(scene) {
   const positions = [];
