@@ -12,6 +12,37 @@ async function refusal(promise) {
 }
 
 describe('fake island API', () => {
+  it.each([false, true])('rejects fresh walls through scenery and reconciles a paid retry (member=%s)', async member => {
+    const world = createFakeWorld();
+    const host = createFakeIslandApi({world});
+    const visitor = createFakeIslandApi({world, playerId: 'visitor'});
+    const {code} = await host.island();
+    if (member) await visitor.joinGame({code, actionUid: 'join-wall-fixture'});
+    const api = member ? visitor : host;
+    const island = world.islands.get(code.slice(5));
+    const old = {x: -16, z: 0};
+    island.positions = new Map([['wall_1', old]]);
+    const request = {spot: 'wall_1', kind: 'wall', actionUid: 'buy-old-wall', ...(member ? {code} : {})};
+    const before = (await api.island()).coins;
+
+    await expect(api.build(request)).rejects.toMatchObject({status: 409, code: 'place_taken'});
+    expect((await api.island()).coins).toBe(before);
+    expect(island.built.has('wall_1')).toBe(false);
+    expect(island.positions.get('wall_1')).toEqual(old);
+
+    island.positions.set('wall_1', {x: -18.5, z: -1});
+    await api.build(request);
+    expect(island.built.has('wall_1')).toBe(true);
+    expect((await api.island()).coins).toBe(before - 10);
+    island.positions.set('wall_1', old);
+    await api.build(request);
+    expect((await api.island()).coins).toBe(before - 10);
+    expect(island.positions.get('wall_1')).toEqual(old);
+    await expect(api.build({...request, actionUid: 'buy-standing-wall'})).rejects.toMatchObject({
+      status: 409, code: 'spot_taken',
+    });
+  });
+
   it('accepts protocol-two capability and keeps the legacy policy for a legacy island', async () => {
     const transport = createFakeIslandTransport();
     const started = await transport.post('/api/waves/start', {where: 'own', actionUid: 'capability-1', waveProtocol: 2});

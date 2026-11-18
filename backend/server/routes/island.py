@@ -82,6 +82,9 @@ POST /api/island/build  {"spot": "cannon_1", "kind": "cannon" | "mortar", "actio
     "actionUid" is made once per click (8 to 64 letters, digits, hyphens or underscores); the
     ledger ref is "island:<actionUid>", so a repeat never builds or charges twice and is answered
     with the island as it is now. Anything extra is a 422.
+    A new standard wall checks its settled saved cell against fixed scenery before charging.
+    Returns 409 place_taken for an overlap, 409 busy if the checked layout changed, or 503
+    layout_unavailable if the saved layout could not be read.
     Errors: 404 no_such_island (a code that names no island), 403 not_member, 404 no_such_spot,
             409 spot_taken
             (also the cabin), 409 locked ("Opens after wave

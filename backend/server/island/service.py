@@ -41,7 +41,7 @@ from fastapi import Depends, Request
 from server.errors import ApiError
 from server.game import islet_store
 from server.game.building_catalogue import Cost
-from server.island import games, layout, layout_store, permissions, rules, store
+from server.island import games, layout, layout_store, permissions, rules, store, wall_purchase
 from server.island.captain_recovery_policy import (
     LEGACY_RECOVERY_VERSION,
     RETIRED_RECOVERY_OPTIONS,
@@ -412,6 +412,50 @@ async def paid(admin: SupabaseAdmin, function: str, arguments: dict, name: str) 
     return outcome
 
 
+async def build_checked_wall(
+    admin: SupabaseAdmin,
+    catalogue: IslandCatalogue,
+    island: Island,
+    payer: str | None,
+    spot_id: str,
+    action_uid: str,
+    price: int,
+    built: dict[str, Built],
+) -> IslandView:
+    player = payer or island.owner
+    recovery_version = await read_recovery_version(admin, island.owner)
+    checked = await wall_purchase.checked_layout(
+        admin, catalogue, island.owner, spot_id, built, recovery_version
+    )
+    validate_transaction(-price, "building_purchase", REF_PREFIX + action_uid)
+    try:
+        outcome = await store.run_paid(
+            admin,
+            "island_build_checked_wall",
+            {
+                "p_player_id": player,
+                "p_island_owner": island.owner,
+                "p_plot": spot_id,
+                "p_action_uid": action_uid,
+                "p_price": price,
+                **checked,
+            },
+        )
+    except InsufficientFunds as error:
+        raise not_enough_coins("A wall", price) from error
+    except AlreadyApplied:
+        return await look_open(admin, catalogue, island, payer)
+    if isinstance(outcome, Refusal):
+        if outcome.reason == "layout_changed":
+            raise ApiError(409, "busy", "The island layout changed. Try again.")
+        if outcome.reason == "plot_occupied":
+            raise rules.spot_taken(catalogue, "wall")
+        if outcome.reason == "not_member":
+            raise permissions.refusal(permissions.BUILD)
+        raise paid_refusal(outcome, "A wall")
+    return await look_open(admin, catalogue, island, payer)
+
+
 async def build(
     admin: SupabaseAdmin,
     catalogue: IslandCatalogue,
@@ -434,7 +478,9 @@ async def build(
     island, payer = await target_island(admin, catalogue, player_id, code)
     if payer is not None:
         return await build_with_friend(admin, catalogue, island, payer, spot_id, kind, action_uid)
-    if await islet_store.build_exists(admin, player_id, ref):
+    if await islet_store.build_exists(admin, player_id, ref) or (
+        kind == "wall" and await store.ledger_has(admin, player_id, "building_purchase", ref)
+    ):
         return await look_open(admin, catalogue, island)
 
     built = await store.read_built_spots(admin, player_id)
@@ -442,6 +488,10 @@ async def build(
     # GAME-V3 section 4: the island's own best won wave decides what may be built on it.
     spot, price = rules.check_build(catalogue, spot_id, kind, built, progress.wave_best)
     price = rules.engineer_price(catalogue, price, progress.role)  # an engineer pays less
+    if kind == "wall":
+        return await build_checked_wall(
+            admin, catalogue, island, None, spot.id, action_uid, price, built
+        )
     validate_transaction(-price, "building_purchase", ref)
     arguments = islet_store.build_arguments(
         player_id, spot.id, kind, Cost(price, NO_TIMBER), NO_TIMBER, ref
@@ -494,6 +544,10 @@ async def build_with_friend(
         price = rules.engineer_price(
             catalogue, price, (await store.read_progress(admin, payer)).role
         )
+        if kind == "wall":
+            return await build_checked_wall(
+                admin, catalogue, island, payer, spot.id, action_uid, price, built
+            )
         arguments = {
             "p_player_id": payer,
             "p_island_owner": island.owner,
