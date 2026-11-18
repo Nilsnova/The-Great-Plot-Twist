@@ -11,8 +11,8 @@ import { projectPoint } from '../../src/world/art.js';
 const shot = (by, x = 0, toX = 8) => ({ type: 'captain_fired', t: 1, by, x, z: 0, toX, toZ: -2 });
 
 describe('the pose of a shot or a blow', () => {
-  it('has a musket and cutlass drawing in every lobby colour', () => {
-    expect(POSE_IDS).toHaveLength(30);
+  it('has every weapon and cutlass drawing in every lobby colour', () => {
+    expect(POSE_IDS).toHaveLength(110);
     for (const id of POSE_IDS) expect(islandFrame(id), id).not.toBeNull();
   });
   it('fires (frame 2) for the flash time, aims (frame 1) until the pose ends, in the captain\'s colour', () => {
@@ -29,6 +29,24 @@ describe('the pose of a shot or a blow', () => {
     expect(poseOf({ type: 'captain_struck', by: 'me', x: 2, z: 0, toX: 1, toZ: 0 })).toEqual({ kind: 'cutlass', flip: true });
     expect(poseOf({ type: 'cannon_fired', x: 0, toX: 1 })).toBeNull();
     expect(poseOf({ type: 'captain_fired', x: 0, toX: 1 })).toBeNull(); // no shooter
+  });
+  it.each(['musket', 'pistols', 'blunderbuss', 'long_rifle', 'fire_bombs'])('poses %s in every color and returns to walking', weapon => {
+    let clock = 0;
+    const poses = createPoses({now: () => clock});
+    poses.note([{...shot('me'), weapon}]);
+    expect(poses.get('me')).toMatchObject({kind: weapon, angle: Math.atan2(-1.44, 8)});
+    for (let colour = 0; colour < 10; colour++) {
+      const frame = poseFrame(poses.get('me'), colour);
+      expect(frame).toBe(`captain-${colour + 1}-${weapon}-2`);
+      expect(islandFrame(frame)).not.toBeNull();
+    }
+    clock = POSES[weapon].fire + .01;
+    expect(poseFrame(poses.get('me'), 0)).toBe(`captain-1-${weapon}-1`);
+    clock = POSES[weapon].seconds;
+    expect(poses.get('me')).toBeNull();
+  });
+  it('keeps unknown weapon events compatible with the standard musket', () => {
+    expect(poseOf({...shot('me'), weapon: 'unknown'}).kind).toBe('musket');
   });
   it.each([[8, 0], [-8, 0], [0, -8], [0, 8], [8, -8], [-8, 8], [2, -7], [-7, -2]])(
     'aims precisely at (%s, %s), including between cardinal directions', (dx, dz) => {

@@ -72,6 +72,19 @@ describe('pirate wave renderer', () => {
     expect(renderer.root.visible).toBe(false);
     renderer.dispose();
   });
+  it.each([false, true])('throws fire bombs without a muzzle flash or bloom (reduced motion: %s)', reducedMotion => {
+    const blooms = [], scene = new THREE.Scene(), shared = atlas();
+    const renderer = createWaveRenderer({scene, atlas: shared, reducedMotion: () => reducedMotion, fx: () => ({bloom: (...args) => blooms.push(args)})});
+    renderer.events([{type: 'captain_fired', weapon: 'fire_bombs', t: 1, impactAt: 2, by: 'me', x: 0, z: 0, toX: 8, toZ: -2}]);
+    renderer.update({state: {ships: [], walls: [], towers: [], fog: 0, sight: 28}, simTime: 1, dt: .01});
+    expect(blooms).toEqual([]);
+    const air = renderer.root.children.find(item => item.name === 'pirates:air'), uv = air.geometry.getAttribute('iUv').array;
+    const flash = shared.rects['fx-musket-flash'];
+    for (let i = 0; i < air.geometry.instanceCount; i++)
+      expect(Math.min(uv[i * 4], uv[i * 4 + 2])).not.toBeCloseTo((flash.x + .01) / shared.width, 6);
+    expect(renderer.stats().shells).toBe(1);
+    renderer.dispose();
+  });
 
   it('shows damaged walls and zero or tiny-positive tower HP only in recovery v1', () => {
     const scene = new THREE.Scene(), renderer = createWaveRenderer({ scene, atlas: atlas(), defenses: DEFENSES, recoveryV1: true, fx: () => null });

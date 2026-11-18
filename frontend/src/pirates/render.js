@@ -536,10 +536,9 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
         const dir = event.toX < event.x ? -1 : 1;
         if (weapon === 'fire_bombs') {
           // A bomb on a low arc, then its burst (captain_blast); the pose throws it.
-          const hand = muzzleOf(event, dir), from = shooterAt(event);
+          const from = shooterAt(event);
           shells.add(item => Object.assign(item, { x: from.x + dir * .6 * K(), z: from.z, toX: event.toX, toZ: event.toZ, from: event.t, to: event.impactAt, bomb: true, radius: event.radius ?? 3 }));
           tracers.add(item => Object.assign(item, { x: event.x, z: event.z, by: event.by ?? null, toX: event.toX, toZ: event.toZ, at: clock, flight: 0, weapon, pose: true, line: false }));
-          effects()?.bloom(hand.x, hand.y, { radius: .6, life: MUSKET.fire, colour: '#ffb35a' });
           break;
         }
         // One streak per ship hit (the blunderbuss sprays up to three, the rifle goes through to a second).

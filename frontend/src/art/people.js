@@ -101,18 +101,24 @@ function captainBody(c, pal, view, step, armed = false) {
 function captain(pal, view, step) { return c => captainBody(c, pal, view, step); }
 // The musket pose, facing right: the captain stands at the middle of a 48 px box, the long gun level.
 export function musketPose(pal, firing, angle = null) {
+  return weaponPose(pal, 'musket', firing, angle);
+}
+// Weapon silhouettes share the upright captain and projected aim, with a separate throwing arm for bombs.
+export function weaponPose(pal, weapon, firing, angle = null) {
   return c => {
-    // Keep the body upright; only the musket turns continuously toward the target.
+    // Keep the body upright; only the weapon and its arms turn toward the target.
     const tilt = Math.abs(angle ?? 0), back = angle < 0;
     const view = tilt < Math.PI / 8 ? '-side' : tilt > 3 * Math.PI / 8
       ? (back ? '-back' : '') : (back ? '-back-diagonal' : '-front-diagonal');
     const body = () => { c.save(); c.translate(12, 0); captainBody(c, pal, view, '', true); c.restore(); };
     // Facing away: the captain occludes the musket. Facing toward us: the gun is in front.
     if (angle === null || angle >= 0) body();
-    const turn = angle ?? 0, reach = angle === null ? 1 : .6, kick = firing ? -1 : 0;
+    const turn = angle ?? 0, reach = angle === null ? 1 : .6, kick = firing && weapon !== 'fire_bombs' ? -1 : 0;
     const shoulder = 24 + (angle !== null && angle < 0 ? 8 * Math.abs(Math.sin(angle)) : 0);
     // Only these two sleeves/hands belong to the firing pose; the body's idle arms are omitted.
-    for (const [from, x, y] of [[19, 26, 19.6], [29, 31.4, 19]]) {
+    const hands = weapon === 'fire_bombs' ? [[19, 28, 23], [29, firing ? 35 : 31, firing ? 12 : 18]]
+      : weapon === 'pistols' ? [[19, 29, 16], [29, 34, 22]] : [[19, 26, 19.6], [29, 31.4, 19]];
+    for (const [from, x, y] of hands) {
       const dx = (x + kick - 24) * reach, dy = y - 18;
       const to = [shoulder + Math.cos(turn) * dx - Math.sin(turn) * dy,
         18 + Math.sin(turn) * dx + Math.cos(turn) * dy];
@@ -125,11 +131,25 @@ export function musketPose(pal, firing, angle = null) {
       c.translate(shoulder, 18); c.rotate(angle); c.scale(.6, 1); c.translate(-24, -18);
     }
     c.save(); c.translate(kick, 0);
-    part(c, poly([[20, 17.2], [26, 16], [29, 18.6], [21.5, 20.6]], 1), '#8a5a36', {depth: .8});
-    part(c, rect(25, 15.6, 18.5, 1.9, .9), '#3b3f4a', {depth: .6, gloss: rect(27, 15.9, 14, .5, .25)});
-    part(c, rect(28, 17.2, 7, 1.6, .6), '#8a5a36', {depth: .5, width: .8});
-    part(c, ellipse(26, 19.6, 1.6), SKIN, {depth: .6});
-    part(c, ellipse(31.4, 19, 1.5), SKIN, {depth: .6});
+    if (weapon === 'fire_bombs') {
+      // The throwing hand is empty after release; the other hand holds the next round bomb.
+      part(c, ellipse(28, 23, 3), '#343a42', {depth: .8, gloss: ellipse(27, 22, .8)});
+      part(c, rect(27, 19, 2, 2, .5), '#a46e32', {depth: .5});
+      stroke(c, [[28, 19], [30, 17.5]], '#dcb772', 1.3);
+    } else if (weapon === 'pistols') {
+      for (const [x, y] of [[29, 16], [34, 22]]) {
+        part(c, rect(x - 1.5, y - 2, 3, 5, 1), '#8a5a36', {depth: .7});
+        part(c, rect(x - 1, y - 3, 8, 2.4, .8), '#3b3f4a', {depth: .6});
+      }
+    } else {
+      part(c, poly([[20, 17.2], [26, 16], [29, 18.6], [21.5, 20.6]], 1), '#8a5a36', {depth: .8});
+      const length = weapon === 'long_rifle' ? 22 : weapon === 'blunderbuss' ? 12 : 18.5;
+      part(c, rect(25, 15.6, length, 1.9, .9), '#3b3f4a', {depth: .6, gloss: rect(27, 15.9, length - 4, .5, .25)});
+      part(c, rect(28, 17.2, 7, 1.6, .6), '#8a5a36', {depth: .5, width: .8});
+      if (weapon === 'blunderbuss') part(c, poly([[33, 15.6], [40, 12.5], [40, 20.5], [33, 17.5]], 1), '#b8924f', {depth: .7});
+      if (weapon === 'long_rifle') part(c, rect(30, 13, 5, 1.6, .6), '#c8b47a', {depth: .6});
+    }
+    for (const [, x, y] of hands) part(c, ellipse(x, y, 1.5), SKIN, {depth: .6});
     c.restore(); c.restore();
     if (angle !== null && angle < 0) body();
   };
@@ -294,8 +314,10 @@ export function peopleFrames() {
   // Every colour's poses, for the captain's own body (src/pirates/poses.js): your character and a teammate's
   // figure fire and strike in their own colour instead of a second captain drawn where the shot was fired.
   CAPTAIN_PALETTES.forEach((pal, i) => {
-    frames[`captain-${i + 1}-musket-1`] = [48, 32, 3, musketPose(pal, false)];
-    frames[`captain-${i + 1}-musket-2`] = [48, 32, 3, musketPose(pal, true)];
+    for (const weapon of ['musket', 'pistols', 'blunderbuss', 'long_rifle', 'fire_bombs']) {
+      frames[`captain-${i + 1}-${weapon}-1`] = [48, 32, 3, weaponPose(pal, weapon, false)];
+      frames[`captain-${i + 1}-${weapon}-2`] = [48, 32, 3, weaponPose(pal, weapon, true)];
+    }
     frames[`captain-${i + 1}-cutlass`] = [48, 32, 3, cutlassPose(pal)];
   });
   // Captain health: every colour's fallen captain (a wave shows each captain who is down in their colour).
