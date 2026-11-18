@@ -6,7 +6,7 @@ Used by both legacy wave adapters; refusing a control never selects another paye
 from server.errors import ApiError
 
 
-def control_refusal(reason: str) -> ApiError | None:
+def control_refusal(reason: str | None) -> ApiError | None:
     errors = {
         "economy_context_required": (
             409, "economy_context_required", "Read this island's shared session first."
