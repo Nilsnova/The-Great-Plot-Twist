@@ -41,7 +41,7 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
   let modal = null, kind = null, render = null, disposed = false, lastToast = null, boatNoticeTimer = null;
   let selection = null, selectionModel = null, selectionHandlers = null, returnToDock = null;
   // The Tech hub tile the player tapped (kept while the page lives); the tree shows its detail.
-  let techPicked = null;
+  let techPicked = null, techFindSpot = null;
   let overviewKind = 'all', overviewState = 'all';
   const banner = node('div', 'island-banner'); banner.setAttribute('role', 'status'); banner.setAttribute('aria-live', 'polite'); banner.hidden = true;
   const bannerEyebrow = node('span', 'island-banner-eyebrow', 'Harbor bell'), bannerText = node('strong', 'island-banner-text');
@@ -306,12 +306,13 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
       return focusable;
     });
   }
-  // handlers: {research({branch, tier, choice, change})}. GAME-V3.md §5.1: one small tree per tower kind (tier 1
+  // handlers: {research({branch, tier, choice, change}), find(id, kind)}. GAME-V3.md §5.1: one small tree per tower kind (tier 1
   // at the root, tiers 2 and 3 a fork of two), drawn by skill-tree.js; a tap on a tile shows it in the detail panel.
   function techCard(model, handlers = {}) {
     open('tech', model.title, body => {
       modal.element.classList.add('island-card-wide');
       const view = {picked: techPicked, research: action => handlers.research?.(action), locked: box => lockedNote(box, model),
+        find: handlers.find, findSpot: techFindSpot, rememberFind: id => { techFindSpot = id; },
         select: id => { techPicked = id; techCard(model, handlers); }};
       return drawTech(body, model, view, {button, line});
     });
@@ -633,6 +634,7 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
     overviewCard, leaderboardCard, buildCard, bellCard, inviteCard, lobbyCard, crewCard, captainCard, captainsCard, harborCard, techCard, wreckCard, arsenalCard, demolishCard, close, copyLink,
     cancel: () => close(true),
     get selectionElement() { return selection?.element ?? null; },
+    focusSelection() { selection?.focusDetails(); },
     get selectionSpot() { return selection ? selectionModel.spotId : null; },
     get selectionRange() { return selection?.coverage ?? null; },
     // Re-draw the open card from fresh models (the island controller calls this on every change).

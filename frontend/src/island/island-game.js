@@ -148,6 +148,7 @@ export function createGames(isl) {
     if (!symbols) return false;
     interruptBoat();
     isl.village.leave();
+    isl.reportVisitGeneration++;
     invalidateWallFeedback();
     isl.visitCode = symbols; isl.visiting = null; isl.flow.reset(); isl.ui.close();
     return true;

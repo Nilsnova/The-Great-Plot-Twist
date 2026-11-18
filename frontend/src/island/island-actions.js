@@ -18,7 +18,7 @@ import {SPOTS_CHANGED, TOWER_SPECIALISED, TOWER_TREE_BOUGHT, HOUSE_ROLE_PICKED} 
 export function createActions(isl) {
   const {emit, focus, resetInput, reducedMotion, now, wallRecovery} = isl;
   // From the other parts (island-*.js), linked once every part exists.
-  let recoveryControlsOn, recoveryPolicyOn, readStructureRecovery, setOwn, campaign, wrote, target, where,
+  let recoveryControlsOn, recoveryPolicyOn, readStructureRecovery, setOwn, campaign, wrote, target, shownIsland, researchIsland, where,
     placeOf, tookCoins, reloadVisit, reloadOwn, refreshDefended, took, refused, lobby, colours, bellAction,
     demolishHandlers, demolishCardModel, readBoat, bell, refreshCard, refreshCardIfBuild;
   const onWhere = place => (place === 'point' ? ' for Pirate Point' : place === 'visit' ? ` on ${isl.visiting?.ownerName ? `${isl.visiting.ownerName}'s` : 'this'} island` : '');
@@ -178,10 +178,11 @@ export function createActions(isl) {
   // GAME-V3.md §5: a tower picks a skill (free); research a kind at the Tech hub; §4: coins into the wreck.
   // Each answer is the island; the room hears island_changed, so every screen reads it again.
   const placeCode = () => (isl.visiting ? {code: isl.visiting.code} : {});
-  async function landed(answer, spot) {
-    if (isl.visiting) { wrote('visit'); wrote('own'); await Promise.all([reloadVisit(), reloadOwn()]); }
+  async function landed(answer, spot, current = () => true) {
+    const place = isl.visiting ? 'visit' : 'own';
+    if (place === 'visit') { wrote('visit'); wrote('own'); await Promise.all([reloadVisit(), reloadOwn()]); }
     else { wrote('own'); setOwn(answer.data); }
-    emit({type: SPOTS_CHANGED, place: isl.visiting ? 'visit' : 'own', spot});
+    if (current()) emit({type: SPOTS_CHANGED, place, spot});
   }
   async function specialise(spotId, spec) {
     if (isl.busySpot || (!SPECS[spec] && !ROLES[spec])) return;
@@ -261,14 +262,23 @@ export function createActions(isl) {
   // the crew picked the other one before and pays the tier's price again to switch).
   async function research(step) {
     const {branch, tier = 1, choice = null, change = false} = typeof step === 'string' ? {branch: step} : step ?? {};
-    if (isl.busyResearch || !BRANCH_BY_ID[branch]) return;
+    if (isl.busyResearch || !BRANCH_BY_ID[branch] || !researchIsland()) return;
+    const scope = shownIsland(), travelGeneration = isl.coreTravelGeneration, reset = isl.resetGeneration;
+    const visitGeneration = isl.reportVisitGeneration;
+    const current = () => !isl.disposed && !!researchIsland() && shownIsland() === scope
+      && isl.coreTravelGeneration === travelGeneration && isl.resetGeneration === reset && isl.reportVisitGeneration === visitGeneration;
     isl.busyResearch = `${branch}:${tier}:${choice ?? ''}`; isl.cardMessage = ''; refreshCard();
     const answer = await isl.api.research({branch, tier, choice, change, ...placeCode()});
     if (isl.disposed) return;
     isl.busyResearch = null;
+    if (!current()) {
+      if (answer.ok) await Promise.all([reloadOwn(), reloadVisit()]);
+      refreshCard();
+      return;
+    }
     if (answer.ok) {
-      await landed(answer, 'tech_hub');
-      if (isl.disposed) return;
+      await landed(answer, 'tech_hub', current);
+      if (!current()) return;
       emit({type: 'tech_researched', branch, tier, choice});
       const kind = KINDS[branch].name.toLowerCase();
       isl.ui.toast(tier === 1 ? `${BRANCH_BY_ID[branch].name} researched! Tap a ${kind} to pick its skill.`
@@ -361,7 +371,7 @@ export function createActions(isl) {
     refreshCard();
   }
   function link() { // the names of the other parts, once every part exists (index.js)
-    ({recoveryControlsOn, recoveryPolicyOn, readStructureRecovery, setOwn, campaign, wrote, target, where,
+    ({recoveryControlsOn, recoveryPolicyOn, readStructureRecovery, setOwn, campaign, wrote, target, shownIsland, researchIsland, where,
       placeOf, tookCoins, reloadVisit, reloadOwn, refreshDefended, took, refused, lobby, colours, bellAction,
       demolishHandlers, demolishCardModel, readBoat, bell, refreshCard, refreshCardIfBuild} = isl);
   }

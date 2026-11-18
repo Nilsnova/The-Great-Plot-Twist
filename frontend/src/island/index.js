@@ -101,7 +101,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     tookCoins, arsenalCoins, reloadVisit, refreshDefended, currentCode, syncGame, wantSync, colourOf, captainColour,
     openLobby, setPresence, resetState, resetIsland, playArrival, visit, leaveGame, enterGame, sailHome,
     interruptBoat, refreshCard, refreshCardIfBuild, openHarbor, openTechHub, openWreck, selectedAnchor, openCrew,
-    openOverview, openCaptain, openLeaderboard, openCaptains, openInvite, pick, invalidateWallFeedback, build, readWalls,
+    openOverview, openCaptain, openLeaderboard, openCaptains, openInvite, pick, defenseReportIdentity,
+    canFocusDefenseReport, resolveDefenseReport, focusDefenseReport, invalidateWallFeedback, build, readWalls,
     upgrade, askDemolish, confirmDemolish, heardDemolish, specialise, buyTree, toggleVillage, startMove, moved,
     inspectHouse, activeHouseSupport, research, giveWreck, hire, upgradeCaptain, learnSkill, takeRole, respecCaptain} = isl;
   // ownRetry: your own island's read failed for a passing reason, so the next reread (the wave wiring's
@@ -157,6 +158,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   isl.moveBar = createMoveBar({container, handlers: {nudge: (dx, dz) => isl.moving.nudge(dx, dz), place: () => void isl.moving.confirm(), cancel: () => isl.moving.cancel()}});
   // A confirmed fresh start begins a new island identity for the core display (VIS-35).
   isl.resetGeneration = 0;
+  isl.reportVisitGeneration = 0;
+  isl.reportLocation = null;
   isl.villageBar = createVillageBar({container, onLeave: () => isl.village.leave(), onPick: pick, onCamera: villageCamera, onCoverage: setApproachTarget});
   isl.village = createVillageMode({
     context: () => ({ready: !!isl.own?.code && !!isl.world, own: !isl.visiting && !isl.visitCode, code: isl.own?.code,
@@ -165,6 +168,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     render: active => isl.villageBar.render(active),
     onLeave: () => {
       approachTarget = ''; approachCache = null;
+      isl.reportLocation = null;
       isl.villageBar.setCoverage('');
       isl.moving.cancel(); isl.ui.close(); isl.openSpot = null; resetInput(); focus();
     },
@@ -451,6 +455,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     get managing() { return isl.village.active; },
     get selection() { return selectedAnchor(); },
     get selectionElement() { return isl.ui.selectionElement; },
+    get defenseReportIdentity() { return defenseReportIdentity(); },
+    canFocusDefenseReport, resolveDefenseReport, focusDefenseReport,
     toggleVillage,
     startMove,
     get moving() { return isl.moving.state; },
