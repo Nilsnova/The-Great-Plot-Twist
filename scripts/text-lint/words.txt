@@ -2816,3 +2816,13 @@ quote
 slots
 # WALL-44: undo is the standard American English verb for reversing the last draft edit.
 undo
+# CF1: reviewed combat feedback terms.
+bullets
+attacking
+attacks
+bomb
+enemy
+fired
+incoming
+limited
+warnings

@@ -16,7 +16,7 @@ export function createWaveFlow({api, emit, notify = () => {}, banner = () => {},
   defensesOf = () => [], placeholder = false, hasRenderer = defaultHasRenderer, prepare = async () => {},
   now = () => Date.now(), setTimer = (fn, ms) => setTimeout(fn, ms), clearTimer = id => clearTimeout(id)} = {}) {
   let current = null; // {wave, where, joined, finished}
-  let busy = false, disposed = false;
+  let activeOperation = null, disposed = false;
   let contextWhere = null, contextGeneration = 0, lookupGeneration = 0;
   // Reads may overlap preparation. Target/reset changes cancel admission; a join also keeps its wave ID.
   // A newer read, accepted begin or clear invalidates older read responses before they mutate current.
@@ -75,9 +75,10 @@ export function createWaveFlow({api, emit, notify = () => {}, banner = () => {},
     catch { /* The island as we had it. */ } finally { if (timer !== null) clearTimer(timer); }
   }
   async function run(task) {
-    if (busy || disposed) return {ok: false, status: 0, code: 'busy', message: 'One moment…'};
-    busy = true; changed();
-    try { return await task(); } finally { busy = false; if (!disposed) changed(); }
+    if (activeOperation || disposed) return {ok: false, status: 0, code: 'busy', message: 'One moment…'};
+    const operation = {}; activeOperation = operation; changed();
+    try { return await task(); }
+    finally { if (activeOperation === operation) { activeOperation = null; if (!disposed) changed(); } }
   }
   // joinRunning: the break's "Next wave" (two friends may press it at once): when the other one's
   // wave already runs there, join it instead of saying no.
@@ -85,19 +86,20 @@ export function createWaveFlow({api, emit, notify = () => {}, banner = () => {},
     const generation = contextFor(where), before = current;
     lookupGeneration++;
     const answer = await api.startWave({where});
-    if (disposed || generation !== contextGeneration) return answer;
+    if (disposed || generation !== contextGeneration) return {...answer, ignored: true};
     if (answer.ok) {
       await ready();
       // A fresh same-target read may confirm another wave while start/prepare is pending.
       if (!disposed && generation === contextGeneration
           && (!current || current === before || current.wave.waveId === answer.data.waveId)) begin(answer.data, where, {fresh: true});
+      else return {...answer, ignored: true};
     } else if (answer.code === 'wave_running') {
       const lookup = lookupGeneration + 1;
       await look(where);
       if (joinRunning && !disposed && generation === contextGeneration && lookup === lookupGeneration
           && current && !current.joined) return joinNow(where);
     }
-    return answer;
+    return generation === contextGeneration ? answer : {...answer, ignored: true};
   });
   async function joinNow(where) {
     const generation = contextFor(where);
@@ -106,8 +108,12 @@ export function createWaveFlow({api, emit, notify = () => {}, banner = () => {},
     lookupGeneration++;
     const stillCurrent = () => !disposed && generation === contextGeneration && current?.where === where && current?.wave.waveId === waveId;
     const answer = await api.joinWave({waveId});
-    if (!stillCurrent()) return answer;
-    if (answer.ok) { await ready(); if (stillCurrent()) begin(answer.data, where); }
+    if (!stillCurrent()) return {...answer, ignored: true};
+    if (answer.ok) {
+      await ready();
+      if (!stillCurrent()) return {...answer, ignored: true};
+      begin(answer.data, where);
+    }
     else if (answer.code === 'wave_over') { lookupGeneration++; current = null; changed(); }
     return answer;
   }
@@ -150,7 +156,7 @@ export function createWaveFlow({api, emit, notify = () => {}, banner = () => {},
   // the island like finish() does (loot toast, coins, wave_finished).
   function ended(waveId, data = null) {
     const number = current?.wave.waveId === waveId ? current.wave.wave : undefined;
-    if (number !== undefined) { current.finished = true; stopTimers(); banner(null); current = null; }
+    if (number !== undefined) { lookupGeneration++; current.finished = true; stopTimers(); banner(null); current = null; }
     if (data) {
       if (data.away) notify('This wave ended while you were away. The bell is free again.', 'info');
       else if (data.survived) notify(lootText(data), 'success');
@@ -163,7 +169,7 @@ export function createWaveFlow({api, emit, notify = () => {}, banner = () => {},
   const stopFinisher = setWaveFinisher(args => finish(args, {retry: false}));
   return {
     ring, join, look, finish, ended,
-    get busy() { return busy; },
+    get busy() { return activeOperation !== null; },
     get current() { return current ? {...current} : null; },
     secondsLeft: () => (current ? Math.max(0, Math.ceil((current.startAt - now()) / 1000)) : null),
     // The wave on screen ended here (its controller stopped) but no finish got through: the bell must not say
@@ -176,7 +182,7 @@ export function createWaveFlow({api, emit, notify = () => {}, banner = () => {},
       return true;
     },
     // Leaving the island ends the countdown on screen; the wave itself keeps its server time.
-    reset() { contextGeneration++; lookupGeneration++; contextWhere = null; stopTimers(); current = null; banner(null); changed(); },
-    dispose() { if (disposed) return; disposed = true; contextGeneration++; lookupGeneration++; stopTimers(); stopFinisher(); current = null; banner(null); },
+    reset() { contextGeneration++; lookupGeneration++; contextWhere = null; activeOperation = null; stopTimers(); current = null; banner(null); changed(); },
+    dispose() { if (disposed) return; disposed = true; contextGeneration++; lookupGeneration++; activeOperation = null; stopTimers(); stopFinisher(); current = null; banner(null); },
   };
 }
