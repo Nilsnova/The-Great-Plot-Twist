@@ -3430,3 +3430,56 @@ Focused verification also runs `server/tests/test_economy_operations.py`,
 `server/tests/island_sql/test_economy_operations_cutover_sql.py` with the disposable PostgreSQL tools
 above. Source settlement after departure/retirement keeps its original account; this extension does
 not grant current membership, convert saves, register routes or authorize a live migration.
+
+## Guarded shared economy domain migrations
+
+The new service-only domain contracts are in
+[Guarded shared economy transactions](../docs/economy/DOMAIN-TRANSACTIONS.md).
+Apply no live migration or admission from this documentation. The treasury and
+operation migrations precede `20261118050900_shared_arsenal.sql`,
+`20261118051200_shared_combat_repairs.sql`,
+`20261118051400_shared_island_wagers.sql` and
+`20261118051500_shared_ship_rewards.sql`.
+
+| Data | Browser rights | Service rights and immutable history |
+| --- | --- | --- |
+| `shared_arsenal_receipts` | No direct rights; RLS enabled | Select only; definer transaction inserts an immutable domain receipt. |
+| `island_shared_repair_receipts` | No direct rights; RLS enabled | Select only; guarded transaction inserts the root/financial repair proof. |
+| `island_wagers`, `island_wager_settlements` | No direct rights; RLS enabled | Select only; definer functions insert immutable product/source/terminal evidence. |
+| `island_boat_rounds`, `island_boat_results` | No direct rights; RLS enabled | Select only; definer functions insert immutable original round and result rows. |
+| `island_boat_reward_buckets` | No direct rights; RLS enabled | Select only; the claim transaction updates cumulative paid reward under locks. |
+
+Only the documented domain entry points grant `service_role` execution. Private
+arsenal holder/loadout/closure helpers and other internal projections grant no
+execution to `anon`, `authenticated` or `service_role`. Existing arsenal rows and
+their legacy grants are not a new client write path. The arsenal capacity trigger
+preserves legacy storage limits, permits bound grandfathered returns, and retains
+the total-copy check on new shared purchases.
+
+Use a disposable database for the following manual checks; the automated suites
+in the linked document exercise the same boundaries with explicit fixture authority:
+
+1. Apply the full migration chain twice. `anon` and `authenticated` cannot call
+   new entry points or read/write the new domain tables. Direct service mutations
+   of immutable receipts/results are refused; only documented entry points execute.
+2. With the reserved authority RPC absent, a fresh action refuses without a new
+   operation, product, ledger row, HP change or quota use. Test malformed and
+   mismatched authority separately. A TEST-ONLY provider is not runtime acceptance.
+3. Race a real wager against arsenal purchase and reserved repair for the last
+   available coins. Inspect both cash and commitment ledger reconciliation, root
+   claims and persisted asset/journal effects; only the affordable action succeeds.
+4. Return bound historical excess arsenal stock, then force deferred constraints
+   or commit. Preserve every copy; reject another purchase at 20 total. Confirm the
+   original legacy stored-copy limit still rejects an over-capacity legacy commit.
+5. Replay successful operations after later damage, departure and source-account
+   retirement. Return original effects without another charge/heal/reward and
+   without exposing unauthorized fresh treasury state. Changed immutable intent
+   conflicts; an injected post-effect failure rolls the entire transaction back.
+6. Run simultaneous ship scores from ten members and repeated same-round claims.
+   Each game/account/epoch/record bucket stays within the existing three-star cap.
+   Direct account-retirement fixtures verify fencing, not the actual reset RPC.
+
+Canonical authority/session/assignment storage, immutable wave economy binding,
+free revival hold/fall authority, lifecycle workers, holder deletion, legacy
+guards and actual reset/deletion integration remain release gates. Authenticated
+multiple-client and physical-device acceptance are still required separately.
