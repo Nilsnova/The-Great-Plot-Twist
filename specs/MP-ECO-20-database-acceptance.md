@@ -72,3 +72,39 @@ the reproduced pre-existing failures separately from the corrected test run.
 - **Coding assistance:** Codex; the teammate remains responsible.
 - **Human reviewer:** pending a different teammate's review.
 - **Last updated:** 2026-11-18.
+
+
+## Verification against updated main
+
+The previous 1,043-Python/387-SQL results above belong to their recorded earlier
+source. Verification was repeated after updating to main
+`d58d924617319cd166a637618d780665b462b39a`, including its paid-revival journal,
+historical reconciliation and saved legacy reward recovery. The published
+treasury schema now uses migration version `20261118050050`; all migration
+versions remain unique. Upstream's equivalent repair-price expectation correction
+was retained without rewriting that test file. Contract PR #515 is already part
+of this main snapshot. No dependency PR or main branch was modified here.
+
+The tested production/test source is `ce8d63b18fdbc70a716a6521e6fbf6a2a6e867a2`;
+subsequent changes are documentation only. With disposable PostgreSQL and explicit
+TEST-ONLY authority/snapshot inputs:
+
+- Affected Python, foundation and legacy regression selection: **1,078 passed in
+  39.91s**, process exit 0, no skips. This includes migration-version uniqueness,
+  saved reward recovery and house-role parity.
+- Mixed actual PostgreSQL selection across 24 suites: **450 passed in 106.58s**,
+  process exit 0, no skips. All eight cross-domain cases are included. The
+  selection also covers the new paid-revival/reconciliation/reward HTTP/database
+  paths and existing recovery contracts.
+- Full backend Ruff: **All checks passed!**
+- Production migration parser: **75 files parse; all 75 timestamp versions are
+  unique**. Whitespace and added documentation links were checked.
+
+The domain SQL command in the transaction overview and the individual specs
+reproduce the principal component checks. The complete long regression selections
+were captured with their actual results; neither a full backend run nor frontend
+acceptance is claimed for this increment. Production authority, canonical frozen
+economy and hold/participation producers, lifecycle workers, legacy guards, actual
+reset/deletion and authenticated clients remain explicit integration gates. New
+legacy `/api/waves/recover` obligations must retain their original accounting mode
+before any shared admission; no personal payout fallback is introduced here.
