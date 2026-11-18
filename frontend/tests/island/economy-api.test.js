@@ -49,8 +49,8 @@ describe('shared economy API adaptation', () => {
   it('does not fall back to the old personal weapon shop on a shared island', async () => {
     const post = vi.fn();
     const api = createIslandApi({transport: {get() {}, post}, economy: () => sharedEconomy()});
-    expect(await api.buyWeapon({weapon: 'pistols'})).toMatchObject({ok: false, code: 'economy_path_unavailable'});
-    expect(await api.equipWeapon({weapon: 'pistols'})).toMatchObject({ok: false, code: 'economy_path_unavailable'});
+    expect(api).not.toHaveProperty('buyWeapon');
+    expect(api).not.toHaveProperty('equipWeapon');
     expect(post).not.toHaveBeenCalled();
   });
 

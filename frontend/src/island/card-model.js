@@ -4,7 +4,7 @@ import {BUILDINGS, CREW, CREW_IDS, CAPTAIN, CAPTAIN_MAX, SLOT_KINDS, maxLevel, p
 import {towerKinds} from './defenses-v2.js';
 import {displayIslandCode, visitUrl} from './codes.js';
 import {formatCoinDelta, formatCoins} from '../lib/coins.js';
-import {BRANCHES, ROLES, ROLE_BY_ID, ROLE_LEVEL, SKILLS, SKILL_BY_ID, WEAPONS, WEAPON_BY_ID, isRole, pointsEarned, pointsSpent, readSkills, readWeapon, respecPrice} from '../pirates/captain-ids.js';
+import {BRANCHES, ROLES, ROLE_BY_ID, ROLE_LEVEL, SKILLS, SKILL_BY_ID, isRole, pointsEarned, pointsSpent, readSkills, respecPrice} from '../pirates/captain-ids.js';
 import {isExtraSpot} from './extra-spots.js';
 import {opensText, spotWave, waveOf, isOpen, tierItem, tierWave} from '../campaign/index.js';
 import {BRANCH_BY_ID, SPECS, TOP_TIER, isCapstone, optionLine, optionName, optionsOf, readSpec, readTier, skillPrice} from '../campaign/tech.js';
@@ -321,31 +321,6 @@ export function skillsModel({skills = null, wonWave = 0, picked = null, busy = n
   else if (!personal && coins < price) { respec.disabled = true; respec.reason = `Not enough 🪙: you need ${coinText(price - coins)} more.`; }
   return {title: 'Skills', recoveryVersion, points, pointsText: skillPointsText(points), line: personal ? 'Win personal wave milestones to earn skill points.' : 'Win new waves to earn skill points: one for every two waves.',
     branches, picked: chosen.id, detail, message, learned: known.length, role: roleCard, respec};
-}
-
-// The weapon shop (§15): buy once with coins, then equip one. weapons: the island answer's {owned,
-// equipped, shop} (or null while loading: only the musket); wonWave: the best wave you won (unlocks).
-//   row.action  'equip' | 'buy' | null (equipped already, or locked, or short of coins: row.reason says)
-export function weaponsModel({weapons = null, coins = null, wonWave = 0, busy = null, message = ''} = {}) {
-  const owned = new Set(['musket', ...(Array.isArray(weapons?.owned) ? weapons.owned.filter(id => WEAPON_BY_ID[id]) : [])]);
-  const equipped = readWeapon(weapons?.equipped);
-  const shop = new Map((Array.isArray(weapons?.shop) ? weapons.shop : []).filter(item => WEAPON_BY_ID[item?.id]).map(item => [item.id, item]));
-  const rows = WEAPONS.map(weapon => {
-    const sent = shop.get(weapon.id);
-    const price = Number.isSafeInteger(sent?.price) ? sent.price : weapon.price, unlockWave = Number.isSafeInteger(sent?.unlockWave) ? sent.unlockWave : weapon.unlockWave;
-    const row = {id: weapon.id, name: weapon.name, line: weapon.line, price, priceText: price ? coinText(price) : 'Free',
-      owned: owned.has(weapon.id), equipped: weapon.id === equipped, action: null, button: '', disabled: true, reason: ''};
-    if (row.equipped) { row.button = 'Equipped'; return row; }
-    if (row.owned) { row.action = 'equip'; row.button = busy === weapon.id ? 'Equipping…' : 'Equip'; row.disabled = busy !== null; return row; }
-    row.action = 'buy'; row.button = busy === weapon.id ? 'Buying…' : `Buy · ${coinText(price)}`;
-    if (wonWave < unlockWave) { row.action = null; row.button = 'Locked'; row.reason = `${opensText(unlockWave)}.`; return row; }
-    if (coins === null) row.reason = 'Your coins are still loading.';
-    else if (coins < price) row.reason = `Not enough 🪙: you need ${coinText(price - coins)} more.`;
-    else row.disabled = busy !== null;
-    return row;
-  });
-  return {title: 'Weapons', lead: 'Buy a weapon once, then equip it. It changes how your captain shoots.', rows,
-    equipped: WEAPON_BY_ID[equipped].name, message, coins: coins === null ? '' : `You have ${coinText(coins)}`};
 }
 
 // wave: the running wave there or null. countdown: whole seconds left before it starts, or null.

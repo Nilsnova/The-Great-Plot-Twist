@@ -16,8 +16,6 @@
 //   await api.upgradeCaptain();                       // POST /api/island/captain     (§10)
 //   await api.learnSkill({skill: 'steady_aim'});      // POST /api/island/skill       (§14)
 //   await api.pickRole({role: 'medic'}); await api.respec(); // POST /api/island/role, /respec
-//   await api.buyWeapon({weapon: 'pistols'});         // POST /api/island/weapon/buy  (§15)
-//   await api.equipWeapon({weapon: 'pistols'});       // POST /api/island/weapon/equip
 //   await api.demolishQuote({spot, code?});            // GET  /api/island/demolish   (GAME-V3.md §4.2: who gets what back)
 //   await api.demolish({spot, code?});                 // POST /api/island/demolish   (between waves; half back to each payer)
 //   await api.move({spot, x, z, code?});               // POST /api/island/move       (T36: a spot to a cell of the build grid, free)
@@ -46,7 +44,7 @@
 import {makeActionUid} from '../screens/islet/action-uid.js';
 import {islandCode, displayIslandCode} from './codes.js';
 import {localSpotId} from './spots.js';
-import {SKILL_BY_ID, WEAPON_BY_ID, isRole} from '../pirates/captain-ids.js';
+import {SKILL_BY_ID, isRole} from '../pirates/captain-ids.js';
 import {BRANCH_BY_ID, SPECS, optionsOf} from '../campaign/tech.js';
 import {isRole as isHouseRole} from '../campaign/houses.js';
 import {readRecoverySnapshot} from '../pirates/recovery-snapshot.js';
@@ -59,7 +57,7 @@ export const PATHS = Object.freeze({
   start: '/api/waves/start', join: '/api/waves/join', finish: '/api/waves/finish', revive: '/api/waves/revive',
   current: (where, waveProtocol = 1) => `/api/waves/current?where=${encodeURIComponent(where)}${waveProtocol === 2 ? '&waveProtocol=2' : ''}`,
   upgrade: '/api/island/upgrade', hire: '/api/island/hire', captain: '/api/island/captain', inviteJoin: '/api/island/invite/join',
-  skill: '/api/island/skill', role: '/api/island/role', respec: '/api/island/respec', weaponBuy: '/api/island/weapon/buy', weaponEquip: '/api/island/weapon/equip',
+  skill: '/api/island/skill', role: '/api/island/role', respec: '/api/island/respec',
   point: '/api/pirate-point', pointBuild: '/api/pirate-point/build', pointUpgrade: '/api/pirate-point/upgrade',
   games: '/api/games', gameJoin: '/api/games/join', gameLeave: '/api/games/leave', game: code => `/api/games/${code}`,
   research: '/api/island/research', specialise: '/api/island/tower-skill', towerTree: '/api/island/tower-tree', wreck: '/api/island/wreck',
@@ -87,7 +85,6 @@ export const MESSAGES = Object.freeze({
   badCrew: 'Choose a gunner, a carpenter, a lookout or a guard.',
   badSkill: 'There is no such skill.',
   badRole: 'There is no such role.',
-  badWeapon: 'There is no such weapon.',
   badResearch: 'There is no such research.',
   badSpec: 'There is no such tower skill.',
   badTree: 'There is no such step in a tower tree.',
@@ -407,17 +404,7 @@ export function createIslandApi({transport, makeUid = makeActionUid, waveProtoco
       if (personalVersion() || selectedEconomy() !== undefined) return writePersonal('respec');
       return writeSpots('respec', actionUid => postIsland(PATHS.respec, {actionUid}), isIsland);
     },
-    // §15: buy a weapon once with coins, then equip it (equipping again changes nothing, so no click id).
-    buyWeapon({weapon} = {}) {
-      if (selectedEconomy() !== undefined) return refuse(409, 'economy_path_unavailable', 'Buy island weapons at the arsenal.');
-      if (!Object.hasOwn(WEAPON_BY_ID, weapon ?? '')) return refuse(400, 'bad_weapon', MESSAGES.badWeapon);
-      return writeSpots(`weapon:${weapon}`, actionUid => transport.post(PATHS.weaponBuy, {weapon, actionUid}), isIsland);
-    },
-    equipWeapon({weapon} = {}) {
-      if (selectedEconomy() !== undefined) return refuse(409, 'economy_path_unavailable', 'Choose an island weapon at the arsenal.');
-      if (!Object.hasOwn(WEAPON_BY_ID, weapon ?? '')) return refuse(400, 'bad_weapon', MESSAGES.badWeapon);
-      return askSpots(() => transport.post(PATHS.weaponEquip, {weapon}), isIsland);
-    },
+
     // GAME-V3.md §5, §5.1: one research step at the Tech hub of the island (yours, or the game of `code`):
     // tier 1 of a branch, or one option of tier 2 or 3 (`change`: switch from the option the crew chose before).
     research({branch, tier = 1, choice = null, change = false, code = null} = {}) {
