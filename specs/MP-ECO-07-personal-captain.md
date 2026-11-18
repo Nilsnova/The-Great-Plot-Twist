@@ -102,3 +102,5 @@ After merging main `f0c64442` and adding the operation registry dependency:
 - The documented pglast parser check parsed **70 migrations**.
 
 The new SQL regressions first reproduced sequential and concurrent cross-domain duplicate execution. They cover refusal rollback, historical mapping refusal, reserved namespaces, exact replay linkage, missing adoption and an injected failure after profile mutation while writing its receipt. Existing Engineer-generation, global assignment and legacy-finish/profile-freeze tests remain in the same SQL run. No router registration, live conversion, production migration or authenticated end-to-end activation is claimed.
+
+The corrected registry cutover (`8a35a58e`) is integrated. Rerunning the four PostgreSQL suites above together with `server/tests/island_sql/test_economy_operations_cutover_sql.py` passed **91 tests**, including populated first-apply/reapply writer-drain races. The same **108 Python tests**, full Ruff and **70-migration** parser check passed again. This proves local dependency compatibility, not migration-tool behavior or live cutover.
