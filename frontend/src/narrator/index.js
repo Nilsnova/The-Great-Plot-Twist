@@ -148,7 +148,7 @@ export function createNarrator({container = globalThis.document?.body, on, audio
     end();
   }
   function end() {
-    speaking = null; card.hide(); clearTimer(watch); watch = null;
+    speaking = null; card.hide({keepReading: true}); clearTimer(watch); watch = null;
     later(pump, TAIL_MS);
   }
   function skip() {
@@ -246,6 +246,7 @@ export function createNarrator({container = globalThis.document?.body, on, audio
     if (!enabled()) hush();
     else if (!captions()) card.hide();
     else if (speaking && !card.visible) card.show(speaking.line);
+    else if (!speaking && settings().subtitleSize !== 'large') card.hide();
   }) ?? (() => {}));
 
   return {

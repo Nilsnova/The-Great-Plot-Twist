@@ -18,6 +18,10 @@ export function createNarratorCard(container = document.body, {onSkip = () => {}
   const card = document.createElement('div');
   card.className = 'narrator-card';
   card.hidden = true;
+  const reader = document.createElement('div');
+  reader.className = 'narrator-reader';
+  const history = document.createElement('div');
+  history.className = 'narrator-history';
   const text = document.createElement('p');
   text.className = 'narrator-text';
   text.setAttribute('role', 'status');
@@ -28,8 +32,29 @@ export function createNarratorCard(container = document.body, {onSkip = () => {}
   skip.textContent = '×';
   skip.setAttribute('aria-label', 'Skip the narrator');
   skip.title = 'Skip';
-  skip.addEventListener('click', event => { event.stopPropagation(); onSkip(); });
-  card.append(text, skip);
+  skip.addEventListener('click', event => { event.stopPropagation(); if (retained) hide(); else onSkip(); });
+  reader.append(history, text);
+  card.append(reader, skip);
+  let reading = false, retained = false, savedScroll = 0, focusOwner = null;
+  card.addEventListener('focusin', event => {
+    if (event.relatedTarget instanceof HTMLElement && !card.contains(event.relatedTarget)) focusOwner = event.relatedTarget;
+  });
+  function restoreFocus() {
+    const usable = node => node?.isConnected && !node.closest('[hidden],[inert]') && node.getClientRects().length > 0;
+    const target = usable(focusOwner) ? focusOwner : container.querySelector('canvas[tabindex="0"]');
+    if (usable(target)) target.focus({preventScroll: true});
+    focusOwner = null;
+  }
+  const beginReading = () => {
+    if (card.classList.contains('is-large-touch-reader') && reader.scrollHeight > reader.clientHeight + 1) reading = true;
+  };
+  for (const event of ['pointerdown', 'wheel', 'focus']) reader.addEventListener(event, beginReading);
+  reader.addEventListener('keydown', event => { if (event.key !== 'Escape') event.stopPropagation(); });
+  const markUnread = () => card.classList.toggle('has-unread-subtitles', reader.scrollTop + reader.clientHeight + 2 < reader.scrollHeight);
+  reader.addEventListener('scroll', () => {
+    if (reader.clientHeight) savedScroll = reader.scrollTop;
+    markUnread();
+  });
   let observedBar = null, layoutFrame = null;
   const barSize = typeof ResizeObserver === 'function' ? new ResizeObserver(() => {
     // Position after the HUD has published the new wave bar bottom.
@@ -56,9 +81,11 @@ export function createNarratorCard(container = document.body, {onSkip = () => {}
         && own.top < bounds.bottom && own.bottom > bounds.top;
     });
     // Measure the final dock or fallback position. Even large captions yield to an acute instruction.
+    const focused = card.classList.contains('is-large-touch-reader') && card.contains(document.activeElement);
     card.classList.toggle('is-danger-suppressed', suppressed);
     card.inert = suppressed;
     if (suppressed) card.setAttribute('aria-hidden', 'true'); else card.removeAttribute('aria-hidden');
+    if (suppressed && focused) restoreFocus();
     return suppressed;
   }
 
@@ -84,7 +111,37 @@ export function createNarratorCard(container = document.body, {onSkip = () => {}
     const combatHud = container.querySelector(ACTIVE_COMBAT);
     const touchAction = container.querySelector(TOUCH_ACTIONS);
     const style = getComputedStyle(card);
-    const dock = !card.classList.contains('is-large') && !!(combatHud || touchAction)
+    const enlarged = card.classList.contains('is-large');
+    const wasReader = card.classList.contains('is-large-touch-reader');
+    const largeReader = enlarged && style.getPropertyValue('--narrator-reader-enabled').trim() === '1'
+      && dockLargeReader(touchAction);
+    const focused = wasReader && card.contains(document.activeElement);
+    const wasDormant = card.classList.contains('is-reader-dormant');
+    const dormant = retained && !largeReader;
+    card.classList.toggle('is-large-touch-reader', !!largeReader);
+    card.classList.toggle('is-reader-dormant', dormant);
+    if (largeReader) {
+      reader.tabIndex = 0;
+      reader.setAttribute('role', 'region');
+      reader.setAttribute('aria-label', 'Narrator subtitles');
+      if (wasDormant || (!wasReader && reading)) reader.scrollTop = savedScroll;
+      markUnread();
+    } else {
+      reader.removeAttribute('tabindex');
+      reader.removeAttribute('role');
+      reader.removeAttribute('aria-label');
+      if (dormant) {
+        card.inert = true;
+        card.setAttribute('aria-hidden', 'true');
+        if (focused) restoreFocus();
+        document.documentElement.style.setProperty('--narrator-card-height', '0px');
+        document.documentElement.style.removeProperty('--narrator-sound-bottom');
+        document.documentElement.style.removeProperty('--narrator-sound-left');
+        return;
+      }
+      card.classList.remove('has-unread-subtitles');
+    }
+    const dock = !enlarged && !!(combatHud || touchAction)
       && style.getPropertyValue('--narrator-dock-enabled').trim() === '1';
     const waveBreak = dock && !!touchAction && !!container.querySelector(WAVE_BREAK);
     // The wave event details can resize the bar without changing any control's hidden flag.
@@ -93,9 +150,10 @@ export function createNarratorCard(container = document.body, {onSkip = () => {}
     card.classList.remove('is-combat-fallback');
     const footer = waveBreak && style.getPropertyValue('--narrator-footer-enabled').trim() === '1' && fitFooter(touchAction);
     card.classList.toggle('is-wave-footer', footer);
-    const placed = footer || (dock && dockBesideControls());
+    const placed = largeReader || footer || (dock && dockBesideControls());
     card.classList.toggle('is-wave-touch-docked', waveBreak && placed);
-    if (!footer) document.documentElement.style.removeProperty('--narrator-sound-bottom');
+    if (!footer && !largeReader) document.documentElement.style.removeProperty('--narrator-sound-bottom');
+    if (!largeReader) document.documentElement.style.removeProperty('--narrator-sound-left');
     if (!placed) {
       card.classList.remove('is-combat-docked');
       card.classList.toggle('is-combat-fallback', dock);
@@ -108,6 +166,25 @@ export function createNarratorCard(container = document.body, {onSkip = () => {}
     }
     const suppressed = protectWarning();
     document.documentElement.style.setProperty('--narrator-card-height', `${suppressed ? 0 : Math.round(card.getBoundingClientRect().height)}px`);
+  }
+
+  function dockLargeReader(action) {
+    const stick = container.querySelector('.touch-stick-group')?.getBoundingClientRect();
+    if (!stick?.height) return false;
+    const target = action?.getBoundingClientRect();
+    card.classList.add('is-large-touch-reader');
+    card.style.removeProperty('bottom');
+    const inset = Number.parseFloat(getComputedStyle(card).bottom);
+    const obstacles = [...container.querySelectorAll(DOCK_CONTROLS)].map(node => node.getBoundingClientRect());
+    const reserved = Math.max(stick.bottom, ...obstacles.filter(box => box.width > 0 && box.height > 0).map(box => box.bottom));
+    const height = Math.floor(innerHeight - reserved - inset - 4);
+    if (height < 54) return false;
+    card.style.setProperty('--narrator-reader-height', `${height}px`);
+    const leading = Number.parseFloat(getComputedStyle(text).lineHeight);
+    card.style.setProperty('--narrator-reader-lines', `${Math.floor((height - 12) / leading) * leading}px`);
+    document.documentElement.style.setProperty('--narrator-sound-bottom', `${innerHeight - (target?.top ?? stick.bottom) + 4}px`);
+    document.documentElement.style.setProperty('--narrator-sound-left', `${Math.ceil(stick.right) + 8}px`);
+    return true;
   }
 
   // The shortest portrait screens can use the footer without crossing the wave result or the touch controls.
@@ -127,30 +204,69 @@ export function createNarratorCard(container = document.body, {onSkip = () => {}
   const flipped = record => (record.oldValue === null) === record.target.hasAttribute('hidden');
   const controlsChange = typeof MutationObserver === 'function' ? new MutationObserver(records => { if (records.some(flipped)) position(); }) : null;
   const watch = on => { controlsChange?.disconnect(); if (on) controlsChange?.observe(container, {subtree: true, attributes: true, attributeOldValue: true, attributeFilter: ['hidden']}); };
+  function hide({keepReading = false} = {}) {
+    if (keepReading && reading && card.classList.contains('is-large') && !card.hidden) {
+      retained = true;
+      skip.setAttribute('aria-label', 'Close narrator subtitles');
+      skip.title = 'Close';
+      position();
+      return;
+    }
+    const focused = card.classList.contains('is-large-touch-reader') && card.contains(document.activeElement);
+    watch(false);
+    barSize?.disconnect();
+    observedBar = null;
+    if (layoutFrame !== null) cancelAnimationFrame(layoutFrame);
+    layoutFrame = null;
+    card.hidden = true;
+    card.classList.remove('is-danger-suppressed', 'is-reader-dormant', 'is-large-touch-reader');
+    card.inert = false; card.removeAttribute('aria-hidden');
+    delete card.dataset.line;
+    reading = retained = false;
+    savedScroll = 0;
+    reader.scrollTop = 0;
+    history.replaceChildren();
+    text.textContent = '';
+    document.documentElement.style.removeProperty('--narrator-card-height');
+    document.documentElement.style.removeProperty('--narrator-sound-bottom');
+    document.documentElement.style.removeProperty('--narrator-sound-left');
+    if (focused) restoreFocus();
+    else focusOwner = null;
+  }
   return {
     element: card,
     show(line) {
       if (!card.isConnected) container.append(card);
-      card.classList.toggle('is-large', !!large());
+      const enlarged = !!large();
+      let scrollTop = 0;
+      if (reading && text.textContent && enlarged) {
+        scrollTop = savedScroll;
+        const previous = document.createElement('p');
+        previous.className = 'narrator-text';
+        previous.textContent = text.textContent;
+        history.append(previous);
+        if (history.children.length > 4) {
+          const oldest = history.firstElementChild;
+          const height = oldest.getBoundingClientRect().height + Number.parseFloat(getComputedStyle(oldest).marginBottom);
+          oldest.remove();
+          scrollTop = Math.max(0, scrollTop - height);
+        }
+      } else {
+        history.replaceChildren();
+      }
+      retained = false;
+      skip.setAttribute('aria-label', 'Skip the narrator');
+      skip.title = 'Skip';
+      card.classList.toggle('is-large', enlarged);
       card.dataset.line = line.id;
       card.hidden = false;
       text.textContent = line.text;
       barSize?.observe(card);
-      position(); watch(true);
+      position();
+      reader.scrollTop = scrollTop;
+      watch(true);
     },
-    hide() {
-      watch(false);
-      barSize?.disconnect();
-      observedBar = null;
-      if (layoutFrame !== null) cancelAnimationFrame(layoutFrame);
-      layoutFrame = null;
-      card.hidden = true;
-      card.classList.remove('is-danger-suppressed'); card.inert = false; card.removeAttribute('aria-hidden');
-      delete card.dataset.line;
-      text.textContent = '';
-      document.documentElement.style.removeProperty('--narrator-card-height');
-      document.documentElement.style.removeProperty('--narrator-sound-bottom');
-    },
+    hide,
     get visible() { return !card.hidden; },
     dispose() { removeEventListener('resize', position); this.hide(); card.remove(); },
   };
