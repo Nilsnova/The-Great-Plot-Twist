@@ -142,6 +142,9 @@ declare
   v_price numeric;
   v_offer jsonb;
   v_finance jsonb;
+  v_finance_id uuid;
+  v_child_uid text;
+  v_reference text;
 begin
   if p_actor_id is null or p_account_id is null or p_run_epoch is null
      or p_crew is null or p_crew not in ('gunner','carpenter','lookout','guard') then
@@ -197,13 +200,29 @@ begin
     when 'guard' then crew_guard end into v_before
     from public.islands where player_id = v_account.island_owner;
   if v_before >= v_max then raise exception 'crew_full'; end if;
+  v_child_uid := public.island_economy_effect_uid(v_operation,'charge');
+  v_reference := 'crew:hire:'||v_operation::text;
   v_finance := public.island_treasury_spend(p_actor_id,p_account_id,p_run_epoch,
-    public.island_economy_effect_uid(v_operation,'charge'),'crew_hire',
-    'crew:hire:'||v_operation::text,v_price);
+    v_child_uid,'crew_hire',v_reference,v_price);
   if v_finance ->> 'status' is distinct from 'done' then
     raise exception '%',coalesce(v_finance ->> 'reason','crew_financial_conflict');
   end if;
-  if (v_finance ->> 'repeat')::boolean then raise exception 'crew_financial_conflict'; end if;
+  if v_finance -> 'repeat' is distinct from 'false'::jsonb
+     or jsonb_typeof(v_finance #> '{receipt,id}') is distinct from 'string'
+     or (v_finance #>> '{receipt,id}') !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' then
+    raise exception 'crew_financial_conflict';
+  end if;
+  -- A successful-looking reply must identify this exact committed child charge.
+  select id into v_finance_id from public.island_treasury_transactions
+   where id = (v_finance #>> '{receipt,id}')::uuid and account_id = p_account_id
+     and run_epoch = p_run_epoch and actor_id = p_actor_id and action_uid = v_child_uid
+     and kind = 'spend' and reason = 'crew_hire' and reference = v_reference
+     and balance_delta = -v_price and committed_delta = 0 and source_reservation_id is null;
+  if not found then raise exception 'crew_financial_conflict'; end if;
+  if v_finance -> 'receipt' is distinct from
+     (public.island_treasury_result(v_finance_id,false) -> 'receipt') then
+    raise exception 'crew_financial_conflict';
+  end if;
   update public.islands set
     crew_gunner = crew_gunner + case when p_crew = 'gunner' then 1 else 0 end,
     crew_lookout = crew_lookout + case when p_crew = 'lookout' then 1 else 0 end,
@@ -212,7 +231,7 @@ begin
   insert into public.island_crew_receipts
     (id,actor_id,action_uid,account_id,run_epoch,crew,previous_count,count,charged_coins,treasury_receipt_id)
   values (v_operation,p_actor_id,p_action_uid,p_account_id,p_run_epoch,p_crew,
-    v_before,v_before+1,v_price,(v_finance #>> '{receipt,id}')::uuid);
+    v_before,v_before+1,v_price,v_finance_id);
   return public.island_crew_result(v_operation,false,true);
 exception
   when invalid_text_representation or numeric_value_out_of_range or check_violation then
