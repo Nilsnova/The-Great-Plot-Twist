@@ -1866,3 +1866,58 @@ with paid-restore race protection in `20261115150000_wall_restore_record_fence.s
 The main game owns the pirate update loop by passing `loop:false` to `wireWaves`; its `update(delta)` forwards the existing `mountPirates.update`. The optional third argument of `createController.update(delta, active, beforeAnimate)` runs after movement/collision/facing and before `character.animate`. The game uses it for combat sampling and pose consumption in one frame. Default module loops and existing two-argument movement callers keep their behavior.
 
 Legacy body poses may also use accepted outcomes correlated to live local/validated-room inputs admitted after initial catch-up. This channel preserves original event order, rejects ambiguous actor/type batches, and clears on travel/hidden/stop/disposal. It changes neither simulation inputs nor generic renderer/audio history filtering. Recovery feedback keeps its existing prediction/dedup rules. See `live-attack-feedback.js`, the controller and D066.
+## Shared island treasury foundation (MP-ECO-02)
+
+The additive foundation in `backend/server/island/treasury.py`, `treasury_models.py` and
+`treasury_store.py` defines exact accounts per island/run. Contracts are in migrations
+`20261118050000_island_treasury.sql` / `20261118050100_island_treasury_functions.sql`,
+[database rights and checks](../supabase/README.md#shared-island-treasury-foundation-mp-eco-02)
+and [the package spec](../specs/MP-ECO-02-island-treasury.md). Existing HTTP routes do not call
+admission or these money functions; personal-wallet runtime remains unchanged.
+
+`EconomyContext(mode,version,actor_id,island_owner,account_id,run_epoch,revision)` and
+`resolve_economy_context(admin,actor_id,island_owner,*,expected_epoch=None)` live in
+`server.island.treasury`. Resolution establishes identity, not action permission. A successful
+known-island read without admission returns `personal_legacy`, version 0, null account/epoch/revision.
+Missing tables, transport errors and unreadable replies fail closed. Paused offers stay shared;
+expected-epoch mismatch returns `409 economy_epoch_mismatch`.
+
+The common envelope is `economy: {mode:"island_shared", version:1, islandOwner, accountId,
+runEpoch, revision, treasury:{balanceCoins,committedCoins,availableCoins}}`. IDs are UUID strings;
+coins and revisions are canonical decimal strings, including values above JavaScript precision.
+Balance includes held principal; available is balance minus committed. Integrations must resolve
+the actor/account on the server and check the client's expected island/epoch capability assertion.
+
+| Service-only RPC | Contract |
+|---|---|
+| `island_economy_context(p_island_owner)` | Consistent persisted-mode read; membership authorization is separate. |
+| `island_treasury_admit(p_actor_id,p_island_owner,p_action_uid,p_starting_coins)` | Owner-only explicit bootstrap, one grant per known island; rejects active waves and any second admission under a new UID. |
+| `island_treasury_spend(p_actor_id,p_account_id,p_run_epoch,p_action_uid,p_reason,p_reference,p_amount)` | Locked current active account/epoch/member check; debit available funds. |
+| `island_treasury_reserve(p_actor_id,p_account_id,p_run_epoch,p_action_uid,p_reason,p_reference,p_principal,p_fee)` | Same current/member checks; reserve principal and debit opening fee atomically, without extra stake/day/count caps. |
+| `island_treasury_credit(p_actor_id,p_account_id,p_run_epoch,p_action_uid,p_reason,p_reference,p_amount)` | Privileged canonical loot/refund/ship credit to saved origin; domain caller proves that source. Current membership is irrelevant. |
+| `island_treasury_settle(p_reservation_id,p_returned_payout,p_reference,p_action_uid)` | Resolve one reserve once; derive original account/epoch/actor/principal/reason, including after departure or retirement. Domain caller verifies returned payout, including principal and already net of closing fees. |
+
+Reserve principal `s` with opening fee `f` needs available funds of at least `s+f` and changes
+`(balance,committed)` by `(-f,+s)`. Verified returned payout `p` changes `(+p-s,-s)`: loss has `p=0`,
+principal refund `p=s`. The product subtracts any closing fee once before passing `p`; the treasury
+does not subtract it again. Fee refund is included only when the product grants it. Purchases and wagers
+share one availability check; committed money cannot simultaneously buy a building or repair.
+
+Success is `{status:"done",repeat,receipt,currentEconomy,accountState,admissionState}`. The immutable
+receipt keeps its operation UUID, actor, action UID, reason/reference, signed cash/commitment deltas,
+balances/revision at commit and optional source-reservation UUID. `currentEconomy` is fresh state
+of that same originating account, which may differ from the island currently on screen. Match
+account and epoch before updating UI; never use `receipt.balanceAtCommit` as the current balance.
+Changed retry inputs/target yield `409 idempotency_conflict`; insufficient funds, paused/retired
+spending and a second distinct settlement mutate nothing.
+
+Acquire the `hashtextextended('island-economy:' || owner::text,0)` transaction advisory scope before
+account rows. Multi-island callers sort distinct signed scope keys, then account UUIDs; personal
+Captain/Engineer, island, admission/recovery, wave/assets/product and receipt locks follow. Future
+game RPCs must combine money, assets and Engineer commitment in one database transaction. A separate
+network debit followed by an asset request is not atomic.
+
+Existing-save admission, reset/owner deletion, wave accounting, product verification and remaining
+money paths require integration before enabling shared mode. Retained account/ledger references
+prevent accidental deletion of an admitted island until explicit deletion/retirement policy exists.
+This foundation neither converts balances nor admits existing saves automatically.
