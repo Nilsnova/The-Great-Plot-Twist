@@ -3,8 +3,8 @@
 What this is: the scope and verification handover for [issue #462](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/462). Used by Ianno and the peer reviewer.
 
 - Responsible teammate: Ianno Hollensteiner (`Iannomh123456`); agent assistance: Codex, one writer and read-only reviewers.
-- Branch: `fix/boat-quest-flow`, started from main `48aee0e7`; main `37eb70fa` merged on 18 Nov.
-- Status: implemented as [Draft PR #467](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/467), stacked on captain-feedback [#481](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/481). Joint validation passed **4627 tests / 421 files**, build and refreshed boat captures; the included pose source passes the full four-page native journey. Independent human review remains required.
+- Branch: `fix/boat-quest-flow`, started from main `48aee0e7`; main `03e660fe` integrated in `a1416e00` on 18 Nov.
+- Status: implemented in [PR #467](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/467). Prerequisite captain-feedback [#481](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/481) has merged separately. Notice follow-up `d7a25731` addresses the native small-screen review; [current verification](../docs/evidence/boat-quest-flow/review-2026-11-18/README.md) supersedes the earlier component-only layout evidence. Current-head human peer approval remains required.
 
 ## Scope and agreed behavior
 
@@ -14,10 +14,11 @@ What this is: the scope and verification handover for [issue #462](https://githu
 
 ## Files and contracts
 
-`first-quests.js` holds the pure reconciliation; `hud.js` persists and renders it; `island/index.js` supplies own snapshots through `game.js` and owns boat cancellation. `island/ui.js` shows a seven-second nonblocking interruption notice independent of other toasts; `card-model.js` explains the current payout. The callback is documented in INTERFACES; the local transition is recorded in DECISIONS. No room message, dependency or storage format is added.
+`first-quests.js` holds the pure reconciliation; `hud.js` persists and renders it; `island/index.js` supplies own snapshots through `game.js` and owns boat cancellation. `island/ui.js` shows a seven-second nonblocking interruption notice independent of other toasts; `card-model.js` explains the current payout. The notice reserves its measured height in the real wave announcement lane. Short screens use a compact countdown, sharing a row with the notice in landscape. Toast height updates on rotation. Critical combat/status feedback stays above passive narration during the notice. The callback is documented in INTERFACES; the local transition is recorded in DECISIONS. No room message, dependency or storage format is added.
 
 ## Verification
 
+- Latest-main/review follow-up: **425 files / 4681 tests passed**, 493.25 s; production build passed with **250 text files / 12 protected lines**. Final boat/selection checks passed **10 tests** after the animation-clearance adjustment. Native application `e12d303d` passes all four small-screen/toast variants and both settled rotations with captain movement restored, stable source hashes and no browser errors. [Exact evidence and scope](../docs/evidence/boat-quest-flow/review-2026-11-18/README.md).
 - Tests first: the three saved-achievement regressions failed before implementation. The real Chromium boat test reproduced retained scene/input at countdown; the delayed-launch regression also failed.
 - Before latest-main integration: **349 files / 3847 tests passed**; production build/spoiler guard and text lint passed. The general four-page multiplayer check stopped at the musket-pose assertion tracked by #421. [Exact commands, results and desktop/phone screenshots](../docs/evidence/boat-quest-flow/README.md).
 - After merging main `37eb70fa`: `npm test -- --maxWorkers=1 tests/ui/first-quests.test.js tests/tutorial/guide.test.js` passed **2 files / 19 tests**. JavaScript syntax checks and `git diff origin/main --check` passed. Conflicts combined the boat hooks with the new village camera, core cleanup and selection dock; the task decision is now D067, preserving main's D061. Browser, full frontend suite and build were not rerun at this integration step.
