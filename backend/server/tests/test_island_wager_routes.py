@@ -26,8 +26,6 @@ def world(monkeypatch):
         lambda request: httpx.Response(200, json={"id": ACTOR, "is_anonymous": False}),
     ))
     app = create_app(settings=settings, verifier=verifier, admin=FakeAdmin({"status": "missing"}))
-    app.include_router(island_wagers.router, prefix="/api")
-    app.include_router(island_wager_jobs.router, prefix="/api")
     calls = []
 
     async def opened(*arguments):

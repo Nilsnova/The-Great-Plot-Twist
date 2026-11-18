@@ -35,3 +35,12 @@ authenticated game acceptance; the latter requires the real local provider,
 database and completed domain integration.
 
 No deployment, live migration, admission or production feature activation occurs.
+
+## Runtime route registration
+
+Register the shared Harbor and durable settlement routers in the production app
+factory. Their routes, authorization and queue contracts remain owned by
+[the Harbor runtime spec](MP-ECO-14-harbor-runtime.md). The protected route tests
+must use ordinary `create_app()` registration rather than installing routers
+only inside a test fixture. Missing login/capability and unauthorized scheduler
+calls must still refuse before any domain mutation.
