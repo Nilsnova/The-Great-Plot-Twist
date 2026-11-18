@@ -4,7 +4,7 @@
 >
 > **Who uses it:** reset, account-deletion, canonical-wave, arsenal and financial-settlement implementations and reviewers.
 
-- **Status:** selected lifecycle policies and bounded foundation preparation; complete reset/deletion routes and admission remain gated below.
+- **Status:** selected lifecycle policies and isolated private treasury foundation implemented locally; complete reset/deletion routes and admission remain gated below.
 - **Responsible teammate:** Ianno Hollensteiner (`Iannomh123456`), assisted by Codex.
 - **Issue:** [#511](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/511), under [epic #492](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/492).
 - **Branch:** `feat/mp-eco-16-reset`.
@@ -61,9 +61,19 @@ The proposed additive receipt is `island_economy_reset_receipts`, keyed by the g
 
 Its result separates the immutable effect (`oldAccountId`, `oldRunEpoch`, `newAccountId`, `newRunEpoch`, receipt IDs and original counts) from any authorized fresh `currentEconomy` projection. A delayed retry after several more resets must not promote its historical new account back to current or roll back the UI's current scope. An old reset UID cannot reset the later run.
 
-The bounded foundation may supply this receipt/schema, strict immutable result parsing and one private treasury-transition helper, with isolated transaction/failure/concurrency tests. The proposed helper `island_economy_reset_treasury_locked(operation_id, starting_coins, grant_policy_version, effects)` accepts only a matching already-claimed owner `lifecycle:reset` operation. Its encompassing caller must claim before personal/domain locks, prepare all earlier locks and apply the approved asset/recovery/session/inventory reset in the same transaction. The helper rechecks the current original account and idle boundary, preserves old cash/holds, creates/grants the new account and records the pointer/receipt once. Every refusal raises so the outer transaction can roll back the root claim and all prior effects; returning a refusal after an outer claim is insufficient.
+The bounded foundation supplies this receipt/schema, strict immutable result parsing and one private treasury-transition helper, with isolated transaction/failure/concurrency tests. `island_economy_reset_treasury_locked(operation_id uuid, starting_coins numeric, grant_policy_version text, effects jsonb)` accepts only a matching already-claimed owner `lifecycle:reset` operation. Its encompassing caller must claim before personal/domain locks, prepare all earlier locks and apply the approved asset/recovery/session/inventory reset in the same transaction. The helper rechecks the current original account and idle boundary, including an unclosed MP-ECO-03 accounting snapshot even if old wave metadata appears closed. It preserves old cash/holds, creates/grants the new account and records the pointer/receipt once. Every refusal raises so the outer transaction can roll back the root claim and all prior effects; returning a refusal after an outer claim is insufficient.
 
-The helper has no browser or service-role execute grant and no public route. It does not accept a client `hooksComplete` flag, initialize a Captain, perform guessed copy/session changes or make an incomplete reset available. A complete authorized domain wrapper is still required. Exact migration timestamp, module fields and error mapping are recorded with implementation; final route DTO remains a later integration contract.
+The helper has no browser or service-role execute grant and no public route. It does not accept a client `hooksComplete` flag, initialize a Captain, perform guessed copy/session changes or make an incomplete reset available. A complete authorized domain wrapper is still required; final route DTO and public error mapping remain later integration contracts.
+
+### Implemented private interfaces
+
+Migration `20261118051600_island_economy_reset.sql` adds the restricted receipt table, immutable trigger, private result formatter and the helper above. `backend/server/island/island_lifecycle.py` validates results only; it exposes no network reset/grant operation. Its `read_result(value, context, action_uid)` requires the original owner/account/epoch and checks old/new separation, exact integral strings and current-projection scope.
+
+The helper returns `{status:'done', repeat, currentEconomy, receipt}`. Receipt fields are `receiptId`, `actorId`, `actionUid`, `action:'reset'`, old `origin:{mode,version,islandOwner,accountId,runEpoch}` and `result:{newAccountId,newRunEpoch,retiredTreasury,startingCoins,grantReceiptId,grantPolicyVersion,effects}`. `retiredTreasury` has decimal-string `balanceCoins`, `committedCoins`, `availableCoins` and `revision`. `startingCoins` and every current money/revision value are also strings; `effects` contains server-derived nonnegative integer counts. They are not asset-cleanup authorization. Exact replay resolves before today's grant settings/phase/current pointer; `currentEconomy` is null after a later replacement and never republishes the historical run.
+
+The server chooses the configured grant/policy; no client has direct execute access or supplies authority through those arguments. A new account's financial effect uses `sys_<new epoch UUID hex>_run_start`, including an authorized zero grant. A malformed/mismatched finance result raises `reset_grant_conflict` and rolls the outer transaction back. Other private refusals cover wrong root/owner, unavailable current scope, invalid configuration and unfinished waves; they are not a new HTTP error protocol.
+
+Apply the entire migration in one `READ COMMITTED` transaction. Before FK/trigger DDL, all account/registry/ledger and existing-reset-receipt relation barriers are acquired with `NOWAIT` inside one retry/savepoint block; a partial set is released before waiting. Unsupported isolation raises `25000 island_economy_reset_requires_read_committed`; 30 seconds of contention raises `55P03 island_economy_reset_migration_busy`. Roll back and leave history unapplied on either error. Exact migration-tool transaction behavior and live execution remain release checks, not consequences of local tests.
 
 ## Outstanding obligations: retire the original run
 
@@ -114,8 +124,23 @@ The existing deletion response promises account data was removed. Do not answer 
 
 ## Verification and remaining work
 
-This change is a specification only. Source inspection covered the current main deletion/reset/arsenal/recovery relationships and the local treasury/operation, wave-receipt, personal-Captain and conversion contracts. Runtime schemas/helpers, dependency integration, database tests and authenticated multiplayer behavior are not implemented or verified here.
+The feature additions are this spec, `island_lifecycle.py`, migration `20261118051600_island_economy_reset.sql` and focused Python/PostgreSQL tests. Local dependency integration uses main `77a9e34d`, treasury `c12407e9`, personal Captain `ba351aa3`, wave accounting `8645ba18` and construction phase/guard `9a9ada32`. Shared prerequisite conflicts retain the newer treasury registry/fixture and personal-protocol corrections together with the wave contract; no existing route or application registration is changed by this feature.
+
+The PostgreSQL tests use a synthetic owner-only transaction wrapper and a dummy asset row to prove atomic composition. This is deliberately not the missing production reset executor. They verify private treasury replacement, preservation of old obligations and personal tables, rollback and phase/idempotency/privilege boundaries, plus first/reapply/partial-barrier migration races on disposable databases. No complete asset reset, owner deletion, authenticated multiplayer, deployed schema, migration-tool invocation or live operation is claimed.
 
 The outstanding-bet and owner-island policies are selected above. Next confirm MP-ECO-10/11 hooks and exact lock order, historical ownership detachment/de-identification and cleanup confirmation handling; use the reviewed treasury/registry dependency. Add only the bounded receipt/private-treasury foundation with meaningful failure/concurrency tests until those hooks exist. The final implementation must update INTERFACES, the Supabase policy matrix and affected deletion/privacy contracts together.
 
-Documentation link/content and whitespace checks are recorded after review. No application tests are required for this specification-only increment. Last updated: 2026-11-18.
+Verification on 18 Nov 2026, from `backend/` with a writable uv cache:
+
+```sh
+uv run pytest -q server/tests/test_island_lifecycle.py server/tests/test_island_treasury.py server/tests/test_island_treasury_store.py server/tests/test_economy_operations.py server/tests/test_wave_economy.py server/tests/test_personal_captain.py server/tests/test_captain_progression_routes.py server/tests/test_construction_store.py server/tests/test_construction_rules.py
+# 192 passed in 4.95s, including 17 reset-receipt checks.
+CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q server/tests/island_sql/test_island_reset_sql.py server/tests/island_sql/test_island_reset_migration_sql.py server/tests/island_sql/test_island_treasury_sql.py server/tests/island_sql/test_economy_operations_sql.py server/tests/island_sql/test_economy_operations_cutover_sql.py server/tests/island_sql/test_wave_treasury_settlement_sql.py server/tests/island_sql/test_shared_construction_sql.py server/tests/island_sql/test_personal_captain_sql.py server/tests/island_sql/test_personal_captain_operations_sql.py --tb=short
+# 198 passed in 34.55s, including 28 reset/DDL cases; complete chain applied twice.
+uv run ruff check .
+# All checks passed.
+```
+
+The complete pglast check parsed all 74 migrations. Initial receipt tests failed on the absent module; the corrected SQL harness then failed on the absent helper before its implementation. No full-backend, browser, hosted backup, provider, deployment or live database test was run. Documentation link/content and whitespace checks complete this bounded increment; independent review and full lifecycle integration remain required.
+
+Last updated: 2026-11-18.
