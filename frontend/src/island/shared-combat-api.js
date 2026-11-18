@@ -9,7 +9,8 @@ import {repairIntentKey, savedRepairIntent} from './shared-combat-intents.js';
 const options = () => ({headers: ECONOMY_CAPABILITY_HEADERS});
 const failure = (status, code, message) => ({ok: false, status, code, message});
 const safeStore = () => {try {return globalThis.sessionStorage ?? null;} catch {return null;}};
-const unknown = answer => !answer.status || answer.status >= 500 || answer.status === 429;
+// Reauthentication cannot prove that an earlier unknown attempt had no effect.
+const unknown = answer => !answer.status || answer.status >= 500 || [401, 429].includes(answer.status);
 const clone = value => JSON.parse(JSON.stringify(value));
 const frozenOrigin = value => Object.fromEntries(['mode', 'version', 'islandOwner', 'accountId', 'runEpoch']
   .map(key => [key, value[key]]));
@@ -51,7 +52,11 @@ export function createSharedCombatApi({transport, getEconomy, onEconomy = () => 
       if (!answer.ok) return answer;
       if (!isSharedRecoveryState(answer.data) || !isRepairEconomy(answer.data.economy)
           || !sameRepairOrigin(answer.data.economy, origin)) return failure(502, 'unreadable', 'The building state could not be read.');
-      if (!sameRepairOrigin(current(), origin) || actorNow() !== actor) return failure(409, 'economy_epoch_mismatch', 'The selected island changed.');
+      const latest = current();
+      if (!sameRepairOrigin(latest, origin) || actorNow() !== actor) return failure(409, 'economy_epoch_mismatch', 'The selected island changed.');
+      if (!isRepairEconomy(latest) || BigInt(answer.data.economy.revision) < BigInt(latest.revision)) {
+        return failure(409, 'economy_context_required', 'The island treasury changed. Read its current state again.');
+      }
       update(answer.data.economy, origin);
       return answer;
     },

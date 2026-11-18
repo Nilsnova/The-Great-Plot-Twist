@@ -78,6 +78,28 @@ describe('shared combat API', () => {
     expect(value.pendingStore.values.size).toBe(1);
   });
 
+  it('keeps the original unknown intent through 401 and same-actor reauthentication', async () => {
+    const pendingStore = storage(), first = make({pendingStore});
+    const payloads = [];
+    first.transport.post = async (_path, body) => {
+      payloads.push(JSON.stringify(body));
+      return {ok: false, status: payloads.length === 1 ? 503 : 401};
+    };
+    expect((await first.api.repairStructure({quote: quote()})).status).toBe(503);
+    expect((await first.api.repairStructure({quote: quote({expectedRepairSeq: 12})})).status).toBe(401);
+    expect(pendingStore.values.size).toBe(1);
+    const restored = make({pendingStore, makeUid: () => 'new-click-after-signin'});
+    restored.transport.post = async (_path, body) => {
+      payloads.push(JSON.stringify(body));
+      return success(body, {repeat: true});
+    };
+    expect((await restored.api.repairStructure({quote: quote({expectedRepairSeq: 19})})).ok).toBe(true);
+    expect(payloads).toEqual([payloads[0], payloads[0], payloads[0]]);
+    expect(JSON.parse(payloads[2]).actionUid).toBe('repair-action-01');
+    expect(pendingStore.values.size).toBe(0);
+    expect(restored.updates).toEqual([]);
+  });
+
   it('rejects an unrelated financial receipt and keeps the unknown intent for verification', async () => {
     const value = make();
     value.transport.post = async (_path, body) => {const reply = success(body);
@@ -150,6 +172,19 @@ describe('shared combat API', () => {
       return {ok: true, data: {...state(), economy: economy()}};
     };
     expect((await value.api.structureRecovery({})).code).toBe('economy_epoch_mismatch');
+    expect(value.updates).toEqual([]);
+  });
+
+  it('rejects old treasury funds after the canonical same-origin revision advances', async () => {
+    const value = make();
+    value.transport.get = async () => {
+      value.setCurrent(economy({revision: '3',
+        treasury: {balanceCoins: '0', committedCoins: '0', availableCoins: '0'}}));
+      return {ok: true, data: {...state(), economy: economy()}};
+    };
+    const answer = await value.api.structureRecovery({});
+    expect(answer).toMatchObject({ok: false, status: 409, code: 'economy_context_required'});
+    expect(answer).not.toHaveProperty('data');
     expect(value.updates).toEqual([]);
   });
 });
