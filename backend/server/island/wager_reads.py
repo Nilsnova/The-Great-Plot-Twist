@@ -9,6 +9,7 @@ from server.island import treasury_store
 from server.island.economy_permissions import require_economy_action
 from server.island.treasury_models import decimal_integer
 from server.island.treasury_store import EnvelopeRow, Unsigned
+from server.market.calls import asset_name
 from server.supabase_admin import SupabaseAdmin, SupabaseRejected
 
 
@@ -59,6 +60,12 @@ async def read_page(
                 raise ValueError
             if (item.status == "open") != (item.payout is None):
                 raise ValueError
-        return page.model_dump(mode="json", exclude={"status"})
+        result = page.model_dump(mode="json", exclude={"status"})
+        for item in result["items"]:
+            item["eventName"] = asset_name(item["eventId"]) if product == "market_call" else (
+                item["home"] + " v " + item["away"] if item["home"] and item["away"]
+                else "Football match"
+            )
+        return result
     except (ValidationError, ValueError) as error:
         raise SupabaseRejected("The database sent an unreadable island wager page.") from error

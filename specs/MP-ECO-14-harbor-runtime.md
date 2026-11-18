@@ -22,3 +22,12 @@ Add separate shared Harbor cards/adapters with canonical decimal strings and Big
 ## Verification and remaining gates
 
 Tests cover real disposable PostgreSQL queue creation/retries/source settlement after departure/retirement, protected HTTP auth/capability/payload/scope validation, exact large amounts, concurrent funds and duplicate completion, frontend scope changes/unknown retries/multiple same-event bets, and real browser controls. Run focused Python/SQL/frontend checks, whole-backend Ruff, SQL parsing and production frontend build. Label injected authority/provider/auth fixtures separately from actual authenticated multi-client evidence. Actual production authority/client acceptance remains a gate until canonical shared session integration is available. Final verification/results are recorded after execution; human review follows CONTRIBUTING.md.
+
+## Actual local checks
+
+- Focused backend worker/routes/store/source/settlement checks: **71 passed in 4.48s**. Protected route checks use actual app registration with injected authentication/provider services.
+- Durable queue/pages plus actual Python worker against disposable PostgreSQL: **7 passed in 21.18s**. A retired source settles after departure without browser activity; 55 same-event wagers settle across 40/15 batches with no dropped principal; unavailable prices preserve durable retry. Authority/source data are explicit fixtures, while queue, domain and treasury effects are real SQL.
+- Shared Harbor frontend suites: **42 passed in 5.69s**, including two real Chromium component checks. Nested malformed choices/activity and unreadable/missing/wrong receipt identities are rejected before rendering, a balance setter or pending-UID release.
+- Whole-backend Ruff passed. The documented parser read **76 migration files** successfully. No remote scheduler, migration, feature or deployment was activated.
+
+Fresh shared snapshots still depend on the canonical persisted authority/island integration. These fixture/component checks do not establish production authentication, physical-device performance or final authenticated game acceptance.

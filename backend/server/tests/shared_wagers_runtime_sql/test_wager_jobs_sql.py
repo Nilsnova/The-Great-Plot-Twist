@@ -1,8 +1,19 @@
 """Durable work/authorization pages on PostgreSQL; authority is explicitly injected."""
 
+import asyncio
+from decimal import Decimal
+from types import SimpleNamespace
+
 import pytest
 
 psycopg = pytest.importorskip("psycopg")
+from psycopg import sql  # noqa: E402
+from psycopg.types.json import Jsonb  # noqa: E402
+
+from server.island.wager_jobs import settle_due_jobs  # noqa: E402
+from server.market.calendars import ALWAYS_OPEN  # noqa: E402
+from server.market.readings import Reading  # noqa: E402
+from server.market.states import CompanyState  # noqa: E402
 from server.tests.case_sql.conftest import scratch_server as scratch_server  # noqa: E402
 from server.tests.island_sql.test_island_treasury_sql import (  # noqa: E402
     as_owner,
@@ -10,6 +21,7 @@ from server.tests.island_sql.test_island_treasury_sql import (  # noqa: E402
     reconciles,
     rpc,
 )
+from server.tests.market_helpers import island_company  # noqa: E402
 from server.tests.shared_wagers_sql.test_shared_wager_transactions_sql import (  # noqa: E402
     fixture_authority as fixture_authority,
 )
@@ -57,7 +69,7 @@ def test_retry_is_durable_and_completed_source_can_never_reenter_queue(database)
     reconciles(database, keys(initial)[0])
 
 
-def test_pages_allow_many_same_event_bets_and_refuse_other_account_cursors(database):
+def test_pages_allow_many_same_event_bets_and_refuse_outsiders(database):
     owner, actor, outsider, initial = ready(database, 100)
     for number in range(55):
         open_wager(database, actor, owner, initial, 1, f"market{number:03d}")
@@ -87,4 +99,85 @@ def test_job_failure_rolls_back_the_root_product_and_hold(database):
         "select count(*) from public.island_economy_operations "
         "where actor_id=%s and action_uid='wager001'", (actor,)
     ).fetchone() == (0,)
+    reconciles(database, keys(initial)[0])
+
+
+class DatabaseAdmin:
+    """Test-only bridge to real local SQL, replacing HTTP transport rather than money rules."""
+
+    def __init__(self, connection):
+        self.connection = connection
+
+    async def call_function(self, name, parameters):
+        arguments = [Jsonb(value) if isinstance(value, dict) else value
+                     for value in parameters.values()]
+        terms = [sql.SQL("{} => %s").format(sql.Identifier(key)) for key in parameters]
+        statement = sql.SQL("select public.{}({})").format(
+            sql.Identifier(name), sql.SQL(",").join(terms),
+        )
+        return self.connection.execute(statement, arguments).fetchone()[0]
+
+
+class StaticMarket:
+    """Injected source evidence; financial/authorization/queue behavior remains real SQL."""
+
+    def __init__(self, connection):
+        self.connection = connection
+        self.price = Decimal("101")
+        self.reads = 0
+
+    def state(self, asset):
+        moment = self.connection.execute("select clock_timestamp()").fetchone()[0]
+        return CompanyState(island_company(id=asset), Reading(self.price, moment, moment, "live"),
+                            ALWAYS_OPEN, "open", None, False, True)
+
+    async def snapshot(self, admin, *, trading_enabled):
+        self.reads += 1
+        return SimpleNamespace(find=self.state)
+
+
+def test_worker_settles_original_source_without_member_browser_or_current_admission(database):
+    owner, actor, _, initial = ready(database, 100)
+    opened = open_wager(database, actor, owner, initial)
+    due(database, opened)
+    rpc(database, "game_leave", actor, owner)
+    as_owner(database)
+    # This models retired-source settlement, not acceptance of the separately owned reset API.
+    database.execute("update public.island_economy_accounts set state='retired',"
+                     "retired_at=clock_timestamp() where id=%s", (keys(initial)[0],))
+    worker = asyncio.run(settle_due_jobs(DatabaseAdmin(database), StaticMarket(database), None))
+    assert worker == {"considered": 1, "settled": 1, "retried": 0}
+    assert database.execute(
+        "select balance_coins,committed_coins from public.island_economy_accounts "
+        "where id=%s", (keys(initial)[0],)
+    ).fetchone() == (150, 0)
+    assert rpc(database, "island_wager_jobs_due", 40)["jobs"] == []
+    reconciles(database, keys(initial)[0])
+
+
+def test_worker_batch_size_does_not_drop_or_cap_many_same_event_stakes(database):
+    owner, actor, _, initial = ready(database, 100)
+    for number in range(55):
+        opened = open_wager(database, actor, owner, initial, 1, f"market{number:03d}")
+        due(database, opened)
+    market = StaticMarket(database)
+    first = asyncio.run(settle_due_jobs(DatabaseAdmin(database), market, None))
+    second = asyncio.run(settle_due_jobs(DatabaseAdmin(database), market, None))
+    assert first == {"considered": 40, "settled": 40, "retried": 0}
+    assert second == {"considered": 15, "settled": 15, "retried": 0}
+    assert market.reads == 2
+    assert rpc(database, "island_wager_jobs_due", 40)["jobs"] == []
+    reconciles(database, keys(initial)[0])
+
+
+def test_worker_source_failure_leaves_a_durable_retry_without_releasing_principal(database):
+    owner, actor, _, initial = ready(database, 100)
+    opened = open_wager(database, actor, owner, initial)
+    due(database, opened)
+    worker = asyncio.run(settle_due_jobs(DatabaseAdmin(database), None, None))
+    assert worker == {"considered": 1, "settled": 0, "retried": 1}
+    assert database.execute("select attempts,last_error,completed_at from public.island_wager_jobs "
+                            "where wager_id=%s", (opened["wager"]["id"],)).fetchone() == (
+        1, "result_pending", None
+    )
     reconciles(database, keys(initial)[0])

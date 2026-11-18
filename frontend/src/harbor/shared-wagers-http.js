@@ -1,7 +1,8 @@
 // Dedicated shared Harbor transport. Failed shared requests never select personal endpoints.
 import {api as defaultApi, ECONOMY_CAPABILITY_HEADERS} from '../online/api.js';
 import {makeActionUid} from '../screens/market/uid.js';
-import {coinInteger, isUuid, originMatches, validEconomy} from './shared-stakes.js';
+import {coinInteger, isUuid, validEconomy} from './shared-stakes.js';
+import {validOpeningReceipt, validProjection} from './shared-wager-validation.js';
 
 const HEADERS = ECONOMY_CAPABILITY_HEADERS;
 const failure = (code, message, unknown = false) => ({ok: false, code, message, unknown});
@@ -37,13 +38,7 @@ export function createSharedWagersHttp({api = defaultApi, getEconomy, getActorId
     try { if (record) pendingStore?.setItem(saved.key, JSON.stringify(record)); else pendingStore?.removeItem(saved.key); } catch { /* Memory keeps this page's retry identity. */ }
   }
   function receiptMatches(value, saved, body) {
-    const receipt = value?.receipt, wager = receipt?.result?.wager;
-    return receipt?.action === 'island_bet' && receipt.actionUid === body.actionUid
-      && receipt.actorId === saved.actorId && originMatches(receipt.origin, saved.economy)
-      && wager?.product === product && wager.stake === body.stake
-      && wager.eventId === (body.asset ?? body.fixtureId) && wager.selection === (body.direction ?? body.pick)
-      && (value.currentEconomy === null || (validEconomy(value.currentEconomy)
-        && originMatches(value.currentEconomy, saved.economy)));
+    return validOpeningReceipt(value, saved, body, product);
   }
   async function read(cursor = null) {
     const saved = scope();
@@ -57,9 +52,7 @@ export function createSharedWagersHttp({api = defaultApi, getEconomy, getActorId
     if (!current(saved)) return scopeChanged();
     if (!reply?.ok) return reply ?? failure('bad_response', 'The Harbor answer could not be read.');
     const data = reply.data;
-    if (!validEconomy(data?.economy) || !originMatches(data.economy, saved.economy)
-      || !Array.isArray(data.items) || !Array.isArray(data.choices)
-      || data.product !== product || (data.nextCursor !== null && !isUuid(data.nextCursor))) {
+    if (!validProjection(data, product, saved.economy)) {
       return failure('bad_response', 'The shared Harbor answer did not match this island.');
     }
     const latest = getEconomy?.();
@@ -86,7 +79,9 @@ export function createSharedWagersHttp({api = defaultApi, getEconomy, getActorId
     const saved = scope();
     if (!saved) return scopeChanged();
     if (pending(saved)) return failure('pending_wager', 'Resolve the pending stake before placing another.');
-    if (coinInteger(stake) < 1n || !eventId || !selection) return failure('invalid_stake', 'Enter a positive whole-coin stake.');
+    try { if (coinInteger(stake) < 1n) throw new TypeError(); }
+    catch { return failure('invalid_stake', 'Enter a positive whole-coin stake.'); }
+    if (!eventId || !selection) return failure('invalid_stake', 'Choose an event and side.');
     const economy = {mode: 'island_shared', version: 1,
       islandOwner: saved.economy.islandOwner, runEpoch: saved.economy.runEpoch};
     const body = {economy, actionUid: makeUid(), stake,

@@ -1,6 +1,9 @@
 -- Durable origin-bound wager work and authorized paginated Harbor activity.
 -- No scheduler, feature or existing island is activated by this migration.
 
+create index if not exists island_wagers_account_page
+  on public.island_wagers(account_id,product,opened_at desc,id desc);
+
 create table if not exists public.island_wager_jobs (
   wager_id uuid primary key references public.island_wagers(id),
   next_attempt_at timestamptz not null,

@@ -29,6 +29,7 @@ def football_evidence(reading: SportsReading) -> dict:
     match = reading.match
     return {"provider": reading.provider, "source": reading.source,
             "fixtureId": match.id, "sport": match.sport, "status": match.status,
+            "home": match.home, "away": match.away,
             "kickoff": match.kickoff.isoformat(), "fetchedAt": reading.fetched_at.isoformat(),
             "homeScore": match.home_score, "awayScore": match.away_score}
 

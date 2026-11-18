@@ -1,5 +1,6 @@
 import {describe, expect, it} from 'vitest';
 import {createSharedWagersHttp} from '../../src/harbor/shared-wagers-http.js';
+import {acceptedWager} from './shared-wager-fixtures.js';
 
 const id = n => `00000000-0000-0000-0000-${String(n).padStart(12, '0')}`;
 const actor = id(2);
@@ -11,9 +12,15 @@ function store() {
     removeItem: key => records.delete(key)};
 }
 function accepted(body, context, user = actor) {
-  return {ok: true, status: 200, data: {receipt: {action: 'island_bet', actionUid: body.actionUid,
-    actorId: user, origin: context, result: {wager: {product: 'market_call', stake: body.stake,
-      eventId: body.asset, selection: body.direction}}}, currentEconomy: context}};
+  return acceptedWager(body, context, user);
+}
+function projection(context) {
+  return {economy: context, product: 'market_call', nextCursor: null, items: [{id: id(30),
+    product: 'market_call', eventId: 'harbor-trust', selection: 'up', stake: '1',
+    openedAt: '2026-11-18T15:00:00Z', settleAt: '2026-11-18T15:05:00Z',
+    actorName: 'Captain', home: null, away: null, status: 'open', payout: null}],
+  choices: [{id: 'harbor-trust', name: 'Bitcoin', open: true,
+    options: [{id: 'up', label: 'Up'}, {id: 'down', label: 'Down'}]}]};
 }
 
 describe('dedicated shared wager transport', () => {
@@ -88,5 +95,52 @@ describe('dedicated shared wager transport', () => {
     expect((await client.read()).code).toBe('economy_scope_changed');
     expect((await client.place({stake: '1'})).code).toBe('economy_scope_changed');
     expect(calls).toBe(0);
+  });
+  it('accepts the complete account-scoped nested projection', async () => {
+    const context = economy();
+    const client = createSharedWagersHttp({api: {get: async () => ({ok: true, data: projection(context)})},
+      getEconomy: () => context, getActorId: () => actor, product: 'market_call'});
+    expect((await client.read()).ok).toBe(true);
+  });
+  it.each([
+    ['missing options', value => { value.choices[0].options = null; }],
+    ['wrong option label type', value => { value.choices[0].options[0].label = 1; }],
+    ['unknown option', value => { value.choices[0].options[0].id = 'left'; }],
+    ['duplicate options', value => { value.choices[0].options[1].id = 'up'; }],
+    ['coerced open flag', value => { value.choices[0].open = 'true'; }],
+    ['oversized choice label', value => { value.choices[0].name = 'x'.repeat(257); }],
+    ['noncanonical activity coins', value => { value.items[0].stake = '01'; }],
+    ['coerced activity coins', value => { value.items[0].stake = 1; }],
+    ['activity missing UUID', value => { delete value.items[0].id; }],
+    ['invalid activity time', value => { value.items[0].settleAt = 'not-a-time'; }],
+    ['open activity with payout', value => { value.items[0].payout = '2'; }],
+    ['forged winning amount', value => { value.items[0].status = 'won'; value.items[0].payout = '3'; }],
+    ['unbounded activity page', value => { value.items = Array(51).fill(value.items[0]); }],
+  ])('rejects malformed nested projection: %s', async (_label, corrupt) => {
+    const context = economy(), data = projection(context); corrupt(data);
+    const client = createSharedWagersHttp({api: {get: async () => ({ok: true, data})},
+      getEconomy: () => context, getActorId: () => actor, product: 'market_call'});
+    const result = await client.read();
+    expect(result.ok).toBe(false);
+    expect(result.code).toBe('bad_response');
+  });
+  it.each([
+    ['missing receiptId', value => { delete value.receipt.receiptId; }],
+    ['invalid receiptId', value => { value.receipt.receiptId = 'not-a-uuid'; }],
+    ['wrong valid receiptId', value => { value.receipt.receiptId = id(99); }],
+    ['missing result', value => { delete value.receipt.result; }],
+    ['missing financial receipt', value => { delete value.receipt.result.financialReceipt; }],
+    ['forged financial principal', value => { value.receipt.result.financialReceipt.committedDelta = '2'; }],
+    ['noncanonical financial coins', value => { value.receipt.result.financialReceipt.balanceAtCommit = 100; }],
+    ['wrong source linkage', value => { value.receipt.result.wager.sourceReservationId = id(99); }],
+  ])('retains the exact pending operation on unreadable success: %s', async (_label, corrupt) => {
+    const context = economy(); let sent;
+    const client = createSharedWagersHttp({api: {post: async (_path, body) => {
+      sent = structuredClone(body); const response = accepted(body, context); corrupt(response.data); return response;
+    }}, getEconomy: () => context, getActorId: () => actor, product: 'market_call',
+    pendingStore: store(), makeUid: () => 'market001'});
+    const result = await client.place({eventId: 'harbor-trust', selection: 'up', stake: '1'});
+    expect(result.unknown).toBe(true);
+    expect(client.pending.body).toEqual(sent);
   });
 });
