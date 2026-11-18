@@ -62,6 +62,41 @@ function setup() {
 afterEach(() => { for (const fixture of fixtures.splice(0)) fixture.dispose(); });
 
 describe('panel observations reconcile the shared authoritative wallet', () => {
+  it.each([good({coins: 999, wonWaveBest: 5, recovered: [], hasMore: false}), failed(0)])
+  ('reconciles a reward recovery outcome through fresh ME, including a lost response: %j', async response => {
+    const f = setup(); f.posts.push(() => Promise.resolve(response)); f.setMe(me(120));
+    expect(await f.wallet.api.post('/api/waves/recover', {})).toBe(response);
+    await f.wallet.waitIdle();
+    expect(f.meReads()).toHaveLength(1); expect(f.store.read().captain.coins).toBe(120);
+  });
+
+  it('waits for a purchase while reward ME is pending and only exposes the final fresh balance', async () => {
+    const f = setup(), stale = deferred(), purchase = deferred();
+    f.reads.push(() => stale.promise); f.posts.push(() => Promise.resolve(good({coins: 120})));
+    await f.wallet.api.post('/api/waves/recover', {});
+    const fresh = f.wallet.freshWallet();
+    f.posts.push(() => purchase.promise);
+    const buying = f.wallet.api.post('/api/island/upgrade', {spot: 'cannon_1'});
+    f.setMe(me(80)); purchase.resolve(good({coins: 80})); await buying;
+    stale.resolve(good(me(120)));
+    const wallet = await fresh;
+    expect(wallet.coins).toBe(80); expect(wallet.current()).toBe(true);
+    expect(f.meReads()).toHaveLength(2);
+    const newer = f.wallet.api.post('/api/island/build', {spot: 'wall_1'});
+    expect(wallet.current()).toBe(false); await newer; await f.wallet.waitIdle();
+  });
+
+  it('combat inputs and health do not reread the wallet or invalidate a fresh reward balance', async () => {
+    const f = setup(); f.setMe(me(120));
+    await f.wallet.api.post('/api/waves/recover', {});
+    const wallet = await f.wallet.freshWallet();
+    for (let i = 0; i < 12; i++) {
+      await f.wallet.api.post(`/api/waves/${i}/inputs`, {inputs: []});
+      await f.wallet.api.post(`/api/waves/${i}/health`, {structures: []});
+    }
+    await f.wallet.waitIdle();
+    expect(f.meReads()).toHaveLength(1); expect(wallet.current()).toBe(true); expect(wallet.coins).toBe(120);
+  });
   it('preserves exact A2 objects and bodies, never repeats a POST, and rereads the account even at the same balance', async () => {
     const f = setup(), response = good({recorded: true}), body = {asset: 'harbor-trust', direction: 'up', stake: 10, actionUid: randomUUID()};
     f.posts.push(() => Promise.resolve(response));

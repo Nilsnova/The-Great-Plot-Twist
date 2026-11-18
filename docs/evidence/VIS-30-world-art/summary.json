@@ -1,0 +1,87 @@
+{
+  "scope": "offline normalized PNG source compilation; runtime activation/build exclusion and actual-game acceptance remain separate",
+  "sourceCommit": "d39ba70278c7060774a7cc03aa01e44e159cf1ac",
+  "browser": "156.0.8078.79",
+  "families": [
+    "buildings",
+    "houses",
+    "landmarks",
+    "services",
+    "nature",
+    "cannons",
+    "walls",
+    "core",
+    "progress",
+    "mortars",
+    "harpoons",
+    "culverins",
+    "swivels"
+  ],
+  "frames": 164,
+  "initialTransfer": {
+    "unchangedTerrainBytes": 2683357,
+    "rawPlusTerrainBytes": 29819059,
+    "compiledPlusTerrainBytes": 12554858,
+    "targetBytes": 8388608,
+    "targetMet": false
+  },
+  "originalEncoded": 27135702,
+  "compiledEncoded": 9871501,
+  "originalDecoded": 88077512,
+  "compiledDecoded": 38543104,
+  "largestCompiledDecoded": 5541888,
+  "density": [
+    {
+      "density": 4,
+      "cases": 164,
+      "maxRgb": 0,
+      "maxAlpha": 0,
+      "worstAlphaWeightedMeanRgb": 0,
+      "differingPixels": 0,
+      "minVisiblePixels": 3631
+    },
+    {
+      "density": 2.5,
+      "cases": 164,
+      "maxRgb": 255,
+      "maxAlpha": 52,
+      "worstAlphaWeightedMeanRgb": 3.5373021553435815,
+      "differingPixels": 1309620,
+      "minVisiblePixels": 1505
+    },
+    {
+      "density": 2,
+      "cases": 164,
+      "maxRgb": 255,
+      "maxAlpha": 59,
+      "worstAlphaWeightedMeanRgb": 5.190346129254299,
+      "differingPixels": 841504,
+      "minVisiblePixels": 953
+    },
+    {
+      "density": 1.5,
+      "cases": 164,
+      "maxRgb": 255,
+      "maxAlpha": 74,
+      "worstAlphaWeightedMeanRgb": 5.549814298425998,
+      "differingPixels": 505651,
+      "minVisiblePixels": 556
+    }
+  ],
+  "zeroRetained": true,
+  "errors": [],
+  "externalRequests": [],
+  "transport": {
+    "sourceCommit": "9a52ebcce7922e4a70030440e1d8f2525269c479",
+    "beforeBytes": 10924945,
+    "afterBytes": 9871501,
+    "savedBytes": 1053444,
+    "files": 13,
+    "allLogicalFramesUnchanged": true,
+    "browserCases": 52,
+    "max4Rgb": 0,
+    "max4Alpha": 0,
+    "errors": [],
+    "externalRequests": []
+  }
+}

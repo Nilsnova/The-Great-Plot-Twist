@@ -35,6 +35,15 @@ describe('higher framebuffer density with stable logical framing',()=>{
   });
 });
 describe('responsive continuous explorer',()=>{
+  it('samples combat after movement and before drawing the same frame, including blocked movement',()=>{
+    const {controller,character}=walker(),order=[];
+    character.animate.mockImplementation(()=>order.push('draw'));
+    controller.update(.1,true,()=>{expect(controller.player.position.x).toBeCloseTo(WALK_SPEED*.1);order.push('combat');});
+    expect(order).toEqual(['combat','draw']);
+    order.length=0;
+    controller.update(.1,false,()=>{expect(controller.player.position.x).toBeCloseTo(WALK_SPEED*.1);order.push('combat');});
+    expect(order).toEqual(['combat','draw']);
+  });
   it('starts on the first frame and stops on release or blocking',()=>{
     const {controller,character,input}=walker();expect(controller.update(1/60,true)).toBeCloseTo(WALK_SPEED);
     expect(controller.player.position.x).toBeCloseTo(WALK_SPEED/60);
@@ -61,18 +70,19 @@ describe('responsive continuous explorer',()=>{
   it('draws the explorer exactly where it stands (smooth art: no pixel grid, no wobble against the ground)',()=>{
     const art=Object.fromEntries(Object.keys(artSizes).map(name=>[name,new THREE.MeshBasicMaterial()]));
     const character=createCharacter(art,{reducedMotion:true});character.group.position.set(.53,1,.0234);character.animate(1/60,WALK_SPEED);
-    expect(character.sprite.position.x).toBeCloseTo(.53,10);expect(character.sprite.position.y).toBeCloseTo(-.0234*.72,10);
-    character.group.position.x+=.04;character.animate(1/60,WALK_SPEED);expect(character.sprite.position.x).toBeCloseTo(.57,10);
+    // D064: X=1.3x+0.2z and Y=-0.6z; numeric expectations stay independent of the runtime helper.
+    expect(character.sprite.position.x).toBeCloseTo(.69368,10);expect(character.sprite.position.y).toBeCloseTo(-.01404,10);
+    character.group.position.x+=.04;character.animate(1/60,WALK_SPEED);expect(character.sprite.position.x).toBeCloseTo(.74568,10);
     Object.values(art).forEach(material=>material.dispose());character.sprite.geometry.dispose();
   });
 });
 describe('continuous camera follow',()=>{
   it('adds up tiny movements smoothly (no pixel grid) and converges on the target',()=>{
     const view=createCamera({pointer:{wheel:0}});view.setPlace('home_islet',{x:0,z:0});view.start();view.update(1/60,{x:.02,z:0});
-    expect(view.camera.position.x).toBeGreaterThan(0);expect(view.camera.position.x).toBeLessThan(.02);
+    expect(view.camera.position.x).toBeGreaterThan(0);expect(view.camera.position.x).toBeLessThan(.026);
     let previous=view.camera.position.x;
     for(let i=0;i<60;i++){view.update(1/60,{x:.2,z:0});expect(view.camera.position.x).toBeGreaterThanOrEqual(previous);previous=view.camera.position.x;}
-    expect(view.camera.position.x).toBeCloseTo(.2,3);
+    expect(view.camera.position.x).toBeCloseTo(.26,3);
   });
   it('follows frame independently while preserving orientation',()=>{
     const positions=[20,30,60,144].map(frames=>{const view=createCamera({pointer:{wheel:0}});view.setPlace('home_islet',{x:0,z:0});view.start();const q=view.camera.quaternion.clone();
@@ -84,7 +94,7 @@ describe('continuous camera follow',()=>{
     const seen=[];for(let i=0;i<60;i++){view.update(1/60,{x:0,z:0});input.pointer.wheel=0;seen.push(view.camera.zoom);}
     expect(seen.every((zoom,i)=>i===0||zoom>=seen[i-1])).toBe(true);expect(seen.at(-1)).toBeCloseTo(2,2);
     view.overview();expect(view.camera.zoom).toBe(1);input.pointer.wheel=-1000;view.start(true);view.update(1/60,{x:.1234,z:0});
-    expect(view.camera.position.x).toBeCloseTo(.1234,10);expect(view.camera.zoom).toBe(2);
+    expect(view.camera.position.x).toBeCloseTo(.16042,10);expect(view.camera.zoom).toBe(2);
     view.camera.userData.battleZoom=.59;view.update(1/60,{x:0,z:0});expect(view.camera.zoom).toBe(.59);
   });
 });

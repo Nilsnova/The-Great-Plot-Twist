@@ -53,7 +53,7 @@ describe('ship fire: the targets (ship-fire.js)', () => {
     fire.land(10, events);
     expect(h.log).toEqual([]); // still in the air
     fire.land(fired.impactAt, events);
-    expect(h.log).toEqual([['wall', 'wall_3', 3], ['captain', 'a', .75], ['captain', 'b', .75]]); // id order; 'far' is out of the splash
+    expect(h.log).toEqual([['wall', 'wall_3', 3 * SHIP_FIRE.hitScale], ['captain', 'a', .75], ['captain', 'b', .75]]); // id order; 'far' is out of the splash
     expect(fire.state()).toEqual([]);
     // A second ball, then the wall breaks before it lands: it lands in the rubble.
     fire.aim(ship, 20, events); walls[0].hp = 0; h.log.length = 0;
@@ -106,7 +106,7 @@ describe('ship fire in the sim (the wave rule ship_fire)', () => {
     const hits = events.filter(e => e.type === 'island_damaged' && e.shipId);
     expect(hits.length).toBeGreaterThan(10);
     expect(hits.every(e => e.landed && e.x === CONFIG.boarding.heart.x && e.z === CONFIG.boarding.heart.z)).toBe(true);
-    expect(hits.slice(0, -1).every(e => Math.abs(e.damage - 3 * SHIP_FIRE.heart) < 1e-9)).toBe(true); // a sloop: 0.6 ♥ (the last one what was left)
+    expect(hits.slice(0, -1).every(e => Math.abs(e.damage - 3 * SHIP_FIRE.heart * SHIP_FIRE.hitScale) < 1e-9)).toBe(true); // a sloop: 0.75 ♥ (the last one what was left)
     expect(shots(events).every(e => e.target === 'heart')).toBe(true);
     expect(result.survived).toBe(false);
     // Before the rule the same wave was held with a sliver of the heart: the ships' shots did next to nothing.
@@ -117,7 +117,7 @@ describe('ship fire in the sim (the wave rule ship_fire)', () => {
     const { events } = runWave({ seed: 7919, wave: 1, defenses: harpoon, ...FIRE });
     const hits = events.filter(e => e.type === 'tower_damaged' && String(e.by).startsWith('ship_'));
     expect(hits.length).toBeGreaterThan(5);
-    expect(hits[0]).toMatchObject({ towerId: 'cannon_6', damage: 3 * SHIP_FIRE.tower, maxHp: 60 });
+    expect(hits[0]).toMatchObject({ towerId: 'cannon_6', damage: Math.round(3 * SHIP_FIRE.tower * SHIP_FIRE.hitScale * 100) / 100, maxHp: 60 });
     const broke = events.findIndex(e => e.type === 'tower_broken' && String(e.by).startsWith('ship_'));
     expect(broke).toBeGreaterThan(0);
     const after = shots(events.slice(broke));
@@ -132,7 +132,7 @@ describe('ship fire in the sim (the wave rule ship_fire)', () => {
     const { events } = runWave({ seed: 7919, wave: 1, defenses: [wall, ...harpoon], ...FIRE });
     const first = shots(events)[0];
     expect(first).toMatchObject({ target: 'wall', targetId: 'wall_3' });
-    expect(events.find(e => e.type === 'wall_damaged' && e.shipId)).toMatchObject({ wallId: 'wall_3', landed: true, damage: 3 });
+    expect(events.find(e => e.type === 'wall_damaged' && e.shipId)).toMatchObject({ wallId: 'wall_3', landed: true, damage: 3.75 });
   });
 
   it('a captain next to the impact takes a little; one away from it nothing', () => {
@@ -205,6 +205,8 @@ describe('ship fire: balance', () => {
   }, 60000);
 
   it('a strong, full crew still wins waves 30, 50, 70 and the final battle; the heart still takes a beating at 100', () => {
+    // fix/playtest-1117: with hitScale 1.25 the final battle is still won (the heart at about 31 %); 1.5 loses it.
+    expect(SHIP_FIRE.hitScale).toBe(1.25);
     const strong = { ...researched(islandAt(5)), ...FIRE };
     for (const wave of [30, 50, 70]) expect(crewMeasure(strong, wave, 10), `wave ${wave}`).toMatchObject({ won: 4 });
     const final = crewMeasure(strong, 100, 10);

@@ -1,0 +1,39 @@
+
+ RUN  v5.1.0 /workspace/reference-village-work/clearance-volume/frontend
+
+ ❯ tests/island/wall-batch-options.test.js (3 tests | 1 failed) 18ms
+   ❯ ordinary selected wall batching (3)
+     × filters only when a caller explicitly requests diagnostic selection-only geometry 6ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/island/wall-batch-options.test.js > ordinary selected wall batching > filters only when a caller explicitly requests diagnostic selection-only geometry
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/island/wall-batch-options.test.js:36:55
+     34|     const subset = draw({selectedId: 'b', selectionOnly: true});
+     35|     expect(quads(subset)).toHaveLength(9);
+     36|     expect(quads(subset).every(q => centre(q) < 5.2)).toBe(true);
+       |                                                       ^
+     37|     expect(quads(draw({selectedId: 'missing', selectionOnly: true}))).…
+     38|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 16 passed (17)
+   Start at  09:57:48
+   Duration  800ms (import 55%, transform 27%, tests 15%, worker 3%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.3
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.3
+npm notice To update run: npm install -g npm@12.2.3
+npm notice

@@ -44,10 +44,15 @@ from server.game.building_catalogue import Cost
 from server.island import games, layout, layout_store, permissions, rules, store
 from server.island.captain_recovery_policy import (
     LEGACY_RECOVERY_VERSION,
+    RETIRED_RECOVERY_OPTIONS,
     STRUCTURE_RECOVERY_VERSION,
     is_retired_recovery_skill,
 )
-from server.island.catalogue import IslandCatalogue
+from server.island.catalogue import (
+    IslandCatalogue,
+    catalogue_for_demolition,
+    catalogue_for_existing_structures,
+)
 from server.island.codes import read_code, shown
 from server.island.layout import LayoutInfo, Position
 from server.island.rules import Built, ResearchTier, SpotView
@@ -148,6 +153,7 @@ class VisitView:
     crew: dict[str, int]  # the owner's crew: every visitor simulates the same defenses
     campaign: CampaignView
     layout: LayoutInfo = FIXED_LAYOUT
+    recovery_version: int = LEGACY_RECOVERY_VERSION
 
 
 @dataclass(frozen=True)
@@ -207,19 +213,21 @@ def view_of(
     research: dict[str, ResearchTier] | tuple[str, ...] = (),
     stored: dict[str, Position] | None = None,
     recovery_version: int = LEGACY_RECOVERY_VERSION,
+    purchase_catalogue: IslandCatalogue | None = None,
 ) -> IslandView:
     """The island of `progress` (its spots, best and next wave, campaign) with the personal part
     (coins, crew, captain, unlocks) of `personal`: the same player on their own island, the
     visitor after a co-op build or upgrade on a friend's island. `stored`: the island's moved
     spots (layout_store.read_layout); None shows the fixed spots and no moving."""
     mine = progress if personal is None else personal
+    purchase_catalogue = catalogue if purchase_catalogue is None else purchase_catalogue
     grid = layout.island_layout(catalogue.more_tower_spots)
     return IslandView(
         code=shown(island.code),
         coins=coins,
         wave_best=progress.wave_best,
         flags=island.flags,
-        next_wave=rules.next_wave(catalogue, progress.wave_best, progress.next_wave),
+        next_wave=rules.next_wave(purchase_catalogue, progress.wave_best, progress.next_wave),
         spots=layout.place_spots(grid, rules.plan_spots(catalogue, built, role=mine.role), stored),
         crew=mine.crew,
         captain_level=mine.captain_level,
@@ -227,7 +235,7 @@ def view_of(
         unlocks=unlocks_of(catalogue, mine.unlock_wave, progress.wave_best),
         skills=skills_of(catalogue, mine),
         weapons=weapons_of(catalogue, mine),
-        campaign=campaign_of(catalogue, progress.wave_best, research, progress.wreck_paid),
+        campaign=campaign_of(purchase_catalogue, progress.wave_best, research, progress.wreck_paid),
         layout=layout.info_of(grid, stored),
         recovery_version=recovery_version,
     )
@@ -272,7 +280,12 @@ async def look(admin: SupabaseAdmin, catalogue: IslandCatalogue, player_id: str)
 
 
 async def look_open(
-    admin: SupabaseAdmin, catalogue: IslandCatalogue, island: Island, payer: str | None = None
+    admin: SupabaseAdmin,
+    catalogue: IslandCatalogue,
+    island: Island,
+    payer: str | None = None,
+    *,
+    include_existing_gated: bool = False,
 ) -> IslandView:
     """`island` as it is now. With `payer` (a visitor): their coins, crew, captain and unlocks."""
     who = island.owner if payer is None else payer
@@ -283,8 +296,20 @@ async def look_open(
     research = await store.read_research(admin, island.owner)
     stored = await read_stored(admin, catalogue, island.owner)
     recovery_version = await read_recovery_version(admin, island.owner)
+    purchase_catalogue = catalogue
+    if include_existing_gated or recovery_version == STRUCTURE_RECOVERY_VERSION:
+        catalogue = catalogue_for_existing_structures(catalogue, built)
     return view_of(
-        catalogue, island, coins, built, progress, personal, research, stored, recovery_version
+        catalogue,
+        island,
+        coins,
+        built,
+        progress,
+        personal,
+        research,
+        stored,
+        recovery_version,
+        purchase_catalogue,
     )
 
 
@@ -433,7 +458,22 @@ async def build(
     built[spot.id] = Built(kind, 1)
     research = await store.read_research(admin, island.owner)
     stored = await read_stored(admin, catalogue, island.owner)
-    return view_of(catalogue, island, outcome.balance, built, progress, None, research, stored)
+    recovery_version = await read_recovery_version(admin, island.owner)
+    runtime_catalogue = catalogue
+    if recovery_version == STRUCTURE_RECOVERY_VERSION:
+        runtime_catalogue = catalogue_for_existing_structures(catalogue, built)
+    return view_of(
+        runtime_catalogue,
+        island,
+        outcome.balance,
+        built,
+        progress,
+        None,
+        research,
+        stored,
+        recovery_version,
+        catalogue,
+    )
 
 
 async def build_with_friend(
@@ -485,8 +525,13 @@ async def upgrade(
     island, payer = await target_island(admin, catalogue, player_id, code, permissions.UPGRADE)
     if not await store.ledger_has(admin, player_id, "building_purchase", ref):
         built = await store.read_built_spots(admin, island.owner)
+        runtime_catalogue = catalogue
+        if await read_recovery_version(admin, island.owner) == STRUCTURE_RECOVERY_VERSION:
+            runtime_catalogue = catalogue_for_existing_structures(catalogue, built)
         progress = await store.read_progress(admin, island.owner)
-        spot, kind, reachable = rules.check_upgrade(catalogue, spot_id, built, progress.wave_best)
+        spot, kind, reachable = rules.check_upgrade(
+            runtime_catalogue, spot_id, built, progress.wave_best
+        )
         role = (
             progress.role
             if island.owner == player_id
@@ -497,7 +542,9 @@ async def upgrade(
             "p_island_owner": island.owner,
             "p_plot": spot.id,
             "p_action_uid": action_uid,
-            "p_prices": [rules.engineer_price(catalogue, price, role) for price in kind.prices],
+            "p_prices": [
+                rules.engineer_price(runtime_catalogue, price, role) for price in kind.prices
+            ],
             "p_unlocked_level": reachable,
         }
         await paid(admin, "island_upgrade", arguments, f"The next {kind.name.lower()} level")
@@ -515,6 +562,11 @@ async def hire(
     ref = f"{CREW_PREFIX}{action_uid}"
     island = await store.open_island(admin, player_id, catalogue.starting_coins)
     if not await store.ledger_has(admin, player_id, "crew_hire", ref):
+        if (
+            crew == "carpenter"
+            and await read_recovery_version(admin, player_id) == STRUCTURE_RECOVERY_VERSION
+        ):
+            raise retired_recovery_option()
         progress = await store.read_progress(admin, player_id)
         member = rules.check_hire(catalogue, crew, progress.crew[crew], progress.unlock_wave)
         arguments = {
@@ -764,6 +816,14 @@ async def research(
     if not await store.ledger_has(admin, player_id, "tech_research", ref):
         progress = await store.read_progress(admin, island.owner)
         done = await store.read_research(admin, island.owner)
+        existing = done.get(entry.branch)
+        if (
+            tier == 2
+            and choice == "mason_drill"
+            and (existing is None or existing.choice_2 != choice)
+            and await read_recovery_version(admin, island.owner) == STRUCTURE_RECOVERY_VERSION
+        ):
+            raise retired_recovery_option()
         entry, price = rules.check_research(
             catalogue, entry.branch, done, progress.wave_best, tier, choice, change
         )
@@ -823,11 +883,16 @@ async def specialise(
     nothing."""
     island, payer = await target_island(admin, catalogue, player_id, code, permissions.TOWER_SKILL)
     built = await store.read_built_spots(admin, island.owner)
+    runtime_catalogue = catalogue
+    if await read_recovery_version(admin, island.owner) == STRUCTURE_RECOVERY_VERSION:
+        runtime_catalogue = catalogue_for_existing_structures(catalogue, built)
     done = await store.read_research(admin, island.owner)
-    spot, branch = rules.check_specialise(catalogue, spot_id, spec, built, done)
-    price = rules.tower_skill_price(catalogue, branch, spec)
+    spot, branch = rules.check_specialise(runtime_catalogue, spot_id, spec, built, done)
+    price = rules.tower_skill_price(runtime_catalogue, branch, spec)
     if price > 0 and built[spot.id].spec == spec:
         # The skill it has already: nothing to pay, nothing to change (safe to repeat).
+        return await look_open(admin, catalogue, island, payer)
+    if branch == "house" and built[spot.id].spec == spec:
         return await look_open(admin, catalogue, island, payer)
     if price > 0 and action_uid is None:
         # An old tab that does not know the prices yet: never charge a click without its id.
@@ -838,6 +903,12 @@ async def specialise(
         admin, player_id, "tower_skill", f"{TOWER_SKILL_PREFIX}{action_uid}"
     ):
         return await look_open(admin, catalogue, island, payer)
+    if (
+        spec in RETIRED_RECOVERY_OPTIONS
+        and built[spot.id].spec != spec
+        and await read_recovery_version(admin, island.owner) == STRUCTURE_RECOVERY_VERSION
+    ):
+        raise retired_recovery_option()
     arguments = {
         "p_player_id": player_id,
         "p_island_owner": island.owner,
@@ -874,6 +945,15 @@ def specialise_refusal(
     return campaign_refusal(refusal, catalogue, "tech_hub", entry.name)
 
 
+def retired_recovery_option() -> ApiError:
+    """The recovery-v1 island cannot newly buy or select a retired recovery option."""
+    return ApiError(
+        409,
+        "recovery_option_retired",
+        "That recovery option is no longer available on this island.",
+    )
+
+
 async def tower_tree(
     admin: SupabaseAdmin,
     catalogue: IslandCatalogue,
@@ -895,9 +975,12 @@ async def tower_tree(
     ref = f"{TOWER_TREE_PREFIX}{action_uid}"
     if not await store.ledger_has(admin, player_id, "tower_tree", ref):
         built = await store.read_built_spots(admin, island.owner)
+        runtime_catalogue = catalogue
+        if await read_recovery_version(admin, island.owner) == STRUCTURE_RECOVERY_VERSION:
+            runtime_catalogue = catalogue_for_existing_structures(catalogue, built)
         progress = await store.read_progress(admin, island.owner)
         spot, tree, price = rules.check_tree(
-            catalogue, spot_id, path, tier, built, progress.wave_best
+            runtime_catalogue, spot_id, path, tier, built, progress.wave_best
         )
         validate_transaction(-price, "tower_tree", ref)
         arguments = {
@@ -1048,18 +1131,22 @@ async def demolish_quote(
     """What tearing down the building on `spot_id` would give back, per payer, worked out by the
     database (island_demolish_quote): for the confirmation card. Changes nothing. 409 protected,
     404 no_such_spot, 404 no_such_island, 403 not_member, 409 not_built, 409 wave_running."""
-    spot = rules.check_demolish(catalogue, spot_id)
     island, _payer = await target_island(admin, catalogue, player_id, code, permissions.DEMOLISH)
+    built = await store.read_built_spots(admin, island.owner)
+    runtime_catalogue = catalogue
+    if await read_recovery_version(admin, island.owner) == STRUCTURE_RECOVERY_VERSION:
+        runtime_catalogue = catalogue_for_existing_structures(catalogue, built)
+    spot = rules.check_demolish(runtime_catalogue, spot_id)
     arguments = {
         "p_player_id": player_id,
         "p_island_owner": island.owner,
         "p_plot": spot.id,
-        "p_prices": rules.price_table(catalogue),
+        "p_prices": rules.price_table(runtime_catalogue),
     }
     outcome = await store.run_demolish(admin, "island_demolish_quote", arguments)
     if isinstance(outcome, Refusal):
         raise demolish_refusal(outcome)
-    return await demolish_view(admin, catalogue, outcome)
+    return await demolish_view(admin, runtime_catalogue, outcome)
 
 
 async def demolish(
@@ -1076,19 +1163,22 @@ async def demolish(
     again and its tower skill is gone. A repeated actionUid pays nothing and answers the same
     refunds. 409 protected, 404 no_such_spot, 404 no_such_island, 403 not_member, 409 not_built,
     409 wave_running, 409 busy."""
-    spot = rules.check_demolish(catalogue, spot_id)
     island, payer = await target_island(admin, catalogue, player_id, code, permissions.DEMOLISH)
+    runtime_catalogue = catalogue
+    if await read_recovery_version(admin, island.owner) == STRUCTURE_RECOVERY_VERSION:
+        runtime_catalogue = catalogue_for_demolition(catalogue)
+    spot = rules.check_demolish(runtime_catalogue, spot_id)
     arguments = {
         "p_player_id": player_id,
         "p_island_owner": island.owner,
         "p_plot": spot.id,
         "p_action_uid": action_uid,
-        "p_prices": rules.price_table(catalogue),
+        "p_prices": rules.price_table(runtime_catalogue),
     }
     outcome = await store.run_demolish(admin, "island_demolish", arguments)
     if isinstance(outcome, Refusal):
         raise demolish_refusal(outcome)
-    done = await demolish_view(admin, catalogue, outcome)
+    done = await demolish_view(admin, runtime_catalogue, outcome)
     return await look_open(admin, catalogue, island, payer), done
 
 
@@ -1121,12 +1211,19 @@ async def visit(
     await permissions.require_action(admin, island.owner, player_id, permissions.ISLAND_VISIT)
     owner_name = await store.read_display_name(admin, island.owner)
     built = await store.read_built_spots(admin, island.owner)
-    stored = await read_stored(admin, catalogue, island.owner)
-    grid = layout.island_layout(catalogue.more_tower_spots)
-    spots = layout.place_spots(grid, rules.plan_spots(catalogue, built), stored)
+    recovery_version = await read_recovery_version(admin, island.owner)
+    runtime_catalogue = (
+        catalogue_for_existing_structures(catalogue, built)
+        if recovery_version == STRUCTURE_RECOVERY_VERSION
+        else catalogue
+    )
+    stored = await read_stored(admin, runtime_catalogue, island.owner)
+    grid = layout.island_layout(runtime_catalogue.more_tower_spots)
+    spots = layout.place_spots(grid, rules.plan_spots(runtime_catalogue, built), stored)
     progress = await store.read_progress(admin, island.owner)
     research = await store.read_research(admin, island.owner)
     campaign = campaign_of(catalogue, progress.wave_best, research, progress.wreck_paid)
+    recovery_version = await read_recovery_version(admin, island.owner)
     return VisitView(
         shown(island.code),
         owner_name,
@@ -1135,6 +1232,7 @@ async def visit(
         progress.crew,
         campaign,
         layout.info_of(grid, stored),
+        recovery_version,
     )
 
 

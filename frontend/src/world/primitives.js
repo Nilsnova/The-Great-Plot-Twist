@@ -10,15 +10,6 @@ export function polygon(group, points, color, order = 0, opacity = 1) {
   }));
   mesh.renderOrder = order; group.add(mesh); return mesh;
 }
-export function brushLines(group, segments, color, order = 1, opacity = 1) {
-  const points = segments.flatMap(([a, b]) => [...a, 0, ...b, 0]);
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute('position', new THREE.Float32BufferAttribute(points, 3));
-  const lines = new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({
-    color, transparent: true, opacity, depthTest: false, depthWrite: false, toneMapped: false,
-  }));
-  lines.renderOrder = order; group.add(lines); return lines;
-}
 export function paintedBlob(group, x, y, width, height, color, order, opacity = 1) {
   const points = [];
   for (let i = 0; i < 44; i++) {

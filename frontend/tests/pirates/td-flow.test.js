@@ -184,7 +184,8 @@ describe('the v2 renderer', () => {
     const scene = new THREE.Scene(), defenses = [...ISLANDS.full.defenses];
     const renderer = createWaveRenderer({ scene, atlas: { texture: new THREE.Texture(), ...packAtlas() }, defenses, fx: () => null });
     const posts = defenses.filter(item => item.kind !== 'house').length;
-    expect(renderer.root.children.length).toBe(3 + BOARDER_BANDS + posts + 1);
+    expect(renderer.root.children.length).toBe(3 + BOARDER_BANDS + posts + 1 + 1 + 1); // sea/air, bands, posts, fog, wall connections, captain feedback
+    expect(renderer.root.children.filter(child => child.name === 'pirates:wall-connections')).toHaveLength(1);
     const sim = createWave({ seed: 3, wave: 10, weather: { ships: 2 }, ...ISLANDS.full, crew: { gunner: 2, carpenter: 2, lookout: 1 } });
     const peak = { instances: 0, shells: 0, bursts: 0 };
     let time = 0, tick = 0;
@@ -224,7 +225,7 @@ describe('the v2 fake API', () => {
     const world = api; void world;
   });
 
-  it('runs waves to 100 with boss flags, double boss loot and the restart rule, plus Pirate Point builds and invites', async () => {
+  it('runs waves to 100 with boss flags, triple boss loot and the restart rule, plus Pirate Point builds and invites', async () => {
     const time = clock(), transport = createFakeIslandTransport({ now: time.now, version: 2, coins: 2000 });
     const api = transport.api;
     transport.dev.setWaveBest(8);
@@ -237,7 +238,7 @@ describe('the v2 fake API', () => {
     expect(ninth.wave).toMatchObject({ wave: 9, boss: false });
     const tenth = await pay(true);
     expect(tenth.wave).toMatchObject({ wave: 10, boss: true });
-    expect(tenth.done.loot).toBe((10 + 5 * 10) * 2);
+    expect(tenth.done.loot).toBe((10 + 5 * 10) * 3); // fix/playtest-1117: a boss wave pays 3 times
     const lost = await pay(false);
     expect(lost.wave.wave).toBe(11); expect(lost.done.loot).toBe(0);
     expect((await api.island()).nextWave).toBe(8); // best 10 − 2

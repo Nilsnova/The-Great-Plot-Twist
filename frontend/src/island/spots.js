@@ -57,7 +57,6 @@ export const EXTRA_SPOTS = Object.freeze(EXTRA_SPOT_TABLE.map(([id, x, z, unlock
 export const ALL_SPOTS = Object.freeze([...SPOTS, ...EXTRA_SPOTS]);
 /** The spots of an island answer: the 22 of the table, then the extra tower spots it lists (D060). */
 export const offeredSpots = (spots = []) => { const extra = new Set(offeredExtra(spots)); return [...SPOTS, ...EXTRA_SPOTS.filter(item => extra.has(item.id))]; };
-export const isTowerSlot = id => spotById(id)?.slot === 'tower' || ppSpotById(id)?.slot === 'tower';
 
 // Pirate Point's shared spots (§5) on lighthouse_isle: [id, slot, x, z]. pp_wall_1…4 and pp_tower_1…4
 // stand where its fixed defenses stood (src/pirates/pirate-point.js), pp_tower_5…6 are new.

@@ -1,0 +1,47 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run --maxWorkers=1 tests/ui/recovered-rewards.test.js
+
+
+ RUN  v5.1.0 /workspace/The-Great-Plot-Twist/frontend
+
+ ❯ tests/ui/recovered-rewards.test.js (10 tests | 1 failed) 7218ms
+   × combines saved island purchases and personal wins in either arrival order (recovery first=true) 616ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/ui/recovered-rewards.test.js > combines saved island purchases and personal wins in either arrival order (recovery first=true)
+AssertionError: expected { beforeInvite: 1, done: 4, …(1) } to deeply equal { beforeInvite: 4, done: 10, …(1) }
+
+- Expected
++ Received
+
+  {
+-   "beforeInvite": 4,
+-   "done": 10,
++   "beforeInvite": 1,
++   "done": 4,
+    "finishes": [],
+  }
+
+ ❯ tests/ui/recovered-rewards.test.js:26:18
+     24|     } finally {stop();hud.dispose();}
+     25|   },recoveryFirst);
+     26|   expect(result).toEqual({beforeInvite:4,done:10,finishes:[]});
+       |                  ^
+     27| });
+     28|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 9 passed (10)
+   Start at  18:35:31
+   Duration  8.00s (tests 92%, import 7%, transform 1%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.3
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.3
+npm notice To update run: npm install -g npm@12.2.3
+npm notice

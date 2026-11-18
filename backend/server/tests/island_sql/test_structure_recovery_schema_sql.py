@@ -518,13 +518,9 @@ def test_post_bell_build_is_readable_and_survives_expiry_settlement(database) ->
         "select greatest(0, floor(extract(epoch from (%s - greatest(%s, %s))) * 1000)::bigint)",
         (server_now, boundary, settled_at),
     ).fetchone()[0]
-    expected_new_build_hp = call(
-        database,
-        "select public.structure_recovery_project_hp(750000, %s, %s, %s)",
-        elapsed_ms,
-        rate_numerator,
-        rate_denominator,
-    )
+    assert elapsed_ms >= 0 and rate_denominator > 0 and rate_numerator >= 0
+    # fix/playtest-1117 (owner): the expiry settlement repairs every structure at once.
+    expected_new_build_hp = 1_000_000
     settled = call(
         database,
         "select public.structure_recovery_settle_locked(%s, %s)",

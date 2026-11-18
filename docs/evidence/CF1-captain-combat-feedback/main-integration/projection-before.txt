@@ -1,0 +1,72 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run tests/pirates/combat-overlay.test.js
+
+
+ RUN  v5.1.0 /workspace/captain-combat-feedback/frontend
+
+ ❯ tests/pirates/combat-overlay.test.js (4 tests | 3 failed) 38ms
+   × projects exact range around the current player with cached resources and clears hidden feedback 20ms
+   × places the direction cap at true range before the shared ground projection 4ms
+   × points toward the projected danger while keeping the marker upright 4ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/pirates/combat-overlay.test.js > projects exact range around the current player with cached resources and clears hidden feedback
+AssertionError: expected { x: +0, z: -0 } to deeply equal { x: 102, z: 5 }
+
+- Expected
++ Received
+
+  {
+-   "x": 102,
+-   "z": 5,
++   "x": 0,
++   "z": -0,
+  }
+
+ ❯ tests/pirates/combat-overlay.test.js:17:47
+     15|   const matrix = group.children[1].matrix;
+     16|   const center = new THREE.Vector3().applyMatrix4(matrix);
+     17|   expect(unprojectGround(center.x, center.y)).toEqual({ x: 102, z: 5 }…
+       |                                               ^
+     18|   const edge = new THREE.Vector3(1, 0, 0).applyMatrix4(matrix);
+     19|   expect(unprojectGround(edge.x, edge.y)).toEqual({ x: 127, z: 5 });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  tests/pirates/combat-overlay.test.js > places the direction cap at true range before the shared ground projection
+AssertionError: expected 17 to be close to 23.1, received difference is 6.100000000000001, but expected 0.005
+ ❯ tests/pirates/combat-overlay.test.js:50:21
+     48|     expect(marker.visible).toBe(true);
+     49|     const expected = projectGround(range.x + range.radius * dx / lengt…
+     50|     expect(point.x).toBeCloseTo(expected.x);
+       |                     ^
+     51|     expect(point.y).toBeCloseTo(expected.y);
+     52|     const logical = unprojectGround(point.x, point.y);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  tests/pirates/combat-overlay.test.js > points toward the projected danger while keeping the marker upright
+AssertionError: expected 18.200000000000003 to be close to +0, received difference is 18.200000000000003, but expected 0.005
+ ❯ tests/pirates/combat-overlay.test.js:67:47
+     65|   const at = projectGround(player.x, player.z), direction = projectGro…
+     66|   const dx = pointer.position.x - at.x, dy = pointer.position.y - at.y…
+     67|   expect(dx * direction.y - dy * direction.x).toBeCloseTo(0);
+       |                                               ^
+     68|   expect(dx * direction.x + dy * direction.y).toBeGreaterThan(0);
+     69|   expect(pointer.rotation.z).toBeCloseTo(Math.atan2(direction.y, direc…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 1 passed (4)
+   Start at  14:09:49
+   Duration  445ms (import 51%, transform 26%, tests 20%, worker 3%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.3
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.3
+npm notice To update run: npm install -g npm@12.2.3
+npm notice

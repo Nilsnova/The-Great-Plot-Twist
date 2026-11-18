@@ -7,12 +7,46 @@ import { matchFigures } from '../../src/pirates/figures.js';
 import { createCharacter } from '../../src/player/character.js';
 import { islandFrame } from '../../src/art/registry.js';
 import { projectPoint } from '../../src/world/art.js';
+import {weaponGripLayout} from '../../src/art/people.js';
 
 const shot = (by, x = 0, toX = 8) => ({ type: 'captain_fired', t: 1, by, x, z: 0, toX, toZ: -2 });
 
+describe('drawn hands stay on their weapon grips', () => {
+  const angles = [null, 0, -Math.PI / 2, Math.PI / 2, -Math.PI / 4, Math.PI / 4, Math.atan2(-7 * .72, 2), Math.atan2(-2 * .72, 7)];
+  it.each(['pistols', 'blunderbuss', 'long_rifle', 'fire_bombs'])('keeps %s wrists attached through both phases and all aim directions', weapon => {
+    for (const angle of angles) for (const firing of [true, false]) {
+      const pose = weaponGripLayout(weapon, firing, angle);
+      for (const [i, hand] of pose.hands.entries()) {
+        const arm = pose.arms[i];
+        expect(arm.wrist).toEqual(hand.point);
+        for (const [a, b] of [[arm.shoulder, arm.elbow], [arm.elbow, arm.wrist]]) {
+          expect(Math.hypot(b[0] - a[0], b[1] - a[1])).toBeGreaterThan(.5);
+          expect(Math.hypot(b[0] - a[0], b[1] - a[1])).toBeLessThan(11);
+        }
+        if (hand.local) {
+          const dx = (hand.local[0] - 24 - (firing && weapon !== 'fire_bombs' ? .6 : 0)) * pose.scale;
+          const dy = hand.local[1] - 18;
+          expect(hand.point[0]).toBeCloseTo(pose.origin[0] + Math.cos(angle ?? 0) * dx - Math.sin(angle ?? 0) * dy + hand.offset);
+          expect(hand.point[1]).toBeCloseTo(pose.origin[1] + Math.sin(angle ?? 0) * dx + Math.cos(angle ?? 0) * dy);
+        }
+      }
+      if (weapon === 'fire_bombs') {
+        expect(pose.bombs).toBe(firing ? 0 : 1);
+        expect(pose.hands[0].local).toBeNull(); // balancing hand carries no spare bomb
+      } else if (weapon === 'pistols') {
+        expect(Math.hypot(...pose.hands[1].point.map((v, i) => v - pose.hands[0].point[i]))).toBeGreaterThan(3);
+      } else {
+        const [trigger, support] = pose.hands;
+        expect(support.local[0]).toBeGreaterThan(trigger.local[0]);
+        expect(support.local[1]).toBeGreaterThan(18.3); // palm supports the wooden fore-end from underneath
+      }
+    }
+  });
+});
+
 describe('the pose of a shot or a blow', () => {
-  it('has a musket and cutlass drawing in every lobby colour', () => {
-    expect(POSE_IDS).toHaveLength(30);
+  it('has every weapon and cutlass drawing in every lobby colour', () => {
+    expect(POSE_IDS).toHaveLength(110);
     for (const id of POSE_IDS) expect(islandFrame(id), id).not.toBeNull();
   });
   it('fires (frame 2) for the flash time, aims (frame 1) until the pose ends, in the captain\'s colour', () => {
@@ -24,11 +58,33 @@ describe('the pose of a shot or a blow', () => {
     expect(poseFrame(null, 0)).toBeNull();
   });
   it('faces the shot, and only shots and blows pose', () => {
-    expect(poseOf(shot('me', 0, 8))).toEqual({ kind: 'musket', flip: false, angle: Math.atan2(-1.44, 8) });
-    expect(poseOf(shot('me', 0, -8))).toEqual({ kind: 'musket', flip: true, angle: Math.atan2(-1.44, 8) });
+    expect(poseOf(shot('me', 0, 8))).toEqual({ kind: 'musket', flip: false, angle: Math.atan2(-1.2, 10) });
+    expect(poseOf(shot('me', 0, -8))).toEqual({ kind: 'musket', flip: true, angle: Math.atan2(-1.2, 10.8) });
     expect(poseOf({ type: 'captain_struck', by: 'me', x: 2, z: 0, toX: 1, toZ: 0 })).toEqual({ kind: 'cutlass', flip: true });
     expect(poseOf({ type: 'cannon_fired', x: 0, toX: 1 })).toBeNull();
     expect(poseOf({ type: 'captain_fired', x: 0, toX: 1 })).toBeNull(); // no shooter
+  });
+  it.each(['musket', 'pistols', 'blunderbuss', 'long_rifle', 'fire_bombs'])('poses %s in every color and returns to walking', weapon => {
+    let clock = 0;
+    const poses = createPoses({now: () => clock});
+    poses.note([{...shot('me'), weapon}]);
+    expect(poses.get('me')).toMatchObject({kind: weapon, angle: Math.atan2(-1.2, 10)});
+    for (let colour = 0; colour < 10; colour++) {
+      const frame = poseFrame(poses.get('me'), colour);
+      expect(frame).toBe(`captain-${colour + 1}-${weapon}-2`);
+      expect(islandFrame(frame)).not.toBeNull();
+    }
+    clock = POSES[weapon].fire + .01;
+    expect(poseFrame(poses.get('me'), 0)).toBe(`captain-1-${weapon}-1`);
+    clock = POSES[weapon].seconds;
+    expect(poses.get('me')).toBeNull();
+  });
+  it.each(['musket', 'pistols', 'blunderbuss', 'long_rifle', 'fire_bombs'])('keeps %s when projection reverses logical horizontal facing', weapon => {
+    const pose = poseOf({type: 'captain_fired', by: 'me', weapon, x: 0, z: 0, toX: .5, toZ: -8});
+    expect(pose).toEqual({kind: weapon, flip: true, angle: Math.atan2(-4.8, .95)});
+  });
+  it('keeps unknown weapon events compatible with the standard musket', () => {
+    expect(poseOf({...shot('me'), weapon: 'unknown'}).kind).toBe('musket');
   });
   it.each([[8, 0], [-8, 0], [0, -8], [0, 8], [8, -8], [-8, 8], [2, -7], [-7, -2]])(
     'aims precisely at (%s, %s), including between cardinal directions', (dx, dz) => {
@@ -36,9 +92,9 @@ describe('the pose of a shot or a blow', () => {
       poses.note([{...shot('me'), x: 3, z: 4, toX: 3 + dx, toZ: 4 + dz}]);
       const pose = poses.get('me');
       // Mirroring the local barrel vector must match the target's projected screen vector.
-      const length = Math.hypot(dx, dz * .72);
-      expect(Math.cos(pose.angle) * (pose.flip ? -1 : 1)).toBeCloseTo(dx / length);
-      expect(Math.sin(pose.angle)).toBeCloseTo(dz * .72 / length);
+      const displayedX = 1.3 * dx + .2 * dz, displayedY = -.6 * dz, length = Math.hypot(displayedX, displayedY);
+      expect(Math.cos(pose.angle) * (pose.flip ? -1 : 1)).toBeCloseTo(displayedX / length);
+      expect(Math.sin(pose.angle)).toBeCloseTo(-displayedY / length);
     });
   it('rejects missing, nonfinite and zero-length directions', () => {
     for (const extra of [{z: undefined}, {toZ: NaN}, {toX: Infinity}, {toX: 0, toZ: 0}])
@@ -48,7 +104,7 @@ describe('the pose of a shot or a blow', () => {
     let clock = 10;
     const poses = createPoses({ now: () => clock });
     poses.note([shot('me'), { type: 'ship_sunk' }]);
-    expect(poses.get('me')).toEqual({ kind: 'musket', flip: false, angle: Math.atan2(-1.44, 8), age: 0 });
+    expect(poses.get('me')).toEqual({ kind: 'musket', flip: false, angle: Math.atan2(-1.2, 10), age: 0 });
     clock += .3; expect(poses.get('me').age).toBeCloseTo(.3);
     clock += .3; expect(poses.get('me')).toBeNull();
     poses.note([shot('ben')]); poses.clear(); expect(poses.get('ben')).toBeNull();

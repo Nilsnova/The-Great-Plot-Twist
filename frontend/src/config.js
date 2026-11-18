@@ -1,5 +1,4 @@
 // Shared art direction and layout. World and player modules read these values.
-export const SEA_LEVEL = 0;
 export const LAND_LIMIT = 0.38;
 export const PLAYER_RADIUS = 0.34;
 export const START_HOUR = 10.4;

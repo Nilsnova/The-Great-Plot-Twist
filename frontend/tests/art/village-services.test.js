@@ -1,0 +1,48 @@
+// Real existing service identities and unchanged geometry, checked against the authored PNG source.
+import {readFileSync} from 'node:fs';
+import {createHash} from 'node:crypto';
+import {describe, expect, it} from 'vitest';
+import {frames, sheets} from '../../src/art/village/services.js';
+import {islandFrame} from '../../src/art/registry.js';
+import {ARSENAL, CAMPAIGN_BUILDINGS} from '../../src/island/spots.js';
+
+const source = readFileSync(new URL('../../public/village/services-v1.png', import.meta.url));
+const report = JSON.parse(readFileSync(new URL('../../../docs/evidence/VIS-13-services/asset-report.json', import.meta.url)));
+
+describe('approved service sources', () => {
+  it('uses the exact inspected RGBA source with a transparent separator', () => {
+    expect(source.subarray(0, 8).toString('hex')).toBe('89504e470d0a1a0a');
+    expect(source[25]).toBe(6);
+    expect([source.readUInt32BE(16), source.readUInt32BE(20)]).toEqual([sheets.villageServices.width, sheets.villageServices.height]);
+    expect(createHash('sha256').update(source).digest('hex')).toBe(report.sha256);
+    expect(report.alpha.corners.every(alpha => alpha < report.alpha.meaningfulThreshold)).toBe(true);
+    expect(report.alpha.separatorCenter).toBe(0);
+  });
+
+  it('keeps real service frame names and all registered logical geometry', () => {
+    expect(Object.keys(frames).sort()).toEqual(['island-arsenal', 'island-techhub']);
+    for (const [id, frame] of Object.entries(frames)) {
+      expect([...CAMPAIGN_BUILDINGS, ARSENAL].some(spot => spot.art === id)).toBe(true);
+      expect(frame.logical).toEqual(islandFrame(id).slice(0, 3));
+    }
+  });
+
+  it('retains complete measured signs/instruments and bounded, separate source feet', () => {
+    for (const cell of report.cells) {
+      const frame = frames[cell.id], sheet = sheets[frame.sheet];
+      expect(frame.rect).toEqual(cell.rect);
+      expect(frame.sourceFoot).toEqual(cell.sourceFoot);
+      expect(frame.rect[0] + frame.rect[2]).toBeLessThanOrEqual(sheet.width);
+      expect(frame.rect[1] + frame.rect[3]).toBeLessThanOrEqual(sheet.height);
+      const [left, top, right, bottom] = cell.meaningfulAlphaBounds;
+      expect(Math.min(left, top)).toBeGreaterThanOrEqual(12);
+      expect(frame.rect[2] - right).toBeGreaterThanOrEqual(12);
+      expect(frame.rect[3] - bottom).toBeGreaterThanOrEqual(12);
+      expect(frame.sourceFoot[0]).toBeGreaterThan(left);
+      expect(frame.sourceFoot[0]).toBeLessThan(right);
+      expect(frame.sourceFoot[1]).toBeLessThan(bottom);
+    }
+    const [a, b] = Object.values(frames).map(frame => frame.rect);
+    expect(a[0] + a[2]).toBeLessThanOrEqual(b[0]);
+  });
+});

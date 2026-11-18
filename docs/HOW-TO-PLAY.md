@@ -68,7 +68,7 @@ The **harbor bell** stands near the south beach. Walk up to it and press **E** (
 - Towers fire on their own.
 - The wave bar at the top shows the wave, the ships left and the ♥ of the island.
 - **The weather is real.** A storm brings more ships. Fog hides them longer.
-- **Every 5th wave is a boss wave** with a warship. A boss wave pays double loot.
+- **Every 5th wave is a boss wave** with a warship. A boss wave pays three times the loot, the boss wave 40 five times. From wave 41 every island wave pays half as much again.
 - **Boss minigames get harder slowly after wave 10**: the target moves a little faster, the window is a little narrower and a little more must go right, up to a fixed limit at wave 100. Waves 5 and 10 play as before. The crew always shares one goal, and one captain alone can still win.
 - **Loot** for a won wave *n*: 🪙 25 + 10 × *n*, plus 🪙 10 for each house. From wave 30 it grows more slowly. A lost wave pays nothing.
 - A lost wave ends the run. You keep your buildings and coins. The next bell starts at your best wave minus 2.
@@ -90,6 +90,9 @@ You carry a musket.
 - **Click** anywhere to aim and fire there. On a phone, tap where to fire.
 - Press **F** to fire at the nearest ship or pirate. Hold F to keep firing. On a phone, use the musket button at the bottom right.
 - Up close to a pirate on foot, F swings your **cutlass** instead.
+- Hover or focus the fire button, hold F, or try a shot to see your current weapon's **range ring**. It fades after firing. The message explains when enemies are out of range or your weapon is reloading. Fire bombs show throw distance; their blast can reach beyond the ring.
+- Bullets and small impact flashes show where your shots land. The range marker uses quiet broken arcs, with a short mark at the boundary in your firing direction.
+- A warning beneath the wave bar calls out attacks on you or the island heart. The arrow beside your captain points toward the danger. A warning sounds once when it appears, then stays visual. If that threat clears and later returns, it can sound once again. Sounds respect your effects volume.
 
 Open **Menu**, then **Captain and skills**. There you raise your captain's level (🪙 20, 40, 80 and 160), spend skill points and buy other guns. You earn skill points by winning new waves.
 
@@ -99,18 +102,18 @@ Ships that reach the shore let **boarders** climb out. They walk to the heart of
 
 - A standing wall stops them until they break it.
 - **Legacy recovery v0:** press **E** at a damaged wall to repair it, and at a broken one to rebuild it.
-- **Legacy wall recovery v0:** a wall keeps its damage into the next wave. Between waves its card offers **Repair** or **Rebuild** for a few coins instead of Upgrade, or it mends by itself 10 minutes later. Upgrade it once it is whole. The versioned recovery v1 preview below describes the replacement behavior for an island served with that policy.
+- **Legacy wall recovery v0:** when a wave ends every wall is whole again (owner, 18 Nov); a wall damaged before that rule mends by itself 10 minutes later, or its card offers **Repair** or **Rebuild** for a few coins. The versioned recovery v1 preview below describes the replacement behavior for an island served with that policy.
 - Your gun and your cutlass beat them.
 
 ## Structure health · recovery v1 preview
 
 **Preview only, not a claim that recovery v1 is enabled or released.** When the server serves an island with recovery version 1, these are the intended player rules. Legacy recovery v0 remains described above.
 
-- Damaged **walls, cannons, mortars, harpoons, culverins and swivels** show a small health bar and exact HP in the structure card. Houses and watchtowers have no structure HP and are excluded. Full-health bars and repair offers are hidden. A destroyed structure shows an empty bar, a small **!** and its broken appearance; during a reserved wave it stays inactive until a paid repair succeeds. Between waves, free repair can bring it back from zero and it becomes active once HP is positive. Any positive HP can enter the next wave, but a partly damaged structure is fragile. Base level upgrades require full HP and are available between waves.
-- Between waves, eligible structures heal automatically from their actual missing HP, including while you are offline. The card offers **Repair now: pay N coins** or **Or wait about Y for free repair**. Waiting takes no action; healing continues while the card is open or ignored. The ETA uses current HP and current repair rate, so a new wave can pause it.
-- Free repair pauses as soon as the server accepts the bell, including preparation and countdown, and stays paused through combat. It resumes when the server confirms the wave has finished or expired. During that reserved wave the card shows the paused status and shared remaining paid uses, with no free-repair ETA.
+- Damaged **walls, cannons, mortars, harpoons, culverins and swivels** show a small health bar and exact HP in the structure card. Houses and watchtowers have no structure HP and are excluded. Full-health bars and repair offers are hidden. A destroyed structure shows an empty bar, a small **!** and its broken appearance; during a reserved wave it stays inactive until a paid repair succeeds. It is whole again the moment the wave ends. Base level upgrades are available between waves.
+- **When a wave ends, every wall and tower is repaired at once** (won or lost, finished or timed out; owner, 18 Nov). The break starts with everything whole: no waiting, nothing to pay between waves.
+- During a wave nothing heals by itself. The card shows exact HP and **Repair now: pay N coins**; during a reservation it also shows the shared uses remaining. The card has no countdown or wave-end explanatory sentence.
 - A successful **Repair now** restores one structure immediately. Its server-quoted price is the current level's catalogue price, independent of damage or who pays. The team shares three successful repairs per island and wave, including preparation/countdown; repairs outside the reserved wave are unlimited. Failed requests do not charge coins or use a slot.
-- Captain **E** repair/rebuild and repair-only Captain skills are removed in recovery v1. The hired Carpenters on the island owner's crew speed up free repair between waves: up to two count island-wide, even when the owner is offline. Nearby Workshops add a capped bonus. The selected wall's **Quick Mend** or **Bastion** spec and island **Mason Drill** research further affect wall repair; Quick Mend and Bastion are exclusive, and only the wall's equipped spec applies. These bonuses pause during a reserved wave. See [D059](DECISIONS.md#d059--shared-gradual-hp-recovery-and-paid-instant-repair--2026-11-16) for the full rules and figures.
+- In recovery v1, Captain **E** structure repair/rebuild and repair-only Captain skills are removed. Carpenter hiring, the Workshop house role, **Quick Mend** and **Mason Drill** are being retired because there is no gradual repair to speed up. **Bastion** keeps +50% maximum wall HP; **Engineer** keeps the 10% construction/upgrade discount. Other crew/house abilities and Captain/Tavern healing remain. See [current implementation tasks](OPEN-TODOS.md#11-unified-defense-recovery--unassigned-follow-ups-16-nov) for review/release status.
 
 ## The heart of the island
 
@@ -129,7 +132,7 @@ The heart stands in the middle of the island. Its ♥ shows in the wave bar. Boa
 Open **Menu**, then **Crew**. You hire crew once and keep them.
 
 - **Gunner** (🪙 40, up to 2): your strongest tower reloads faster. After wave 3.
-- **Carpenter** (🪙 30, up to 2): under legacy recovery v0, repairs your most damaged wall during a wave. In recovery v1, Carpenters instead add to the island-wide between-wave free-repair rate; see the recovery v1 preview above. After wave 5.
+- **Carpenter** (legacy recovery v0 only; 🪙 30, up to 2): repairs your most damaged wall during a wave, unlocked after wave 5. New recovery-v1 hiring is being retired; full recovery happens at wave end without workers.
 - **Lookout** (🪙 25, one): sees further in fog. Ships show 3 seconds earlier. After wave 8.
 
 ## What opens when
@@ -143,7 +146,7 @@ New things open when your game first **wins** a wave. A toast and the narrator s
 | 2 | Level 2, the mortar |
 | 3 | The watchtower, the gunner |
 | 4 | **The Harbor** and its market stall |
-| 5 | Level 3, the inner ring of walls, the carpenter |
+| 5 | Level 3, the inner ring of walls; Carpenter in legacy recovery v0 only |
 | 6 | **A wreck washes ashore.** Anyone can pay into her repair. |
 | 7 | The football match board at the Harbor |
 | 8 | **The Tech hub**, the lookout, captain levels 4 and 5 |
@@ -182,7 +185,8 @@ The Harbor is a building on the east beach. Walk up to it and press **E** (or **
 - **Your ship** (after wave 30, once the wreck is repaired): walk to her on the west beach and press **E**. Between waves, pick one of her games. A round lasts 20 seconds and ends with 0 to 3 stars:
   - **💥 Broadside duel:** enemy ships sail across. Fire when one is inside the gold band: in its middle is a bullseye (+2), inside it a hit (+1), a miss costs 1. The guns reload after every shot. **Space**, **F**, a click or tap on the sea, or **Fire**.
   - **🪙 Treasure dash:** steer your boat left and right to grab coins (+1) and dodge cannonballs (−2; a red arrow shows where one lands). **← →** or **A D**, drag on the sea, or hold **◀ ▶**.
-  - Each game pays coins **once per won wave**: ★ × (6 + wave ÷ 5), so ★★★ is 🪙 36 at wave 30 and 🪙 78 at wave 100. After that you can keep playing for fun until your crew wins the next wave. Every player is paid into their own wallet. Settings › **Easier finishers** widens the gold band and the catch.
+  - Attempts are free. If a friend rings the bell, your unfinished boat round ends and you return to defend the island; an on-screen notice explains that no coins were spent and no reward was used. Completed rounds keep their earned coins.
+  - Only the first round with at least one star pays for each game at each won wave. A later better score pays nothing extra. Each game pays coins **once per won wave**: ★ × (6 + wave ÷ 5), so ★★★ is 🪙 36 at wave 30 and 🪙 78 at wave 100. After that you can keep playing for fun until your crew wins the next wave. Every player is paid into their own wallet. Settings › **Easier finishers** widens the gold band and the catch.
 
 ## Controls
 
@@ -194,6 +198,7 @@ The Harbor is a building on the east beach. Walk up to it and press **E** (or **
 | Cutlass | F next to a pirate on foot | The musket button next to a pirate | No separate button |
 | Close a card / pause | Escape | Close button / Menu | B in a menu; Menu closes or pauses |
 | Zoom | Mouse wheel over the world | No separate zoom button | No separate zoom button |
+| Whole island | Hold Tab | Not yet | Not yet |
 | Menus | Tab / Shift+Tab; Enter or Space on buttons | Tap the labeled control | D-pad to focus, A to activate |
 
 Cards open only when you stand close. A click or tap on a building from far away shows "Walk closer" next to it. During a wave a fallen teammate next to you always comes first: E helps them up, and it never opens a building.

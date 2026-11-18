@@ -64,6 +64,13 @@ describe('the islands flag and where Play lands', () => {
     expect(calls).toBe(0);
     expect(await resolveIslandsMode({online: true, readFlags: () => null, wait: async () => {}, timeoutMs: 300})).toBe('off');
   });
+  it('still finds the islands when the first /api/config answers late (a cold start, one failed read)', async () => {
+    let waited = 0;
+    const wait = async ms => { waited += ms; };
+    const readFlags = () => (waited >= 6500 ? {islands: true} : null);
+    expect(await resolveIslandsMode({online: true, readFlags, wait})).toBe('live');
+    expect(waited).toBe(6500);
+  });
   it('lands on your island, but keeps the class harbor for a class code', () => {
     expect(startPlace({mode: 'live'})).toBe('home_islet');
     expect(startPlace({mode: 'fake'})).toBe('home_islet');

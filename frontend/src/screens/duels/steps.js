@@ -3,7 +3,7 @@
 // A duel here is the server's detail JSON (docs/INTERFACES.md, GET /api/duels/{id}), so every
 // point is already decided; the screen only turns it into sentences.
 // Used by: reveal.js, history.js and the tests.
-import { ANSWER_HOURS, SIGNAL_NAMES, otherCaptainName } from './logic.js';
+import { SIGNAL_NAMES, otherCaptainName } from './logic.js';
 import { formatCoinDelta } from '../../lib/coins.js';
 
 const BEAT_LINES = {
@@ -60,34 +60,4 @@ export function revealSteps(duel, { reducedMotion = false } = {}) {
   });
   const result = resultStep(duel);
   return reducedMotion ? [result] : [...rounds, result];
-}
-
-// "5 rounds, stake 100, winner takes 190" or "3 rounds, friendly duel".
-export function termsText(duel) {
-  const stakeText = duel.stake > 0 ? `stake ${duel.stake}, winner takes ${duel.winnerTakes}` : 'friendly duel';
-  return `${duel.rounds} rounds, ${stakeText}`;
-}
-
-function finishedLine(duel) {
-  const word = { won: 'Won', lost: 'Lost', draw: 'Draw' }[duel.yourResult];
-  const score = `${duel.score.you} to ${duel.score.them}`;
-  const against = duel.yourResult === 'draw' ? '' : ` against ${otherCaptainName(duel) ?? 'a captain who has left'}`;
-  if (duel.stake === 0) return `${word} ${score}${against}, friendly duel`;
-  if (duel.yourResult === 'draw') return `${word} ${score}, stake returned`;
-  return `${word} ${score}${against}, ${formatCoinDelta(duel.coinsChange)}`;
-}
-
-// "Won 3 to 1 against Captain-3fa85f, +90 coins", "Withdrawn, stake returned" and so on.
-export function historyLine(duel) {
-  const returned = duel.stake > 0 ? ', stake returned' : '';
-  const isOpponent = duel.you === 'opponent';
-  if (duel.status === 'finished') return finishedLine(duel);
-  if (duel.status === 'withdrawn') return `Withdrawn${returned}`;
-  if (duel.status === 'declined') {
-    return isOpponent ? `You declined the challenge from ${duel.challengerName}` : `Declined by ${duel.opponentName}${returned}`;
-  }
-  if (duel.status === 'expired') {
-    return isOpponent ? `You did not answer ${duel.challengerName} within ${ANSWER_HOURS} h` : `No answer within ${ANSWER_HOURS} h${returned}`;
-  }
-  return 'Waiting for an answer';
 }

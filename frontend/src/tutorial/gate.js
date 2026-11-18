@@ -4,7 +4,7 @@
 // the island's code and its campaign known from the server's answer. A signed-out player, the front door and a
 // code typed but not joined yet have no answer, so nothing starts.
 //   probe: {place, code, wave}   (src/tutorial/game-hooks.js)
-import {gameKey} from '../narrator/logic.js';
+import {gameKey} from '../narrator/game-key.js';
 
 export const ISLAND_PLACE = 'home_islet';
 export function onIsland(probe) {
