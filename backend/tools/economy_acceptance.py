@@ -11,6 +11,8 @@ import re
 from collections.abc import Sequence
 from pathlib import Path
 
+from server.island.treasury_models import decimal_integer
+
 SCENARIOS = (
     "treasury-concurrent-spending",
     "settlement-source-account",
@@ -36,7 +38,7 @@ def coin_integer(value: object, *, signed: bool = False) -> int:
     pattern = r"0|-?[1-9][0-9]*" if signed else r"0|[1-9][0-9]*"
     if not isinstance(value, str) or re.fullmatch(pattern, value) is None:
         raise ValueError("coin amount must be a canonical decimal string")
-    return int(value)
+    return decimal_integer(value)
 
 
 def validate_treasury(snapshot: dict) -> tuple[int, int]:

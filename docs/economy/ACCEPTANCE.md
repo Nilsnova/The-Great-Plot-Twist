@@ -4,11 +4,13 @@
 >
 > **Who uses it:** teammates validating the shared economy before release.
 
-**Status:** preparation only. The reviewed base does not contain the treasury and
-permission implementations required by [#493](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/493),
-[#494](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/494) and
-[#495](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/495).
-No row below is a reported runtime pass. See [#505](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/505)
+**Status:** database integration preparation. Published draft dependencies now
+provide the [contract #515](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/515),
+[permission policy #516](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/516) and
+[treasury/operation registry #517](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/517).
+The permission RPC reader still lacks its production persistent authority provider;
+personal Captain/Engineer/assignment and lifecycle integration remain prerequisites.
+No row below is a reported authenticated runtime pass. See [#505](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/505)
 and the [bounded specification](../../specs/MP-ECO-20-integration-acceptance.md).
 
 ## Evidence layers
@@ -58,8 +60,10 @@ invent passing output while prerequisites are missing.
 Use the agreed 20-copy total capacity with grandfathered excess, 60-second reconnect
 grace, longest-active-member succession with stable player-ID tie break, and ship
 rewards paid only for positive cumulative score improvements. Their implementations
-must preserve these values. Conversion and outstanding reset obligations still need
-their owning contracts. This matrix does not authorize migration or activation.
+must preserve these values. Reset permits open wagers, whose settlement remains
+confined to the old retired account. Owner deletion deletes that island while
+preserving other players' personal Captain progress. Conversion and the actual
+reset/deletion transactions remain prerequisites; this matrix authorizes no activation.
 
 ## Offline assertions
 
@@ -68,15 +72,17 @@ their owning contracts. This matrix does not authorize migration or activation.
 commitmentDelta)` decimal-string pairs exported from actual ledger observations.
 It rejects noncanonical values, negative balances/commitments, spending held funds
 and a final snapshot that does not reconcile. It has no legacy numeric stake cap.
-It is an independent assertion tool, not another treasury implementation.
+It reuses `treasury_models.decimal_integer`, including 5,001-digit values without
+changing Python's global conversion limit. It is an independent assertion tool,
+not another treasury implementation.
 
 ## Evidence manifest
 
-From the repository root, generate a clearly not-run inventory outside Git:
+From `backend/`, generate a clearly not-run inventory outside Git:
 
 ```bash
-python3 -I backend/tools/economy_acceptance.py --source FULL_TESTED_COMMIT_SHA --template > /tmp/economy-evidence.json
-python3 -I backend/tools/economy_acceptance.py --source FULL_TESTED_COMMIT_SHA /tmp/economy-evidence.json
+uv run python -m tools.economy_acceptance --source FULL_TESTED_COMMIT_SHA --template > /tmp/economy-evidence.json
+uv run python -m tools.economy_acceptance --source FULL_TESTED_COMMIT_SHA /tmp/economy-evidence.json
 ```
 
 Replace `FULL_TESTED_COMMIT_SHA` with the full lowercase 40-character source commit.
