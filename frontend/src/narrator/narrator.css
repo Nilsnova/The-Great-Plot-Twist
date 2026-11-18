@@ -31,8 +31,11 @@ body:has(.narrator-card.is-wave-footer:not([hidden],.is-danger-suppressed)) .sou
   .narrator-card.is-wave-footer{left:max(5px,env(safe-area-inset-left));right:max(5px,env(safe-area-inset-right));bottom:max(5px,env(safe-area-inset-bottom));width:auto;padding:3px 6px}
   .narrator-card.is-wave-footer .narrator-text{line-height:1.14}
 }
-/* A full-size reading strip uses the measured space below fixed portrait touch controls. */
+/* A reading strip uses the measured space below fixed portrait touch controls. */
 @media(max-width:420px) and (orientation:portrait) and (pointer:coarse){.narrator-card{--narrator-reader-enabled:1}}
+@media(min-width:320px) and (max-width:350px) and (min-height:560px) and (max-height:640px) and (orientation:portrait) and (pointer:coarse){
+  .narrator-card{--narrator-preparation-reader:1}
+}
 .narrator-card.is-large-touch-reader{
   left:max(6px,env(safe-area-inset-left));right:max(6px,env(safe-area-inset-right));bottom:max(6px,env(safe-area-inset-bottom));
   transform:none;width:auto;max-height:var(--narrator-reader-height);padding:4px 4px 4px 10px;border-radius:10px

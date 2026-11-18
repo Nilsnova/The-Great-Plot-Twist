@@ -22,18 +22,41 @@ it('keeps every pre-wave guide action above the stick on a short phone', async (
         const {createHud} = await window.g20Import('/src/ui/hud.js');
         const {createCoach} = await window.g20Import('/src/tutorial/coach.js');
         const {createTouchControls} = await window.g20Import('/src/controls/touch.js');
+        const {createToasts} = await window.g20Import('/src/ui/toasts.js');
+        const {createNarratorCard} = await window.g20Import('/src/narrator/card.js');
+        const {default: narration} = await window.g20Import('/src/narrator/lines.json');
         const {GUIDE_STEPS, guideStart, guideView} = await window.g20Import('/src/ui/first-quests.js');
         const game = document.createElement('main'); document.body.append(game);
         const hud = createHud(game, {start() {}, focus() {}, menu() {}, hasIsland: () => true});
         hud.setCoinSource('island'); hud.setCoins(100); hud.start(); hud.update(null, {});
-        const touch = createTouchControls(game, {setVirtual() {}, press() {}}, {});
+        const inputs = [];
+        const touch = createTouchControls(game, {setVirtual() {}, press: key => inputs.push(key)}, {});
         touch.update(null, true);
         const coach = createCoach(game, {parent: game.querySelector('.hud-right')});
+        const toasts = createToasts({parent: game});
+        const narrator = createNarratorCard(game);
+        const nearCannon = () => {
+          const label = 'Upgrade Cannon';
+          touch.update('cannon_5', true, label);
+          hud.update('cannon_5', {interactionLabel: label, promptAt: {x: .45, y: .5}});
+        };
         window.showStep = index => {
           const step = GUIDE_STEPS[index];
           hud.setGuide(guideView({...guideStart(), step: index}));
           coach.show({step: `Step ${index + 1} of ${GUIDE_STEPS.length}`, title: step.label, caption: step.caption, keys: step.keys});
         };
+        window.showBuildFeedback = () => {
+          nearCannon();
+          toasts.show({text: 'Cannon built · 🪙 70', tone: 'success', context: 'guided-cannon-build'});
+          narrator.show(narration.lines.find(line => line.id === 'opening_2'));
+        };
+        window.clearBuildFeedback = () => {
+          narrator.hide();
+          toasts.clear();
+          touch.update(null, true);
+          hud.update(null, {});
+        };
+        window.finishGuide = () => { coach.hide(); nearCannon(); return inputs; };
         return GUIDE_STEPS.slice(0, 5).map((step, index) => ({index, title: step.label}));
       });
       const read = region => region.evaluate(panel => {
@@ -65,7 +88,28 @@ it('keeps every pre-wave guide action above the stick on a short phone', async (
           await expect.poll(() => copy.evaluate(node => node.scrollTop + node.clientHeight >= node.scrollHeight - 2)).toBe(true);
           expect((await read(region)).targetHits).toEqual([true, true]);
         }
+        if (index === 3) {
+          await page.evaluate(() => window.showBuildFeedback());
+          const action = page.getByRole('button', {name: 'Use: Upgrade Cannon'});
+          await expect.poll(() => action.textContent()).toBe('Upgrade Cannon');
+          expect(await page.locator('.hud-play .interact.floating').isVisible()).toBe(false);
+          const clearance = await region.evaluate(panel => {
+            const box = selector => document.querySelector(selector).getBoundingClientRect();
+            const overlaps = (a, b) => a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
+            const guide = panel.getBoundingClientRect(), stick = box('.touch-stick-group'), use = box('.touch-actions button');
+            const receipt = box('.u-toast'), caption = box('.narrator-card');
+            return {receipt: receipt.height > 0 && [guide, stick, use, caption].every(control => !overlaps(receipt, control)),
+              caption: caption.height > 0 && [guide, stick, use].every(control => !overlaps(caption, control))};
+          });
+          expect(clearance).toEqual({receipt: true, caption: true});
+          await action.tap();
+          expect((await read(region)).targetHits).toEqual([true, true]);
+          await page.evaluate(() => window.clearBuildFeedback());
+        }
       }
+      expect(await page.evaluate(() => window.finishGuide())).toEqual(['KeyE']);
+      expect(await page.getByRole('button', {name: 'Use: Upgrade Cannon'}).textContent()).toBe('Use');
+      expect(await page.locator('.hud-play .interact.floating').isVisible()).toBe(true);
     } finally {await context.close();}
   });
 });

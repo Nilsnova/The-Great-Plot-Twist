@@ -10,6 +10,25 @@
 @media(max-width:900px){.u-toasts,.u-toasts[popover]{inset:max(172px,var(--hud-goals-toast-top,0px)) 12px auto}}
 @media(prefers-reduced-motion:reduce){.u-toast{animation:none}}
 html[data-reduced-motion=true] .u-toast{animation:none}
+/* The first Cannon receipt uses the touch controls' open lane while the guide is in view. */
+@media(min-width:320px) and (max-width:420px) and (min-height:560px) and (orientation:portrait) and (pointer:coarse){
+  html:has(.coach-panel:not([hidden],.is-combat-guide)):has(.touch-controls:not([hidden])) .u-toasts:has(>[data-context=guided-cannon-build]){
+    inset:auto max(18px,env(safe-area-inset-right)) calc(var(--touch-controls-bottom,82px) + 70px) auto;width:164px
+  }
+  html:has(.coach-panel:not([hidden],.is-combat-guide)):has(.touch-controls:not([hidden])) [data-context=guided-cannon-build]{
+    max-width:100%;padding:6px 8px;gap:6px;align-items:center;justify-content:center;text-align:center
+  }
+  html:has(.coach-panel:not([hidden],.is-combat-guide)):has(.touch-controls:not([hidden])) [data-context=guided-cannon-build] .u-toast-text{
+    font-size:14px;line-height:1.25;overflow-wrap:anywhere
+  }
+  /* Standard narration may dock on the right. The space under the stick is free in that layout. */
+  html:has(.coach-panel:not([hidden],.is-combat-guide)):has(.touch-controls:not([hidden])):has(.narrator-card.is-combat-docked:not([hidden],.is-danger-suppressed)) .u-toasts:has(>[data-context=guided-cannon-build]){
+    inset:auto auto max(14px,env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left));width:112px
+  }
+  html:has(.coach-panel:not([hidden],.is-combat-guide)):has(.touch-controls:not([hidden])):has(.narrator-card.is-combat-docked:not([hidden],.is-danger-suppressed)) [data-context=guided-cannon-build] .u-toast-icon{
+    display:none
+  }
+}
 /* A card is open (a modal dialog): the toasts sit inside the card, just under its header, so the card's title and
    × stay in view (overlap audit, 15 Nov); toasts.js measures the header. !important: the wave and break rules
    (pirates.css) would otherwise keep them under the HUD behind the card. */
