@@ -25,6 +25,7 @@ import { towerMaxHp } from './tower-health.js';
 import { blocksAsTower } from './tower-obstacles.js';
 import { toScreen } from '../world/pixel-glsl.js';
 import { WALL_LANE_ROWS } from '../island/wall-lanes.js';
+import { classifyApproach, sampleSeaApproaches } from '../island/coverage-model.js';
 import {projectGround, LEGACY_DEPTH, groundProjectionGlsl} from '../world/projection.js';
 
 const Y = LEGACY_DEPTH; // existing ground instance geometry is converted together in the vertex shader
@@ -161,11 +162,44 @@ export function routeDots(points, every = GUIDE.dotEvery) {
   return dots;
 }
 
+const APPROACH_DOTS_PER_LANE = 24;
+const routeCell = point => `${Math.round(point.x * 2)},${Math.round(point.z * 2)}`;
+
+/** Bounded ground samples from the guide's own routes, including a stop if a route was incomplete. */
+export function sampleBoarderApproaches(routes, heart) {
+  const samples = new Map();
+  function add(point, routeId, unresolved = false) {
+    const cell = routeCell(point), previous = samples.get(cell);
+    if (!previous || (previous.unresolved && !unresolved)) {
+      samples.set(cell, {x: point.x, z: point.z, target: 'boarders', routeId, ...(unresolved ? {unresolved: true} : {})});
+    }
+  }
+  for (const route of routes) {
+    const last = route.points.at(-1);
+    if (!last) continue;
+    let length = 0;
+    for (let i = 1; i < route.points.length; i++) {
+      const a = route.points[i - 1], b = route.points[i];
+      length += Math.hypot(b.x - a.x, b.z - a.z);
+    }
+    const limit = APPROACH_DOTS_PER_LANE - (route.reachable ? 0 : 1);
+    const lastCell = routeCell(last);
+    for (const dot of routeDots(route.points, Math.max(1.6, length / limit)).slice(0, limit)) {
+      if (route.reachable || routeCell(dot) !== lastCell) add(dot, route.id);
+    }
+    if (!route.reachable) add(last, route.id, true);
+  }
+  // routeDots stops just before its endpoint. Sample the actual heart rather than a nearby rounded cell.
+  if (routes.some(route => route.reachable)) samples.set(routeCell(heart), {x: heart.x, z: heart.z, target: 'boarders'});
+  return [...samples.values()];
+}
+
 const round2 = value => Math.round(value * 100) / 100;
 
 // ---------------------------------------------------------------- drawing
 
-const SHAPE = { disc: 0, ring: 1, chevron: 2, icon: 3, box: 4, dashed: 5 };
+const SHAPE = { disc: 0, ring: 1, chevron: 2, icon: 3, box: 4, dashed: 5,
+  gap: 6, conditional: 7, unknown: 8 };
 const ICONS = ['skull', 'heart', 'rubble'];
 const ICON_PX = 64;
 const vertex = /* glsl */`
@@ -191,8 +225,17 @@ void main(){
     // A chevron pointing along +x: the big arrowhead minus a smaller one set back behind it.
     a*=step(-.75,x)*step(y,(.85-x)*.62)*(1.0-step(y,(.1-x)*.62));}
   else if(vShape<3.5){vec4 t=texture2D(uIcons,vUv);a*=t.a;rgb=t.rgb*vColor.rgb;}
-  else if(vShape>4.5){// T50: a dashed ring (a landing place, not a target): the ring's band cut into 14 dashes.
+  else if(vShape>4.5&&vShape<5.5){// T50: a landing ring, cut into 14 dashes.
     a*=smoothstep(.66,.74,r)*(1.0-smoothstep(.9,1.0,r))*step(0.0,sin(atan(vLocal.y,vLocal.x)*14.0));}
+  else if(vShape>5.5){
+    vec2 p=abs(vLocal);
+    float d=vShape>6.5&&vShape<7.5?p.x+p.y:max(p.x,p.y);
+    float pigment=1.0-smoothstep(.70,.83,d);
+    a*=1.0-smoothstep(.88,1.0,d);
+    // A filled square marks a gap. An open diamond marks a condition and an open square marks unknowns.
+    if(vShape>6.5){a*=smoothstep(.23,.34,d);pigment*=smoothstep(.38,.49,d);}
+    rgb=mix(vec3(.035,.026,.022),rgb,pigment);
+  }
   if(a<.01)discard;
   gl_FragColor=vec4(rgb,a);
   ${toScreen}
@@ -278,11 +321,17 @@ export function skullAt(landing, heart = CONFIG.boarding.heart, walls = [], scal
 const RGB = hex => { const c = new THREE.Color(hex); return { r: c.r, g: c.g, b: c.b }; };
 const LANE = RGB('#ffe08a'), RED = RGB('#ff4a36'), DARK = RGB('#1f2622'), GOLD = RGB('#ffd34d'), WHITE = { r: 1, g: 1, b: 1 };
 const BAR = { good: RGB('#7ed957'), low: RGB('#ffd34d'), bad: RGB('#ff4a36') };
+const COVERAGE_MARKS = {
+  uncovered: {shape: SHAPE.gap, width: .89, height: 1.26, color: {...RGB('#f0e1c4'), a: .86}},
+  conditional: {shape: SHAPE.conditional, width: 1.15, height: 1.62, color: {...RGB('#e3bf77'), a: .87}},
+  unknown: {shape: SHAPE.unknown, width: .98, height: 1.40, color: {...RGB('#b4c1bd'), a: .71}},
+};
 
 /**
  * createBattleGuide({scene, reducedMotion, characterScale}) → {update(view), dispose()}.
  * view: null (hide), or {mode: 'preview'|'wave', lanes (the wave_started lanes, or null: every sea lane), defenses
  * (where the walls stand), stateWalls (the sim's walls in a wave, else null), boarders, heart: {x, z}, wave, dt}.
+ * Preview coverage replaces the guide drawings with classified marks. Its version changes with layout and stats.
  * preview draws faintly, over the wall lanes, without wall marks (view.wallLanes: false leaves the lanes out); wave draws everything. The
  * routes are worked out again only when routeKey() changes (position, maximum hp or quarter-health band).
  */
@@ -301,7 +350,7 @@ export function createBattleGuide({ scene, reducedMotion = () => false, characte
   // On the ground (over the terrain, under every building and character) and in the air (badges and bars).
   const ground = createInstances('ground', 1600, groundMaterial, 9, owned), air = createInstances('air', 160, material, 936, owned);
   root.add(ground.mesh, air.mesh);
-  let clock = 0, disposed = false, key = null, routes = [];
+  let clock = 0, disposed = false, key = null, routes = [], lastCoverage = null;
   const still = () => !!reducedMotion();
   const drawnY = z => -z * Y;
 
@@ -309,6 +358,41 @@ export function createBattleGuide({ scene, reducedMotion = () => false, characte
   let k = 1, thin = false;
   // Routes from two landings often share their last cells: each cell draws once.
   const cells = new Set();
+
+  function prepareRoutes(view, heart) {
+    const landings = view.lanes?.length ? waveLandings(view.lanes) : laneLandings();
+    const walls = guideWalls(view.defenses ?? [], view.stateWalls ?? null);
+    const towerBlocking = view.towerObstacles === true;
+    const towers = towerBlocking ? guideTowers(view.defenses ?? [], view.stateTowers ?? null) : [];
+    const wave = view.wave ?? 1;
+    const next = `${heart.x},${heart.z}|${routeKey(landings, walls, wave, towers, towerBlocking)}`;
+    if (next !== key) { key = next; routes = guideRoutes({landings, heart, walls, towers, towerBlocking, wave}); }
+    return walls;
+  }
+
+  function drawCoverage(view) {
+    const {target, towers, version, complete} = view.coverage;
+    const heart = view.heart ?? CONFIG.boarding.heart;
+    if (version != null && lastCoverage?.version === version && lastCoverage.target === target
+      && lastCoverage.complete === complete && lastCoverage.wave === view.wave
+      && lastCoverage.towerObstacles === view.towerObstacles && lastCoverage.x === heart.x && lastCoverage.z === heart.z) return;
+    lastCoverage = {target, version, complete, wave: view.wave, towerObstacles: view.towerObstacles, x: heart.x, z: heart.z};
+    ground.begin(); air.begin(); laneBoxes = 0;
+    let samples;
+    if (target === 'boarders') {
+      prepareRoutes(view, heart);
+      samples = sampleBoarderApproaches(routes, heart);
+    } else {
+      const lanes = view.lanes?.length ? waveLandings(view.lanes).map(({id, a}) => ({id, bearing: a * 180 / Math.PI})) : undefined;
+      samples = sampleSeaApproaches(lanes);
+    }
+    for (const point of classifyApproach(samples, towers ?? [], {complete})) {
+      const mark = COVERAGE_MARKS[point.status];
+      if (mark) ground.push(mark.shape, point.x, drawnY(point.z), mark.width, mark.height * Y, mark.color);
+    }
+    ground.end(); air.end();
+  }
+
   function drawRoute(route, alpha, live) {
     const dots = routeDots(route.points);
     const total = dots.length ? dots[dots.length - 1].along : 0;
@@ -387,6 +471,11 @@ export function createBattleGuide({ scene, reducedMotion = () => false, characte
     root,
     update(view) {
       if (disposed) return;
+      if (view?.mode === 'preview' && (view.coverage?.target === 'boarders' || view.coverage?.target === 'ships')) {
+        drawCoverage(view);
+        return;
+      }
+      lastCoverage = null;
       ground.begin(); air.begin(); cells.clear();
       if (view) {
         thin = !!sparse();
@@ -396,17 +485,15 @@ export function createBattleGuide({ scene, reducedMotion = () => false, characte
         if (!live && view.managing === true) { laneBoxes = 0; ground.end(); air.end(); return; }
         if (!live && view.wallLanes !== false) drawLanes(); else laneBoxes = 0; // D056: under everything else
         k = live ? Math.max(1, Math.min(2, Number(characterScale()) || 1)) : 1;
-        const landings = view.lanes?.length ? waveLandings(view.lanes) : laneLandings();
-        const walls = guideWalls(view.defenses ?? [], view.stateWalls ?? null), attacked = attackedWalls(view.boarders);
-        const towerBlocking = view.towerObstacles === true;
-        const towers = towerBlocking ? guideTowers(view.defenses ?? [], view.stateTowers ?? null) : [];
         const heart = view.heart ?? CONFIG.boarding.heart;
-        const next = `${heart.x},${heart.z}|${routeKey(landings, walls, view.wave ?? 1, towers, towerBlocking)}`;
-        if (next !== key) { key = next; routes = guideRoutes({ landings, heart, walls, towers, towerBlocking, wave: view.wave ?? 1 }); }
+        const walls = prepareRoutes(view, heart);
         for (const route of routes) drawRoute(route, alpha, live);
         for (const route of routes) drawLanding(route.landing, alpha, live, heart, walls);
         drawHeart(heart, live);
-        if (live) for (const wall of walls) drawWall(wall, attacked.has(wall.id));
+        if (live) {
+          const attacked = attackedWalls(view.boarders);
+          for (const wall of walls) drawWall(wall, attacked.has(wall.id));
+        }
       }
       ground.end(); air.end();
     },

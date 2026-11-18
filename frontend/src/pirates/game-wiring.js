@@ -98,6 +98,7 @@ export function wireWaves(ctx) {
   let publishCore = () => {};
   const pirates = mountPirates({...ctx, getDefenses: () => withLevels(island?.defenses() ?? [], defended()), finishWave, api, openRoom, notify,
     getManaging: () => island?.managing === true,
+    getApproachCoverage: () => island?.approachCoverage?.() ?? null,
     inspectDefenses: !!island,
     onIslandEvents: events => { noteReport(() => defenseReport?.events(events)); noteReport(publishCore); },
     recoveryTransport,

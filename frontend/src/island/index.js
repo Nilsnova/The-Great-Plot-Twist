@@ -32,6 +32,7 @@ import {createMoveMode} from './move-mode.js';
 import {createMoveBar} from './move-bar.js';
 import {createVillageMode, isTextEntry} from './village-mode.js';
 import {createVillageBar} from './village-bar.js';
+import {approachSnapshot} from './coverage-planning.js';
 import {canDockSelection, holdOtherBuildingAction} from './selection-dock.js';
 import {footprintOf} from './placement.js';
 import {previewDefenseCoverage} from '../pirates/sim.js';
@@ -239,18 +240,29 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   const ui = createIslandUi({container, focus, resetInput,
     onSelection: active => villageBar.render(village.active && !active && !moving.active)});
   // T36, flexible placement: Move mode (move-mode.js) with its bar (move-bar.js) and the preview on the island.
-  const moving = createMoveMode({api, render: model => { moveBar.render(model); villageBar.render(village.active && !model); }, preview: cell => world?.preview(cell),
+  let approachTarget = '', approachMove = null, approachCache = null;
+  const moving = createMoveMode({api, render: model => {
+    const draft = approachTarget && model ? moving.state : null;
+    approachMove = draft?.ok && !draft.message ? draft : null;
+    moveBar.render(model && approachTarget ? {...model, coverage: approachTarget, coverageDraft: !!approachMove} : model);
+    villageBar.render(village.active && !model);
+  }, preview: cell => world?.preview(cell),
     spots: () => target()?.spots ?? [], code: () => (visiting ? visiting.code : null), onMoved: (answer, spotId) => void moved(answer, spotId)});
   const moveBar = createMoveBar({container, handlers: {nudge: (dx, dz) => moving.nudge(dx, dz), place: () => void moving.confirm(), cancel: () => moving.cancel()}});
   // A confirmed fresh start begins a new island identity for the core display (VIS-35).
   let resetGeneration = 0;
-  const villageBar = createVillageBar({container, onLeave: () => village.leave(), onPick: pick, onCamera: villageCamera});
+  const villageBar = createVillageBar({container, onLeave: () => village.leave(), onPick: pick,
+    onCamera: villageCamera, onCoverage: setApproachTarget});
   const village = createVillageMode({
     context: () => ({ready: !!own?.code && !!world, own: !visiting && !visitCode, code: own?.code,
       // A successful start/join awaits preparation before flow.current is set.
       reserved: flow.busy || !!flow.current || (battle && !waveOver)}),
     render: active => villageBar.render(active),
-    onLeave: () => { moving.cancel(); ui.close(); openSpot = null; resetInput(); focus(); },
+    onLeave: () => {
+      approachTarget = ''; approachCache = null;
+      villageBar.setCoverage?.('');
+      moving.cancel(); ui.close(); openSpot = null; resetInput(); focus();
+    },
   });
   const villageKeys = event => {
     if (event.defaultPrevented || isTextEntry(event.target)) return;
@@ -283,6 +295,34 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   const recoveryControlsOn = () => recoveryPolicyOn()
     || (recoveryIslandCode === target()?.code && ['loading', 'error'].includes(recoveryStatus));
   const recoveryModelVersion = () => recoveryPolicyOn() ? 1 : 0;
+  function setApproachTarget(value) {
+    if (!village.active || !['', 'boarders', 'ships'].includes(value) || approachTarget === value) return;
+    approachTarget = value;
+    villageBar.setCoverage(value);
+    if (!value) { approachCache = null; return; }
+    if (recoveryControlsOn()) void readStructureRecovery();
+    else if (wallRecovery()) void readWalls();
+  }
+  function approachCoverage() {
+    if (!approachTarget || !village.active || !own || ui.active || ui.selectionElement) return null;
+    const needsRecovery = recoveryControlsOn();
+    const recovery = needsRecovery && recoveryStatus === 'ready' && recoveryIslandCode === own.code
+      && recoveryState?.recoveryVersion === 1 && recoveryState.displayPhase === 'between_waves'
+      && (!own.islandEpoch || recoveryState.islandEpoch === own.islandEpoch) ? recoveryState : null;
+    const needsLegacyWalls = !needsRecovery && wallRecovery();
+    const legacyWalls = needsLegacyWalls && wallsFor === own.code ? walls : null;
+    const defensesV2 = defensesV2On() === true || recoveryPolicyOn();
+    // Accepted data and the local Move draft change independently. Stable frames reuse their snapshot.
+    const cached = approachCache;
+    if (cached?.island === own && cached.target === approachTarget && cached.draft === approachMove
+      && cached.recovery === recovery && cached.legacyWalls === legacyWalls && cached.needsLegacyWalls === needsLegacyWalls
+      && cached.needsRecovery === needsRecovery && cached.defensesV2 === defensesV2) return cached.value;
+    const value = approachSnapshot({target: approachTarget, island: own, draft: approachMove,
+      recovery, needsRecovery, legacyWalls, needsLegacyWalls, defensesV2});
+    approachCache = {island: own, target: approachTarget, draft: approachMove, recovery,
+      legacyWalls, needsLegacyWalls, needsRecovery, defensesV2, value: cached?.value.version === value.version ? cached.value : value};
+    return approachCache.value;
+  }
   const where = () => (visiting ? displayIslandCode(visiting.code) : 'own');
   // Before a wave we are in starts: the defended island once more, so a friend's co-op build is in it.
   const flow = createWaveFlow({api, emit, placeholder, now, setTimer, clearTimer, prepare: async () => {
@@ -1520,7 +1560,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     get point() { return point ? structuredClone(point) : null; },
     // The wave on screen (src/pirates/, wired in game.js): the built defenses it fights with, the client
     // for Pirate Point, the island's room place (isle_<code>), joining a running wave, and the battle look.
-    defenses: () => defenses(target()?.spots ?? [], campaign()?.research?.tiers),
+    defenses: () => defenses(target()?.spots ?? [], campaign()?.research?.tiers), approachCoverage,
     get api() { return api; },
     // A fresh account read after background reward settlement, guarded by its service owner and write order.
     setWalletCoins(value) {
