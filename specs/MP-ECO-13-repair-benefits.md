@@ -79,7 +79,7 @@ The design contribution is complete when this inventory, selected retirement pol
 - [ ] The shared purchase service refuses Carpenter before any charge and the shared UI has no active hire offer; existing counts and history are retained.
 - [ ] New-mode offers and wording never sell obsolete between-wave repair speed or a discount on free revival; legacy policy text/behavior remains scoped correctly.
 - [ ] Bastion +50% max HP, Tavern healing, Medic hold/HP and Engineer 10% plus one-wave binding remain intact.
-- [ ] Retired allocations retain normal accounting; ordinary free respec preserves earned totals and unrelated skills without clearing an Engineer commitment. Include a valid 13-point Shipwright path, a partial path and repeated respec.
+- [ ] Retirement/adoption preserves unrelated allocations and normal spent-point accounting. Explicit ordinary free respec clears skill choices normally and releases their actual cost once, preserving earned totals and any Engineer role commitment. Include a valid 13-point Shipwright path, a partial path and repeated respec.
 - [ ] Stored retired choices preserve identifiers, house assets, acquired tiers and ordinary management without automatic replacement or compensation.
 - [ ] Run relevant backend/frontend tests and build for the eventual code; include real client evidence for changed cards. Do not count a design document as runtime or balance evidence.
 - [ ] A different human teammate reviews the current eventual implementation before merge.
