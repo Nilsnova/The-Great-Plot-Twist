@@ -44,6 +44,8 @@ Personal profile changes depend on the player's own assignment, not a spectated 
 
 Saved-origin refunds, rewards and wager settlements are deliberately not player actions in this matrix. Their transaction loads its own durable authorization, original account and epoch; current membership/leadership/phase must not redirect or block the automatic settlement. No client-selected `settlement` or `authorized` flag bypasses admission. MP-ECO-02 and the financial integrations own stored-origin validation and exactly-once settlement.
 
+An authenticated exact retry of an existing operation can also read its own immutable domain receipt after departure or reset. Route integration resolves that actor's stored root UID/origin and validates the original owner/epoch/domain before considering current mutation preflight. Only a new intent needs `require_economy_action` and current-context resolution. A changed replay conflicts; historical receipt access never authorizes a new effect or exposes another run's fresh balance/assets. Calling current membership/epoch preflight before every retry would wrongly block this receipt-only path.
+
 The Python read is advisory: context and authority are separate reads. Each later mutation RPC must repeat membership/owner/leader, account/epoch, accepted reservation and relevant personal assignment checks under its mutation locks. This task supplies no SQL race protection, new live routes or write RPC.
 
 ## Tests to write first and acceptance
