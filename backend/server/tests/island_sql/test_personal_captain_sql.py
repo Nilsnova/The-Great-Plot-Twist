@@ -21,6 +21,12 @@ from server.tests.island_sql.test_islands_and_waves_sql import (  # noqa: E402
     as_owner,
     as_server,
     balance,
+    move_start,
+    open_island,
+    start,
+)
+from server.tests.island_sql.test_islands_and_waves_sql import (  # noqa: E402
+    finish as legacy_finish,
 )
 
 RULES = configuration(load_island())
@@ -52,9 +58,11 @@ def private(connection, name, *arguments):
     return rpc(connection, name, *arguments)
 
 
-def edit(connection, player, action, value=None, uid=None):
+def edit(connection, player, action, value=None, uid=None, expected=None):
+    revision = expected if expected is not None else view(connection, player)["captain"]["revision"]
     as_server(connection)
-    return rpc(connection, "personal_captain_change", player, uid or uuid4().hex, action, value)
+    return rpc(connection, "personal_captain_change", player, uid or uuid4().hex,
+               action, value, revision)
 
 
 def attach(connection, player, wave=None, played=6):
@@ -105,11 +113,47 @@ def test_free_respec_and_role_selection_never_charge_coins(database):
     assert cleared["profile"]["skills"]["points"] == 2
     assert cleared["profile"]["captain"]["role"] is None
     edit(database, owner, "role", "medic")
-    learned = edit(database, owner, "learn", "steady_aim", uid="learn001")
+    revision = view(database, owner)["captain"]["revision"]
+    learned = edit(database, owner, "learn", "steady_aim", uid="learn001", expected=revision)
     assert learned["profile"]["skills"]["points"] == 1
-    assert edit(database, owner, "learn", "steady_aim", uid="learn001")["repeat"] is True
-    assert edit(database, owner, "learn", "cutlass", uid="learn001")["reason"] == "action_conflict"
+    assert edit(database, owner, "learn", "steady_aim", uid="learn001",
+                expected=revision)["repeat"] is True
+    assert edit(database, owner, "learn", "cutlass", uid="learn001",
+                expected=revision)["reason"] == "action_conflict"
     assert balance(database, owner) == wallet
+
+
+def test_new_adoption_cannot_ignore_a_personal_wave_on_another_legacy_island(database):
+    owner, member, _, treasury = ready(database)
+    open_island(database, member, "P6W8X")
+    start(database, member, "legacy01", owner=member)
+    as_server(database)
+    result = rpc(database, "personal_captain_initialize", member, owner,
+                 keys(treasury)[1], Jsonb(RULES))
+    assert result["reason"] == "captain_conversion_required"
+    assert rpc(database, "personal_captain_context", member) == {"status": "legacy"}
+
+
+def test_stale_profile_revision_and_old_unversioned_mutation_cannot_apply(database):
+    owner, _, _, _, initial = initialized(database)
+    revision = initial["captain"]["revision"]
+    edit(database, owner, "respec", expected=revision)
+    assert edit(database, owner, "role", "medic", expected=revision)["reason"] == (
+        "captain_revision_mismatch"
+    )
+    as_owner(database)
+    signature = "public.personal_captain_change(uuid,text,text,text)"
+    assert database.execute(
+        "select has_function_privilege('service_role',%s,'execute')", (signature,),
+    ).fetchone() == (False,)
+
+
+def test_unadopted_personal_profile_refuses_new_edit_without_import(database):
+    _, member, _, _ = ready(database)
+    as_server(database)
+    result = rpc(database, "personal_captain_change", member, "profile01", "respec", None, "0")
+    assert result == {"status": "refused", "reason": "captain_context_required"}
+    assert rpc(database, "personal_captain_context", member) == {"status": "legacy"}
 
 
 def test_pending_engineer_is_one_generation_and_skill_respec_keeps_role(database):
@@ -205,6 +249,37 @@ def test_late_c1_completion_cannot_clear_a_new_c2_generation(database):
     assert view(database, owner)["captain"]["engineerCommitment"]["id"] == str(c2)
 
 
+def test_purchase_after_withdrawal_rotates_before_the_old_wave_finishes(database):
+    owner, _, _, _, _ = initialized(database)
+    c1 = private(database, "personal_captain_bind_engineer_locked", owner)
+    wave, frozen = attach(database, owner)
+    private(database, "personal_captain_release_assignment_locked", owner, wave)
+    attached = view(database, owner)["captain"]
+    assert attached["assignmentWaveId"] is None
+    assert attached["engineerCommitment"]["state"] == "attached"
+    c2 = private(database, "personal_captain_bind_engineer_locked", owner)
+    assert c1 != c2
+    assert private(database, "personal_captain_bind_engineer_locked", owner) == c2
+    finish(database, owner, wave, frozen, outcome="lost")
+    current = view(database, owner)["captain"]["engineerCommitment"]
+    assert current == {"id": str(c2), "state": "pending", "waveId": None}
+
+
+def test_old_completion_does_not_release_a_different_current_assignment(database):
+    owner, _, _, _, _ = initialized(database)
+    private(database, "personal_captain_bind_engineer_locked", owner)
+    first_wave, first = attach(database, owner)
+    private(database, "personal_captain_release_assignment_locked", owner, first_wave)
+    second_wave, second = attach(database, owner)
+    finish(database, owner, first_wave, first, outcome="lost")
+    current = view(database, owner)["captain"]
+    assert current["engineerCommitment"] is None
+    assert current["assignmentWaveId"] == str(second_wave)
+    assert current["canRespec"] is False
+    finish(database, owner, second_wave, second, outcome="lost")
+    assert view(database, owner)["captain"]["assignmentWaveId"] is None
+
+
 def test_completion_and_milestone_replays_cannot_grant_more_points(database):
     owner, _, _, _, _ = initialized(database)
     wave, frozen = attach(database, owner)
@@ -257,3 +332,43 @@ def test_parallel_respec_and_discount_binding_cannot_leave_a_non_engineer_bound(
     assert "done" in results
     current = view(database, owner)["captain"]
     assert current["engineerCommitment"] is None or current["role"] == "engineer"
+
+
+def test_personal_freeze_and_real_legacy_finish_do_not_deadlock_on_profile_foreign_key(
+    database, scratch_server,
+):
+    owner, member, _, _, _ = initialized(database)
+    # A retained legacy settlement can still reference an adopted personal profile.
+    open_island(database, member, "P6W8X")
+    rpc(database, "game_join", owner, member, 10)
+    wave = start(database, owner, "legacy01", owner=member)
+    move_start(database, wave["waveId"], 30)
+    database.commit()
+    barrier = Barrier(2)
+
+    def finish_old():
+        with psycopg.connect(scratch_server.get_uri()) as connection:
+            connection.execute("set local statement_timeout='5s'")
+            connection.execute(
+                "select 1 from public.wallets where player_id=%s for update", (owner,),
+            )
+            connection.execute(
+                "select 1 from public.islands where player_id=%s for update", (member,),
+            )
+            barrier.wait(timeout=10)
+            result = legacy_finish(connection, owner, wave["waveId"])
+            assert result["status"] == "done" and result["loot"] > 0
+
+    def freeze_personal():
+        with psycopg.connect(scratch_server.get_uri()) as connection:
+            connection.execute("set local statement_timeout='5s'")
+            private(connection, "personal_captain_lock_state_locked", owner)
+            barrier.wait(timeout=10)
+            connection.execute(
+                "select 1 from public.islands where player_id=%s for update", (member,),
+            )
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        futures = [pool.submit(finish_old), pool.submit(freeze_personal)]
+        for future in futures:
+            future.result(timeout=15)
