@@ -1,0 +1,105 @@
+{
+  "status": "interim_authored_documents_only",
+  "localLinkTargetsChecked": 24,
+  "jsonParse": "passed",
+  "authoredWhitespace": "passed via git diff --check",
+  "applicationChecks": "not run by documentation writer",
+  "links": [
+    {
+      "from": "docs/contribute/VILLAGE-CLEARANCE-REVIEW.md",
+      "target": "../DECISIONS.md#d065--wall-clearance-and-upright-presentation-follow-up--2026-11-18"
+    },
+    {
+      "from": "docs/contribute/VILLAGE-CLEARANCE-REVIEW.md",
+      "target": "../../frontend/src/island/wall-obstacles.js"
+    },
+    {
+      "from": "docs/contribute/VILLAGE-CLEARANCE-REVIEW.md",
+      "target": "../../backend/content/island_layout.json"
+    },
+    {
+      "from": "docs/contribute/VILLAGE-CLEARANCE-REVIEW.md",
+      "target": "../../frontend/src/island/placement.js"
+    },
+    {
+      "from": "docs/contribute/VILLAGE-CLEARANCE-REVIEW.md",
+      "target": "../../backend/server/island/layout.py"
+    },
+    {
+      "from": "docs/contribute/VILLAGE-CLEARANCE-REVIEW.md",
+      "target": "../evidence/VIS-62-scenery-clearance/README.md"
+    },
+    {
+      "from": "docs/contribute/VILLAGE-CLEARANCE-REVIEW.md",
+      "target": "../../frontend/src/island/wall-connections.js"
+    },
+    {
+      "from": "docs/contribute/VILLAGE-CLEARANCE-REVIEW.md",
+      "target": "../../frontend/src/island/selection-bracket.js"
+    },
+    {
+      "from": "docs/contribute/VILLAGE-CLEARANCE-REVIEW.md",
+      "target": "../evidence/VIS-63-wall-selection/README.md"
+    },
+    {
+      "from": "docs/contribute/VILLAGE-CLEARANCE-REVIEW.md",
+      "target": "../../frontend/src/art/village/walls.js"
+    },
+    {
+      "from": "docs/contribute/VILLAGE-CLEARANCE-REVIEW.md",
+      "target": "../../frontend/src/island/wall-batches.js"
+    },
+    {
+      "from": "docs/contribute/VILLAGE-CLEARANCE-REVIEW.md",
+      "target": "../evidence/VIS-64-upright-walls/README.md"
+    },
+    {
+      "from": "docs/contribute/VILLAGE-CLEARANCE-REVIEW.md",
+      "target": "../../frontend/src/world/water.js"
+    },
+    {
+      "from": "docs/contribute/VILLAGE-CLEARANCE-REVIEW.md",
+      "target": "../evidence/VIS-65-sea-depth/README.md"
+    },
+    {
+      "from": "docs/contribute/VILLAGE-CLEARANCE-REVIEW.md",
+      "target": "../../frontend/src/world/places/layouts.js"
+    },
+    {
+      "from": "docs/contribute/VILLAGE-CLEARANCE-REVIEW.md",
+      "target": "../evidence/VIS-66-barrel-clearance/README.md"
+    },
+    {
+      "from": "docs/contribute/VILLAGE-CLEARANCE-REVIEW.md",
+      "target": "../evidence/village-clearance-review/README.md"
+    },
+    {
+      "from": "docs/contribute/VILLAGE-CLEARANCE-REVIEW.md",
+      "target": "VILLAGE-POLISH-REVIEW.md"
+    },
+    {
+      "from": "docs/contribute/VILLAGE-CLEARANCE-REVIEW.md",
+      "target": "../design/reference-village/approved-2026-11-17/README.md"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/README.md",
+      "target": "../../contribute/VILLAGE-CLEARANCE-REVIEW.md"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/README.md",
+      "target": "source.json"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/README.md",
+      "target": "../village-polish-review/README.md"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/README.md",
+      "target": "../../design/reference-village/approved-2026-11-17/README.md"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/README.md",
+      "target": "../VIS-66-barrel-clearance/legacy-limit.json"
+    }
+  ]
+}
