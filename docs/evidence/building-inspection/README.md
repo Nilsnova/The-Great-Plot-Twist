@@ -56,3 +56,13 @@ On touch, the existing in-world interaction appears on its action button during 
 On the 320 × 568 phone, the counts and captain health share a row. The measured wave bar is 159 CSS pixels tall, down from 186, with both danger lines and the event control visible. The named action remains 48 pixels tall. The extended short-screen probe confirmed space for wrapping loot and no horizontal scrolling.
 
 Friendly gunners use navy and teal with a brass cap detail. Enemy boarders keep their red headwear. The gunner's original silhouette, anchor and occupied pixels are unchanged. Native before and after used the same local island, Wave 9 seed 25135766 at tick 240, weather, positions and high-quality reduced-motion settings. Both recordings made 53 draw calls. Desktop E and the touch button opened the same existing card and left the wallet and layout intact. The screenshots are from `a15f5af3` and `98a4fe58` in Chrome on the Mac with touch emulation for the two phone sizes.
+
+## From the first wave to the first wall
+
+[Short phone before](post-wave-short-before.png) · [Short phone after](post-wave-short-final.png)
+
+The first-session check starts a fresh island, buys two Cannons, wins the normal first wave, and spends 10 of the confirmed coins on Wall 1. Chrome passed the same journey at 1280 × 720, 375 × 812 and 320 × 568. The final local fixture balance is 45 coins. At 320 pixels, the first unlock notice fits beside the movement stick while the narrator and victory sound caption stay visible. The full announcement remains available to screen readers and in the existing unlock cards. The default caption-size check kept Build here and Skip independently tappable.
+
+The 320 × 568 combat check also passed in WebKit after allowing a wider counter column. The build panel header at 844 × 390 stays within its bottom sheet. The updated native phone walking check passed with actual touch, joystick and the current Menu. The lifecycle check exercised real one-shot WebGL startup failure and normal retry while preserving the existing shared adapter.
+
+The three High–Low–High cycles retained the same installed layout, hit targets, colliders and renderer resources at each repeated quality. The first village view fetched 2,868,430 bytes of artwork. A wave that starts on Low allocates a 10.17 MiB battle atlas. Changing quality during a wave immediately resizes the framebuffer and the existing battle atlas stays resident until the next wave. These local measurements use Mac browser emulation for phones.
