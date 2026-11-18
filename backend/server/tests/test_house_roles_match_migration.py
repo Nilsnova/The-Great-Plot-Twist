@@ -101,13 +101,27 @@ def test_wave_revive_changes_only_the_tavern_block():
 
 
 def test_the_latest_wave_revive_keeps_the_tavern_rule():
-    latest = next(
+    definitions = [
         path
-        for path in sorted(MIGRATIONS.glob("*.sql"), reverse=True)
-        if re.search(r"function public\.wave_revive\(", path.read_text())
+        for path in sorted(MIGRATIONS.glob("*.sql"))
+        if re.search(r"create or replace function public\.wave_revive\(", path.read_text())
+    ]
+    latest = definitions[-1]
+    assert latest.name == "20261118051000_paid_revive_journal.sql"
+    text = latest.read_text()
+    # The atomic-journal update retains the existing payment implementation by renaming it.
+    assert "rename to wave_revive_charge;" in text
+    assert "return public.wave_revive_charge(" in function(text, "wave_revive")
+    original = definitions[-2]
+    assert original.name == ROLES.name
+    assert function(original.read_text(), "wave_revive") == function(
+        ROLES.read_text(), "wave_revive"
     )
-    assert latest.name == ROLES.name
-    assert function(latest.read_text(), "wave_revive") == function(ROLES.read_text(), "wave_revive")
+    assert TAVERN in function(original.read_text(), "wave_revive")
+    # A later replacement of the delegated payment helper must retain the discount too.
+    for path in sorted(MIGRATIONS.glob("*.sql")):
+        if re.search(r"create or replace function public\.wave_revive_charge\(", path.read_text()):
+            assert TAVERN in function(path.read_text(), "wave_revive_charge"), path.name
 
 
 # The tests above pin 20261112090000 itself: it is applied to production and never edited, so what

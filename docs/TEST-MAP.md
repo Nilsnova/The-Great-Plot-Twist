@@ -72,6 +72,13 @@ Command: `cd frontend && npm test` (runs `vitest run`; files `tests/**/*.test.js
 
 Size: 193 test files in [frontend/tests/](../frontend/tests/), about 1,830 `it`/`test` lines (the run before the 11 Nov release reported 2,563 tests, because of `it.each`; one Harbor overview test fails, [OPEN-TODOS.md](OPEN-TODOS.md) section 7).
 
+CW1 adds 15 focused cases in [scattershot-latency.test.js](../frontend/tests/pirates/scattershot-latency.test.js):
+`cd frontend && npm test -- tests/pirates/scattershot-latency.test.js`.
+They cover moving ships and boarders at cone/range boundaries, the existing two-second
+history limit and fallbacks, historical nearest-three ordering, current projectile endpoints
+and deterministic journal replay. They use the real local simulator and replay modules;
+they do not exercise a hosted room or prove deployment. See [the CW1 spec](../specs/CW1-scattershot-latency.md).
+
 | Area | Files (examples) | Tests | What it covers | Does not cover |
 |---|---|---|---|---|
 | Pirate waves | [pirates/](../frontend/tests/pirates/) (`sim`, `td-sim`, `fog-balance`, `multiplayer`, `controller`, `td-flow`, `pirate-point`, `render`, `art`, `fake-api`) | 72 | Same seed and inputs give the same wave at any frame rate; the balance curve (wave 1 with one cannon, the wave 5 boss, wave 10, wave 20, below wave 30 with a full island); mortar, crew, captain musket and bad shots; boss waves; the break, Next wave and Auto next; two captains ringing at once; the single-flight join; re-sent `wave_start` | The real Realtime room; slow phones; drift after late packets |
@@ -357,3 +364,8 @@ the outside-overlay/StopPlots assertions through the captain-blocking wrapper.
 | Recovery-v1 Captain choices, persisted-version tutorial help, and shared wall Tech copy | [Focused tests](../frontend/tests/campaign/captain-repair-policy.test.js), [Captain tree](../frontend/tests/island/captain-recovery-tree.test.js), [card model](../frontend/tests/island/card-model.test.js), [structure upgrade DOM gate](../frontend/tests/island/structure-recovery-upgrade-dom.test.js), [tutorial pages](../frontend/tests/tutorial-pages.test.js) and [tutorial host](../frontend/tests/tutorial/host.test.js); `cd frontend && npm exec vitest -- run tests/tutorial-pages.test.js tests/tutorial/host.test.js tests/campaign/captain-repair-policy.test.js tests/island/captain-recovery-tree.test.js tests/island/card-model.test.js`; recovery views: `cd frontend && npm exec vitest -- run tests/island/structure-recovery-policy.test.js tests/island/structure-recovery-model.test.js`; backend rate: `cd backend && uv run pytest -q server/tests/test_structure_recovery_rate.py`; build: `cd frontend && npm run build`; [fixture capture](../frontend/scripts/capture-captain-repair.js) | Legacy-vs-v1 page selection, stable first four pages, E help-up/F fire controls, retired saved IDs and spent-point display, Engineer discount, Quick Mend/Bastion exclusivity, Mason stacking, paused recovery factor, no level upgrades when v1 HP is damaged/reserved, base-strength label, Tech copy and production island UI presentation at 1280×800 and 375×812 | Fixture data is supplied directly to UI models, not fetched from a saved island; no live API, server transaction, wave runtime, payment, multiplayer, physical phone or release activation. Combined dependency/release checks are pending. |
 
 See the [T58 evidence README](evidence/T58-captain-repair/README.md) for fixture values, screenshots and reproducible commands.
+
+
+## CF1 captain range and danger feedback (18 Nov 2026)
+
+[Task #453](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/453), [spec](../specs/CF1-captain-combat-feedback.md) and [evidence/limits](evidence/CF1-captain-combat-feedback/README.md). Pure range/danger tests cover intent lifetime, weapon/skill reach, priority, expiry and once-per-episode sound. Audio regressions cover sustained/critical warnings, priority switches, independently clearing threats, menus, mute/unmute and wave reset. The visual revision checks sparse arc gaps, exact projected direction, the absence of damage labels, and preserved firing/impact events. Controller/native component tests cover refusal, reload, hit truth, keyboard focus, announcements and cleanup; overlay tests check projection and disposal. `node scripts/check-captain-feedback.js` runs the actual local fake game at desktop/phone sizes with native F and captures before/after state. No live multiplayer, physical touch or screen-reader speech proof is claimed.

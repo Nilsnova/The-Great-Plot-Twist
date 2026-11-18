@@ -7,7 +7,7 @@ import hashlib
 import json
 from collections.abc import Mapping
 
-from server.island.catalogue import IslandCatalogue
+from server.island.catalogue import IslandCatalogue, catalogue_with_recovery_prices
 from server.island.structure_repair_models import RepairRequest
 
 REPAIRABLE_KINDS = frozenset({"wall", "cannon", "mortar", "harpoon", "culverin", "swivel"})
@@ -21,7 +21,8 @@ def repair_price(catalogue: IslandCatalogue, kind: str, level: int) -> int:
         raise ValueError(
             "A repair level must be a whole number from 1 through the catalogue maximum."
         )
-    entry = next((item for item in catalogue.kinds if item.kind == kind), None)
+    runtime_catalogue = catalogue_with_recovery_prices(catalogue)
+    entry = next((item for item in runtime_catalogue.kinds if item.kind == kind), None)
     if entry is None:
         raise ValueError(f"Structure kind '{kind}' is not repairable in this catalogue.")
     if level > entry.max_level:
@@ -48,9 +49,10 @@ def repair_price_from_schedule(prices: object, kind: str, level: int) -> int:
 
 def catalogue_price_schedule(catalogue: IslandCatalogue) -> dict[str, list[int]]:
     """Build the server-only level schedule sent to the atomic transaction."""
+    runtime_catalogue = catalogue_with_recovery_prices(catalogue)
     return {
         entry.kind: list(entry.prices)
-        for entry in catalogue.kinds
+        for entry in runtime_catalogue.kinds
         if entry.kind in REPAIRABLE_KINDS
     }
 

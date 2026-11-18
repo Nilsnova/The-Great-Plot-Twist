@@ -1,5 +1,19 @@
 # Saltreach Isles graphics
 
+Recovery-wave result events: `wave_controller_started` carries `recovery: true`; its defense report shows "Result awaiting confirmation" until the saved outcome arrives, then shows "Wave won" or "Wave lost". The controller emits `wave_finish_answered {waveId, survived, loot, recovery, coins, waveBest, flags}` only after a valid server receipt. The island flow then emits the corresponding `wave_finished` once, using the saved boolean `survived`; the controller does not emit a provisional recovery result. A receipt for an older wave can complete quests without changing the current battle's narration, loot chip or break. Pending finish requests retain their original wave across wave changes. Unknown outcomes retry the same checkpoint UID; an explicit stale-state refusal first refreshes that old wave's journal and creates a fresh checkpoint. Background replay cannot drive the current battle's UI or effects. Controller disposal cancels timers and ignores late replies. See [the API contract](../docs/INTERFACES.md#your-island-and-the-pirate-waves-lane-0-tasks-02-and-03).
+
+Saved personal rewards after a reload: `wave_rewards_recovered {wonWaveBest, recovered: [{waveId, wave, survived, loot}]}`
+comes from the authenticated background reward host, including an empty batch with the server's saved personal best.
+The HUD retains that best for its current or later win goals without skipping build, invite or hire goals.
+This event does not finish a battle, free building controls, announce repairs or trigger the narrator.
+The host starts when the private service owner is ready and wakes on online/visible return, independently of
+new-island admission flags. Batches are bounded to 20 and paced; empty success stops polling. Transient failures
+use 5/15/30-second retry delays capped at 30 seconds and respect Retry-After. Account/provider changes and disposal invalidate late work.
+The POST response's coin snapshot is not displayed: `panel-services.reconcileWallet()` waits for the existing
+wallet observer's fresh `/api/me` reconciliation and yields a private currentness check. A newer monetary write
+invalidates that result; combat inputs and health do not. Only a still-current fresh balance updates the island
+and HUD. Contract and verification: [RETURN-reward-client](../specs/RETURN-reward-client.md).
+
 > **12 Nov 2026: clean cartoon 2D replaces the pixel art** ([GAME-V3.md §7](../docs/GAME-V3.md), section *Clean cartoon art (v3)* at the end). The pixel sections below stay as history; the pixel PNGs and generators stay in place for the places not yet redrawn.
 
 > **10 Nov 2026: the mystery left the game** (D031 in [DECISIONS.md](../docs/DECISIONS.md), [PITCH.md](../docs/PITCH.md)). The sections below on Act 1 in the browser, the demo tour, the case adapter, board, finale, reveal, relighting, rewards, partners in the world, the Captain’s Log and hints, the golden path, Gull’s Rest, the Chapter 2 hook, the presenter kit, the festival frontend and the bulletin describe screens and checks that were removed on 10 Nov. They stay as history; their files and `npm run` scripts no longer exist.
