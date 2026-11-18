@@ -99,7 +99,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     narrator=module.createNarrator({container,on,audio,getGame:()=>{const visit=island?.visiting,own=island?.island;return visit?{code:visit.code,waveBest:0}:own?{code:own.code,waveBest:own.waveBest??0}:null;}});
     tutorials=module.createTutorials({container,on,reducedMotion,probe:tutorialHooks.probe,locate:tutorialHooks.locate,spotTarget:tutorialHooks.spotTarget,anchor:tutorialHooks.anchor,tour:tutorialHooks.tour,
       say:trigger=>narrator.say(trigger),setGuide:view=>hud.setGuide(view),hudParent:()=>container.querySelector('.hud-play .hud-right'),
-      focusGame:()=>graphics.renderer.domElement.focus({preventScroll:true}),flags:{arsenal:()=>islandFlags.arsenal?.()===true,defenses_v2:()=>islandFlags.defenses_v2?.()===true,
+      focusGame:()=>graphics.renderer.domElement.focus({preventScroll:true}),flags:{defenses_v2:()=>islandFlags.defenses_v2?.()===true,
         // D060: the server offers the extra tower spots (its flag more_tower_spots) when the island answer lists them.
         more_tower_spots:()=>(island?.island?.spots??[]).some(item=>item?.id==='cannon_8')}});
     return true;
@@ -274,9 +274,6 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
         // T55/T59: only show persistent structure recovery once the server enables its versioned rules.
         structureRecoveryOn:()=>{if(fakeTransport)return fakeTransport.flags.structure_recovery===true;
           const services=findPanelServices(session);return services?.isReady()?services.getFlags()?.structure_recovery===true:false;},
-        // The arsenal (T41, D042): the server's flag "arsenal"; in the dev fake ?fakeflags=arsenal (or ?arsenal=1).
-        arsenalOn:islandFlags.arsenal=()=>fakeTransport?(fakeTransport.flags.arsenal===true||new URLSearchParams(location.search).get('arsenal')==='1')
-          :findPanelServices(session)?.getFlags?.()?.arsenal===true,
         // T43 (D048 proposed): the culverin on the tower spots, only while the server's flag defenses_v2 is on
         // (in the dev fake ?fakeflags=defenses_v2).
         defensesV2On:islandFlags.defenses_v2=()=>fakeTransport?fakeTransport.flags.defenses_v2===true:findPanelServices(session)?.getFlags?.()?.defenses_v2===true});
@@ -294,7 +291,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     wavesLoad??=Promise.all([import('./pirates/game-wiring.js'),import('./net/wave-rooms.js'),!island||islandsMode==='fake'?import('./pirates/room.js'):null,
       island?null:import('./pirates/fake-api.js')]).then(([module,rooms,local,fake])=>{
       if(disposed)return null;
-      waves=module.wireWaves({scene,camera:view.camera,canvas:graphics.renderer.domElement,container,player:controller.player,world,input,audio,reducedMotion,
+      waves=module.wireWaves({scene,camera:view.camera,canvas:graphics.renderer.domElement,container,player:controller.player,world,input,audio,reducedMotion,loop:false,
         getPracticeToken:session.getToken,quality:()=>settings.quality,isBlocked:()=>!active||outsideBlocked(),on,emit,island,fakeApi:fake?fake.createFakeIslandApi():null,
         rehearsal:!island,host:!island,openRoom:local?topic=>local.createLocalRoom(topic):topic=>rooms.openRoom(topic),notify:text=>hud.message(text)});
       return waves;
@@ -349,6 +346,12 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   function applyPreferences(value){quality(value.quality);if(active&&!shell.blocked)view.start(reducedMotion());}
   const stopPreferences=onPreferences(applyPreferences),stopMotion=watchSystemMotion();applyPreferences(getPreferences());graphics.resize(view.camera);
   const resize = () => graphics.resize(view.camera); window.addEventListener('resize', resize);
+  let framePoses=null;
+  function combatAfterMove(delta){
+    waves?.update?.(delta);
+    controller.player.visible=!isCaptainDown();
+    framePoses=waves?.poses?.()??null;character.pose(framePoses?.own??null);
+  }
   const stop = startLoop((delta, time) => {
     gamepad.update();adapter?.tick?.(delta);perf?.update();
     if (!outsideBlocked()) {
@@ -360,10 +363,10 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     settings.hour = (settings.hour + (shell.blocked && !followLocalTime ? 0 : delta) * (settings.fastTime ? 0.8 : followLocalTime ? 1 / 3600 : 0.003)) % 24;
     mapTouch.update(delta);
     // Captain health (GAME-V3.md §3): a fallen captain cannot walk, and lies as the wave draws them.
-    const captainDown=isCaptainDown();controller.player.visible=!captainDown;
+    const captainDown=isCaptainDown();
     // A shot or a cutlass blow poses your own body (and a teammate's figure), never a second captain (pirates/poses.js).
-    const poses=waves?.poses?.()??null;character.pose(poses?.own??null);
-    const speed=captainDown?controller.update(delta,false):controller.update(delta, active && !captainBlocked());
+    const speed=controller.update(delta,!captainDown&&active&&!captainBlocked(),combatAfterMove);
+    const poses=framePoses;
     const state = weather.update(reducedMotion()?0:delta, controller.player.position, settings.quality);
     const night = sky.update(settings.hour, state, reducedMotion()?0:time); lightPools.update(reducedMotion()?0:time, night); pixelFx.update(delta);
     audio.update(delta,{weather:state,weatherAnswer,isletBuilt:isletState.getBuilt(),speed,night,active:active&&!isAppBlocked?.()&&!world.busy&&!(marketUi?.active||sportsUi.active)&&!chart.open,place:world.current?.id});
