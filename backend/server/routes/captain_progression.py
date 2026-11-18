@@ -3,7 +3,8 @@
 GET /api/captain reads only the authenticated player's existing profile, without import/grant.
 POST /api/captain/role, /skill and /respec take strict version one, expectedRevision and
 actionUid, plus role or skill as appropriate. No island/code/payer/owner input is accepted.
-Missing version/adoption answers 409 captain_context_required; stale new changes answer
+GET without adoption answers 409 captain_not_initialized. POST without version/adoption
+answers 409 captain_context_required; stale new changes answer
 409 captain_revision_mismatch. Reallocation is free and checks global assignment/Engineer
 binding under SQL locks. Replies are {captain,skills}; legacy endpoints are unchanged here.
 Used by explicit application integration; this module does not register itself in app.py.
@@ -48,7 +49,7 @@ async def captain(request: Request, response: Response, player: PlayerDep, admin
         raise ApiError(422, "validation_error", "This personal read takes no query fields.")
     profile = await personal_captain_store.read_optional(admin, player.id)
     if profile is None:
-        raise ApiError(409, "captain_context_required", "This Captain uses legacy progression.")
+        raise ApiError(409, "captain_not_initialized", "This Captain uses legacy progression.")
     return response_body(profile, response)
 
 
