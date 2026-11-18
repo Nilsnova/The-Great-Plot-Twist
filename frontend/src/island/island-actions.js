@@ -19,9 +19,10 @@ export function createActions(isl) {
   const {emit, focus, resetInput, reducedMotion, now, wallRecovery} = isl;
   function islandRequest(place = isl.visiting ? 'visit' : 'own') {
     const selected = () => place === 'point' ? isl.point : place === 'visit' ? isl.visiting : isl.own;
-    const selection = isl.selectionGeneration, code = selected()?.code, funds = isl.funding.view(selected(), isl.own?.coins ?? null);
+    const selection = isl.selectionGeneration, reset = isl.resetGeneration;
+    const code = selected()?.code, funds = isl.funding.view(selected(), isl.own?.coins ?? null);
     return {place, shared: funds.shared, current: () => !isl.disposed && selection === isl.selectionGeneration
-      && code === selected()?.code && funds.key === isl.funding.view(selected(), isl.own?.coins ?? null).key};
+      && reset === isl.resetGeneration && code === selected()?.code && funds.key === isl.funding.view(selected(), isl.own?.coins ?? null).key};
   }
   async function reconcileStaleOwnWrite(answer, request) {
     // Ignore the old payload; a current read reconciles a legacy own purchase after travel.

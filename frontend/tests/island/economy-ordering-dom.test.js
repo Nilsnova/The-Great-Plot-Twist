@@ -111,3 +111,44 @@ it('reconciles a late legacy own-build through a fresh read without restoring it
   expect(result.home.coins).toBe(90);
   expect(result.visiting).toBe('FR3ND');
 });
+
+it.each(['build', 'upgrade'])('does not restore a pre-reset own %s reply or emit its old purchase event', async operation => {
+  const result = await evaluate(async operation => {
+    const {createIsland} = await window.g20Import('/src/island/index.js');
+    const {createFakeIslandTransport} = await window.g20Import('/src/pirates/fake-api.js');
+    const {ISLAND_BUILT, ISLAND_UPGRADED} = await window.g20Import('/src/ui/quest-events.js');
+    const {on, emit} = await window.g20Import('/src/core/events.js');
+    const base = createFakeIslandTransport(); base.dev.setWaveBest(9); base.dev.setCoins(100);
+    if (operation === 'upgrade') {
+      await base.post('/api/island/build', {spot: 'wall_1', kind: 'wall', actionUid: 'prepare-reset-wall'});
+      base.dev.setCoins(100);
+    }
+    let applied, release;
+    const transport = {get: (...args) => base.get(...args), post: (path, body) => {
+      const answer = base.post(path, body);
+      if (path !== `/api/island/${operation}`) return answer;
+      applied = answer;
+      return new Promise(resolve => { release = async () => resolve(await answer); });
+    }};
+    const events = [], stops = [on(ISLAND_BUILT, () => events.push('built')), on(ISLAND_UPGRADED, () => events.push('upgraded'))];
+    const island = createIsland({container: document.body, emit, on, mode: 'fake', transport, storage: null, visitStorage: null,
+      menu: () => () => {}, settings: () => () => {}});
+    const state = data => ({code: data.code, coins: data.coins, waveBest: data.waveBest,
+      spots: data.spots.map(({id, built, level}) => ({id, built, level: level ?? 0}))});
+    try {
+      await island.load();
+      const pending = operation === 'build' ? island.build('wall_1', 'wall') : island.upgrade('wall_1');
+      await applied;
+      const initialApplied = state((await base.get('/api/island')).data);
+      const reset = await island.resetIsland(island.island.code), fresh = state(island.island);
+      await release(); await pending;
+      return {reset: reset.ok, initialApplied, fresh, after: state(island.island),
+        persisted: state((await base.get('/api/island')).data), events};
+    } finally { island.dispose(); stops.forEach(stop => stop()); }
+  }, operation);
+  expect(result.reset).toBe(true);
+  expect(result.initialApplied).not.toEqual(result.fresh);
+  expect(result.fresh).toEqual(result.persisted);
+  expect(result.after).toEqual(result.fresh);
+  expect(result.events).toEqual([]);
+});

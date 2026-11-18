@@ -35,7 +35,7 @@ export function createCards(isl) {
         // The server holds you to your own unlocks at Pirate Point too (a level you have not won is refused).
         unlocks: isl.own ? unlocks() : null});
     }
-    // On a friend's island you build with your own coins (and your own unlocks); it stays theirs.
+    // The defended island supplies shared funds and unlocks; legacy islands retain personal funding.
     const island = target(), spot = island?.spots.find(item => item.id === spotId) ?? null;
     const recoveryEnabled = recoveryControlsOn() && !!spot?.built && ['wall', 'cannon', 'mortar', 'harpoon', 'culverin', 'swivel'].includes(spot.kind);
     const recoveryReady = recoveryEnabled && isl.recoveryStatus === 'ready' && recoveryPolicyOn()
