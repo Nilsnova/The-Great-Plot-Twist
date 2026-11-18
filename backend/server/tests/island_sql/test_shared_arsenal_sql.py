@@ -1,5 +1,6 @@
-"""Atomic shared arsenal tests on disposable PostgreSQL; session authority is test-only."""
+"""Atomic shared arsenal tests on disposable PostgreSQL; canonical facts are seeded."""
 
+import json
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime, timedelta
 from threading import Barrier
@@ -11,6 +12,12 @@ psycopg = pytest.importorskip("psycopg")
 
 # Register a module-private cluster so committed race seeds never reach legacy tests.
 from server.tests.case_sql.conftest import scratch_server as scratch_server  # noqa: E402
+from server.tests.economy_test_authority import (  # noqa: E402
+    authority_outage,
+    configure_test_authority,
+    install_test_authority,
+    malformed_authority_domain,
+)
 from server.tests.island_sql.test_island_treasury_sql import (  # noqa: E402
     add_players,
     as_owner,
@@ -24,28 +31,9 @@ from server.tests.island_sql.test_island_treasury_sql import (  # noqa: E402
 
 @pytest.fixture
 def authority(database):
-    """Install only in this rolled-back test transaction, never in an application migration."""
+    """Require the actual provider; individual cases seed real canonical facts."""
     as_owner(database)
-    database.execute("create schema if not exists arsenal_test")
-    database.execute(
-        "create table if not exists arsenal_test.phase (owner uuid primary key, wave uuid)"
-    )
-    database.execute("""
-        create or replace function public.island_economy_authority(
-          p_actor_id uuid, p_island_owner uuid
-        ) returns jsonb language sql stable security definer set search_path='' as $$
-          select jsonb_build_object(
-            'actor_id',p_actor_id,'island_owner',p_island_owner,
-            'is_member',p_actor_id=p_island_owner or exists (
-              select 1 from public.island_members where island_owner=p_island_owner
-                and player_id=p_actor_id and left_at is null),
-            'reservation_id',(select wave from arsenal_test.phase where owner=p_island_owner),
-            'session_leader_id',null,'actor_assignment_wave_id',null)
-        $$;
-        revoke all on function public.island_economy_authority(uuid,uuid)
-          from public,anon,authenticated;
-        grant execute on function public.island_economy_authority(uuid,uuid) to service_role;
-    """)
+    install_test_authority(database)
     yield database
 
 
@@ -102,29 +90,27 @@ def seed_copies(database, owner, initial, count):
 def test_missing_authority_fails_closed_and_leaves_no_root_or_charge(database):
     owner, member, _, initial = ready(database)
     as_owner(database)
-    database.execute("drop function if exists public.island_economy_authority(uuid,uuid)")
-    result = change(database, member, initial)
-    assert result == {"status": "refused", "reason": "path_unavailable"}
-    assert counts(database, member, "arsenal001") == (0, 0)
-    assert (
-        database.execute(
-            "select count(*) from public.arsenal_copies where island_owner=%s", (owner,)
-        ).fetchone()[0]
-        == 0
-    )
-    reconciles(database, keys(initial)[0])
+    with authority_outage(database):
+        result = change(database, member, initial)
+        assert result == {"status": "refused", "reason": "path_unavailable"}
+        assert counts(database, member, "arsenal001") == (0, 0)
+        assert (
+            database.execute(
+                "select count(*) from public.arsenal_copies where island_owner=%s", (owner,)
+            ).fetchone()[0]
+            == 0
+        )
+        reconciles(database, keys(initial)[0])
 
 
 @pytest.mark.parametrize("payload", ["null", "[]", "{}", '{"is_member":true}'])
-def test_malformed_authority_cannot_authorize_or_leave_a_root(authority, payload):
+def test_malformed_authority_cannot_authorize_or_leave_a_root(authority, payload, monkeypatch):
     _, member, _, initial = ready(authority)
     as_owner(authority)
-    # Payloads are fixed test constants; the reserved provider is still test-only.
-    authority.execute(
-        "create or replace function public.island_economy_authority"
-        "(p_actor_id uuid,p_island_owner uuid) "
-        "returns jsonb language sql as $$ select '" + payload + "'::jsonb $$"
-    )
+    # Consumer/domain-unit injection; the canonical provider remains unchanged.
+    monkeypatch.setattr(__name__ + ".rpc", malformed_authority_domain(
+        authority, "island_shared_arsenal_mutate", json.loads(payload)
+    ))
     assert change(authority, member, initial) == {"status": "refused", "reason": "path_unavailable"}
     assert counts(authority, member, "arsenal001") == (0, 0)
 
@@ -142,7 +128,7 @@ def test_buy_uses_real_treasury_child_and_original_receipt_before_mutable_checks
         "where island_owner=%s and player_id=%s",
         (owner, member),
     )
-    database.execute("insert into arsenal_test.phase values(%s,%s)", (owner, uuid4()))
+    configure_test_authority(database, member, owner, reservation_id=uuid4())
     again = change(database, member, initial, price=999999, unlock=100)
     assert again["repeat"] and again["receipt"] == first["receipt"]
     assert again["currentEconomy"] is None
@@ -187,7 +173,7 @@ def test_reservation_and_nonmember_refusals_leave_no_claim(authority):
     owner, member, outsider, initial = ready(authority)
     assert change(authority, outsider, initial)["reason"] == "not_member"
     as_owner(authority)
-    authority.execute("insert into arsenal_test.phase values(%s,%s)", (owner, uuid4()))
+    configure_test_authority(authority, member, owner, reservation_id=uuid4())
     assert change(authority, member, initial)["reason"] == "wave_running"
     assert counts(authority, member, "arsenal001") == (0, 0)
 
@@ -628,10 +614,10 @@ def test_late_receipt_failure_rolls_back_charge_copy_and_operation(authority):
     owner, member, _, initial = ready(authority)
     as_owner(authority)
     authority.execute("""
-        create function arsenal_test.fail_receipt() returns trigger language plpgsql as $$
+        create function pg_temp.fail_receipt() returns trigger language plpgsql as $$
         begin raise exception 'test-only late receipt failure'; end $$;
         create trigger arsenal_test_fail before insert on public.shared_arsenal_receipts
-        for each row execute function arsenal_test.fail_receipt();
+        for each row execute function pg_temp.fail_receipt();
     """)
     with pytest.raises(psycopg.Error), authority.transaction():
         change(authority, member, initial)

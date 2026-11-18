@@ -1,12 +1,12 @@
-"""Actual shared-repair SQL with injected authority/binding on disposable PostgreSQL.
+"""Actual shared-repair SQL with test-seeded canonical facts/binding on disposable PostgreSQL.
 
-The real treasury, roots, recovery tables and repair RPC execute. Canonical authority and
-immutable economy snapshot production are explicit TEST-ONLY fixtures, not authenticated
-acceptance or a production wave/session implementation. No configured database is used.
+The real treasury, roots, recovery tables and repair RPC execute. Canonical authority is
+real; its input facts and immutable economy snapshot production are explicit TEST-ONLY
+fixtures, not authenticated acceptance or a production wave/session implementation.
+No configured database is used.
 """
 
 import asyncio
-import json
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from threading import Barrier
@@ -26,8 +26,10 @@ from server.island.shared_combat_repair import (  # noqa: E402
 )
 from server.tests.case_sql.conftest import scratch_server as scratch_server  # noqa: E402
 from server.tests.economy_test_authority import (  # noqa: E402
+    authority_outage,
     configure_test_authority,
     install_test_authority,
+    malformed_authority_domain,
 )
 from server.tests.island_sql.test_island_treasury_sql import (  # noqa: E402
     as_owner,
@@ -303,9 +305,9 @@ def test_last_shared_quota_slot_is_consumed_once_across_members_and_structures(d
 def test_missing_authority_is_not_replaced_by_membership_or_browser_facts(database):
     world = seed(database)
     as_owner(database)
-    database.execute("drop function public.island_economy_authority(uuid,uuid)")
-    assert repair(database, world) == {"status": "refused", "reason": "path_unavailable"}
-    assert counts(database, world) == (0, 0, 1, 0, 0)
+    with authority_outage(database):
+        assert repair(database, world) == {"status": "refused", "reason": "path_unavailable"}
+        assert counts(database, world) == (0, 0, 1, 0, 0)
 
 
 @pytest.mark.parametrize("binding", [{}, None, {"mode": "island_shared", "version": "1"}])
@@ -592,18 +594,14 @@ def test_retired_origin_replay_is_read_only_but_new_identity_cannot_spend(databa
         ("reservation_id", False),
     ],
 )
-def test_malformed_trusted_authority_fails_closed(database, key, value):
+def test_malformed_trusted_authority_fails_closed(database, key, value, monkeypatch):
     world = seed(database)
     as_owner(database)
     authority = rpc(database, "island_economy_authority", world.member, world.owner)
     authority[key] = value
-    database.execute(
-        sql.SQL(
-            "create or replace function public.island_economy_authority("
-            "p_actor_id uuid,p_island_owner uuid) returns jsonb "
-            "language sql stable security definer set search_path='' as {}"
-        ).format(sql.Literal("select '" + json.dumps(authority).replace("'", "''") + "'::jsonb"))
-    )
+    monkeypatch.setattr(__name__ + ".rpc", malformed_authority_domain(
+        database, "island_shared_structure_repair", authority
+    ))
     assert repair(database, world) == {"status": "refused", "reason": "path_unavailable"}
     assert counts(database, world) == (0, 0, 1, 0, 0)
 

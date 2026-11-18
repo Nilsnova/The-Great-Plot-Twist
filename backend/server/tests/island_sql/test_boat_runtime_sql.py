@@ -10,6 +10,7 @@ import pytest
 
 psycopg = pytest.importorskip("psycopg")
 from server.tests.economy_test_authority import (  # noqa: E402
+    authority_outage,
     configure_test_authority,
     install_test_authority,
 )
@@ -35,11 +36,7 @@ def runtime_server(tmp_path_factory):
             connection.execute((ROOT / "backend/server/tests/case_sql/stub.sql").read_text())
             for _ in range(2):
                 for migration in sorted((ROOT / "supabase/migrations").glob("*.sql")):
-                    if (
-                        migration.name <= "20261118070000_revive_reconciliation.sql"
-                        or migration.name == "20261118181500_shared_boat_runtime.sql"
-                    ):
-                        connection.execute(migration.read_text())
+                    connection.execute(migration.read_text())
             install_test_authority(connection)
         yield server
     assert not directory.exists()
@@ -126,10 +123,11 @@ def test_shared_status_checks_membership_and_reservation_authority(database):
     configure_test_authority(database, member, owner, reservation_id=uuid4())
     status = rpc(database, "island_boat_runtime_status", member, owner)
     assert status["open"] is False and status["reason"] == "wave_running"
-    database.execute("drop function public.island_economy_authority(uuid,uuid)")
-    assert (
-        rpc(database, "island_boat_runtime_status", member, owner)["reason"] == "path_unavailable"
-    )
+    with authority_outage(database):
+        assert (
+            rpc(database, "island_boat_runtime_status", member, owner)["reason"]
+            == "path_unavailable"
+        )
 
 
 def test_admission_and_legacy_award_share_one_atomic_scope_boundary(database, runtime_server):

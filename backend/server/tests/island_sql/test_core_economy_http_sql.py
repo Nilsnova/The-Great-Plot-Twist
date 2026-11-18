@@ -22,6 +22,7 @@ from server.island.shared_snapshot import snapshot_from_row  # noqa: E402
 from server.island.treasury import EconomyContext  # noqa: E402
 from server.supabase_admin import SupabaseRejected  # noqa: E402
 from server.tests.case_sql.conftest import scratch_server as scratch_server  # noqa: E402
+from server.tests.economy_test_authority import authority_outage  # noqa: E402
 from server.tests.island_sql.test_core_snapshot_sql import snapshot  # noqa: E402
 from server.tests.island_sql.test_economy_progression_sql import (  # noqa: E402
     add_building,
@@ -84,24 +85,25 @@ def test_new_shared_http_action_refuses_actual_missing_authority_without_claimin
         },
     )
     admin = DatabaseAdmin(database)
-    with pytest.raises(ApiError) as error:
-        asyncio.run(shared_write(admin, str(owner), "build", body, CATALOGUE))
-    assert error.value.code == "economy_path_unavailable"
-    assert admin.calls == [
-        "island_economy_operation_origin",
-        "island_economy_context",
-        "island_economy_authority",
-    ]
-    assert prepared(database, owner)["economy"] == view["economy"]
-    assert rpc(
-        database,
-        "island_economy_operation_origin",
-        owner,
-        owner,
-        keys(initial)[1],
-        "httpnew01",
-        "construction:build",
-    ) == {"status": "new"}
+    with authority_outage(database):
+        with pytest.raises(ApiError) as error:
+            asyncio.run(shared_write(admin, str(owner), "build", body, CATALOGUE))
+        assert error.value.code == "economy_path_unavailable"
+        assert admin.calls == [
+            "island_economy_operation_origin",
+            "island_economy_context",
+            "island_economy_authority",
+        ]
+        assert prepared(database, owner)["economy"] == view["economy"]
+        assert rpc(
+            database,
+            "island_economy_operation_origin",
+            owner,
+            owner,
+            keys(initial)[1],
+            "httpnew01",
+            "construction:build",
+        ) == {"status": "new"}
 
 
 def test_historical_http_retry_reaches_exact_domain_with_no_current_authority_provider(database):
@@ -120,9 +122,10 @@ def test_historical_http_retry_reaches_exact_domain_with_no_current_authority_pr
         },
     )
     admin = DatabaseAdmin(database)
-    replay = asyncio.run(shared_write(admin, str(owner), "build", body, CATALOGUE))
-    assert replay["repeat"] is True and replay["receipt"] == first["receipt"]
-    assert admin.calls == ["island_economy_operation_origin", "island_economy_construct"]
+    with authority_outage(database):
+        replay = asyncio.run(shared_write(admin, str(owner), "build", body, CATALOGUE))
+        assert replay["repeat"] is True and replay["receipt"] == first["receipt"]
+        assert admin.calls == ["island_economy_operation_origin", "island_economy_construct"]
 
 
 def test_research_tower_and_wreck_quotes_execute_actual_progression_transactions(database):

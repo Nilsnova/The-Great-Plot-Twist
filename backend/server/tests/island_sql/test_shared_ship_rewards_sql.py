@@ -1,10 +1,9 @@
-"""Committed ship reward races on disposable PostgreSQL with TEST-ONLY authority.
+"""Committed ship reward races on disposable PostgreSQL with test-seeded canonical facts.
 
-No configured database or credentials are read. The six-field authority fixture is not
-persisted multiplayer runtime acceptance. The migration chain is explicitly bounded.
+No configured database or credentials are read. Seeding the actual provider tables is not
+persisted multiplayer runtime acceptance. The full migration chain is applied twice.
 """
 
-import json
 import os
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -14,11 +13,12 @@ from uuid import uuid4
 import pytest
 
 psycopg = pytest.importorskip("psycopg")
-from psycopg import sql  # noqa: E402
 
 from server.tests.economy_test_authority import (  # noqa: E402
+    authority_outage,
     configure_test_authority,
     install_test_authority,
+    malformed_authority_domain,
 )
 from server.tests.island_sql.test_island_treasury_sql import (  # noqa: E402
     as_owner,
@@ -45,12 +45,7 @@ def ship_server(tmp_path_factory):
         with psycopg.connect(server.get_uri(), autocommit=True) as connection:
             stub = ROOT / "backend/server/tests/case_sql/stub.sql"
             connection.execute(stub.read_text())
-            chain = [
-                path
-                for path in sorted((ROOT / "supabase/migrations").glob("*.sql"))
-                if path.name <= "20261118050150_island_economy_operations.sql"
-            ]
-            chain.append(MIGRATION)
+            chain = sorted((ROOT / "supabase/migrations").glob("*.sql"))
             for _ in range(2):
                 for path in chain:
                     connection.execute(path.read_text())
@@ -157,8 +152,8 @@ def test_authorization_phase_and_unlock_refusals_leave_no_root_claim(database):
 
 def test_missing_authority_fails_closed(database):
     owner, member, _, initial = setup(database)
-    database.execute("drop function public.island_economy_authority(uuid,uuid)")
-    assert start(database, member, owner, initial)["reason"] == "path_unavailable"
+    with authority_outage(database):
+        assert start(database, member, owner, initial)["reason"] == "path_unavailable"
 
 
 def test_actor_substitution_cannot_claim_another_members_round(database):
@@ -328,19 +323,19 @@ def test_replay_returns_common_original_receipt_without_current_treasury(databas
     owner, member, _, initial = setup(database)
     opened = start(database, member, owner, initial)
     first = claim(database, member, opened)
-    database.execute("drop function public.island_economy_authority(uuid,uuid)")
-    replay = claim(database, member, opened)
-    receipt = replay["receipt"]
-    assert receipt == first["receipt"] and replay["currentEconomy"] is None
-    assert set(receipt) == {"receiptId", "actionUid", "action", "actorId", "origin", "result"}
-    assert receipt["actionUid"] == "boatclaim1" and receipt["action"] == "boat:claim"
-    assert receipt["origin"] == {
-        "mode": "island_shared",
-        "version": 1,
-        "islandOwner": str(owner),
-        "accountId": keys(initial)[0],
-        "runEpoch": keys(initial)[1],
-    }
+    with authority_outage(database):
+        replay = claim(database, member, opened)
+        receipt = replay["receipt"]
+        assert receipt == first["receipt"] and replay["currentEconomy"] is None
+        assert set(receipt) == {"receiptId", "actionUid", "action", "actorId", "origin", "result"}
+        assert receipt["actionUid"] == "boatclaim1" and receipt["action"] == "boat:claim"
+        assert receipt["origin"] == {
+            "mode": "island_shared",
+            "version": 1,
+            "islandOwner": str(owner),
+            "accountId": keys(initial)[0],
+            "runEpoch": keys(initial)[1],
+        }
 
 
 @pytest.mark.parametrize(
@@ -355,7 +350,7 @@ def test_replay_returns_common_original_receipt_without_current_treasury(databas
         ("reservation_id", "missing"),
     ],
 )
-def test_malformed_or_missing_authority_fields_fail_closed(database, field, value):
+def test_malformed_or_missing_authority_fields_fail_closed(database, field, value, monkeypatch):
     owner, member, _, initial = setup(database)
     authority = {
         "actor_id": str(member),
@@ -369,13 +364,9 @@ def test_malformed_or_missing_authority_fields_fail_closed(database, field, valu
         authority.pop(field)
     else:
         authority[field] = value
-    database.execute(
-        sql.SQL("""
-        create or replace function public.island_economy_authority(
-          p_actor_id uuid,p_island_owner uuid)
-        returns jsonb language sql stable as $$select {}::jsonb$$
-    """).format(sql.Literal(json.dumps(authority)))
-    )
+    monkeypatch.setattr(__name__ + ".rpc", malformed_authority_domain(
+        database, "island_shared_boat_start", authority
+    ))
     assert start(database, member, owner, initial)["reason"] == "path_unavailable"
     assert (
         database.execute(
