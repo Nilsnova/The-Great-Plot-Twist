@@ -42,6 +42,14 @@ VIEW = {
 }
 
 
+def recovery_prices(world: World) -> dict[str, list[int]]:
+    # Only these six defense kinds have canonical recovery state; catalog-only kinds do not.
+    prices = rules.price_table(world.app.state.island)
+    return {
+        kind: prices[kind] for kind in ("wall", "cannon", "mortar", "harpoon", "swivel", "culverin")
+    }
+
+
 def test_owned_structure_state_uses_canonical_wire_fields_without_wallet() -> None:
     world = World()
     world.database.islands["K7Q2M"] = {
@@ -72,7 +80,7 @@ def test_owned_structure_state_uses_canonical_wire_fields_without_wallet() -> No
     assert body["structures"][0] == {key: value for key, value in VIEW["structures"][0].items()}
     assert "coins" not in body
     assert world.database.calls("structure_recovery_read_state") == [
-        {"p_island_owner": PLAYER_ID, "p_prices": rules.price_table(world.app.state.island)}
+        {"p_island_owner": PLAYER_ID, "p_prices": recovery_prices(world)}
     ]
 
 
@@ -94,7 +102,7 @@ def test_member_can_read_a_shared_island_but_outsider_cannot() -> None:
 
     assert allowed.status_code == 200, allowed.text
     assert world.database.calls("structure_recovery_read_state") == [
-        {"p_island_owner": FRIEND_ID, "p_prices": rules.price_table(world.app.state.island)}
+        {"p_island_owner": FRIEND_ID, "p_prices": recovery_prices(world)}
     ]
     assert_error(denied, 403, "not_member")
     assert outsider.database.calls("structure_recovery_read_state") == []
