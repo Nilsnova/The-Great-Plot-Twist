@@ -78,7 +78,8 @@ class ProfileRow(StrictRow):
             raise ValueError("Inconsistent personal profile.")
         if bound and (captain.role != "engineer" or
                       (bound.state == "attached") != (bound.waveId is not None) or
-                      (bound.waveId is not None and bound.waveId != captain.assignmentWaveId)):
+                      (bound.waveId is not None and captain.assignmentWaveId is not None
+                       and bound.waveId != captain.assignmentWaveId)):
             raise ValueError("Inconsistent Engineer commitment.")
         return self
 

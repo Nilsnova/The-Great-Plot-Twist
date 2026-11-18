@@ -33,6 +33,20 @@ create table if not exists public.personal_engineer_commitments (
 comment on table public.personal_engineer_commitments is
   'One personal generation for any number of discounted pre-wave purchases; only a matching confirmed normal completion satisfies it. No island/reset foreign key.';
 
+alter table public.personal_engineer_commitments
+  add column if not exists attached_wave_id uuid;
+alter table public.personal_engineer_commitments
+  add column if not exists superseded_by uuid;
+alter table public.personal_engineer_commitments
+  drop constraint if exists personal_engineer_successor;
+alter table public.personal_engineer_commitments
+  add constraint personal_engineer_successor foreign key(player_id,superseded_by)
+  references public.personal_engineer_commitments(player_id,id) deferrable initially deferred;
+comment on column public.personal_engineer_commitments.attached_wave_id is
+  'Latest attachment for display/rotation only; immutable per-wave snapshots authorize completion.';
+comment on column public.personal_engineer_commitments.superseded_by is
+  'A new discounted purchase after attachment carries the single pending obligation into a fresh generation. Older receipts cannot clear its successor.';
+
 alter table public.personal_captain_profiles
   drop constraint if exists personal_captain_pending_generation;
 alter table public.personal_captain_profiles
@@ -91,6 +105,7 @@ declare
   v_profile public.personal_captain_profiles;
   v_spent integer;
   v_commitment jsonb;
+  v_attached uuid;
 begin
   select * into v_profile from public.personal_captain_profiles where player_id=p_player_id;
   if not found then raise exception 'captain_not_initialized'; end if;
@@ -99,11 +114,11 @@ begin
     where entry->>'skill'=any(v_profile.skills);
   if v_spent>v_profile.earned_points then raise exception 'captain_conversion_required'; end if;
   if v_profile.pending_engineer_commitment_id is not null then
+    select attached_wave_id into v_attached from public.personal_engineer_commitments
+      where player_id=p_player_id and id=v_profile.pending_engineer_commitment_id;
     v_commitment := jsonb_build_object('id',v_profile.pending_engineer_commitment_id,
-      'state',case when v_profile.assignment_engineer_commitment_id=
-        v_profile.pending_engineer_commitment_id then 'attached' else 'pending' end,
-      'waveId',case when v_profile.assignment_engineer_commitment_id=
-        v_profile.pending_engineer_commitment_id then v_profile.assignment_wave_id end);
+      'state',case when v_attached is not null then 'attached' else 'pending' end,
+      'waveId',v_attached);
   end if;
   return jsonb_build_object('status','ok','captain',jsonb_build_object(
     'progressionVersion',1,'level',v_profile.level,'personalBestWave',v_profile.won_wave_best,
@@ -123,7 +138,7 @@ $$;
 create or replace function public.personal_captain_lock_state_locked(p_player_id uuid)
 returns jsonb language plpgsql security definer set search_path = '' as $$
 begin
-  perform 1 from public.profiles where id=p_player_id for update;
+  perform 1 from public.profiles where id=p_player_id for no key update;
   if not found then raise exception 'captain_not_initialized'; end if;
   perform 1 from public.personal_captain_profiles where player_id=p_player_id for update;
   if not found then raise exception 'captain_not_initialized'; end if;
@@ -172,7 +187,7 @@ begin
   end if;
   perform 1 from public.island_economy_accounts
     where id=(v_context#>>'{economy,accountId}')::uuid for update;
-  perform 1 from public.profiles where id=p_actor_id for update;
+  perform 1 from public.profiles where id=p_actor_id for no key update;
   if not found then raise exception 'captain_not_initialized'; end if;
   select rules into v_rules from public.personal_captain_profiles
     where player_id=p_actor_id for update;
@@ -196,6 +211,15 @@ begin
       return jsonb_build_object('status','refused','reason','captain_rules_mismatch');
     end if;
     return public.personal_captain_lock_state_locked(p_actor_id);
+  end if;
+  if exists (select 1 from public.wave_participants as participant
+    join public.wave_runs as wave on wave.id=participant.wave_id
+    where participant.player_id=p_actor_id and wave.finished_at is null
+      and wave.starts_at+make_interval(secs=>wave.maximum_seconds)>clock_timestamp())
+    or exists (select 1 from public.recovery_wave_participants as participant
+      join public.recovery_wave_states as wave on wave.wave_id=participant.wave_id
+      where participant.player_id=p_actor_id and wave.closed_at is null) then
+    return jsonb_build_object('status','refused','reason','captain_conversion_required');
   end if;
   -- Admission/legacy guards must be integrated before this initializer is exposed.
   select * into v_legacy from public.islands where player_id=p_actor_id;
@@ -233,7 +257,7 @@ $$;
 create or replace function public.personal_captain_context(p_player_id uuid)
 returns jsonb language plpgsql security definer set search_path = '' as $$
 begin
-  perform 1 from public.profiles where id=p_player_id for update;
+  perform 1 from public.profiles where id=p_player_id for no key update;
   if not found then raise exception 'captain_not_initialized'; end if;
   if not exists (select 1 from public.personal_captain_profiles where player_id=p_player_id) then
     return jsonb_build_object('status','legacy');
@@ -247,7 +271,7 @@ comment on function public.personal_captain_context(uuid) is
 create or replace function public.personal_captain_legacy_guard_locked(p_player_id uuid)
 returns void language plpgsql security definer set search_path = '' as $$
 begin
-  perform 1 from public.profiles where id=p_player_id for update;
+  perform 1 from public.profiles where id=p_player_id for no key update;
   if not found then raise exception 'captain_not_initialized'; end if;
   if exists (select 1 from public.personal_captain_profiles where player_id=p_player_id) then
     raise exception 'personal_captain_managed';
@@ -352,11 +376,17 @@ begin
   select * into v_profile from public.personal_captain_profiles where player_id=p_player_id;
   if v_profile.assignment_wave_id is not null then raise exception 'captain_assigned'; end if;
   if v_profile.role is distinct from 'engineer' then raise exception 'engineer_required'; end if;
-  if v_profile.pending_engineer_commitment_id is not null then
+  if v_profile.pending_engineer_commitment_id is not null and not exists (
+    select 1 from public.personal_captain_wave_snapshots where player_id=p_player_id
+      and engineer_commitment_id=v_profile.pending_engineer_commitment_id) then
     return v_profile.pending_engineer_commitment_id;
   end if;
   insert into public.personal_engineer_commitments(player_id) values(p_player_id)
     returning id into v_id;
+  if v_profile.pending_engineer_commitment_id is not null then
+    update public.personal_engineer_commitments set superseded_by=v_id
+      where player_id=p_player_id and id=v_profile.pending_engineer_commitment_id;
+  end if;
   update public.personal_captain_profiles set pending_engineer_commitment_id=v_id,
     revision=revision+1 where player_id=p_player_id;
   return v_id;
@@ -390,6 +420,10 @@ begin
   update public.personal_captain_profiles set assignment_wave_id=p_wave_id,
     assignment_engineer_commitment_id=pending_engineer_commitment_id,revision=revision+1
     where player_id=p_player_id;
+  if v_profile.pending_engineer_commitment_id is not null then
+    update public.personal_engineer_commitments set attached_wave_id=p_wave_id
+      where player_id=p_player_id and id=v_profile.pending_engineer_commitment_id;
+  end if;
   select coalesce(array_agg(value order by ordinal),'{}'::text[]) into v_active
     from unnest(v_profile.skills) with ordinality as t(value,ordinal)
     where not ((v_profile.rules->'retired') ? value);
