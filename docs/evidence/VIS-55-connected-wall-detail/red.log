@@ -1,0 +1,383 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run --run tests/island/wall-tier-detail.test.js tests/island/wall-textured-batches.test.js --maxWorkers=1
+
+
+ RUN  v5.1.0 /workspace/reference-village-work/wall-polish/frontend
+
+ ❯ tests/island/wall-textured-batches.test.js (11 tests | 5 failed) 106ms
+   ❯ dimensional wall artwork contract (11)
+     × draws level 1 spans with fixed projected feet, tier profile, upright trim and unchanged indices 20ms
+     × draws level 2 spans with fixed projected feet, tier profile, upright trim and unchanged indices 4ms
+     × draws level 3 spans with fixed projected feet, tier profile, upright trim and unchanged indices 6ms
+     × draws level 4 spans with fixed projected feet, tier profile, upright trim and unchanged indices 4ms
+     × draws level 5 spans with fixed projected feet, tier profile, upright trim and unchanged indices 4ms
+ ❯ tests/island/wall-tier-detail.test.js (9 tests | 7 failed) 53ms
+   ❯ connected wall tier detail (9)
+     × shows the full actual level 1 post when selecting a non-buttress straight segment 18ms
+     × shows the full actual level 2 post when selecting a non-buttress straight segment 1ms
+     × shows the full actual level 3 post when selecting a non-buttress straight segment 1ms
+     × shows the full actual level 4 post when selecting a non-buttress straight segment 1ms
+     × shows the full actual level 5 post when selecting a non-buttress straight segment 1ms
+     × retains sparse coordinate-based buttresses on horizontal runs after reordering and renaming 2ms
+     × retains sparse coordinate-based buttresses on vertical runs after reordering and renaming 2ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 12 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/island/wall-textured-batches.test.js > dimensional wall artwork contract > draws level 1 spans with fixed projected feet, tier profile, upright trim and unchanged indices
+AssertionError: expected [ -0.0560000017285347, …(47) ] to deeply equal [ -0.0560000017285347, …(47) ]
+
+- Expected
++ Received
+
+@@ -34,17 +34,17 @@
+    0,
+    2.5439999103546143,
+    1.1180000305175781,
+    0,
+    0.0560000017285347,
+-   0.6420000195503235,
+-   0,
+-   2.6559998989105225,
+-   0.6420000195503235,
++   0.7919999957084656,
+    0,
+    2.6559998989105225,
+    0.7919999957084656,
+    0,
+-   0.0560000017285347,
+-   0.7919999957084656,
++   2.6419999599456787,
++   0.8339999914169312,
++   0,
++   0.041999999433755875,
++   0.8339999914169312,
+    0,
+  ]
+
+ ❯ tests/island/wall-textured-batches.test.js:77:67
+     75|       const mesh = drawing.root.children.find(row => row.renderOrder =…
+     76|       const expected = Array.from(new Float32Array(points.flatMap(([px…
+     77|       expect(Array.from(mesh.geometry.attributes.position.array)).toEq…
+       |                                                                   ^
+     78|       expect(Array.from(mesh.geometry.index.array)).toEqual([0,1,2,0,2…
+     79|       expect(mesh.geometry.attributes.position.count).toBe(16);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/12]⎯
+
+ FAIL  tests/island/wall-textured-batches.test.js > dimensional wall artwork contract > draws level 2 spans with fixed projected feet, tier profile, upright trim and unchanged indices
+AssertionError: expected [ -0.0560000017285347, …(47) ] to deeply equal [ -0.0560000017285347, …(47) ]
+
+- Expected
++ Received
+
+@@ -34,17 +34,17 @@
+    0,
+    2.5439999103546143,
+    1.3179999589920044,
+    0,
+    0.0560000017285347,
+-   0.8420000076293945,
+-   0,
+-   2.6559998989105225,
+-   0.8420000076293945,
++   0.9919999837875366,
+    0,
+    2.6559998989105225,
+    0.9919999837875366,
+    0,
+-   0.0560000017285347,
+-   0.9919999837875366,
++   2.6419999599456787,
++   1.034000039100647,
++   0,
++   0.041999999433755875,
++   1.034000039100647,
+    0,
+  ]
+
+ ❯ tests/island/wall-textured-batches.test.js:77:67
+     75|       const mesh = drawing.root.children.find(row => row.renderOrder =…
+     76|       const expected = Array.from(new Float32Array(points.flatMap(([px…
+     77|       expect(Array.from(mesh.geometry.attributes.position.array)).toEq…
+       |                                                                   ^
+     78|       expect(Array.from(mesh.geometry.index.array)).toEqual([0,1,2,0,2…
+     79|       expect(mesh.geometry.attributes.position.count).toBe(16);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/12]⎯
+
+ FAIL  tests/island/wall-textured-batches.test.js > dimensional wall artwork contract > draws level 3 spans with fixed projected feet, tier profile, upright trim and unchanged indices
+AssertionError: expected [ -0.0560000017285347, …(47) ] to deeply equal [ -0.0560000017285347, …(47) ]
+
+- Expected
++ Received
+
+  [
+    -0.0560000017285347,
+-   1.5180000066757202,
++   1.6180000305175781,
+    0,
+    2.5439999103546143,
+-   1.5180000066757202,
++   1.6180000305175781,
+    0,
+    2.6559998989105225,
+-   1.1820000410079956,
++   1.281999945640564,
+    0,
+    0.0560000017285347,
+-   1.1820000410079956,
++   1.281999945640564,
+    0,
+    0.0560000017285347,
+    -0.1679999977350235,
+    0,
+    2.6559998989105225,
+    -0.1679999977350235,
+    0,
+    2.6559998989105225,
+-   1.1820000410079956,
++   1.281999945640564,
+    0,
+    0.0560000017285347,
+-   1.1820000410079956,
++   1.281999945640564,
+    0,
+    2.5439999103546143,
+    0.1679999977350235,
+    0,
+    2.6559998989105225,
+    -0.1679999977350235,
+    0,
+    2.6559998989105225,
+-   1.1820000410079956,
++   1.281999945640564,
+    0,
+    2.5439999103546143,
+-   1.5180000066757202,
++   1.6180000305175781,
+    0,
+    0.0560000017285347,
+-   1.0420000553131104,
++   1.2920000553131104,
+    0,
+    2.6559998989105225,
+-   1.0420000553131104,
++   1.2920000553131104,
+    0,
+-   2.6559998989105225,
+-   1.1920000314712524,
++   2.6419999599456787,
++   1.3339999914169312,
+    0,
+-   0.0560000017285347,
+-   1.1920000314712524,
++   0.041999999433755875,
++   1.3339999914169312,
+    0,
+  ]
+
+ ❯ tests/island/wall-textured-batches.test.js:77:67
+     75|       const mesh = drawing.root.children.find(row => row.renderOrder =…
+     76|       const expected = Array.from(new Float32Array(points.flatMap(([px…
+     77|       expect(Array.from(mesh.geometry.attributes.position.array)).toEq…
+       |                                                                   ^
+     78|       expect(Array.from(mesh.geometry.index.array)).toEqual([0,1,2,0,2…
+     79|       expect(mesh.geometry.attributes.position.count).toBe(16);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/12]⎯
+
+ FAIL  tests/island/wall-textured-batches.test.js > dimensional wall artwork contract > draws level 4 spans with fixed projected feet, tier profile, upright trim and unchanged indices
+AssertionError: expected [ -0.0560000017285347, …(47) ] to deeply equal [ -0.0560000017285347, …(47) ]
+
+- Expected
++ Received
+
+@@ -34,17 +34,17 @@
+    0,
+    2.5439999103546143,
+    1.6180000305175781,
+    0,
+    0.0560000017285347,
+-   1.1419999599456787,
+-   0,
+-   2.6559998989105225,
+-   1.1419999599456787,
++   1.2920000553131104,
+    0,
+    2.6559998989105225,
+    1.2920000553131104,
+    0,
+-   0.0560000017285347,
+-   1.2920000553131104,
++   2.6419999599456787,
++   1.3339999914169312,
++   0,
++   0.041999999433755875,
++   1.3339999914169312,
+    0,
+  ]
+
+ ❯ tests/island/wall-textured-batches.test.js:77:67
+     75|       const mesh = drawing.root.children.find(row => row.renderOrder =…
+     76|       const expected = Array.from(new Float32Array(points.flatMap(([px…
+     77|       expect(Array.from(mesh.geometry.attributes.position.array)).toEq…
+       |                                                                   ^
+     78|       expect(Array.from(mesh.geometry.index.array)).toEqual([0,1,2,0,2…
+     79|       expect(mesh.geometry.attributes.position.count).toBe(16);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/12]⎯
+
+ FAIL  tests/island/wall-textured-batches.test.js > dimensional wall artwork contract > draws level 5 spans with fixed projected feet, tier profile, upright trim and unchanged indices
+AssertionError: expected [ -0.0560000017285347, …(47) ] to deeply equal [ -0.0560000017285347, …(47) ]
+
+- Expected
++ Received
+
+  [
+    -0.0560000017285347,
+-   1.718000054359436,
++   1.6180000305175781,
+    0,
+    2.5439999103546143,
+-   1.718000054359436,
++   1.6180000305175781,
+    0,
+    2.6559998989105225,
+-   1.3819999694824219,
++   1.281999945640564,
+    0,
+    0.0560000017285347,
+-   1.3819999694824219,
++   1.281999945640564,
+    0,
+    0.0560000017285347,
+    -0.1679999977350235,
+    0,
+    2.6559998989105225,
+    -0.1679999977350235,
+    0,
+    2.6559998989105225,
+-   1.3819999694824219,
++   1.281999945640564,
+    0,
+    0.0560000017285347,
+-   1.3819999694824219,
++   1.281999945640564,
+    0,
+    2.5439999103546143,
+    0.1679999977350235,
+    0,
+    2.6559998989105225,
+    -0.1679999977350235,
+    0,
+    2.6559998989105225,
+-   1.3819999694824219,
++   1.281999945640564,
+    0,
+    2.5439999103546143,
+-   1.718000054359436,
++   1.6180000305175781,
+    0,
+    0.0560000017285347,
+-   1.2419999837875366,
++   1.2920000553131104,
+    0,
+    2.6559998989105225,
+-   1.2419999837875366,
++   1.2920000553131104,
+    0,
+-   2.6559998989105225,
+-   1.3919999599456787,
++   2.6419999599456787,
++   1.3339999914169312,
+    0,
+-   0.0560000017285347,
+-   1.3919999599456787,
++   0.041999999433755875,
++   1.3339999914169312,
+    0,
+  ]
+
+ ❯ tests/island/wall-textured-batches.test.js:77:67
+     75|       const mesh = drawing.root.children.find(row => row.renderOrder =…
+     76|       const expected = Array.from(new Float32Array(points.flatMap(([px…
+     77|       expect(Array.from(mesh.geometry.attributes.position.array)).toEq…
+       |                                                                   ^
+     78|       expect(Array.from(mesh.geometry.index.array)).toEqual([0,1,2,0,2…
+     79|       expect(mesh.geometry.attributes.position.count).toBe(16);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/12]⎯
+
+ FAIL  tests/island/wall-tier-detail.test.js > connected wall tier detail > shows the full actual level 1 post when selecting a non-buttress straight segment
+ FAIL  tests/island/wall-tier-detail.test.js > connected wall tier detail > shows the full actual level 2 post when selecting a non-buttress straight segment
+ FAIL  tests/island/wall-tier-detail.test.js > connected wall tier detail > shows the full actual level 3 post when selecting a non-buttress straight segment
+ FAIL  tests/island/wall-tier-detail.test.js > connected wall tier detail > shows the full actual level 4 post when selecting a non-buttress straight segment
+ FAIL  tests/island/wall-tier-detail.test.js > connected wall tier detail > shows the full actual level 5 post when selecting a non-buttress straight segment
+AssertionError: expected [] to have a length of 1 but got +0
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ tests/island/wall-tier-detail.test.js:29:73
+     27|     const art = atlas(), rows = [wall('a',0,0,level),wall('b',2,0,leve…
+     28|     const before = structuredClone(rows), layers = draw(rows, art, 'b'…
+     29|     const actual = posts(layers, art, wallFrame(level)); expect(actual…
+       |                                                                         ^
+     30|     expect(actual[0].positions).toEqual([1.475,-.375,0,3.725,-.375,0,3…
+     31|     expect(quads(layers)).toHaveLength(9); expect(rows).toEqual(before…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/12]⎯
+
+ FAIL  tests/island/wall-tier-detail.test.js > connected wall tier detail > retains sparse coordinate-based buttresses on horizontal runs after reordering and renaming
+AssertionError: expected [ Array(2) ] to have a length of 5 but got 2
+
+- Expected
++ Received
+
+- 5
++ 2
+
+ ❯ tests/island/wall-tier-detail.test.js:39:20
+     37|     const layers = draw(rows, art), actual = posts(layers, art, wallFr…
+     38|     // Nine pieces retain five full posts: both ends and the fixed -6,…
+     39|     expect(actual).toHaveLength(5);
+       |                    ^
+     40|     const centres = actual.map(({positions:p}) => (p[0]+p[3])/2);
+     41|     expect(centres).toEqual((axis==='horizontal'?[-10.4,-7.8,0,7.8,10.…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/12]⎯
+
+ FAIL  tests/island/wall-tier-detail.test.js > connected wall tier detail > retains sparse coordinate-based buttresses on vertical runs after reordering and renaming
+AssertionError: expected [ { …(2) }, …(1) ] to have a length of 5 but got 2
+
+- Expected
++ Received
+
+- 5
++ 2
+
+ ❯ tests/island/wall-tier-detail.test.js:39:20
+     37|     const layers = draw(rows, art), actual = posts(layers, art, wallFr…
+     38|     // Nine pieces retain five full posts: both ends and the fixed -6,…
+     39|     expect(actual).toHaveLength(5);
+       |                    ^
+     40|     const centres = actual.map(({positions:p}) => (p[0]+p[3])/2);
+     41|     expect(centres).toEqual((axis==='horizontal'?[-10.4,-7.8,0,7.8,10.…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/12]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  12 failed | 8 passed (20)
+   Start at  23:58:05
+   Duration  1.60s (import 53%, transform 27%, tests 18%, worker 2%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice

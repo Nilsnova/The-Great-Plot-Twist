@@ -4,9 +4,10 @@
 >
 > **Who uses it:** village builders, defenders and reviewers of the shared wall renderer.
 
-- **Status:** in progress; Draft review and human acceptance remain open.
+- **Status:** implemented with focused checks; coordinator browser evidence and human acceptance remain open.
 - **Branch:** `fix/vis-55-connected-wall-detail`
 - **Issue:** [#423](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/423)
+- **Draft pull request:** [#428](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/428); [focused evidence](../docs/evidence/VIS-55-connected-wall-detail/README.md).
 - **Base:** `6c87b8dcd2d7a1bb5376c3b64bbede27a144479e`, the VIS57 current-main/visual preview.
 
 ## Why and scope
@@ -29,11 +30,11 @@ Wall IDs, paid positions, two-unit footprints, exact contacts, lower-endpoint-ti
 
 ## Acceptance and tests first
 
-- [ ] All five tiers have the fixed independent horizontal/vertical expected coordinates, proper atlas UVs and unchanged index/quad counts.
-- [ ] A selected non-buttress middle segment displays its actual tier post.
-- [ ] Sparse buttresses and full corner/branch/mixed/damaged posts remain deterministic after reorder.
-- [ ] A broken segment opens both real joins and retains only its ruin at that position.
-- [ ] Existing fallback hashes, ground feet, ordering, nonmutation and resource lifetime assertions still pass.
+- [x] All five tiers have the fixed independent horizontal/vertical expected coordinates, proper atlas UVs and unchanged index/quad counts.
+- [x] A selected non-buttress middle segment displays its actual tier post.
+- [x] Sparse buttresses and full corner/branch/mixed/damaged posts remain deterministic after reorder.
+- [x] A broken segment opens both real joins and retains only its ruin at that position.
+- [x] Existing fallback hashes, ground feet, ordering, nonmutation and resource lifetime assertions still pass.
 - [ ] Relevant pure tests and build run with exact results; actual desktop/phone and level/state screenshots are captured by the coordinator.
 - [ ] Responsible human explain-back and a different human's review remain required before readiness or merge.
 
