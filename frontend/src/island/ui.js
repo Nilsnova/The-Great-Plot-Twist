@@ -17,6 +17,7 @@ import {drawArsenal} from './arsenal-ui.js';
 import {drawSkills, drawTech, drawTowerTree, iconOf} from './skill-tree.js';
 import {drawUpgradeOverview} from './upgrade-overview-view.js';
 import {renderStructureRecoveryView} from './structure-recovery-view.js';
+import {createSelectionDock} from './selection-dock.js';
 
 // The cards of the island's buildings: a spot's build or upgrade card (houses too), the wreck, the Harbor and
 // the arsenal. They dock at the right side on a desktop and come up as a bottom sheet on a phone
@@ -30,8 +31,9 @@ function button(label, onClick, quiet = false) {
   return element;
 }
 
-export function createIslandUi({container, focus = () => {}, resetInput = () => {}, toasts = gameToasts} = {}) {
+export function createIslandUi({container, focus = () => {}, resetInput = () => {}, toasts = gameToasts, onSelection = () => {}} = {}) {
   let modal = null, kind = null, render = null, disposed = false, lastToast = null;
+  let selection = null, selectionModel = null, selectionHandlers = null, returnToDock = null;
   // The Tech hub tile the player tapped (kept while the page lives); the tree shows its detail.
   let techPicked = null;
   let overviewKind = 'all', overviewState = 'all';
@@ -42,19 +44,23 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
   const visit = node('div', 'island-visit'); visit.hidden = true;
   container.append(banner, visit);
 
-  function close() {
-    if (!modal) return false;
+  function close(restore = false) {
+    if (!modal && !selection) return false;
+    const back = restore === true ? returnToDock : null; returnToDock = null;
     const current = modal; modal = null; kind = null; render = null;
-    current.dispose(); resetInput(); focus();
+    current?.dispose(); selection?.dispose(); selection = null; onSelection(false); resetInput(); focus();
+    if (back) { back(); selection?.focusDetails(); }
     return true;
   }
   // Opens (or re-renders) the card of one kind. draw(body) fills it and returns the element to focus.
   function open(nextKind, title, draw) {
     if (disposed) return;
+    if (nextKind !== 'build') returnToDock = null;
+    if (selection) close();
     resetInput();
     if (modal && kind !== nextKind) close();
     if (!modal) {
-      modal = createModal({title, onCancel: close});
+      modal = createModal({title, onCancel: () => close(true)});
       modal.element.classList.add('island-card', `island-card-${nextKind}`);
       // The island's own cards dock at the side (a bottom sheet on phones), so the island stays in view.
       if (DOCKED.has(nextKind)) modal.element.classList.add('island-card-docked');
@@ -93,8 +99,22 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
   //   treeSelect(spotId, id), tree(spotId, path, tier)}
   // D055: a tower with an upgrade tree (model.tree) gets a bigger, centred card like the captain's, with the tree
   // (skill-tree.js) in place of the plain Upgrade: the trunk tile upgrades the level, the path tiles buy the tree.
-  function buildCard(model, handlers) {
+  function buildCard(model, handlers, {dock = false, details = false} = {}) {
+    if (disposed) return;
     const on = typeof handlers === 'function' ? {build: handlers} : handlers ?? {};
+    selectionModel = model; selectionHandlers = on;
+    if (!dock && !details) returnToDock = null;
+    if (dock && returnToDock) returnToDock = () => buildCard(model, on, {dock: true});
+    else if (dock) {
+      if (modal) close();
+      selection ??= createSelectionDock({container, onClose: close, onDetails: () => {
+        const current = selectionModel, actions = selectionHandlers;
+        returnToDock = () => buildCard(current, actions, {dock: true});
+        selection.dispose(); selection = null; onSelection(false);
+        buildCard(current, actions, {details: true});
+      }});
+      kind = 'build'; selection.render(model, on); onSelection(true); return;
+    }
     open('build', model.title, body => {
       let focusable = null;
       const treeCard = !!model.tree;
@@ -561,6 +581,8 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
   }
   return {
     overviewCard, leaderboardCard, buildCard, bellCard, inviteCard, lobbyCard, crewCard, captainCard, captainsCard, harborCard, techCard, wreckCard, arsenalCard, demolishCard, close, copyLink,
+    cancel: () => close(true),
+    get selectionElement() { return selection?.element ?? null; },
     // Re-draw the open card from fresh models (the island controller calls this on every change).
     get open() { return kind; },
     get active() { return !!modal; },
@@ -584,6 +606,7 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
     get toastText() { return lastToast && toasts().shown.some(item => item.id === lastToast.id) ? lastToast.text : ''; },
     dispose() {
       if (disposed) return; disposed = true;
+      returnToDock = null; selection?.dispose(); selection = null;
       if (modal) { const current = modal; modal = null; current.dispose(); }
       banner.remove(); visit.remove();
     },

@@ -16,14 +16,11 @@ import table from './campaign.json';
 import {BRANCHES, readTier} from './tech.js';
 import {extraSpotWave} from '../island/extra-spots.js';
 
-export const CAMPAIGN = table;
 export const STEPS = Object.freeze(table.steps.map(step => Object.freeze({...step, opens: Object.freeze([...step.opens]), later: step.later === true})));
 const BY_ID = new Map(STEPS.flatMap(step => step.opens.map(id => [id, step])));
 export const SPOT_GROUPS = Object.freeze(Object.fromEntries(Object.entries(table.spots).map(([group, spots]) => [group, Object.freeze([...spots])])));
 
 export const waveOf = id => BY_ID.get(id)?.wave ?? null;
-export const stepOf = id => BY_ID.get(id) ?? null;
-export const isLater = id => BY_ID.get(id)?.later === true;
 export const opensText = wave => `Opens after wave ${wave}`;
 export function spotWave(spotId) {
   for (const [group, spots] of Object.entries(SPOT_GROUPS)) if (spots.includes(spotId)) return waveOf(group) ?? 0;

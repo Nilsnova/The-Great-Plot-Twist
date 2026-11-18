@@ -2799,3 +2799,20 @@ catalog
 discount
 fully
 upgrading
+# WALL-37: reviewed American English for precise adjustment and the native summary element.
+fine
+summary
+
+# WALL-05: reviewed American English for grid quotes and connected wall construction.
+placement
+construction
+perimeter
+piece
+pieces
+square
+squares
+quote
+# WALL-42: slots is the standard American English plural of slot; this count is capacity, not coins.
+slots
+# WALL-44: undo is the standard American English verb for reversing the last draft edit.
+undo

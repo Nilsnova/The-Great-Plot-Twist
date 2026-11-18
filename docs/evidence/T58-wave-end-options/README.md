@@ -30,3 +30,21 @@ The first combined SQL attempt had 395 passed / 3 failed from committed race-fix
 ## Limits and risks
 
 All PostgreSQL/authentication data is synthetic and disposable. Backend tests are not rendered browser, real provider, live database or authenticated two-browser proof. The combined frontend fixtures are documented separately by T59. Frozen replay, closed combat history and paid receipts must stay immutable. New policy metadata is additive; old clients cannot choose or override it. There is no player compensation subsystem, role reassignment or replacement repair ability. Human review/publication confirmation and Franz's current-revision review remain before a human merge.
+
+## Latest-main integration (2026-11-18)
+
+Merged `origin/main` at `37eb70fa` into the task branch with a two-parent merge. The only textual conflict was `docs/STATUS.md`; `/tmp/retain-status-histories.py` resolved it, and an order-preserving subsequence check confirmed all 1,143 lines from the task side and all 1,144 lines from main remain in the merged file. No protected policy files were changed. Main's current layout/scenery, content, test, documentation, frontend refactoring and artwork changes were retained. Existing task-only retirement migration/tests, recovery-version serialization, and evidence remain present.
+
+From `backend/`, the current merged tree passed the focused recovery/retirement/routes tests (276 passed, 3 skipped):
+
+```sh
+UV_CACHE_DIR=/tmp/wave-end-options-uv-cache uv run pytest -q server/tests/test_captain_recovery_policy.py server/tests/test_house_roles_match_migration.py server/tests/test_house_roles_routes.py server/tests/test_island_routes.py server/tests/test_research_tiers_routes.py server/tests/test_structure_recovery_manifest.py server/tests/test_structure_recovery_rate.py server/tests/test_structure_recovery_routes.py server/tests/test_supabase_admin.py server/tests/test_tower_defense_routes.py server/tests/test_tower_skill_price_routes.py server/tests/test_wave_recovery_routes.py server/tests/test_wave_recovery_transport.py server/tests/island_sql/test_recovery_wave_end_sql.py server/tests/island_sql/test_retired_recovery_options_sql.py server/tests/island_sql/test_structure_recovery_mutations_sql.py
+```
+
+The complete disposable SQL suite passed on the merged tree (395 passed in 39.76 seconds):
+
+```sh
+CASE_PG_SCRATCH=1 UV_CACHE_DIR=/tmp/wave-end-options-uv-cache uv run --with pgserver --with 'psycopg[binary]' --with pglast pytest -q server/tests/island_sql
+```
+
+`UV_CACHE_DIR=/tmp/wave-end-options-uv-cache uv run ruff check .` passed. This remains local disposable PostgreSQL evidence; there was no live database, migration application, feature activation, deployment or PR. Manual review and explicit publication approval remain outstanding.

@@ -29,7 +29,9 @@
 //   the same tick, and the same hits on the heart.
 //   node scripts/check-multiplayer.js [folder]        (npm run test:mp)
 import assert from 'node:assert/strict';
-import {mkdir} from 'node:fs/promises';
+import {mkdir, writeFile} from 'node:fs/promises';
+import {execFileSync} from 'node:child_process';
+import {compareSyncSamples} from './multiplayer-sync-samples.js';
 import {openWorldBrowser, settle} from './world-browser-tools.js';
 import {stubOfflineApi} from './api-browser-fixture.js';
 import {stubWeather} from './weather-browser-fixture.js';
@@ -37,6 +39,10 @@ import {stubWeather} from './weather-browser-fixture.js';
 const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
 const out = process.argv[2] ?? `/Users/nilslenke/Developer/fri6-integration/td-shots/mp/check-${stamp}`;
 await mkdir(out, {recursive: true});
+const qaSource = execFileSync('git', ['rev-parse', 'HEAD'], {cwd: new URL('..', import.meta.url), encoding: 'utf8'}).trim();
+const syncReceipts = [];
+const saveSyncReceipts = () => writeFile(`${out}/sync-samples.json`, JSON.stringify({source: qaSource,
+  scope: 'Existing sampled histories from declared local fake players; no added collection frames.', comparisons: syncReceipts}, null, 2));
 const WORLD = `mp${Date.now().toString(36)}`;
 const env = await openWorldBrowser({hmr: false}), context = env.page.context();
 const pages = [];
@@ -95,6 +101,8 @@ async function openCaptain(name, playerId, visit = null, {create = false, join =
   // A visit link or a joined code: wait until the host's island has answered (the join's visit read).
   await page.waitForFunction(joined => window.__island.waves && (!(joined || new URLSearchParams(location.search).get('visit')) || window.__island.island.visiting?.ownerName), !!join, {timeout: 30000});
   if (!pages.includes(captain)) pages.push(captain);
+  await page.addScriptTag({type: 'module', content: "import {observeMultiplayerMap} from '/scripts/multiplayer-map-observer.js'; window.__mpMap = observeMultiplayerMap;"});
+  await page.waitForFunction(() => typeof window.__mpMap === 'function');
   // What every page heard: the sim's musket shots, the loot answers, and a ship list per frame.
   await page.evaluate(() => {
     const g = window.__island; g.settings.hour = 12;
@@ -173,16 +181,9 @@ const spotBuilt = (captain, spot) => captain.page.evaluate(spot => {
   const i = window.__island.island, target = i.visiting?.spots ? i.visiting : i.island;
   return !!target?.spots?.find(item => item.id === spot)?.built;
 }, spot);
-// What a page shows of one spot: the level art on the map (island-cannon:<spot>, its brass pips) and the card's
+// What a page shows of one spot: current textured wall buffers or legacy sprite/pips, and the card's
 // "Level n of m" with the price of the next level. The card is opened and closed again unless `keep`.
-const mapOf = (captain, spot) => captain.page.evaluate(spot => {
-  let level = 0, pips = 0;
-  window.__island.scene.traverse(object => {
-    if (/^island-(wall|cannon|mortar|watchtower|house):/.test(object.name) && object.name.endsWith(`:${spot}`)) level = object.userData.level ?? 0;
-    if (object.name.startsWith(`island-pip:${spot}:`)) pips++;
-  });
-  return {level, pips};
-}, spot);
+const mapOf = (captain, spot) => captain.page.evaluate(spot => window.__mpMap(window.__island.scene, spot), spot);
 const cardOf = (captain, spot, keep = false) => captain.page.evaluate(async ([spot, keep]) => {
   const game = window.__island.island;
   game.pick(spot); await new Promise(resolve => setTimeout(resolve, 80));
@@ -191,10 +192,11 @@ const cardOf = (captain, spot, keep = false) => captain.page.evaluate(async ([sp
   if (!keep) game.ui.close();
   return read;
 }, [spot, keep]);
-// Waits (at most 2 s) until the map shows `level` with that many pips, then reads the card; answers the ms it took.
+// Waits at most 2 s for the actual tier (batch geometry/UVs, or legacy sprite and pips), then reads the card.
 async function shows(captain, spot, level, what) {
   const began = Date.now();
-  const ok = async () => { const map = await mapOf(captain, spot); return map.level === level && map.pips === level; }; // a wall shows pips from level 2
+  const ok = async () => { const map = await mapOf(captain, spot); return map.level === level
+    && (map.mode === 'wall-batch' ? map.pips === 0 : map.mode === 'sprite' && map.pips === level); };
   while (Date.now() - began < 2000 && !await ok()) await captain.page.waitForTimeout(100);
   assert.ok(await ok(), `${captain.name}'s map shows ${what} as level ${level}: ${JSON.stringify(await mapOf(captain, spot))}`);
   const card = await cardOf(captain, spot);
@@ -224,19 +226,16 @@ async function musket(captain) {
 // ships and the same boarders ashore (boarding, TOWER-DEFENSE.md §12).
 async function compare(a, b, waveId) {
   const [left, right] = await Promise.all([a, b].map(captain => captain.page.evaluate(id => window.__mp.samples.filter(item => item.waveId === id), waveId)));
-  const byTick = new Map(right.map(item => [item.ticks, item]));
-  const size = list => list.split(',').filter(Boolean).length;
-  let checked = 0, same = 0, worst = 0, sameBoarders = 0, worstBoarders = 0, withBoarders = 0;
-  for (const sample of left.filter((_, index) => index % 10 === 0)) {
-    const other = byTick.get(sample.ticks) ?? byTick.get(sample.ticks - 1) ?? byTick.get(sample.ticks + 1);
-    if (!other) continue;
-    checked++;
-    if (other.ships === sample.ships) same++;
-    if (other.boarders === sample.boarders) sameBoarders++;
-    if (sample.boarders) withBoarders++;
-    worst = Math.max(worst, Math.abs(size(other.ships) - size(sample.ships)));
-    worstBoarders = Math.max(worstBoarders, Math.abs(size(other.boarders) - size(sample.boarders)));
+  const receipt = {waveId, leftPlayer: a.playerId, rightPlayer: b.playerId, left, right};
+  syncReceipts.push(receipt);
+  let observed;
+  try { observed = compareSyncSamples(left, right); }
+  catch (error) {
+    receipt.error = {name: error.name, message: error.message};
+    throw error;
   }
+  const {pairs, ...comparison} = observed;
+  receipt.pairs = pairs;
   const landed = Math.max(0, ...left.map(item => item.landed));
   // T50: the heart's ♥ at exactly the same tick.
   let heartChecked = 0, sameHeart = 0;
@@ -252,7 +251,9 @@ async function compare(a, b, waveId) {
     if (other.militia === sample.militia) sameMilitia++;
     if (sample.militia.includes(':fighting')) fighting++;
   }
-  return {checked, same, worst, sameBoarders, worstBoarders, withBoarders, landed, militiaChecked, sameMilitia, fighting, heartChecked, sameHeart};
+  const metrics = {...comparison, landed, militiaChecked, sameMilitia, fighting, heartChecked, sameHeart};
+  receipt.metrics = metrics;
+  return metrics;
 }
 
 // The musket fires from the captain's own body (owner, 12 Nov): the owner's character and, on the friend's
@@ -567,7 +568,7 @@ try {
   await island(ben, async i => { i.dev.setWaveBest(5); i.dev.setCoins(900); await i.load(); });
   // The inner wall ring opens after wave 5 (GAME-V3.md §4): the owner raises it now, for the wave further down.
   await island(host, async i => { for (const id of ['wall_7', 'wall_8', 'wall_9', 'wall_10', 'wall_11', 'wall_12']) await i.build(id, 'wall'); });
-  assert.deepEqual(await mapOf(ben, 'wall_2'), {level: 1, pips: 0});
+  assert.deepEqual(await mapOf(ben, 'wall_2'), {level: 1, pips: 0, mode: 'wall-batch'});
   await island(host, async i => i.upgrade('wall_2'));
   const ownerUpgrade = await shows(ben, 'wall_2', 2, 'the owner\'s wall');
   results.push(`owner upgrade to level 2 on the friend's map and card after ${ownerUpgrade} ms`);
@@ -675,8 +676,8 @@ try {
   await ben.page.waitForFunction(() => /^Nils tore down the Wall\. You got back 🪙 25\.$/.test(window.__island.island.ui.toastText), null, {timeout: 3000, polling: 50});
   const benToast = await ben.page.evaluate(() => window.__island.island.ui.toastText);
   await ben.page.waitForFunction(before => window.__island.island.island?.coins === before + 25, benBefore, {timeout: 3000, polling: 100});
-  assert.deepEqual(await mapOf(ben, 'wall_2'), {level: 0, pips: 0}, "the friend's map shows no wall on wall_2");
-  assert.deepEqual(await mapOf(host, 'wall_2'), {level: 0, pips: 0}, "the owner's map shows no wall on wall_2");
+  assert.deepEqual(await mapOf(ben, 'wall_2'), {level: 0, pips: 0, mode: 'none'}, "the friend's map shows no wall on wall_2");
+  assert.deepEqual(await mapOf(host, 'wall_2'), {level: 0, pips: 0, mode: 'none'}, "the owner's map shows no wall on wall_2");
   results.push(`tear down: the owner's confirmation "${confirmation.question}" ${confirmation.lines.join(' ')}; the friend's island showed the empty spot after ${emptyAfter} ms, his toast "${benToast}", his coins ${benBefore} → ${benBefore + 25}`);
   await sized('02f-teardown-after', [host, ben]);
   await island(host, async i => { await i.build('wall_2', 'wall'); await i.upgrade('wall_2'); await i.upgrade('wall_2'); });
@@ -893,9 +894,11 @@ try {
   const audio = env.errors.filter(text => /AudioContext|audio device/i.test(text));
   const errors = env.errors.filter(text => !/Failed to load resource/.test(text) && !audio.includes(text));
   assert.deepEqual(errors, [], 'no browser errors');
+  await saveSyncReceipts();
   log('\nRESULTS'); for (const line of results) log(`  ${line}`);
   log(`\ncheck-multiplayer: OK (${pages.length} pages), screenshots in ${out}`);
 } catch (error) {
+  await saveSyncReceipts().catch(writeError => log('sync receipt write failed:', writeError.message));
   log('\nRESULTS SO FAR'); for (const line of results) log(`  ${line}`);
   for (const captain of pages) {
     await captain.page.screenshot({path: `${out}/failure-${captain.playerId}.png`}).catch(() => {});
