@@ -12,6 +12,8 @@
 >
 > Last updated: Tue 10 Nov 2026.
 
+**18 Nov multiplayer planning addition:** the accepted shared-island economy target is recorded in the [decision log](DECISIONS.md#shared-island-economy-2026-11-18). Its [delivery milestones](BUILD-PLAN.md#7-shared-island-economy-roadmap) and [MP-ECO task board](OPEN-TODOS.md#12-shared-island-economy-and-multiplayer-rules) extend the existing plan without renumbering or completing previous tasks. This is planning before implementation; the freeze and submission dates below are unchanged. Schedule the cross-system work explicitly rather than promising it before submission. Branch changes and request approval before opening a merge request; merge only after the agreed review and explicit authorization.
+
 ## Where we stand against the grading criteria
 
 | Criterion (weight) | Today | What "excellent" means for us |
