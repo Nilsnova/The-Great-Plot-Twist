@@ -1,0 +1,2 @@
+ae0bfd36f8480706d98834f051f94e0951bc558ed8f0324b832680b98ed1a5e1  tests/multiplayer-map-observer.test.js
+3c0768bee371f680428ed6cc4ac3fcb82b68332a7f395c45eb030c020c0d1c8a  scripts/multiplayer-map-observer.js

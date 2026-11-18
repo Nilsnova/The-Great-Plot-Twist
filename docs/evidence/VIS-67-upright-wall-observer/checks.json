@@ -1,0 +1,100 @@
+{
+  "scope": "QA-only source expectations; no browser/application result inferred",
+  "testedCandidateCommittedAs": "b21cda306ae57e192753cf1a14a9897d551a5edd",
+  "runMethod": "Final pure run executed before commit; the exact observer/test bytes were then committed unchanged.",
+  "productDependencies": [
+    "bdf54f43",
+    "15d8362f",
+    "76e7949f",
+    "3866a92f",
+    "52b6f921"
+  ],
+  "qaCodeCommits": [
+    {
+      "commit": "977f1eda5b9d02f9c60cfc749967bf89a80c7daa",
+      "files": [
+        "frontend/scripts/multiplayer-map-observer.js",
+        "frontend/tests/multiplayer-map-observer.test.js"
+      ]
+    },
+    {
+      "commit": "b21cda306ae57e192753cf1a14a9897d551a5edd",
+      "files": [
+        "frontend/scripts/multiplayer-map-observer.js",
+        "frontend/tests/multiplayer-map-observer.test.js"
+      ]
+    }
+  ],
+  "original151CasePrefix": {
+    "sha256": "ae0bfd36f8480706d98834f051f94e0951bc558ed8f0324b832680b98ed1a5e1",
+    "bytes": 8675,
+    "unchanged": true
+  },
+  "checkedFiles": {
+    "frontend/scripts/multiplayer-map-observer.js": "7d87f300b19c230abb57bdf1ebb5f1dad1eb88842416f60f42f580caa32d2efd",
+    "frontend/tests/multiplayer-map-observer.test.js": "cde9829697e71a1799699d6e0c09d3252ed5847f817e49a19b5c6d15c96d7176",
+    "frontend/scripts/check-multiplayer.js": "c59e65fa95c5a82925efd286e1c210bfc57de5b7e70e303b82fb999fd368fd2a",
+    "frontend/scripts/multiplayer-sync-samples.js": "7d080e48790d653f49dbee78c53e5e9560a134dcd2d2cf8aa338bc7e8c31f5f0"
+  },
+  "checks": [
+    {
+      "name": "old observer against revised product source",
+      "tests": 151,
+      "failed": 61,
+      "passed": 90,
+      "seconds": 1.42,
+      "exitCode": 1,
+      "log": "red.log"
+    },
+    {
+      "name": "corrected independent dimensions, original cases unchanged",
+      "tests": 151,
+      "passed": 151,
+      "seconds": 0.86,
+      "exitCode": 0,
+      "log": "green-existing.log"
+    },
+    {
+      "name": "old-dimension negative controls added",
+      "tests": 171,
+      "passed": 171,
+      "seconds": 0.692,
+      "exitCode": 0,
+      "log": "green-expanded.log"
+    },
+    {
+      "name": "selected identity tests before selected-state observer support",
+      "tests": 191,
+      "failed": 20,
+      "passed": 171,
+      "seconds": 1.0,
+      "exitCode": 1,
+      "log": "red-selected.log"
+    },
+    {
+      "name": "final selected contract plus wall renderer/art lifecycle selection",
+      "files": 7,
+      "tests": 254,
+      "passed": 254,
+      "seconds": 3.41,
+      "exitCode": 0,
+      "log": "green-final.log"
+    }
+  ],
+  "notRun": [
+    "Chrome/native multiplayer",
+    "full frontend suite",
+    "backend suite",
+    "app screenshots",
+    "build/budget/text lint"
+  ],
+  "unchangedByQA": [
+    "application sources",
+    "public PNGs",
+    "backend",
+    "migrations",
+    "dependencies",
+    "native actions/timeouts/tick coverage/tolerances/collection",
+    "all original151observer cases"
+  ]
+}

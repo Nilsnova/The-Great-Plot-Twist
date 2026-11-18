@@ -1,0 +1,271 @@
+
+ RUN  v5.1.0 /workspace/reference-village-work/clearance-wall-qa/frontend
+
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > observes tier 1 in real indexed wall buffers without inventing pips 13ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > observes tier 2 in real indexed wall buffers without inventing pips 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > observes tier 3 in real indexed wall buffers without inventing pips 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > observes tier 4 in real indexed wall buffers without inventing pips 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > observes tier 5 in real indexed wall buffers without inventing pips 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > observes the actual cap of a straight same-level wall, and changed level after repaint 3ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > does not trust a fresh diagnostic level over stale drawn UVs 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects a corrupted actual position buffer 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects a corrupted actual uv buffer 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects a corrupted actual index buffer 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects missing mesh 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects hidden mesh 0ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects hidden ancestor 0ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects moved mesh 0ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects moved scene 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects manual matrix 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects scaled group 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects empty draw range 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects excluded post 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects no texture 0ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects transparent material 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects wrong texture size 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects placeholder receipt 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects empty metrics 0ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects missing receipt 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > does not report a torn-down row from another wall in the same layer 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > refuses teardown success when fresh rows disappear but the last observed quad is still drawn 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects a stale teardown remnant despite wrong UV 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects a stale teardown remnant despite no texture 1ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > rejects a stale teardown remnant despite moved ancestor 2ms
+ ✓ tests/multiplayer-map-observer.test.js > actual multiplayer map observer > preserves legacy walls, towers and real pip counts, refusing duplicate renderers 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > observes tier 1 horizontal cap across positive, negative and half-grid positions 2ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > observes tier 1 horizontal buttress across positive, negative and half-grid positions 2ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > observes tier 1 vertical cap across positive, negative and half-grid positions 7ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > observes tier 1 vertical buttress across positive, negative and half-grid positions 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > observes tier 2 horizontal cap across positive, negative and half-grid positions 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > observes tier 2 horizontal buttress across positive, negative and half-grid positions 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > observes tier 2 vertical cap across positive, negative and half-grid positions 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > observes tier 2 vertical buttress across positive, negative and half-grid positions 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > observes tier 3 horizontal cap across positive, negative and half-grid positions 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > observes tier 3 horizontal buttress across positive, negative and half-grid positions 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > observes tier 3 vertical cap across positive, negative and half-grid positions 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > observes tier 3 vertical buttress across positive, negative and half-grid positions 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > observes tier 4 horizontal cap across positive, negative and half-grid positions 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > observes tier 4 horizontal buttress across positive, negative and half-grid positions 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > observes tier 4 vertical cap across positive, negative and half-grid positions 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > observes tier 4 vertical buttress across positive, negative and half-grid positions 2ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > observes tier 5 horizontal cap across positive, negative and half-grid positions 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > observes tier 5 horizontal buttress across positive, negative and half-grid positions 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > observes tier 5 vertical cap across positive, negative and half-grid positions 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > observes tier 5 vertical buttress across positive, negative and half-grid positions 2ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects fresh tier diagnostics over stale tier 1 horizontal cap buffers 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects fresh tier diagnostics over stale tier 1 horizontal buttress buffers 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects fresh tier diagnostics over stale tier 1 vertical cap buffers 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects fresh tier diagnostics over stale tier 1 vertical buttress buffers 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects fresh tier diagnostics over stale tier 2 horizontal cap buffers 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects fresh tier diagnostics over stale tier 2 horizontal buttress buffers 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects fresh tier diagnostics over stale tier 2 vertical cap buffers 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects fresh tier diagnostics over stale tier 2 vertical buttress buffers 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects fresh tier diagnostics over stale tier 3 horizontal cap buffers 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects fresh tier diagnostics over stale tier 3 horizontal buttress buffers 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects fresh tier diagnostics over stale tier 3 vertical cap buffers 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects fresh tier diagnostics over stale tier 3 vertical buttress buffers 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects fresh tier diagnostics over stale tier 4 horizontal cap buffers 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects fresh tier diagnostics over stale tier 4 horizontal buttress buffers 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects fresh tier diagnostics over stale tier 4 vertical cap buffers 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects fresh tier diagnostics over stale tier 4 vertical buttress buffers 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects fresh tier diagnostics over stale tier 5 horizontal cap buffers 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects fresh tier diagnostics over stale tier 5 horizontal buttress buffers 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects fresh tier diagnostics over stale tier 5 vertical cap buffers 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects fresh tier diagnostics over stale tier 5 vertical buttress buffers 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted position on a tier 1 horizontal cap 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted uv on a tier 1 horizontal cap 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted index on a tier 1 horizontal cap 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted position on a tier 1 horizontal buttress 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted uv on a tier 1 horizontal buttress 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted index on a tier 1 horizontal buttress 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted position on a tier 1 vertical cap 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted uv on a tier 1 vertical cap 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted index on a tier 1 vertical cap 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted position on a tier 1 vertical buttress 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted uv on a tier 1 vertical buttress 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted index on a tier 1 vertical buttress 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted position on a tier 2 horizontal cap 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted uv on a tier 2 horizontal cap 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted index on a tier 2 horizontal cap 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted position on a tier 2 horizontal buttress 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted uv on a tier 2 horizontal buttress 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted index on a tier 2 horizontal buttress 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted position on a tier 2 vertical cap 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted uv on a tier 2 vertical cap 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted index on a tier 2 vertical cap 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted position on a tier 2 vertical buttress 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted uv on a tier 2 vertical buttress 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted index on a tier 2 vertical buttress 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted position on a tier 3 horizontal cap 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted uv on a tier 3 horizontal cap 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted index on a tier 3 horizontal cap 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted position on a tier 3 horizontal buttress 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted uv on a tier 3 horizontal buttress 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted index on a tier 3 horizontal buttress 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted position on a tier 3 vertical cap 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted uv on a tier 3 vertical cap 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted index on a tier 3 vertical cap 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted position on a tier 3 vertical buttress 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted uv on a tier 3 vertical buttress 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted index on a tier 3 vertical buttress 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted position on a tier 4 horizontal cap 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted uv on a tier 4 horizontal cap 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted index on a tier 4 horizontal cap 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted position on a tier 4 horizontal buttress 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted uv on a tier 4 horizontal buttress 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted index on a tier 4 horizontal buttress 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted position on a tier 4 vertical cap 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted uv on a tier 4 vertical cap 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted index on a tier 4 vertical cap 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted position on a tier 4 vertical buttress 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted uv on a tier 4 vertical buttress 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted index on a tier 4 vertical buttress 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted position on a tier 5 horizontal cap 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted uv on a tier 5 horizontal cap 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted index on a tier 5 horizontal cap 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted position on a tier 5 horizontal buttress 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted uv on a tier 5 horizontal buttress 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted index on a tier 5 horizontal buttress 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted position on a tier 5 vertical cap 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted uv on a tier 5 vertical cap 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted index on a tier 5 vertical cap 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted position on a tier 5 vertical buttress 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted uv on a tier 5 vertical buttress 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects corrupted index on a tier 5 vertical buttress 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects stale teardown quads for tier 1 horizontal cap 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects stale teardown quads for tier 1 horizontal buttress 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects stale teardown quads for tier 1 vertical cap 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects stale teardown quads for tier 1 vertical buttress 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects stale teardown quads for tier 2 horizontal cap 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects stale teardown quads for tier 2 horizontal buttress 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects stale teardown quads for tier 2 vertical cap 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects stale teardown quads for tier 2 vertical buttress 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects stale teardown quads for tier 3 horizontal cap 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects stale teardown quads for tier 3 horizontal buttress 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects stale teardown quads for tier 3 vertical cap 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects stale teardown quads for tier 3 vertical buttress 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects stale teardown quads for tier 4 horizontal cap 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects stale teardown quads for tier 4 horizontal buttress 1ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects stale teardown quads for tier 4 vertical cap 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects stale teardown quads for tier 4 vertical buttress 2ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects stale teardown quads for tier 5 horizontal cap 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects stale teardown quads for tier 5 horizontal buttress 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects stale teardown quads for tier 5 vertical cap 0ms
+ ✓ tests/multiplayer-map-observer.test.js > independent current cap and buttress contract > rejects stale teardown quads for tier 5 vertical buttress 0ms
+ ✓ tests/multiplayer-map-observer.test.js > upright wall profile rejection > rejects old height with fresh tier 1 horizontal diagnostics 1ms
+ ✓ tests/multiplayer-map-observer.test.js > upright wall profile rejection > rejects old width with fresh tier 1 horizontal diagnostics 0ms
+ ✓ tests/multiplayer-map-observer.test.js > upright wall profile rejection > rejects old height with fresh tier 1 vertical diagnostics 0ms
+ ✓ tests/multiplayer-map-observer.test.js > upright wall profile rejection > rejects old width with fresh tier 1 vertical diagnostics 0ms
+ ✓ tests/multiplayer-map-observer.test.js > upright wall profile rejection > rejects old height with fresh tier 2 horizontal diagnostics 0ms
+ ✓ tests/multiplayer-map-observer.test.js > upright wall profile rejection > rejects old width with fresh tier 2 horizontal diagnostics 0ms
+ ✓ tests/multiplayer-map-observer.test.js > upright wall profile rejection > rejects old height with fresh tier 2 vertical diagnostics 0ms
+ ✓ tests/multiplayer-map-observer.test.js > upright wall profile rejection > rejects old width with fresh tier 2 vertical diagnostics 0ms
+ ✓ tests/multiplayer-map-observer.test.js > upright wall profile rejection > rejects old height with fresh tier 3 horizontal diagnostics 0ms
+ ✓ tests/multiplayer-map-observer.test.js > upright wall profile rejection > rejects old width with fresh tier 3 horizontal diagnostics 0ms
+ ✓ tests/multiplayer-map-observer.test.js > upright wall profile rejection > rejects old height with fresh tier 3 vertical diagnostics 0ms
+ ✓ tests/multiplayer-map-observer.test.js > upright wall profile rejection > rejects old width with fresh tier 3 vertical diagnostics 0ms
+ ✓ tests/multiplayer-map-observer.test.js > upright wall profile rejection > rejects old height with fresh tier 4 horizontal diagnostics 0ms
+ ✓ tests/multiplayer-map-observer.test.js > upright wall profile rejection > rejects old width with fresh tier 4 horizontal diagnostics 0ms
+ ✓ tests/multiplayer-map-observer.test.js > upright wall profile rejection > rejects old height with fresh tier 4 vertical diagnostics 0ms
+ ✓ tests/multiplayer-map-observer.test.js > upright wall profile rejection > rejects old width with fresh tier 4 vertical diagnostics 0ms
+ ✓ tests/multiplayer-map-observer.test.js > upright wall profile rejection > rejects old height with fresh tier 5 horizontal diagnostics 0ms
+ ✓ tests/multiplayer-map-observer.test.js > upright wall profile rejection > rejects old width with fresh tier 5 horizontal diagnostics 0ms
+ ✓ tests/multiplayer-map-observer.test.js > upright wall profile rejection > rejects old height with fresh tier 5 vertical diagnostics 0ms
+ ✓ tests/multiplayer-map-observer.test.js > upright wall profile rejection > rejects old width with fresh tier 5 vertical diagnostics 0ms
+ ✓ tests/multiplayer-map-observer.test.js > known ordinary-depth wall selection > observes exactly the selected tier 1 horizontal post and restores its cap 1ms
+ ✓ tests/multiplayer-map-observer.test.js > known ordinary-depth wall selection > observes exactly the selected tier 1 vertical post and restores its cap 1ms
+ ✓ tests/multiplayer-map-observer.test.js > known ordinary-depth wall selection > observes exactly the selected tier 2 horizontal post and restores its cap 0ms
+ ✓ tests/multiplayer-map-observer.test.js > known ordinary-depth wall selection > observes exactly the selected tier 2 vertical post and restores its cap 0ms
+ ✓ tests/multiplayer-map-observer.test.js > known ordinary-depth wall selection > observes exactly the selected tier 3 horizontal post and restores its cap 0ms
+ ✓ tests/multiplayer-map-observer.test.js > known ordinary-depth wall selection > observes exactly the selected tier 3 vertical post and restores its cap 0ms
+ ✓ tests/multiplayer-map-observer.test.js > known ordinary-depth wall selection > observes exactly the selected tier 4 horizontal post and restores its cap 0ms
+ ✓ tests/multiplayer-map-observer.test.js > known ordinary-depth wall selection > observes exactly the selected tier 4 vertical post and restores its cap 1ms
+ ✓ tests/multiplayer-map-observer.test.js > known ordinary-depth wall selection > observes exactly the selected tier 5 horizontal post and restores its cap 1ms
+ ✓ tests/multiplayer-map-observer.test.js > known ordinary-depth wall selection > observes exactly the selected tier 5 vertical post and restores its cap 0ms
+ ✓ tests/multiplayer-map-observer.test.js > known ordinary-depth wall selection > rejects an unexpected tier 1 horizontal full post while another wall is selected 1ms
+ ✓ tests/multiplayer-map-observer.test.js > known ordinary-depth wall selection > rejects an unexpected tier 1 vertical full post while another wall is selected 1ms
+ ✓ tests/multiplayer-map-observer.test.js > known ordinary-depth wall selection > rejects an unexpected tier 2 horizontal full post while another wall is selected 0ms
+ ✓ tests/multiplayer-map-observer.test.js > known ordinary-depth wall selection > rejects an unexpected tier 2 vertical full post while another wall is selected 1ms
+ ✓ tests/multiplayer-map-observer.test.js > known ordinary-depth wall selection > rejects an unexpected tier 3 horizontal full post while another wall is selected 1ms
+ ✓ tests/multiplayer-map-observer.test.js > known ordinary-depth wall selection > rejects an unexpected tier 3 vertical full post while another wall is selected 0ms
+ ✓ tests/multiplayer-map-observer.test.js > known ordinary-depth wall selection > rejects an unexpected tier 4 horizontal full post while another wall is selected 0ms
+ ✓ tests/multiplayer-map-observer.test.js > known ordinary-depth wall selection > rejects an unexpected tier 4 vertical full post while another wall is selected 0ms
+ ✓ tests/multiplayer-map-observer.test.js > known ordinary-depth wall selection > rejects an unexpected tier 5 horizontal full post while another wall is selected 3ms
+ ✓ tests/multiplayer-map-observer.test.js > known ordinary-depth wall selection > rejects an unexpected tier 5 vertical full post while another wall is selected 1ms
+ ✓ tests/island/wall-selection.test.js > selected walls retain ordinary painter depth > exposes only an existing selected wall through a read-only diagnostic across readiness, clearing and disposal 10ms
+ ✓ tests/island/wall-selection.test.js > selected walls retain ordinary painter depth > cannot paint copied wall textures over a foreground prop and retains the actual selected post once 18ms
+ ✓ tests/island/wall-selection.test.js > selected walls retain ordinary painter depth > retains the exact selected level 1 artwork at the accepted foot 2ms
+ ✓ tests/island/wall-selection.test.js > selected walls retain ordinary painter depth > retains the exact selected level 2 artwork at the accepted foot 1ms
+ ✓ tests/island/wall-selection.test.js > selected walls retain ordinary painter depth > retains the exact selected level 3 artwork at the accepted foot 1ms
+ ✓ tests/island/wall-selection.test.js > selected walls retain ordinary painter depth > retains the exact selected level 4 artwork at the accepted foot 1ms
+ ✓ tests/island/wall-selection.test.js > selected walls retain ordinary painter depth > retains the exact selected level 5 artwork at the accepted foot 1ms
+ ✓ tests/island/wall-selection.test.js > selected walls retain ordinary painter depth > rebuilds accepted level, damage and position changes, and keeps HP-zero rubble without joins 2ms
+ ✓ tests/island/wall-selection.test.js > selected walls retain ordinary painter depth > retains pre-readiness selection on retry and disposes only owned resources exactly once 5ms
+ ✓ tests/island/wall-selection.test.js > selected walls retain ordinary painter depth > clears or ignores invalid selection "missing" without a foreground copy 5ms
+ ✓ tests/island/wall-selection.test.js > selected walls retain ordinary painter depth > clears or ignores invalid selection "" without a foreground copy 5ms
+ ✓ tests/island/wall-selection.test.js > selected walls retain ordinary painter depth > clears or ignores invalid selection null without a foreground copy 2ms
+ ✓ tests/island/wall-selection.test.js > selected walls retain ordinary painter depth > clears or ignores invalid selection undefined without a foreground copy 1ms
+ ✓ tests/island/wall-selection.test.js > selected walls retain ordinary painter depth > removes obsolete normal buffers for unbuilt/invalid state [] 1ms
+ ✓ tests/island/wall-selection.test.js > selected walls retain ordinary painter depth > removes obsolete normal buffers for unbuilt/invalid state [ [Object] ] 0ms
+ ✓ tests/island/wall-selection.test.js > selected walls retain ordinary painter depth > removes obsolete normal buffers for unbuilt/invalid state [ [Object] ] 1ms
+ ✓ tests/island/wall-selection.test.js > selected walls retain ordinary painter depth > removes obsolete normal buffers for unbuilt/invalid state [ [Object] ] 0ms
+ ✓ tests/island/wall-selection.test.js > selected walls retain ordinary painter depth > does not invent a fallback pose when the accepted atlas lacks the current frame 0ms
+ ✓ tests/island/wall-selection.test.js > the actual world reuses its one tile bracket through selection, Move, Close, visitor and battle lifecycle 31ms
+ ✓ tests/island/wall-tier-detail.test.js > connected wall tier detail > keeps actual projected level 1 span and straight-cap vertices below the authored post top 5ms
+ ✓ tests/island/wall-tier-detail.test.js > connected wall tier detail > keeps actual projected level 2 span and straight-cap vertices below the authored post top 2ms
+ ✓ tests/island/wall-tier-detail.test.js > connected wall tier detail > keeps actual projected level 3 span and straight-cap vertices below the authored post top 1ms
+ ✓ tests/island/wall-tier-detail.test.js > connected wall tier detail > keeps actual projected level 4 span and straight-cap vertices below the authored post top 2ms
+ ✓ tests/island/wall-tier-detail.test.js > connected wall tier detail > keeps actual projected level 5 span and straight-cap vertices below the authored post top 2ms
+ ✓ tests/island/wall-tier-detail.test.js > connected wall tier detail > shows the full actual level 1 post when selecting a non-buttress straight segment 3ms
+ ✓ tests/island/wall-tier-detail.test.js > connected wall tier detail > shows the full actual level 2 post when selecting a non-buttress straight segment 1ms
+ ✓ tests/island/wall-tier-detail.test.js > connected wall tier detail > shows the full actual level 3 post when selecting a non-buttress straight segment 1ms
+ ✓ tests/island/wall-tier-detail.test.js > connected wall tier detail > shows the full actual level 4 post when selecting a non-buttress straight segment 2ms
+ ✓ tests/island/wall-tier-detail.test.js > connected wall tier detail > shows the full actual level 5 post when selecting a non-buttress straight segment 1ms
+ ✓ tests/island/wall-tier-detail.test.js > connected wall tier detail > retains sparse coordinate-based buttresses on horizontal runs after reordering and renaming 9ms
+ ✓ tests/island/wall-tier-detail.test.js > connected wall tier detail > retains sparse coordinate-based buttresses on vertical runs after reordering and renaming 7ms
+ ✓ tests/island/wall-tier-detail.test.js > connected wall tier detail > keeps corners, branches, mixed tiers and damaged posts full, without closing broken joins 1ms
+ ✓ tests/island/wall-tier-detail.test.js > connected wall tier detail > keeps actual village and combat wall buffers identical at every tier and accepted damage state 9ms
+ ✓ tests/pirates/wall-connections.test.js > live combat wall connections > uses frozen posts, known positive sim HP and exact full-side contacts without mutating input 5ms
+ ✓ tests/pirates/wall-connections.test.js > live combat wall connections > retains geometry for positive HP ticks, opens both adjacent spans at zero, and restores only positive state 4ms
+ ✓ tests/pirates/wall-connections.test.js > live combat wall connections > does not accept a repair animation or wrong-instance recovery event as a restored barrier 13ms
+ ✓ tests/pirates/wall-connections.test.js > live combat wall connections > ignores frozen initial health during combat and preserves the explicit post-wave handoff 5ms
+ ✓ tests/pirates/wall-connections.test.js > live combat wall connections > matches healthy world junction widths without shifting feet and leaves damage/ruins full width 4ms
+ ✓ tests/pirates/wall-connections.test.js > live combat wall connections > keeps connections outside picking and releases owned geometry/material exactly once 3ms
+ ✓ tests/art/wall-upright-volume.test.js > upright original wall posts > retains the exact original raw artwork bytes 26ms
+ ✓ tests/art/wall-upright-volume.test.js > upright original wall posts > fits level 1 states without changing their source ground foot or relative scale 2ms
+ ✓ tests/art/wall-upright-volume.test.js > upright original wall posts > fits level 2 states without changing their source ground foot or relative scale 1ms
+ ✓ tests/art/wall-upright-volume.test.js > upright original wall posts > fits level 3 states without changing their source ground foot or relative scale 1ms
+ ✓ tests/art/wall-upright-volume.test.js > upright original wall posts > fits level 4 states without changing their source ground foot or relative scale 1ms
+ ✓ tests/art/wall-upright-volume.test.js > upright original wall posts > fits level 5 states without changing their source ground foot or relative scale 1ms
+ ✓ tests/art/wall-upright-volume.test.js > upright original wall posts > keeps level 1 wider faces inside the real footprint and below visible authored post tops 3ms
+ ✓ tests/art/wall-upright-volume.test.js > upright original wall posts > keeps level 2 wider faces inside the real footprint and below visible authored post tops 2ms
+ ✓ tests/art/wall-upright-volume.test.js > upright original wall posts > keeps level 3 wider faces inside the real footprint and below visible authored post tops 1ms
+ ✓ tests/art/wall-upright-volume.test.js > upright original wall posts > keeps level 4 wider faces inside the real footprint and below visible authored post tops 1ms
+ ✓ tests/art/wall-upright-volume.test.js > upright original wall posts > keeps level 5 wider faces inside the real footprint and below visible authored post tops 1ms
+ ✓ tests/island/wall-connections.test.js > full-side wall connections > joins a line and a corner without depending on array order or changing positions 4ms
+ ✓ tests/island/wall-connections.test.js > full-side wall connections > forms a T from three real contacts and keeps the surrounding gaps open 0ms
+ ✓ tests/island/wall-connections.test.js > full-side wall connections > does not turn a 2.5,0 gap into a full connection 0ms
+ ✓ tests/island/wall-connections.test.js > full-side wall connections > does not turn a 2,0.5 partial side into a full connection 0ms
+ ✓ tests/island/wall-connections.test.js > full-side wall connections > does not turn a 2,2 diagonal point into a full connection 0ms
+ ✓ tests/island/wall-connections.test.js > full-side wall connections > does not turn a 1.5,0 overlap into a full connection 0ms
+ ✓ tests/island/wall-connections.test.js > full-side wall connections > does not bridge an unbuilt, explicitly broken, invalid or non-wall neighbour 0ms
+ ✓ tests/island/wall-connections.test.js > full-side wall connections > uses the lower level for the shared span while leaving both original levels intact 0ms
+ ✓ tests/island/wall-connections.test.js > join drawing lifetime > reuses unchanged geometry and clears old spans when a move opens a gap 5ms
+ ✓ tests/island/wall-connections.test.js > join drawing lifetime > removes every span for a battle handoff and disposes owned resources only once 1ms
+ ✓ tests/island/wall-batch-options.test.js > ordinary selected wall batching > retains all normal geometry and one real selected post in its existing depth layer 6ms
+ ✓ tests/island/wall-batch-options.test.js > ordinary selected wall batching > filters only when a caller explicitly requests diagnostic selection-only geometry 1ms
+ ✓ tests/island/wall-batch-options.test.js > ordinary selected wall batching > keeps an unknown normal selection equivalent to no selection 3ms
+
+ Test Files  7 passed (7)
+      Tests  254 passed (254)
+   Start at  10:11:02
+   Duration  3.41s (import 48%, transform 33%, tests 18%, worker 2%)
+
+    Isolate  7 workers spawned · ~162ms startup each (spawn + environment, per file)
+             at least ~971ms faster with isolate: false — reuses workers across files instead of one per file
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.3
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.3
+npm notice To update run: npm install -g npm@12.2.3
+npm notice
