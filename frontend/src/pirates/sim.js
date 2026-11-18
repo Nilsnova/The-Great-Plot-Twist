@@ -9,7 +9,7 @@
 import { surfaces } from '../world/places/surfaces.js';
 import { captainStats, readSkills } from './captain-stats.js';
 import { readBonus, readSpec } from '../campaign/tech.js';
-import { ROLE_RADIUS } from '../campaign/houses.js';
+import { ROLE_RADIUS, barracksPosts, inHouseReach } from '../campaign/houses.js';
 // v3 waves (GAME-V3.md §4.2, §4.3): the wave's event and the boss finisher, each in its own module.
 import { createEventRules } from './wave-events.js';
 import { createFinisher } from './finisher/rules.js';
@@ -291,6 +291,7 @@ const finite = value => typeof value === 'number' && Number.isFinite(value);
 const clamp = (value, low, high) => Math.min(high, Math.max(low, value));
 const round2 = value => Math.round(value * 100) / 100;
 const distance = (ax, az, bx, bz) => { const dx = ax - bx, dz = az - bz; return Math.sqrt(dx * dx + dz * dz); };
+const clusterBlastDamage = (shellDamage, cluster) => round2(shellDamage * cluster.damage);
 
 // mulberry32: a tiny, well-mixed 32-bit generator.
 export function createRandom(seed) {
@@ -385,6 +386,65 @@ export function previewDefenseCoverages(defenses, { defensesV2 = false } = {}) {
   const items = readDefenses(defenses, { culverin: defensesV2 === true });
   const { rangeFor } = attackRanges(lookoutsOf(items));
   return items.filter(item => isAttackTower(item.kind)).map(item => clearWeatherCoverage(item, rangeFor));
+}
+
+// Nominal stats for a complete accepted layout. Sight, targets in motion and other wave state are applied later.
+function effectiveAttackTowers(defenses, lookouts, gunnerCount) {
+  const C = CONFIG, { towerBonus, rangeFor } = attackRanges(lookouts);
+  const spotters = lookoutsWith(lookouts, 'spotter'), drummers = lookoutsWith(lookouts, 'war_drums');
+  const boost = Math.max(1, ...lookouts.map(item => C.levels.watchtower[item.level - 1].boost ?? 1));
+  const towers = defenses.filter(item => isAttackTower(item.kind)).map(item => {
+    const stats = C.levels[item.kind][item.level - 1], spec = skillOf(item, C);
+    const range = rangeFor(item, stats.range, spec.range ?? 0);
+    const spotted = reach(spotters, item)?.skill.damage ?? 1, drums = reach(drummers, item)?.skill.reload ?? 1;
+    // D055: a tower without a tree keeps the old sums exactly (no factor is applied at all).
+    const tree = item.tree ? treeStats(item.kind, item.tree) : null, grown = (value, key) => (tree ? value * tree[key] : value);
+    const radius = item.kind === 'mortar' ? round2(grown(C.mortar.radius * bonusOf(item, 'radius', C), 'radius')) : undefined;
+    const damage = round2(grown(stats.damage * (spec.damage ?? 1) * spotted * boost, 'damage'));
+    const baseReload = round2(grown(stats.reload * C.pace.reload * (spec.reload ?? 1) * bonusOf(item, 'reload', C) * drums, 'reload'));
+    return { ...item, skill: spec, damage, baseReload, range, manned: false,
+      ...(radius !== undefined ? { radius } : {}),
+      ...(item.kind === 'harpoon' ? { slow: { slow: tree ? round2(stats.slow + tree.slow) : stats.slow, seconds: tree ? round2(stats.seconds + tree.seconds) : stats.seconds } } : {}),
+      ...(item.kind === 'swivel' ? { pellets: stats.pellets + (tree?.pellets ?? 0) } : {}) };
+  });
+  const strength = tower => tower.damage / tower.baseReload * (tower.kind === 'mortar' ? 1.5 : 1);
+  // The strongest cannon or mortar gets the Gunner, with level and then id breaking ties.
+  towers.filter(item => item.kind === 'cannon' || item.kind === 'mortar')
+    .sort((a, b) => strength(b) - strength(a) || b.level - a.level || (a.id < b.id ? -1 : 1))
+    .slice(0, gunnerCount).forEach(tower => { tower.manned = true; tower.baseReload = round2(tower.baseReload * C.crew.gunner.reload); });
+  return { towerBonus, towers };
+}
+
+/**
+ * Compare one next level on the currently accepted island layout. The caller supplies the current
+ * selection, crew and rules from the same island response. This projects nominal automatic fire
+ * for a future wave, without estimating weather-dependent sight, total damage or a purchase.
+ */
+export function previewDefenseUpgrade({ defenses, selectedId, currentLevel, gunnerCount, defensesV2 } = {}) {
+  if (!Array.isArray(defenses) || typeof selectedId !== 'string' || !selectedId
+    || !Number.isInteger(currentLevel) || currentLevel < 1
+    || !Number.isInteger(gunnerCount) || gunnerCount < 0 || gunnerCount > CONFIG.crew.gunner.max
+    || typeof defensesV2 !== 'boolean') return null;
+  const selected = defenses.find(item => item?.id === selectedId);
+  if (!selected || !isAttackTower(selected.kind) || selected.level !== currentLevel
+    || currentLevel >= CONFIG.levels[selected.kind].length || (selected.kind === 'culverin' && !defensesV2)
+    || !finite(selected.x) || !finite(selected.z)) return null;
+
+  const current = readDefenses(defenses, { culverin: defensesV2 });
+  const next = readDefenses(defenses.map(item => item === selected ? { ...item, level: currentLevel + 1 } : item),
+    { culverin: defensesV2 });
+  const lookouts = lookoutsOf(current);
+  const before = effectiveAttackTowers(current, lookouts, gunnerCount).towers;
+  const after = effectiveAttackTowers(next, lookouts, gunnerCount).towers;
+  const afterById = new Map(after.map(tower => [tower.id, tower]));
+  const readStats = ({ level, range, damage, baseReload, manned, spec, skill }) =>
+    ({ level, range, damage: spec === 'cluster' ? clusterBlastDamage(damage, skill) : damage, reloadSeconds: baseReload, manned });
+  const attack = before.find(tower => tower.id === selectedId);
+  const gunnerChanges = before.filter(tower => tower.id !== selectedId && tower.manned !== afterById.get(tower.id).manned)
+    .map(tower => ({ id: tower.id, manned: afterById.get(tower.id).manned }));
+  const kind = attack.kind;
+  return { id: selectedId, kind, damageUnit: kind === 'swivel' ? 'pellet' : kind === 'mortar' ? 'blast' : 'projectile',
+    before: readStats(attack), after: readStats(afterById.get(selectedId)), gunnerChanges };
 }
 
 // Another island's coast (Pirate Point on lighthouse_isle): {rx, rz, seed}, else the home_islet coast.
@@ -584,44 +644,23 @@ export function createWave(options = {}) {
   // T38: a lost wave from wave 4 (not Pirate Point) first offers the captains still on the island one co-op haul.
   const rescue = createRescue({ wave: waveNumber, seed: options?.seed, enabled: options?.rescue === true && !withFlagship,
     preparation: options?.finisherPreparation === true, gapMs: typeof options?.gapMs === 'function' ? options.gapMs : null });
-  const lookouts = lookoutsOf(defenses), { towerBonus, rangeFor } = attackRanges(lookouts);
-  const boost = Math.max(1, ...lookouts.map(item => C.levels.watchtower[item.level - 1].boost ?? 1));
-  const S = C.specs, near = spec => lookoutsWith(lookouts, spec);
-  const spotters = near('spotter'), drummers = near('war_drums');
-  const signal = Math.max(0, ...near('signal_fire').map(item => item.skill.warn));
+  const lookouts = lookoutsOf(defenses), S = C.specs;
+  const signal = Math.max(0, ...lookoutsWith(lookouts, 'signal_fire').map(item => item.skill.warn));
   let fogShare = waveNumber === 1 ? Math.max(1 - fog, C.fog.firstWaveSight) : 1 - fog;
   if (crew.lookout && fog > 0) fogShare = Math.min(1, fogShare * C.crew.lookout.sight);
   const warnLead = (crew.lookout ? C.crew.lookout.warn : 0) + signal;
   const coast = readCoast(options?.coast), laneList = readLanes(options?.lanes);
-  // Cannons, mortars, harpoons, culverins and swivel nests, in id order; the gunners man the strongest (damage per second, then level).
+  const { towerBonus, towers: configured } = effectiveAttackTowers(defenses, lookouts, crew.gunner);
   const firstReload = { mortar: C.mortar.firstReload, harpoon: C.harpoon.firstReload, culverin: C.culverin.firstReload, swivel: C.swivel.firstReload };
-  const towers = defenses.filter(item => isAttackTower(item.kind)).map(item => {
-    const stats = C.levels[item.kind][item.level - 1], spec = skillOf(item, C);
-    const range = rangeFor(item, stats.range, spec.range ?? 0);
-    // A spotter watchtower in reach adds its share of damage (GAME-V3.md §5); the skill's own numbers on top.
-    const spotted = reach(spotters, item)?.skill.damage ?? 1, drums = reach(drummers, item)?.skill.reload ?? 1;
-    // D055: the tower's upgrade tree. A tower without one keeps the old sums exactly (no factor is applied at all).
-    const tree = item.tree ? treeStats(item.kind, item.tree) : null, grown = (value, key) => (tree ? value * tree[key] : value);
-    const radius = item.kind === 'mortar' ? round2(grown(C.mortar.radius * bonusOf(item, 'radius', C), 'radius')) : undefined;
-    const damage = round2(grown(stats.damage * (spec.damage ?? 1) * spotted * boost, 'damage'));
-    const baseReload = round2(grown(stats.reload * C.pace.reload * (spec.reload ?? 1) * bonusOf(item, 'reload', C) * drums, 'reload'));
-    return { ...item, skill: spec, damage, baseReload,
-      range, sight: range * fogShare * happening.sightOf(item, defenses), manned: false, reload: firstReload[item.kind] ?? 0, lastShot: -Infinity, shots: 0,
-      ...(radius !== undefined ? { radius } : {}),
-      ...(item.kind === 'harpoon' ? { slow: { slow: tree ? round2(stats.slow + tree.slow) : stats.slow, seconds: tree ? round2(stats.seconds + tree.seconds) : stats.seconds } } : {}),
-      ...(item.kind === 'swivel' ? { pellets: stats.pellets + (tree?.pellets ?? 0) } : {}) };
-  });
-  const strength = tower => tower.damage / tower.baseReload * (tower.kind === 'mortar' ? 1.5 : 1);
-  // Gunners stay on cannons and mortars (not on a harpoon tower, a culverin or a swivel nest).
-  towers.filter(item => item.kind !== 'harpoon' && item.kind !== 'culverin' && item.kind !== 'swivel').sort((a, b) => strength(b) - strength(a) || b.level - a.level || (a.id < b.id ? -1 : 1))
-    .slice(0, crew.gunner).forEach(tower => { tower.manned = true; tower.baseReload = round2(tower.baseReload * C.crew.gunner.reload); });
+  const towers = configured.map(tower => ({ ...tower, sight: tower.range * fogShare * happening.sightOf(tower, defenses),
+    reload: firstReload[tower.kind] ?? 0, lastShot: -Infinity, shots: 0 }));
   const cannons = towers.filter(item => item.kind === 'cannon'), mortars = towers.filter(item => item.kind === 'mortar');
   // The sight the island shows (fog edge, the manual-fire reach): the level-1 cannon's, or the best cannon's.
   const sight = Math.max(C.cannon.range + towerBonus, ...cannons.map(item => item.range)) * fogShare;
   // The house roles (CONFIG.houses): the houses of level 2 and up that picked one, in id order.
   const HO = C.houses, roles = houseRoles(defenses), withRole = role => roles.filter(item => item.role === role);
   const barracks = withRole('barracks'), taverns = withRole('tavern'), workshops = withRole('workshop');
-  const W = HO.workshop, housesNear = (list, item, radius) => list.filter(house => distance(house.x, house.z, item.x, item.z) <= radius + 1e-9).length;
+  const W = HO.workshop, housesNear = (list, item, radius) => list.filter(house => inHouseReach(house, item, radius)).length;
   const walls = defenses.filter(item => item.kind === 'wall').map(item => {
     const skill = skillOf(item, C), baseHp = round2(C.levels.wall[item.level - 1].hp * (skill.hp ?? 1) * bonusOf(item, 'hp', C));
     const hp = recoveryPolicy === 'structure-recovery-v1' && finite(item.maxHP) && item.maxHP > 0 ? item.maxHP : baseHp;
@@ -1574,10 +1613,10 @@ export function createWave(options = {}) {
       if (happening.id) events.push({ type: 'wave_event', t: 0, event: happening.id, wave: waveNumber });
       // The Barracks' militia walk out of their doors (CONFIG.houses.barracks), the same on every screen.
       const G = HO.barracks;
-      for (const house of barracks) for (let k = 0; k < G.units[house.level - 1] && militia.length < G.max; k++) {
+      for (const {house, x: homeX, z: homeZ} of barracksPosts(barracks, G)) {
         const id = `militia_${militia.length + 1}`, hp = Math.round(G.hp[house.level - 1] * curve.hp);
-        const unit = { id, militia: true, houseId: house.id, homeX: round2(house.x + (k ? .9 : 0) - (G.units[house.level - 1] > 1 ? .45 : 0)),
-          homeZ: round2(house.z + G.door), x: house.x, z: round2(house.z + .6), hp, maxHp: hp, damage: round2(G.damage[house.level - 1] * curve.hp),
+        const unit = { id, militia: true, houseId: house.id, homeX, homeZ,
+          x: house.x, z: round2(house.z + .6), hp, maxHp: hp, damage: round2(G.damage[house.level - 1] * curve.hp),
           state: 'walking', foe: null, hitIn: G.every / 2, facing: 1, level: house.level };
         militia.push(unit); militiaById.set(id, unit);
         events.push({ type: 'militia_out', t: 0, militiaId: id, houseId: house.id, hp, x: round2(unit.x), z: round2(unit.z) });
@@ -1725,7 +1764,7 @@ export function createWave(options = {}) {
       const blasts = cluster
         ? Array.from({ length: cluster.blasts }, (_, k) => { const a = k / cluster.blasts * Math.PI * 2 + shell.toX;
           return { x: round2(shell.toX + Math.cos(a) * cluster.spread), z: round2(shell.toZ + Math.sin(a) * cluster.spread),
-            radius: round2(cluster.radius * wide), damage: round2(shell.damage * cluster.damage) }; })
+            radius: round2(cluster.radius * wide), damage: clusterBlastDamage(shell.damage, cluster) }; })
         : [{ x: shell.toX, z: shell.toZ, radius, damage: shell.damage }];
       for (const blast of blasts) {
         const hits = ships.filter(ship => distance(ship.x, ship.z, blast.x, blast.z) <= blast.radius);

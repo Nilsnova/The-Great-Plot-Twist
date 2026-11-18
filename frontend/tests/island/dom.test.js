@@ -89,7 +89,7 @@ it('builds from the card: cannon or mortar, upgrade, max level, short of coins, 
   expect(result.built).toEqual({closed: true, toast: 'Cannon built · 🪙 70', coins: 70, reported: [100, 70]});
   // D055: a tower's card is its upgrade tree; the trunk (its level) upgrades in the one detail panel.
   expect(result.lockedUpgrade).toMatchObject({title: 'Cannon', pips: 'Level 1 of 5', treeButton: 'Upgrade · 🪙 60', treeDisabled: true, treeReason: 'Opens after wave 2.', hire: true});
-  expect(result.upgrade).toMatchObject({title: 'Cannon', treeName: 'Level 2', treeLine: 'Damage 10 → 16 · Range 28 → 31', treeButton: 'Upgrade · 🪙 60', treeDisabled: false, treeReason: ''});
+  expect(result.upgrade).toMatchObject({title: 'Cannon', treeName: 'Level 2', treeLine: 'Base stats · Damage 10 → 16 · Range 28 → 31', treeButton: 'Upgrade · 🪙 60', treeDisabled: false, treeReason: ''});
   expect(result.upgraded).toMatchObject({pips: 'Level 2 of 5', toast: 'Cannon level 2 · 🪙 140', treeReason: 'Opens after wave 5.'});
   expect(result.choice).toMatchObject({title: 'Tower spot', choices: ['cannon:false', 'mortar:false', 'harpoon:true', 'swivel:true'], soon: ''});
   expect(result.mortar).toMatchObject({kind: 'mortar', level: 1, built: true});

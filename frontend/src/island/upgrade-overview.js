@@ -3,8 +3,9 @@
 import {buildCardModel, coinText} from './card-model.js';
 import {BUILDINGS, readUnlocks} from './td-rules.js';
 import {campaignOf} from '../campaign/index.js';
+import {spotById} from './spots.js';
 
-export function upgradeOverviewModel({island = null, battle = false, message = ''} = {}) {
+export function upgradeOverviewModel({island = null, battle = false, find = false, message = ''} = {}) {
   const coins = Number.isSafeInteger(island?.coins) ? island.coins : null;
   const seen = new Set(), rows = [], campaign = campaignOf(island);
   for (const spot of island?.spots ?? []) {
@@ -13,7 +14,7 @@ export function upgradeOverviewModel({island = null, battle = false, message = '
     const card = buildCardModel({spotId: spot.id, kind: spot.kind, spot, coins,
       unlocks: readUnlocks(island), prices: island.prices, campaign, battle});
     const next = card.upgrade?.label ?? card.soon;
-    rows.push({id: spot.id, kind: spot.kind, name: card.title, level: card.level,
+    rows.push({id: spot.id, kind: spot.kind, name: card.title, level: card.level, onMap: !!spotById(spot.id),
       place: spot.id.replace(/^cannon_/, 'tower ').replace(/_/g, ' '),
       next: next || 'Highest building level',
       reason: card.reason || (card.soon ? 'Win more waves to open this level.' : ''),
@@ -25,7 +26,8 @@ export function upgradeOverviewModel({island = null, battle = false, message = '
   const kinds = [...new Set(rows.map(row => row.kind))].map(kind => ({id: kind, name: BUILDINGS[kind].name}));
   return {title: 'Base overview', coins: coinText(coins), rows, kinds,
     lead: island ? `${rows.length} built ${rows.length === 1 ? 'building' : 'buildings'} · ${coinText(coins)}` : 'Your island is still loading.',
-    note: battle ? 'A wave is running. Plan building levels here.' : 'Plan building levels here, then approach a building to make changes.',
+    note: !island ? '' : battle ? 'A wave is running. Plan building levels here.'
+      : find ? 'Use Find to open a building on the island.' : 'Find buildings between waves on your own island.',
     message, empty: island ? 'No buildings yet. Build your first defense on the island.' : ''};
 }
 

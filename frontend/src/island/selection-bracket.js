@@ -21,11 +21,11 @@ function cornerGeometry(padding = 0) {
   return geometry;
 }
 
-export function makeSelectionBracket(root) {
-  const group = new THREE.Group(); group.name = 'island-selection-bracket'; group.visible = false; root.add(group);
+export function makeSelectionBracket(root, {support = false} = {}) {
+  const group = new THREE.Group(); group.name = support ? 'house-support-target' : 'island-selection-bracket'; group.visible = false; root.add(group);
   // Draw before the buildings, so the back corners can tuck behind their bases.
   const meshes = [[.043, 0x51351d, 94], [0, 0xf9de95, 95]].map(([padding, color, order]) => {
-    const material = new THREE.MeshBasicMaterial({color, depthTest: false, depthWrite: false,
+    const material = new THREE.MeshBasicMaterial({color: support ? (padding ? 0x163735 : 0xb7f7d6) : color, depthTest: false, depthWrite: false,
       toneMapped: false, transparent: true, opacity: padding ? .86 : .98});
     const mesh = new THREE.Mesh(cornerGeometry(padding), material);
     mesh.name = padding ? 'selection-corner-outline' : 'selection-corner-brass';
@@ -45,8 +45,8 @@ export function makeSelectionBracket(root) {
     if (nextStructure !== structure) {
       structure = nextStructure;
       // Deep foliage and the structure's own base still draw in front of its ground marker.
-      meshes[0].renderOrder = structure ? 69 : 94; meshes[0].material.opacity = structure ? .74 : .86;
-      meshes[1].renderOrder = structure ? 70 : 95; meshes[1].material.opacity = structure ? .88 : .98;
+      meshes[0].renderOrder = structure && !support ? 69 : 94; meshes[0].material.opacity = structure ? .74 : .86;
+      meshes[1].renderOrder = structure && !support ? 70 : 95; meshes[1].material.opacity = structure ? .88 : .98;
     }
     group.userData.spotId = anchor.spotId;
     group.userData.level = Number.isSafeInteger(anchor.level) && anchor.level > 0 ? anchor.level : null;

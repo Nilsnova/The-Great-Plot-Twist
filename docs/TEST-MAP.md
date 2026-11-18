@@ -337,6 +337,7 @@ COC-39 ownership follow-up: `frontend/tests/pirates/defense-report-ownership.tes
 | What / where | Evidence | Coverage and limits |
 |---|---|---|
 | Read-only model and actual menu/card integration; `src/island/upgrade-overview*.js` | `tests/island/upgrade-overview.test.js`, `upgrade-overview-dom.test.js`; [capture report](evidence/COC-31-base-overview/README.md) | Extra offered plots, duplicate/unknown entries, server prices, affordability, loading/locks/roles, filters, accepted refresh, focus, 375px overflow and zero overview POST writes. Local fake transport + Chromium; no live backend, Safari or physical phone proof. Focused four-file run: 40 tests passed; broader parent checks reported separately. |
+| Find a building by its accepted plot | [Desktop and touch game test](../frontend/tests/island/upgrade-overview-jump.test.js) | A moved extra tower with the same name as another tower opens its own card. Focus survives a refresh and transfers to the selection. A wave reservation blocks a stale action. The fake transport records no build, upgrade or Move calls after setup. |
 
 ## COC-49 — Johannes Franz Lang — Village management
 
@@ -355,6 +356,10 @@ Menu eligibility is queried without entering/rendering. Unavailable contexts do
 not offer a Manage action; after a reservation the full-game test checks both
 Manage and Exit Menu entries are absent. Existing islet-boundary tests preserve
 the outside-overlay/StopPlots assertions through the captain-blocking wrapper.
+
+## Building inspection and support
+
+The [upgrade comparison tests](../frontend/tests/pirates/defense-upgrade-comparison.test.js) compare both levels against real wave acquisition, attack events and reload. They cover Gunner reassignment, spatial bonuses and unknown or stale inputs. The [Village Mode journeys](../frontend/tests/island/village-game.test.js) exercise the comparison from **Details** and check the saved levels and wallet. The [house model](../frontend/tests/island/house-support-model.test.js) covers role policy, distance boundaries and valid or refused drafts. The [scene test](../frontend/tests/island/house-support-markers.test.js) covers marker reuse, cancellation and disposal. The checks cover nominal attack values and support geometry. Hit rate, damage totals, live party forecasts and server purchases use their existing checks.
 
 ## COC-02 — village overview camera (Johannes)
 

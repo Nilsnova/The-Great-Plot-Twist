@@ -148,7 +148,7 @@ export const ROLE_COLOURS = Object.freeze({barracks: 0xe2463b, tavern: 0x3fa04d,
 export function makeRangeRing(root) {
   const disc = new THREE.Mesh(groundGeometry(new THREE.CircleGeometry(1, 64)), new THREE.MeshBasicMaterial({transparent: true, opacity: .14, depthTest: false, depthWrite: false}));
   const rim = new THREE.Mesh(groundGeometry(new THREE.RingGeometry(.975, 1, 96)), new THREE.MeshBasicMaterial({transparent: true, opacity: .85, depthTest: false, depthWrite: false}));
-  for (const [mesh, order] of [[disc, 97], [rim, 98]]) { mesh.renderOrder = order; mesh.frustumCulled = false; mesh.visible = false; root.add(mesh); }
+  for (const [mesh, order] of [[disc, 97], [rim, 98]]) { mesh.renderOrder = order; mesh.frustumCulled = false; mesh.visible = false; mesh.raycast = () => {}; root.add(mesh); }
   disc.name = 'island-range'; rim.name = 'island-range-rim';
   let shown = null;
   return {
@@ -162,6 +162,34 @@ export function makeRangeRing(root) {
       disc.userData = {range: {...range}}; shown = range;
     },
     get shown() { return shown; },
+    dispose() {
+      for (const mesh of [disc, rim]) { mesh.removeFromParent(); mesh.geometry.dispose(); mesh.material.dispose(); }
+    },
+  };
+}
+
+export function makeHouseSupportMarkers(root) {
+  const group = new THREE.Group(); group.name = 'island-house-support'; group.visible = false; root.add(group);
+  const rings = [], brackets = [];
+  let shown = null;
+  return {
+    show(support) {
+      if (support === shown) return;
+      shown = support;
+      const at = support?.proposed ?? support?.current, areas = at?.areas ?? [], targets = at?.beneficiaries ?? [];
+      group.visible = areas.length > 0;
+      group.userData.position = group.visible ? (support.proposed ? 'proposed' : 'current') : null;
+      while (rings.length < areas.length) rings.push(makeRangeRing(group));
+      while (brackets.length < targets.length) brackets.push(makeSelectionBracket(group, {support: true}));
+      rings.forEach((ring, index) => ring.show(areas[index] ? {...areas[index], role: support.role} : null));
+      brackets.forEach((bracket, index) => {
+        const target = targets[index];
+        bracket.show(target ? {spotId: target.id, kind: target.kind, x: target.x, z: target.z, size: 1.6} : null);
+      });
+    },
+    dispose() {
+      rings.forEach(ring => ring.dispose()); brackets.forEach(bracket => bracket.dispose()); group.removeFromParent();
+    },
   };
 }
 
@@ -214,6 +242,9 @@ export function decorateIsland(place, ctx = {}) {
   // The marker (src/art/island.js): a gold ring on the ground and a gold "+" badge; a spot that opens later a
   // slate ring and a padlock badge with the wave it opens after (src/art/campaign.js).
   const ringTexture = drawn('build-ring'), lockRingTexture = drawn('build-ring-locked'), badgeTexture = drawn('build-badge');
+  // Home village paths carry the composition. Leave the build and lock icons readable while recessing
+  // their large ground rings into the paths and grass. Other layouts keep their existing marker style.
+  const ringWeight = layout.zones === islandZones ? .36 : 1;
   const lockTextures = new Map();
   const lockTexture = wave => {
     const name = LOCK_WAVES.includes(wave) ? `build-badge-locked-${wave}` : 'build-badge-locked';
@@ -267,7 +298,8 @@ export function decorateIsland(place, ctx = {}) {
   if (layout.cabin !== false && ctx.art?.cabin) placeArt(root, ctx.art, 'cabin', CABIN.x, CABIN.z).name = 'island-cabin';
   // The reach of a house's role while its card is open (GAME-V3.md "Houses"): a soft disc with a bright rim on
   // the ground, in the role's colour. ctx.range() says which ({x, z, radius, role} or null), read every frame.
-  const rangeRing = makeRangeRing(root);
+  const houseSupport = typeof ctx.houseSupport === 'function' ? makeHouseSupportMarkers(root) : null;
+  const rangeRing = houseSupport ? null : makeRangeRing(root);
   const defenseRange = typeof ctx.defenseRange === 'function' ? makeDefenseRange(root) : null;
   const homeWalls = layout.zones === islandZones;
   const purchaseLight = homeWalls ? makeWallPurchaseLight() : null;
@@ -583,7 +615,9 @@ export function decorateIsland(place, ctx = {}) {
       const coverage = selection && !state.battle && !state.visitor ? ctx.defenseRange?.() : null;
       const current = coverage && coverage.id === selection.spotId && coverage.x === selection.x && coverage.z === selection.z;
       defenseRange?.show(current ? coverage : null);
-      rangeRing.show(defenseRange?.shown ? null : ctx.range?.() ?? null, still ? 0 : time);
+      const showHouse = !defenseRange?.shown;
+      rangeRing?.show(showHouse ? ctx.range?.() ?? null : null, still ? 0 : time);
+      houseSupport?.show(showHouse ? ctx.houseSupport() : null);
       if (wallFeedback) {
         wallFeedback.update(dt, paused, still);
         purchaseLight.show(wallFeedback.current, wallFeedback.light);
@@ -596,8 +630,10 @@ export function decorateIsland(place, ctx = {}) {
         const near = !at || !Number.isFinite(marker.x) || Math.hypot(at.x - marker.x, at.z - marker.z) <= MARKER_NEAR;
         const target = near ? 1 : MARKER_FAR;
         marker.fade = still || marker.fade === undefined ? target : marker.fade + (target - marker.fade) * Math.min(1, dt * 6);
-        marker.ring.material.opacity = (near ? glow : 1) * marker.fade;
-        for (const mesh of [marker.badge, marker.lock, marker.lockRing]) mesh.material.opacity = marker.fade;
+        const ringOpacity = marker.fade * ringWeight;
+        marker.ring.material.opacity = (near ? glow : 1) * ringOpacity;
+        marker.lockRing.material.opacity = ringOpacity;
+        for (const mesh of [marker.badge, marker.lock]) mesh.material.opacity = marker.fade;
         marker.badge.position.y = marker.badge.userData.baseY + (near ? bob : 0);
       }
       if (!bell) return;
@@ -613,6 +649,7 @@ export function decorateIsland(place, ctx = {}) {
       progress?.dispose(); recoveryIndicators.dispose();
       wallConnections.dispose(); selectionBracket.dispose();
       defenseRange?.dispose();
+      houseSupport?.dispose(); rangeRing?.dispose();
       place.setSelectedCanopy?.(null);
       wallFeedback?.dispose();
       place.setMooringBattle?.(false);

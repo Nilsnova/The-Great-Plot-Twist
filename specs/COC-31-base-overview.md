@@ -6,7 +6,7 @@ Responsible teammate: Johannes Franz Lang (`frcola`). Related issue: [#172](http
 
 Menu → **Base overview** shows all built buildings from the player's last accepted island answer. Each row identifies its plot, building level, next building-level price or wave lock, selected house/tower skill when available, and bought tower-path steps. Local filters show one building type or affordable, blocked and top-building-level plans.
 
-This is the first independently useful COC-31 slice. It is read-only: there are no purchase callbacks and no new API endpoint. It does not select distant buildings, move the camera, apply a layout, recommend a mathematically best purchase, or replace the detail card's tower tree. That later selection handoff belongs with the reviewed village mode. COC-31 remains open.
+The overview reads the island without making purchase requests. **Find** enters the existing Village Mode and opens the selected plot's normal card. The action uses its stable plot ID and checks the current island and accepted roster before navigating. It is available on your own island between waves and outside Move mode. The building card still owns its purchase controls and tower tree.
 
 The overview describes current building levels, not effective combat damage or range. It intentionally does not repeat house-loot statistics while their separate UI/server discrepancy is unresolved. `Highest building level` means the normal level trunk is complete; tower paths and house roles can still exist.
 
@@ -54,7 +54,7 @@ Full frontend suite, production build/budget and broad accessibility/demo journe
 
 ## Explain-back preparation
 
-I take the buildings that the island answer already says I own and turn them into a readable list. I ask the same model used by a normal building card what the next level costs and why it might be unavailable. The filters only change which list rows I see, so selecting a filter cannot spend coins. A server update replaces the list model while the modal keeps the focused filter. This version helps me compare the base, but selecting or changing a distant building is still a separate village-mode feature.
+I take the buildings that the island answer already says I own and turn them into a readable list. I ask the same model used by a normal building card what the next level costs and why it might be unavailable. The filters only change which rows I see. A server update replaces the list model while the modal keeps focus on the same filter or row action when available. **Find** opens the accepted plot in Village Mode so I can use the existing building controls.
 
 Questions for Johannes before marking the PR ready:
 

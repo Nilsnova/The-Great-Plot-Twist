@@ -131,3 +131,50 @@ it.each([false, true])('explicit management selects remotely, holds captain inpu
     expect(await page.getByRole('button', {name: 'Exit village mode', exact: true}).count()).toBe(0);
   });
 }, 60000); // a long real-browser journey: ~17 s locally, too close to the harness's 20 s default
+
+it('keeps the effective upgrade read-only and clears it when a new accepted answer has unknown crew', async () => {
+  await browser.withPage(async (page, base) => {
+    await ready(page, base, false);
+    expect(await page.evaluate(async () => {
+      const island = window.__island.island;
+      const {setPreferences} = await window.g20Import('/src/settings/preferences.js');
+      setPreferences({tutorials: false});
+      const entered = island.toggleVillage();
+      island.dev.setWaveBest(2);
+      island.dev.setCoins(0);
+      await island.refreshDefended();
+      return entered;
+    })).toBe(true);
+    await page.getByRole('combobox', {name: 'Find building'}).selectOption('cannon_1');
+    const selection = page.getByRole('region', {name: 'Selected building'});
+    const saved = () => page.evaluate(() => {
+      const {coins, spots} = window.__island.island.island;
+      return {coins, spot: spots.find(row => row.id === 'cannon_1')};
+    });
+    const before = await saved();
+    await selection.getByRole('button', {name: 'Details', exact: true}).click();
+    const comparison = page.getByRole('region', {name: 'Next level comparison'});
+    await comparison.waitFor();
+    expect(await comparison.locator('dd').allTextContents()).toEqual(['28 → 31 units', '1.05 → 0.91 s', '10 → 16']);
+    const upgrade = page.locator('.island-tree-detail [data-focus="upgrade"]');
+    expect(await upgrade.isDisabled()).toBe(true);
+    expect(await upgrade.textContent()).toContain(String(before.spot.upgradeCost));
+    expect(await saved()).toEqual(before);
+
+    await page.evaluate(async () => {
+      const island = window.__island.island, read = island.api.getIsland;
+      island.api.getIsland = async () => {
+        const result = await read();
+        return result.ok ? {...result, data: {...result.data, crew: null}} : result;
+      };
+      try { await island.refreshDefended(); } finally { island.api.getIsland = read; }
+    });
+    expect(await comparison.count()).toBe(0);
+    expect(await page.locator('.island-tree-detail .island-skill-line').textContent()).toContain('Base stats');
+    await page.evaluate(() => window.__island.island.refreshDefended());
+    await comparison.waitFor();
+    await page.keyboard.press('Escape');
+    await selection.getByRole('button', {name: 'Details', exact: true}).waitFor();
+    expect(await saved()).toEqual(before);
+  });
+}, 60000);

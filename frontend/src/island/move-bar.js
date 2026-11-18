@@ -21,6 +21,7 @@ export function createMoveBar({container, handlers = {}, loadPortrait}) {
   const portrait = createBuildingPortrait({className: 'island-move-portrait', loadPortrait});
   const title = node('strong', 'island-move-title'), hint = node('p', 'island-move-line');
   const status = node('p', 'island-move-status'); status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite');
+  const support = node('p', 'island-move-support'); support.setAttribute('aria-live', 'polite');
   const pad = node('div', 'island-move-pad'); pad.setAttribute('role', 'group'); pad.setAttribute('aria-label', 'Move one square');
   const arrows = [];
   for (const [label, name, dx, dz] of ARROWS) {
@@ -30,7 +31,7 @@ export function createMoveBar({container, handlers = {}, loadPortrait}) {
   const place = button('Place here', () => handlers.place?.(), 'island-move-place');
   const cancel = button('Cancel', () => handlers.cancel?.(), 'kit-quiet island-move-cancel');
   const actions = node('div', 'island-move-actions'); actions.append(cancel, place);
-  const copy = node('div', 'island-move-copy'); copy.tabIndex = 0; copy.setAttribute('aria-label', 'Move details'); copy.append(title, hint, status);
+  const copy = node('div', 'island-move-copy'); copy.tabIndex = 0; copy.setAttribute('aria-label', 'Move details'); copy.append(title, hint, status, support);
   const controls = node('div', 'island-move-controls'); controls.append(pad, actions);
   const legend = createCoverageLegend();
   bar.append(portrait.element, copy, controls, legend.element);
@@ -41,6 +42,7 @@ export function createMoveBar({container, handlers = {}, loadPortrait}) {
       if (!model) { portrait.render(null); return; }
       portrait.render(model.portrait);
       title.textContent = model.title; hint.textContent = model.line; status.textContent = model.status;
+      support.textContent = model.support ?? ''; support.hidden = !support.textContent;
       bar.classList.toggle('is-refused', model.refused); place.textContent = model.placeLabel; place.disabled = !model.ok;
       legend.show(model.coverage, model.coverageDraft);
       for (const arrow of arrows) arrow.disabled = !!model.busy;

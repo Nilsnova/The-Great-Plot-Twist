@@ -24,3 +24,22 @@ export const isRole = id => typeof id === 'string' && Object.hasOwn(ROLES, id);
 export const readRole = (kind, spec) => (kind === 'house' && isRole(spec) ? spec : null);
 // The role a house acts with: from level 2 only (a level-1 house cannot have one, the server keeps it so).
 export const activeRole = item => (item?.kind === 'house' && (item.level ?? 1) >= ROLE_LEVEL ? readRole('house', item.spec) : null);
+
+// Workshop and Tavern evaluate the same inclusive distance in logical world coordinates.
+export function inHouseReach(house, target, radius) {
+  const dx = house.x - target.x, dz = house.z - target.z;
+  return Math.sqrt(dx * dx + dz * dz) <= radius + 1e-9;
+}
+
+// Shared by the wave and its planning preview. Roles arrive in canonical house-id order.
+export function* barracksPosts(houses, {units, max, door}) {
+  const round = value => Math.round(value * 100) / 100;
+  let allocated = 0;
+  for (const house of houses) {
+    const count = units[house.level - 1];
+    for (let i = 0; i < count && allocated < max; i++) {
+      allocated++;
+      yield {house, x: round(house.x + (i ? .9 : 0) - (count > 1 ? .45 : 0)), z: round(house.z + door)};
+    }
+  }
+}

@@ -34,8 +34,10 @@ import {createVillageMode, isTextEntry} from './village-mode.js';
 import {createVillageBar} from './village-bar.js';
 import {approachSnapshot} from './coverage-planning.js';
 import {canDockSelection, holdOtherBuildingAction} from './selection-dock.js';
+import {houseMoveSummary} from './building-inspection.js';
+import {previewHouseSupport} from './house-support-model.js';
 import {footprintOf} from './placement.js';
-import {previewDefenseCoverage} from '../pirates/sim.js';
+import {previewDefenseCoverage, previewDefenseUpgrade} from '../pirates/sim.js';
 import {SPOTS, KINDS, BELL, CABIN, ISLAND_PLACE, POINT_PLACE, PP_SPOTS, isIslandZone, isPointSpot, spotById, ppSpotById, pointZones, defenses, slotName,
   campaignBuilding, placedSpot, ARSENAL} from './spots.js';
 import {createArsenal} from './arsenal.js';
@@ -45,7 +47,7 @@ import {buildCardModel, bellModel, inviteModel, crewModel, captainModel, captain
 import {campaignOf, isOpen, openedBetween, opensText, waveOf} from '../campaign/index.js';
 import {BRANCH_BY_ID, SPECS, optionName} from '../campaign/tech.js';
 import {TOWER_TREES} from '../pirates/tower-trees.js';
-import {ROLES, activeRole, roleRadius} from '../campaign/houses.js';
+import {ROLES, activeRole} from '../campaign/houses.js';
 import {ROLE_BY_ID, SKILL_BY_ID, WEAPONS, isRole, readSkills} from '../pirates/captain-ids.js';
 import {displayIslandCode, islandCode, islandRoom, storeVisit, readVisit, forgetVisit} from './codes.js';
 import {ISLAND_BUILT, ISLAND_INVITE_OPENED, ISLAND_UPGRADED, CREW_HIRED, WAVE_FINISHED} from '../ui/quest-events.js';
@@ -105,6 +107,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   let disposed = false, own = null, ownMessage = '', ownRetry = false, visiting = null, visitCode = readVisit(visitStorage), busySpot = null, cardMessage = '';
   let pendingWallet = null, walletGeneration = 0;
   let world = null, cutscene = null, openSpot = null, loadTicket = 0, battle = false;
+  let housePlayer = null, selectedHouse = null, movingHouse = null;
   let wallFeedbackGeneration = 0;
   const coreState = createCoreState();
   let coreWorld = null, coreContextKey = null, coreTravelGeneration = 0, coreRejoin = null;
@@ -242,9 +245,12 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   // T36, flexible placement: Move mode (move-mode.js) with its bar (move-bar.js) and the preview on the island.
   let approachTarget = '', approachMove = null, approachCache = null;
   const moving = createMoveMode({api, render: model => {
-    const draft = approachTarget && model ? moving.state : null;
-    approachMove = draft?.ok && !draft.message ? draft : null;
-    moveBar.render(model && approachTarget ? {...model, coverage: approachTarget, coverageDraft: !!approachMove} : model);
+    const move = model ? moving.state : null;
+    movingHouse = move ? inspectHouse(move.spotId, move) : null;
+    // The selected house and the approach guide both mark the ground. Show one at a time.
+    const coverage = movingHouse?.support ? '' : approachTarget;
+    approachMove = coverage && move?.ok && !move.message ? move : null;
+    moveBar.render(model && {...model, coverage, coverageDraft: !!approachMove, support: houseMoveSummary(movingHouse?.support)});
     villageBar.render(village.active && !model);
   }, preview: cell => world?.preview(cell),
     spots: () => target()?.spots ?? [], code: () => (visiting ? visiting.code : null), onMoved: (answer, spotId) => void moved(answer, spotId)});
@@ -304,7 +310,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     else if (wallRecovery()) void readWalls();
   }
   function approachCoverage() {
-    if (!approachTarget || !village.active || !own || ui.active || ui.selectionElement) return null;
+    if (!approachTarget || !village.active || !own || ui.active || ui.selectionElement || movingHouse?.support) return null;
     const needsRecovery = recoveryControlsOn();
     const recovery = needsRecovery && recoveryStatus === 'ready' && recoveryIslandCode === own.code
       && recoveryState?.recoveryVersion === 1 && recoveryState.displayPhase === 'between_waves'
@@ -596,6 +602,15 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       movable: island?.layout?.movable === true, flags: {defenses_v2: defensesV2On() === true}, treePicked: treePicked.get(spotId) ?? null,
       recoveryState: recoveryView, recoveryStatus: recoveryEnabled ? (recoveryReady ? 'ready' : recoveryStatus) : 'disabled',
       recoveryError, recoveryPending: recoveryPendingSpot === spotId, recoveryVersion: recoveryModelVersion()});
+    const version = island?.recoveryVersion ?? 0;
+    if (model.mode === 'upgrade' && Number.isSafeInteger(spot?.upgradeCost) && model.tree?.detail.action?.type === 'upgrade' && !busySpot
+      && (version === 0 || version === 1 && recoveryEnabled) && (!battle || waveOver)
+      && (!recoveryEnabled || (recoveryReady && recoveryRow?.level === model.level
+        && recoveryRow.hpUnits === 1_000_000 && recoveryView.repairWindow !== 'reserved_wave'))) {
+      model.upgradeComparison = previewDefenseUpgrade({defenses: defenses(island.spots, campaign()?.research?.tiers),
+        selectedId: spotId, currentLevel: model.level, gunnerCount: island.crew?.gunner,
+        defensesV2: recoveryPolicyOn() || defensesV2On()});
+    }
     if (recoveryEnabled && recoveryState?.displayPhase === 'combat' && !live) {
       model.recovery = {visible: false, status: 'error', message: 'Battle health is still loading.'};
     }
@@ -705,6 +720,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     if (disposed) return;
     village.refresh();
     applyWorld();
+    if (moving.active) moving.refresh();
     if (ui.open === 'build' && openSpot) showBuild(openSpot);
     else if (ui.open === 'bell') ui.bellCard(bell(), bellAction);
     else if (ui.open === 'invite') ui.inviteCard(inviteModel(own?.code));
@@ -717,7 +733,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     else if (ui.open === 'wreck') ui.wreckCard(wreck(), wreckHandlers);
     else if (ui.open === 'demolish') ui.demolishCard(demolishCardModel(), demolishHandlers);
     else if (ui.open === 'arsenal') arsenal.redraw();
-    else if (ui.open === 'overview') ui.overviewCard(overview());
+    else if (ui.open === 'overview') showOverview();
   }
   // The Tear down button follows the wave on screen (off while it runs, on again in its break).
   function refreshCardIfBuild() { if (ui.open === 'build' && openSpot) refreshCard(); }
@@ -735,6 +751,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   }
   function showBuild(spotId) {
     const model = buildModel(spotId);
+    selectedHouse = model.kind === 'house' ? inspectHouse(spotId) : null;
+    model.houseSupport = selectedHouse?.support ?? null;
     if (ui.selectionSpot === spotId && !model.built) { ui.close(); openSpot = null; return; }
     const dock = village.active && !visiting && !isPointSpot(spotId) && canDockSelection(model);
     const destroyed = model.recovery?.actualHp === 0 && model.recoveryLevel === model.level;
@@ -917,8 +935,25 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     return answer;
   }
   function openCrew() { openSpot = null; cardMessage = ''; ui.crewCard(crew(), hire); void freshOwn(); }
-  const overview = () => upgradeOverviewModel({island: own, battle: battle && !waveOver, message: ownMessage});
-  function openOverview() { openSpot = null; cardMessage = ''; ui.overviewCard(overview()); void freshOwn(); }
+  const overviewScope = () => JSON.stringify([own?.code, own?.islandEpoch, resetGeneration, coreTravelGeneration]);
+  const canFindBuilding = () => village.available && !moving.active;
+  function showOverview(message = ownMessage) {
+    const find = canFindBuilding(), scope = overviewScope();
+    ui.overviewCard(upgradeOverviewModel({island: own, battle: battle && !waveOver, find, message}), {
+      find: find ? id => findOverviewBuilding(id, scope) : null,
+    });
+  }
+  function findOverviewBuilding(id, scope) {
+    if (ui.open !== 'overview' || scope !== overviewScope() || !canFindBuilding()) return;
+    if (!spotById(id) || !own.spots.some(spot => spot.id === id && spot.built === true)) {
+      showOverview('This building is no longer on your island.');
+      return;
+    }
+    if (!village.enter()) return;
+    ui.close();
+    openBuild(id);
+  }
+  function openOverview() { openSpot = null; cardMessage = ''; showOverview(); void freshOwn(); }
   function openCaptain(tab = null) {
     openSpot = null; cardMessage = ''; if (['captain', 'skills'].includes(tab)) captainTab = tab;
     ui.captainCard(captain(), captainHandlers); void freshOwn();
@@ -1244,11 +1279,19 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     refreshCard();
     ui.toast(`Moved${onWhere(place)}. Your defenders fight from the new spot.`, 'success');
   }
-  function houseRange() {
-    if (ui.open !== 'build' || !openSpot) return null;
-    const where = placedSpot(openSpot, target()?.spots), role = activeRole((target()?.spots ?? []).find(item => item.id === openSpot));
-    if (recoveryModelVersion() === 1 && role === 'workshop') return null;
-    return where && role ? {x: where.x, z: where.z, radius: roleRadius(role), role} : null;
+  function inspectHouse(houseId, move = null) {
+    const island = target();
+    if (!island?.spots || spotById(houseId)?.slot !== 'house' || (battle && !waveOver)) return null;
+    const at = housePlayer?.();
+    const captains = at && Number.isFinite(at.x) && Number.isFinite(at.z)
+      ? [{id: 'you', x: at.x, z: at.z, present: true, down: false}] : null;
+    const recoveryVersion = recoveryPolicyOn() ? 1 : island.recoveryVersion ?? 0;
+    return {island, support: previewHouseSupport({houseId, spots: island.spots, recoveryVersion, captains, move})};
+  }
+  function activeHouseSupport() {
+    if (battle && !waveOver) return null;
+    const shown = moving.active ? movingHouse : ui.open === 'build' ? selectedHouse : null;
+    return shown && shown.island === target() ? shown.support : null;
   }
   // GAME-V3.md §5.1: one research step: tier 1 of a branch, or one of the two options of tier 2 or 3 (change:
   // the crew picked the other one before and pays the tier's price again to switch).
@@ -1476,9 +1519,10 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     decorate(place, art, cleanups, adapters = {}) {
       world?.dispose();
       coreWorld?.dispose();
+      housePlayer = adapters.player ?? null;
       const core = decorateCore(place);
       const deco = decorateIsland(place, {container, art, reducedMotion, quality: () => preferences().quality, canvas: adapters.canvas, camera: adapters.camera,
-        isActive: adapters.isActive, onPick: pick, range: houseRange, selection: selectedAnchor, defenseRange: () => ui.selectionRange,
+        isActive: adapters.isActive, onPick: pick, houseSupport: activeHouseSupport, selection: selectedAnchor, defenseRange: () => ui.selectionRange,
         player: adapters.player, onFar: adapters.onFar,
         placing: () => moving.active, onGround: (x, z) => moving.tap(x, z),
         canPickRemote: id => village.active && !!spotById(id),
@@ -1487,7 +1531,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       deco.runArtTask('core', () => core.retryArt());
       const original = place.update;
       place.update = (dt, frame) => { original(dt, frame); deco.update(dt, frame?.time ?? 0, frame?.paused); };
-      cleanups.push(() => { deco.dispose(); core.dispose(); if (world === deco) world = null; if (coreWorld === core) coreWorld = null; place.update = original; });
+      cleanups.push(() => { deco.dispose(); core.dispose(); if (world === deco) { world = null; housePlayer = null; } if (coreWorld === core) coreWorld = null; place.update = original; });
     },
     // Pirate Point's shared build spots on lighthouse_isle (factory.js); its bell and lamps stay lane P's.
     decoratePoint(place, adapters = {}) {
