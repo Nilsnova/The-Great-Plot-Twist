@@ -4,6 +4,31 @@ import {browserHarness} from '../g20-browser.js';
 
 const evaluate = browserHarness();
 
+it('releases the actual host input block when the native card closes before its initial GET returns', async () => {
+  const result = await evaluate(async () => {
+    const {createSharedWagerHost} = await window.g20Import('/src/harbor/shared-wager-host.js');
+    const {registerPanelServices} = await window.g20Import('/src/online/panel-services.js');
+    const id = n => `00000000-0000-0000-0000-${String(n).padStart(12, '0')}`;
+    const economy = {mode: 'island_shared', version: 1, islandOwner: id(1), accountId: id(3), runEpoch: id(4),
+      revision: '1', treasury: {balanceCoins: '100', committedCoins: '0', availableCoins: '100'}};
+    const session = {isSignedIn: () => true, getScope: () => session};
+    let releaseRead, requested;
+    const waiting = new Promise(resolve => {requested = resolve;});
+    const provider = registerPanelServices(session, {isReady: () => true, getActorId: () => id(2),
+      getFlags: () => ({market: true}), api: {get: () => {requested(); return new Promise(resolve => {releaseRead = resolve;});}}});
+    const host = createSharedWagerHost({session, container: document.body, getEconomy: () => economy});
+    const opening = host.open('market'); await waiting;
+    const before = host.active, dialog = document.querySelector('.shared-harbor');
+    const closed = new Promise(resolve => dialog.addEventListener('close', resolve, {once: true}));
+    dialog.querySelector('[aria-label="Close dialog"]').click(); await closed;
+    const afterClose = host.active, stillOpen = dialog.open;
+    releaseRead({ok: false, status: 503}); const opened = await opening;
+    host.dispose(); provider.dispose();
+    return {before, afterClose, stillOpen, opened};
+  });
+  expect(result).toEqual({before: true, afterClose: false, stillOpen: false, opened: false});
+});
+
 it('uses exact all-in above Number limits and publishes only the verified island origin', async () => {
   const result = await evaluate(async () => {
     const {createSharedMarketEntry} = await window.g20Import('/src/harbor/shared-market-card.js');

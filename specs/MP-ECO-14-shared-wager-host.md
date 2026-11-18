@@ -32,6 +32,11 @@ economy capability header. Recheck scope after awaits; discard late replies and 
 Never read credentials, install a new global context store, or select a personal transport.
 Missing or malformed context and disabled features fail closed without loading a card.
 
+Closing the shared card while its initial read is pending must immediately release the host's
+input block. The card reports closure to its own host entry callback; the host cancels only
+that still-owned entry. A delayed close notification from an older card must leave a newer
+market or football open intact. Closing does not resolve or replace any pending wager UID.
+
 Only the new host, its focused tests and this specification are in scope. Game and island
 wiring, canonical authority production, activation and publication remain outside this change.
 

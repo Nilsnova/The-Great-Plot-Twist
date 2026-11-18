@@ -10,7 +10,7 @@ export function createSharedWagerCard(ctx = {}, product) {
     kind: product === 'market_call' ? 'market' : 'match',
     marker: product === 'market_call' ? 'market-modal' : 'sports-modal',
     resetInput: ctx.resetInput, focusGame: ctx.focusGame,
-    onClose() { generation++; clearInterval(timer); timer = null; }});
+    onClose(reason) { generation++; clearInterval(timer); timer = null; ctx.onClose?.(reason); }});
   card.element.classList.add('shared-harbor');
   let page = null, items = [], message = '', busy = false, disposed = false, generation = 0, timer = null;
   let currentKey = client.scopeKey();
