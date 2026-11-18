@@ -16,6 +16,37 @@
 const TAU = Math.PI * 2;
 const OUTLINE = '#1f2622';
 const hash = (n) => { const x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+// The low-quality pass keeps the first five banks, spread across the viewport edges.
+const FOG_BANKS = [
+  [.09, .31], [.82, .84], [.26, .91], [.78, .21], [.16, .73],
+  [.95, .40], [.04, .09], [.57, .10], [.91, .72], [.41, .96],
+].map(([x, y], i) => ({
+  x, y, width: .20 + hash(i + 3) * .16,
+  height: 24 + hash(i + 5) * 25, speed: 6 + hash(i) * 8,
+}));
+
+// Cache one soft stamp instead of rebuilding the fog gradients on every frame.
+function makeFogBank() {
+  const stamp = document.createElement('canvas');
+  stamp.width = 256;
+  stamp.height = 64;
+  const ink = stamp.getContext('2d');
+  const paint = (x, y, rx, ry, rgb, alpha) => {
+    ink.setTransform(rx, 0, 0, ry, x, y);
+    const density = ink.createRadialGradient(0, 0, 0, 0, 0, 1);
+    density.addColorStop(0, `rgba(${rgb},${alpha})`);
+    density.addColorStop(.45, `rgba(${rgb},${alpha * .68})`);
+    density.addColorStop(.8, `rgba(${rgb},${alpha * .15})`);
+    density.addColorStop(1, `rgba(${rgb},0)`);
+    ink.fillStyle = density;
+    ink.fillRect(-1, -1, 2, 2);
+  };
+  paint(128, 34, 126, 28, '169,208,215', .32);
+  paint(90, 35, 82, 16, '224,240,235', .35);
+  paint(169, 27, 85, 14, '221,237,235', .28);
+  paint(144, 47, 103, 12, '185,219,222', .16);
+  return stamp;
+}
 
 export function createEventArt({ container, canvas: world = null, project, reducedMotion = () => false, quality = () => 'high' } = {}) {
   const layer = document.createElement('canvas');
@@ -23,7 +54,7 @@ export function createEventArt({ container, canvas: world = null, project, reduc
   layer.setAttribute('aria-hidden', 'true');
   if (world?.parentElement === container) world.after(layer); else container.prepend(layer);
   const ctx = layer.getContext('2d');
-  let clock = 0, visible = true, disposed = false, latest = null, flash = 0, nextFlash = 4;
+  let clock = 0, visible = true, disposed = false, latest = null, flash = 0, nextFlash = 4, fogBank;
   const bursts = [], smashes = [], rises = new Map();
   const still = () => !!reducedMotion();
   const low = () => quality() === 'low';
@@ -45,28 +76,43 @@ export function createEventArt({ container, canvas: world = null, project, reduc
     g.addColorStop(0, `rgba(0,0,0,${clear})`); g.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
   };
-  // A wash over everything with soft holes where it is clear (destination-out).
-  function wash(colour, holes) {
-    const { w, h } = size();
-    ctx.fillStyle = colour; ctx.fillRect(0, 0, w, h);
+  // Clear the overlay where the island's defenses can see.
+  function clearSight(holes) {
     ctx.globalCompositeOperation = 'destination-out';
     for (const [x, y, r, soft, clear] of holes) hole(x, y, r, soft, clear);
     ctx.globalCompositeOperation = 'source-over';
   }
+  function wash(colour, holes) {
+    const { w, h } = size();
+    ctx.fillStyle = colour; ctx.fillRect(0, 0, w, h);
+    clearSight(holes);
+  }
 
-  function drawFog(state, u) {
-    // Clear within each tower's sight (thinning towards its edge), most of all near the watchtower; a light mist stays.
+  function drawFogBanks(w, h, count, time) {
+    for (let i = 0; i < count; i++) {
+      const bank = FOG_BANKS[i], rx = Math.max(96, w * bank.width), ry = bank.height;
+      const x = (bank.x * w + rx + time * bank.speed) % (w + 2 * rx) - rx;
+      const y = bank.y * h;
+      ctx.drawImage(fogBank, x - rx, y - ry, 2 * rx, 2 * ry);
+    }
+  }
+
+  function drawFog(state, u, w, h) {
+    fogBank ??= makeFogBank();
+    ctx.fillStyle = 'rgba(166,207,215,.43)';
+    ctx.fillRect(0, 0, w, h);
+    const count = low() ? 5 : FOG_BANKS.length, time = still() ? 0 : clock;
+    drawFogBanks(w, h, count, time);
+    // Reveal the established sight radii through both the ambient haze and the drifting banks.
     const sight = (state.towers ?? []).map(tower => { const p = at(tower.x, tower.z); return p ? [p.x, p.y, tower.range * u, .55, .8] : null; }).filter(Boolean);
     for (const tower of state.event.watchtowers ?? []) { const p = at(tower.x, tower.z); if (p) sight.push([p.x, p.y, state.event.clear * u, .4, .95]); }
-    wash('rgba(226,233,236,.86)', sight);
-    // Drifting banks: soft white ellipses with a pale blue underside.
-    const { w, h } = size(), n = low() ? 5 : 10;
-    for (let i = 0; i < n; i++) {
-      const drift = still() ? 0 : clock * (6 + hash(i) * 8);
-      const x = ((hash(i + 1) * w + drift) % (w + 300)) - 150, y = hash(i + 7) * h, rx = 90 + hash(i + 3) * 120, ry = 26 + hash(i + 5) * 18;
-      ctx.fillStyle = 'rgba(200,214,224,.30)'; ctx.beginPath(); ctx.ellipse(x, y + ry * .35, rx, ry, 0, 0, TAU); ctx.fill();
-      ctx.fillStyle = 'rgba(248,250,250,.38)'; ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, TAU); ctx.fill();
-    }
+    clearSight(sight);
+    // A faint trail remains when overlapping tower sight clears the main veil.
+    ctx.globalCompositeOperation = 'destination-over';
+    ctx.globalAlpha = .39;
+    drawFogBanks(w, h, count, time);
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'source-over';
   }
 
   function drawStorm(state, u) {
@@ -264,7 +310,7 @@ export function createEventArt({ container, canvas: world = null, project, reduc
     if (id === 'siege_barge') drawBarge(state, u);
     drawBursts(u);
     if (id === 'pincer' || id === 'smugglers') drawLanes(state);
-    if (id === 'fog_bank') drawFog(state, u);
+    if (id === 'fog_bank') drawFog(state, u, w, h);
     if (id === 'night_raid') drawNight(state, u);
     if (id === 'storm') drawStorm(state, u);
   }
