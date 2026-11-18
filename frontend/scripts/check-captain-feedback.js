@@ -23,7 +23,10 @@ const stand = (x, z) => game((g, at) => {
 async function enter() {
   console.log('Opening the local fake game.');
   await page.goto(`${env.url}/?islands=fake&fakeplayer=cf1&fakename=Ianno`);
-  await page.locator('.shell-screen[open]').waitFor(); await page.locator('#play').click();
+  await page.locator('.shell-screen[open]').waitFor();
+  // This combat fixture represents a returning device; settle its real preference before Play can queue teaching cards.
+  await page.evaluate(async () => (await import('/src/settings/preferences.js')).setPreferences({ tutorials: false }));
+  await page.locator('#play').click();
   for (let i = 0; i < 12; i++) {
     await page.waitForFunction(() => document.querySelector('dialog[open]')
       || window.__island?.world.current?.id === 'home_islet', null, { timeout: 60000 });
