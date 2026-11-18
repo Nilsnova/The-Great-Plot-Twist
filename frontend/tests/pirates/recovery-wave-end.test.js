@@ -32,7 +32,7 @@ function makeBus() {
 }
 
 const seal = now => Math.max(-1, Math.floor((now - (START + 1000)) / 50) - 1);
-const closeAnswer = body => ({ ok: true, data: { loot: 10, coins: 110, waveBest: 1, flags: 1, recovery: { waveId: body.waveId,
+const closeAnswer = body => ({ ok: true, data: { survived: body.survived, loot: 10, coins: 110, waveBest: 1, flags: 1, recovery: { waveId: body.waveId,
   islandEpoch: body.checkpoint.islandEpoch, closedAt: new Date(START).toISOString(), closedHp: body.checkpoint.hpUnits,
   checkpointUid: body.checkpoint.checkpointUid, throughTick: body.checkpoint.throughTick, inputHeadSeq: body.checkpoint.inputHeadSeq,
   lastRepairSeq: body.checkpoint.lastRepairSeq, basisRepairSeq: body.checkpoint.basisRepairSeq } } });
@@ -40,7 +40,13 @@ const accepted = request => ({ accepted: request.inputs.map((item, index) => ({ 
   type: 'captain_input', participantToken: TOKEN, payload: { inputUid: item.inputUid, actorCounter: item.actorCounter,
     participantToken: TOKEN, command: item.command, captain: { level: 1, skills: [], weapon: 'musket' } } })) });
 
-function setup({ readEvents, sendInputs, finishWave, timers = [] } = {}) {
+function finishFlow(bus) {
+  const flow = createWaveFlow({ api: {}, emit: event => bus.emit(event), setTimer: () => 0, clearTimer() {} });
+  bus.on('wave_finish_answered', ({ type, ...data }) => flow.ended(data.waveId, data));
+  return flow;
+}
+
+function setup({ readEvents, sendInputs, finishWave, timers = [], hud = null, sound, startNextWave, playCutscene } = {}) {
   const bus = makeBus();
   let now = START;
   const transport = {
@@ -51,15 +57,21 @@ function setup({ readEvents, sendInputs, finishWave, timers = [] } = {}) {
     finishWave: finishWave ?? vi.fn(async body => closeAnswer(body)),
   };
   const controller = createWaveController({ recoveryPlayoutMs: 0, bus, now: () => now, recoveryTransport: transport,
-    playerId: 'account-id', world: {}, getDefenses: () => [], createRenderer: () => null, createHud: () => null,
-    setTimer: (fn, ms) => { timers.push({ fn, ms }); return timers.length; }, clearTimer: () => {}, accept: () => true });
+    playerId: 'account-id', world: hud ? { container: {} } : {}, sound, startNextWave, playCutscene,
+    getDefenses: () => [], createRenderer: () => null, createHud: () => hud,
+    setTimer: (fn, ms) => { const timer = { fn, ms, at: now + ms }; timers.push(timer); return timer; },
+    clearTimer: timer => { const index = timers.indexOf(timer); if (index >= 0) timers.splice(index, 1); }, accept: () => true });
   const begin = (waveId = 'wave-r') => {
     const snap = snapshot(waveId);
     bus.emit({ type: 'wave_started_server', waveId, wave: 1, seed: 77, startsAt: snap.startsAt, weather: snap.weather,
       rules: snap.rules, recoveryVersion: 1, waveProtocol: 2, initialSnapshot: snap, participantToken: TOKEN, lastActorCounter: 0 });
   };
   const step = async ms => { now += ms; controller.update(.05); await tick(); await tick(); };
-  return { bus, controller, transport, begin, step, at: () => now, timers };
+  const flushTimers = async () => {
+    for (const timer of timers.filter(item => item.at <= now)) { timers.splice(timers.indexOf(timer), 1); timer.fn(); }
+    await tick(); await tick();
+  };
+  return { bus, controller, transport, begin, step, flushTimers, at: () => now, timers };
 }
 
 describe('recovery refusal policy (recovery-transport.js)', () => {
@@ -177,6 +189,142 @@ describe('the end of a recovery wave (controller.js)', () => {
     await step(10);
     expect(controller.wave.info.waveId).toBe('wave-new');
     expect(transport.finishWave).toHaveBeenCalledWith(expect.objectContaining({ waveId: 'wave-old' }));
+  });
+
+  it('retries an in-flight old finish after the next wave starts, keeping its checkpoint and result once', async () => {
+    let resolveOld;
+    const finishWave = vi.fn(body => finishWave.mock.calls.length === 1
+      ? new Promise(resolve => { resolveOld = resolve; }) : Promise.resolve(closeAnswer(body)));
+    const h = setup({ finishWave });
+    h.begin('wave-old');
+    for (let i = 0; i < 40 && !h.controller.wave.done; i++) await h.step(60_000);
+    const old = h.controller.wave;
+    expect(old.recoveryFinishing).toBe(true);
+    h.begin('wave-new');
+    resolveOld({ ok: false, status: 503, code: 'database_unavailable' });
+    await tick();
+    await h.step(1000); await h.flushTimers();
+    const requests = finishWave.mock.calls.map(([body]) => body).filter(body => body.waveId === 'wave-old');
+    expect(requests).toHaveLength(2);
+    expect(requests[1]).toEqual(requests[0]);
+    expect(old.recoveryFinishAnswered).toBe(true);
+    expect(h.bus.events.filter(event => event.type === 'wave_finish_answered' && event.waveId === 'wave-old')).toHaveLength(1);
+    expect(h.controller.wave.info.waveId).toBe('wave-new');
+    expect(h.controller.wave.roundLoot).toBeUndefined();
+    h.controller.dispose();
+  });
+
+  it('waits for the saved loss before announcing a local win or completing the wave quest', async () => {
+    let resolveFinish;
+    const finishWave = vi.fn(() => new Promise(resolve => { resolveFinish = resolve; }));
+    const hud = { banner: vi.fn(), countdown() {}, bar() {}, prompt() {}, dispose() {}, setVisible() {}, pause() {} };
+    const sound = { cue: vi.fn() };
+    const playCutscene = vi.fn(async () => {});
+    const h = setup({ finishWave, hud, sound, playCutscene, startNextWave: async () => ({ ok: true }) });
+    const flow = finishFlow(h.bus);
+    h.begin();
+    for (let i = 0; i < 40 && !h.controller.wave.done; i++) await h.step(60_000);
+    expect(finishWave.mock.calls[0][0].survived).toBe(true);
+    expect(h.bus.events.filter(event => event.type === 'wave_finished')).toEqual([]);
+    expect(sound.cue).not.toHaveBeenCalledWith('pirate-victory');
+    const answer = closeAnswer(finishWave.mock.calls[0][0]);
+    answer.data.survived = false;
+    resolveFinish(answer);
+    await tick(); await h.step(1);
+    expect(h.controller.wave.result.survived).toBe(false);
+    expect(h.controller.inBreak).toBe(false);
+    expect(sound.cue).toHaveBeenCalledWith('pirate-defeat');
+    expect(sound.cue).not.toHaveBeenCalledWith('pirate-victory');
+    expect(h.bus.events.filter(event => event.type === 'wave_finished')).toEqual([
+      expect.objectContaining({ waveId: 'wave-r', survived: false }),
+    ]);
+    await h.step(5000); await h.flushTimers();
+    expect(playCutscene).toHaveBeenCalledWith('wave_lost');
+    h.controller.dispose(); flow.dispose();
+  });
+
+  it('keeps its request if the next wave starts between a refresh refusal and its finalizer', async () => {
+    let resolveOld;
+    const finishWave = vi.fn(body => finishWave.mock.calls.length === 1
+      ? new Promise(resolve => { resolveOld = resolve; }) : Promise.resolve(closeAnswer(body)));
+    const h = setup({ finishWave });
+    h.begin('wave-old');
+    for (let i = 0; i < 40 && !h.controller.wave.done; i++) await h.step(60_000);
+    const old = h.controller.wave;
+    resolveOld({ ok: false, status: 409, code: 'health_sync_required' });
+    queueMicrotask(() => queueMicrotask(() => h.begin('wave-new')));
+    await tick(); await h.step(1000); await h.flushTimers();
+    expect(h.controller.wave.info.waveId).toBe('wave-new');
+    expect(finishWave.mock.calls[1][0]).toEqual(finishWave.mock.calls[0][0]);
+    expect(old.recoveryFinishAnswered).toBe(true);
+    h.controller.dispose();
+  });
+
+  it('retries a missing canonical outcome without guessing it from loot or the simulation', async () => {
+    const finishWave = vi.fn(async body => {
+      const answer = closeAnswer(body);
+      if (finishWave.mock.calls.length === 1) delete answer.data.survived;
+      return answer;
+    });
+    const h = setup({ finishWave });
+    h.begin();
+    for (let i = 0; i < 40 && !h.controller.wave.done; i++) await h.step(60_000);
+    expect(h.controller.wave.recoveryFinishAnswered).toBe(false);
+    expect(h.bus.events.filter(event => event.type === 'wave_finish_answered')).toEqual([]);
+    await h.step(1000);
+    expect(h.controller.wave.recoveryFinishAnswered).toBe(true);
+    expect(finishWave).toHaveBeenCalledTimes(2);
+    h.controller.dispose();
+  });
+
+  it('cancels a detached retry timer on disposal', async () => {
+    const finishWave = vi.fn(async () => ({ ok: false, status: 503, code: 'database_unavailable' }));
+    const h = setup({ finishWave });
+    h.begin('wave-old'); await h.step(1500);
+    h.begin('wave-new'); await tick();
+    expect(h.timers).toHaveLength(1);
+    h.controller.dispose();
+    await h.step(10_000); await h.flushTimers();
+    expect(finishWave).toHaveBeenCalledTimes(1);
+    expect(h.timers).toEqual([]);
+  });
+
+  it('releases a finished wave after a terminal finish refusal without inventing an outcome', async () => {
+    const h = setup({ finishWave: vi.fn(async () => ({ ok: false, status: 403, code: 'not_in_wave' })) });
+    h.begin();
+    for (let i = 0; i < 40 && !h.controller.wave.done; i++) await h.step(60_000);
+    expect(h.controller.wave.recoveryFinishFailed).toBe(true);
+    await h.step(2000); await h.flushTimers();
+    expect(h.controller.wave).toBeNull();
+    expect(h.bus.events.filter(event => event.type === 'wave_finished')).toEqual([]);
+    h.controller.dispose();
+  });
+
+  it('ignores an in-flight receipt after disposal and cancels pending settlement timers', async () => {
+    let resolveFinish;
+    const finishWave = vi.fn(() => new Promise(resolve => { resolveFinish = resolve; }));
+    const h = setup({ finishWave });
+    h.begin('wave-old'); await h.step(1500);
+    h.begin('wave-new'); await tick();
+    h.controller.dispose();
+    resolveFinish(closeAnswer(finishWave.mock.calls[0][0]));
+    await tick(); await h.step(1000); await h.flushTimers();
+    expect(h.bus.events.filter(event => event.type === 'wave_finish_answered')).toEqual([]);
+    expect(h.timers).toEqual([]);
+  });
+
+  it('uses the saved outcome of a handoff instead of an unfinished simulation', async () => {
+    const finishWave = vi.fn(async body => ({ ...closeAnswer(body), data: { ...closeAnswer(body).data, survived: true } }));
+    const h = setup({ finishWave });
+    const flow = finishFlow(h.bus);
+    h.begin('wave-old'); await h.step(1500);
+    expect(h.controller.wave.sim.result().survived).toBe(false);
+    h.begin('wave-new'); await tick();
+    expect(h.bus.events.filter(event => event.type === 'wave_finished')).toEqual([
+      expect.objectContaining({ waveId: 'wave-old', survived: true }),
+    ]);
+    expect(h.bus.events.find(event => event.type === 'wave_finish_answered')).toMatchObject({ survived: true });
+    h.controller.dispose(); flow.dispose();
   });
 
   it('a terminal journal refusal ends the wave on screen and stops reading (no silent retry)', async () => {

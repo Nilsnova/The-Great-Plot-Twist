@@ -258,13 +258,15 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   const stopFinished = on(WAVE_FINISHED, event => {
     if (disposed) return;
     tellCoins(event.coins, {tick: true}); // the loot counts up in the HUD
-    waveOver = true; // its break: buildings may come down again
+    const activeWaveId = flow.current?.wave.waveId;
+    const endedHere = !activeWaveId || activeWaveId === event.waveId;
+    if (endedHere) waveOver = true; // An old receipt must not open the next wave's break.
     if (!own) return;
     if (!visiting && Number.isSafeInteger(event.coins)) own = {...own, coins: event.coins, flags: event.flags ?? own.flags};
     refreshCard();
     void readStructureRecovery();
     // The owner's rule (fix/playtest-1117): the server repairs every building when a wave ends.
-    if (Number.isSafeInteger(event.coins)) ui.toast(ALL_REPAIRED, 'info');
+    if (endedHere && Number.isSafeInteger(event.coins)) ui.toast(ALL_REPAIRED, 'info');
     // A won wave may open something (GAME-V3.md §4): read the island again; setOwn (or the visit) tells what is new.
     if (event.survived === true) {
       const current = reading('own'); void api.getIsland().then(fresh => { if (!disposed && fresh.ok && current()) { setOwn(fresh.data); refreshCard(); } });
@@ -1268,7 +1270,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   async function bellAction(action) {
     cardMessage = '';
     const answer = action === 'join' ? await flow.join(where()) : action === 'ring' ? await flow.ring(where()) : null;
-    if (disposed || !answer) return;
+    if (disposed || !answer || answer.ignored) return;
     if (answer.ok) { world?.ring(); ui.close(); return; }
     cardMessage = answer.message; refreshCard();
   }
@@ -1427,8 +1429,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     },
     refreshDefended,
     // Captain health (GAME-V3.md §3): you stand a fallen teammate up and pay for it (your coins follow).
-    async reviveCaptain({waveId, fallen, downAt} = {}) {
-      const answer = await api.reviveCaptain({waveId, fallen, downAt});
+    async reviveCaptain(body = {}) {
+      const answer = await api.reviveCaptain(body);
       if (!disposed && answer.ok) tookCoins(answer.data.coins);
       return answer;
     },
@@ -1442,7 +1444,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     async ringBell() {
       if (disposed || !target()) return {ok: false, status: 0, code: 'not_ready', message: 'Your island is still loading.'};
       const answer = await flow.ring(where(), {joinRunning: true});
-      if (!disposed && answer.ok) world?.ring();
+      if (!disposed && answer.ok && !answer.ignored) world?.ring();
       return answer;
     },
     chartVisible: id => Object.hasOwn(CHART_NAMES, id),

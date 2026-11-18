@@ -290,6 +290,7 @@ class FakeIslandDatabase:
             "POST /rpc/wave_current": lambda _: httpx.Response(200, json=self.current_reply),
             "POST /rpc/recovery_wave_current": self.recovery_current,
             "POST /rpc/wave_revive": lambda _: self.answer(self.revive_reply),
+            "POST /rpc/recovery_wave_revive": lambda _: self.answer(self.revive_reply),
             "GET /wallet_transactions": self.read_ledger,
             "GET /captain_skill_learns": lambda request: httpx.Response(
                 200,

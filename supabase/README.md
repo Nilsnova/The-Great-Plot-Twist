@@ -3247,6 +3247,19 @@ migrations/20261118040000_playtest.sql (fix/playtest-1117): a new overload recov
 
 ### Recovery implementation migration order and rollback boundary
 
+`migrations/20261118050000_paid_revive_journal.sql` fixes issue #466. The service-only
+`recovery_wave_revive` function charges the payer, keeps the fall receipt and appends one
+`captain_revive` journal event in the same transaction, after the sealed frontier. It locks the
+payer wallet, sorted islands, recovery state, wave and participant in that order. Paid repeats
+do not append or charge again, even after close/leave; a failed append rolls everything back.
+The original payment implementation is retained as service-only `wave_revive_charge`.
+`wave_revive` keeps protocol-1 behavior and refuses charge-only requests to saved recovery waves.
+All three functions deny `anon` and `authenticated`; table grants and policies are unchanged.
+Apply in timestamp order before the matching backend/client; old clients receive a safe reload
+refusal on recovery waves. Reapplication is supported. No live application, deployment or flag
+change is performed by this fix. Opt-in checks: `test_recovery_revive_sql.py` and
+`test_recovery_revive_http_pg.py` under `backend/server/tests/island_sql/`.
+
 For a backend/client candidate that contains T55/T60 recovery code, review and apply the required files in timestamp order: `20261117020000_structure_recovery.sql`, `20261117025000_legacy_wave_locks.sql`, `20261117030000_paid_structure_repair.sql`, `20261117040000_structure_recovery_api.sql`, then `20261117050000_structure_recovery_mutations.sql`. Include any earlier candidate prerequisite, such as `20261117010000_more_tower_spots.sql`, before this set. The integration tests only apply/reapply this chain in disposable Unix-socket PostgreSQL; no live application or activation is recorded here.
 
 The recovery feature flag remains off by default and governs admission of new v1 waves on legacy islands. It does not make the migrations optional for a deployed server or protocol-2 client that can read or mutate a saved v1 island. If a release must stop admitting new v1 waves, turn the flag off and preserve saved v1 state. Admission off does not downgrade saved v1 policy, which persists between waves; no safe policy downgrade is implemented. Keep a v1-capable backend and protocol-2 client while any saved v1 island remains, even when no wave is active. Do not reverse the migrations or delete receipts to roll back. Fix forward with reviewed code and migrations; any future saved-policy data transition needs separate review. See the [release checklist](../docs/RELEASE-CHECKLIST.md#t55t60-structure-recovery-release-gate). No live migration, deployment or flag activation was performed by T60.

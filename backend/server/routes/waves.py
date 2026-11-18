@@ -61,6 +61,8 @@ GET /api/waves/current?where=own | ISLE-K7Q2M | pirate_point
 POST /api/waves/finish  {"waveId": "6f1c...", "survived": true, "shipsSunk": 7,
                          "bonuses": ["galleon"], "walls": {"wall_1": 40, "wall_2": 0}}
     -> {"loot": 15, "coins": 115, "waveBest": 1, "flags": 1, "boss": false}
+    Protocol-2 finishes also return boolean "survived": the saved outcome of the first close,
+    which can differ from the caller's unfinished simulation. Legacy answers omit it.
     bonuses (optional, v3 waves, docs/GAME-V3.md 4.2 and 4.3): "galleon" (the treasure galleon was
     sunk) and "finisher" (a boss finisher was won) add 20 + 4 x n and 15 + 3 x n to the base of a
     won wave n (content/wave_events.json), only on an island wave whose seed brings the galleon or
@@ -103,8 +105,15 @@ POST /api/waves/revive  {"waveId": "6f1c...", "fallen": "p-k3x9q2", "downAt": 41
     same in every browser): one fall is paid for once, so when two teammates help the same
     fallen captain up at the same moment the first pays and the second is refused already_up
     and pays nothing. Shares the budget of start, join and finish.
+    Recovery waves require waveProtocol: 2 and the helper's x/z coordinates (-499.999..499.999).
+    The database commits payment, receipt and captain_revive journal event together and answers
+    journaled: true. The event carries the paid fall's downAt and server Captain identity/stats;
+    the client does not submit another revival input. A saved recovery wave refuses a legacy
+    request with 409 client_update_required before charging. A committed protocol-2 repeat stays
+    repeatable after the wave closes or the helper leaves the island.
     Errors: 403 not_member, 403 not_in_wave, 404 no_such_wave, 404 player_not_set_up,
-            409 wave_over, 409 insufficient_funds, 409 already_up
+            409 wave_over, 409 insufficient_funds, 409 already_up, 409 client_update_required,
+            409 action_conflict (the same actionUid names a different paid fall)
 
 Every route also: 401, 403 demo_closed, 404 feature_off, 422 validation_error, 429
 too_many_requests, 502 database_error, 503 database_unavailable.
@@ -118,7 +127,15 @@ from typing import Annotated, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Query, Request
-from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    StrictBool,
+    StrictFloat,
+    StrictInt,
+    model_validator,
+)
 
 from server.errors import ApiError
 from server.flags import is_enabled
@@ -186,12 +203,26 @@ class ReviveRequest(BaseModel):
     # The tick of the fall in the wave's simulation (50 ms ticks; a wave lasts at most 900 s).
     downAt: StrictInt = Field(ge=0, le=100_000)
     actionUid: str = Field(pattern=ACTION_UID_PATTERN)
+    waveProtocol: StrictInt = Field(default=1, ge=1, le=2)
+    x: StrictFloat | None = Field(default=None, ge=-499.999, le=499.999)
+    z: StrictFloat | None = Field(default=None, ge=-499.999, le=499.999)
+
+    @model_validator(mode="after")
+    def recovery_position(self) -> "ReviveRequest":
+        if self.waveProtocol == 2:
+            if self.x is None or self.z is None or self.downAt > 18_000:
+                raise ValueError("A recovery revival needs coordinates and a valid fall tick.")
+            if str(UUID(self.fallen)) != self.fallen.lower():
+                raise ValueError("A recovery revival needs a participant token.")
+            self.fallen = str(UUID(self.fallen))
+        return self
 
 
 class ReviveResponse(BaseModel):
     price: int
     coins: int
     repeat: bool
+    journaled: bool | None = None
 
 
 class WeatherOut(BaseModel):
@@ -243,6 +274,7 @@ class FinishResponse(BaseModel):
     waveBest: int
     flags: int
     boss: bool
+    survived: StrictBool | None = None
     recovery: RecoveryFinishResponse | None = None
 
 
@@ -418,7 +450,7 @@ async def post_finish(
             checkpoint=body.checkpoint.model_dump(mode="json", by_alias=True),
         )
         recovery_state = reply.get("recovery")
-        if not isinstance(recovery_state, dict):
+        if not isinstance(recovery_state, dict) or type(reply.get("survived")) is not bool:
             raise ApiError(502, "database_error", "The recovery finish answer could not be read.")
         return FinishResponse(
             loot=reply["loot"],
@@ -426,6 +458,7 @@ async def post_finish(
             waveBest=reply["waveBest"],
             flags=reply["flags"],
             boss=reply["boss"],
+            survived=reply["survived"],
             recovery=recovery_state,
         )
     finished = await waves.finish(
@@ -453,7 +486,7 @@ async def post_finish(
     )
 
 
-@router.post("/waves/revive")
+@router.post("/waves/revive", response_model_exclude_none=True)
 async def post_revive(
     body: ReviveRequest,
     player: IslandPlayerDep,
@@ -463,6 +496,17 @@ async def post_revive(
 ) -> ReviveResponse:
     request.app.state.wave_budget.spend(player.id)
     revived = await waves.revive(
-        admin, catalogue, player.id, body.waveId, body.fallen, body.downAt, body.actionUid
+        admin,
+        catalogue,
+        player.id,
+        body.waveId,
+        body.fallen,
+        body.downAt,
+        body.actionUid,
+        protocol=body.waveProtocol,
+        x=body.x,
+        z=body.z,
     )
-    return ReviveResponse(price=revived.price, coins=revived.coins, repeat=revived.repeat)
+    return ReviveResponse(
+        price=revived.price, coins=revived.coins, repeat=revived.repeat, journaled=revived.journaled
+    )

@@ -43,6 +43,8 @@ FUNCTIONS = frozenset(
         "recovery_wave_events_page",
         "recovery_wave_report_health",
         "recovery_wave_finish",
+        "recovery_wave_revive",
+        "wave_revive",
     }
 )
 IDENTIFIER = re.compile(r"[a-z][a-z0-9_]*\Z")

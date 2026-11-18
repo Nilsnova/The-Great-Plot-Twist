@@ -232,6 +232,7 @@ export function wireWaves(ctx) {
     // Recovery waves finish over their own journal transport: their end frees the island's bell and village.
     stops.push(on('wave_finish_answered', event => {
       if (!event?.recovery || typeof event.waveId !== 'string') return;
+      noteReport(() => defenseReport?.confirmed(event.waveId, event.loot, event.survived));
       try { island.recoveryWaveEnded?.(event.waveId, {survived: event.survived === true, loot: event.loot ?? 0, coins: event.coins,
         waveBest: event.waveBest, flags: event.flags, ...(event.away === true ? {away: true} : {})}); } catch (error) { console.error(error); }
     }), on('wave_controller_stopped', event => {
