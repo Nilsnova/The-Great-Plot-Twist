@@ -167,6 +167,19 @@ def test_unsupported_shared_read_version_has_the_common_mismatch_code(world):
                  409, "economy_version_mismatch")
 
 
+def test_a_cached_token_cannot_restore_island_access_after_deletion(world):
+    assert world.island(HEADERS).status_code == 200
+    world.database.deleted_players.add(PLAYER_ID)
+    before = len(world.database.requests)
+    assert_error(world.island(HEADERS), 401, "unauthorized")
+    assert_error(world.client.post("/api/island/build", json=build_body(), headers=HEADERS),
+                 401, "unauthorized")
+    assert [request.url.path.rsplit("/", 1)[-1]
+            for request in world.database.requests[before:]] == [
+                "island_lifecycle_actor_status", "island_lifecycle_actor_status",
+            ]
+
+
 def test_paused_member_can_read_but_outsider_gets_no_snapshot(world):
     world.database.facts["admissionState"] = "paused"
     response = world.visit("K7Q2M", HEADERS)
@@ -382,4 +395,4 @@ def test_each_shared_endpoint_preserves_its_strict_body_and_domain_receipt(
     monkeypatch.setattr(economy_http, "shared_write", dispatch)
     response = world.client.post("/api/island/" + path, json=payload, headers=HEADERS)
     assert response.status_code == 200 and response.json() == answer
-    assert world.database.requests == []
+    assert world.database.paths() == ["POST /rpc/island_lifecycle_actor_status"]

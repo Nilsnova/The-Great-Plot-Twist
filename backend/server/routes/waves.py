@@ -153,7 +153,7 @@ from pydantic import (
 from server.auth import PlayerDep
 from server.errors import ApiError
 from server.flags import is_enabled
-from server.island import service, wall_repair, wave_rewards, wave_rules, waves
+from server.island import service, shared_lifecycle, wall_repair, wave_rewards, wave_rules, waves
 from server.island import wave_recovery as recovery
 from server.island.service import IslandCatalogueDep
 from server.island.wave_weather import wave_weather
@@ -194,6 +194,7 @@ async def post_recover_rewards(
 ) -> wave_rewards.RewardRecoveryResponse:
     # An existing obligation stays recoverable when new island play is disabled.
     request.app.state.wave_budget.spend(player.id)
+    await shared_lifecycle.ensure_not_deleted(admin, player.id)
     response.headers["Cache-Control"] = "private, no-store"
     return await wave_rewards.recover_rewards(admin, player.id)
 
@@ -375,6 +376,7 @@ async def post_start(
     request: Request,
 ) -> WaveResponse:
     request.app.state.wave_budget.spend(player.id)
+    await shared_lifecycle.ensure_not_deleted(admin, player.id)
     # The ringer's area from Vercel's geo headers, for this request only: never stored or logged.
     area = place_from_headers(request.headers)
     weather = await wave_weather(
@@ -433,6 +435,7 @@ async def post_join(
     request: Request,
 ) -> WaveResponse:
     request.app.state.wave_budget.spend(player.id)
+    await shared_lifecycle.ensure_not_deleted(admin, player.id)
     joined = await waves.join_protocol2(
         admin, catalogue, player.id, body.waveId, protocol=body.waveProtocol
     )
@@ -452,6 +455,7 @@ async def get_current(
     wave_protocol: Annotated[int, Query(alias="waveProtocol", ge=1, le=2)] = 1,
 ) -> WaveResponse | None:
     request.app.state.wave_read_budget.spend(player.id)
+    await shared_lifecycle.ensure_not_deleted(admin, player.id)
     running = await waves.current_protocol2(
         admin, catalogue, player.id, where, protocol=wave_protocol
     )
@@ -472,6 +476,7 @@ async def post_finish(
     request: Request,
 ) -> FinishResponse:
     request.app.state.wave_budget.spend(player.id)
+    await shared_lifecycle.ensure_not_deleted(admin, player.id)
     if body.checkpoint is not None:
         if body.waveProtocol != 2:
             raise ApiError(
@@ -536,6 +541,7 @@ async def post_revive(
     request: Request,
 ) -> ReviveResponse:
     request.app.state.wave_budget.spend(player.id)
+    await shared_lifecycle.ensure_not_deleted(admin, player.id)
     revived = await waves.revive(
         admin,
         catalogue,

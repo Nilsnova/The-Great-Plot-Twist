@@ -234,6 +234,7 @@ def test_the_island_is_opened_before_the_first_build_so_the_starting_coins_are_t
     world.build()
 
     paths = world.database.paths()
+    assert paths.pop(0) == "POST /rpc/island_lifecycle_actor_status"
     assert paths[0] == "POST /rpc/island_economy_context"
     assert paths.index("POST /rpc/island_open") < paths.index("POST /rpc/islet_build")
 

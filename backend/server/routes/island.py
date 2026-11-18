@@ -233,7 +233,15 @@ from server.auth import Player, PlayerDep
 from server.clock import ClockDep
 from server.errors import ApiError
 from server.flags import is_enabled
-from server.island import economy_http, economy_reads, leaderboard, rules, service, wall_repair
+from server.island import (
+    economy_http,
+    economy_reads,
+    leaderboard,
+    rules,
+    service,
+    shared_lifecycle,
+    wall_repair,
+)
 from server.island.captain_recovery_policy import active_captain_skills
 from server.island.catalogue import IslandCatalogue
 from server.island.economy_http_models import (
@@ -777,6 +785,7 @@ def island_out(view: IslandView, catalogue: IslandCatalogue) -> IslandResponse:
 async def get_island(
     player: IslandPlayerDep, catalogue: IslandCatalogueDep, admin: AdminDep, request: Request,
 ) -> IslandResponse | dict:
+    await shared_lifecycle.ensure_not_deleted(admin, player.id)
     shared = await economy_reads.shared_read(
         admin, player.id, catalogue, request.headers.get("X-Island-Economy-Version"),
     )
@@ -811,6 +820,7 @@ async def post_build(
 ) -> IslandResponse | dict:
     request.app.state.island_build_budget.spend(player.id)
     economy_http.require_body_capability(request, body)
+    await shared_lifecycle.ensure_not_deleted(admin, player.id)
     shared = await economy_http.shared_write(admin, player.id, "build", body, catalogue)
     if shared is not None:
         return shared
@@ -832,6 +842,7 @@ async def post_upgrade(
 ) -> IslandResponse | dict:
     request.app.state.island_build_budget.spend(player.id)
     economy_http.require_body_capability(request, body)
+    await shared_lifecycle.ensure_not_deleted(admin, player.id)
     shared = await economy_http.shared_write(admin, player.id, "upgrade", body, catalogue)
     if shared is not None:
         return shared
@@ -852,6 +863,7 @@ async def post_hire(
 ) -> IslandResponse | dict:
     request.app.state.island_build_budget.spend(player.id)
     economy_http.require_body_capability(request, body)
+    await shared_lifecycle.ensure_not_deleted(admin, player.id)
     shared = await economy_http.shared_write(admin, player.id, "hire", body, catalogue)
     if shared is not None:
         return shared
@@ -957,6 +969,7 @@ async def post_research(
 ) -> IslandResponse | dict:
     request.app.state.island_build_budget.spend(player.id)
     economy_http.require_body_capability(request, body)
+    await shared_lifecycle.ensure_not_deleted(admin, player.id)
     shared = await economy_http.shared_write(admin, player.id, "research", body, catalogue)
     if shared is not None:
         return shared
@@ -984,6 +997,7 @@ async def post_specialise(
 ) -> IslandResponse | dict:
     request.app.state.island_build_budget.spend(player.id)
     economy_http.require_body_capability(request, body)
+    await shared_lifecycle.ensure_not_deleted(admin, player.id)
     shared = await economy_http.shared_write(admin, player.id, "towerSkill", body, catalogue)
     if shared is not None:
         return shared
@@ -1003,6 +1017,7 @@ async def post_tower_tree(
 ) -> IslandResponse | dict:
     request.app.state.island_build_budget.spend(player.id)
     economy_http.require_body_capability(request, body)
+    await shared_lifecycle.ensure_not_deleted(admin, player.id)
     shared = await economy_http.shared_write(admin, player.id, "towerTree", body, catalogue)
     if shared is not None:
         return shared
@@ -1022,6 +1037,7 @@ async def post_wreck(
 ) -> IslandResponse | dict:
     request.app.state.island_build_budget.spend(player.id)
     economy_http.require_body_capability(request, body)
+    await shared_lifecycle.ensure_not_deleted(admin, player.id)
     shared = await economy_http.shared_write(admin, player.id, "wreck", body, catalogue)
     if shared is not None:
         return shared
@@ -1060,6 +1076,7 @@ async def post_demolish(
 ) -> DemolishResponse | dict:
     request.app.state.island_build_budget.spend(player.id)
     economy_http.require_body_capability(request, body)
+    await shared_lifecycle.ensure_not_deleted(admin, player.id)
     shared = await economy_http.shared_write(admin, player.id, "demolish", body, catalogue)
     if shared is not None:
         return shared
@@ -1081,6 +1098,7 @@ async def get_visit(
 ) -> VisitResponse | dict:
     # A budget, because a visit looks a code up: guessing codes stays slow.
     request.app.state.island_visit_budget.spend(player.id)
+    await shared_lifecycle.ensure_not_deleted(admin, player.id)
     shared = await economy_reads.shared_read(
         admin, player.id, catalogue, request.headers.get("X-Island-Economy-Version"), code,
     )

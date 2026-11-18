@@ -275,11 +275,13 @@ class FakeIslandDatabase:
         self.layout_missing = False
         self.move_replies: list[dict] = []
         self.requests: list[httpx.Request] = []
+        self.deleted_players: set[str] = set()
 
     def __call__(self, request: httpx.Request) -> httpx.Response:
         self.requests.append(request)
         route = f"{request.method} {request.url.path.removeprefix('/rest/v1')}"
         handlers = {
+            "POST /rpc/island_lifecycle_actor_status": self.actor_status,
             "POST /rpc/island_economy_context": self.economy_context,
             "POST /rpc/island_open": self.open_island,
             "GET /wallets": self.read_wallet,
@@ -352,6 +354,10 @@ class FakeIslandDatabase:
         for name in ARSENAL_FUNCTIONS:
             handlers[f"POST /rpc/{name}"] = self.arsenal
         return handlers[route](request)
+
+    def actor_status(self, request: httpx.Request) -> httpx.Response:
+        actor = json.loads(request.content)["p_player_id"]
+        return self.answer({"status": "deleted" if actor in self.deleted_players else "active"})
 
     def arsenal(self, request: httpx.Request) -> httpx.Response:
         name = request.url.path.rsplit("/", 1)[-1]

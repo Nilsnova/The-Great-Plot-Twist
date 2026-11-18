@@ -132,3 +132,9 @@ read-only context marker: `mode: personal_legacy`, `version: 0`, server-selected
 discovery requests retain their original serializer. The marker conveys no new
 permission and cannot be selected by a browser body. Missing, malformed or stale
 live context never authorizes a personal-wallet fallback.
+
+Validated core island and wave handlers check the durable lifecycle status
+after login, feature checks, body validation and their request budget, before domain access. A cached login
+cannot recreate access after deletion. The database must independently refuse
+deleted or missing actors in canonical mutation transactions. Generic login
+caching and repeatable account deletion keep their existing contracts.

@@ -198,3 +198,4 @@ def require_body_capability(request: Request, body: BaseModel) -> None:
     """Shared HTTP intents negotiate before a root lookup or any domain transaction."""
     if isinstance(body, SharedBody):
         require_economy_capability(request)
+        root_action_uid(body.actionUid)
