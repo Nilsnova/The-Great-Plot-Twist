@@ -298,6 +298,35 @@ def test_owner_asset_reset_preserves_common_history_and_legacy_movements(databas
     )
 
 
+def test_paused_owner_can_dispose_stock_without_enabling_reset_or_bell(database):
+    owner, _, initial, _ = held_copy(database)
+    database.execute(
+        "update public.island_economy_state set admission_state='paused' where island_owner=%s",
+        (owner,),
+    )
+    with (
+        pytest.raises(psycopg.errors.CheckViolation, match="arsenal_loadout_origin_changed"),
+        database.transaction(),
+    ):
+        rpc(database, "island_shared_arsenal_loadouts_locked", *keys(initial), [owner])
+    assert rpc(database, "island_shared_arsenal_reset_locked", *keys(initial), owner, NOW) == {
+        "copiesCleared": 1,
+        "historicalMovesRetained": 0,
+    }
+    code = database.execute(
+        "select code from public.islands where player_id=%s", (owner,)
+    ).fetchone()[0]
+    assert rpc(database, "island_fresh_start", owner, "paused-reset01", code, 100) == {
+        "status": "refused",
+        "reason": "economy_context_required",
+    }
+    assert database.execute(
+        "select admission_state,current_account_id::text from public.island_economy_state "
+        "where island_owner=%s",
+        (owner,),
+    ).fetchone() == ("paused", initial["currentEconomy"]["accountId"])
+
+
 @pytest.mark.parametrize(
     ("blocked", "reason"),
     [

@@ -148,7 +148,7 @@ begin
     join public.island_economy_state s on s.current_account_id=a.id
       and s.island_owner=a.island_owner and s.run_epoch=a.run_epoch
     where a.id=p_account_id and a.run_epoch=p_run_epoch and a.state='active'
-      and s.admission_state='active';
+      and s.admission_state in ('active','paused');
   if not found then raise exception using errcode='23514',message='arsenal_reset_origin_changed'; end if;
   if v_owner<>p_actor_id then raise exception using errcode='23514',message='arsenal_reset_not_owner'; end if;
   v_authority:=public.island_shared_arsenal_authority(p_actor_id,v_owner);
@@ -174,6 +174,6 @@ begin
 end;
 $$;
 comment on function public.island_shared_arsenal_reset_locked(uuid,uuid,uuid,timestamptz) is
-  'Private current-owner asset reset inside the complete canonical lifecycle transaction. Requires real idle authority and no pending/unclosed attempt; clears only live original-account copies and preserves immutable shared history, money and legacy move history.';
+  'Private current-owner asset disposition for reset or confirmed owner deletion, including paused admission. Requires real idle authority and no pending/unclosed attempt; public reset retains its own active-admission guard. Preserves immutable history, money and legacy moves.';
 revoke all on function public.island_shared_arsenal_reset_locked(uuid,uuid,uuid,timestamptz)
   from public,anon,authenticated,service_role;
