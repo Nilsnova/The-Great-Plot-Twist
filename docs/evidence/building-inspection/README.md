@@ -31,4 +31,12 @@ Ground rings are quieter on the home island. Build and lock badges, footprint pi
 
 A single northwest palm is smaller at its existing ground anchor. In matched views, the visible Cannon raster rose from roughly 25–30% to 82–85% of the unobstructed view. Its location, scenery clearance, collision radius and painter order were preserved.
 
-The short phone View keeps the arrows and actions in two compact rows. Chrome and WebKit on the Mac both completed the full 320 × 568 journey, including [the protected-point refusal](short-phone-refusal.png).
+The short phone view keeps the arrows and actions in two compact rows. Chrome and WebKit on the Mac both completed the full 320 × 568 journey, including [the protected-point refusal](short-phone-refusal.png).
+
+## Damage and Settings readability
+
+[Destroyed tower before](ruin-phone-before.png) · [Destroyed tower after](ruin-phone-after.png) · [Controls before](settings-phone-before.png) · [Controls after](settings-phone-after.png)
+
+Destroyed towers keep their rubble and zero-health indicator. Level stars return with confirmed positive health. Chrome exercised zero, one positive unit, partial recovery and full health on desktop and phone, including the older recovery policy and unchanged adjacent towers.
+
+The Controls labels use the existing parchment color. Their measured contrast rose from 6.70:1 to 7.96:1 on desktop and phone. The Settings audit covered five viewport sizes. The production startup check now follows the actual first-run panels before asserting world focus. The underlying app already returned focus correctly when those panels were dismissed.
