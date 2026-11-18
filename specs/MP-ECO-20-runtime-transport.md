@@ -20,6 +20,16 @@ capability. Only this named header is allowed; callers cannot override bearer
 authorization, content type, URL or credentials. Existing call signatures retain
 their behavior. Token renewal keeps the capability header and identical body.
 
+The existing deferred panel service forwards these optional request options to
+the authenticated transport. Its readiness and session checks still run before
+every call, and its existing public reads keep the anonymous client.
+
+Private feature adapters also receive the authenticated actor ID from the
+accepted `/api/me` response through the panel service. The existing scope-based
+identity and lifetime checks remain unchanged. A missing profile, signed-out
+session, disposed provider or invalid ID returns no actor; identifiers remain
+outside the public game view and tokens are never decoded for identity.
+
 The runtime feature adapters consume this transport while canonical context
 comes from the established island projection. No competing treasury or global
 client context store is introduced. Common island/game wiring follows the actual
