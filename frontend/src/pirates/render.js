@@ -25,6 +25,7 @@ import * as THREE from 'three';
 import { CULVERIN_ART, FIRE_ART, HARPOON_ART, SWIVEL_ART, TIER_ART, crewArt, fireArt, levelArt, pipRow, pirateDimensions, pirateFrames, pirateLevels } from '../pixel/pirate-catalog.js';
 // T33 (D049, proposed): the damaged and broken tower drawings, used only while the wave has tower health.
 import { TOWER_KINDS, towerStateFrame } from '../art/tower-states.js';
+import { RECOVERY_BADGE, paintRecoveryBadge, recoveryBadgeFill, recoveryBadgeLift, recoveryBadgeTone } from '../art/structure-health-badge.js';
 import { towerLook } from './tower-health.js';
 import { MARK_IDS, buildingMarks } from '../art/path-marks.js';
 import { pixelGlsl, toScreen } from '../world/pixel-glsl.js';
@@ -136,6 +137,7 @@ export const SWIVEL_IDS = [...SWIVEL_ART.levels, ...SWIVEL_ART.fire, SWIVEL_ART.
 // atlas (tests) has none and simply draws no marks.
 export const MARK_ATLAS_IDS = MARK_IDS;
 export const SWIVEL_STATE_IDS = [...SWIVEL_ART.damaged, ...SWIVEL_ART.broken];
+const HEALTH_BADGE = 'recovery-health-badge', RUIN_BADGE = 'recovery-ruin-badge';
 /**
  * The frame of a cannon or mortar post: its level's art, or while it fires its level's firing frame (so a
  * level-3 cannon does not flick to level 1's plain barrel, nor a level-5 one lose its gold). has(id) says
@@ -177,9 +179,22 @@ export async function loadAtlas({ quality = 'high', colour = 0, towerStates = fa
   const ids = [...new Set([...ATLAS_IDS.filter(id => !PIXEL_ONLY_IDS.includes(id)), ...CARTOON_EXTRA_IDS, ...TIER_IDS, ...WALL_ATLAS_IDS, ...FIRE_LEVEL_IDS, ...HARPOON_IDS, ...GUNBOAT_IDS,
     ...(towerStates ? TOWER_STATE_IDS : []), ...(culverins ? CULVERIN_IDS : []), ...(culverins && towerStates ? CULVERIN_STATE_IDS : []),
     ...(swivels ? SWIVEL_IDS : []), ...(swivels && towerStates ? SWIVEL_STATE_IDS : []), ...MARK_ATLAS_IDS])];
-  const atlas = await cartoonAtlas(ids, { quality, extra: [[WHITE, 8, 8]] });
+  const extra = [[WHITE, 8, 8]];
+  if (towerStates) extra.push([HEALTH_BADGE, RECOVERY_BADGE.width, RECOVERY_BADGE.height],
+    [RUIN_BADGE, RECOVERY_BADGE.width, RECOVERY_BADGE.height]);
+  const atlas = await cartoonAtlas(ids, { quality, extra });
   const white = atlas.rects[WHITE], context = atlas.image.getContext('2d');
   context.fillStyle = '#fff'; context.fillRect(white.x * atlas.density, white.y * atlas.density, white.w * atlas.density, white.h * atlas.density);
+  if (towerStates) {
+    for (const id of [HEALTH_BADGE, RUIN_BADGE]) {
+      const { x, y } = atlas.rects[id];
+      context.save();
+      context.translate(x * atlas.density, y * atlas.density);
+      context.scale(atlas.density, atlas.density);
+      paintRecoveryBadge(context, id === RUIN_BADGE);
+      context.restore();
+    }
+  }
   const result = {texture: smoothTexture(atlas.image), width: atlas.image.width / atlas.density, height: atlas.image.height / atlas.density,
     rects: atlas.rects, density: atlas.density};
   result.wallArt = wallAtlasView(result); return result;
@@ -275,6 +290,10 @@ function pool() {
 
 const colour = hex => { const c = new THREE.Color(hex); return { r: c.r, g: c.g, b: c.b }; };
 const GOLD = colour('#ffd77a'), RED = colour('#d8553f'), GREEN = colour('#9fd26a'), DARK = colour('#1f2622'), BEAM = colour('#ffe9a8');
+const RECOVERY_TINT = {
+  green: colour(RECOVERY_BADGE.green), gold: colour(RECOVERY_BADGE.gold), red: colour(RECOVERY_BADGE.red),
+  light: colour(RECOVERY_BADGE.light),
+};
 const BRASS = colour('#e0b04a'), TEAL = colour('#4fc3c9');
 const CANNONBALL_LOOK = {
   island: { core: { r: 1.1, g: 1.05, flashing: .04 }, trail: colour('#ffdc97') },
@@ -1036,20 +1055,22 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     layers.air.push(rect[WHITE], x - w / 2 - .0625, top - .0625, w + .125, .3125, 0, 0, tinted(DARK, .8));
     layers.air.push(rect[WHITE], x - w / 2, top, w * share, .1875, 0, 0, opt(1, share > .5 ? GREEN : share > .25 ? GOLD : RED));
   }
-  function drawRecoveryHealthBar(item) {
+  function drawRecoveryHealthBar(item, kind) {
     const { z, hp, maxHp } = item, x = drawnX(item.x, z);
     if (!Number.isFinite(x) || !Number.isFinite(z) || !Number.isFinite(hp) || !(maxHp > 0) || hp >= maxHp) return;
-    const w = 1.3, top = drawnY(z) + TOWER_BAR_LIFT * K();
-    layers.air.push(rect[WHITE], x - w / 2 - .0625, top - .0625, w + .125, .3125, 0, 0, tinted(DARK, .8));
-    if (hp <= 0) {
-      // A ruin needs a positive visual signal; a zero-width red bar disappears against its dark track.
-      layers.air.push(rect[WHITE], x - .055, top + .015, .11, .17, .5, 0, tinted(RED, 1));
-      layers.air.push(rect[WHITE], x - .055, top + .22, .11, .08, .5, 0, tinted(RED, 1));
-      return;
+    const { width, height, units, fillInset, fillHeight } = RECOVERY_BADGE;
+    const destroyed = hp <= 0, badge = rect[destroyed ? RUIN_BADGE : HEALTH_BADGE];
+    const center = drawnY(z) + recoveryBadgeLift(kind), left = x - width / (2 * units), bottom = center - height / (2 * units);
+    layers.air.push(badge ?? rect[WHITE], x, center, width / units, height / units, .5, height / (2 * units),
+      badge ? undefined : opt(1, DARK));
+    if (destroyed && !badge) {
+      layers.air.push(rect[WHITE], left + 26 / units, bottom + 5 / units, 2 / units, 3 / units, 0, 0, opt(1, RECOVERY_TINT.light));
+      layers.air.push(rect[WHITE], left + 26 / units, bottom + 2 / units, 2 / units, 2 / units, 0, 0, opt(1, RECOVERY_TINT.light));
     }
-    const share = Math.max(.08, Math.min(1, hp / maxHp)); // Keep a 1-unit positive structure visible at a pixel scale.
-    layers.air.push(rect[WHITE], x - w / 2, top, w * share, .1875, 0, 0,
-      opt(1, share > .5 ? GREEN : share > .25 ? GOLD : RED));
+    if (destroyed) return;
+    const share = hp / maxHp;
+    layers.air.push(rect[WHITE], left + fillInset / units, bottom + fillInset / units,
+      recoveryBadgeFill(share) / units, fillHeight / units, 0, 0, opt(1, RECOVERY_TINT[recoveryBadgeTone(share)]));
   }
   function drawDown(hero, x, z, reviving) {
     x = drawnX(x, z);
@@ -1165,7 +1186,8 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       drawCaptain();
       drawParty(state);
       if (recoveryV1) {
-        for (const structure of [...(state.walls ?? []), ...(state.towers ?? [])]) drawRecoveryHealthBar(structure);
+        for (const wall of state.walls ?? []) drawRecoveryHealthBar(wall, 'wall');
+        for (const tower of state.towers ?? []) drawRecoveryHealthBar(tower, tower.kind);
       } else {
         // T33: a bar over every tower with hp that has taken damage (none while the wave has no tower health).
         for (const tower of state.towers ?? []) if (tower.maxHp > 0 && tower.hp > 0 && tower.hp < tower.maxHp) drawHealthBar(tower.x, tower.z, tower.hp, tower.maxHp, TOWER_BAR_LIFT);
