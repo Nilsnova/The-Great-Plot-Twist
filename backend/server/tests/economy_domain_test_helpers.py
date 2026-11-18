@@ -1,4 +1,4 @@
-"""Actual domain RPC calls for disposable SQL acceptance; authority remains injected.
+"""Actual domain RPC calls for disposable SQL acceptance; real canonical facts are test-seeded.
 
 No helper replaces a domain transaction or supplies production session authority.
 """

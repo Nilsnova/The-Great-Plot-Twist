@@ -9,6 +9,7 @@ psycopg = pytest.importorskip("psycopg")
 
 from server.tests.case_sql.conftest import scratch_server as scratch_server  # noqa: E402
 from server.tests.economy_test_authority import (  # noqa: E402
+    authority_outage,
     configure_test_authority,
     install_test_authority,
 )
@@ -311,18 +312,19 @@ def test_asset_reset_refuses_incomplete_current_owner_authority(database, blocke
     owner, member, initial, copy = held_copy(database)
     if blocked == "pending":
         prepare_deletion(database, member, initial, copy, wave=uuid4())
-    if blocked == "authority":
-        database.execute("drop function public.island_economy_authority(uuid,uuid)")
-    with pytest.raises(psycopg.errors.CheckViolation, match=reason), database.transaction():
-        rpc(
-            database,
-            "island_shared_arsenal_reset_locked",
-            keys(initial)[0],
-            uuid4() if blocked == "wrong_epoch" else keys(initial)[1],
-            member if blocked == "member" else owner,
-            NOW,
-        )
-    assert database.execute("select id from public.arsenal_copies where id=%s", (copy,)).fetchone()
+    with authority_outage(database, enabled=blocked == "authority"):
+        with pytest.raises(psycopg.errors.CheckViolation, match=reason), database.transaction():
+            rpc(
+                database,
+                "island_shared_arsenal_reset_locked",
+                keys(initial)[0],
+                uuid4() if blocked == "wrong_epoch" else keys(initial)[1],
+                member if blocked == "member" else owner,
+                NOW,
+            )
+        assert database.execute(
+            "select id from public.arsenal_copies where id=%s", (copy,)
+        ).fetchone()
 
 
 def test_asset_reset_refuses_real_unclosed_accounting_even_after_wave_metadata_closed(database):

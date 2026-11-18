@@ -10,6 +10,7 @@ psycopg = pytest.importorskip("psycopg")
 
 from server.tests.case_sql.conftest import scratch_server as scratch_server  # noqa: E402
 from server.tests.economy_test_authority import (  # noqa: E402
+    authority_outage,
     configure_test_authority,
     install_test_authority,
 )
@@ -77,12 +78,12 @@ def test_shared_view_refuses_departed_actor_and_unbound_stock(database):
 
 def test_shared_view_fails_closed_without_canonical_authority(database):
     owner, member, _, _ = setup(database)
-    database.execute("drop function public.island_economy_authority(uuid,uuid)")
-    as_server(database)
-    assert rpc(database, "island_shared_arsenal_read", member, owner) == {
-        "status": "refused",
-        "reason": "path_unavailable",
-    }
+    with authority_outage(database):
+        as_server(database)
+        assert rpc(database, "island_shared_arsenal_read", member, owner) == {
+            "status": "refused",
+            "reason": "path_unavailable",
+        }
 
 
 @pytest.mark.parametrize("kind", ["state", "buy", "take", "return"])
@@ -182,23 +183,23 @@ def test_wire_request_replays_original_retired_context_without_current_authority
         "retired_at=clock_timestamp() where id=%s",
         (keys(initial)[0],),
     )
-    database.execute("drop function public.island_economy_authority(uuid,uuid)")
-    replay = rpc(
-        database,
-        "island_shared_arsenal_request",
-        member,
-        owner,
-        keys(initial)[1],
-        "replay001",
-        "buy",
-        "pistols",
-        None,
-        None,
-        None,
-        None,
-    )
-    assert replay["repeat"] and replay["receipt"] == first["receipt"]
-    assert replay["currentEconomy"] is None
+    with authority_outage(database):
+        replay = rpc(
+            database,
+            "island_shared_arsenal_request",
+            member,
+            owner,
+            keys(initial)[1],
+            "replay001",
+            "buy",
+            "pistols",
+            None,
+            None,
+            None,
+            None,
+        )
+        assert replay["repeat"] and replay["receipt"] == first["receipt"]
+        assert replay["currentEconomy"] is None
 
 
 def test_actor_shared_island_is_not_initialized_to_view_a_legacy_target(database):

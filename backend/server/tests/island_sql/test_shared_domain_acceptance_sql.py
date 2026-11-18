@@ -19,7 +19,7 @@ from server.tests.economy_domain_test_helpers import (  # noqa: E402
     prepare_domains,
     start_round,
 )
-from server.tests.economy_test_authority import install_test_authority  # noqa: E402
+from server.tests.economy_test_authority import authority_outage, install_test_authority  # noqa: E402
 from server.tests.island_sql.test_island_treasury_sql import (  # noqa: E402
     as_owner,
     keys,
@@ -161,10 +161,10 @@ def test_real_ship_reward_can_fund_purchase_after_wager_refusal_without_an_orpha
 def test_failure_after_actual_asset_and_charge_rolls_back_root_and_every_effect(database):
     owner, member, _, initial = prepare_domains(database)
     database.execute("""
-        create function mp_eco_test.reject_arsenal_receipt() returns trigger
+        create function pg_temp.reject_arsenal_receipt() returns trigger
         language plpgsql as $$begin raise exception 'test_post_effect_failure'; end$$;
         create trigger acceptance_reject_receipt before insert on public.shared_arsenal_receipts
-        for each row execute function mp_eco_test.reject_arsenal_receipt();
+        for each row execute function pg_temp.reject_arsenal_receipt();
     """)
     with pytest.raises(psycopg.errors.RaiseException, match="post_effect"), database.transaction():
         buy_copy(database, member, initial, "failure-buy1")
@@ -265,8 +265,8 @@ def test_actual_domain_replay_after_departure_returns_common_receipt_without_cur
     }
     assert rpc(database, "game_leave", member, owner)["status"] == "left"
     as_owner(database)
-    database.execute("drop function public.island_economy_authority(uuid,uuid)")
-    again = calls[domain]()
-    assert again["repeat"] is True and again["receipt"] == receipt
-    assert again["currentEconomy"] is None
-    reconciles(database, keys(initial)[0])
+    with authority_outage(database):
+        again = calls[domain]()
+        assert again["repeat"] is True and again["receipt"] == receipt
+        assert again["currentEconomy"] is None
+        reconciles(database, keys(initial)[0])

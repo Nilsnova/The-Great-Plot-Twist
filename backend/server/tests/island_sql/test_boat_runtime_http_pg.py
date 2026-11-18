@@ -16,7 +16,7 @@ from psycopg import sql  # noqa: E402
 from server.app import create_app  # noqa: E402
 from server.auth import PlayerVerifier  # noqa: E402
 from server.flags import parse_flags  # noqa: E402
-from server.tests.economy_test_authority import configure_test_authority  # noqa: E402
+from server.tests.economy_test_authority import authority_outage, configure_test_authority  # noqa: E402
 from server.tests.helpers import CONFIGURED_SETTINGS, FakeClock  # noqa: E402
 from server.tests.island_helpers import CALM, FakeWeather  # noqa: E402
 from server.tests.island_sql.test_boat_runtime_sql import (  # noqa: E402,F401
@@ -219,13 +219,13 @@ def test_missing_capability_is_refused_even_when_shared_authority_is_not_install
     code = database.execute(
         "select code from public.islands where player_id=%s", (owner,)
     ).fetchone()[0]
-    database.execute("drop function public.island_economy_authority(uuid,uuid)")
-    with client_for(database, {"test.member.signature": member}) as client:
-        response = client.get(
-            f"/api/island/boat?code=ISLE-{code}",
-            headers={
-                "Authorization": "Bearer test.member.signature",
-            },
-        )
-        assert response.status_code == 409
-        assert response.json()["error"]["code"] == "economy_context_required"
+    with authority_outage(database):
+        with client_for(database, {"test.member.signature": member}) as client:
+            response = client.get(
+                f"/api/island/boat?code=ISLE-{code}",
+                headers={
+                    "Authorization": "Bearer test.member.signature",
+                },
+            )
+            assert response.status_code == 409
+            assert response.json()["error"]["code"] == "economy_context_required"

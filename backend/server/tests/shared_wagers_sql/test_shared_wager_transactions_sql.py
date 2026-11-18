@@ -15,8 +15,10 @@ from psycopg.types.json import Jsonb  # noqa: E402
 
 from server.tests.case_sql.conftest import scratch_server as scratch_server  # noqa: E402
 from server.tests.economy_test_authority import (  # noqa: E402
+    authority_outage,
     configure_test_authority,
     install_test_authority,
+    malformed_authority_domain,
 )
 from server.tests.island_sql.test_island_treasury_sql import (  # noqa: E402
     as_owner,
@@ -33,7 +35,7 @@ from server.tests.island_sql.test_island_treasury_sql import (  # noqa: E402
 
 @pytest.fixture(autouse=True)
 def fixture_authority(database):
-    """TEST-ONLY six-field authority. Production permission/assignment RPC is not implemented."""
+    """Require the real canonical provider; domain cases seed explicit input facts."""
     as_owner(database)
     install_test_authority(database)
 
@@ -176,16 +178,15 @@ def test_refusals_roll_back_new_root_product_and_reservation(database, kind):
         supplied["source"] = "replay"
     if kind == "nonmember":
         actor = outsider
-    if kind == "authority":
-        as_owner(database)
-        database.execute("drop function public.island_economy_authority(uuid,uuid)")
-    result = open_wager(database, actor, owner, initial, stake, supplied=supplied)
-    assert result["status"] == "refused"
-    assert counts(database, actor, "wager001") == (0, 0)
-    assert database.execute(
-        "select committed_coins from public.island_economy_accounts where id=%s",
-        (keys(initial)[0],)
-    ).fetchone() == (0,)
+    as_owner(database)
+    with authority_outage(database, enabled=kind == "authority"):
+        result = open_wager(database, actor, owner, initial, stake, supplied=supplied)
+        assert result["status"] == "refused"
+        assert counts(database, actor, "wager001") == (0, 0)
+        assert database.execute(
+            "select committed_coins from public.island_economy_accounts where id=%s",
+            (keys(initial)[0],)
+        ).fetchone() == (0,)
 
 
 def test_post_reserve_failure_rolls_back_the_financial_child_and_root(database):
@@ -327,20 +328,13 @@ def test_unusable_market_data_refunds_once_after_timeout(database):
     {"is_member": "true"}, {"actor_id": None}, {"reservation_id": 42},
     {"session_leader_id": "invalid"}, {"extra": True},
 ])
-def test_malformed_authority_fails_closed_and_rolls_back_the_root(database, bad):
+def test_malformed_authority_fails_closed_and_rolls_back_the_root(database, bad, monkeypatch):
     owner, actor, _, initial = ready(database, 100)
     as_owner(database)
-    database.execute("""
-      create or replace function public.island_economy_authority(
-        p_actor_id uuid,p_island_owner uuid)
-      returns jsonb language sql stable as $$
-        select jsonb_build_object('actor_id',$1,'island_owner',$2,'is_member',true,
-          'reservation_id',null,'session_leader_id',null,'actor_assignment_wave_id',null)
-          || current_setting('mp_eco_test.bad_authority')::jsonb
-      $$;
-    """)
-    import json
-    database.execute("select set_config('mp_eco_test.bad_authority',%s,true)", (json.dumps(bad),))
+    payload = rpc(database, "island_economy_authority", actor, owner) | bad
+    monkeypatch.setattr(__name__ + ".rpc", malformed_authority_domain(
+        database, "island_wager_open", payload
+    ))
     assert open_wager(database, actor, owner, initial) == {
         "status": "refused", "reason": "path_unavailable"
     }
