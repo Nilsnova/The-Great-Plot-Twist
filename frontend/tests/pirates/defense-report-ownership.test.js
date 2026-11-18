@@ -91,4 +91,4 @@ it('the actual game blocks keyboard and gamepad movement while the report owns i
     await page.evaluate(() => { window.reportPad.axes[0] = 0; window.dispatchEvent(new KeyboardEvent('keyup', {code: 'KeyA'})); });
     expect(await inputOwners(page)).toEqual(clearOwners);
   });
-});
+}, 60000); // Real game boot with the village artwork decode takes about 20 s on a busy test machine.

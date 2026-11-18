@@ -1,0 +1,116 @@
+
+ RUN  v5.1.0 /workspace/reference-village-work/clearance-volume/frontend
+
+ ❯ tests/art/wall-upright-volume.test.js (11 tests | 10 failed) 61ms
+   ❯ upright original wall posts (11)
+     × fits level 1 states without changing their source ground foot or relative scale 12ms
+     × fits level 2 states without changing their source ground foot or relative scale 3ms
+     × fits level 3 states without changing their source ground foot or relative scale 2ms
+     × fits level 4 states without changing their source ground foot or relative scale 2ms
+     × fits level 5 states without changing their source ground foot or relative scale 2ms
+     × keeps level 1 wider faces inside the real footprint and below visible authored post tops 3ms
+     × keeps level 2 wider faces inside the real footprint and below visible authored post tops 9ms
+     × keeps level 3 wider faces inside the real footprint and below visible authored post tops 0ms
+     × keeps level 4 wider faces inside the real footprint and below visible authored post tops 1ms
+     × keeps level 5 wider faces inside the real footprint and below visible authored post tops 0ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 10 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/art/wall-upright-volume.test.js > upright original wall posts > fits level 1 states without changing their source ground foot or relative scale
+ FAIL  tests/art/wall-upright-volume.test.js > upright original wall posts > fits level 2 states without changing their source ground foot or relative scale
+ FAIL  tests/art/wall-upright-volume.test.js > upright original wall posts > fits level 3 states without changing their source ground foot or relative scale
+ FAIL  tests/art/wall-upright-volume.test.js > upright original wall posts > fits level 4 states without changing their source ground foot or relative scale
+ FAIL  tests/art/wall-upright-volume.test.js > upright original wall posts > fits level 5 states without changing their source ground foot or relative scale
+AssertionError: expected [ 48, 32, 6 ] to deeply equal [ 48, 48, 6 ]
+
+- Expected
++ Received
+
+  [
+    48,
+-   48,
++   32,
+    6,
+  ]
+
+ ❯ tests/art/wall-upright-volume.test.js:36:29
+     34|     for (const [state,look] of looks.entries()) {
+     35|       const frame = frames[raw.wallFrame(level,look)], [x,y,w,h] = fix…
+     36|       expect(frame.logical).toEqual([48,48,6]); expect(frame.rect).toE…
+       |                             ^
+     37|       expect(frame.sourceFoot).toEqual([nativeFeet[level-1]-x,rowFeet[…
+     38|       expect(frame.fitBounds).toEqual(fixture.fit);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/10]⎯
+
+ FAIL  tests/art/wall-upright-volume.test.js > upright original wall posts > keeps level 1 wider faces inside the real footprint and below visible authored post tops
+AssertionError: expected 1.1179999999999999 to be close to 1.69, received difference is 0.5720000000000001, but expected 5e-13
+ ❯ tests/art/wall-upright-volume.test.js:62:58
+     60|       const values = batch.positions;
+     61|       expect(values).toHaveLength(48); expect(batch.indices).toHaveLen…
+     62|       expect(Math.max(...values.filter((_,i)=>i%3===1))).toBeCloseTo(h…
+       |                                                          ^
+     63|       const groundY = values.slice(12,18).filter((_,i)=>i%3===1);
+     64|       expect(groundY).toEqual([-.24,-.24]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/10]⎯
+
+ FAIL  tests/art/wall-upright-volume.test.js > upright original wall posts > keeps level 2 wider faces inside the real footprint and below visible authored post tops
+AssertionError: expected 1.3179999999999998 to be close to 1.94, received difference is 0.6220000000000001, but expected 5e-13
+ ❯ tests/art/wall-upright-volume.test.js:62:58
+     60|       const values = batch.positions;
+     61|       expect(values).toHaveLength(48); expect(batch.indices).toHaveLen…
+     62|       expect(Math.max(...values.filter((_,i)=>i%3===1))).toBeCloseTo(h…
+       |                                                          ^
+     63|       const groundY = values.slice(12,18).filter((_,i)=>i%3===1);
+     64|       expect(groundY).toEqual([-.24,-.24]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/10]⎯
+
+ FAIL  tests/art/wall-upright-volume.test.js > upright original wall posts > keeps level 3 wider faces inside the real footprint and below visible authored post tops
+AssertionError: expected 1.418 to be close to 2.19, received difference is 0.772, but expected 5e-13
+ ❯ tests/art/wall-upright-volume.test.js:62:58
+     60|       const values = batch.positions;
+     61|       expect(values).toHaveLength(48); expect(batch.indices).toHaveLen…
+     62|       expect(Math.max(...values.filter((_,i)=>i%3===1))).toBeCloseTo(h…
+       |                                                          ^
+     63|       const groundY = values.slice(12,18).filter((_,i)=>i%3===1);
+     64|       expect(groundY).toEqual([-.24,-.24]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/10]⎯
+
+ FAIL  tests/art/wall-upright-volume.test.js > upright original wall posts > keeps level 4 wider faces inside the real footprint and below visible authored post tops
+AssertionError: expected 1.518 to be close to 2.34, received difference is 0.8219999999999998, but expected 5e-13
+ ❯ tests/art/wall-upright-volume.test.js:62:58
+     60|       const values = batch.positions;
+     61|       expect(values).toHaveLength(48); expect(batch.indices).toHaveLen…
+     62|       expect(Math.max(...values.filter((_,i)=>i%3===1))).toBeCloseTo(h…
+       |                                                          ^
+     63|       const groundY = values.slice(12,18).filter((_,i)=>i%3===1);
+     64|       expect(groundY).toEqual([-.24,-.24]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/10]⎯
+
+ FAIL  tests/art/wall-upright-volume.test.js > upright original wall posts > keeps level 5 wider faces inside the real footprint and below visible authored post tops
+AssertionError: expected 1.5979999999999999 to be close to 2.4400000000000004, received difference is 0.8420000000000005, but expected 5e-13
+ ❯ tests/art/wall-upright-volume.test.js:62:58
+     60|       const values = batch.positions;
+     61|       expect(values).toHaveLength(48); expect(batch.indices).toHaveLen…
+     62|       expect(Math.max(...values.filter((_,i)=>i%3===1))).toBeCloseTo(h…
+       |                                                          ^
+     63|       const groundY = values.slice(12,18).filter((_,i)=>i%3===1);
+     64|       expect(groundY).toEqual([-.24,-.24]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/10]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  10 failed | 1 passed (11)
+   Start at  10:02:24
+   Duration  725ms (transform 44%, import 40%, tests 15%, worker 1%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.3
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.3
+npm notice To update run: npm install -g npm@12.2.3
+npm notice

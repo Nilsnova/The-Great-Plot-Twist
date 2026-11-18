@@ -1,0 +1,410 @@
+{
+  "sourceFile": "frontend/public/village/houses-v1.png",
+  "generatedBy": "OpenAI image_gen, 17 November 2026",
+  "sha256": "9c7e6e80c8f8b089e2213c2274d4cf98d0d8ba7c9f1574b417855e3f4aad2585",
+  "bytes": 2055185,
+  "nativeSize": [
+    1254,
+    1254
+  ],
+  "mode": "RGBA",
+  "alpha": {
+    "corners": [
+      0,
+      0,
+      1,
+      0
+    ],
+    "solidThreshold": 240,
+    "transparentNoiseThreshold": 16
+  },
+  "cells": [
+    {
+      "id": "island-house",
+      "rect": [
+        46,
+        85,
+        322,
+        304
+      ],
+      "sourceFoot": [
+        163,
+        288
+      ],
+      "solidBounds": [
+        13,
+        14,
+        309,
+        290
+      ],
+      "originalCell": [
+        0,
+        0,
+        418,
+        418
+      ],
+      "group": "plain",
+      "fitBounds": [
+        207,
+        365,
+        186,
+        16
+      ],
+      "nativeGroundFoot": [
+        209,
+        373
+      ],
+      "logical": [
+        80,
+        80,
+        8
+      ]
+    },
+    {
+      "id": "island-house-l2",
+      "rect": [
+        420,
+        79,
+        389,
+        313
+      ],
+      "sourceFoot": [
+        207,
+        297
+      ],
+      "solidBounds": [
+        13,
+        14,
+        375,
+        299
+      ],
+      "originalCell": [
+        418,
+        0,
+        418,
+        418
+      ],
+      "group": "plain",
+      "fitBounds": [
+        207,
+        365,
+        186,
+        16
+      ],
+      "nativeGroundFoot": [
+        627,
+        376
+      ],
+      "logical": [
+        80,
+        80,
+        8
+      ]
+    },
+    {
+      "id": "island-house-l3",
+      "rect": [
+        847,
+        22,
+        384,
+        380
+      ],
+      "sourceFoot": [
+        198,
+        365
+      ],
+      "solidBounds": [
+        13,
+        13,
+        370,
+        366
+      ],
+      "originalCell": [
+        836,
+        0,
+        418,
+        418
+      ],
+      "group": "plain",
+      "fitBounds": [
+        207,
+        365,
+        186,
+        16
+      ],
+      "nativeGroundFoot": [
+        1045,
+        387
+      ],
+      "logical": [
+        80,
+        80,
+        8
+      ]
+    },
+    {
+      "id": "island-house-barracks",
+      "rect": [
+        24,
+        474,
+        391,
+        324
+      ],
+      "sourceFoot": [
+        185,
+        310
+      ],
+      "solidBounds": [
+        13,
+        14,
+        377,
+        311
+      ],
+      "originalCell": [
+        0,
+        418,
+        418,
+        418
+      ],
+      "group": "role",
+      "fitBounds": [
+        206,
+        387,
+        207,
+        16
+      ],
+      "nativeGroundFoot": [
+        209,
+        784
+      ],
+      "logical": [
+        96,
+        88,
+        8
+      ]
+    },
+    {
+      "id": "island-house-tavern",
+      "rect": [
+        435,
+        474,
+        381,
+        325
+      ],
+      "sourceFoot": [
+        192,
+        310
+      ],
+      "solidBounds": [
+        14,
+        14,
+        368,
+        311
+      ],
+      "originalCell": [
+        418,
+        418,
+        418,
+        418
+      ],
+      "group": "role",
+      "fitBounds": [
+        206,
+        387,
+        207,
+        16
+      ],
+      "nativeGroundFoot": [
+        627,
+        784
+      ],
+      "logical": [
+        96,
+        88,
+        8
+      ]
+    },
+    {
+      "id": "island-house-workshop",
+      "rect": [
+        840,
+        474,
+        394,
+        326
+      ],
+      "sourceFoot": [
+        205,
+        310
+      ],
+      "solidBounds": [
+        14,
+        14,
+        381,
+        312
+      ],
+      "originalCell": [
+        836,
+        418,
+        418,
+        418
+      ],
+      "group": "role",
+      "fitBounds": [
+        206,
+        387,
+        207,
+        16
+      ],
+      "nativeGroundFoot": [
+        1045,
+        784
+      ],
+      "logical": [
+        96,
+        88,
+        8
+      ]
+    },
+    {
+      "id": "island-house-barracks-l3",
+      "rect": [
+        23,
+        839,
+        393,
+        399
+      ],
+      "sourceFoot": [
+        186,
+        384
+      ],
+      "solidBounds": [
+        14,
+        13,
+        380,
+        385
+      ],
+      "originalCell": [
+        0,
+        836,
+        418,
+        418
+      ],
+      "group": "role",
+      "fitBounds": [
+        206,
+        387,
+        207,
+        16
+      ],
+      "nativeGroundFoot": [
+        209,
+        1223
+      ],
+      "logical": [
+        96,
+        88,
+        8
+      ]
+    },
+    {
+      "id": "island-house-tavern-l3",
+      "rect": [
+        428,
+        838,
+        393,
+        401
+      ],
+      "sourceFoot": [
+        199,
+        385
+      ],
+      "solidBounds": [
+        14,
+        14,
+        380,
+        387
+      ],
+      "originalCell": [
+        418,
+        836,
+        418,
+        418
+      ],
+      "group": "role",
+      "fitBounds": [
+        206,
+        387,
+        207,
+        16
+      ],
+      "nativeGroundFoot": [
+        627,
+        1223
+      ],
+      "logical": [
+        96,
+        88,
+        8
+      ]
+    },
+    {
+      "id": "island-house-workshop-l3",
+      "rect": [
+        839,
+        838,
+        400,
+        402
+      ],
+      "sourceFoot": [
+        206,
+        387
+      ],
+      "solidBounds": [
+        14,
+        13,
+        386,
+        389
+      ],
+      "originalCell": [
+        836,
+        836,
+        418,
+        418
+      ],
+      "group": "role",
+      "fitBounds": [
+        206,
+        387,
+        207,
+        16
+      ],
+      "nativeGroundFoot": [
+        1045,
+        1225
+      ],
+      "logical": [
+        96,
+        88,
+        8
+      ]
+    }
+  ],
+  "limits": [
+    "Read-only alpha inspection; source PNG is unchanged and no offline edited image is emitted.",
+    "Faint peripheral alpha below16 includes generation noise.",
+    "Actual gameplay/state/provider evidence is separate from this generated source."
+  ],
+  "presentationRevision": "Actual stage-one correction: tight measured rectangles, approved visual boxes, common per-group fit bounds; original PNG and ground feet unchanged",
+  "logicalGroups": {
+    "plain": [
+      80,
+      80,
+      8
+    ],
+    "role": [
+      96,
+      88,
+      8
+    ]
+  }
+}

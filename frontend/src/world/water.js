@@ -4,6 +4,7 @@
 // catch the wave crests it crosses. Low quality draws no glints, rings or moving foam.
 import * as THREE from 'three';
 import { QUALITY } from '../config.js';
+import {coastUvMatrix} from './ground-transform.js';
 import { pixelGlsl, worldVertex, toScreen } from './pixel-glsl.js';
 
 const FIELD_W = 256, FIELD_H = 192, FIELD_PX = 4; // one texel = 4 native pixels of a 64 x 48 backdrop
@@ -22,15 +23,15 @@ let seaPace = 1, seaClock = null, lastTime = null;
 export function setSeaPace(value) { seaPace = Number.isFinite(value) ? Math.max(0, Math.min(1, value)) : 1; }
 export const seaUniforms = {
   uSeaTime: { value: 0 }, uWind: { value: .2 }, uRain: { value: 0 }, uDetail: { value: 1 },
-  uCoast: { value: coastTexture }, uCoastOn: { value: 0 },
+  uCoast: { value: coastTexture }, uCoastOn: { value: 0 }, uCoastUv: {value: new THREE.Matrix3()},
   uCoastRect: { value: new THREE.Vector4(-BACKDROP.width / 2, -BACKDROP.height / 2, BACKDROP.width, BACKDROP.height) },
 };
 // Distance to the nearest land in native pixels (255 = open sea), for any fragment shader.
 export const seaGlsl = /* glsl */`
-uniform float uSeaTime,uWind,uRain,uDetail,uCoastOn;uniform sampler2D uCoast;uniform vec4 uCoastRect;
+uniform float uSeaTime,uWind,uRain,uDetail,uCoastOn;uniform sampler2D uCoast;uniform vec4 uCoastRect;uniform mat3 uCoastUv;
 float coastDistance(vec2 p){
   if(uCoastOn<.5)return 255.0;
-  vec2 uv=(p-uCoastRect.xy)/uCoastRect.zw;
+  vec2 uv=(uCoastUv*vec3(p,1.0)).xy;
   if(uv.x<0.0||uv.y<0.0||uv.x>1.0||uv.y>1.0)return 255.0;
   return texture2D(uCoast,uv).r*255.0;
 }`;
@@ -77,8 +78,8 @@ function findBackdrop(group) {
 }
 
 // The clean cartoon sea (GAME-V3.md §7): a smooth depth gradient from turquoise shallows to deep
-// blue, soft light streaks drifting with the swell, a white foam edge and a second foam line that
-// runs up and back along the actual coast, a few soft glints, rain rings and whitecaps. Every edge is
+// blue, intersecting ripples and restrained caustics, a white foam edge and broken surf that
+// runs along the actual coast, soft sun flecks, rain rings and whitecaps. Every edge is
 // antialiased with fwidth, so the sea stays clean at any resolution and zoom.
 const fragment = /* glsl */`
 ${pixelGlsl}${seaGlsl}
@@ -89,27 +90,45 @@ void main(){
   vec2 p=vWorld;float t=uSeaTime;
   float d=coastDistance(p)/16.0; // world units to the nearest land (16 = open sea)
   if(d < .02)discard; // land: the place's ground covers it
-  // Depth: shallows hug the coast, the open sea deepens with a slow large-scale variation.
-  float swell=sin(p.y*.55+sin(p.x*.13+t*.18)*1.4-t*(.35+uWind*.6))*.5+.5;
-  float far=pxNoise(p*.045+vec2(t*.01,0.0));
-  vec3 colour=mix(uMid,uDeep,smoothstep(.35,.9,far)*.85);
-  colour=mix(colour,uLight,swell*.22);
+  // Broad depth pockets and crossing swells give the sea mass beneath the smaller ripples.
+  // The same real coast distance still defines the shallows; none of these colours add land.
+  float swell=sin(p.y*.38+p.x*.12+sin(p.x*.13+t*.18)*1.4-t*(.35+uWind*.6))*.5+.5;
+  float far=pxNoise(p*.055+vec2(t*.01,0.0))*.7+pxNoise(p*.12+vec2(7.0,3.0))*.3;
+  float depth=smoothstep(1.0,11.0,d);
+  vec3 colour=mix(uMid,uDeep,clamp(depth*.58+smoothstep(.25,.85,far)*.4,0.0,1.0));
+  colour=mix(colour,uLight,smoothstep(.3,.9,swell)*(.09+(1.0-depth)*.11));
   float shallow=1.0-smoothstep(.0,4.2,d+sin(p.x*.8+p.y*.5+t*.6)*.25);
   colour=mix(colour,uShallow,shallow*.85);
   colour=mix(colour,uShallow2,(1.0-smoothstep(.0,1.3,d))*.9);
-  // Soft light streaks along the swell, broken into dashes by noise, drifting with the wind.
+  // Curled noise contours break up highlights without two crossing families of periodic lines.
+  // The entire extra material branch is disabled by the existing low-quality uniform.
   if(uDetail>.5){
-    float lineY=p.y*1.25+sin(p.x*.32+t*.45)*.55-t*(.18+uWind*.25);
-    float crest=abs(fract(lineY)-.5);
-    float dash=smoothstep(.45,.75,pxNoise(vec2(p.x*.22+floor(lineY)*7.3,floor(lineY)*1.7)+vec2(t*.05,0.0)));
-    float streak=(1.0-band(crest,.06))*dash*smoothstep(1.2,3.0,d);
-    colour=mix(colour,uStroke,streak*.55);
+    vec2 drift=vec2(t*(.06+uWind*.06),-t*.045);
+    float curl=pxNoise(p*.42+drift), coarse=pxNoise(p*.19-drift);
+    float broad=curl*.6+coarse*.4;
+    vec2 flow=p*vec2(.55,1.4)+vec2(coarse,curl)*2.4;
+    float ripple=pxNoise(flow+drift);
+    float broken=smoothstep(.32,.75,curl);
+    float offshore=smoothstep(.5,2.0,d);
+    float crest=(1.0-band(abs(ripple-.55),.025))*broken*offshore;
+    float sheen=smoothstep(.35,.85,ripple);
+    colour=mix(colour,uDeep,(1.0-broad)*.09);
+    colour=mix(colour,uLight,sheen*.05);
+    colour=mix(colour,uStroke,crest*.16);
+    vec2 q=p*2.2+vec2(broad,pxNoise(p*.65-drift))*.8;
+    float cells=pxNoise(q+drift)+pxNoise(q*1.95-drift)*.2;
+    float caustic=(1.0-band(abs(cells-.6),.02))*smoothstep(.6,1.2,d)*(1.0-smoothstep(1.5,3.0,d));
+    colour=mix(colour,uShallow2,caustic*.12);
   }
-  // Surf: a solid foam edge and a second foam line that runs up and back.
-  float run=.5+.5*sin(t*(.8+uWind*.5)+p.x*.21+p.y*.37);
-  float edge=.28+sin(p.x*2.1+p.y*1.3+t*1.2)*.05;
+  // The close edge is still in low quality; its extra movement and broken surf are high-only.
+  float foamTime=uDetail>.5?t:0.0;
+  float run=.5+.5*sin(foamTime*(.8+uWind*.5)+p.x*.21+p.y*.37);
+  float edge=.18+sin(p.x*2.1+p.y*1.3+foamTime*1.2)*.045;
   float surf=.55+run*(.6+uWind*.5);
-  if(uDetail>.5)colour=mix(colour,uFoam,(1.0-band(abs(d-surf),.07))*.75*smoothstep(.0,.25,run));
+  if(uDetail>.5){
+    float broken=smoothstep(.25,.7,pxNoise(p*1.4+vec2(foamTime*.08,-foamTime*.03)));
+    colour=mix(colour,uFoam,(1.0-band(abs(d-surf),.06))*.8*broken*smoothstep(.0,.25,run));
+  }
   colour=mix(colour,uFoam,1.0-band(d,edge));
   // Whitecaps on crests once the wind picks up.
   if(uDetail>.5&&uWind>.45){
@@ -118,12 +137,12 @@ void main(){
     float on=step(1.0-(uWind-.45)*.35,cap)*smoothstep(3.0,5.0,d);
     colour=mix(colour,uFoam,on*(1.0-band(length(local),.35))*.85);
   }
-  // Glints: soft four-point sparkles that blink here and there.
+  // Reflected sun flecks are short soft ripples, without floating star-shaped marks.
   if(uDetail>.5){
     vec2 cell=floor(p/vec2(4.2,2.4));float h=pxHash(cell);vec2 local=p-(cell+vec2(.3+h*.4,.3+fract(h*7.0)*.4))*vec2(4.2,2.4);
     float blink=fract(h*13.7+t*(.18+h*.2)),life=smoothstep(.0,.04,blink)*(1.0-smoothstep(.04,.1,blink));
-    float star=max(1.0-band(abs(local.x)*.6+abs(local.y)*4.0,.12),1.0-band(abs(local.x)*4.0+abs(local.y)*1.4,.12));
-    colour=mix(colour,uGlint,star*life*step(.55,swell)*smoothstep(3.0,4.0,d));
+    float fleck=1.0-band(length(local*vec2(.8,3.4)),.13);
+    colour=mix(colour,uGlint,fleck*life*step(.55,swell)*smoothstep(3.0,4.0,d));
   }
   // Rain: small rings open on the water and fade.
   if(uDetail>.5&&uRain>.01&&d>.3){
@@ -138,7 +157,7 @@ void main(){
 }`;
 
 export function createWater(scene) {
-  const colours = { uDeep: '#1b6aa3', uMid: '#2689bb', uLight: '#3aa6cf', uShallow: '#3fbfc9', uShallow2: '#7fe3d4', uFoam: '#ffffff', uGlint: '#ffffff', uStroke: '#8fdcf0' };
+  const colours = { uDeep: '#07566e', uMid: '#087f96', uLight: '#3dbdc9', uShallow: '#38c9b5', uShallow2: '#8be2c5', uFoam: '#f4fffa', uGlint: '#e6fff5', uStroke: '#63cfd6' };
   const uniforms = { ...seaUniforms };
   for (const [key, value] of Object.entries(colours)) uniforms[key] = { value: new THREE.Color(value) };
   const material = new THREE.ShaderMaterial({ uniforms, vertexShader: worldVertex, fragmentShader: fragment,
@@ -157,6 +176,7 @@ export function createWater(scene) {
         coastTexture.image.data.set(readField(backdrop.material.map.image));
         backdrop.updateWorldMatrix(true, false);
         const origin = new THREE.Vector3().setFromMatrixPosition(backdrop.matrixWorld);
+        seaUniforms.uCoastUv.value.copy(coastUvMatrix(backdrop.matrixWorld, BACKDROP.width, BACKDROP.height));
         seaUniforms.uCoastRect.value.set(origin.x - BACKDROP.width / 2, origin.y - BACKDROP.height / 2, BACKDROP.width, BACKDROP.height);
         seaUniforms.uCoastOn.value = 1;
       } catch { coastTexture.image.data.fill(255); seaUniforms.uCoastOn.value = 0; }

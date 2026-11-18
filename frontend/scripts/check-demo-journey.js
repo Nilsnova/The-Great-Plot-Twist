@@ -34,6 +34,11 @@ async function frontDoor(url){
   await page.getByRole('button',{name:'Got it',exact:true}).click();
   await page.waitForFunction(()=>window.__island?.classDemo&&window.__island.world.current?.id==='saltreach_harbor'&&!document.querySelector('dialog[open]'),null,{timeout:30000});
 }
+async function unfoldGoals(){
+  const show=page.getByRole('button',{name:'Show the goals',exact:true});
+  if(await show.isVisible())await show.click();
+  await page.locator('.quest-fold[aria-expanded=true]').waitFor();
+}
 try{
   await page.setViewportSize({width:1280,height:720});
   // ---- part 1: the real lock path, recorded answers ----
@@ -60,9 +65,12 @@ try{
   check((await page.locator('.quest-item').allTextContents()).join('|')==='1Wave to a captain|2Help defend Pirate Point|3Light a lamp','The strip lists wave, defend Pirate Point and a lamp');
   check(await page.evaluate(()=>window.__island.classDemo.presencePlace('saltreach_harbor')==='class_harbor'),'A joined player announces the class harbor place');
   await page.locator('.demo-splash').waitFor();await shot('03-class-harbor-splash');
-  await page.locator('.quest-item').nth(2).click();
-  check((await page.locator('.quest-hint').textContent()).includes('lamps by the lighthouse'),'Tapping a goal shows its one-line hint');
-  await page.locator('.quest-item').nth(2).click();
+  await unfoldGoals();
+  const waveGoal=page.locator('.quest-item[data-quest=wave][data-current=true]');
+  await waveGoal.click();
+  check((await page.locator('.quest-hint').textContent()).includes('Walk up to another captain'),'The actual current Wave goal opens its hint');
+  await shot('03b-current-wave-hint');
+  await waveGoal.click();
   await teleport(6.2,15.3);await page.locator('.demo-prompt button').waitFor();await shot('04-lock-prompt');
   await page.keyboard.press('KeyE');await page.locator('.lock-modal[open] .lock-choice').first().waitFor();
   await shot('05-lock-question');
@@ -103,15 +111,6 @@ try{
   check(await page.locator('.duel-reveal:not([hidden])').count()===1,'A friendly duel still reaches the spotlight reveal (no longer a class goal)');
   await page.locator('.duel-reveal .duel-banner').filter({hasText:/./}).waitFor({timeout:10000});
   await page.getByRole('button',{name:'Back to the ring'}).click();
-  await teleport(-5,16.9);await page.locator('.lamp-hold').waitFor();await shot('24-lamp-prompt');
-  await page.keyboard.down('KeyE');await page.waitForTimeout(2300);await page.keyboard.up('KeyE');
-  check(await page.evaluate(()=>window.__island.classDemo.debug.lamps.lamps[0].litAt!==null),'Holding E for 2 s lights the lamp');
-  check(await page.evaluate(()=>window.__island.classDemo.debug.quests.lamp===true),'Lighting a lamp ticks the lamp goal');
-  await page.waitForTimeout(400);await shot('25-lamp-lit');
-  await page.locator('dialog.cutscene[open]').waitFor({timeout:12000});await page.waitForTimeout(1500);await shot('26-lamps-relight-cutscene');
-  check(await cutsceneTitle()==='The three lamps','All three lamps within 20 s relight the lighthouse with the cutscene');
-  await page.getByRole('button',{name:'Skip',exact:true}).click();await page.waitForTimeout(800);await shot('27-lighthouse-relit');
-  check(await page.evaluate(()=>[...document.querySelectorAll('.u-toast,.lamp-status,.sound-caption')].filter(node=>!node.hidden&&node.getClientRects().length&&node.textContent.trim()).length)===1,'The relit lighthouse shows one caption, not three');
   await page.keyboard.press('KeyJ');await page.locator('.projector:not([hidden]) canvas').waitFor();await page.waitForTimeout(300);await shot('28-projector');
   check(await page.evaluate(()=>{const canvas=document.querySelector('.projector canvas');return canvas.width>200&&!canvas.hidden&&document.querySelector('.projector-code').textContent==='HARBOR-TESTS'
     &&canvas.getAttribute('aria-label')==='QR code for https://the-great-plot-twist.vercel.app/?join=TESTS';}),'J shows the projector panel with the QR canvas for the practice class code HARBOR-TESTS');
@@ -129,6 +128,30 @@ try{
   }
   await page.waitForFunction(()=>window.__island.classDemo.debug.quests.defend===true,null,{timeout:15000});
   check(true,'Joining the Pirate Point battle ticks the defend goal');
+  // Main intentionally hides future goals and the battle HUD hides the strip. Return to the harbor
+  // after real Wave/Defend progress, while Lamp is current, before either lamp finale is attempted.
+  await page.evaluate(async()=>{await window.__island.world.goTo('saltreach_harbor',{fast:true});});
+  await page.locator('.quest-strip').waitFor();await unfoldGoals();
+  await page.locator('.quest-item[data-quest=lamp][data-current=true]').click();
+  check((await page.locator('.quest-hint').textContent()).includes('lamps by the lighthouse'),'Tapping a goal shows its one-line hint');
+  await shot('28b-current-lamp-hint');
+  await page.locator('.quest-item[data-quest=lamp][data-current=true]').click();
+  await teleport(-5,16.9);await page.locator('.lamp-hold').waitFor();await shot('24-lamp-prompt');
+  await page.keyboard.down('KeyE');await page.waitForTimeout(2300);await page.keyboard.up('KeyE');
+  check(await page.evaluate(()=>window.__island.classDemo.debug.lamps.lamps[0].litAt!==null),'Holding E for 2 s lights the lamp');
+  check(await page.evaluate(()=>window.__island.classDemo.debug.quests.lamp===true),'Lighting a lamp ticks the lamp goal');
+  await page.waitForTimeout(400);await shot('25-lamp-lit');
+  await page.locator('dialog.cutscene[open]').waitFor({timeout:12000});await page.waitForTimeout(1500);await shot('26-lamps-relight-cutscene');
+  check(await cutsceneTitle()==='The three lamps','All three lamps within 20 s relight the lighthouse with the cutscene');
+  await page.getByRole('button',{name:'Skip',exact:true}).click();await page.waitForTimeout(800);await shot('27-lighthouse-relit');
+  check(await page.evaluate(()=>[...document.querySelectorAll('.u-toast,.lamp-status,.sound-caption')].filter(node=>!node.hidden&&node.getClientRects().length&&node.textContent.trim()).length)===1,'The relit lighthouse shows one caption, not three');
+  // If that ordinary battle ended while we visited the harbor, ring the real projector bell again.
+  if(await page.evaluate(()=>!window.__island.waves.point.controller.wave||window.__island.waves.point.controller.wave.done)){
+    await page.keyboard.press('KeyJ');
+    await page.locator('.projector:not([hidden])').getByRole('button',{name:'Ring the Pirate Point bell',exact:true}).click();
+    await page.keyboard.press('KeyJ');
+  }
+  await page.evaluate(async()=>{await window.__island.world.goTo('lighthouse_isle',{fast:true});});
   await page.waitForFunction(()=>window.__island.experience.stats.drawn>=10,null,{timeout:15000});
   await page.waitForFunction(()=>window.__island.waves.point.controller.state?.ships?.length>0,null,{timeout:30000,polling:250});
   await page.waitForTimeout(1500);await shot('29-pirate-point-battle');
