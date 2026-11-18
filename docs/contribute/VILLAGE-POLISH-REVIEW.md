@@ -4,12 +4,12 @@ For **Johannes Franz Lang (`frcola`)** and a different human reviewer. This guid
 explains the presentation follow-up to the existing reference-village build. It
 does not record completed human approval or a deployment.
 
-**Review status: the last QA-only application run is in progress.** Final
-actual-game captures, terrain parity, the corrected renderer matrix, the
-comparison-page browser check and both paid-tier walkthroughs have completed.
-Two earlier full application sequences retain mixed results. Final VIS60-run
-results remain pending; no complete-suite green result is claimed. All PRs stay
-Draft and human acceptance remains open.
+**The review package is complete; application checks are not fully green.** The
+final source `6c1cda17` has **4,792 frontend passes / one known input timeout**,
+and its multiplayer run stops at the known own-musket-pose check (**0 versus 2**).
+Actual-game captures, paid tiers, terrain parity, the corrected matrix and the
+comparison page have passed their stated checks. Later multiplayer steps remain
+unproved. All PRs stay Draft; human visual, explain-back and peer review are open.
 
 The user's latest constraint is to keep the game that teammates have playtested
 and improve how it looks. Relative to fixed before source `6c87b8dc`, this pass
@@ -43,8 +43,8 @@ The implementation retains its existing original pirate-village artwork.
 | 1 | VIS57: preserve current main and the prior visual preview | [#426](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/426) | Both histories and all teammate fixes survive; the renderer uses smoothed coordinates with the existing projection; migration versions are unique. |
 | 2 | VIS54: home-tree clearance | [#427](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/427) | Smaller artwork leaves exact tree feet, blockers, player fade, wind and house growth intact. |
 | 3 | VIS55: connected wall details | [#428](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/428) | Real tier posts, cap trim and profiles improve readability without changing paid positions, contacts, health or gaps. |
-| 4 | VIS59: strict wall observer | [#435](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/435) | QA-only follow-up recognizes the deliberately changed wall profiles and sparse posts while retaining topology/buffer checks; reruns remain pending. |
-| 5 | VIS60: distinct sync samples | [#437](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/437) | QA-only collector stops discarding owner observations, keeps unique tick pairs and preserves minimum coverage/tolerances. Final native outcome is pending. |
+| 4 | VIS59: strict wall observer | [#435](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/435) | QA-only observer recognizes the deliberate profiles and sparse posts; its former failure is absent from the two later complete frontend runs. |
+| 5 | VIS60: distinct sync samples | [#437](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/437) | QA-only collector retains unique tick pairs/minimum coverage/tolerances. Final native proof has 108 matching first-wave owner/Ben pairs; the later comparison target is not reached. |
 | 6 | VIS58: landscape materials | [#431](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/431) | Ground color/texture sampling and rock lighting change inside the original masks; native alpha and fallback bytes are retained. |
 | 7 | VIS56: existing-level renderer fixtures | [#430](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/430) | The actual compiled frames and shared wall renderer cover the real level/state catalogue; fixtures are labeled honestly. |
 | 8 | VIS56: assembled actual-game review | [#432](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/432) | The composed source has matching screenshots, paid-action proof and fresh regression results. |
@@ -179,7 +179,7 @@ retain the existing manual/server-governed rules.
 | `b844407065cfc9cb3a974c11224050c6186e6bc6` | Later helper-only high-density attempt: failed before its first intended capture because the capture helper read a null selection. This is retained as a verification-helper failure, not a game regression. |
 | `7fab8866b83e27c6102df6b123ffdf2eb96619d0` | High-density paid-tier proof passed in 305.36s and actual capture passed in 192.03s. Its complete first application sequence has two frontend failures and a multiplayer comparison-coverage failure. Product/test trees match `9fa15494`. |
 | `0a461c47c3818c5ba31db6113b575c5802dfcc23` | VIS59 QA-only observer correction and fixture caption fix. Full frontend: 4,760 passed / one input timeout; native matrix passed; multiplayer stopped at the own-musket-pose check. Product trees still match the captures. |
-| `6c1cda1739f9e5b8d96946d04c3d919cbe00fcfe` | Final QA-only candidate with VIS60's distinct-sample collector and terminal receipts. Last full frontend/native run is pending. Product trees are unchanged; script/test identities are recorded separately. |
+| `6c1cda1739f9e5b8d96946d04c3d919cbe00fcfe` | Final verification runtime: frontend 4,792 passed / one input timeout; multiplayer failed own-musket pose 0 versus 2. Build/budget/text passed; terminal first-wave sample data is preserved. Product trees are unchanged; script/test identities differ and are recorded separately. |
 
 The candidate's application identities are recorded in
 [the source record](../evidence/village-polish-review/source.json). Source identity
@@ -253,8 +253,11 @@ appearance remain limitations to assess rather than invented new tier art.
 | First `7fab8866` multiplayer | Failed in 341.53s at minimum paired-comparison coverage: one matching pair observed, minimum three required. Prior pose assertions passed in this run; unrecorded states and later steps remain unknown. |
 | VIS59-corrected `0a461c47` frontend | 4,760 passed / one known input timeout (4,761), 423 passed / one failed files (424), 553.31s Vitest / 554.35s process. Observer failure is resolved in this complete run. |
 | `0a461c47` multiplayer/build/budget/text | Multiplayer failed in 358.28s at line 809, own-musket pose 1 versus 2. Build/budget/text passed in 2.41s / 0.32s / 1.55s. This run is not green. |
-| Final VIS60 run | Full frontend/native checks on `6c1cda17` are pending. The QA collector has no product-code change; earlier outcomes do not establish this final result. |
-| This documentation | Interim static check passed: 157 copied originals, all 20 before-image inventory hashes, 12 unchanged comparison images, ARIA/syntax, 57 relative link targets and 164 manifest file hashes. Final VIS60 receipts require a fresh static pass. No application tests run by this writer; two original-log EOF whitespace diagnostics are retained separately. |
+| Final VIS60 frontend | **4,792 passed / one failed (4,793)**, 425 passed / one failed files (426), **575.87s Vitest / 576.94s process**. Only the unchanged input-ownership case times out at **20.025s**. |
+| Final VIS60 multiplayer | **Failed in 345.91s**, current line 814: own-musket pose **0 versus 2**. Boss/finisher steps and the late-join wave-two comparison target were not reached. Overall final command sequence exit is **1**. |
+| Final first-wave samples | Only `fake-wave-1`, owner/Ben: **108 distinct checked / 108 matching ship and boarder pairs**, worst recorded drift 0/0; 19 include boarders. Exact heart and militia checks are **86/86 each**. This is scoped sample evidence, not native resolution of the later coverage failure. |
+| Final build/budget/text | Passed in **6.03s / 0.80s / 3.51s**. Title remains 18,932 JS / 9,410 CSS bytes, no title image; text remains 4,550 candidates / 534 files, 0 errors / 8 report-only findings. |
+| This documentation | Final static pass: 169 copied originals, all 20 before-image inventory hashes, 12 unchanged comparison images, 65 local targets and 176 manifest file hashes verified. Checker syntax/ARIA and authored whitespace pass; three original-log EOF diagnostics retained. No application tests run by this writer. |
 
 The first frontend command finished with two failures: the unchanged
 defense-report ownership case at its **20.027s timeout**, and the old multiplayer
@@ -265,8 +268,9 @@ fresh complete run after that QA correction passed the observer checks, leaving
 the known input timeout. VIS60 separately corrects the sampling collector: all
 distinct owner/peer tick pairs are considered, exact tick before ±1, with no
 sample reuse or duplicate inflation. Minimum three comparisons, tolerances,
-native actions and exact heart/militia checks remain unchanged. Its final native
-outcome still needs the last frozen run.
+native actions and exact heart/militia checks remain unchanged. The final run
+records 108 distinct first-wave owner/Ben comparisons, but stops at the pose
+assertion before the later comparison target. That target is still unverified.
 
 The first multiplayer failure is a **coverage failure, not a demonstrated state
 mismatch**: the one observed ship/boarder pair matched, with worst recorded drift
@@ -276,16 +280,32 @@ known family as issue #421. Do not call either source's full multiplayer run
 green or describe them as the same failure. Boss/finisher steps after the stop
 were not proved. Exact raw logs preserve both outcomes.
 
+The final run repeats the pose-family failure with **zero**, rather than one,
+observed own-musket poses. Its raw first-wave arrays are preserved in
+[sync-samples.json](../evidence/village-polish-review/checks/final-vis60/multiplayer-captures/sync-samples.json).
+The file contains no second-wave/Ana comparison: matching first-wave samples
+must not be used to claim the late-join coverage problem is fully native-resolved.
+Ana/Max join, lobby and membership checks did pass; the unproved boundary is the
+later-wave synchronization comparison, not joining itself.
+The [final invariant receipt](../evidence/village-polish-review/checks/final-invariants-6c1cda17.json)
+confirms all six application/script/test trees match the frozen final runtime,
+the same five presentation-file delta, 71 unique migrations and the untouched
+original checkout. The earlier 480d invariant receipt remains separate history.
+
 The older `e874023f` frontend run had **4,586 passes and one unchanged 20-second
 input timeout**. Its full multiplayer predecessor stopped at a firing-pose check;
 later boss/finisher steps were not reached. Those remain historical open evidence
 in [the previous guide](REFERENCE-VILLAGE-REVIEW.md), [Draft #408](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/408)
 and [issue #421](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/421).
-Fresh results must establish their status on the corrected follow-up. No timeout,
+The final source still has the input and pose-family failures described above.
+No timeout,
 frame count, graphics limit or substantive assertion is relaxed to obtain a pass.
 
 ## Limits and the human review gate
 
+- The final complete frontend and multiplayer commands fail for the recorded
+  input timeout and pose feedback. This package does not claim all checks pass.
+  Later boss/finisher and late-join comparison steps remain unproved.
 - The landscape and wall composition improve readability; pixel-perfect parity
   and commercial-game production quality are not established.
 - Original world art and terrain still total **12,554,858 bytes**. The unchanged

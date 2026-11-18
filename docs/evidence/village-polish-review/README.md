@@ -2,10 +2,11 @@
 
 Used by Johannes Franz Lang (`frcola`) and reviewers of [Draft #432](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/432) and [documentation Draft #433](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/433).
 
-**The last QA-only application run is in progress.** Final actual-game captures,
-terrain parity, the corrected matrix, comparison-page browser proof and both
-paid-tier walkthroughs have completed. The first two full command sequences keep
-their mixed results below; the final VIS60 run remains pending. The directory does not
+**Evidence collection is complete; application checks are not fully green.** Final
+`6c1cda17` frontend: 4,792 passes / one known input timeout. Multiplayer fails
+own-musket poses 0 versus 2. Actual captures, paid tiers, matrix, terrain and
+comparison checks have passed their stated scope. Human review and the listed
+unverified steps remain open. The directory does not
 inherit a pass from older sources. The documentation writer runs static checks
 only; it does not run Chrome or application tests.
 
@@ -28,7 +29,9 @@ workspace origins plus the inventory of all twenty original before PNGs.
 | Source invariants | [Coordinator's static record](checks/static-invariants.json): exactly five changed presentation files relative to `6c87b8dc`; backend, migrations, public assets and package/lock files unchanged, required histories retained and original checkout untouched. |
 | First application sequence | [Raw report](checks/first-7fab/report.json) on `7fab8866`: frontend 4,639 passed / 2 failed; a11y 33/demo 34/layout 21 passed; build/budget/text passed; multiplayer coverage failed. Overall exit 1. |
 | Post-VIS59 sequence | [Raw report](checks/post-vis59-0a/report.json) on `0a461c47`: frontend 4,760 passed / one input timeout; multiplayer failed at own-musket pose 1 versus 2; build/budget/text passed. Overall exit 1. |
-| Final VIS60 sequence | [Draft #437](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/437) changes the strict observation collector only. Source `6c1cda17` full/native results are pending; no product-code or final-green claim. |
+| Final VIS60 sequence | [Raw report](checks/final-vis60/report.json) on `6c1cda17`: **4,792 passed / one failed**, 426 files (425 pass / one fail), 575.87s Vitest / 576.94s process; input timeout 20.025s. Multiplayer fails 0 versus 2 own poses in 345.91s, line 814. Build/budget/text pass 6.03s / 0.80s / 3.51s. Overall exit 1. |
+| Final sync samples | [Raw arrays and metrics](checks/final-vis60/multiplayer-captures/sync-samples.json): ONLY first-wave owner/Ben, 108 distinct checked and matching ship/boarder pairs, worst 0/0; 19 include boarders, exact heart and militia 86/86 each. Later comparison target not reached. |
+| Final invariants | [New receipt](checks/final-invariants-6c1cda17.json), separate from the old 480d snapshot: six code/script/test trees match runtime; five product-file delta, 71 unique migrations, unchanged backend/migrations/public/packages, required histories and original clean checkout retained. |
 | Comparison document | [Native receipt](comparison-browser/report.json) passed in 7.11s: exact served HTML and 13 response hashes, 12 decoded images, 3 tablists / 33 real actions at each viewport, zero page/console/external errors. |
 
 The generated concepts remain in their [original design folder](../../design/reference-village/approved-2026-11-17/README.md).
@@ -139,7 +142,19 @@ VIS59's strict profile observer resolves the obsolete level-three `1.45` versus
 has 4,760 passes and one known input timeout. VIS60 then considers all distinct
 tick pairs, exact before ±1, with no sample reuse or duplicate inflation. Minimum
 three comparisons, tolerances, native actions and exact heart/militia checks stay
-in force. Its final frozen-source native run is still pending.
+in force. The final run provides 108 matching first-wave owner/Ben comparisons,
+but fails own-pose feedback before the later target. It does **not** establish
+full native resolution of the earlier late-join coverage failure. Boss/finisher
+and late-join wave-two comparison steps are not reached.
+Ana/Max join, lobby and membership checks passed; only the later synchronization
+comparison remains unproved, not the act of joining.
+
+Useful original multiplayer diagnostics are the
+[musket-stage image](checks/final-vis60/multiplayer-captures/03-wave1-muskets-me.png),
+[owner failure image](checks/final-vis60/multiplayer-captures/failure-me.png) and
+[Ben failure image](checks/final-vis60/multiplayer-captures/failure-ben.png).
+They use the native multiplayer harness's own viewport dimensions; they are not
+the standard before/after captures.
 
 Documentation at `13c10cdc` has the same frontend source/public/backend and
 migrations subtree as `9fa15494`, while top-level Supabase differs through README
@@ -154,4 +169,4 @@ database application, deployment and automatic island growth are not proven.
 World art and terrain still transfer 12,554,858 bytes against the unchanged 8MiB
 effort target. All work remains Draft; no PR/main merge or rollout is represented.
 
-Original frontend reporter logs retain their final blank line. The [two Git whitespace diagnostics](checks/original-log-whitespace.txt) are recorded rather than changing those raw bytes; authored text and checker whitespace checks pass.
+Original frontend reporter logs retain their final blank line. The [Git whitespace diagnostics](checks/original-log-whitespace.txt) are recorded rather than changing those raw bytes; authored text and checker whitespace checks pass.

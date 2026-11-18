@@ -1,11 +1,11 @@
 {
-  "status": "interim_final_VIS60_application_run_pending",
-  "originalArtifactsByteVerified": 157,
+  "status": "final_static_validation_complete_with_documented_application_failures",
+  "originalArtifactsByteVerified": 169,
   "allBeforePngInventoryHashesVerified": 20,
   "comparisonImages": 12,
   "tablists": 3,
   "tabs": 8,
-  "relativeLinkTargetsChecked": 57,
+  "relativeLinkTargetsChecked": 65,
   "jsonParse": "passed",
   "htmlKeyboardScriptSyntax": "passed",
   "nativeCheckerSyntax": "passed",
@@ -21,9 +21,11 @@
   "originalLogWhitespace": {
     "exitCode": 2,
     "diagnostics": [
+      "docs/evidence/village-polish-review/checks/final-vis60/frontend.log:4884: new blank line at EOF.",
       "docs/evidence/village-polish-review/checks/first-7fab/frontend.log:4757: new blank line at EOF.",
       "docs/evidence/village-polish-review/checks/post-vis59-0a/frontend.log:4852: new blank line at EOF."
     ],
-    "reason": "preserve exact raw reporter output; no code/test change"
-  }
+    "reason": "untouched original reporter output retained"
+  },
+  "finalApplicationTests": "not run by documentation writer; coordinator receipts copied unchanged"
 }
