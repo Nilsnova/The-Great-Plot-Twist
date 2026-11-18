@@ -3,14 +3,14 @@ import { expect, it } from 'vitest';
 import { createWaveController } from '../../src/pirates/controller.js';
 import { createRoomProxy } from '../../src/pirates/room.js';
 
-async function setup({ playerId = 'me', room = null } = {}) {
-  let now = 100000, latest = null, callbacks = null, range = null, blocked = false;
+async function setup({ playerId = 'me', room = null, inspectDefenses = false, defenses = [], simOptions = {} } = {}) {
+  let now = 100000, latest = null, callbacks = null, range = null, blocked = false, inspection = null, location = 'home_islet';
   const player = { x: 90, z: 0 }, events = [];
-  const controller = createWaveController({ playerId, room, now: () => now, listen: false,
-    world: { scene: {}, container: {}, player: { position: player }, isBlocked: () => blocked },
+  const controller = createWaveController({ playerId, room, now: () => now, listen: false, inspectDefenses, simOptions, getDefenses: () => defenses, place: 'home_islet',
+    world: { scene: {}, container: {}, player: { position: player }, isBlocked: () => blocked, place: () => location },
     createRenderer: () => ({ events(list) { events.push(...list); }, setVisible() {}, update(value) { latest = value; }, dispose() {} }),
     createHud: options => { callbacks = options; return { countdown() {}, bar() {}, prompt() {},
-      banner() {}, setVisible() {}, rangeFeedback(value) { range = value; }, dispose() {} }; },
+      banner() {}, setVisible() {}, rangeFeedback(value) { range = value; }, inspectDefense(value) { inspection = value; }, dispose() {} }; },
     setTimer: () => 0, clearTimer() {} });
   controller.start({ waveId: 'feedback', wave: 1, seed: 77, startsAt: now, weather: { kind: 'calm' } });
   async function advance(ms) {
@@ -18,7 +18,7 @@ async function setup({ playerId = 'me', room = null } = {}) {
   }
   await advance(2000);
   return { controller, player, advance, events, get range() { return range; }, get latest() { return latest; },
-    get callbacks() { return callbacks; }, block(value) { blocked = value; } };
+    get callbacks() { return callbacks; }, get inspection() { return inspection; }, block(value) { blocked = value; }, sailTo(place) { location = place; } };
 }
 
 it('reveals an out-of-range attempt and follows the actual equipped weapon', async () => {
@@ -137,4 +137,56 @@ it('keeps host and visitor range private while their shots are shared', async ()
   } finally {
     host.controller.dispose(); visitor.controller.dispose(); hostRoom.close(); visitorRoom.close();
   }
+});
+
+const INSPECTED_DEFENSES = [
+  {id: 'cannon_1', kind: 'cannon', level: 2, x: -5, z: 0},
+  {id: 'cannon_2', kind: 'mortar', level: 1, x: 5, z: 2},
+];
+
+it('reads one live tower for the inspector without changing simulated combat or captain range', async () => {
+  const settings = {inspectDefenses: true, defenses: INSPECTED_DEFENSES, simOptions: {event: 'night_raid'}};
+  const selected = await setup(settings), baseline = await setup(settings);
+  try {
+    expect(selected.controller.canInspectDefense).toBe(true);
+    expect(selected.inspection).toBeNull();
+    expect(selected.controller.openDefenseInspection()).toBe(true);
+    await selected.advance(50); await baseline.advance(50);
+    expect(selected.inspection.options.map(item => item.id)).toEqual(['cannon_1', 'cannon_2']);
+    expect(selected.latest.defenseCoverage).toEqual(selected.controller.wave.sim.attackCoverage('cannon_1'));
+    selected.callbacks.inspectDefenses.onSelect('cannon_2');
+    selected.callbacks.onRangePreview(true);
+    await selected.advance(50); await baseline.advance(50);
+    expect(selected.latest.defenseCoverage).toMatchObject({id: 'cannon_2', kind: 'mortar', minRange: 8, status: 'ready'});
+    expect(selected.latest.defenseCoverage.litRange).toBeGreaterThan(selected.latest.defenseCoverage.range);
+    expect(selected.range).toMatchObject({radius: 14});
+    expect(baseline.latest.defenseCoverage).toBeNull();
+    expect(selected.controller.state).toEqual(baseline.controller.state);
+    expect(selected.events).toEqual(baseline.events);
+  } finally { selected.controller.dispose(); baseline.controller.dispose(); }
+});
+
+it('clears live inspection when the menu, travel, or a new countdown takes over', async () => {
+  const h = await setup({inspectDefenses: true, defenses: INSPECTED_DEFENSES});
+  try {
+    expect(h.controller.openDefenseInspection()).toBe(true);
+    await h.advance(50);
+    expect(h.inspection.coverage.id).toBe('cannon_1');
+    h.block(true); await h.advance(50);
+    expect(h.inspection).toBeNull();
+    expect(h.latest.defenseCoverage).toBeNull();
+    h.block(false); await h.advance(50);
+    expect(h.inspection).toBeNull();
+    h.controller.openDefenseInspection();
+    h.sailTo('saltreach_harbor'); await h.advance(50);
+    expect(h.latest.defenseCoverage).toBeNull();
+    expect(h.controller.canInspectDefense).toBe(false);
+    h.sailTo('home_islet'); await h.advance(50);
+    h.controller.openDefenseInspection(); await h.advance(50);
+    h.controller.start({waveId: 'next-defense', wave: 2, seed: 78, startsAt: 130000, weather: {kind: 'calm'}});
+    await h.advance(100);
+    expect(h.inspection).toBeNull();
+    expect(h.controller.canInspectDefense).toBe(false);
+    expect(h.latest.defenseCoverage).toBeNull();
+  } finally { h.controller.dispose(); }
 });

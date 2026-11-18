@@ -3,6 +3,29 @@ import {expect, it} from 'vitest';
 import {browserHarness} from '../g20-browser.js';
 const evaluate = browserHarness();
 
+it.each([false,true])('combines saved island purchases and personal wins in either arrival order (recovery first=%s)', async recoveryFirst => {
+  const result = await evaluate(async recoveryFirst => {
+    const {createHud} = await window.g20Import('/src/ui/hud.js');
+    const {on,emit} = await window.g20Import('/src/core/events.js');
+    const values = new Map(), storage = {getItem:key=>values.get(key)??null,setItem:(key,value)=>values.set(key,value)};
+    const hud = createHud(document.body,{hasIsland:()=>true,travel:()=>false},{storage,toast:()=>{}});
+    const finishes = [], stop = on('wave_finished',event=>finishes.push(event));
+    const island = {waveBest:0,crew:{gunner:2},spots:[
+      {kind:'cannon',built:true,level:2},{kind:'wall',built:true},{kind:'mortar',built:true},
+    ]};
+    const recover = ()=>emit({type:'wave_rewards_recovered',wonWaveBest:10,recovered:[]});
+    try {
+      if(recoveryFirst)recover();
+      hud.setQuestIsland(island);
+      if(!recoveryFirst)recover();
+      const beforeInvite = hud.quests.done;
+      emit({type:'island_invite_opened'});
+      return {beforeInvite,done:hud.quests.done,finishes};
+    } finally {stop();hud.dispose();}
+  },recoveryFirst);
+  expect(result).toEqual({beforeInvite:4,done:10,finishes:[]});
+});
+
 it('retains saved wins for later win goals while preserving the ordinary goal order', async () => {
   const result = await evaluate(async () => {
     const {createHud} = await window.g20Import('/src/ui/hud.js');

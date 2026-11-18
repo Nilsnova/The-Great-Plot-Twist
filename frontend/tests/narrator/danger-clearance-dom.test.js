@@ -39,7 +39,7 @@ async function mount(page, large = false) {
     window.play = createHud(game, {start() {}, focus() {}, menu() {}, hasIsland: () => true});
     play.setCoinSource('island'); play.setCoins(7180); play.start();
     play.update(null, {waveStatus: {bestWave: 40, currentWave: 41}});
-    window.battle = createWaveHud({container: game, reducedMotion: () => true});
+    window.battle = createWaveHud({container: game, reducedMotion: () => true, inspectDefenses: {onSelect() {}, onClose() {}}});
     battle.bar({wave: 41, shipsLeft: 7, boardersLeft: 3, islandHp: 20, maxIslandHp: 100});
     battle.health({hp: 25, maxHp: 100, down: false});
     battle.event({id: 'fog_bank', icon: '🌫️', title: 'Fog bank', line: 'Thick fog rolls in. Cannons have shorter range until it lifts.', open: false});
@@ -130,5 +130,31 @@ it('rechecks measured weather expansion and restores the same caption after the 
       return !document.querySelector('.narrator-card');
     });
     expect(disposed).toBe(true);
+  });
+});
+
+it('keeps the live defense selector legible during a large caption on a short phone', async () => {
+  await withPhone(320, 568, async page => {
+    await mount(page, true);
+    await page.evaluate(() => {
+      battle.event({id: 'fog_bank', icon: '🌫️', title: 'Fog bank', line: 'Thick fog rolls in. Cannons have shorter range until it lifts.', open: true});
+      const mortar = {id: 'cannon_1', kind: 'mortar', level: 2};
+      battle.inspectDefense({options: [mortar], coverage: {...mortar, range: 21, minRange: 8, litRange: 34, targets: ['ships', 'boarders'], status: 'ready'}});
+    });
+    expect(await page.locator('.pirate-event').getAttribute('open')).toBeNull();
+    const picker = page.getByRole('combobox', {name: 'Inspect a defense'});
+    expect(await picker.evaluate(node => {
+      const box = node.getBoundingClientRect();
+      return document.elementFromPoint((box.left + box.right) / 2, (box.top + box.bottom) / 2) === node;
+    })).toBe(true);
+    const clearance = await page.evaluate(() => {
+      const panel = document.querySelector('.pirate-defense-inspector').getBoundingClientRect();
+      const stick = document.querySelector('.touch-stick').getBoundingClientRect();
+      return stick.top - panel.bottom;
+    });
+    expect(clearance).toBeGreaterThanOrEqual(0);
+    await page.evaluate(() => battle.inspectDefense(null));
+    await expect.poll(async () => (await measure(page)).drawn).toBe(true);
+    expect(await measure(page)).toMatchObject({sameLine: true, skipPresent: true});
   });
 });

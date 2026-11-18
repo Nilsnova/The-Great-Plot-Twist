@@ -1,0 +1,98 @@
+{
+  "desktop": {
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    },
+    "browser": "157.0.8103.79",
+    "touch": false,
+    "balance": 397900,
+    "wallCount": 12,
+    "cameras": {
+      "work": {
+        "zoom": 0.5513287237388999,
+        "cameraDistance": 0.0,
+        "drawCallsBefore": 84,
+        "drawCallsAfter": 85
+      },
+      "selection": {
+        "zoom": 0.5513287237388999,
+        "cameraDistance": 0.0,
+        "drawCallsBefore": 87,
+        "drawCallsAfter": 87
+      }
+    },
+    "selected": {
+      "id": "wall_10",
+      "renderOrderBefore": [
+        200,
+        201
+      ],
+      "renderOrderAfter": [
+        94,
+        95
+      ]
+    },
+    "movePreviews": {
+      "occupied": {
+        "x": -9.5,
+        "z": 1
+      },
+      "free": {
+        "x": -7.5,
+        "z": -1
+      },
+      "charged": 0
+    },
+    "browserErrors": 0,
+    "externalRequests": 0
+  },
+  "phone": {
+    "viewport": {
+      "width": 375,
+      "height": 812
+    },
+    "browser": "157.0.8103.79",
+    "touch": true,
+    "balance": 397900,
+    "wallCount": 12,
+    "cameras": {
+      "work": {
+        "zoom": 0.9,
+        "cameraDistance": 0.0,
+        "drawCallsBefore": 84,
+        "drawCallsAfter": 85
+      },
+      "selection": {
+        "zoom": 0.9,
+        "cameraDistance": 0.0,
+        "drawCallsBefore": 87,
+        "drawCallsAfter": 87
+      }
+    },
+    "selected": {
+      "id": "wall_10",
+      "renderOrderBefore": [
+        200,
+        201
+      ],
+      "renderOrderAfter": [
+        94,
+        95
+      ]
+    },
+    "movePreviews": {
+      "occupied": {
+        "x": -9.5,
+        "z": 1
+      },
+      "free": {
+        "x": -7.5,
+        "z": -1
+      },
+      "charged": 0
+    },
+    "browserErrors": 0,
+    "externalRequests": 0
+  }
+}
