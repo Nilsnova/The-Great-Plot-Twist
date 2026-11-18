@@ -3264,3 +3264,54 @@ For a backend/client candidate that contains T55/T60 recovery code, review and a
 A saved v1 island may retain already-built `cannon_8`–`cannon_11` plots and culverins after the `more_tower_spots` or `defenses_v2` availability flags are off. The application continues to expose and operate those existing buildings, includes their full catalogue repair prices, and freezes `defenses_v2` for a v1 wave containing a culverin. New builds remain gated. This compatibility is application behavior; it makes no migration or activation change.
 
 The recovery feature flag remains off by default and governs admission of new v1 waves on legacy islands. It does not make the migrations optional for a deployed server or protocol-2 client that can read or mutate a saved v1 island. If a release must stop admitting new v1 waves, turn the flag off and preserve saved v1 state. Admission off does not downgrade saved v1 policy, which persists between waves; no safe policy downgrade is implemented. Keep a v1-capable backend and protocol-2 client while any saved v1 island remains, even when no wave is active. Do not reverse the migrations or delete receipts to roll back. Fix forward with reviewed code and migrations; any future saved-policy data transition needs separate review. See the [release checklist](../docs/RELEASE-CHECKLIST.md#t55t60-structure-recovery-release-gate). No live migration, deployment or flag activation was performed by T60.
+
+## Shared island treasury foundation (MP-ECO-02)
+
+`20261118050000_island_treasury.sql` and `20261118050100_island_treasury_functions.sql` add exact
+island/run accounts and atomic financial primitives. They create no admission rows or automatic
+balance conversion. Existing personal wallets, ledger and HTTP routes remain unchanged. See
+[the interface contract](../docs/INTERFACES.md#shared-island-treasury-foundation-mp-eco-02)
+and [the package spec](../specs/MP-ECO-02-island-treasury.md).
+
+### Treasury rights and invariants
+
+| Object | `anon` / `authenticated` | `service_role` |
+|---|---|---|
+| `island_economy_state` | No reads/writes | Select only; persisted mode/current account/epoch and active/paused offers. |
+| `island_economy_accounts` | No reads/writes | Select only; exact finite integral numeric balance, committed principal and revision. |
+| `island_treasury_transactions` | No reads/writes | Select only; append-only immutable cash and commitment receipts. |
+| `island_economy_context`, `island_treasury_admit`, `island_treasury_spend`, `island_treasury_reserve`, `island_treasury_credit`, `island_treasury_settle` | No execute | Execute the checked public primitives. |
+| Treasury scope, validation, envelope, replay, result and record helpers | No execute | No direct execute; only enclosing function-owner SQL can call them. |
+
+All three tables enable RLS without browser policies. Security-definer financial RPCs use an
+empty search path and fully qualified tables. A separate checked API must authorize member reads.
+Balance includes held principal and cannot fall below committed principal. A ledger reserve has
+one uniquely linked settlement on the same account/epoch. Cash/commitment sums reconcile to account
+balances; actor/action UID and account/reason/reference keys prevent repeated payments. A trigger
+rejects update/delete even from an accidental privileged statement.
+
+Scope advisory locks precede account rows and prevent first-admission/reset races. New spending
+checks active membership and current active account/epoch under locks. Canonical credit/settlement
+uses its saved origin and does not require the original actor to remain a member. Pausing offers
+does not downgrade mode or stop valid settlement. Monetary helpers must share the asset mutation's
+SQL transaction; a preceding separate HTTP money call is insufficient.
+
+Accounts/state reference their original island with deletion restricted. Owner-account deletion,
+reset, old obligations and existing-save conversion need an explicit integrated policy before any
+runtime admission path is enabled. No live application/admission is recorded by this foundation.
+
+### Treasury verification
+
+On disposable PostgreSQL, run the existing full-chain fixture:
+
+```bash
+cd backend
+CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q server/tests/island_sql/test_island_treasury_sql.py
+uv run pytest -q server/tests/test_island_treasury.py server/tests/test_island_treasury_store.py
+```
+
+The SQL suite applies every migration twice and checks grants/RLS, immutable receipts, one-time
+bootstrap, no partial admission on UID conflict, exact large funds, same-event independent bets,
+spend/reserve races, duplicate settlements, retired-origin payouts and ledger/escrow reconciliation.
+The Python checks cover strict decimal-string/context parsing and fresh state versus immutable
+receipt values. These are local integration checks, not proof of deployed shared-mode gameplay.
