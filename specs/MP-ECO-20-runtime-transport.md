@@ -25,6 +25,9 @@ the authenticated transport. Its readiness and session checks still run before
 every call, and its existing public reads keep the anonymous client.
 The island's live and recovery wrappers forward the same optional arguments
 without choosing an economy mode or retaining a transport from an old session.
+Initial own-island and code-based visit reads advertise capability before an
+epoch is known. The header does not choose the persisted accounting mode; these
+discovery reads still use the canonical server projection and existing parsers.
 
 Private feature adapters also receive the authenticated actor ID from the
 accepted `/api/me` response through the panel service. The existing scope-based

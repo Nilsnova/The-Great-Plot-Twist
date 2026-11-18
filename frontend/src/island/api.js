@@ -42,6 +42,7 @@
 // or a 5xx such as 503 database_unavailable) the id is kept, and the next try of the same spot (or the
 // same bell) sends it again, so the server never charges or starts twice. Any clear answer drops it.
 import {makeActionUid} from '../screens/islet/action-uid.js';
+import {ECONOMY_CAPABILITY_HEADERS} from '../online/api.js';
 import {islandCode, displayIslandCode} from './codes.js';
 import {localSpotId} from './spots.js';
 import {SKILL_BY_ID, isRole} from '../pirates/captain-ids.js';
@@ -49,6 +50,8 @@ import {BRANCH_BY_ID, SPECS, optionsOf} from '../campaign/tech.js';
 import {isRole as isHouseRole} from '../campaign/houses.js';
 import {readRecoverySnapshot} from '../pirates/recovery-snapshot.js';
 import {isParticipantToken} from '../pirates/recovery-policy.js';
+
+const DISCOVERY_OPTIONS = Object.freeze({headers: ECONOMY_CAPABILITY_HEADERS});
 
 export const PATHS = Object.freeze({
   leaderboard: '/api/island/leaderboard', island: '/api/island', build: '/api/island/build', visit: code => `/api/island/visit/${code}`,
@@ -319,7 +322,7 @@ export function createIslandApi({transport, makeUid = makeActionUid, waveProtoco
     // scope 'week' (T7) or 'all' (T45, all time). The answer must be the board that was asked for.
     leaderboard: (scope = 'week') => ask(() => transport.get(scope === 'all' ? `${PATHS.leaderboard}?scope=all` : PATHS.leaderboard),
       data => isLeaderboard(data, scope)),
-    getIsland: () => askSpots(() => transport.get(PATHS.island), isIsland),
+    getIsland: () => askSpots(() => transport.get(PATHS.island, DISCOVERY_OPTIONS), isIsland),
     // code: a friend's island (ISLE-XXXXX) to build on with your own coins; without it your own island.
     build({spot, kind, code = null} = {}) {
       const where = code ? displayIslandCode(code) : '';
@@ -506,7 +509,7 @@ export function createIslandApi({transport, makeUid = makeActionUid, waveProtoco
     visit(code) {
       const symbols = islandCode(code);
       if (!symbols) return refuse(422, 'validation_error', MESSAGES.badCode);
-      return askSpots(() => transport.get(PATHS.visit(displayIslandCode(symbols))), isVisit);
+      return askSpots(() => transport.get(PATHS.visit(displayIslandCode(symbols)), DISCOVERY_OPTIONS), isVisit);
     },
     startWave({where: place = 'own', waveProtocol: askedProtocol = null} = {}) {
       const target = where(place);

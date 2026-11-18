@@ -21,6 +21,23 @@ const expectRefusal = (answer, status, code) => {
 };
 
 describe('island api: accepted answers', () => {
+  it('advertises shared capability on island discovery before an epoch is known', async () => {
+    const base = createFakeIslandTransport(), calls = [];
+    const api = createIslandApi({transport: {
+      async get(path, options) {
+        calls.push({path, options});
+        if (options?.headers?.['X-Island-Economy-Version'] !== '1') {
+          return {ok: false, status: 409, code: 'economy_context_required', message: 'Reload this island.'};
+        }
+        return base.get(path);
+      },
+      post: (path, body) => base.post(path, body),
+    }});
+    expect((await api.getIsland()).ok).toBe(true);
+    expect((await api.visit(FAKE_FRIEND_CODE)).ok).toBe(true);
+    expect(calls.map(call => call.path)).toEqual(['/api/island', `/api/island/visit/ISLE-${FAKE_FRIEND_CODE}`]);
+    expect(calls.every(call => Object.keys(call.options).length === 1)).toBe(true);
+  });
   it('reads the island with its 22 spots in the server order and 100 starting coins', async () => {
     const {api} = setup();
     const answer = await api.getIsland();
