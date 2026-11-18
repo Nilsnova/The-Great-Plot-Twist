@@ -1,0 +1,33 @@
+
+ RUN  v5.1.0 /workspace/captain-combat-feedback/frontend
+
+ ❯ tests/ui/combat-feedback.test.js (3 tests | 1 failed) 2010ms
+   × reserves the expanded fire control column beside real toasts in short landscape 362ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/ui/combat-feedback.test.js > reserves the expanded fire control column beside real toasts in short landscape
+AssertionError: expected 719.75 to be less than or equal to 599.671875
+ ❯ tests/ui/combat-feedback.test.js:81:30
+     79|       return { toastRight: toast.right, fireLeft: fire.left };
+     80|     });
+     81|     expect(boxes.toastRight).toBeLessThanOrEqual(boxes.fireLeft - 8);
+       |                              ^
+     82|   });
+     83| });
+ ❯ evaluate tests/g20-browser.js:44:24
+ ❯ tests/ui/combat-feedback.test.js:64:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 passed (3)
+   Start at  14:36:00
+   Duration  2.84s (tests 75%, import 23%, transform 2%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.3
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.3
+npm notice To update run: npm install -g npm@12.2.3
+npm notice

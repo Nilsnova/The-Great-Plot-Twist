@@ -1,0 +1,18 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run tests/ui/recovered-rewards.test.js tests/wave-reward-recovery.test.js tests/panel-wallet.test.js tests/panel-services.test.js tests/ui/first-quests.test.js tests/ui/hud.test.js tests/island/first-read-retry.test.js tests/island/wave-context-dom.test.js tests/online-islet-host.test.js
+
+
+ RUN  v5.1.0 /workspace/wave-publish/frontend
+
+
+ Test Files  9 passed (9)
+      Tests  125 passed (125)
+   Start at  15:08:55
+   Duration  26.88s (tests 92%, import 7%, transform 1%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.3
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.3
+npm notice To update run: npm install -g npm@12.2.3
+npm notice
