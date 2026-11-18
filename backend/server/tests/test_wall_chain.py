@@ -15,7 +15,9 @@ from server.island.rules import Built
 from server.island.wall_chain import chain_cells, quote_chain
 
 CATALOGUE = catalogue_for_flags(load_island(), {"more_tower_spots": True})
-RING = json.loads((Path(__file__).parent / "fixtures/perimeter-scenery-ring.json").read_text())["cells"]
+RING = json.loads(
+    (Path(__file__).parent / "fixtures/perimeter-scenery-ring.json").read_text()
+)["cells"]
 
 
 def snapshot(stored=None, version=1, capacity=128):
