@@ -12,7 +12,6 @@ const INFO = {waveId: 'return-wave', wave: 2, seed: 77, startsAt: '2026-11-17T12
   weather: {kind: 'calm'}, flagship: false};
 const islands = [];
 afterEach(() => { for (const island of islands.splice(0)) island.dispose(); });
-// Production flags (arsenal on) unless a test says otherwise.
 function harness() {
   const listeners = new Map(), base = createFakeIslandTransport(), coins = [], holds = new Map();
   let readWave = () => Promise.resolve({ok: true, data: INFO}), failIsland = false, failVisit = false;
@@ -26,7 +25,7 @@ function harness() {
       ?? (path.startsWith('/api/waves/current?') ? readWave()
       : path.startsWith('/api/island/visit/') && failVisit ? {ok: false, status: 404, code: 'no_such_island'}
       : path === '/api/island' && failIsland ? {ok: false, status: 503, code: 'unavailable'} : base.get(path))},
-    onCoins: value => coins.push(value), menu: () => () => {}, settings: () => () => {}, arsenalOn: () => true});
+    onCoins: value => coins.push(value), menu: () => () => {}, settings: () => () => {}});
   islands.push(island);
   return {island, travel: () => emit({type: 'travel', to: 'saltreach_harbor'}), failIsland: () => { failIsland = true; },
     failVisit: () => { failVisit = true; }, coins, emit,
