@@ -138,7 +138,7 @@ function approvedMusketPose(pal, firing, angle = null) {
     if (angle !== null && angle < 0) body();
   };
 }
-// Authored bends in screen space: wrists and the weapon use the same projected local coordinates.
+// Compact sleeves follow the gun; bomb poses are authored around the head so the held ball stays visible.
 export function weaponGripLayout(weapon, firing, angle = null) {
   const turn = angle ?? 0, sine = Math.sin(turn), back = sine < 0, depth = Math.abs(sine);
   const scale = angle === null ? 1 : .6, origin = [24 + (back ? 8 * depth : 0), 18];
@@ -146,22 +146,29 @@ export function weaponGripLayout(weapon, firing, angle = null) {
     const dx = (x - 24 - (firing && weapon !== 'fire_bombs' ? .6 : 0)) * scale, dy = y - 18;
     return [origin[0] + Math.cos(turn) * dx - sine * dy + offset, origin[1] + sine * dx + Math.cos(turn) * dy];
   };
-  const shoulders = [[23 + (back && weapon !== 'pistols' ? 2 : -4) * depth, 16.2], [26 + 3 * depth, 16.2]];
-  const locals = weapon === 'pistols' ? [[30, 18.5], [36, 20.5]] : [[27, 19], [35, 19.5]];
-  const hands = locals.map((local, i) => ({local, offset: weapon === 'pistols' && i === 0 && back ? -16 * depth : 0}));
+  const blend = (side, vertical) => side.map((value, i) => value + (vertical[i] - value) * depth);
+  const shoulders = [[19, 16.2], [29, 16.2]];
+  let hands = [{local: [27, 19.6], offset: 0}, {local: [35, 19], offset: 0}];
+  let elbows = [blend([20, 19.7], back ? [25, 16] : [20, 21]),
+    blend([29.5, 20.4], back ? [31.2, 15] : [26.5, 20.5])];
+  let bombCenter = null;
+  if (weapon === 'pistols') {
+    // One pistol fires; the other is held safely down beside the rear hip.
+    hands = [{point: [15.3, 22.5], local: null, lowered: true}, {local: [32.5, 19.2], offset: back ? 3 * depth : 0}];
+    elbows = [[17, 20], blend([30.3, 20.4], back ? [31, 15.5] : [26.5, 20.5])];
+  }
   if (weapon === 'fire_bombs') {
-    hands[0] = {point: [19 - 2 * depth, 23], local: null};
-    hands[1] = {local: firing ? [37, 20] : [30, 20], offset: 0};
+    shoulders[0] = [29, 16.8];
+    shoulders[1] = blend([23.5, 16.2], [29.2, 16.2]);
+    hands = [{point: [29.8, 23], local: null}, {point: firing
+      ? blend([34.5, 11.8], back ? [33.5, 3.5] : [31.8, 26.6]) : [17.6, 12.2], local: null}];
+    elbows = [[31, 20.5], firing
+      ? blend([29.2, 14.5], back ? [32.2, 9.2] : [32.4, 20.5]) : [20, 17.2]];
+    if (!firing) bombCenter = [15.8, 10];
   }
   for (const hand of hands) hand.point ??= point(hand.local, hand.offset);
-  const arms = hands.map((hand, i) => {
-    const shoulder = shoulders[i], wrist = hand.point;
-    const elbow = [(shoulder[0] + wrist[0]) / 2 - sine * (i ? 1.5 : .8),
-      (shoulder[1] + wrist[1]) / 2 + 2 + Math.abs(Math.cos(turn)) * (i ? 1.5 : 2)];
-    if (weapon === 'fire_bombs' && !firing && i === 1) {elbow[0] = shoulder[0] + 2.5 * Math.cos(turn); elbow[1] = 22;}
-    return {shoulder, elbow, wrist};
-  });
-  return {origin, turn, scale, back, hands, arms, bombs: weapon === 'fire_bombs' && !firing ? 1 : 0};
+  const arms = hands.map((hand, i) => ({shoulder: shoulders[i], elbow: elbows[i], wrist: hand.point}));
+  return {origin, turn, scale, back, hands, arms, bombCenter, bombs: bombCenter ? 1 : 0};
 }
 
 export function weaponPose(pal, weapon, firing, angle = null) {
@@ -175,41 +182,51 @@ export function weaponPose(pal, weapon, firing, angle = null) {
       c.save(); c.translate(pose.origin[0] + offset, pose.origin[1]); c.rotate(pose.turn); c.scale(pose.scale, 1);
       c.translate(-24 - (firing && weapon !== 'fire_bombs' ? .6 : 0), -18); draw(); c.restore();
     };
-    if (!pose.back) body();
-    for (const {shoulder, elbow, wrist} of pose.arms) {
-      stroke(c, [shoulder, elbow, wrist], INK, 4.1); stroke(c, [shoulder, elbow, wrist], pal.coat, 2.6);
+    const sleeve = ({shoulder, elbow, wrist}) => {
+      stroke(c, [shoulder, elbow, wrist], INK, 4.6); stroke(c, [shoulder, elbow, wrist], pal.coat, 3.1);
+    };
+    const hand = point => part(c, ellipse(point[0], point[1], 1.35, 1.45), SKIN, {depth: .6});
+    const pistol = hand => {
+      const paintPistol = (x, y) => {
+        part(c, poly([[x - 1.5, y - 2.7], [x + 1.4, y - 2.4], [x + .7, y + 2], [x - 1.5, y + 1.6]], .7), '#8a5a36', {depth: .5});
+        part(c, rect(x - 1, y - 3.6, 8, 2.2, .7), '#3b3f4a', {depth: .5});
+        part(c, ellipse(x + 1.5, y - .7, 1.6, 1.2), '#b8924f', {width: .6, depth: .4});
+      };
+      if (hand.lowered) {
+        c.save(); c.translate(...hand.point); c.rotate(Math.PI / 2); c.scale(.6, 1); paintPistol(0, 0); c.restore();
+      } else onWeapon(() => {const [x, y] = hand.local; paintPistol(x, y);}, hand.offset);
+    };
+    if (weapon === 'fire_bombs') {
+      // Wind-up is behind the head; release reaches above/forward instead of waving at chest height.
+      for (const arm of pose.arms) sleeve(arm);
+      if (pose.bombCenter) {
+        const [x, y] = pose.bombCenter;
+        part(c, ellipse(x, y, 2.7), '#343a42', {depth: .8, gloss: ellipse(x - .8, y - .8, .75)});
+        part(c, rect(x - .7, y - 3.6, 1.4, 1.4, .4), '#a46e32', {depth: .4});
+        stroke(c, [[x, y - 3.6], [x - 1, y - 5]], '#dcb772', 1);
+      }
+      for (const grip of pose.hands) hand(grip.point);
+      body();
+      return;
     }
-    if (weapon === 'pistols') for (const hand of pose.hands) onWeapon(() => {
-      const [x, y] = hand.local;
-      part(c, poly([[x - 1.5, y - 2.7], [x + 1.4, y - 2.4], [x + .7, y + 2], [x - 1.5, y + 1.6]], .7), '#8a5a36', {depth: .5});
-      part(c, rect(x - 1, y - 3.6, 10, 2.2, .7), '#3b3f4a', {depth: .5});
-      part(c, ellipse(x + 1.5, y - .7, 1.6, 1.2), '#b8924f', {width: .6, depth: .4});
-    }, hand.offset);
-    else if (weapon === 'fire_bombs' && pose.bombs) onWeapon(() => {
-      const [x, y] = pose.hands[1].local;
-      part(c, ellipse(x + .7, y - 2.1, 2.5), '#343a42', {depth: .6, gloss: ellipse(x, y - 3, .65)});
-      part(c, rect(x, y - 5, 1.6, 1.4, .4), '#a46e32', {depth: .4});
-      stroke(c, [[x + .8, y - 5], [x + 2.5, y - 6]], '#dcb772', 1);
-    });
-    else if (weapon !== 'fire_bombs') onWeapon(() => {
+    // The far sleeve belongs behind the coat, not across the shirt like a blue strap.
+    sleeve(pose.arms[0]);
+    if (weapon === 'pistols') {pistol(pose.hands[0]); hand(pose.hands[0].point);}
+    if (!pose.back) body();
+    sleeve(pose.arms[1]);
+    if (weapon === 'pistols') pistol(pose.hands[1]);
+    else onWeapon(() => {
       part(c, poly([[21, 16], [26, 16], [28.5, 18.5], [27, 20.5], [24.5, 18.5], [21, 19]], .7), '#8a5a36', {depth: .6});
       const length = weapon === 'long_rifle' ? 21 : 14;
       part(c, rect(25, 15.2, length, 2, .7), '#3b3f4a', {depth: .5});
       part(c, rect(29, 17, 9, 1.3, .5), '#8a5a36', {depth: .4});
-      if (weapon === 'blunderbuss') part(c, poly([[34, 15.2], [40, 12.5], [40, 20], [34, 17.2]], .7), '#b8924f', {depth: .5});
+      if (weapon === 'blunderbuss') {
+        part(c, poly([[34, 15.2], [40, 13.8], [40, 18.6], [34, 17.2]], .7), '#b8924f', {depth: .5});
+        part(c, ellipse(40, 16.2, .6, 1.7), '#27323b', {depth: .3, width: .5});
+      }
       else part(c, rect(30, 13, 5, 1.4, .5), '#c8b47a', {depth: .4});
     });
-    for (const hand of pose.hands) {
-      const fingers = () => {
-        const [x, y] = hand.local;
-        part(c, ellipse(x, y, 1.4, 1.25), SKIN, {depth: .5});
-        if (weapon === 'fire_bombs' && firing) {
-          for (const dy of [-1.1, .3, 1.3]) stroke(c, [[x, y + dy], [x + 3, y + dy - .3]], SKIN, .9);
-        } else part(c, ellipse(x + 1, y - .9, .6, .8), SKIN, {depth: .3, width: .5});
-      };
-      if (hand.local) onWeapon(fingers, hand.offset);
-      else part(c, ellipse(hand.point[0], hand.point[1], 1.3, 1.5), SKIN, {depth: .5});
-    }
+    for (const grip of pose.hands) if (!grip.lowered) hand(grip.point);
     if (pose.back) body();
   };
 }

@@ -1,5 +1,7 @@
 # CW4 revision 2 · Natural grips and arm bends
 
+**Historical, superseded:** the candidate at `d35efd92` was rejected, especially its bomb gesture. Use [revision 3](../revision-3/README.md) for the current artwork and checks. All pictures and results on this page remain the original revision-2 record.
+
 Issue [#461](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/461), draft PR [#464](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/464). **Before means the rejected first CW4 candidate at `0f6b966e`, not the live site.** After uses the corrected shoulder/elbow/wrist chains. All pictures use local synthetic fixtures; no live account or player data.
 
 ## Primary desktop and phone comparison
