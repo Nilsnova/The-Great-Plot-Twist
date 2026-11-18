@@ -13,6 +13,7 @@ from server.supabase_admin import (
     AdminDep,
     AlreadyApplied,
     InsufficientFunds,
+    RecoveryOptionRetired,
     SupabaseAdmin,
     SupabaseNotConfigured,
     SupabaseRejected,
@@ -150,6 +151,33 @@ def test_insufficient_funds_becomes_its_own_error():
 
     assert problem.value.status_code == 409
     assert problem.value.code == "insufficient_funds"
+
+
+def test_retired_recovery_option_race_becomes_its_own_conflict():
+    admin, _ = make_admin(
+        lambda request: httpx.Response(
+            400,
+            json={"code": "P0001", "message": "recovery_option_retired"},
+        )
+    )
+
+    with pytest.raises(RecoveryOptionRetired) as problem:
+        call(admin)
+
+    assert problem.value.status_code == 409
+    assert problem.value.code == "recovery_option_retired"
+
+
+def test_retirement_mapping_requires_the_exact_database_error():
+    admin, _ = make_admin(
+        lambda request: httpx.Response(
+            400,
+            json={"code": "P0001", "message": "recovery_option_retired: wallet changed"},
+        )
+    )
+
+    with pytest.raises(SupabaseRejected):
+        call(admin)
 
 
 @pytest.mark.parametrize(
