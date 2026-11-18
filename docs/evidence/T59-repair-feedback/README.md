@@ -107,6 +107,45 @@ The fixture asserts canonical response shapes and request flow, exact card HP/qu
 
 The latest capture completed with 103 calls to the offline API fixture. It does not prove SQL behavior, real signed-in transport, or two-client synchronization. The separate disposable PostgreSQL/API/replay evidence is documented by T60.
 
+### Saved-v1 policy when the recovery endpoint is unavailable
+
+Issue [#344](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/344) tracks a UI fallback bug: a `feature_off` answer from the structure endpoint must not downgrade a persisted recovery-v1 island to legacy wall repair and upgrades. The focused browser regression uses local fake-island/API-shaped responses. It covers `feature_off` on the first canonical read, `feature_off` after a successful v1 read, retry recovery, the legacy wall-action guard, and disabled tower upgrades while health is unavailable.
+
+The optional screenshot mode renders the production DOM card with the production base, kit and island styles. It reuses the local browser fixture and makes no authenticated or live API request. Source: UI fix commit `f0fa4df7`; capture-only test helper commit `bb9a2382`. The screenshots crop the card from 1440 × 900 desktop and 375 × 812 phone viewports.
+
+| Viewport | State | Screenshot |
+|---|---|---|
+| 1440 × 900 desktop | Saved-v1 Wall; health endpoint unavailable; Upgrade stays visible and disabled with the small wait helper; legacy Repair is hidden | [Wall health error](../../../frontend/captures/t59-policy-fallback-wall-error-desktop.png) |
+| 375 × 812 phone | Saved-v1 Cannon; health endpoint unavailable; visible Upgrade is disabled with “Wait until building health has loaded.” | [Cannon upgrade guard](../../../frontend/captures/t59-policy-fallback-cannon-phone.png) |
+
+Captured with:
+
+```sh
+cd frontend && RECOVERY_POLICY_CAPTURE_DIR=captures ./node_modules/.bin/vitest run --maxWorkers=1 tests/island/structure-recovery-policy.test.js -t 'does not downgrade a persisted v1 island'
+```
+
+Before the fix, the first-read fixture produced no recovery error and exposed the legacy wall Repair action. The cached-v1 case also allowed a tower upgrade after a later `feature_off` response. After the fix, both cases retain recovery v1 and display the health-load error; an eligible Upgrade remains visible and disabled with the small wait helper until health loads. A later successful read restores normal eligibility.
+
+Verified with:
+
+```sh
+cd frontend && ./node_modules/.bin/vitest run --maxWorkers=1 tests/island/structure-recovery-policy.test.js tests/island/structure-recovery-upgrade-dom.test.js tests/island/structure-recovery-card.test.js tests/island/structure-recovery-card-dom.test.js tests/island/card-model.test.js tests/island/structure-recovery-model.test.js tests/island/structure-recovery-api.test.js tests/island/captain-recovery-tree.test.js tests/campaign/captain-repair-policy.test.js
+```
+
+The capture command passed its selected browser regression (1 passed; 9 skipped by the test-name filter). The focused nine-file suite passed 103 tests. These screenshots and checks use a local fake-island transport; they do not demonstrate live service, wallet, database, multiplayer, activation or deployment behavior.
+
+### Independent policy-fallback verification
+
+On 17 Nov 2026, the two new regression cases were independently rerun on source revision `111a8b4a`:
+
+```sh
+# frontend/
+./node_modules/.bin/vitest run --maxWorkers=1 tests/island/structure-recovery-policy.test.js -t 'does not downgrade a persisted|keeps a previously discovered'
+npm run build
+```
+
+Both selected cases passed in 5.97 seconds; the other eight cases were excluded by the test-name filter. The build passed in 1.45 seconds and the spoiler guard passed across 241 text files. The nine-file 103-test result above is the worker's focused verification; these independent results are separate. The desktop Wall and phone Cannon crops were inspected: error text and disabled upgrade are legible, and no legacy Repair action is shown. The source change preserves cached world damage while blocking repair/upgrade decisions until canonical health is ready. These remain local component/fixture checks, not authenticated two-client or live server evidence.
+
 ### Independent follow-up verification
 
 On 17 Nov 2026, `npm exec vitest -- run tests/island/structure-recovery-model.test.js tests/island/structure-recovery-card-dom.test.js --maxWorkers=1` from `frontend/` passed 25 tests across 2 files. `npm run build` passed in 1.12 seconds and the spoiler guard passed across 241 text files. The corrected desktop/phone captures were inspected: Wall level-2 upgrade is 20 coins and Harpoon level-2 upgrade is 80 coins, with the existing current-level repair prices unchanged. The bell-pause explanation wraps legibly. These remain offline fixture screenshots and do not prove API/payment/database/multiplayer behavior.
@@ -196,3 +235,59 @@ The final local four-branch candidate `b908e34e` passed all 53 selection-dock, c
 The earlier complete combined frontend run on `35f91e0e` finished with 4,623 passed and three failed; it was not green. The old dock helper expectation was corrected without weakening its stale-HP/disabled-upgrade assertions. The village desktop case subsequently passed separately within its unchanged 60-second limit. The nearby-game timeout also reproduced on pristine main `db573347`, so full-game E/revive coverage remains a limit. [Exact full, baseline and isolated outputs with source provenance](https://github.com/Nilsnova/The-Great-Plot-Twist/blob/a3f06c3b/docs/evidence/T59-repair-feedback/README.md#full-combined-source-frontend-result).
 
 The current zero-HP world and preparation-offer phone captures were independently inspected: the broken wall, empty bar/marker, fixed price and shared quota are visible. No authenticated API, real charge, second client, live migration, activation or deployment is demonstrated. The approved rule-document alignment and backend refusal/target-policy metadata remain separate in PRs #468 and #478.
+### Health-loading Upgrade helper — 18 Nov
+
+Upgrade remains visible and disabled while canonical health is loading or unavailable, with the helper “Wait until building health has loaded.” When valid data arrives, normal full-health and between-wave eligibility applies. The updated desktop/phone component crops above show this state; capture source is `8ca34b18`.
+
+After synchronization with main `48aee0e7`, the nine-file policy/card/API/Captain check listed above passed **105 tests across 9 files in 28.31 seconds**. The production build and spoiler guard passed. Every committed STATUS line from both branch histories was preserved. No PR, migration, deployment or activation was performed; manual review and publication confirmation remain pending.
+
+
+## Current-main policy review · 18 Nov
+
+Source baseline `d9809cc8` includes main `db573347`; an unrelated EOF-only stylesheet difference was removed so `frontend/src/ui/styles.css` matches main exactly. Both committed STATUS histories and the protected instruction files are retained.
+
+The 105-test focused run includes headless Chromium DOM fixtures; no new full-game or authenticated browser session was run during that synchronization. A fresh selected Chromium capture regression on the current baseline passed (1 passed, 9 skipped by the name filter) with:
+
+```sh
+cd frontend && RECOVERY_POLICY_CAPTURE_DIR=../docs/evidence/T59-repair-feedback/policy-main-db573347 ./node_modules/.bin/vitest run --maxWorkers=1 tests/island/structure-recovery-policy.test.js -t 'does not downgrade a persisted v1 island'
+```
+
+[Desktop Wall error](policy-main-db573347/t59-policy-fallback-wall-error-desktop.png) and [375 × 812 phone Cannon guard](policy-main-db573347/t59-policy-fallback-cannon-phone.png) were visually inspected. These crop the production-styled card from offline fake-island fixtures, make no authenticated request and prove no live wallet, database or multiplayer outcome. The earlier captures remain unchanged. [Exact capture output](policy-main-db573347/capture.txt).
+
+The local four-branch candidate `35f91e0e` passed 232 focused frontend tests across 23 files, production build/spoiler checks, and text lint (zero errors, eight unchanged report-only findings). It retains the target island's saved policy, blocks legacy fallback and stale-level health rows, and keeps HP-less houses/watchtowers outside the health-loading guard. This is combined-source evidence rather than an isolated-branch full-suite result. No PR, live migration, deployment or activation.
+
+
+### Current selection-dock compatibility
+
+The full combined-source run on `35f91e0e` exposed an incoming selection-dock expectation for the former helper text. The guard itself remains intact: stale-level health cannot label the new level or enable another upgrade. Only the expected helper wording was aligned to the agreed “Wait until building health has loaded.” The isolated selection-dock command passed all four tests on this branch; no production code, assertion coverage, timer or bound was weakened.
+
+```sh
+cd frontend && ./node_modules/.bin/vitest run --maxWorkers=1 tests/island/selection-dock.test.js
+```
+
+
+### Full combined-source frontend result
+
+`npm test` on unchanged combined candidate `35f91e0e` (main `db573347` and all four repair fixes) completed **4,623 passed / 3 failed**, across 419 files, in 1087.44 seconds. This full run was not green. [Exact full output](current-main-checks/frontend-full.txt); [232-test focused output](current-main-checks/frontend-focused.txt).
+
+- The selection-dock failure was its obsolete helper string. The subsequent one-line expectation correction passed all four dock tests on this policy branch and the UI branch. The stale-HP and disabled-upgrade assertions remain.
+- The desktop nearby-game test exceeded its existing 20-second bound. On pristine main `db573347`, both cases also timed out under the same existing bounds: [baseline output](current-main-checks/baseline-nearby.txt). This does not establish passing full-game E/revive browser coverage.
+- The desktop village journey exceeded its existing 60-second bound during the full run. After the full run finished, the same combined-source desktop case passed within that unchanged bound (1 passed, 1 skipped by name filter, 53.44 seconds): [isolated output](current-main-checks/combined-village-desktop.txt). The phone case passed in the full run. Pristine main passed both village cases in 79.89 seconds: [baseline output](current-main-checks/baseline-village.txt). No timeout or assertion was widened.
+
+These are local fake-island/Chromium checks, not authenticated multiplayer or a live service result. The earlier 232 focused tests, build/spoiler/text checks and 398 disposable SQL tests retain their recorded source provenance; the complete frontend suite has not been relabelled as a pass. Final combined-source Ruff also passed. No gameplay changes were made to hide these timing observations.
+
+## Current main synchronization · 18 Nov
+
+Merged this UI branch with `origin/main` at `03e660fe9e5d83bdc96ac03bb94963188852b339` using the actual merge base `db57334748fb90d4139bdc0395c3c1cc9eb42ac`. The merge keeps main's backend/API/policy, narrator and tutorial chunk loading, arsenal model slimming, saved-defense compatibility, multiplayer, and documentation changes. Conflict resolution retains both complete STATUS histories in order, combines the six supported HP-bearing kind readiness guard with main's stale-level check, and preserves house/watchtower upgrades when no structure-health row exists.
+
+Fresh captures are stored in new directories below; all earlier evidence remains unchanged. From `frontend/`:
+
+```sh
+RECOVERY_CAPTURE_DIRECTORY=../docs/evidence/T59-repair-feedback/sync-03e660fe node scripts/capture-structure-recovery-card.js
+RECOVERY_CAPTURE_DIRECTORY=../docs/evidence/T59-repair-feedback/sync-03e660fe-component npm run test:recovery:component
+RECOVERY_CAPTURE_DIRECTORY=../docs/evidence/T59-repair-feedback/sync-03e660fe-integration node scripts/capture-structure-recovery-integration.js
+```
+
+The card capture passed its wave-end repair, reserved quota, loading-upgrade and retired-choice checks. The component capture passed three cards, HP, zero marker, tiny-positive fill, intent-only action and desktop/phone checks. The production integration capture passed with 79 signed-shape adapter requests across between-wave, preparation, combat, refusal, full, tiny and replay cases. These are local UI/offline fixtures; they do not prove authenticated service transport, real payment, database behavior, canonical live wave closure, or multiplayer.
+
+Current focused frontend checks passed 158 tests across 16 files, including card model, dock, recovery API/model/DOM/policy/indicator, narrator, tutorial and lazy-part tests. `npm run build` passed (541 modules) with the spoiler guard (250 text files, 12 protected lines). Text lint reported zero errors and 10 report-only findings. The earlier full frontend result (4,623 passed, 3 failed), 398 disposable SQL tests, village isolated result and pristine-main timeout remain historical evidence from their recorded source revisions; no full frontend or SQL suite was rerun for this UI-only sync. Backend and migration trees match current main exactly. No live migration, activation, deployment or PR publication occurred.

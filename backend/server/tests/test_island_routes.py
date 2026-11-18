@@ -20,6 +20,7 @@ from server.tests.island_helpers import (
     GUEST,
     GUEST_ID,
     ISLAND_SETTINGS,
+    PLAYER,
     PLAYER_ID,
     World,
     opened,
@@ -64,7 +65,7 @@ def test_a_new_player_sees_the_code_the_coins_and_sixteen_empty_spots():
     assert response.headers["cache-control"] == "private, no-store"
     body = response.json()
     assert list(body) == [
-        "code", "coins", "waveBest", "nextWave", "flags", "spots",
+        "code", "coins", "waveBest", "nextWave", "flags", "recoveryVersion", "spots",
         "crew", "captain", "prices", "unlocks", "skills", "weapons", "campaign", "layout",
     ]  # fmt: skip
     assert (body["code"], body["coins"], body["waveBest"], body["flags"]) == (
@@ -80,6 +81,14 @@ def test_a_new_player_sees_the_code_the_coins_and_sixteen_empty_spots():
         "x": -18.5, "z": -1.0, "tree": None,
     }  # fmt: skip
     assert body["nextWave"] == 1
+    assert body["recoveryVersion"] == 0
+
+
+def test_the_island_serializes_its_persisted_recovery_version():
+    world = World()
+    world.database.recovery_policy_version = 1
+
+    assert world.island().json()["recoveryVersion"] == 1
 
 
 def test_the_prices_are_the_economy_table():
@@ -173,6 +182,50 @@ def test_a_build_pays_the_price_of_the_file_in_coins_only_and_answers_the_island
         "p_starter_timber": 0,
         "p_ref": "island:click-0001",
     }
+
+
+def test_gated_plot_and_culverin_purchases_stay_blocked_after_saved_recovery_v1():
+    world = World(settings=replace(ISLAND_SETTINGS, flags=parse_flags("islands")))
+    world.database.recovery_policy_version = 1
+    before = world.database.balance
+
+    extra_plot = world.build(spot="cannon_8", kind="cannon")
+    culverin = world.build(spot="cannon_1", kind="culverin")
+
+    assert_error(extra_plot, 404, "no_such_spot")
+    assert_error(culverin, 422, "wrong_kind")
+    assert world.database.calls("islet_build") == []
+    assert world.database.balance == before
+    assert world.database.buildings == {}
+
+
+def test_saved_v1_existing_culverin_can_upgrade_with_defenses_flag_off():
+    world = World(settings=replace(ISLAND_SETTINGS, flags=parse_flags("islands")))
+    world.database.recovery_policy_version = 1
+    world.database.progress.update({"wave_best": 40, "won_wave_best": 40})
+    world.database.buildings[PLAYER_ID] = [
+        {
+            "plot": "cannon_8",
+            "building_type": "culverin",
+            "level": 1,
+            "spec": None,
+            "tree_a": 0,
+            "tree_b": 0,
+        }
+    ]
+
+    response = world.client.post(
+        "/api/island/upgrade",
+        headers=PLAYER,
+        json={"spot": "cannon_8", "actionUid": "culverin-existing-upgrade-01"},
+    )
+
+    assert response.status_code == 200, response.text
+    (call,) = world.database.calls("island_upgrade")
+    assert call["p_plot"] == "cannon_8"
+    assert call["p_prices"] == [80, 160, 320, 640, 1280]
+    returned = {spot["id"]: spot for spot in response.json()["spots"]}
+    assert returned["cannon_8"]["kind"] == "culverin"
 
 
 def test_the_island_is_opened_before_the_first_build_so_the_starting_coins_are_there():
@@ -317,9 +370,24 @@ def test_a_friend_visits_an_island_by_its_code(code):
 
     assert response.status_code == 200
     body = response.json()
-    assert list(body) == ["code", "ownerName", "waveBest", "spots", "crew", "campaign", "layout"]
+    assert list(body) == [
+        "code", "ownerName", "waveBest", "recoveryVersion", "spots", "crew", "campaign", "layout"
+    ]  # fmt: skip
     assert (body["code"], body["ownerName"], body["waveBest"]) == ("ISLE-K7Q2M", "Captain Gull", 3)
+    assert body["recoveryVersion"] == 0
     assert [spot["id"] for spot in body["spots"] if spot["built"]] == ["wall_2"]
+
+
+def test_a_visit_serializes_the_target_owners_persisted_policy():
+    world = World()
+    friend_island(world)
+    world.database.recovery_policy_versions[FRIEND_ID] = 1
+    world.database.recovery_policy_versions[PLAYER_ID] = 0
+
+    response = world.visit("ISLE-K7Q2M")
+
+    assert response.status_code == 200
+    assert response.json()["recoveryVersion"] == 1
 
 
 @pytest.mark.parametrize("code", ["ISLE-ZZZZZ", "HARBOR-K7Q2M", "K7Q20", "x"])

@@ -23,6 +23,30 @@ def test_the_prices_come_from_islands_json_and_cannons_cost_the_most():
     assert max(table.values()) == table["cannon"]
 
 
+def test_recovery_v1_refuses_quick_mend_but_keeps_bastion_and_old_receipts():
+    world = world_at(26)
+    researched(world, wall=(3, "thick_walls", "bastion"))
+    world.database.buildings[PLAYER_ID] = [
+        {"plot": "wall_1", "building_type": "wall", "level": 1, "spec": None},
+    ]
+    world.database.recovery_policy_version = 1
+
+    retired = specialise(world, spot="wall_1", spec="quick_mend")
+    assert_error(retired, 409, "recovery_option_retired")
+    assert world.database.calls("island_specialise") == []
+
+    world.database.ledger_refs.add(("tower_skill", "towerskill:click-0001"))
+    assert specialise(world, spot="wall_1", spec="quick_mend").status_code == 200
+    assert world.database.calls("island_specialise") == []
+
+    assert (
+        specialise(world, spot="wall_1", spec="bastion", actionUid="click-0002").status_code
+        == 200
+    )
+    (call,) = world.database.calls("island_specialise")
+    assert call["p_spec"] == "bastion"
+
+
 def test_the_island_answer_lists_the_prices_per_tower_kind():
     prices = world_at(9).island().json()["prices"]["towerSkills"]
     assert prices == {kind: {"skill": a, "capstone": b} for kind, (a, b) in PRICES.items()}
