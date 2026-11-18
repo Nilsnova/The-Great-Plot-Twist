@@ -1,6 +1,19 @@
 -- MP-ECO-04: atomic shared construction, actual payment basis and immutable receipts.
 -- Existing routes and economy admission remain unchanged; only service calls use this path.
 
+-- Cumulative base payments can exceed one legal catalogue increment. Preserve old values
+-- and inline validation so legacy invoker writes need no private treasury helper grant.
+alter table public.islet_buildings alter column coins_paid type numeric using coins_paid::numeric;
+alter table public.islet_buildings drop constraint if exists islet_buildings_coins_paid_range;
+do $$ begin
+  if not exists (select 1 from pg_constraint where conrelid = 'public.islet_buildings'::regclass
+    and conname = 'islet_buildings_coins_paid_integral') then
+    alter table public.islet_buildings add constraint islet_buildings_coins_paid_integral
+      check (coins_paid::text not in ('NaN','Infinity','-Infinity')
+        and coins_paid = trunc(coins_paid) and coins_paid >= 0);
+  end if;
+end; $$;
+
 -- Preserve the actual shared charge for every acquired base level.
 create table if not exists public.island_construction_payments (
   account_id uuid not null,
@@ -247,18 +260,20 @@ begin
   v_member := p_actor_id = v_account.island_owner or exists (
     select 1 from public.island_members where island_owner = v_account.island_owner
       and player_id = p_actor_id and left_at is null);
+  select * into v_state from public.island_economy_state
+   where island_owner = v_account.island_owner for update;
   if v_existing.id is not null then
     if v_existing.request_fingerprint <> v_fingerprint then
       raise exception 'action_conflict';
     end if;
-    return public.island_construction_result(v_existing.id,true,v_member);
+    return public.island_construction_result(v_existing.id,true,coalesce(
+      v_member and v_account.state = 'active' and v_state.current_account_id = p_account_id
+      and v_state.run_epoch = p_run_epoch and v_state.admission_state = 'active',false));
   end if;
   if not v_member then raise exception 'not_member'; end if;
   if v_account.run_epoch <> p_run_epoch then
     raise exception 'epoch_mismatch';
   end if;
-  select * into v_state from public.island_economy_state
-   where island_owner = v_account.island_owner for update;
   if v_account.state <> 'active' or v_state.current_account_id is distinct from p_account_id
      or v_state.run_epoch is distinct from p_run_epoch or v_state.admission_state <> 'active' then
     raise exception 'path_unavailable';
