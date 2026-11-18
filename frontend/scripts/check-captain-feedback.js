@@ -22,6 +22,9 @@ const stand = (x, z) => game((g, at) => {
 
 async function enter() {
   console.log('Opening the local fake game.');
+  await page.addInitScript(() => {
+    for (const key of ['plot_twist_front_door_v1', 'plot_twist_tutorial_v1', 'plot_twist_island_arrival_v1']) localStorage.setItem(key, '1');
+  });
   await page.goto(`${env.url}/?islands=fake&fakeplayer=cf1&fakename=Ianno`);
   await page.locator('.shell-screen[open]').waitFor();
   // This combat fixture represents a returning device; settle its real preference before Play can queue teaching cards.
