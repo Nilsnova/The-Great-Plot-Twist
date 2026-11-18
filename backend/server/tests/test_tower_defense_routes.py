@@ -395,6 +395,19 @@ def test_a_repeated_hire_charges_nothing():
     assert world.database.calls("island_hire") == []
 
 
+def test_recovery_v1_refuses_new_carpenters_before_the_paid_rpc_but_answers_retries():
+    world = world_at(9)
+    world.database.recovery_policy_version = 1
+
+    retired = world.post("/api/island/hire", crew="carpenter")
+    assert_error(retired, 409, "recovery_option_retired")
+    assert world.database.calls("island_hire") == []
+
+    world.database.ledger_refs.add(("crew_hire", "crew:click-0001"))
+    assert world.post("/api/island/hire", crew="carpenter").status_code == 200
+    assert world.database.calls("island_hire") == []
+
+
 # --- POST /api/island/captain ---
 
 
@@ -744,7 +757,10 @@ def test_a_visit_shows_the_levels_kinds_and_crew_so_every_visitor_simulates_the_
     assert invite(world).status_code == 200
     body = world.visit("ISLE-K7Q2M", headers=GUEST).json()
 
-    assert list(body) == ["code", "ownerName", "waveBest", "spots", "crew", "campaign", "layout"]
+    assert list(body) == [
+        "code", "ownerName", "waveBest", "recoveryVersion", "spots", "crew", "campaign", "layout"
+    ]  # fmt: skip
+    assert body["recoveryVersion"] == 0
     spot = next(spot for spot in body["spots"] if spot["id"] == "cannon_3")
     assert (spot["kind"], spot["level"], spot["built"]) == ("mortar", 2, True)
     assert body["crew"] == {"gunner": 1, "carpenter": 0, "lookout": 1, "guard": 0}

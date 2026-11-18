@@ -31,7 +31,7 @@ PAGE = "select public.recovery_wave_events_page(%s,%s,%s,null,null)"
 INPUTS = "select public.recovery_wave_inputs(%s,%s,%s::jsonb)"
 
 
-def template(database):
+def template(database, structures=()):
     value = {
         "configVersion": 1,
         "createWave": {"defenses": []},
@@ -41,12 +41,41 @@ def template(database):
         "recoveryConfig": {
             "recoveryVersion": 1,
             "waveProtocol": 2,
-            "structureMaxHp": {},
-            "recoveryRateFactors": {"carpenterMaximumWorkers": 2},
+            "structureMaxHp": {
+                "wall": [60, 120, 200, 300, 420],
+                "cannon": [80, 130, 200, 290, 400],
+                "mortar": [70, 115, 180, 260, 360],
+                "harpoon": [60, 100, 155, 230, 320],
+                "culverin": [56, 91, 140, 203, 280],
+                "swivel": [72, 117, 180, 261, 360],
+            },
+            "wallSkillMaxHpFactors": {"stone": [2, 1], "bastion": [3, 2]},
+            "wallResearchMaxHpFactors": {"thick_walls": [23, 20]},
+            "recoveryRateFactors": {
+                "carpenterMultiplierPerWorker": 0,
+                "carpenterMaximumWorkers": 2,
+                "workshopPercentPerHouse": 0,
+                "workshopPercentCap": 0,
+                "workshopRadius": 10,
+                "wallSpecRateFactors": {"quick_mend": [1, 1], "bastion": [1, 1]},
+                "wallResearchRateFactors": {"mason_drill": [1, 1]},
+            },
         },
-        "defaultPositions": {},
+        "defaultPositions": {
+            spot: {"x": index * 3, "z": 0} for index, (spot, _) in enumerate(structures)
+        },
         "eventByWave": {str(wave): None for wave in range(1, 6)},
         "bossByWave": {str(wave): False for wave in range(1, 6)},
+    }
+    value["structureConfigBySpot"] = {
+        spot: {
+            "kind": kind,
+            "level": 1,
+            "maxHP": value["recoveryConfig"]["structureMaxHp"][kind][0],
+            "rateNumerator": 1,
+            "rateDenominator": 1,
+        }
+        for spot, kind in structures
     }
     value["expectedRevision"] = database.execute(
         "select revision from public.island_recovery_state where island_owner=%s", (OWNER,)
@@ -54,7 +83,7 @@ def template(database):
     return value
 
 
-def ring(database, uid):
+def ring(database, uid, structures=()):
     return call(
         database,
         "select public.recovery_wave_start(%s,%s,'island',%s,4242,0,0,900,50,"
@@ -63,7 +92,7 @@ def ring(database, uid):
         uid,
         OWNER,
         ["structure_recovery"],
-        json.dumps(template(database)),
+        json.dumps(template(database, structures)),
     )
 
 
@@ -349,3 +378,117 @@ def test_f10_the_append_helper_refuses_a_tick_past_the_maximum(database):
             "'participant_joined',0,'{}'::jsonb)",
             (wave_id,),
         )
+
+
+SUPPORTED_STRUCTURES = (
+    ("wall_1", "wall"),
+    ("cannon_1", "cannon"),
+    ("cannon_2", "mortar"),
+    ("cannon_3", "harpoon"),
+    ("cannon_4", "culverin"),
+    ("cannon_5", "swivel"),
+)
+
+
+def damaged_supported_wave(database, uid):
+    add_players(database, OWNER)
+    open_island(database, OWNER, "K7Q2M")
+    as_server(database)
+    for index, (spot, kind) in enumerate(SUPPORTED_STRUCTURES, start=1):
+        call(
+            database,
+            "select public.islet_build(%s,%s,%s,10,0,0,%s)",
+            OWNER,
+            spot,
+            kind,
+            f"{uid[:16]}-{index:04d}",
+        )
+    started = ring(database, uid, SUPPORTED_STRUCTURES)
+    assert started["status"] == "started", started
+    wave_id = UUID(started["waveId"])
+    move_start(database, wave_id, 20)
+    page = call(database, PAGE, OWNER, wave_id, 0)
+    epoch = database.execute(
+        "select reset_epoch from public.recovery_wave_states where wave_id=%s", (wave_id,)
+    ).fetchone()[0]
+    rows = database.execute(
+        "select instance_id::text from public.island_structure_health "
+        "where island_owner=%s order by spot",
+        (OWNER,),
+    ).fetchall()
+    vector = {instance_id: 500_000 for (instance_id,) in rows}
+    vector[next(iter(vector))] = 0
+    basis = {instance_id: 0 for (instance_id,) in rows}
+    accepted = call(
+        database,
+        "select public.recovery_wave_report_health(%s,%s,%s,'damageprefix01',"
+        "%s,%s,0,%s::jsonb,%s::jsonb)",
+        OWNER,
+        wave_id,
+        epoch,
+        page["sealedThroughTick"],
+        page["headSeq"],
+        json.dumps(basis),
+        json.dumps(vector),
+    )
+    assert accepted["status"] == "accepted", accepted
+    return wave_id, epoch, page, vector
+
+
+def assert_full_health_and_closed_damage(database, wave_id, vector):
+    assert database.execute(
+        "select closed_hp from public.recovery_wave_states where wave_id=%s", (wave_id,)
+    ).fetchone()[0] == vector
+    assert database.execute(
+        "select count(*),min(hp_units),max(hp_units) from public.island_structure_health "
+        "where island_owner=%s",
+        (OWNER,),
+    ).fetchone() == (len(SUPPORTED_STRUCTURES), 1_000_000, 1_000_000)
+
+
+@pytest.mark.parametrize("survived,uid", [(True, "fullhealthwin01"), (False, "fullhealthloss01")])
+def test_a_finished_wave_restores_supported_structures_and_keeps_the_damaged_vector(
+    database, survived, uid
+):
+    wave_id, epoch, page, vector = damaged_supported_wave(database, uid)
+    closed = call(
+        database,
+        FINISH,
+        OWNER,
+        wave_id,
+        survived,
+        epoch,
+        "closedloss001",
+        page["sealedThroughTick"],
+        page["headSeq"],
+    )
+    assert closed["status"] == "done", closed
+    assert closed["survived"] is survived
+    assert closed["recovery"]["closedHp"] == vector
+    assert_full_health_and_closed_damage(database, wave_id, vector)
+
+
+def test_expiry_and_abandonment_close_damaged_history_and_restore_current_health(database):
+    expired_id, _, _, expired_vector = damaged_supported_wave(database, "fullhealexpire01")
+    move_start(database, expired_id, 901)
+    expired = call(
+        database,
+        "select public.recovery_wave_current(%s,'island',%s,2::smallint)",
+        OWNER,
+        OWNER,
+    )
+    assert expired == {"status": "empty"}
+    as_owner(database)
+    database.execute("select player_id from public.islands where player_id=%s for update", (OWNER,))
+    as_server(database)
+    settled = call(database, "select public.structure_recovery_mutation_begin(%s)", OWNER)
+    assert settled["settlement"]["status"] == "settled"
+    assert_full_health_and_closed_damage(database, expired_id, expired_vector)
+
+    abandoned_id, _, _, abandoned_vector = damaged_supported_wave(
+        database, "fullhealabandon01"
+    )
+    move_start(database, abandoned_id, 300, activity=300)
+    next_wave = ring(database, "fullhealnext001", SUPPORTED_STRUCTURES)
+    assert next_wave["status"] == "started", next_wave
+    assert_full_health_and_closed_damage(database, abandoned_id, abandoned_vector)
