@@ -348,7 +348,7 @@ def surface_class(rules: LayoutRules, x: float, z: float) -> int:
     return 2 if distance < 0.85 else BEACH if distance < 1 else SEA
 
 
-def overlaps(a: Box, b: Box) -> bool:
+def overlaps(a: Box, b: Box | WallObstacle) -> bool:
     """True when two footprints share ground. Touching edges do not count: walls form lines."""
     return abs(a.x - b.x) < (a.w + b.w) / 2 and abs(a.z - b.z) < (a.d + b.d) / 2
 
