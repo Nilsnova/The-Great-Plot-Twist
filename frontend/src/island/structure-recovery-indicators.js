@@ -16,7 +16,8 @@ export function structureRecoveryIndicatorRows(state) {
 
 export function createStructureRecoveryIndicators({root, locate = () => null} = {}) {
   const indicators = new Map();
-  let state = null, disposed = false;
+  // Spot -> row for the structures that should show a bar now (damaged, outside combat).
+  let shown = new Map(), disposed = false;
 
   function draw(item) {
     const {row, context, canvas, texture} = item;
@@ -51,8 +52,8 @@ export function createStructureRecoveryIndicators({root, locate = () => null} = 
 
   function setState(next) {
     if (disposed) return;
-    state = next && structureRecoveryIndicatorRows(next).length ? next : null;
-    const rows = new Map(structureRecoveryIndicatorRows(state).map(row => [row.spot, row]));
+    shown = new Map(structureRecoveryIndicatorRows(next).map(row => [row.spot, row]));
+    const rows = new Map(shown);
     for (const [spot, item] of indicators) {
       const row = rows.get(spot);
       if (!row) { item.mesh.visible = false; continue; }
@@ -67,7 +68,7 @@ export function createStructureRecoveryIndicators({root, locate = () => null} = 
   function update() {
     if (disposed) return;
     for (const [spot, item] of indicators) {
-      const row = state?.structures?.find(entry => entry.spot === spot);
+      const row = shown.get(spot);
       const point = row ? locate(spot) : null;
       item.mesh.visible = !!row && !!point && Number.isFinite(point.x) && Number.isFinite(point.z);
       if (!item.mesh.visible) continue;
@@ -79,7 +80,7 @@ export function createStructureRecoveryIndicators({root, locate = () => null} = 
 
   function dispose() {
     if (disposed) return;
-    disposed = true; state = null;
+    disposed = true; shown = new Map();
     for (const {mesh, texture, material} of indicators.values()) {
       root.remove(mesh); mesh.geometry.dispose(); material.dispose(); texture.dispose();
     }
