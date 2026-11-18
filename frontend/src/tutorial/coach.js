@@ -13,6 +13,9 @@ const EDGE = 28;
 export function createCoach(container = document.body, {parent = null, onSkipStep = () => {}, onSkipAll = () => {}, focusGame = () => {}} = {}) {
   const panel = node('section', 'coach-panel'), heading = node('h2', 'coach-title'), eyebrow = node('span', 'coach-step');
   const caption = node('p', 'coach-caption'), keys = node('kbd', 'coach-key'), actions = node('div', 'coach-actions');
+  const scrollHint = node('span', 'coach-scroll-hint', 'Scroll instructions');
+  scrollHint.hidden = true;
+  scrollHint.setAttribute('aria-hidden', 'true');
   heading.id = uniqueId('coach');
   panel.id = uniqueId('coach-panel');
   panel.setAttribute('aria-labelledby', heading.id);
@@ -32,7 +35,7 @@ export function createCoach(container = document.body, {parent = null, onSkipSte
   const skipStep = button('Skip step', () => onSkipStep()), skipAll = button('Skip tutorial', () => onSkipAll(), true);
   actions.append(skipStep, skipAll);
   const top = node('div', 'coach-top');top.append(eyebrow, keys);
-  panel.append(top, heading, caption, actions);
+  panel.append(top, heading, caption, scrollHint, actions);
   panel.hidden = true;
   const ring = node('div', 'coach-ring'), arrow = node('div', 'coach-arrow'), label = node('span', 'coach-ring-label');
   ring.setAttribute('aria-hidden', 'true');arrow.setAttribute('aria-hidden', 'true');ring.append(label);
@@ -76,21 +79,36 @@ export function createCoach(container = document.body, {parent = null, onSkipSte
   }
   function placePanel() {
     if (!shown) return;
-    const compact = inCombat && coarse.matches && innerWidth <= 420 && innerWidth <= innerHeight;
+    const portrait = coarse.matches && innerWidth <= innerHeight;
+    const compact = inCombat && portrait && innerWidth <= 420;
+    const preparation = !inCombat && !!parent && portrait && innerWidth <= 350 && innerHeight <= 640;
     const hadGuideFocus = document.activeElement === guide;
     const hadPanelFocus = panel.contains(document.activeElement);
     panel.classList.toggle('is-combat-guide', compact);
+    panel.classList.toggle('is-preparation-guide', preparation);
+    scrollHint.hidden = true;
     if (!compact) {
-      stopWatching();
       guide.hidden = true;
       panel.hidden = false;
       panel.removeAttribute('tabindex');
+      if (preparation) {
+        bounds('.hud-coins');
+        bounds('.quest-strip');
+        const stick = bounds('.touch-stick-group');
+        if (stick) panel.style.setProperty('--coach-preparation-height', `${Math.floor(stick.top - panel.getBoundingClientRect().top - 8)}px`);
+        else panel.style.removeProperty('--coach-preparation-height');
+      } else stopWatching();
+      if (preparation && caption.scrollHeight > caption.clientHeight + 1) {
+        caption.tabIndex = 0;
+        scrollHint.hidden = false;
+      } else caption.removeAttribute('tabindex');
       guide.setAttribute('aria-expanded', 'false');
       open = false;
       if (hadGuideFocus) focusGame();
       return;
     }
 
+    caption.removeAttribute('tabindex');
     const purse = bounds('.hud-coins'), menu = bounds('.hud-menu');
     const bar = bounds('.pirate-hud:not([hidden]) .pirate-bar:not([hidden])'), weapon = bounds('.pirate-hud:not([hidden]) .pirate-musket:not([hidden])'), stick = bounds('.touch-stick-group');
     const left = 12, right = innerWidth - 12;
@@ -134,7 +152,8 @@ export function createCoach(container = document.body, {parent = null, onSkipSte
     if (open && !panel.hidden) panel.focus({preventScroll: true});
   });
   panel.addEventListener('keydown', event => {
-    if (panel.classList.contains('is-combat-guide') && event.key !== 'Escape' && event.key !== 'Tab') event.stopPropagation();
+    if ((panel.classList.contains('is-combat-guide') || event.target === caption)
+      && event.key !== 'Escape' && event.key !== 'Tab') event.stopPropagation();
   });
   addEventListener('resize', placePanel);
 
