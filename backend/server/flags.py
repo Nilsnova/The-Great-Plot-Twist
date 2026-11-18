@@ -39,9 +39,9 @@ FLAG_NAMES = (
     "arsenal",
     # T33 (D049): towers have hp in a wave (a wave rule). Retired: always on (wave_rules.ALWAYS_ON).
     "tower_health",
-    # T34/T35 (D040): boarders walk round or through the real walls (a wave rule). Retired: always on.
+    # T34/T35 (D040): boarders walk round or through real walls (a wave rule). Retired: always on.
     "pathing",
-    # T35 combat towers block boarders; requires both pathing and tower_health.
+    # T35 combat towers block boarders (a wave rule). Retired: always on.
     "tower_obstacles",
     # T50: ships at anchor fire at a real wall, tower or the heart and their hits count (a wave
     # rule). Needs supabase/migrations/20261116160000_ship_fire_rule.sql applied first.

@@ -56,16 +56,12 @@ class KeptRules(BaseModel):
 
 
 # The rules every new wave plays whatever FEATURE_FLAGS says (their flags are retired, always on).
-ALWAYS_ON = ("tower_health", "pathing")
+ALWAYS_ON = ("tower_health", "pathing", "tower_obstacles")
 
 
 def wanted_rules(settings: Settings) -> list[str]:
     """The rules of SIM_RULES that are always on or whose flag is on now, in that order."""
     enabled = {name for name in SIM_RULES if name in ALWAYS_ON or is_enabled(name, settings.flags)}
-    # T35 needs the shared path and tower-health simulation rules. A partial deployment
-    # must keep the old pathing/tower behavior, and the frozen wave still carries one complete set.
-    if not all(name in enabled for name in ("pathing", "tower_health")):
-        enabled.discard("tower_obstacles")
     return [name for name in SIM_RULES if name in enabled]
 
 

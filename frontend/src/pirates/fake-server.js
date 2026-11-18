@@ -231,8 +231,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
   // first answer keeps its set for the wave (an empty set too), every later one serves the kept set.
   // world.liveFlags (dev.setFlag) switches a flag for every tab of a shared world, like a redeploy.
   const flagOn = name => (world.liveFlags && Object.hasOwn(world.liveFlags, name) ? world.liveFlags[name] : flags?.[name]) === true;
-  const ruleWanted = name => ALWAYS_ON_RULES.includes(name) || flagOn(name);
-  const ruleOn = name => ruleWanted(name) && (name !== 'tower_obstacles' || (ruleWanted('pathing') && ruleWanted('tower_health')));
+  const ruleOn = name => ALWAYS_ON_RULES.includes(name) || flagOn(name);
   const rulesOf = run => {
     // Kept by the wave's first answer, even when empty (the server's wave_rules_keep), whatever the flags say later.
     if (!Array.isArray(run.rules)) run.rules = SIM_RULES.filter(ruleOn);

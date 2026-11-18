@@ -25,10 +25,8 @@ def world_with(flags: str) -> World:
 
 def plays(*flagged: str) -> list[str]:
     """The rules of a new wave with these flagged rules on: the always-on ones too, in SIM_RULES
-    order; tower_obstacles only with pathing and tower_health."""
+    order."""
     on = set(ALWAYS_ON) | set(flagged)
-    if not {"pathing", "tower_health"} <= on:
-        on.discard("tower_obstacles")
     return [name for name in SIM_RULES if name in on]
 
 
@@ -72,23 +70,7 @@ def test_every_rule_flag_switched_off_mid_wave_keeps_the_starters_rules():
 
 @pytest.mark.parametrize("rule", SIM_RULES)
 def test_a_rule_flag_puts_that_rule_on_the_wave_answer(rule: str):
-    flags = f"islands,{rule}"
-    flagged = [rule]
-    if rule == "tower_obstacles":
-        flags += ",pathing,tower_health"
-        flagged = ["tower_health", "pathing", "tower_obstacles"]
-    assert world_with(flags).start().json()["rules"] == plays(*flagged)
-
-
-def test_tower_obstacles_only_turns_on_with_its_three_dependencies():
-    for flags, flagged in (
-        ("islands,tower_obstacles", ["tower_obstacles"]),
-        ("islands,tower_obstacles,pathing", ["tower_obstacles", "pathing"]),
-        ("islands,tower_obstacles,tower_health", ["tower_obstacles", "tower_health"]),
-    ):
-        assert rules_of(world_with(flags).start().json()) == plays(*flagged)
-    world = world_with("islands,pathing,tower_health,tower_obstacles")
-    assert world.start().json()["rules"] == ["tower_health", "pathing", "tower_obstacles"]
+    assert world_with(f"islands,{rule}").start().json()["rules"] == plays(rule)
 
 
 def test_the_rules_follow_the_agreed_order_whatever_the_order_of_the_flags():

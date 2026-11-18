@@ -1,7 +1,6 @@
 // The in-memory island and wave API (BUILD-PLAN 3.4): prices, refusals, loot and timing.
 import { describe, expect, it } from 'vitest';
 import { createFakeIslandApi, createFakeIslandTransport, createFakeWorld, fakeFlagsFor, islandRoom, lootFor, readIslandCode, wantsFakeIslands } from '../../src/pirates/fake-api.js';
-import { plays } from './wave-rules-plays.js';
 
 const clock = (start = Date.UTC(2026, 10, 11, 12, 0, 0, 400)) => {
   let now = start;
@@ -24,12 +23,6 @@ describe('fake island API', () => {
     expect(joined.data.waveId).toBe(started.data.waveId);
   });
 
-  it('keeps tower obstacles off unless both pathing and tower health are on (always on or flagged)', async () => {
-    const partial = createFakeIslandApi({flags: {tower_obstacles: true}});
-    expect((await partial.startWave({where: 'own', actionUid: 'partial'})).rules ?? []).toEqual(plays('tower_obstacles'));
-    const full = createFakeIslandApi({flags: {tower_obstacles: true, pathing: true, tower_health: true}});
-    expect((await full.startWave({where: 'own', actionUid: 'full'})).rules).toEqual(plays('tower_health', 'pathing', 'tower_obstacles'));
-  });
 
   it('opens an island with 100 coins and the 16 spots of TOWER-DEFENSE.md §2 in the contract order', async () => {
     const api = createFakeIslandApi();
