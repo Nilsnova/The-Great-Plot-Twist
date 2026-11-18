@@ -68,6 +68,12 @@ projection. A departed member can receive their own receipt without current isla
 or balances. Retired accounts cannot accept new purchases. All asset changes, financial
 effects, claims and receipts commit together or roll back together.
 
+A paid action verifies the committed financial child itself: actor, account, epoch, child
+UID, spend kind, reason, reference, exact debit and zero committed delta must all match.
+The helper's receipt must equal the immutable stored receipt. A successful-looking helper
+reply with another same-account receipt or different fields refuses as `action_conflict`
+and rolls back the root claim, debit and progression together.
+
 Dependencies are the MP-ECO-02 treasury and operation-claim primitives, the MP-ECO-04
 `island_economy_require_idle_locked` helper, and existing structure-recovery refresh hooks.
 Missing prerequisites fail closed. No live economy admission or route activation is added.
@@ -194,3 +200,20 @@ checks passed **81 tests** in 0.58 seconds. Full backend Ruff passed, and all **
 versions** were unique and parsed. Earlier broad backend results remain scoped to their
 recorded revisions. No browser flow, registered shared HTTP route, live migration or
 feature activation is claimed by this integration check.
+
+## Financial child receipt verification
+
+A successful helper response previously checked only its status, repeat marker and receipt
+identifier. Five disposable PostgreSQL regressions demonstrated that an unrelated real
+same-account receipt, a real debit with the wrong amount/reason/reference, or an altered
+returned receipt could still complete research. The transaction now proves the exact
+committed child debit and its complete immutable receipt before changing progression.
+Any mismatch returns `action_conflict` and rolls back the root claim and all new effects.
+
+The five regressions failed before the correction and passed afterward. The complete
+progression module then passed **63 PostgreSQL cases in 12.39 seconds**; the focused
+progression/model, historical contract and migration-version selection passed **41 Python
+checks in 0.49 seconds**, and backend-wide Ruff passed. The full migration chain applies
+twice on a disposable database. The substituted helper bodies are confined to rollback-only
+test transactions; no browser or service role gains permission to replace production SQL.
+These checks do not establish live admission, route integration or deployment.

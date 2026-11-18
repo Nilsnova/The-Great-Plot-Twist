@@ -637,6 +637,89 @@ def test_malformed_financial_reply_cannot_grant_research_or_leave_an_operation_c
     assert count_claims(database, member, "malformed1") == 0
 
 
+@pytest.mark.parametrize(
+    "fault",
+    ["unrelated_receipt", "wrong_amount", "wrong_reason", "wrong_reference", "edited_reply"],
+)
+def test_financial_reply_must_prove_the_exact_progression_charge(database, fault):
+    owner, member, _, initial = setup(database)
+    earlier = rpc(
+        database,
+        "island_treasury_spend",
+        member,
+        *keys(initial),
+        "earlier_charge",
+        "tech_research",
+        "earlier-progression-charge",
+        1,
+    )
+    before = money(earlier)
+    before_count = database.execute(
+        "select count(*) from public.island_treasury_transactions where account_id=%s",
+        (keys(initial)[0],),
+    ).fetchone()[0]
+    as_owner(database)
+    original = database.execute(
+        "select pg_get_functiondef("
+        "'public.island_treasury_spend(uuid,uuid,uuid,text,text,text,numeric)'::regprocedure)"
+    ).fetchone()[0]
+    database.execute(
+        original.replace(
+            "FUNCTION public.island_treasury_spend(",
+            "FUNCTION public.progression_fixture_spend(",
+            1,
+        )
+    )
+    database.execute(
+        "revoke all on function public.progression_fixture_spend("
+        "uuid,uuid,uuid,text,text,text,numeric) from public,anon,authenticated,service_role"
+    )
+    if fault == "unrelated_receipt":
+        body = f"return public.island_treasury_result('{earlier['receipt']['id']}'::uuid,false);"
+    else:
+        price = "p_amount-1" if fault == "wrong_amount" else "p_amount"
+        reason = "'wreck_repair'" if fault == "wrong_reason" else "p_reason"
+        reference = "p_reference||':other'" if fault == "wrong_reference" else "p_reference"
+        body = (
+            "v_reply := public.progression_fixture_spend(p_actor_id,p_account_id,p_run_epoch,"
+            f"p_action_uid,{reason},{reference},{price}); "
+            "return "
+            + (
+                "jsonb_set(v_reply,'{receipt,balanceDelta}','\"-1\"'::jsonb);"
+                if fault == "edited_reply"
+                else "v_reply;"
+            )
+        )
+    database.execute(
+        "create or replace function public.island_treasury_spend("
+        "p_actor_id uuid,p_account_id uuid,p_run_epoch uuid,p_action_uid text,"
+        "p_reason text,p_reference text,p_amount numeric) returns jsonb "
+        "language plpgsql security definer set search_path='' as $$ "
+        f"declare v_reply jsonb; begin {body} end; $$"
+    )
+    as_server(database)
+    assert mutate(database, member, initial, "receipt_proof", research()) == {
+        "status": "refused",
+        "reason": "action_conflict",
+    }
+    assert research_state(database, owner)["tier"] == 0
+    assert count_claims(database, member, "receipt_proof") == 0
+    assert database.execute(
+        "select count(*) from public.island_progression_receipts where account_id=%s",
+        (keys(initial)[0],),
+    ).fetchone()[0] == 0
+    assert database.execute(
+        "select count(*) from public.island_treasury_transactions where account_id=%s",
+        (keys(initial)[0],),
+    ).fetchone()[0] == before_count
+    after = rpc(database, "island_economy_context", owner)["economy"]["treasury"]
+    assert (
+        tuple(int(after[key]) for key in ("balanceCoins", "committedCoins", "availableCoins"))
+        == before
+    )
+    reconciles(database, keys(initial)[0])
+
+
 def test_unavailable_catalogue_allows_old_receipt_but_refuses_new_intent_without_claim(database):
     owner, member, _, initial = setup(database)
     intent = {"action": "wreck", "amount": 100, "quotedCoins": "100"}
