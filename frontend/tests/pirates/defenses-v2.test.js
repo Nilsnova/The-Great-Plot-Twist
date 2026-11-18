@@ -11,6 +11,7 @@ import {POINT_TOWER_KINDS, SLOT_KINDS, readUnlocks} from '../../src/island/td-ru
 import {buildCardModel} from '../../src/island/card-model.js';
 import {CULVERIN_ART, defensesV2Frames} from '../../src/art/defenses-v2.js';
 import {hasCartoon, islandFrame} from '../../src/art/registry.js';
+import {plays} from './wave-rules-plays.js';
 
 const file = JSON.parse(readFileSync(new URL('../../../backend/content/defenses_v2.json', import.meta.url), 'utf8'));
 const islands = JSON.parse(readFileSync(new URL('../../../backend/content/islands.json', import.meta.url), 'utf8'));
@@ -209,12 +210,12 @@ describe('the culverin outside the sim', () => {
     expect(before.prices.kinds).not.toHaveProperty('culverin');
     expect(before.unlocks.unlocked.some(id => id.startsWith('culverin'))).toBe(false);
     await expect(off.build({spot: 'cannon_1', kind: 'culverin', actionUid: 'c-off'})).rejects.toMatchObject({status: 422});
-    expect((await off.startWave({where: 'own', actionUid: 'w-off'})).rules).toBeUndefined();
+    expect((await off.startWave({where: 'own', actionUid: 'w-off'})).rules ?? []).toEqual(plays());
     const answer = await on.island();
     expect(answer.spots.find(item => item.id === 'cannon_1').kinds).toEqual(['cannon', 'mortar', 'harpoon', 'swivel', 'culverin']);
     expect(answer.prices.kinds.culverin).toEqual(CULVERIN_CARD.price);
     const built = await on.build({spot: 'cannon_1', kind: 'culverin', actionUid: 'c-on'});
     expect(built.spots.find(item => item.id === 'cannon_1')).toMatchObject({kind: 'culverin', built: true, level: 1});
-    expect((await on.startWave({where: 'own', actionUid: 'w-on'})).rules).toEqual(['defenses_v2']);
+    expect((await on.startWave({where: 'own', actionUid: 'w-on'})).rules).toEqual(plays('defenses_v2'));
   });
 });

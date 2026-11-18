@@ -9,7 +9,7 @@ import { spotWave } from '../campaign/index.js';
 import { createFakeArsenal } from '../island/arsenal-fake.js';
 import { createFakeWorld, ISLAND_RULES, readIslandCode, CODE_ALPHABET, spotView, refuse, MAX_MEMBERS, GAME_FULL,
   unlocksAt, PRICES_V2, PRICES, campaignAt, layoutOf, invalid, slotOfSpot, kindsOfSpot, kindOfSpot, lockedMessage,
-  WALL_RECOVERY_MS, iso, restorePrice, rebuildPrice, SIM_RULES, isBoss, FakeApiError } from './fake-rules.js';
+  WALL_RECOVERY_MS, iso, restorePrice, rebuildPrice, SIM_RULES, ALWAYS_ON_RULES, isBoss, FakeApiError } from './fake-rules.js';
 import { createIslandRoutes } from './fake-island.js';
 import { createResearchRoutes } from './fake-research.js';
 import { createWaveRoutes } from './fake-waves.js';
@@ -23,8 +23,8 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
   // D060: the extra tower spots (cannon_8..cannon_11) join the island only while the flag more_tower_spots is on
   // (?fakeflags=more_tower_spots), as the real server's catalogue_for_flags(); each opens after its won wave.
   const islandSpots = flags?.more_tower_spots === true ? Object.freeze([...ISLAND_RULES.spots, ...EXTRA_SPOT_IDS]) : ISLAND_RULES.spots;
-  // The wave rules (backend/server/island/wave_rules.py): the rule flags on at the wave's first answer, in SIM_RULES
-  // order. That answer keeps its set (wave_rules_keep()), an empty set too, and every later answer serves it whatever
+  // The wave rules (backend/server/island/wave_rules.py): the always-on rules (ALWAYS_ON_RULES) and the rule flags on
+  // at the wave's first answer, in SIM_RULES order. That answer keeps its set (wave_rules_keep()), an empty set too, and every later answer serves it whatever
   // the flags say then (a test may change `flags` mid-wave); an empty set leaves `rules` out.
   // T38 (routes/waves.py): the server honours `rescued` only while the flag rescue is on.
   const rescueOn = flags?.rescue === true;
@@ -227,11 +227,12 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     }
   }
   const running = run => !run.finishedAt && nowMs() <= run.startsAtMs + ISLAND_RULES.waves.maximumSeconds * 1000;
-  // The wave's sim rules (backend/server/island/wave_rules.py): the rule flags on now, in SIM_RULES order; the
+  // The wave's sim rules (backend/server/island/wave_rules.py): the always-on rules and the rule flags on now, in SIM_RULES order; the
   // first answer keeps its set for the wave (an empty set too), every later one serves the kept set.
   // world.liveFlags (dev.setFlag) switches a flag for every tab of a shared world, like a redeploy.
   const flagOn = name => (world.liveFlags && Object.hasOwn(world.liveFlags, name) ? world.liveFlags[name] : flags?.[name]) === true;
-  const ruleOn = name => flagOn(name) && (name !== 'tower_obstacles' || (flagOn('pathing') && flagOn('tower_health')));
+  const ruleWanted = name => ALWAYS_ON_RULES.includes(name) || flagOn(name);
+  const ruleOn = name => ruleWanted(name) && (name !== 'tower_obstacles' || (ruleWanted('pathing') && ruleWanted('tower_health')));
   const rulesOf = run => {
     // Kept by the wave's first answer, even when empty (the server's wave_rules_keep), whatever the flags say later.
     if (!Array.isArray(run.rules)) run.rules = SIM_RULES.filter(ruleOn);

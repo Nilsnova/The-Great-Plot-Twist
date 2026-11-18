@@ -4,6 +4,7 @@ import {createWaveFlow, PLACEHOLDER_SECONDS} from '../../src/island/wave-flow.js
 import {createFakeIslandApi} from './fake.js';
 import {finishWave, registerWaveRenderer, onWaveStarted, WAVE_STARTED, WAVE_FINISHED} from '../../src/island/wave-hooks.js';
 import {emit as busEmit} from '../../src/core/events.js';
+import {ALWAYS_ON_RULES} from '../../src/pirates/fake-rules.js';
 
 function setup({placeholder = true, ...options} = {}) {
   const api = createFakeIslandApi(options), events = [], banners = [], toasts = [];
@@ -25,7 +26,7 @@ describe('the bell and the wave', () => {
     const started = test.events.find(event => event.type === WAVE_STARTED);
     expect(started).toEqual({type: WAVE_STARTED, waveId: answer.data.waveId, wave: 1, seed: answer.data.seed,
       startsAt: '2026-11-11T10:00:10Z', weather: {kind: 'calm', label: 'Calm sea', ships: 1, fog: 0}, flagship: false,
-      where: 'own', defenses: [{id: 'cannon_1', kind: 'cannon', x: -12.5, z: -14.5}]});
+      where: 'own', defenses: [{id: 'cannon_1', kind: 'cannon', x: -12.5, z: -14.5}], rules: [...ALWAYS_ON_RULES]});
     expect(test.banners.at(-1)).toBe('Pirates in 10 s! Wave 1');
     await vi.advanceTimersByTimeAsync(3000);
     expect(test.banners.at(-1)).toBe('Pirates in 7 s! Wave 1');

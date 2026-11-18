@@ -37,7 +37,7 @@ FLAG_NAMES = (
     "defenses_v2",
     # T40/T41 (D042): the shared island arsenal. Off: the old personal weapon shop, as before.
     "arsenal",
-    # T33 (D049, proposed): towers have hp, break and are repaired in a wave (a wave rule).
+    # T33 (D049): towers have hp in a wave (a wave rule). Retired: always on (wave_rules.ALWAYS_ON).
     "tower_health",
     # T34/T35 (D040, proposed): boarders walk round or through the real walls (a wave rule).
     "pathing",

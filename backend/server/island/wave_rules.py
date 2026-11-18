@@ -1,10 +1,12 @@
 """The simulation rules a wave plays with (T33 tower_health, T34/T35 pathing, T38 rescue, T43
 defenses_v2, T50 ship_fire).
 
-Each rule is switched on by the feature flag of the same name. The first wave answer for a wave
-(start, join or current) keeps the rule set the flags say at that moment, in the table wave_rules
-(supabase/migrations/20261114130500_wave_rules.sql, wave_rules_keep()); every later answer for that
-wave serves the kept set. So a friend who joins after a flag was switched still plays the
+Each rule was switched on by the feature flag of the same name. The rules of ALWAYS_ON are on in
+production for good: their flags are retired (the names stay accepted in FEATURE_FLAGS and change
+nothing), so every new wave plays them; the others still follow their flag. The first wave answer
+for a wave (start, join or current) keeps the rule set of that moment, in the table wave_rules
+(supabase/migrations/20261114130500_wave_rules.sql, wave_rules_keep()); every later answer for
+that wave serves the kept set. So a friend who joins after a flag was switched still plays the
 bell-ringer's rules, and every client of a wave simulates the same wave.
 
 The set is kept even when it is empty (every rule flag off): a wave that started with no rules
@@ -53,12 +55,16 @@ class KeptRules(BaseModel):
     rules: list[str]
 
 
+# The rules every new wave plays whatever FEATURE_FLAGS says (their flags are retired, always on).
+ALWAYS_ON = ("tower_health",)
+
+
 def wanted_rules(settings: Settings) -> list[str]:
-    """The rules of SIM_RULES whose flag is on now, in that order."""
-    enabled = {name for name in SIM_RULES if is_enabled(name, settings.flags)}
+    """The rules of SIM_RULES that are always on or whose flag is on now, in that order."""
+    enabled = {name for name in SIM_RULES if name in ALWAYS_ON or is_enabled(name, settings.flags)}
     # T35 needs the shared path and tower-health simulation rules. A partial deployment
     # must keep the old pathing/tower behavior, and the frozen wave still carries one complete set.
-    if not all(settings.flags.get(name, False) for name in ("pathing", "tower_health")):
+    if not all(name in enabled for name in ("pathing", "tower_health")):
         enabled.discard("tower_obstacles")
     return [name for name in SIM_RULES if name in enabled]
 
