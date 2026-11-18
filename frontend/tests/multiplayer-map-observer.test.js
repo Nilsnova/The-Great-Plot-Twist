@@ -153,7 +153,7 @@ function replaceActualCap(state, post, points) {
     for (let first = 0; first + 12 <= position.array.length; first += 12) {
       if (!expected.every((value, at) => Math.abs(position.array[first + at] - value) < 1e-5)) continue;
       position.array.set(points, first);
-      return {position, first, original: expected};
+      return {position, uv: mesh.geometry.getAttribute('uv'), first, original: expected};
     }
   }
   throw Error('The actual center cap must exist before its buffer can be challenged.');
@@ -171,6 +171,42 @@ describe('upright wall profile rejection', () => {
     invalid(state);
     changed.position.array.set(changed.original, changed.first);
     expect(read(state)).toEqual({level:post.level,pips:0,mode:'wall-batch'});
+    state.walls.dispose();
+  });
+});
+
+function replaceCapWithAuthoredPost(state, post) {
+  const x = 1.3 * post.x + .2 * post.z, bottom = -.6 * post.z - 6 / 16, top = bottom + 48 / 16;
+  const changed = replaceActualCap(state, post, [x-1.125,bottom,0,x+1.125,bottom,0,x+1.125,top,0,x-1.125,top,0]);
+  const id = post.level === 1 ? 'island-wall' : `island-wall-l${post.level}`, frame = WALL_AUDIT_ATLAS.rects[id];
+  const u0 = (frame.x+.5)/256, u1 = (frame.x+frame.w-.5)/256;
+  const v0 = 1-(frame.y+frame.h-.5)/WALL_AUDIT_ATLAS.height, v1 = 1-(frame.y+.5)/WALL_AUDIT_ATLAS.height;
+  changed.uv.array.set([u0,v0,u1,v0,u1,v1,u0,v1], changed.first / 3 * 2);
+}
+
+describe('known ordinary-depth wall selection', () => {
+  const cases = [1,2,3,4,5].flatMap(level => ['horizontal','vertical'].map(axis => ({level,axis})));
+  it.each(cases)('observes exactly the selected tier $level $axis post and restores its cap', profile => {
+    const rows = straightRows({...profile,form:'cap'}), state = drawing(rows);
+    expect(read(state)).toEqual({level:profile.level,pips:0,mode:'wall-batch'});
+    state.walls.select('wall_2');
+    expect(state.group.wallSelectedId).toBe('wall_2');
+    expect(read(state)).toEqual({level:profile.level,pips:0,mode:'wall-batch'});
+    expect(state.scene.getObjectByName('island-selected-wall')).toBeUndefined();
+    state.walls.select(null);
+    expect(state.group.wallSelectedId).toBeNull();
+    expect(read(state)).toEqual({level:profile.level,pips:0,mode:'wall-batch'});
+    state.walls.dispose();
+  });
+  it.each(cases)('rejects an unexpected tier $level $axis full post while another wall is selected', profile => {
+    const rows = straightRows({...profile,form:'cap'}), state = drawing(rows);
+    state.walls.select('a');
+    expect(state.group.wallSelectedId).toBe('a');
+    expect(read(state)).toEqual({level:profile.level,pips:0,mode:'wall-batch'});
+    replaceCapWithAuthoredPost(state, rows[1]);
+    invalid(state);
+    state.walls.select('wall_2');
+    expect(read(state)).toEqual({level:profile.level,pips:0,mode:'wall-batch'});
     state.walls.dispose();
   });
 });
