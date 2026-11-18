@@ -1,0 +1,16 @@
+{
+  "source": "68d41990615bac98aac3b3ffb2225857c8707a81",
+  "name": "paid-final",
+  "command": [
+    "node",
+    "scripts/capture-paid-wall-tiers.mjs",
+    "/workspace/reference-village-work/clearance-runtime-02/frontend",
+    "/workspace/reference-village-work/clearance-paid-final",
+    ".7",
+    "--scenery"
+  ],
+  "started": "2026-11-18T10:35:14.544223+00:00",
+  "exitCode": 0,
+  "seconds": 335.84,
+  "finished": "2026-11-18T10:40:50.382477+00:00"
+}
