@@ -3,7 +3,7 @@
 // the wreck, shots and shells, splashes, smoke, fire, explosions and the musket flash. Original designs.
 // The gunboat (docs/GAME-V3.md §4.1) is its own small hull, with its muzzle flash and the "jammed" mark of a tower.
 // Boxes and anchors are the old atlas's: the anchor is the waterline (ships) or the centre (puffs).
-import {INK, ellipse, line, mix, part, poly, rect, stroke} from './paint.js';
+import {INK, ellipse, line, linear, mix, part, poly, radial, rect, stroke} from './paint.js';
 
 const GOLD = '#f2c14e', SEA_FOAM = '#f2fbff';
 // Ship specs: hull length and height above water, colours, masts [x, height, sails] in hull units.
@@ -161,12 +161,21 @@ function gunboat(frame) {
     part(c, ellipse(x1 - 3.6, wl + .6, 5 + frame, 2), SEA_FOAM, {line: '#8fd3e8', width: .8, shade: false});
   };
 }
-// The gunboat's muzzle flash (a hot burst with a smoke ring), 24 x 20, the muzzle on the left edge.
-function gunboatFlash(c, {h}) {
-  const cy = h / 2, star = poly([[1, cy - 2.4], [7, cy - 7.6], [8.6, cy - 2.6], [18, cy - 4.6], [13, cy], [18, cy + 4.6], [8.6, cy + 2.6], [7, cy + 7.6], [1, cy + 2.4]], .8);
-  part(c, star, '#ffd35a', {line: '#e8742a', width: 1.1, shade: false});
-  part(c, ellipse(7.2, cy, 4, 3), '#fff6c8', {line: false, shade: false}); part(c, ellipse(5.2, cy, 1.8, 1.4), '#ffffff', {line: false, shade: false});
-  puff('#d7d3cc', '#8d8a86', [[16, cy - 6, 2.4], [20, cy + 1, 2.8], [15, cy + 6.5, 2]], .85)(c);
+// A short flash aimed away from the barrel. Both frames anchor at the left edge.
+function powderFlash(c, w, cy) {
+  const burst = poly([[1, cy - 1.6], [w * .29, cy - 2.4], [w * .48, cy - w * .27],
+    [w * .48, cy - 1.8], [w * .85, cy - .5], [w * .57, cy + 2], [w * .58, cy + w * .22],
+    [w * .33, cy + 2.7], [1, cy + 1.6]], .42);
+  part(c, burst, linear(c, 1, cy, w * .85, cy, [[0, '#fff3b2'], [.52, '#ffbf54'], [1, '#ec7542']]),
+    {line: '#e68236', width: .7, shade: false});
+  part(c, poly([[1.5, cy], [w * .31, cy - 2.1], [w * .62, cy - .4], [w * .31, cy + 1.5]], .45),
+    '#fffbe2', {line: false, shade: false});
+  part(c, ellipse(w * .81, cy - w * .19, .92, .48, -.45), '#ffe095', {line: false, shade: false, alpha: .87});
+}
+function gunboatFlash(c, {w, h}) {
+  const cy = h / 2;
+  smokePuff(c, [[14, cy - 3.5, 3.6], [19, cy - .5, 3.3], [15.5, cy + 3, 3.1]], .43);
+  powderFlash(c, w, cy);
 }
 // The "jammed" mark over a tower: a broken gear with a crack, and sparks that jump (two frames), 28 x 28 box.
 function jamMark(frame) {
@@ -204,17 +213,22 @@ function ball(fuse) {
     if (fuse) { stroke(c, line([[w / 2 + 2.6, h / 2 - 3.4], [w / 2 + 4, h / 2 - 5.6]]), '#8a5a36', 1.1); part(c, ellipse(w / 2 + 4.3, h / 2 - 6, 1.6), '#ffd166', {line: '#f29e38', width: .7, shade: false}); }
   };
 }
-function puff(colour, edge, blobs, alpha = 1) {
-  return c => {
-    const all = new Path2D(); for (const [x, y, r] of blobs) all.addPath(ellipse(x, y, r, r * .92));
-    c.save(); c.globalAlpha = alpha; c.lineWidth = 1.6; c.strokeStyle = edge; for (const [x, y, r] of blobs) c.stroke(ellipse(x, y, r, r * .92));
-    c.fillStyle = mix(colour, edge, .35); c.fill(all); c.clip(all); c.translate(-1.2, -1.6); c.fillStyle = colour; c.fill(all); c.restore();
-  };
+function cloudOutline(blobs) {
+  const outline = new Path2D();
+  for (const [x, y, radius, aspect = .88, tilt = 0] of blobs) outline.addPath(ellipse(x, y, radius, radius * aspect, tilt));
+  return outline;
+}
+// Fill the union once, so overlapping lobes don't increase opacity over a target.
+function smokePuff(c, blobs, alpha, ash = false) {
+  const top = Math.min(...blobs.map(([, y, r]) => y - r)), bottom = Math.max(...blobs.map(([, y, r]) => y + r));
+  const stops = ash ? [[0, '#b9adb8ba'], [.48, '#8a8299d6'], [1, '#554c6c00']]
+    : [[0, '#fff0d8b0'], [.48, '#dedbdbd1'], [1, '#9999b200']];
+  part(c, cloudOutline(blobs), linear(c, 12, top, 16, bottom, stops), {line: false, shade: false, alpha});
 }
 const smokeFrames = [
-  puff('#f4f1ea', '#9a96a2', [[16, 17, 5], [12, 15, 3.6], [20, 14.6, 3.4]]),
-  puff('#ebe7e0', '#9a96a2', [[16, 15.6, 6.6], [10.4, 17, 4.6], [21.6, 17, 4.4], [15, 10.6, 4.2]], .92),
-  puff('#e2ded8', '#a6a2ae', [[16, 13.4, 7.4], [9, 16.4, 5], [23, 16, 5], [17, 7.6, 4.4]], .7),
+  [[[15.8, 16.6, 5.6, .79, -.18], [11.5, 16, 3.5, .7], [19.8, 14.6, 3.5, .75, .25]], .86],
+  [[[15.5, 15.3, 6.7, .76, -.18], [9.8, 17, 4.1, .77], [21.3, 14.9, 4.5, .74, -.45], [14.3, 11.8, 4.2, .82]], .71],
+  [[[15.7, 13.2, 6.9, .74, -.4], [9.4, 16, 4.4, .67, -.3], [22.6, 14.4, 5.2, .65, .15], [18.4, 9, 4.3, .72, -.22]], .51],
 ];
 function fire(frame) {
   return (c, {w, h}) => {
@@ -230,32 +244,59 @@ function fire(frame) {
 }
 function splash(frame) {
   return (c, {w, h}) => {
-    const g = h - 4, cx = w / 2, edge = '#3d9ec0';
-    const ring = frame === 2 ? 11 : 6 + frame * 3;
-    stroke(c, ellipse(cx, g, ring, ring * .32), frame === 2 ? '#bfeaf6' : SEA_FOAM, 1.4, frame === 2 ? .7 : 1);
-    if (frame === 0) part(c, poly([[cx - 4, g], [cx - 2, g - 11], [cx, g - 15], [cx + 2, g - 11], [cx + 4, g]], [1, 1.4, 1.4, 1.4, 1]), '#dff6ff', {line: edge, width: 1.1, shade: '#a8def0'});
-    if (frame === 1) for (const [x, height] of [[-7, 10], [-3.5, 17], [0, 20], [3.5, 16], [7, 11]]) part(c, poly([[cx + x - 1.8, g], [cx + x * 1.3, g - height], [cx + x + 1.8, g]], [.8, 1.6, .8]), '#dff6ff', {line: edge, width: 1, shade: '#a8def0'});
-    const drops = frame === 0 ? [[-5, 12], [5, 13]] : frame === 1 ? [[-10, 18], [10, 19], [-2, 24]] : [[-12, 6], [12, 7], [-5, 12], [6, 13]];
-    for (const [x, y] of drops) part(c, ellipse(cx + x, g - y, 1.4, 1.7), '#dff6ff', {line: edge, width: .8, shade: false});
+    const g = h - 4, cx = w / 2, ring = [5.9, 8.6, 11.6][frame], depth = ring * .23;
+    stroke(c, ellipse(cx, g, ring, depth), '#62c1d6', 1.45, frame === 2 ? .53 : .87);
+    const foam = new Path2D();
+    foam.ellipse(cx, g, ring, depth, 0, .1, Math.PI * .85);
+    stroke(c, foam, SEA_FOAM, 1, frame === 2 ? .58 : .94);
+
+    if (frame < 2) {
+      const jets = frame === 0 ? [[0, 15, 1.8, 1.1]] : [[-5.4, 12, -4, 2.1], [0, 20, 2, 2.4], [5.4, 15, 4.2, 2.1]];
+      for (const [offset, height, lean, half] of jets) {
+        const x = cx + offset, crest = new Path2D();
+        crest.moveTo(x - half, g);
+        crest.quadraticCurveTo(x - half, g - height * .65, x + lean, g - height);
+        crest.quadraticCurveTo(x + lean * .6, g - height * .5, x + half, g);
+        crest.closePath();
+        part(c, crest, linear(c, x, g - height, x, g, [[0, SEA_FOAM], [.46, '#b9edf3'], [1, '#62bfd8ab']]),
+          {line: '#72c4da', width: .65, shade: false});
+      }
+    }
+    const drops = frame === 0 ? [[-4.4, 9], [5.2, 12]] : frame === 1 ? [[-10, 16], [9.4, 19], [-2, 23]] : [[-11.8, 5], [12, 6], [-5.6, 10], [6.5, 11]];
+    for (const [x, y] of drops) part(c, ellipse(cx + x, g - y, .86, 1.46, Math.sign(x) * .47), '#dcf8ff',
+      {line: false, shade: false, alpha: frame === 2 ? .7 : .96});
   };
 }
 function explosion(frame) {
   return (c, {w, h}) => {
     const cx = w / 2, cy = h / 2;
     if (frame === 0) {
-      const star = []; for (let i = 0; i < 16; i++) { const a = i / 16 * Math.PI * 2, r = i % 2 ? 4 : 9; star.push([cx + Math.cos(a) * r, cy + Math.sin(a) * r]); }
-      part(c, poly(star, .6), '#fff3b0', {line: '#f29e38', width: 1.2, shade: false}); part(c, ellipse(cx, cy, 3.4), '#ffffff', {line: false, shade: false}); return;
+      const flash = [[-9, 1], [-3, -1.7], [-4.7, -7.9], [0, -3.2], [5.5, -8.6], [3.8, -1.7],
+        [9.3, .7], [3.6, 2.6], [5.2, 7.2], [.3, 3.6], [-4.2, 7.1], [-3.4, 2.6]];
+      part(c, poly(flash.map(([x, y]) => [cx + x, cy + y]), .55),
+        radial(c, cx, cy, 9.4, [[0, '#fffdec'], [.48, '#ffe599'], [1, '#ec8a3e']]),
+        {line: '#e99745', width: .72, shade: false});
+      return;
     }
-    if (frame === 3) { puff('#8f8a96', '#5a5662', [[cx, cy - 2, 6], [cx - 7, cy + 2, 4.6], [cx + 7, cy + 1.6, 4.6], [cx - 1, cy - 9, 3.6]], .75)(c); return; }
-    const big = frame === 1 ? 1 : 1.12;
-    puff(frame === 1 ? '#ffb43a' : '#ff8a2c', '#b5401c', [[cx, cy, 8 * big], [cx - 8, cy + 3, 5.4 * big], [cx + 8, cy + 2, 5.6 * big], [cx + 1, cy - 8, 5 * big]])(c);
-    part(c, ellipse(cx - 1, cy + 1, 4.6 * big, 4 * big), '#ffe27a', {line: false, shade: false});
-    if (frame === 2) puff('#77727e', '#4a4652', [[cx - 6, cy - 9, 3.6], [cx + 5, cy - 10, 3.2]], .8)(c);
+    if (frame === 3) {
+      smokePuff(c, [[cx, cy - 1, 6.1], [cx - 6.8, cy + 1.8, 4.3], [cx + 6.9, cy + 1.6, 4.4], [cx - 1, cy - 8.6, 3.8]], .67, true);
+      return;
+    }
+    const swell = frame === 1 ? 0 : .8;
+    if (frame === 2) smokePuff(c, [[cx - 5.6, cy - 8, 5.1], [cx + 4.8, cy - 7, 5.6]], .55, true);
+    const rim = cloudOutline([[cx - 1, cy, 7.6 + swell], [cx - 6.3, cy + 2.8, 4.7 + swell],
+      [cx + 6.5, cy + 1.4, 5.1 + swell], [cx + 1.4, cy - 5.6, 5.1 + swell]]);
+    part(c, rim, radial(c, cx - 1, cy - 1, 12.4, frame === 1
+      ? [[0, '#fff9c5'], [.38, '#ffd568'], [.75, '#f79748'], [1, '#b74e33']]
+      : [[0, '#ffe7a2'], [.35, '#ffc062'], [.69, '#e9804c'], [1, '#ab4c3f59']]),
+    {line: false, shade: false, alpha: frame === 1 ? .98 : .8});
+    for (const [x, y] of [[-11.4, -5.2 - swell], [10.7, 7.5 + swell]])
+      part(c, ellipse(cx + x, cy + y, 1.35, .63, Math.sign(x) * .6), '#ffd57c',
+        {line: false, shade: false, alpha: frame === 1 ? .88 : .65});
   };
 }
 function musketFlash(c, {w, h}) {
-  const cy = h / 2, p = poly([[2, cy - 2], [8, cy - 5.6], [7, cy - 1.6], [14.6, cy], [7, cy + 1.6], [8, cy + 5.6], [2, cy + 2]], .7);
-  part(c, p, '#fff3b0', {line: '#f29e38', width: 1, shade: false}); part(c, ellipse(5.4, cy, 2.4, 1.6), '#ffffff', {line: false, shade: false});
+  powderFlash(c, w, h / 2);
 }
 function flagTrophy(c, {h}) {
   const g = h - 4; part(c, rect(6, 6, 2.4, g - 6, 1), '#6b4a2e', {width: .9});
@@ -293,7 +334,8 @@ export function fleetFrames() {
   const frames = {};
   for (const kind of Object.keys(SHIPS)) for (const frame of [0, 1, 2]) frames[`pirate-${kind}-${frame + 1}`] = [SHIPS[kind].w, SHIPS[kind].h, SHIPS[kind].anchor, ship(kind, frame)];
   for (const frame of [0, 1, 2]) {
-    frames[`fx-smoke-${frame + 1}`] = [32, 32, 16, smokeFrames[frame], NONE];
+    const [blobs, alpha] = smokeFrames[frame];
+    frames[`fx-smoke-${frame + 1}`] = [32, 32, 16, c => smokePuff(c, blobs, alpha), NONE];
     frames[`fx-fire-${frame + 1}`] = [32, 32, 4, fire(frame), NONE];
     frames[`pirate-splash-${frame + 1}`] = [32, 32, 4, splash(frame), NONE];
   }
