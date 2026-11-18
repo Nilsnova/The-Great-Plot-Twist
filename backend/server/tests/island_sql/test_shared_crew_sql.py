@@ -15,6 +15,7 @@ from psycopg.types.json import Jsonb  # noqa: E402
 
 from server.island.catalogue import load_island  # noqa: E402
 from server.island.shared_crew_rules import manifest  # noqa: E402
+from server.tests.case_sql.conftest import scratch_server as scratch_server  # noqa: E402
 from server.tests.island_sql.test_island_treasury_sql import (  # noqa: E402
     keys,
     money,

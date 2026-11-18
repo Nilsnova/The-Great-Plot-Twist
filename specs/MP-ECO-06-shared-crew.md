@@ -94,3 +94,26 @@ uv run ruff check .
 ```
 
 All 78 SQL migrations also parse successfully, every timestamp is unique, and the disposable PostgreSQL fixture reapplies the complete chain. Whitespace checks pass for the seven feature-owned paths. Incoming main evidence files retain their existing whitespace; no unrelated artifacts are reformatted. HTTP activation, live migration/admission and multiplayer simulation remain unverified by this backend-only increment.
+
+### Committed race fixture isolation
+
+The crew SQL module now registers its own session-scoped scratch server. Its real
+concurrency cases must commit fixture rows for separate connections to observe them;
+those rows must not enter another module's migration or global fresh-start checks.
+Running the 22 crew cases followed by the two unchanged legacy fresh-start assertions
+in one process previously produced **22 passed and 2 failed in 4.79 seconds**, with
+eight islands visible where the legacy fixture expected two. The module-local fixture
+import isolates those committed race rows without changing global fixtures, production
+code or any legacy assertion.
+
+The combined affected selection now passes in one process:
+
+```sh
+CASE_PG_SCRATCH=1 uv run --no-sync --with pgserver --with 'psycopg[binary]' --with pglast pytest -q --tb=short server/tests/island_sql/test_shared_crew_sql.py server/tests/island_sql/test_guard_crew_sql.py server/tests/island_sql/test_economy_operations_cutover_sql.py server/tests/island_sql/test_islands_and_waves_sql.py
+# 68 passed in 37.99 seconds; the full disposable migration chain applies twice.
+uv run --no-sync ruff check .
+# All checks passed.
+```
+
+The prior 20-case Python result remains applicable to unchanged crew production and
+Python-test sources; that selection was not rerun for this fixture-only correction.
