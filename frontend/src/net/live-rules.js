@@ -62,7 +62,6 @@ export const START_DELAY_MS = 5000; // the first join waits a random time up to 
 //   * a small "extras" lane for preset emotes, lamp states and duel invitations, one message a second
 //     at most per captain, so a wave shows at once instead of waiting for the next move slot.
 export const CLASS_HARBOR_PLACE = 'class_harbor';
-export const CLASS_HARBOR_ROOM = 1;
 export const CLASS_ROOM_SIZE = 40; // other captains in the class room, all drawn
 export const CLASS_TRACK_JITTER_MS = 4000;
 export const EXTRA_EVENTS = ['lamp', 'duel'];

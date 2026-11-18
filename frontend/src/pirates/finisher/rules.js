@@ -40,7 +40,6 @@ export const FINISHER = Object.freeze({
   redtideSamples: 80,   // each of Redtide's three tasks
   redtideNeeds: 2,      // tasks of three to clear
 });
-export const FINISHER_KINDS = Object.freeze(['haul', 'cannon', 'duel', 'redtide']);
 const BOSS_KINDS = new Set(['warship', 'dreadnought', 'redtide']);
 export const isFinisherBoss = ship => !!ship && ship.boss === true && BOSS_KINDS.has(ship.kind);
 /** Which finisher a boss brings: by its kind and the wave (the boss tiers keep it fresh). */

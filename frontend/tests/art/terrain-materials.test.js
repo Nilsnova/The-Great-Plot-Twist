@@ -1,16 +1,18 @@
 import {readFileSync} from 'node:fs';
 import {describe, expect, it} from 'vitest';
-import {TERRAIN_MATERIALS, TERRAIN_SHEET, materialCells, meadowScale} from '../../src/art/village/terrain-materials.js';
+import {TERRAIN_MATERIALS, TERRAIN_SHEET, TERRAIN_SOURCE_SHEET, materialCells, meadowScale} from '../../src/art/village/terrain-materials.js';
+import {shippedTerrain} from '../../src/art/village/shipped.js';
+import {sheetHeader} from '../../src/art/village-decode.js';
 import {surfaces} from '../../src/world/places/surfaces.js';
 import {cliffProfile} from '../../src/art/coast-cliffs.js';
 
 describe('original terrain source mapping', () => {
-  it('maps four separate inset source regions inside the actual committed PNG', () => {
-    const data = readFileSync(`public/${TERRAIN_SHEET.file}`);
-    expect(data.subarray(0, 8).toString('hex')).toBe('89504e470d0a1a0a');
-    const width = data.readUInt32BE(16), height = data.readUInt32BE(20);
-    expect([TERRAIN_SHEET.width, TERRAIN_SHEET.height]).toEqual([width, height]);
-    const regions = Object.values(TERRAIN_MATERIALS).map(material => material.rect);
+  it.each([['authored PNG', TERRAIN_SOURCE_SHEET, 'png', Object.values(TERRAIN_MATERIALS).map(material => material.rect)],
+    ['shipped WebP', TERRAIN_SHEET, 'webp', Object.keys(TERRAIN_MATERIALS).map(name => shippedTerrain.rects[name])]])('maps four separate inset regions inside the actual committed %s', (_label, sheet, type, regions) => {
+    const data = readFileSync(`public/${sheet.file}`), header = sheetHeader(new DataView(data.buffer, data.byteOffset, data.byteLength));
+    expect(header?.type).toBe(type);
+    const {width, height} = header;
+    expect([sheet.width, sheet.height]).toEqual([width, height]);
     for (const [x, y, w, h] of regions) {
       expect(x).toBeGreaterThan(0); expect(y).toBeGreaterThan(0);
       expect(w).toBeGreaterThan(0); expect(h).toBeGreaterThan(0);

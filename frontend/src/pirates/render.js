@@ -46,7 +46,6 @@ export const ATLAS_IDS = [...pirateFrames.sloop, ...pirateFrames.brig, ...pirate
   ...pirateLevels.wall.slice(1), ...pirateLevels.cannon.slice(1), ...pirateLevels.mortar.slice(1), ...Object.values(crewArt),
   ...pirateFrames.captain, ...pirateFrames.smoke, ...pirateFrames.fire, ...pirateFrames.explosion, ...pirateFrames.boarder,
   'captain-cutlass', 'fx-musket-flash', 'fx-mortar-shell', 'fx-level-pip', 'pirate-cannonball', 'pirate-wreck'];
-export const WARSHIP_FRAMES = pirateFrames.warship;
 // The gunboat (GAME-V3.md §4.1), cartoon only like the tiers: its own small hull (three bobbing frames), its muzzle
 // flash and the two-frame "jammed" mark over a tower (src/art/fleet.js). A pixel atlas (tests) sails it as a plain
 // sloop and draws no marks.
@@ -272,6 +271,10 @@ function pool() {
 const colour = hex => { const c = new THREE.Color(hex); return { r: c.r, g: c.g, b: c.b }; };
 const GOLD = colour('#ffd77a'), RED = colour('#d8553f'), GREEN = colour('#9fd26a'), DARK = colour('#1f2622'), BEAM = colour('#ffe9a8');
 const BRASS = colour('#e0b04a'), TEAL = colour('#4fc3c9');
+// One reused {r, g, b, a} for a colour at an alpha: layer.push copies the numbers at once, so the many
+// bars, shadows and pips drawn each frame need no new object each.
+const TINT = { r: 1, g: 1, b: 1, a: 1 };
+const tinted = (c, a) => { TINT.r = c.r; TINT.g = c.g; TINT.b = c.b; TINT.a = a; return TINT; };
 const SHIP_SIZE = Object.fromEntries(['sloop', 'brig', 'flagship'].map(kind => {
   const [w, h] = pirateDimensions[pirateFrames[kind][0]]; return [kind, { w: w / UNIT, h: h / UNIT }];
 }));
@@ -331,7 +334,8 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     near: createLayer('near-sea', CAPACITY.near, material, LAYER_ORDER.near, owned),
     air: createLayer('air', CAPACITY.air, material, LAYER_ORDER.air, owned),
   };
-  for (const layer of Object.values(layers)) root.add(layer.mesh);
+  const layerList = Object.values(layers);
+  for (const layer of layerList) root.add(layer.mesh);
   const bands = Array.from({ length: BANDS }, (_, i) => {
     const layer = createLayer(`boarders:${i}`, BAND_CAPACITY, material, 100 + BAND_FROM + i * BAND + BAND * .5, owned); root.add(layer.mesh); return layer;
   });
@@ -372,6 +376,8 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   const guards = new Map(); // the Barracks' militia: id -> {phase, flashUntil, strikeUntil, facing}
   let captain = null, revive = null, figures = null;
   const fire = new Map(), wallFlash = new Map();
+  const frameWalls = new Map(), frameTowers = new Map(), aliveShips = new Set(), aliveBoarders = new Set();
+  const aliveAny = { has: id => aliveShips.has(id) || aliveBoarders.has(id) };
   let clock = 0, simNow = 0, latest = null, visible = true, disposed = false;
   // Ships and boarders glide between sim ticks instead of stepping (src/pirates/smoothing.js); drawing only.
   const smooth = createSmoother(() => clock);
@@ -700,7 +706,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     if (ship.hp < ship.maxHp || ship.boss) {
       const top = y + size.h - r.anchor + .15, w = Math.min(2.4, size.w * .5), share = Math.max(0, ship.hp / ship.maxHp);
       const tint = ship.kind === 'flagship' && !ship.exposed ? { r: .75, g: .78, b: .8 } : ship.boss ? RED : share > .5 ? GREEN : share > .25 ? GOLD : RED;
-      layers.air.push(rect[WHITE], x - w / 2 - .0625, top - .0625, w + .125, .3125, 0, 0, { ...DARK, a: .8 });
+      layers.air.push(rect[WHITE], x - w / 2 - .0625, top - .0625, w + .125, .3125, 0, 0, tinted(DARK, .8));
       layers.air.push(rect[WHITE], x - w / 2, top, w * share, .1875, 0, 0, { ...tint, a: 1 });
     }
   }
@@ -728,7 +734,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     layer.push(r, x, y, r.w * K() * big, r.h * K() * big, .5, r.anchor * K() * big, { flip: meta.facing < 0, flashing: hit ? (rect[cartoon] ? .35 : .7) : 0, ...look });
     if (boarder.hp < boarder.maxHp) {
       const top = y + (r.h - r.anchor) * K() - .35, w = .9, share = Math.max(0, boarder.hp / boarder.maxHp);
-      layer.push(rect[WHITE], x - w / 2 - .0625, top - .0625, w + .125, .25, 0, 0, { ...DARK, a: .8 });
+      layer.push(rect[WHITE], x - w / 2 - .0625, top - .0625, w + .125, .25, 0, 0, tinted(DARK, .8));
       layer.push(rect[WHITE], x - w / 2, top, w * share, .125, 0, 0, { ...(share > .5 ? GOLD : RED), a: 1 });
     }
   }
@@ -752,7 +758,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     layer.push(r, x, y, r.w * K(), r.h * K(), .5, r.anchor * K(), { flip: meta.facing < 0, flashing: hit ? .35 : 0 });
     if (unit.hp < unit.maxHp) {
       const top = y + (r.h - r.anchor) * K() - .35, w = .9, share = Math.max(0, unit.hp / unit.maxHp);
-      layer.push(rect[WHITE], x - w / 2 - .0625, top - .0625, w + .125, .25, 0, 0, { ...DARK, a: .8 });
+      layer.push(rect[WHITE], x - w / 2 - .0625, top - .0625, w + .125, .25, 0, 0, tinted(DARK, .8));
       layer.push(rect[WHITE], x - w / 2, top, w * share, .125, 0, 0, { ...(share > .5 ? TEAL : share > .25 ? GOLD : RED), a: 1 });
     }
   }
@@ -788,7 +794,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       const direction = projectGroundVector(ball.toX - ball.x, ball.toZ - ball.z), dx = direction.x, dy = direction.y + 1.4 * 4 * (1 - 2 * p) * .35; // along the path, a little nose-up early and nose-down late
       layers.air.push(r, x, y, r.w, r.h, .5, r.anchor, { angle: Math.atan2(dy, dx || .001) });
     }
-    if (!still()) layers.air.push(rect[WHITE], x, at.y - .05, .3, .1, .5, 0, { ...DARK, a: .3 });
+    if (!still()) layers.air.push(rect[WHITE], x, at.y - .05, .3, .1, .5, 0, tinted(DARK, .3));
   }
 
   // A culverin's shot (T43): a low, fast arc, the long ball turned along its path, a pale streak behind it.
@@ -803,7 +809,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     const direction = projectGroundVector(ball.toX - ball.x, ball.toZ - ball.z);
     if (r) layers.air.push(r, x, y, r.w, r.h, .5, r.anchor, { angle: Math.atan2(direction.y, direction.x || .001) });
     else layers.air.push(rect['pirate-cannonball'], x, y, rect['pirate-cannonball'].w, rect['pirate-cannonball'].h, .5, .55 * rect['pirate-cannonball'].h);
-    if (!still()) layers.air.push(rect[WHITE], x, at.y - .05, .3, .1, .5, 0, { ...DARK, a: .35 });
+    if (!still()) layers.air.push(rect[WHITE], x, at.y - .05, .3, .1, .5, 0, tinted(DARK, .35));
   }
 
   // A swivel nest's pellet (D055): a tiny lead ball on a flat, quick line, a short bright streak behind it.
@@ -836,7 +842,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     }
     layers.air.push(r, drawnX(x, z), drawnY(z) + lift, r.w * 1.1, r.h * 1.1, .5, .55 * r.h, ball.enemy ? { r: .55, g: .45, b: .4 } : undefined);
     // The ball's shadow on the water or the sand.
-    if (!still()) layers.air.push(rect[WHITE], drawnX(x, z), drawnY(z) - .05, .3, .1, .5, 0, { ...DARK, a: .35 });
+    if (!still()) layers.air.push(rect[WHITE], drawnX(x, z), drawnY(z) - .05, .3, .1, .5, 0, tinted(DARK, .35));
   }
 
   // A mortar shell: a high, slow arc with its shadow racing ahead on the water.
@@ -852,9 +858,9 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       layers.air.push(rect[WHITE], drawnX(tx, tz), drawnY(tz) + tl, .3, .3, .5, .15, { r: .85, g: .82, b: .78, a: .5 - back * 2 });
     }
     layers.air.push(r, drawnX(x, z), drawnY(z) + lift, r.w, r.h, .5, .55 * r.h, tintOf(r));
-    if (!still()) layers.air.push(rect[WHITE], drawnX(x, z), drawnY(z) - .05, .45 * (.6 + p * .6), .14, .5, 0, { ...DARK, a: .3 + p * .2 });
+    if (!still()) layers.air.push(rect[WHITE], drawnX(x, z), drawnY(z) - .05, .45 * (.6 + p * .6), .14, .5, 0, tinted(DARK, .3 + p * .2));
     // Where it will land: a faint target mark, so the player sees the area coming.
-    if (p > .35) layers.air.push(rect[WHITE], drawnX(shell.toX, shell.toZ), drawnY(shell.toZ), 2.4 * p, .1, .5, 0, { ...RED, a: .35 * p });
+    if (p > .35) layers.air.push(rect[WHITE], drawnX(shell.toX, shell.toZ), drawnY(shell.toZ), 2.4 * p, .1, .5, 0, tinted(RED, .35 * p));
   }
   // A fire bomb: a small dark ball on a low arc with a flickering flame and sparks, its landing ring in orange.
   function drawBomb(shell, p, x, z, distance) {
@@ -863,8 +869,8 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     const flame = rect[pirateFrames.fire[(still() ? 0 : Math.floor(clock * 10)) % 3]];
     if (ball) layers.air.push(ball, x, drawnY(z) + lift, ball.w * .8, ball.h * .8, .5, .55 * ball.h * .8, { r: .5, g: .35, b: .3 });
     if (flame) layers.air.push(flame, x, drawnY(z) + lift + .25, flame.w * .45, flame.h * .45, .5, flame.anchor * .45, { a: .95 });
-    if (!still()) layers.air.push(rect[WHITE], x, drawnY(z) - .05, .35 * (.6 + p * .6), .12, .5, 0, { ...DARK, a: .3 + p * .2 });
-    if (p > .25) layers.air.push(rect[WHITE], drawnX(shell.toX, shell.toZ), drawnY(shell.toZ), (shell.radius ?? 3) * 2 * p, .1, .5, 0, { ...BOMB_BURST, a: .45 * p });
+    if (!still()) layers.air.push(rect[WHITE], x, drawnY(z) - .05, .35 * (.6 + p * .6), .12, .5, 0, tinted(DARK, .3 + p * .2));
+    if (p > .25) layers.air.push(rect[WHITE], drawnX(shell.toX, shell.toZ), drawnY(shell.toZ), (shell.radius ?? 3) * 2 * p, .1, .5, 0, tinted(BOMB_BURST, .45 * p));
   }
   function drawBurst(burst) {
     const p = (clock - burst.at) / BURST_SECONDS, frame = EXPLOSION_FRAMES[Math.min(3, Math.floor(p * 4))], r = rect[frame];
@@ -945,7 +951,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       if (a > head) break;
       const lit = 1 - Math.min(1, (head - a) / (Math.PI * 1.5)), angle = item.dir * a - Math.PI / 2, size = (.4 + lit * .3) * k;
       const {x, y: groundY} = projectGround(item.x + Math.cos(angle) * r, item.z - Math.sin(angle) * r), y = groundY + .3;
-      layers.air.push(rect[WHITE], x, y, size + .12 * k, size + .12 * k, .5, (size + .12 * k) / 2, { ...DARK, a: .5 * fade });
+      layers.air.push(rect[WHITE], x, y, size + .12 * k, size + .12 * k, .5, (size + .12 * k) / 2, tinted(DARK, .5 * fade));
       layers.air.push(rect[WHITE], x, y, size, size, .5, size / 2, { r: .95, g: .98, b: 1, a: (.45 + lit * .55) * fade });
     }
   }
@@ -955,7 +961,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     const {x: cx, y: cy} = projectGround(captain.x, captain.z);
     for (let i = 0; i < 12; i++) {
       const a = i / 12 * Math.PI * 2 - Math.PI / 2, lit = i / 12 < captain.share;
-      layers.air.push(rect[WHITE], cx + Math.cos(a) * .95, cy + .9 + Math.sin(a) * .95, .19, .19, .5, .09, lit ? { ...BRASS, a: 1 } : { ...DARK, a: .55 });
+      layers.air.push(rect[WHITE], cx + Math.cos(a) * .95, cy + .9 + Math.sin(a) * .95, .19, .19, .5, .09, lit ? tinted(BRASS, 1) : tinted(DARK, .55));
     }
   }
   // Captain health: a captain's hp bar (over the head, drawn units above where they stand), a fallen
@@ -964,18 +970,18 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   function drawHealthBar(x, z, hp, maxHp, lift = 2.05) {
     x = drawnX(x, z);
     const share = Math.max(0, Math.min(1, hp / (maxHp || 1))), w = 1.3, top = drawnY(z) + lift * K();
-    layers.air.push(rect[WHITE], x - w / 2 - .0625, top - .0625, w + .125, .3125, 0, 0, { ...DARK, a: .8 });
+    layers.air.push(rect[WHITE], x - w / 2 - .0625, top - .0625, w + .125, .3125, 0, 0, tinted(DARK, .8));
     layers.air.push(rect[WHITE], x - w / 2, top, w * share, .1875, 0, 0, { ...(share > .5 ? GREEN : share > .25 ? GOLD : RED), a: 1 });
   }
   function drawRecoveryHealthBar(item) {
     const { z, hp, maxHp } = item, x = drawnX(item.x, z);
     if (!Number.isFinite(x) || !Number.isFinite(z) || !Number.isFinite(hp) || !(maxHp > 0) || hp >= maxHp) return;
     const w = 1.3, top = drawnY(z) + TOWER_BAR_LIFT * K();
-    layers.air.push(rect[WHITE], x - w / 2 - .0625, top - .0625, w + .125, .3125, 0, 0, { ...DARK, a: .8 });
+    layers.air.push(rect[WHITE], x - w / 2 - .0625, top - .0625, w + .125, .3125, 0, 0, tinted(DARK, .8));
     if (hp <= 0) {
       // A ruin needs a positive visual signal; a zero-width red bar disappears against its dark track.
-      layers.air.push(rect[WHITE], x - .055, top + .015, .11, .17, .5, 0, { ...RED, a: 1 });
-      layers.air.push(rect[WHITE], x - .055, top + .22, .11, .08, .5, 0, { ...RED, a: 1 });
+      layers.air.push(rect[WHITE], x - .055, top + .015, .11, .17, .5, 0, tinted(RED, 1));
+      layers.air.push(rect[WHITE], x - .055, top + .22, .11, .08, .5, 0, tinted(RED, 1));
       return;
     }
     const share = Math.max(.08, Math.min(1, hp / maxHp)); // Keep a 1-unit positive structure visible at a pixel scale.
@@ -988,8 +994,8 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     for (let i = 0; i < 20; i++) {
       const a = i / 20 * Math.PI * 2 - Math.PI / 2, lit = reviving !== null && i / 20 < reviving;
       const offset = projectLegacyGround(Math.cos(a) * 1.9 * k, Math.sin(a) * .8 * k), dx = x + offset.x, dy = y + .15 + offset.y;
-      layers.air.push(rect[WHITE], dx, dy, .44, .44, .5, .22, { ...DARK, a: .55 });
-      layers.air.push(rect[WHITE], dx, dy, .3, .3, .5, .15, lit ? { ...BRASS, a: 1 } : { ...RED, a: pulse });
+      layers.air.push(rect[WHITE], dx, dy, .44, .44, .5, .22, tinted(DARK, .55));
+      layers.air.push(rect[WHITE], dx, dy, .3, .3, .5, .15, lit ? tinted(BRASS, 1) : tinted(RED, pulse));
     }
     const r = rect[DOWN_IDS[Math.max(0, Math.min(9, hero.colour ?? 0))]];
     if (r) bands[bandOf(z)].push(r, x, y, r.w * k, r.h * k, .5, r.anchor * k);
@@ -1056,7 +1062,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   }
 
   function draw() {
-    for (const layer of Object.values(layers)) layer.begin();
+    for (const layer of layerList) layer.begin();
     for (const layer of bands) layer.begin();
     const state = latest;
     if (state && visible) {
@@ -1110,11 +1116,13 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
         layers.air.push(rect[WHITE], beamFrom.x, beamFrom.y, .35, length, .5, 0, { r: 1, g: 1, b: .95, angle, a: pulse });
       }
     }
-    for (const layer of Object.values(layers)) layer.end();
+    for (const layer of layerList) layer.end();
     for (const layer of bands) layer.end();
     wallConnections.show(posts, state?.walls ?? [], {visible, inBreak});
-    const walls = new Map((state?.walls ?? []).map(wall => [wall.id, wall]));
-    const towers = new Map((state?.towers ?? []).map(tower => [tower.id, tower]));
+    // Reused every frame (no new Map per frame): this frame's walls and towers by id.
+    const walls = frameWalls, towers = frameTowers;
+    walls.clear(); for (const wall of state?.walls ?? []) walls.set(wall.id, wall);
+    towers.clear(); for (const tower of state?.towers ?? []) towers.set(tower.id, tower);
     const crew = state?.crew ?? {};
     for (const post of posts) {
       post.layer.begin();
@@ -1174,11 +1182,13 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       splashes.sweep(item => clock - item.at < SPLASH_SECONDS);
       sinkers.sweep(item => clock - item.at < SINK_SECONDS);
       wrecks.sweep(item => clock - item.at < WRECK_SECONDS);
-      if (latest) { const alive = new Set(latest.ships.map(ship => ship.id)); for (const id of ships.keys()) if (!alive.has(id)) ships.delete(id); }
-      if (latest?.boarders) { const alive = new Set(latest.boarders.map(item => item.id)); for (const id of crew.keys()) if (!alive.has(id)) crew.delete(id); }
+      // Forget ships and boarders no longer in the wave; the id sets are reused, not built anew each frame.
       if (latest) {
-        const alive = new Set([...latest.ships, ...(latest.boarders ?? [])].map(item => item.id));
-        smooth.prune(alive);
+        aliveShips.clear(); for (const ship of latest.ships) aliveShips.add(ship.id);
+        for (const id of ships.keys()) if (!aliveShips.has(id)) ships.delete(id);
+        aliveBoarders.clear(); for (const item of latest.boarders ?? []) aliveBoarders.add(item.id);
+        if (latest.boarders) for (const id of crew.keys()) if (!aliveBoarders.has(id)) crew.delete(id);
+        smooth.prune(aliveAny);
       }
       draw();
     },
