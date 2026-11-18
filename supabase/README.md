@@ -3301,3 +3301,48 @@ bootstrap, no partial admission on UID conflict, exact large funds, same-event i
 spend/reserve races, duplicate settlements, retired-origin payouts and ledger/escrow reconciliation.
 The Python checks cover strict decimal-string/context parsing and fresh state versus immutable
 receipt values. These are local integration checks, not proof of deployed shared-mode gameplay.
+
+## Shared wave accounting foundation (MP-ECO-03)
+
+Migration [20261118050200_wave_treasury_settlement.sql](migrations/20261118050200_wave_treasury_settlement.sql)
+adds isolated canonical accounting; it creates no admitted islands, starts no waves and registers
+no route. Its [spec](../specs/MP-ECO-03-wave-treasury-settlement.md) and
+[interface summary](../docs/INTERFACES.md#shared-wave-accounting-foundation-mp-eco-03) define the
+accepted-bell, live-session acknowledgment and same-transaction canonical-close requirements.
+MP-ECO-02 treasury primitives and MP-ECO-07 personal hooks are prerequisites before use.
+
+| Object | `anon` / `authenticated` | `service_role` |
+|---|---|---|
+| `island_wave_accounting` | No reads/writes | Select only; immutable account/epoch, played wave/protocol, roster and reward snapshot. |
+| `island_wave_participation_receipts` | No reads/writes | Select only; immutable checked post-start confirmations. |
+| `island_wave_closures` | No reads/writes | Select only; one immutable terminal outcome and optional treasury receipt per attempt. |
+| `island_wave_completion_receipts` | No reads/writes | Select only; personal historical facts independent of reset/wave-row deletion. |
+| Freeze, confirmation, canonical settlement, validation and result helpers | No execute | No direct execute; only enclosing function-owner lifecycle SQL calls them. |
+| `island_wave_completion_receipt(uuid,uuid)` | No execute | Execute read for the authenticated player's own stored receipt; no new money/profile effect. |
+
+All four tables enable RLS without browser policies and reject update/delete. No cascading FK
+to `wave_runs` or a departing actor deletes shared accounting history. Canonical close uses the
+original account and actor, not the caller's current island/member status. Personal completion
+hooks run after immutable receipt insertion in the same transaction; any missing/failing hook
+rolls back financial and domain effects. A normal confirmed defeat may satisfy only the frozen
+Engineer generation; aborted/expired/unconfirmed attempts do not.
+
+The no-lock `wallet_transactions` trigger refuses personal pirate loot only for validated
+`wave:<UUID>` / `wave:<UUID>:<UUID>` references already frozen as shared. Freeze locks the wave
+and excludes earlier private payouts/closed attempts; legacy finish already holds that wave
+before paying. This READ COMMITTED serialization prevents double private/shared rewards.
+It is not a replacement for checked route compatibility and canonical session/HP integration.
+Profile anchors must retain `FOR NO KEY UPDATE` compatibility; dedicated personal state stays
+locked `FOR UPDATE`. Account deletion and retention need their explicit disposition policy.
+
+Disposable verification, from `backend/`:
+
+```bash
+CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q server/tests/island_sql/test_wave_treasury_settlement_sql.py
+uv run pytest -q server/tests/test_wave_economy.py
+```
+
+The SQL fixture applies the entire migration chain twice. Checks cover both wave-protocol
+descriptors, actual personal/Engineer hooks, same-attempt and legacy-finish races, exact large
+rewards, immutable receipts, reserved principal, departed participants and old-origin replay.
+These tests do not establish live combat-result authority or authenticated browser integration.
