@@ -54,54 +54,141 @@ def test_an_old_tab_cannot_release_the_current_controller() -> None:
 def test_current_active_member_keeps_leadership_without_gaining_ownership() -> None:
     other = ControlLease(OTHER, OTHER_SESSION, OWNER, NOW - timedelta(seconds=5))
     assert (
-        select_leader(
-            (LEASE, other),
-            OWNER,
-            frozenset({PLAYER, OTHER}),
-            PLAYER,
-        )
-        == PLAYER
+        select_leader((LEASE, other), OWNER, frozenset({PLAYER, OTHER}), PLAYER, now=NOW) == PLAYER
     )
 
 
 def test_succession_excludes_disconnected_or_departed_members() -> None:
     other = ControlLease(OTHER, OTHER_SESSION, OWNER, NOW)
     disconnected = ControlLease(PLAYER, SESSION, OWNER)
+    assert select_leader((other, disconnected), OWNER, frozenset({OTHER}), PLAYER, now=NOW) == OTHER
+
+
+def test_succession_cannot_select_a_controller_on_another_island() -> None:
+    other_island = ControlLease(PLAYER, SESSION, ISLAND, NOW)
+    assert select_leader((other_island,), OWNER, frozenset({PLAYER}), None, now=NOW) is None
+
+
+def test_succession_prefers_longest_continuous_activity_then_stable_player_id() -> None:
+    other = ControlLease(OTHER, OTHER_SESSION, OWNER, NOW - timedelta(seconds=5))
+    assert select_leader((LEASE, other), OWNER, frozenset({PLAYER, OTHER}), None, now=NOW) == OTHER
+    tied = ControlLease(OTHER, OTHER_SESSION, OWNER, NOW)
+    assert select_leader((tied, LEASE), OWNER, frozenset({PLAYER, OTHER}), None, now=NOW) == PLAYER
+
+
+def test_reconnection_resets_continuous_activity_but_heartbeats_do_not() -> None:
+    disconnected = set_connection((LEASE,), LEASE, now=NOW, is_connected=False)
+    reconnected = set_connection(
+        disconnected, LEASE, now=NOW + timedelta(seconds=10), is_connected=True
+    )
+    repeated = set_connection(
+        reconnected, reconnected[0], now=NOW + timedelta(seconds=20), is_connected=True
+    )
+    assert repeated[0].active_since == NOW + timedelta(seconds=10)
+
+
+def test_disconnected_leader_retains_leadership_strictly_before_grace_ends() -> None:
+    other = ControlLease(OTHER, OTHER_SESSION, OWNER, NOW - timedelta(seconds=5))
+    leases = set_connection((LEASE, other), LEASE, now=NOW, is_connected=False)
     assert (
         select_leader(
-            (other, disconnected),
+            leases,
             OWNER,
-            frozenset({OTHER}),
+            frozenset({PLAYER, OTHER}),
             PLAYER,
+            now=NOW + timedelta(seconds=59),
+        )
+        == PLAYER
+    )
+
+
+def test_succession_begins_exactly_at_the_leaders_disconnect_deadline() -> None:
+    other = ControlLease(OTHER, OTHER_SESSION, OWNER, NOW - timedelta(seconds=5))
+    leases = set_connection((LEASE, other), LEASE, now=NOW, is_connected=False)
+    assert (
+        select_leader(
+            leases,
+            OWNER,
+            frozenset({PLAYER, OTHER}),
+            PLAYER,
+            now=NOW + timedelta(seconds=60),
         )
         == OTHER
     )
 
 
-def test_succession_cannot_select_a_controller_on_another_island() -> None:
-    other_island = ControlLease(PLAYER, SESSION, ISLAND, NOW)
-    assert select_leader((other_island,), OWNER, frozenset({PLAYER}), None) is None
+def test_explicit_leader_departure_revokes_leadership_without_waiting_for_grace() -> None:
+    other = ControlLease(OTHER, OTHER_SESSION, OWNER, NOW)
+    leases = release_control((LEASE, other), LEASE)
+    assert select_leader(leases, OWNER, frozenset({PLAYER, OTHER}), PLAYER, now=NOW) == OTHER
 
 
-def test_succession_prefers_longest_continuous_activity_then_stable_player_id() -> None:
+def test_membership_loss_revokes_disconnected_leader_inside_grace() -> None:
+    other = ControlLease(OTHER, OTHER_SESSION, OWNER, NOW)
+    leases = set_connection((LEASE, other), LEASE, now=NOW, is_connected=False)
+    assert select_leader(leases, OWNER, frozenset({OTHER}), PLAYER, now=NOW) == OTHER
+
+
+def test_repeated_disconnect_does_not_extend_leadership_grace() -> None:
+    leases = set_connection((LEASE,), LEASE, now=NOW, is_connected=False)
+    repeated = set_connection(
+        leases,
+        LEASE,
+        now=NOW + timedelta(seconds=30),
+        is_connected=False,
+    )
+    assert repeated[0].grace_until == NOW + timedelta(seconds=60)
+
+
+def test_expired_leader_without_connected_successor_leaves_no_leader() -> None:
+    leases = set_connection((LEASE,), LEASE, now=NOW, is_connected=False)
+    assert (
+        select_leader(
+            leases,
+            OWNER,
+            frozenset({PLAYER}),
+            PLAYER,
+            now=NOW + timedelta(seconds=60),
+        )
+        is None
+    )
+
+
+def test_reconnecting_leader_before_grace_keeps_leadership() -> None:
     other = ControlLease(OTHER, OTHER_SESSION, OWNER, NOW - timedelta(seconds=5))
-    assert select_leader((LEASE, other), OWNER, frozenset({PLAYER, OTHER}), None) == OTHER
-    tied = ControlLease(OTHER, OTHER_SESSION, OWNER, NOW)
-    assert select_leader((tied, LEASE), OWNER, frozenset({PLAYER, OTHER}), None) == PLAYER
+    leases = set_connection((LEASE, other), LEASE, now=NOW, is_connected=False)
+    reconnected = set_connection(
+        leases,
+        LEASE,
+        now=NOW + timedelta(seconds=59),
+        is_connected=True,
+    )
+    assert (
+        select_leader(
+            reconnected,
+            OWNER,
+            frozenset({PLAYER, OTHER}),
+            PLAYER,
+            now=NOW + timedelta(seconds=60),
+        )
+        == PLAYER
+    )
 
 
-def test_reconnection_resets_continuous_activity_but_heartbeats_do_not() -> None:
-    disconnected = set_connection((LEASE,), LEASE, connected_at=None)
-    reconnected = set_connection(disconnected, LEASE, connected_at=NOW + timedelta(seconds=10))
-    repeated = set_connection(reconnected, reconnected[0], connected_at=NOW + timedelta(seconds=20))
-    assert repeated[0].active_since == NOW + timedelta(seconds=10)
+def test_expired_disconnected_controller_cannot_reclaim_leadership_before_cleanup() -> None:
+    leases = set_connection((LEASE,), LEASE, now=NOW, is_connected=False)
+    with pytest.raises(ApiError) as error:
+        set_connection(leases, LEASE, now=NOW + timedelta(seconds=60), is_connected=True)
+    assert error.value.code == "slot_expired"
 
 
 def test_stale_transport_notifications_cannot_disconnect_or_release_a_new_connection() -> None:
-    disconnected = set_connection((LEASE,), LEASE, connected_at=None)
-    reconnected = set_connection(disconnected, LEASE, connected_at=NOW + timedelta(seconds=10))
+    disconnected = set_connection((LEASE,), LEASE, now=NOW, is_connected=False)
+    reconnected = set_connection(
+        disconnected, LEASE, now=NOW + timedelta(seconds=10), is_connected=True
+    )
     with pytest.raises(ApiError):
-        set_connection(reconnected, LEASE, connected_at=None)
+        set_connection(reconnected, LEASE, now=NOW, is_connected=False)
     with pytest.raises(ApiError):
         release_control(reconnected, LEASE)
 

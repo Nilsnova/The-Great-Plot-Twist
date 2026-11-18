@@ -4,12 +4,13 @@ These values are internal only: they define no HTTP, persistence or recovery-jou
 """
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Literal
 from uuid import UUID
 
 Connection = Literal["active", "disconnected", "withdrawn"]
 Outcome = Literal["won", "lost", "abandoned", "expired"]
+DISCONNECT_GRACE = timedelta(seconds=60)
 
 
 @dataclass(frozen=True)
@@ -19,6 +20,7 @@ class ControlLease:
     island_owner: UUID
     active_since: datetime | None = None
     connection_generation: int = 0
+    grace_until: datetime | None = None
 
 
 @dataclass(frozen=True)

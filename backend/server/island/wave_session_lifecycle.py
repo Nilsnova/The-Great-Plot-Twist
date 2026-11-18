@@ -5,19 +5,18 @@ There are no route hooks while the common prerequisites are unavailable.
 """
 
 from dataclasses import replace
-from datetime import datetime, timedelta
+from datetime import datetime
 from uuid import UUID
 
 from server.errors import ApiError
 from server.island.wave_session_state import (
+    DISCONNECT_GRACE,
     ControlLease,
     Outcome,
     ParticipantSlot,
     ParticipantSnapshot,
     Reservation,
 )
-
-DISCONNECT_GRACE = timedelta(seconds=60)
 
 
 def reserve_wave(
