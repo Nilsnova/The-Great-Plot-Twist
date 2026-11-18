@@ -1,0 +1,21 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run --run tests/island/wall-tier-detail.test.js tests/island/wall-textured-batches.test.js tests/island/wall-selection.test.js tests/island/wall-connections.test.js tests/island/wall-span-batches.test.js tests/pirates/wall-connections.test.js tests/art/wall-tier-identity.test.js tests/art/wall-atlas.test.js --maxWorkers=1
+
+
+ RUN  v5.1.0 /workspace/reference-village-work/wall-polish/frontend
+
+
+ Test Files  8 passed (8)
+      Tests  59 passed (59)
+   Start at  23:58:23
+   Duration  5.92s (import 42%, transform 37%, tests 18%, worker 2%)
+
+    Isolate  8 workers spawned · ~231ms startup each (spawn + environment, per file)
+             at least ~1.62s faster with isolate: false — reuses workers across files instead of one per file
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice
