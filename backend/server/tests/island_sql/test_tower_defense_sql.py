@@ -16,6 +16,7 @@ import pytest
 
 pytest.importorskip("psycopg")
 
+from server.tests.island_sql.test_game_rooms_sql import join  # noqa: E402
 from server.tests.island_sql.test_islands_and_waves_sql import (  # noqa: E402
     FRIEND,
     OWNER,
@@ -24,6 +25,7 @@ from server.tests.island_sql.test_islands_and_waves_sql import (  # noqa: E402
     as_server,
     balance,
     build,
+    build_with_friend,
     call,
     move_start,
     open_island,
@@ -50,17 +52,7 @@ def upgrade(database, player, plot, uid, prices=WALL, unlocked=3, owner=None):
 
 
 def coop_build(database, payer, owner, plot, kind, uid, price=10):
-    as_server(database)
-    return call(
-        database,
-        "select public.island_build(%s, %s, %s, %s, %s, %s)",
-        payer,
-        owner,
-        plot,
-        kind,
-        uid,
-        price,
-    )
+    return build_with_friend(database, payer, owner, plot, kind, uid, price)
 
 
 def hire(database, player, crew, uid, price=40, most=2):
@@ -326,6 +318,7 @@ def test_a_won_pirate_point_wave_raises_the_players_own_point_best(database):
 
 def test_a_visitor_builds_and_upgrades_on_a_friends_island_with_their_own_coins(database):
     ready(database, OWNER, FRIEND)
+    assert join(database, FRIEND, OWNER)["status"] == "joined"
 
     built = coop_build(database, FRIEND, OWNER, "wall_2", "wall", "coop-0001")
     again = coop_build(database, FRIEND, OWNER, "wall_2", "wall", "coop-0001")

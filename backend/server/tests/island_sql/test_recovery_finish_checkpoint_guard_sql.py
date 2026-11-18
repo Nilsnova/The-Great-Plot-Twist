@@ -16,6 +16,7 @@ from server.tests.island_sql.test_islands_and_waves_sql import (  # noqa: E402
     as_owner,
     as_server,
     balance,
+    build_with_friend,
     call,
     open_island,
 )
@@ -33,9 +34,7 @@ def start_wall_wave(db):
     open_island(db, OWNER, "K7Q2M")
     as_server(db)
     assert (
-        call(
-            db, "select public.island_build(%s,%s,'wall_1','wall','guard-wall01',10)", OWNER, OWNER
-        )["status"]
+        build_with_friend(db, OWNER, OWNER, "wall_1", "wall", "guard-wall01")["status"]
         == "done"
     )
     as_owner(db)

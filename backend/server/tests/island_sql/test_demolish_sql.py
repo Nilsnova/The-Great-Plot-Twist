@@ -170,16 +170,11 @@ def test_two_payers_each_get_half_of_what_they_paid_themselves(database):
 
 def test_a_building_from_before_the_migration_pays_the_host_half_its_catalogue_value(database):
     game(database)
-    # A level-3 wall with no payment rows, as every building built before this migration.
+    # Acquire a validated site, then declare its historical level without modern payment rows.
+    build(database, OWNER, "wall_3", "wall", "island:legacy-01", coins=70)
     as_owner(database)
     database.execute(
-        "insert into public.islets (player_id, timber) values (%s, 0) on conflict do nothing",
-        (OWNER,),
-    )
-    database.execute(
-        "insert into public.islet_buildings"
-        " (player_id, plot, building_type, level, coins_paid, timber_paid, ref)"
-        " values (%s, 'wall_3', 'wall', 3, 70, 0, 'island:legacy-01')",
+        "update public.islet_buildings set level=3 where player_id=%s and plot='wall_3'",
         (OWNER,),
     )
     host = balance(database, OWNER)
@@ -327,7 +322,7 @@ def cleanup_committed(uri):
         clean.execute("delete from auth.users where id = any(%s)", (list(RACE_PLAYERS),))
 
 
-def click_blocked_at_the_island_lock(scratch_server, change):
+def click_blocked_at_the_island_lock(scratch_server, change, changer_payer=None):
     """Run a member's demolish of wall_7 while another transaction holds the island row, run
     `change(other_connection)` in that transaction, commit it, and return the click's answer."""
     import threading
@@ -353,6 +348,11 @@ def click_blocked_at_the_island_lock(scratch_server, change):
         game(setup)
         coop_build(setup, MEMBER, OWNER, "wall_7", "wall", "build-0081", 10)
         setup.commit()
+        if changer_payer is not None:
+            # A competing fresh purchase also takes its payer wallet before the owner row.
+            other.execute(
+                "select 1 from public.wallets where player_id=%s for update", (changer_payer,)
+            )
         other.execute("select 1 from public.islands where player_id = %s for update", (OWNER,))
         thread = threading.Thread(target=click)
         thread.start()
@@ -392,14 +392,10 @@ def test_a_building_rebuilt_while_the_click_waited_answers_busy(database, scratc
         other.execute(
             "delete from public.islet_buildings where player_id = %s and plot = 'wall_7'", (OWNER,)
         )
-        other.execute(
-            "insert into public.islet_buildings (player_id, plot, building_type, level, coins_paid,"
-            " timber_paid, ref) values (%s, 'wall_7', 'wall', 1, 10, 0, 'island:build-0082')",
-            (OWNER,),
-        )
+        coop_build(other, OTHER, OWNER, "wall_7", "wall", "build-0082", 10)
 
     try:
-        answer = click_blocked_at_the_island_lock(scratch_server, rebuild)
+        answer = click_blocked_at_the_island_lock(scratch_server, rebuild, changer_payer=OTHER)
         assert answer == {"status": "refused", "reason": "busy"}
         with psycopg.connect(scratch_server.get_uri()) as check:
             assert standing(check, "wall_7") == ("wall", 1, None)

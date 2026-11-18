@@ -18,6 +18,8 @@ from server.tests.island_sql.test_islands_and_waves_sql import (  # noqa: E402
     as_owner,
     as_server,
     balance,
+    build,
+    build_with_friend,
     call,
     open_island,
 )
@@ -89,15 +91,7 @@ def seed_v1(database, structures=("wall_1",)):
     kinds = {"wall_1": "wall", "wall_2": "wall", "cannon_1": "cannon"}
     for spot in structures:
         kind = kinds[spot]
-        call(
-            database,
-            "select public.islet_build(%s,%s,%s,%s,0,0,%s)",
-            OWNER,
-            spot,
-            kind,
-            10,
-            f"seed-{spot}",
-        )
+        build(database, OWNER, spot, kind, f"seed-{spot}")
     database.execute(
         "update public.island_recovery_state set reset_epoch=%s,recovery_version=1,"
         "wave_protocol=2,revision=0 where island_owner=%s",
@@ -157,12 +151,7 @@ def test_legacy_build_advances_v0_revision_and_v1_new_instance_starts_full(datab
     before = call(
         database, "select revision from public.island_recovery_state where island_owner=%s", OWNER
     )
-    legacy = call(
-        database,
-        "select public.island_build(%s,%s,'wall_1','wall','legacy-build-01',10)",
-        OWNER,
-        OWNER,
-    )
+    legacy = build_with_friend(database, OWNER, OWNER, "wall_1", "wall", "legacy-build-01")
     assert legacy["status"] == "done" and legacy["repeat"] is False
     after = call(
         database, "select revision from public.island_recovery_state where island_owner=%s", OWNER
@@ -185,12 +174,7 @@ def test_legacy_build_advances_v0_revision_and_v1_new_instance_starts_full(datab
         "values (%s,%s,%s,1,2,%s::jsonb)",
         (UUID(int=985), OWNER2, EPOCH, json.dumps(snapshot)),
     )
-    built = call(
-        database,
-        "select public.island_build(%s,%s,'wall_1','wall','v1-build-0001',10)",
-        OWNER2,
-        OWNER2,
-    )
+    built = build_with_friend(database, OWNER2, OWNER2, "wall_1", "wall", "v1-build-0001")
     assert built["status"] == "done"
     assert (
         call(
@@ -347,7 +331,11 @@ def test_moved_workshop_at_radius_boundary_updates_future_rate(database):
         (OWNER,),
     )
     moved = call(
-        database, "select public.island_move(%s,%s,'house_1',-17,-2,'[]'::jsonb)", OWNER, OWNER
+        database,
+        "select public.island_move(%s,%s,'house_1',-17,-2,%s::jsonb)",
+        OWNER,
+        OWNER,
+        json.dumps(call(database, "select public.island_wall_layout_read(%s)", OWNER)["rows"]),
     )
     assert moved == {"status": "done"}
     position = call(
@@ -557,12 +545,7 @@ def test_failed_v1_refresh_rolls_back_build_wallet_revision_and_history(database
     database.execute("delete from public.recovery_wave_states where wave_id=%s", (WAVE,))
     as_server(database)
     with pytest.raises(psycopg.errors.RaiseException, match="recovery_config_missing"):
-        call(
-            database,
-            "select public.island_build(%s,%s,'wall_2','wall','rollback-0001',10)",
-            OWNER,
-            OWNER,
-        )
+        build_with_friend(database, OWNER, OWNER, "wall_2", "wall", "rollback-0001")
     database.execute("rollback to savepoint invalid_manifest_probe")
     as_owner(database)
     assert balance(database, OWNER) == before_balance

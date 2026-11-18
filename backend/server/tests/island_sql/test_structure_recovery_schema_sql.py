@@ -17,6 +17,7 @@ from server.tests.island_sql.test_islands_and_waves_sql import (  # noqa: E402
     add_players,
     as_owner,
     as_server,
+    build_with_friend,
     call,
     open_island,
 )
@@ -25,15 +26,7 @@ OTHER = UUID(int=965)
 
 
 def build_wall(database, uid: str, plot: str = "wall_1") -> None:
-    as_server(database)
-    call(
-        database,
-        "select public.island_build(%s, %s, %s, 'wall', %s, 10)",
-        OWNER,
-        OWNER,
-        plot,
-        uid,
-    )
+    build_with_friend(database, OWNER, OWNER, plot, "wall", uid)
 
 
 def test_recovery_tables_are_service_only_and_protect_normalized_health(database) -> None:

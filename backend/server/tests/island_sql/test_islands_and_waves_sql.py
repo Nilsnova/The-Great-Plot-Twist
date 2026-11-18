@@ -105,6 +105,19 @@ def move_start(database, wave_id, seconds_ago):
 
 def build(database, player, plot, kind, ref, coins=10):
     as_server(database)
+    if kind == "wall" and plot in {f"wall_{n}" for n in range(1, 13)}:
+        fence = fresh_wall_fence(database, player, player, plot, ref)
+        if fence is not None:
+            return call(
+                database,
+                "select public.islet_build(%s,%s,%s,%s::bigint,0,0,%s,%s,%s,%s::jsonb,%s,%s)",
+                player,
+                plot,
+                kind,
+                coins,
+                ref,
+                *fence,
+            )
     return call(
         database,
         "select public.islet_build(%s, %s, %s, %s, 0, 0, %s)",
@@ -113,6 +126,65 @@ def build(database, player, plot, kind, ref, coins=10):
         kind,
         coins,
         ref,
+    )
+
+
+def fresh_wall_fence(database, payer, owner, plot, ref):
+    """Trusted fresh-fixture setup uses the actual validator and guarded transaction.
+
+    Keep original replay/standing calls on their original signatures: they insert
+    nothing. Never forge proof GUCs, disable a trigger or rewrite a test assertion.
+    """
+    from server.island import layout
+
+    database.execute("select 1 from public.wallets where player_id=%s for update", (payer,))
+    database.execute("select 1 from public.islands where player_id=%s for update", (owner,))
+    if call(
+        database,
+        "select exists(select 1 from public.wallet_transactions "
+        "where player_id=%s and reason='building_purchase' and ref=%s) "
+        "or exists(select 1 from public.islet_buildings where player_id=%s and plot=%s)",
+        payer,
+        ref,
+        owner,
+        plot,
+    ):
+        return None
+    raw = call(database, "select public.island_wall_layout_read(%s)", owner)
+    rules = layout.island_layout(raw["ruleVersion"] == 1)
+    policy = {"wall_rule_version": raw["ruleVersion"], "wall_capacity": raw["capacity"]}
+    stored = {row["plot"]: (row["x_half"] / 2, row["z_half"] / 2) for row in raw["rows"]}
+    positions = layout.positions_of(rules, stored, **policy)
+    x, z = positions[plot]
+    layout.check_move(rules, positions, plot, x, z, **policy)
+    return round(x * 2), round(z * 2), json.dumps(raw["rows"]), raw["ruleVersion"], raw["capacity"]
+
+
+def build_with_friend(database, payer, owner, plot, kind, uid, coins=10):
+    as_server(database)
+    if kind == "wall" and plot in {f"wall_{n}" for n in range(1, 13)}:
+        fence = fresh_wall_fence(database, payer, owner, plot, "island:" + uid)
+        if fence is not None:
+            return call(
+                database,
+                "select public.island_build(%s,%s,%s,%s,%s,%s,%s,%s,%s::jsonb,%s,%s)",
+                payer,
+                owner,
+                plot,
+                kind,
+                uid,
+                coins,
+                *fence,
+            )
+    return call(
+        database,
+        "select public.island_build(%s,%s,%s,%s,%s,%s)",
+        payer,
+        owner,
+        plot,
+        kind,
+        uid,
+        coins,
     )
 
 
@@ -453,7 +525,8 @@ def seed_progress(database):
     # One row in each table of the 14 Nov sprint, written straight as the database owner.
     database.execute(
         "insert into public.island_layout (island_owner, plot, x_half, z_half)"
-        " values (%s, 'wall_1', 4, 6)",
+        " values (%s, 'wall_1', 4, 6) on conflict (island_owner,plot) "
+        "do update set x_half=excluded.x_half,z_half=excluded.z_half",
         (OWNER,),
     )
     database.execute(
