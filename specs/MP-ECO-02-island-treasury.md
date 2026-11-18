@@ -101,3 +101,7 @@ chain twice using disposable Unix-socket clusters. Local Markdown links resolve 
 Markdown files. No full-backend or frontend suite was repeated; these checks do not exercise a
 live database, runtime admission, deployment or feature activation. The two EOF blank-line
 findings from incoming main evidence files remain unchanged and are recorded in the branch handoff.
+
+The committed-diff entropy scanner initially flagged the deterministic public test alphabet used to
+make repeatable island codes. It is explicitly allowlisted at that one literal with its purpose; the
+committed-diff scan then reports zero findings. No credential is embedded.
