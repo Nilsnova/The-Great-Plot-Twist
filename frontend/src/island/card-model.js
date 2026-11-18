@@ -17,6 +17,7 @@ import {isRetiredCaptainSkill, recoveryTechLine} from '../campaign/captain-repai
 
 // Coins always read "🪙 120" through formatCoins (BUILD-PLAN 3.2); an unknown amount reads "🪙 ?".
 export const coinText = n => (Number.isSafeInteger(n) ? formatCoins(n) : '🪙 ?');
+const RECOVERY_HEALTH_KINDS = new Set(['wall', 'cannon', 'mortar', 'harpoon', 'culverin', 'swivel']);
 
 // The build card of one spot (docs/TOWER-DEFENSE.md §2, §5, §9). spot: the server's {id, kind, built,
 // level, cost} or null while loading; slot: wall, tower, watchtower or house (spots.js); unlocks:
@@ -64,7 +65,7 @@ export function buildCardModel({spotId, kind, slot = null, spot = null, coins = 
   }
   if (!spot) { model.reason = message ? '' : visitor ? 'The island is still loading.' : 'Your island is still loading.'; return model; }
   model.hire = !point && !visitor && built && (place === 'tower' || place === 'wall');
-  if (!point && built && ['wall', 'cannon', 'mortar', 'harpoon', 'culverin', 'swivel'].includes(shown) && recoveryStatus !== 'disabled') {
+  if (!point && built && RECOVERY_HEALTH_KINDS.has(shown) && recoveryStatus !== 'disabled') {
     const recovery = recoveryState?.structures?.find(item => item.spot === spotId) ?? null;
     model.recovery = buildStructureRecoveryView(recoveryState, recovery, {
       status: recoveryPending ? 'submitting' : recoveryStatus,
@@ -117,8 +118,9 @@ export function buildCardModel({spotId, kind, slot = null, spot = null, coins = 
   const recoveryRow = recoveryState?.recoveryVersion === 1
     ? recoveryState.structures?.find(item => item.spot === spotId) : null;
   if (shown === 'wall' && recoveryRow) model.stats = model.stats.replace(/^Strength\b/, 'Base strength');
-  const recoveryUnavailable = recoveryStatus === 'loading' || recoveryStatus === 'error'
-    || (recoveryVersion === 1 && (recoveryStatus !== 'ready' || !recoveryRow));
+  const recoveryUnavailable = RECOVERY_HEALTH_KINDS.has(shown)
+    && (recoveryStatus === 'loading' || recoveryStatus === 'error'
+      || (recoveryVersion === 1 && (recoveryStatus !== 'ready' || !recoveryRow)));
   const upgradeBlockedReason = recoveryUnavailable ? 'Wait until building health has loaded.'
     : recoveryRow && recoveryState.recoveryVersion === 1
     ? recoveryState.repairWindow === 'reserved_wave' ? 'Upgrades are available between waves.'

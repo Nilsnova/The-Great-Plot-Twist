@@ -46,6 +46,18 @@ describe('build card (TOWER-DEFENSE.md §2, §9)', () => {
       recoveryState: state, recoveryStatus: status === 'missing' ? 'ready' : status, recoveryVersion: 1});
     expect(model).toMatchObject({button: 'Upgrade', disabled: true, reason: 'Wait until building health has loaded.'});
   });
+  it.each([
+    ['house', 'house_1'],
+    ['watchtower', 'watchtower_1'],
+  ])('keeps affordable recovery-v1 %s upgrades available without a health row', (kind, spotId) => {
+    const state = {recoveryVersion: 1, waveProtocol: 2, displayPhase: 'between_waves', repairWindow: 'between_waves', waveId: null,
+      structures: [{spot: 'wall_1', instanceId: '22345678-1234-4234-8234-123456789abc', kind: 'wall', level: 1,
+        hpUnits: 1_000_000, maxHP: 60, fixedPrice: 10, repairSeq: 0}]};
+    const model = buildCardModel({spotId, slot: kind, spot: {id: spotId, kind, built: true, level: 1, upgradeCost: 10}, coins: 1000,
+      recoveryState: state, recoveryStatus: 'ready', recoveryVersion: 1});
+
+    expect(model).toMatchObject({mode: 'upgrade', button: 'Upgrade', disabled: false, reason: ''});
+  });
 
   it('an empty tower spot offers the unlocked kinds, one line and price each', () => {
     const start = buildCardModel({spotId: 'cannon_1', slot: 'tower', spot: tower(), coins: 100, unlocks: fresh});
