@@ -71,7 +71,8 @@ export function createSharedWagersHttp({api = defaultApi, getEconomy, getActorId
       reply = failure('outcome_unknown', 'The receipt did not match. Retry the same stake.', true);
     }
     const unknown = reply?.unknown === true || reply?.status === 0 || reply?.status >= 500;
-    if (reply?.ok || (!unknown && reply?.status !== 429 && reply?.code !== 'idempotency_conflict')) save(saved, null);
+    // Reauthentication does not resolve a previous attempt that may already have committed.
+    if (reply?.ok || (!unknown && reply?.status !== 401 && reply?.status !== 429 && reply?.code !== 'idempotency_conflict')) save(saved, null);
     if (!current(saved)) return scopeChanged();
     return {...reply, unknown};
   }
