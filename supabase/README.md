@@ -3283,79 +3283,6 @@ A saved v1 island may retain already-built `cannon_8`–`cannon_11` plots and cu
 
 The recovery feature flag remains off by default and governs admission of new v1 waves on legacy islands. It does not make the migrations optional for a deployed server or protocol-2 client that can read or mutate a saved v1 island. If a release must stop admitting new v1 waves, turn the flag off and preserve saved v1 state. Admission off does not downgrade saved v1 policy, which persists between waves; no safe policy downgrade is implemented. Keep a v1-capable backend and protocol-2 client while any saved v1 island remains, even when no wave is active. Do not reverse the migrations or delete receipts to roll back. Fix forward with reviewed code and migrations; any future saved-policy data transition needs separate review. See the [release checklist](../docs/RELEASE-CHECKLIST.md#t55t60-structure-recovery-release-gate). No live migration, deployment or flag activation was performed by T60.
 
-## Shared island treasury foundation (MP-ECO-02)
-
-`20261118050050_island_treasury.sql` and `20261118050100_island_treasury_functions.sql` add exact
-island/run accounts and atomic financial primitives. They create no admission rows or automatic
-balance conversion. Existing personal wallets, ledger and HTTP routes remain unchanged. See
-[the interface contract](../docs/INTERFACES.md#shared-island-treasury-foundation-mp-eco-02)
-and [the package spec](../specs/MP-ECO-02-island-treasury.md).
-
-### Treasury rights and invariants
-
-| Object | `anon` / `authenticated` | `service_role` |
-|---|---|---|
-| `island_economy_state` | No reads/writes | Select only; persisted mode/current account/epoch and active/paused offers. |
-| `island_economy_accounts` | No reads/writes | Select only; exact finite integral numeric balance, committed principal and revision. |
-| `island_treasury_transactions` | No reads/writes | Select only; append-only immutable cash and commitment receipts. |
-| `island_economy_context`, `island_treasury_admit`, `island_treasury_spend`, `island_treasury_reserve`, `island_treasury_credit`, `island_treasury_settle` | No execute | Execute the checked public primitives. |
-| Treasury scope, validation, envelope, replay, result and record helpers | No execute | No direct execute; only enclosing function-owner SQL can call them. |
-
-All three tables enable RLS without browser policies. Security-definer financial RPCs use an
-empty search path and fully qualified tables. A separate checked API must authorize member reads.
-Balance includes held principal and cannot fall below committed principal. A ledger reserve has
-one uniquely linked settlement on the same account/epoch. Cash/commitment sums reconcile to account
-balances; actor/action UID and account/reason/reference keys prevent repeated payments. A trigger
-rejects update/delete even from an accidental privileged statement.
-
-Scope advisory locks precede account rows and prevent first-admission/reset races. New spending
-checks active membership and current active account/epoch under locks. Canonical credit/settlement
-uses its saved origin and does not require the original actor to remain a member. Pausing offers
-does not downgrade mode or stop valid settlement. Monetary helpers must share the asset mutation's
-SQL transaction; a preceding separate HTTP money call is insufficient.
-
-Accounts/state reference their original island with deletion restricted. Owner-account deletion,
-reset, old obligations and existing-save conversion need an explicit integrated policy before any
-runtime admission path is enabled. No live application/admission is recorded by this foundation.
-
-### Treasury verification
-
-On disposable PostgreSQL, run the existing full-chain fixture:
-
-```bash
-cd backend
-CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q server/tests/island_sql/test_island_treasury_sql.py
-uv run pytest -q server/tests/test_island_treasury.py server/tests/test_island_treasury_store.py
-```
-
-The SQL suite applies every migration twice and checks grants/RLS, immutable receipts, one-time
-bootstrap, no partial admission on UID conflict, exact large funds, same-event independent bets,
-spend/reserve races, duplicate settlements, retired-origin payouts and ledger/escrow reconciliation.
-The Python checks cover strict decimal-string/context parsing and fresh state versus immutable
-receipt values. These are local integration checks, not proof of deployed shared-mode gameplay.
-
-### Global operation registry
-
-`20261118050150_island_economy_operations.sql` adds immutable free/personal/paid intent identities
-and the treasury insertion guard. `island_economy_operations` has RLS, no anonymous/authenticated
-access and service-role select only. Claim/effect/system/parser/trigger helpers have no direct
-service-role execute grant; owner-defined domain functions call them inside the asset transaction.
-No public claim-only endpoint is introduced. Historical raw financial UIDs are opaque tombstones;
-checked children must match the original root actor, account and epoch.
-
-Apply this migration transactionally at `READ COMMITTED`. Before any DDL, it collects account,
-existing-operation and ledger relation barriers atomically using `NOWAIT`/savepoint retry. It releases
-partial locks before waiting and fails before changes after 30 seconds of contention. Unsupported
-isolation fails at entry. Do not replace this barrier with an account-scope inventory or account-only
-lock: concurrent new admissions and personal null-scope foreign keys are covered explicitly.
-The [registry spec](../specs/MP-ECO-02-operation-identities.md) documents exact lock modes and errors.
-
-Focused verification also runs `server/tests/test_economy_operations.py`,
-`server/tests/island_sql/test_economy_operations_sql.py` and
-`server/tests/island_sql/test_economy_operations_cutover_sql.py` with the disposable PostgreSQL tools
-above. Source settlement after departure/retirement keeps its original account; this extension does
-not grant current membership, convert saves, register routes or authorize a live migration.
-
 ### Saved reward recovery after returning
 
 `migrations/20261118060000_reward_recovery.sql` adds the partial
@@ -3577,3 +3504,28 @@ free revival hold/fall authority, lifecycle workers, holder deletion, remaining
 legacy guards and actual reset/deletion integration remain release gates.
 Authenticated integrated multiple-client and physical-device acceptance are
 still required separately.
+
+### Coherent shared member snapshots
+
+`20261118050700_island_economy_snapshot.sql` adds two service-only, security-definer functions
+with empty search paths. It creates no tables, admission path or money grant:
+
+| Function | Server purpose | Browser rights |
+|---|---|---|
+| `island_economy_snapshot(actor, owner)` | One locked current member snapshot, including paused reads and explicitly absent personal state | No execute |
+| `island_economy_operation_origin(actor, owner, epoch, uid, domain)` | Actor-owned immutable original account identity before current preflight; domain still validates the exact intent | No execute |
+
+The snapshot locks scope/account, sorted actor/owner profile anchors, existing personal state,
+target island/admission and ordered domain rows. It rechecks current account/epoch and active
+membership, captures one server time and returns actual shared refund lineage. Missing lineage
+remains explicit; private historical payments and catalogue prices cannot mint shared refunds.
+Reads do not initialize Captains, expire reservations or synthesize current session authority.
+Unfinished/reserved waves keep projected health unavailable rather than pretending the journal
+is an idle recovery clock. `20261118050701_island_economy_legacy_guards.sql` separately fences legacy
+entry points needed for global personal router integration.
+
+The [HTTP contract and verification](../specs/MP-ECO-CORE-API.md) keeps domain receipts separate
+from independently coherent refreshes. Existing treasury, construction, progression, crew and
+personal transactions remain the mutation boundaries. This read migration does not supply
+`island_economy_authority`; new HTTP writes remain unavailable without its actual persisted
+provider. It does not authorize shared admission, deployment or a live database migration.

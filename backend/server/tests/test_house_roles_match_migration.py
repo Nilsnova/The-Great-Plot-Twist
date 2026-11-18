@@ -20,6 +20,8 @@ MIGRATIONS = ROOT / "supabase" / "migrations"
 ROLES = MIGRATIONS / "20261112090000_house_roles.sql"
 TECH_HUB = MIGRATIONS / "20261112060000_tech_hub.sql"
 REVIVE = MIGRATIONS / "20261112050000_captain_revive.sql"
+RECOVERY_MUTATIONS = MIGRATIONS / "20261117050000_structure_recovery_mutations.sql"
+PROGRESSION_GUARDS = MIGRATIONS / "20261118050501_island_progression_legacy_guards.sql"
 
 ROLE_PAIRS = "       ('house', 'barracks'), ('house', 'tavern'), ('house', 'workshop')\n"
 TAVERN = """  -- A Tavern on the island (a house of level 2 or more with the role tavern,
@@ -149,6 +151,23 @@ def test_the_latest_definitions_keep_every_house_role():
 
     name, text = latest_with(r"create or replace function public\.island_specialise\(")
     body = function(text, "island_specialise")
+    assert name == PROGRESSION_GUARDS.name
+    assert (
+        body.index("island_treasury_lock_scope(p_island_owner)")
+        < body.index("from public.island_economy_state")
+        < body.index("'economy_context_required'")
+        < body.index("return public.island_specialise_legacy_personal(")
+    )
+    # The private alias captures the original body once; retain every old role/level check.
+    assert "('island_specialise','uuid,uuid,text,text,text,text,integer')" in text
+    assert "to_regprocedure('public.'||v_item.name||'_legacy_personal('" in text
+    assert "pg_get_functiondef(to_regprocedure('public.'||v_item.name||'('" in text
+    assert "position(v_item.name||'_legacy_personal' in v_definition) > 0" in text
+    assert (
+        "revoke all on function public.%I(%s) from public, anon, authenticated, service_role"
+        in text
+    )
+    body = function(RECOVERY_MUTATIONS.read_text(), "island_specialise")
     for role in HOUSE_ROLES:
         assert f"('house', '{role}')" in body, name
     assert HOUSE_LEVEL in body, name

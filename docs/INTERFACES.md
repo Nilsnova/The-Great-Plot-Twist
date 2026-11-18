@@ -1953,3 +1953,37 @@ remaining authority/session gates are described in
 [Guarded shared economy transactions](economy/DOMAIN-TRANSACTIONS.md).
 The adapters require explicit accounting mode and the shared capability header;
 their presence does not admit existing islands or activate a deployment.
+
+## Shared island core HTTP boundary
+
+The [core API spec](../specs/MP-ECO-CORE-API.md) defines the version-one read/quote contract.
+`backend/server/routes/island.py` preserves the existing URLs and legacy serializers. Persisted
+mode is resolved read-only before dispatch; missing or unreadable database state cannot select
+a legacy wallet path. Shared GET `/api/island`, `/api/island/visit/{code}` and demolition quotes
+require `X-Island-Economy-Version: 1`. Shared reads return one member-authorized snapshot with
+authenticated `actorId`, target economy/crew/progress/structures, actor personal projection and
+exact decimal-string quotes. Paused members may read. There is no implicit admission/import,
+wave expiration, fake stock, live roster or world revision derived from financial revision.
+
+Strict shared POST bodies are defined in `server/island/economy_http_models.py`: server-prepared
+flat intent/CAS/quote fields plus `actionUid`, optional `code`, and exactly
+`economy: {mode: 'island_shared', version: 1, islandOwner, runEpoch}`. Build/upgrade/demolish,
+research, tower-skill/tree, wreck and hire dispatch to their existing atomic domain adapters.
+No client-selected actor/account/payer/catalogue/action is accepted. Old-shaped requests on
+persisted shared targets refuse before legacy side effects; malformed shared fields remain
+validation errors. New shared writes require the actual persisted permission provider;
+`economy_path_unavailable` remains the result when it is absent.
+
+Before current preflight, service-only `island_economy_operation_origin` resolves an authenticated
+actor's existing root to its original account/epoch/domain. The domain transaction still checks
+the complete frozen intent and immutable receipt. Historical exact retries can survive departure,
+pause or retirement without unauthorized fresh projections. Shared success returns that original
+domain receipt unchanged; a later coherent refresh is independent and may fail without changing
+the committed outcome. Treasury revisions order only monetary projections.
+
+The application registers the existing global GET `/api/captain` and POST
+`/api/captain/{role,skill,respec}` router with the atomic legacy-guard migration dependency.
+Its strict personal version/revision/root contract is independent of the viewed island's money
+mode, and missing adoption is explicitly `409 captain_not_initialized` on GET. Read failures
+never mean an unadopted profile. Shared arsenal/session/move/repair/reset/market/match capabilities
+remain explicitly unavailable; no canonical lifecycle authority or public conversion is added.
