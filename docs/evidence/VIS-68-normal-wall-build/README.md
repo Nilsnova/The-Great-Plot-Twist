@@ -3,7 +3,8 @@
 Responsible human: **Johannes Franz Lang (`frcola`)**.
 Issue: [#454](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/454).
 Branch: `fix/vis-68-wall-build-guard`.
-Base: `c4ea1b633346cde8ef5f4524a625338b6033dfc8`.
+Actual fork base: `7e60fe1addafaa5f62ad81f53db6d01fda78f0c5`, which retains the
+requested `c4ea1b63` base and the coordinator's subsequent water refinement.
 
 ## Scope claimed before implementation
 
