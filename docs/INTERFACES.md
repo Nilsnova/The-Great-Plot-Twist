@@ -1801,8 +1801,9 @@ with paid-restore race protection in `20261115150000_wall_restore_record_fence.s
 ([supabase/README.md](../supabase/README.md#the-arsenal-migration)).
 
 - **Flag:** `arsenal` (new in `FLAG_NAMES`, off by default in code; on in production since 14 Nov 2026, after the migration was applied live) on top of `islands`. Off: every arsenal route answers
-  `404 feature_off`, the browser draws no arsenal and the old weapon shop (`POST /api/island/weapon/buy|equip`)
-  works as before. On: `POST /api/island/weapon/buy` answers `409 use_arsenal`.
+  `404 feature_off` and the old weapon shop routes (`POST /api/island/weapon/buy|equip`) work as before. On:
+  `POST /api/island/weapon/buy` answers `409 use_arsenal`. The browser treats the arsenal as always on (fix/arsenal-rejoin,
+  18 Nov 2026): it no longer has the old shop (Captain › Weapons) or calls those routes, so a server needs the flag on.
 - **Routes:** `GET /api/island/arsenal?code=` → `{code, capacity: 20, stored, mine, carried, waveRunning, coins,
   unlockWave, copies: [{id, no, weapon, name, holder, holderName, away, you}], types: [{id, name, price, unlockWave,
   unlocked}]}`; `POST /api/island/arsenal/buy {weapon, actionUid, code?}`, `/take {copy, actionUid, code?}`,
