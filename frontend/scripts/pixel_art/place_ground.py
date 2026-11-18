@@ -21,6 +21,13 @@ PATHS={
  'the_teeth': [[(0,14),(0,-8),(9,-9)],[(-8,9),(0,8),(8,1)],[(-5,-3),(0,-3)]],
  'gulls_rest': [[(0,13),(0,-5)]],
 }
+
+def land_color(surface, x, y, palette):
+    if surface == 1:
+        return SAND
+    tone = int((sin(x / 61) + cos(y / 53) + sin((x + y) / 89) + 3) / 2)
+    return palette[min(2, max(0, tone))]
+
 def ground(root,id):
     w,h=1024,768;classes=check_output(['node','scripts/export-place-ground.js',id],cwd=root)
     assert len(classes)==w*h
@@ -30,7 +37,7 @@ def ground(root,id):
     for y in range(h):
         for x in range(w):
             c=classes[y*w+x]
-            if c in [1,2]:p[x,y]=SAND if c==1 else pal[min(2,max(0,int((sin(x/61)+cos(y/53)+sin((x+y)/89)+3)/2)))]
+            if c in [1,2]:p[x,y]=land_color(c,x,y,pal)
     d=ImageDraw.Draw(im)
     for y in range(2,h-2):
         for x in range(2,w-2):
@@ -74,10 +81,22 @@ def ground(root,id):
         for dx,dy in [(0,0),(3,1),(1,3)][:2+i%2]:
             if classes[(y+dy)*w+x+dx]==2 and not mp[x+dx,y+dy]:
                 p[x+dx,y+dy+1]=(92,120,70,255);p[x+dx,y+dy]=(236,226,196,255) if i%3 else (214,160,160,255)
+    additions = None
+    if id == 'saltreach_harbor':
+        # The deck is a separate sprite. Restore only natural land that the dock cut out.
+        natural = check_output(['node', 'scripts/export-place-ground.js', id, '--natural-coast'], cwd=root)
+        additions = Image.new('RGBA', im.size)
+        below_deck = additions.load()
+        for index, (surface, coast) in enumerate(zip(classes, natural)):
+            if surface != 3 or not coast:
+                continue
+            y, x = divmod(index, w)
+            if not p[x, y][3]:
+                below_deck[x, y] = PATH_PALETTE[0] if mp[x, y] else land_color(coast, x, y, pal)
     if id in REGIONAL_MATERIALS:
         return paint_region(im, root, id, {
             'grass': (*pal, *GRASS_PATCHES, *GRASS_TUFTS),
             'path': PATH_PALETTE,
             'sand': (SAND,),
-        })
+        }, additions)
     return im

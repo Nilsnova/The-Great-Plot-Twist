@@ -1,5 +1,5 @@
 """Lay the original village materials into the existing regional ground colors."""
-from PIL import Image
+from PIL import Image, ImageChops
 
 REGIONAL_MATERIALS = {
     'lighthouse_isle': ('sand', .46),
@@ -31,22 +31,34 @@ def tile_surface(atlas, name, canvas_size):
     return surface
 
 
-def paint_region(image, root, place, palette):
+def color_mask(image, colors):
+    return Image.frombytes('L', image.size, bytes(255 if pixel in colors else 0 for pixel in image.getdata()))
+
+
+def paint_region(image, root, place, palette, additions=None):
     path_material, grass_strength = REGIONAL_MATERIALS[place]
     with Image.open(root / 'public' / 'village' / 'terrain-materials-v1.png') as source:
         atlas = source.convert('RGB')
     base = image.convert('RGB')
     output = base.copy()
+    extra_base = additions.convert('RGB') if additions else None
     for name, material, strength in (
         ('grass', 'grass', grass_strength), ('path', path_material, .55), ('sand', 'sand', .52),
     ):
         colors = set(palette[name])
-        mask = Image.frombytes('L', base.size, bytes(255 if pixel in colors else 0 for pixel in image.getdata()))
+        mask = color_mask(image, colors)
         texture = tile_surface(atlas, material, base.size)
         # Limit palette size per surface so the old regions still ship as small PNGs.
         styled = Image.blend(base, texture, strength).quantize(colors=72, dither=Image.Dither.NONE)
         output.paste(styled.convert('RGB'), mask=mask)
-    output.putalpha(image.getchannel('A'))
+        if extra_base:
+            # Use the established color palette without changing existing regional pixels.
+            extra = Image.blend(extra_base, texture, strength).quantize(palette=styled, dither=Image.Dither.NONE)
+            output.paste(extra.convert('RGB'), mask=color_mask(additions, colors))
+    alpha = image.getchannel('A')
+    if additions:
+        alpha = ImageChops.lighter(alpha, additions.getchannel('A'))
+    output.putalpha(alpha)
     return index_region(output)
 
 
