@@ -1,17 +1,19 @@
 """Normal Build honors the displayed wall cell and delegates the checked layout to payment."""
 
+from dataclasses import replace
+
 import httpx
 import pytest
 
+from server.flags import parse_flags
 from server.tests.island_helpers import FRIEND_ID, ISLAND_SETTINGS, PLAYER_ID, World
-from server.tests.test_island_move_routes import PLACEMENT
 from server.tests.test_island_routes import friend_island
 
 UID = "build-wall-0001"
 RPC = "island_build_checked_wall"
 
 
-def game_at(member, recovery_version, x, z, *, settings=PLACEMENT):
+def game_at(member, recovery_version, x, z, *, settings=ISLAND_SETTINGS):
     world = World(settings=settings)
     owner = FRIEND_ID if member else PLAYER_ID
     if member:
@@ -43,8 +45,9 @@ def test_old_empty_wall_cannot_buy_through_scenery(member, recovery_version, x, 
     assert world.database.layout_rows == [{"plot": "wall_1", "x_half": x, "z_half": z}]
 
 
-def test_saved_overlap_is_refused_while_move_is_disabled():
-    world, _, where = game_at(False, 0, -32, 0, settings=ISLAND_SETTINGS)
+def test_saved_overlap_is_refused_with_the_retired_placement_flag():
+    settings = replace(ISLAND_SETTINGS, flags=parse_flags("islands,placement"))
+    world, _, where = game_at(False, 0, -32, 0, settings=settings)
 
     response = world.build(spot="wall_1", kind="wall", actionUid=UID, **where)
 
@@ -87,8 +90,8 @@ def test_clear_normal_purchase_passes_the_complete_checked_snapshot(member, reco
         "p_z_half": -2,
         "p_materialize": False,
         "p_recovery_version": recovery_version,
-        "p_hidden_extra_plots": [f"cannon_{n}" for n in range(8, 12)] if recovery_version else [],
-        "p_existing_extra_spots": False,
+        "p_hidden_extra_plots": [],
+        "p_existing_extra_spots": True,
     }
 
 

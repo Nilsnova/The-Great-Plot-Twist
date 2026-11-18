@@ -1380,6 +1380,12 @@ A flag is off unless the setting `FEATURE_FLAGS` names it (comma separated). The
 | `wall_recovery` | wall damage that stays after a wave (D039, proposed): `GET /api/island/walls`, `POST /api/island/repair`, `walls` on the wave routes, `409 needs_repair` on upgrade. Off: exactly the old behavior, the new columns are never read | T29–T32/T47; off by default in code; needs migration 20261114100000 applied first (applied live 14 Nov 2026; flag on in production), and `islands` on |
 | `defenses_v2` | new tower kinds beyond cannon, mortar and harpoon, first the culverin (T43, D048 proposed): `backend/content/defenses_v2.json` is merged into the island catalogue, so `GET /api/island` lists the kind on the tower spots, in `prices` and in `unlocks`, and `POST /api/island/build`/`upgrade` accept it; it is also a wave rule: the wave answers carry `"defenses_v2"` in `rules`, and only then does every client's sim let the culverins fight (event `culverin_fired`). Off: the file is not read, every island answer is as before, and a sim ignores any culverin | T43; off by default in code (**on in production since ~21:53 UTC, 14 Nov 2026**). Both migrations `20261114130500_wave_rules.sql` and `20261114140000_culverin.sql` were applied live 14 Nov 2026 |
 
+**Retired flags (18 Nov 2026, `refactor/slim-3`):** `placement`, `tower_health`, `pathing`, `tower_obstacles`, `ship_fire`,
+`rescue`, `defenses_v2`, `more_tower_spots` and `wall_recovery` are always on. Their names stay accepted in
+`FEATURE_FLAGS` (production lists them) and change nothing; what their rows above describe as "on" is the only
+behaviour. Every new wave carries all six sim rules (`backend/server/island/wave_rules.py` `ALWAYS_ON`); rules stay
+frozen per wave, and the browser's sim still plays a wave stored without a rule as before.
+
 The separately guarded [disposable local API](LOCAL-TEST-SERVER.md) provides a fixture-only
 sign-in endpoint for automation. It does not enable `sign_in` or change the normal app's auth
 flow. No preview or production settings are enabled by adding this flag.

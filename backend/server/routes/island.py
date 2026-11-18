@@ -806,9 +806,8 @@ async def post_upgrade(
     request: Request,
 ) -> IslandResponse:
     request.app.state.island_build_budget.spend(player.id)
-    if is_enabled("wall_recovery", settings.flags):
-        # T47 (D039): a damaged or destroyed wall is repaired first; an upgrade never heals it.
-        await wall_repair.check_upgrade(admin, catalogue, player.id, body.spot, now(), body.code)
+    # T47 (D039): a damaged or destroyed wall is repaired first; an upgrade never heals it.
+    await wall_repair.check_upgrade(admin, catalogue, player.id, body.spot, now(), body.code)
     view = await service.upgrade(admin, catalogue, player.id, body.spot, body.actionUid, body.code)
     return island_out(view, catalogue)
 

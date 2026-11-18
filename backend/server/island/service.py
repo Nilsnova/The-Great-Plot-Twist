@@ -266,10 +266,8 @@ def weapons_of(catalogue: IslandCatalogue, progress: Progress) -> WeaponsView:
 async def read_stored(
     admin: SupabaseAdmin, catalogue: IslandCatalogue, owner: str
 ) -> dict[str, Position] | None:
-    """The island's moved spots (T36), or None (the fixed spots, no moving) while the flag
-    "placement" is off: then the layout table is never asked."""
-    if not catalogue.placement:
-        return None
+    """The island's moved spots (T36), or None (the fixed spots, no moving) while the layout
+    table cannot be read."""
     return await layout_store.read_layout(admin, owner)
 
 
