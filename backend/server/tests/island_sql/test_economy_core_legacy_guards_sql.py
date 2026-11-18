@@ -3,6 +3,7 @@
 The full migration chain applies twice; committed races use this module's isolated cluster.
 """
 
+import re
 from uuid import uuid4
 
 import pytest
@@ -21,6 +22,10 @@ from server.tests.island_sql.test_islands_and_waves_sql import (  # noqa: E402
     balance,
 )
 from server.tests.island_sql.test_personal_captain_sql import private  # noqa: E402
+from server.tests.test_respec_wave_guards_match_migration import (  # noqa: E402
+    CORE_GUARDS,
+    historical_respec_definition,
+)
 
 RULES = configuration(load_island())
 ALIASES = {
@@ -220,6 +225,26 @@ def test_removed_unchecked_respec_is_not_resurrected(database):
     assert database.execute(
         "select to_regprocedure('public.island_respec(uuid,text,integer)')"
     ).fetchone() == (None,)
+
+
+def test_respec_private_alias_keeps_the_complete_reviewed_body_after_reapplication(database):
+    signature = "public.island_respec_at_level_core_legacy_personal(uuid,text,integer)"
+    reviewed = re.search(r"as \$\$(.*?)\$\$;", historical_respec_definition(), re.S).group(1)
+    as_owner(database)
+    before = database.execute(
+        "select prosrc from pg_proc where oid=to_regprocedure(%s)", (signature,)
+    ).fetchone()[0]
+    assert before == reviewed
+    database.execute(CORE_GUARDS.read_text())
+    database.execute(CORE_GUARDS.read_text())
+    assert database.execute(
+        "select prosrc from pg_proc where oid=to_regprocedure(%s)", (signature,)
+    ).fetchone() == (before,)
+    assert database.execute(
+        "select has_function_privilege(role,%s,'execute') from "
+        "unnest(array['anon','authenticated','service_role']) as roles(role)",
+        (signature,),
+    ).fetchall() == [(False,), (False,), (False,)]
 
 
 def test_required_construction_kit_alias_is_private_without_a_core_kit_wrapper(database):
