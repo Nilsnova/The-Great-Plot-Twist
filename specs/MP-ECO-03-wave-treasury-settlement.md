@@ -112,6 +112,12 @@ Verified again after integrating main `77a9e34d`, including its existing gated-d
 
 The exhaustive unrelated settings matrix and complete browser suite were not rerun. The branch adds no canonical lifecycle route wiring, shared-mode activation, live database change or integrated multi-client gameplay claim.
 
+### Published treasury dependency verification
+
+The branch includes published treasury dependency `feca459f` as an ancestor and uses schema migration `20261118050050_island_treasury.sql`. Its duplicate-version regression check passes alongside the existing wave checks. The current main contract at `3482c281` is included; the retained personal Captain dependency remains separate from later review-base selection.
+
+The same eight-module PostgreSQL command above now gives **137 passed in 50.51s**, including current recovery compatibility. The same eleven-module Python command plus `server/tests/test_migration_versions.py` gives **411 passed in 18.99s**. Backend-wide Ruff and all **71 migration parses with 71 unique versions** pass. Wave-accounting runtime, migration and test contents were unchanged by the treasury/main integration; canonical lifecycle, deletion and authenticated multi-client gates remain open.
+
 ## Reviewer
 
 A different human teammate, to be named before publication. Last updated: 2026-11-18.
