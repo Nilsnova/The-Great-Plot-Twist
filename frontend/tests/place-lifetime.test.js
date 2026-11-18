@@ -94,8 +94,8 @@ describe('real place lifetime', () => {
       place.dispose();
     }
   });
-  it('removes every object and disposes shared-per-place resources exactly once', async () => {
-    const place = await createPlace({ id: 'saltreach_harbor', ...adapters });
+  it.each(['saltreach_harbor', 'home_islet'])('removes every %s object and disposes shared resources exactly once', async id => {
+    const place = await createPlace({ id, ...adapters });
     const parent = new THREE.Group(); parent.add(place.group);
     const resources = new Set();
     place.group.traverse(o => { if (o.geometry) resources.add(o.geometry); if (o.material) { resources.add(o.material); if (o.material.map) resources.add(o.material.map); } });
