@@ -100,6 +100,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   // 15 s timer, the bell or a build card) reads it again instead of leaving the island empty for good.
   let disposed = false, own = null, ownMessage = '', ownRetry = false, visiting = null, visitCode = readVisit(visitStorage), busySpot = null, cardMessage = '';
   let world = null, cutscene = null, openSpot = null, loadTicket = 0, battle = false;
+  let wallFeedbackGeneration = 0;
   const coreState = createCoreState();
   let coreWorld = null, coreContextKey = null, coreTravelGeneration = 0, coreRejoin = null;
   let pointBattle = false;
@@ -287,6 +288,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   // Leaving the island closes its card and ends a visit (the next landing is your own island).
   const stopTravel = on('travel', event => {
     village.leave();
+    invalidateWallFeedback();
     coreTravelGeneration++; syncCoreContext();
     ui.close(); flow.reset(); openSpot = null; moving.cancel();
     if (visiting && event.to !== ISLAND_PLACE) endVisit();
@@ -295,7 +297,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   function applyWorld() {
     syncCoreContext();
     world?.apply({spots: target()?.spots ?? [], visitor: !!visiting, battle, unlocks: islandUnlocks(), crew: target()?.crew ?? null, campaign: campaign(),
-      arsenal: arsenalOn() === true});
+      arsenal: arsenalOn() === true, feedbackScope: wallFeedbackScope()});
     const replaying = recoveryCombat && flow.current?.wave?.waveId === recoveryCombat.waveId;
     world?.setRecoveryState?.(recoveryState && recoveryPolicyOn() ? {...recoveryState, displayPhase: replaying ? 'combat' : recoveryState.displayPhase} : null);
     pointWorld?.apply({spots: point?.spots ?? [], visitor: false, battle: pointBattle, unlocks: unlocks()});
@@ -315,7 +317,10 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       coreWorld?.setHealth(coreState.current);
     }
   }
-  function endVisit() { visiting = null; visitCode = null; forgetVisit(visitStorage); ui.visit(null); }
+  function endVisit() {
+    invalidateWallFeedback();
+    visiting = null; visitCode = null; forgetVisit(visitStorage); ui.visit(null);
+  }
   // The chip of a friend's game: the old "Visiting … · Sail home" only where travel still applies (one
   // island off); with one island the game itself and a way to its lobby (GAME-V3.md §2).
   const canTravel = () => { try { return travel() === true; } catch { return false; } };
@@ -881,10 +886,34 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     }
   }
   const onWhere = place => (place === 'point' ? ' for Pirate Point' : place === 'visit' ? ` on ${visiting?.ownerName ? `${visiting.ownerName}'s` : 'this'} island` : '');
+  function invalidateWallFeedback() {
+    wallFeedbackGeneration++;
+    world?.clearWallFeedback();
+  }
+  function wallFeedbackScope() {
+    const code = islandCode(target()?.code ?? '');
+    return code && (!visitCode || code === visitCode) ? `${code}:${wallFeedbackGeneration}` : null;
+  }
+  function wallPurchaseAt(spot, upgrading) {
+    if (!world || battle || spot?.slot !== 'wall') return null;
+    const scope = wallFeedbackScope();
+    const before = target()?.spots.find(item => item.id === spot.id);
+    if (!scope || !before || before.built !== upgrading || (upgrading && before.kind !== 'wall')) return null;
+    return {scope, world, spotId: spot.id, level: upgrading ? before.level + 1 : 1};
+  }
+  function showWallPurchase(action, answer) {
+    if (!action || !answer.ok || answer.reconciled || action.world !== world || action.scope !== wallFeedbackScope()
+        || islandCode(answer.data.code ?? '') !== islandCode(target()?.code ?? '')) return;
+    const confirmed = answer.data.spots.find(spot => spot.id === action.spotId);
+    if (confirmed?.built === true && confirmed.kind === 'wall' && confirmed.level === action.level) {
+      world.showWallFeedback(action.spotId, action.level);
+    }
+  }
   async function build(spotId, kind) {
     const place = placeOf(spotId), spot = place === 'point' ? ppSpotById(spotId) : spotById(spotId);
     const choice = kind ?? spot?.kind;
     if (!spot || busySpot || !BUILDINGS[choice]) return;
+    const action = choice === 'wall' && place !== 'point' ? wallPurchaseAt(spot, false) : null;
     busySpot = spotId; busyKind = choice; cardMessage = ''; refreshCard();
     const answer = place === 'point' ? await api.pointBuild({spot: spotId, kind: choice})
       : await api.build({spot: spotId, kind: choice, ...(place === 'visit' ? {code: visiting.code} : {})});
@@ -900,6 +929,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       ui.toast(`${BUILDINGS[choice].name} built${onWhere(place)} · ${coinText(own?.coins)}`, 'success');
     } else await refused(answer, place, spotId);
     refreshCard();
+    showWallPurchase(action, answer);
   }
   // D039 (flag wall_recovery): the walls' health of the island on screen; nothing at all while the flag is off.
   async function readWalls() {
@@ -935,6 +965,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   async function upgrade(spotId) {
     const place = placeOf(spotId);
     if (busySpot) return;
+    const action = wallPurchaseAt(spotById(spotId), true);
     busySpot = spotId; busyKind = 'upgrade'; cardMessage = ''; refreshCard();
     const answer = place === 'point' ? await api.pointUpgrade({spot: spotId})
       : await api.upgrade({spot: spotId, ...(place === 'visit' ? {code: visiting.code} : {})});
@@ -952,6 +983,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       if (recoveryControlsOn()) void readStructureRecovery(spotId);
     } else await refused(answer, place, spotId);
     refreshCard();
+    showWallPurchase(action, answer);
   }
   // GAME-V3.md §4.2: Tear down asks the server who gets what back, then the confirmation card; Tear down there
   // takes the building down (between waves), every payer gets half of what they paid, and the room hears it.
@@ -1249,6 +1281,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     const answer = await api.freshStart({confirmCode: typed});
     if (disposed || !answer.ok) return answer;
     resetGeneration++;
+    invalidateWallFeedback();
     const code = islandCode(own?.code ?? '') || islandCode(typed);
     // This page's memory of the old island goes too: its campaign, walls and tree picks.
     campaignSeen.delete(code);
@@ -1293,6 +1326,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     const symbols = storeVisit(code, visitStorage);
     if (!symbols) return false;
     village.leave();
+    invalidateWallFeedback();
     visitCode = symbols; visiting = null; flow.reset(); ui.close();
     return true;
   }
@@ -1336,7 +1370,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       world = deco; coreWorld = core; applyWorld(); core.setHealth(coreState.current);
       deco.runArtTask('core', () => core.retryArt());
       const original = place.update;
-      place.update = (dt, frame) => { original(dt, frame); deco.update(dt, frame?.time ?? 0); };
+      place.update = (dt, frame) => { original(dt, frame); deco.update(dt, frame?.time ?? 0, frame?.paused); };
       cleanups.push(() => { deco.dispose(); core.dispose(); if (world === deco) world = null; if (coreWorld === core) coreWorld = null; place.update = original; });
     },
     // Pirate Point's shared build spots on lighthouse_isle (factory.js); its bell and lamps stay lane P's.
@@ -1434,7 +1468,13 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     },
     // The island's wave controller stopped this wave (src/pirates/game-wiring.js): a bell still holding it goes.
     waveStopped(waveId) { if (!disposed && typeof waveId === 'string') flow.release(waveId); },
-    setBattle(value) { battle = value === true; if (battle) { village.leave(); waveOver = false; moving.cancel(); } applyWorld(); refreshCardIfBuild(); if (['captain', 'tech', 'overview'].includes(ui.open)) refreshCard(); },
+    setBattle(value) {
+      if (value === true && !battle) invalidateWallFeedback();
+      battle = value === true;
+      if (battle) { village.leave(); waveOver = false; moving.cancel(); }
+      applyWorld(); refreshCardIfBuild();
+      if (['captain', 'tech', 'overview'].includes(ui.open)) refreshCard();
+    },
     // A Pirate Point battle: its built walls, cannons and mortars are drawn by the wave renderer meanwhile.
     setPointBattle(value) { pointBattle = value === true; applyWorld(); },
     // The bell again, for the wave's break ("Next wave", TOWER-DEFENSE.md §1): the start route where the

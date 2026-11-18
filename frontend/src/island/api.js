@@ -288,11 +288,12 @@ export function createIslandApi({transport, makeUid = makeActionUid, waveProtoco
   }
   // A write with a click id: reuse the held id after an unknown outcome, drop it after a clear answer.
   async function write(key, send, accept) {
-    const actionUid = held.get(key) ?? makeUid();
+    const heldUid = held.get(key), actionUid = heldUid ?? makeUid();
     held.set(key, actionUid);
     const answer = await ask(() => send(actionUid), data => accept(data, actionUid));
     if (answer.ok || !outcomeUnknown(answer)) held.delete(key);
-    return answer;
+    // A successful retry can be a replay of a purchase that already landed.
+    return heldUid && answer.ok ? {...answer, reconciled: true} : answer;
   }
   // The server's own spelling of each spot id, learnt from its answers (spots.js SPOT_ALIASES).
   const serverIds = new Map();

@@ -363,7 +363,8 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     const night = sky.update(settings.hour, state, reducedMotion()?0:time); lightPools.update(reducedMotion()?0:time, night); pixelFx.update(delta);
     audio.update(delta,{weather:state,weatherAnswer,isletBuilt:isletState.getBuilt(),speed,night,active:active&&!isAppBlocked?.()&&!world.busy&&!(marketUi?.active||sportsUi.active)&&!chart.open,place:world.current?.id});
     water.update(reducedMotion()?0:time, state); sailing.update(delta);
-    world.update(delta, { player: controller.player.position, time:reducedMotion()?0:time, night, weather: state,weatherAnswer });
+    world.update(delta, { player: controller.player.position, time:reducedMotion()?0:time, night, weather: state,weatherAnswer,
+      paused: !active || shell.blocked || !!isAppBlocked?.() });
     characterScale=inBattle?characterScaleFor(view.camera.zoom):1;scene.userData.characterScale=characterScale;
     character.setColour(island?.game?island.captainColour():null);character.setScale(characterScale);
     updateVillageView();

@@ -12,6 +12,7 @@ import {ALL_SPOTS as ISLAND_SPOTS, CABIN, BELL, CAMPAIGN_BUILDINGS, ARSENAL, isl
 import {isExtraSpot} from './extra-spots.js';
 import {makeFootprint, makeWallLanes} from './move-preview.js';
 import {makeSelectionBracket} from './selection-bracket.js';
+import {makeWallFeedback} from './wall-feedback.js';
 import {isOpen, spotWave, waveOf} from '../campaign/index.js';
 import {LOCK_WAVES} from '../art/campaign.js';
 import {SLOT_KINDS} from './td-rules.js';
@@ -200,7 +201,7 @@ export function decorateIsland(place, ctx = {}) {
   const layout = ctx.layout ?? {spots: ISLAND_SPOTS, zones: islandZones, bell: true, cabin: true};
   const SPOTS = layout.spots;
   const root = new THREE.Group(); root.name = layout.name ?? 'island'; place.group.add(root);
-  let state = {spots: [], visitor: false, battle: false, unlocks: null, crew: null, campaign: null, arsenal: false}, disposed = false;
+  let state = {spots: [], visitor: false, battle: false, unlocks: null, crew: null, campaign: null, arsenal: false, feedbackScope: null}, disposed = false;
   let notice;
   const tasks = createArtworkTasks(value => {
     root.userData.artError = value.failed.length ? 'Island artwork unavailable' : null;
@@ -278,6 +279,7 @@ export function decorateIsland(place, ctx = {}) {
   const baseColliders = [...place.colliders];
   let preview = null;
   const footprint = makeFootprint(root), selectionBracket = makeSelectionBracket(root);
+  const wallFeedback = layout.zones === islandZones ? makeWallFeedback(root) : null;
   // D056: while a wall is moved, the cells where a wall stops pirates glow (home island only).
   const wallLanes = layout.zones === islandZones ? makeWallLanes(root) : null;
   // Where a spot stands now: the cell of a move under way, the answer's x/z, else its fixed spot (Pirate Point's stay).
@@ -285,6 +287,10 @@ export function decorateIsland(place, ctx = {}) {
     if (preview?.spotId === spot.id) return {x: preview.x, z: preview.z};
     return layout.zones === islandZones ? placedSpot(spot.id, state.spots) ?? spot : spot;
   };
+  function builtWallAnchor(id, level) {
+    const row = state.spots.find(item => item.id === id);
+    return row?.built === true && row.kind === 'wall' && row.level === level ? placedSpot(id, state.spots) : null;
+  }
   const recoveryIndicators = createStructureRecoveryIndicators({root, locate: id => {
     const spot = SPOTS.find(item => item.id === id);
     return spot ? whereOf(spot) : null;
@@ -348,9 +354,15 @@ export function decorateIsland(place, ctx = {}) {
 
   // battle: a wave is on screen; its renderer (src/pirates/render.js) draws the walls and cannons with
   // their damage, so the island's own wall and cannon sprites step aside until it ends.
-  function apply({spots = [], visitor = false, battle = false, unlocks = null, crew = null, campaign = null, arsenal = false} = {}) {
+  function apply({spots = [], visitor = false, battle = false, unlocks = null, crew = null, campaign = null, arsenal = false, feedbackScope = null} = {}) {
     if (disposed) return;
-    state = {spots, visitor, battle, unlocks, crew, campaign, arsenal: arsenal === true};
+    if (battle || feedbackScope !== state.feedbackScope) wallFeedback?.clear();
+    state = {spots, visitor, battle, unlocks, crew, campaign, arsenal: arsenal === true, feedbackScope};
+    const pulse = wallFeedback?.current;
+    if (pulse) {
+      const anchor = builtWallAnchor(pulse.spotId, pulse.level);
+      if (anchor?.x !== pulse.x || anchor?.z !== pulse.z) wallFeedback.clear();
+    }
     if (visitor || battle) wallConnections.select(null);
     joinedWalls = wallConnections.show(battle ? [] : spots.map(item => {
       const spot = SPOTS.find(entry => entry.id === item.id);
@@ -500,23 +512,30 @@ export function decorateIsland(place, ctx = {}) {
     preview(next) {
       if (disposed) return;
       preview = next && Number.isFinite(next.x) && Number.isFinite(next.z) ? {...next} : null;
-      if (preview) wallConnections.select(null);
+      if (preview) { wallConnections.select(null); wallFeedback?.clear(); }
       footprint.show(preview);
       wallLanes?.show(preview && SPOTS.find(spot => spot.id === preview.spotId)?.slot === 'wall');
       apply(state);
     },
     get previewing() { return preview ? {...preview} : null; },
     get wallLanesShown() { return !!wallLanes?.shown; },
+    showWallFeedback(spotId, level) {
+      if (disposed || !wallFeedback || !state.feedbackScope || state.battle || preview) return;
+      const anchor = builtWallAnchor(spotId, level);
+      if (anchor) wallFeedback.show(spotId, level, anchor, reduced());
+    },
+    clearWallFeedback() { wallFeedback?.clear(); },
     ring() { ringing = 1.2; },
-    update(dt, time = 0) {
+    update(dt, time = 0, paused = false) {
       if (disposed) return;
       notice.update();
       const selection = preview ? null : ctx.selection?.();
       selectionBracket.show(selection);
       wallConnections.select(state.battle || state.visitor ? null : selection?.spotId);
       recoveryIndicators.update();
-      rangeRing.show(ctx.range?.() ?? null, reduced() ? 0 : time);
       const still = reduced();
+      rangeRing.show(ctx.range?.() ?? null, still ? 0 : time);
+      wallFeedback?.update(dt, paused, still);
       const glow = still ? 1 : .7 + .3 * Math.sin(time * 3.2), bob = still ? 0 : Math.sin(time * 2.4) * 2.4 / UNIT;
       // Calm markers (owner, 15 Nov: "limit the visual overload"): only the spots near the captain glow and bob;
       // the others stay on the map as faint, still rings and badges, so a dozen gold "+" never shout at once.
@@ -541,6 +560,7 @@ export function decorateIsland(place, ctx = {}) {
       tasks.dispose(); notice.dispose(); staticArt.dispose();
       progress?.dispose(); recoveryIndicators.dispose();
       wallConnections.dispose(); selectionBracket.dispose();
+      wallFeedback?.dispose();
       for (const id of [...shown.keys()]) clear(id);
       for (const item of lockTextures.values()) item.texture.dispose(); // the padlocks a spot no longer shows
       if (art) Object.values(art).forEach(material => { material.map?.dispose(); material.dispose(); });
