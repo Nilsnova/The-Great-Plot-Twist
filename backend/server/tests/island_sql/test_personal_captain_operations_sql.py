@@ -12,6 +12,7 @@ from server.tests.island_sql.test_economy_operations_sql import (  # noqa: E402
     apply_intent,
     operation_count,
 )
+from server.tests.case_sql.conftest import scratch_server as scratch_server  # noqa: E402
 from server.tests.island_sql.test_island_treasury_sql import as_owner, as_server, keys, rpc  # noqa: E402
 from server.tests.island_sql.test_personal_captain_sql import (  # noqa: E402
     attach,
