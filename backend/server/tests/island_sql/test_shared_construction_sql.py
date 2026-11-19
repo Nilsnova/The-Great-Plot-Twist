@@ -102,6 +102,37 @@ def initialize_member(connection, member, owner, treasury):
     rpc(connection, "personal_captain_initialize", member, owner, keys(treasury)[1], Jsonb(RULES))
 
 
+@pytest.mark.parametrize(
+    "spot,wave", [(f"cannon_{index}", 10 * (index - 7)) for index in range(8, 12)]
+)
+def test_current_runtime_extra_spots_keep_their_target_island_unlock(database, spot, wave):
+    owner, _, _, treasury, _ = initialized(database)
+    manifest = catalogue_manifest(runtime_catalogue(load_island()))
+    request = intent(spot=spot, kind="cannon", coins="27")
+    as_owner(database)
+    database.execute("update public.islands set wave_best=%s where player_id=%s", (wave - 1, owner))
+    refused = construct(
+        database, owner, treasury, request, uid="extra-lock-0001", manifest=manifest
+    )
+    assert refused["reason"] == "locked"
+    assert standing(database, owner, spot) is None
+    assert database.execute(
+        "select balance_coins,committed_coins from public.island_economy_accounts where id=%s",
+        (keys(treasury)[0],),
+    ).fetchone() == (200, 0)
+    assert database.execute(
+        "select count(*) from public.island_economy_operations "
+        "where actor_id=%s and action_uid='extra-lock-0001'",
+        (owner,),
+    ).fetchone()[0] == 0
+    database.execute("update public.islands set wave_best=%s where player_id=%s", (wave, owner))
+    built = construct(database, owner, treasury, request, uid="extra-lock-0001", manifest=manifest)
+    assert built["status"] == "done", built
+    assert money(built) == (173, 0, 173)
+    assert standing(database, owner, spot)[:2] == ("cannon", 1)
+    reconciles(database, keys(treasury)[0])
+
+
 def test_discount_purchase_and_half_actual_refund_share_the_island_account(database):
     owner, member, _, treasury, _ = initialized(database)
     initialize_member(database, member, owner, treasury)
@@ -996,7 +1027,7 @@ def through_adapter(connection, actor, treasury, request, uid):
 @pytest.mark.parametrize(
     "kind,spot", [("culverin", "cannon_1"), ("cannon", "cannon_8"), ("culverin", "cannon_8")]
 )
-def test_saved_v1_gated_structure_can_upgrade_and_demolish_without_opening_new_offers(
+def test_saved_v1_structure_omitted_from_trusted_catalogue_keeps_management_only(
     database, kind, spot
 ):
     owner, _, _, treasury, _ = initialized(database)

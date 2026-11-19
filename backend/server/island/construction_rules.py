@@ -42,7 +42,7 @@ class ConstructionIntent(BaseModel):
 
 
 def catalogue_manifest(catalogue: IslandCatalogue) -> dict:
-    """Serialize the server's current, flag-filtered catalogue for SQL rechecks."""
+    """Serialize the server's current trusted catalogue for SQL rechecks."""
     return {
         "kinds": {
             kind.kind: {

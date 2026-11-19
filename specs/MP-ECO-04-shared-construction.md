@@ -197,3 +197,36 @@ in 8.89 seconds**; full backend Ruff passed. Existing valid upgrades, actual-cos
 zero-refund demolition, replay, reservation, membership and grant-ordering checks remain
 part of those selections. Live operations and complete shared gameplay acceptance remain
 outside this bounded transaction component.
+
+### Current runtime catalogue compatibility
+
+Main `1350c2ba` retires the `defenses_v2` and `more_tower_spots` switches and
+replaces `catalogue_for_flags` with `runtime_catalogue`. Construction manifest
+checks now use that current runtime catalogue and require the culverin and the
+four extra tower spots. The removed switches and catalogue API are not restored.
+
+The saved-structure SQL cases still deliberately supply a restrictive trusted
+catalogue to the adapter. They verify that a stored instance may be managed
+without granting a new or replacement structure omitted by that catalogue;
+this is an explicit input-boundary check, not a retired feature-flag setting.
+Construction pricing, Engineer commitments, financial proof and actual-cost
+refund behavior are unchanged.
+
+Before this compatibility correction, the affected Python selection failed
+during collection because it imported the removed catalogue function. The
+corrected construction rule/store selection passed **40 tests in 1.99 seconds**.
+
+With the current main and personal Captain dependency integrated, the construction,
+historical-contract, personal and runtime-catalogue Python selection passed
+**126 tests in 6.96 seconds**. The construction/grant, personal Captain and legacy
+island PostgreSQL selection passed **132 tests in 14.42 seconds** in one process.
+The full disposable 76-migration chain applies twice; all migration versions are
+unique and parse, and backend-wide Ruff passes.
+
+Four of those PostgreSQL cases explicitly check the always-on extra plots at
+their target-island wave boundaries: `cannon_8` at 10, `cannon_9` at 20,
+`cannon_10` at 30 and `cannon_11` at 40. Each refuses one wave early without
+charging, binding a new claim or creating a building, then succeeds exactly at
+the boundary using the same action identity. This confirms the existing
+construction spot-unlock guard; no production permission or unlock rule was
+changed.

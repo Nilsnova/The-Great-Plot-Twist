@@ -12,7 +12,7 @@ from server.island.construction_rules import (
 INSTANCE = "00000000-0000-0000-0000-000000000010"
 
 
-def test_manifest_preserves_island_unlocks_and_always_on_runtime_kinds():
+def test_manifest_preserves_current_runtime_unlocks_and_kinds():
     catalogue = runtime_catalogue(load_island())
     manifest = catalogue_manifest(catalogue)
     assert manifest["kinds"]["wall"] == {
@@ -22,7 +22,8 @@ def test_manifest_preserves_island_unlocks_and_always_on_runtime_kinds():
     assert manifest["spots"]["wall_7"]["wave"] == 5
     assert manifest["spots"]["cannon_8"]["wave"] == 10
     assert manifest["engineerDiscountPercent"] == 10
-    assert "culverin" in manifest["kinds"]
+    assert manifest["kinds"]["culverin"]["prices"] == ["80", "160", "320", "640", "1280"]
+    assert "culverin" in manifest["spots"]["cannon_8"]["kinds"]
 
 
 def test_intent_keeps_a_demolition_quote_bound_to_its_instance_and_level():
