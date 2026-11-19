@@ -5,7 +5,7 @@
 // and placement retain the separate analytic top in surfaces.js (D062).
 import {surfaces} from '../world/places/surfaces.js';
 import {LEGACY_DEPTH} from '../world/projection.js';
-import {canvas, ellipse, linear, poly} from './paint.js';
+import {canvas, ellipse, linear, poly, radial, stroke} from './paint.js';
 import {cliffProfile, paintCliffFaces, paintGrassRim} from './coast-cliffs.js';
 import {paintHomeTerraces} from './home-terraces.js';
 import {meadowScale, paintMaterial, pathMaterialMask} from './village/terrain-materials.js';
@@ -18,12 +18,58 @@ const PATHS = {
 };
 const seeded = seed => () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
 const PATH_WIDTH = 2.2;
+const PAVING_WIDTH = 1.5;
 
 function meadowEdge(angle) {
   // The north Smugglers beach widens between the terrace shelves, like the three naval beaches.
   const north = Math.abs(angle - Math.PI * 1.5);
   const inward = Math.max(0, Math.min(1, (north - Math.PI / 9) / (Math.PI / 12)));
   return Math.min(meadowScale(angle), .865 + .12 * inward * inward * (3 - 2 * inward));
+}
+
+function paintBeachDetails(c, coast, beach, rim, materials) {
+  c.save();
+  c.clip(beach);
+  c.globalCompositeOperation = 'source-atop';
+  c.globalAlpha = .88;
+  c.fillStyle = linear(c, -16, -13, 15, 13, [[0, '#fff0bf83'], [.40, '#fbda9f38'], [.73, '#d2a97508'], [1, '#926d583d']]);
+  c.fill(beach);
+  for (const inset of [.953, .967, .979]) {
+    const wetSand = new Path2D(beach);
+    wetSand.addPath(coast(angle => inset + .006 * Math.sin(8 * angle - 1) + .004 * Math.cos(17 * angle), .003, 1));
+    c.fillStyle = linear(c, -14, -12, 14, 8, [[0, '#c9a27434'], [.44, '#a57c572c'], [1, '#945f512f']]);
+    c.fill(wetSand, 'evenodd');
+  }
+  // Scattered ridges and warm highlights stay in the dry top between the water and turf.
+  const texture = seeded(31507);
+  for (let i = 0; i < 48; i++) {
+    const index = Math.floor(texture() * (rim.length - 1)), {x, y} = rim[index];
+    const inset = .899 + texture() * .067, at = [x * inset, y * inset];
+    const width = .25 + texture() * .47, angle = Math.atan2(y, x) + Math.PI / 2;
+    c.fillStyle = i % 3 ? '#fff1c15a' : '#9263423e';
+    c.fill(ellipse(...at, width, .043 + texture() * .032, angle));
+    if (i % 5 === 0) {
+      c.fillStyle = '#976d5348'; c.fill(ellipse(at[0] + .17, at[1] - .095, .067, .045));
+    }
+  }
+  if (materials) paintMaterial(c, materials, 'sand', {alpha: .10});
+  c.restore();
+}
+
+function paintTurfBevel(c, coast, meadow, grassRadius) {
+  c.save();
+  c.clip(meadow);
+  c.globalCompositeOperation = 'source-atop';
+  const curve = angle => .023 + .021 * (.5 + .5 * Math.sin(angle * 6 + .5)) + .009 * Math.cos(angle * 13);
+  for (const width of [1.58, 1.39, 1.13, .92, .70, .47]) {
+    const band = new Path2D(meadow);
+    band.addPath(coast(angle => grassRadius(angle) - width * curve(angle), .012, 3));
+    c.fillStyle = '#38522a13';
+    c.fill(band, 'evenodd');
+  }
+  const crest = coast(angle => grassRadius(angle) - curve(angle) * .28, .012, 3);
+  stroke(c, crest, linear(c, -16, -14, 11, 12, [[0, '#d5ea89bb'], [.45, '#b7d87794'], [1, '#83ae523b']]), .125, .89);
+  c.restore();
 }
 
 const PAVERS = [
@@ -37,7 +83,7 @@ function paintPavers(c, paths, materials) {
   const bounds = {left: -SIZE.width / 2, top: -SIZE.height / 2, right: SIZE.width / 2, bottom: SIZE.height / 2};
   const random = seeded(18281), faces = new Path2D();
   c.save();
-  c.clip(pathMaterialMask(paths, PATH_WIDTH));
+  c.clip(pathMaterialMask(paths, PAVING_WIDTH));
   c.fillStyle = '#b0a288';
   c.fillRect(bounds.left, bounds.top, SIZE.width, SIZE.height);
   for (let row = bounds.top; row < bounds.bottom;) {
@@ -97,14 +143,15 @@ export function paintGround(id, density = 28, materials = null) {
   };
   const random = seeded(s.seed * 7919 + 17);
   paintTerrain(c, s, coast, random, materials);
-  // Stone village footpaths retain a thin bank of warm sand against the grass.
+  // The original path remains worn earth at the edges, with narrower stone laid on its centre.
   if (paths) {
     c.save(); c.clip(coast(.99));
-    for (const [padding, colour] of [[.16, '#a88c62'], [.067, '#e5c691'], [0, '#efd7a0']]) {
-      c.fillStyle = colour;
+    c.fillStyle = linear(c, -16, -12, 14, 13, [[0, '#c7b77712'], [.52, '#c2ac7427'], [1, '#b195592b']]);
+    for (const padding of [.16, .067, 0, -.105, -.21]) {
       c.fill(pathMaterialMask(paths, PATH_WIDTH, padding));
     }
-    paintPavers(c, paths, materials);
+    const paving = {...paths, clearings: paths.clearings.map(([x, z, radius]) => [x, z, radius * .76])};
+    paintPavers(c, paving, materials);
     c.clip(pathMaterialMask(paths, PATH_WIDTH));
     c.globalAlpha = materials ? .25 : 1;
     c.fillStyle = '#d7b273'; for (let i = 0; i < 120; i++) { const points = paths.lines[Math.floor(random() * paths.lines.length)], t = random(), j = Math.floor(t * (points.length - 1)), f = t * (points.length - 1) - j;
@@ -140,30 +187,31 @@ function paintTerrain(c, s, coast, random, materials) {
   c.fillStyle = '#f2d595'; c.fill(beach);
   if (materials) { c.save(); c.clip(beach); paintMaterial(c, materials, 'sand', {alpha: .9}); c.restore(); }
   c.save(); c.clip(beach);
-  c.fillStyle = linear(c, -16, -15, 15, 16, [[0, '#fff0b841'], [.47, '#ffebbc18'], [1, '#a2674737']]);
-  c.fill(beach);
-  c.lineWidth = .84; c.strokeStyle = '#e4bc83'; c.stroke(beach);
-  c.lineWidth = .25; c.strokeStyle = '#c89d66'; c.stroke(beach);
+  c.lineWidth = .84; c.strokeStyle = '#dec291'; c.stroke(beach);
+  c.lineWidth = .25; c.strokeStyle = '#bea374'; c.stroke(beach);
   c.fillStyle = '#e2bf7e'; for (let i = 0; i < 260; i++) { const a = random() * Math.PI * 2, k = .86 + random() * .13; c.fill(ellipse(Math.cos(a) * s.rx * k, Math.sin(a) * s.rz * k * .72, .07 + random() * .08, .05)); }
   c.restore();
+  paintBeachDetails(c, coast, beach, rim, materials);
   if (!materials) paintGrassRim(c, rim, beach);
-  // The meadow: a soft edge, a darker rim and a lighter heart.
-  const meadow = coast(materials ? meadowEdge : .85, .012, 3);
-  c.save(); c.clip(beach); c.translate(.07, .29); c.fillStyle = '#b49760'; c.fill(meadow); c.restore();
-  c.fillStyle = '#75bd54'; c.fill(meadow);
+  const grassRadius = materials ? meadowEdge : () => .85;
+  const meadow = coast(grassRadius, .012, 3);
+  c.save(); c.clip(beach); c.translate(.08, .33); c.fillStyle = '#9b7f56'; c.fill(meadow); c.restore();
+  c.fillStyle = '#73b64d'; c.fill(meadow);
   c.save(); c.clip(meadow);
-  const glow = c.createRadialGradient(-5, -7, 2, 0, 0, s.rx + 1.5);
-  glow.addColorStop(0, '#a6d768'); glow.addColorStop(.63, '#84c35a'); glow.addColorStop(1, '#62a94c');
+  const glow = c.createRadialGradient(-7, -8, 2, 1, 0, s.rx + 1.5);
+  glow.addColorStop(0, '#a8d66c'); glow.addColorStop(.54, '#82bd4b'); glow.addColorStop(1, '#5f9f46');
   c.fillStyle = glow; c.fill(meadow);
-  // Let the broad green light lead; fine grass detail should not compete with the buildings.
-  if (materials) paintMaterial(c, materials, 'grass', {alpha: .49});
-  c.lineWidth = .62; c.strokeStyle = '#559445'; c.stroke(meadow);
-  // Soft patches of darker and lighter grass.
-  c.globalAlpha = materials ? .3 : 1;
-  for (let i = 0; i < 26; i++) { const x = (random() - .5) * s.rx * 1.6, z = (random() - .5) * s.rz * 1.6; c.fillStyle = random() > .5 ? '#86cf5e66' : '#63b34f55'; c.fill(ellipse(x, z * .72, 1.2 + random() * 2.2, .7 + random() * 1.2)); }
+  if (materials) paintMaterial(c, materials, 'grass', {alpha: .34});
+  for (let i = 0; i < 26; i++) {
+    const x = (random() - .5) * s.rx * 1.6, y = (random() - .5) * s.rz * 1.6 * LEGACY_DEPTH;
+    const colour = random() > .5 ? '#c2d276' : '#3a7b3f';
+    const width = 2.2 + random() * 2.6, depth = 1.4 + random() * 2.15;
+    c.fillStyle = radial(c, x, y, width, [[0, `${colour}50`], [.43, `${colour}26`], [1, `${colour}00`]]);
+    c.fill(ellipse(x, y, width, depth));
+  }
   c.restore();
-  c.lineWidth = .16; c.strokeStyle = '#3d7f36'; c.stroke(meadow);
-  if (materials) { c.save(); c.clip(beach); c.lineWidth = .08; c.strokeStyle = '#d6e592'; c.stroke(meadow); c.restore(); }
+  paintTurfBevel(c, coast, meadow, grassRadius);
+  stroke(c, meadow, '#486e39', .145, .9);
   paintHomeTerraces(c, rim, beach, materials);
 }
 function nearPath(paths, x, z, reach) {
