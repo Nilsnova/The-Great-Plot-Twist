@@ -5,6 +5,7 @@ import {projectGround, unprojectGround} from '../world/projection.js';
 import {surfaceClass} from '../world/places/surfaces.js';
 import {ISLAND_PLACE} from './spots.js';
 import {padCorners as corners, TOWER_PAD} from './defense-display.js';
+import {foundationMaterial, FOOTING} from './foundation-finish.js';
 
 const FORMS = {
   house: {width: 1.36, depth: .86, rear: .46, reach: 1.7},
@@ -25,6 +26,7 @@ const SIDE_STONE = [[0x8d826e, 0xb0a18a], [0x9b8d77, 0xb5a289]].map(pair => pair
 const ROW_OFFSETS = [.19, .38, .10], BLOCK_WIDTHS = [.58, .52, .43, .60, .48];
 const PAD_FACES = [2, 3, 4, 5, 6];
 const onLand = (x, z) => surfaceClass(ISLAND_PLACE, x, z) !== 0;
+const MORTAR_FINISH = [0, 0, FOOTING.joint];
 
 function clipEdge(polygon, axis, limit, sign) {
   const clipped = [];
@@ -72,11 +74,12 @@ function retainingToe(outside, x, z, footZ) {
 }
 
 function geometryOf(foundations) {
-  const points = [], colors = [], indices = [];
-  function vertex(x, z, rise, color, alpha = 1, light = 1) {
+  const points = [], colors = [], finishes = [], indices = [];
+  function vertex(x, z, rise, color, alpha = 1, light = 1, finish = MORTAR_FINISH) {
     const point = projectGround(x, z), index = points.length / 3;
     points.push(point.x, point.y + rise, rise);
     colors.push(color.r * light, color.g * light, color.b * light, alpha);
+    finishes.push(...finish);
     return index;
   }
   function quad(a, b, c, d) { indices.push(a, b, c, a, c, d); }
@@ -84,8 +87,10 @@ function geometryOf(foundations) {
   // Ground shadows all go first, so a nearby occupied footing keeps its own highlights.
   for (const {x, z, slot, ruin} of foundations) {
     const {width, depth, rear, reach} = FORMS[slot], scale = ruin ? .72 : 1;
-    appendGroundShadow((gx, gz, tint, alpha) => vertex(gx, gz, 0, tint, alpha), indices, {
-      x, z: z - rear + .13, width: (width + .08) * scale, depth: (depth + .24) * scale,
+    const footZ = z - rear + .13, halfWidth = (width + .08) * scale, halfDepth = (depth + .24) * scale;
+    appendGroundShadow((gx, gz, tint, alpha) => vertex(gx, gz, 0, tint, alpha, 1,
+      [(gx - x) / halfWidth, (gz - footZ) / halfDepth, FOOTING.shadow]), indices, {
+      x, z: footZ, width: halfWidth, depth: halfDepth,
       reach: reach * (ruin ? .32 : 1), opacity: ruin ? .51 : 1,
     });
   }
@@ -103,45 +108,49 @@ function geometryOf(foundations) {
         const next = edge + 1, stone = edge < 4 ? RETAINING_SIDE : RETAINING_FRONT;
         const [ax, az] = outside[edge], [bx, bz] = outside[next], a = toes[edge], b = toes[next];
         if (a.height === 0 && b.height === 0) continue;
-        const course = (across, fraction, tint) => {
+        const course = (across, fraction, tint, material) => {
           const gx = lerp(lerp(ax, bx, across), lerp(a.x, b.x, across), fraction);
           const gz = lerp(lerp(az, bz, across), lerp(a.z, b.z, across), fraction);
           const rise = lerp(a.height, b.height, across) * fraction;
           const projected = projectGround(gx, gz), behind = unprojectGround(projected.x, projected.y + rise);
           // The farther end embeds into the existing earth as the projected stone meets the top.
           const alpha = onLand(behind.x, behind.z) ? 1 - .85 * THREE.MathUtils.smoothstep(fraction, .36, 1) : 1;
-          return vertex(gx, gz, rise, tint, alpha);
+          return vertex(gx, gz, rise, tint, alpha, 1, [across, 1 - fraction, material]);
         };
-        const panel = (from, to, upper, lower, upperTint, lowerTint = upperTint) => quad(
-          course(from, upper, upperTint), course(to, upper, upperTint), course(to, lower, lowerTint), course(from, lower, lowerTint),
+        const panel = (from, to, upper, lower, upperTint, lowerTint = upperTint, material = FOOTING.retaining) => quad(
+          course(from, upper, upperTint, material), course(to, upper, upperTint, material),
+          course(to, lower, lowerTint, material), course(from, lower, lowerTint, material),
         );
         panel(0, 1, 0, .41, SHOULDER, stone);
-        panel(0, 1, .41, .46, RETAINING_JOINT);
+        panel(0, 1, .41, .46, RETAINING_JOINT, RETAINING_JOINT, FOOTING.joint);
         panel(0, 1, .46, 1, stone, EMBEDDED_STONE);
         if (Math.hypot(bx - ax, bz - az) > .55) {
-          panel(.64, .689, .08, .41, RETAINING_JOINT, EMBEDDED_STONE);
-          panel(.34, .384, .46, .94, RETAINING_JOINT, EMBEDDED_STONE);
+          panel(.64, .689, .08, .41, RETAINING_JOINT, EMBEDDED_STONE, FOOTING.joint);
+          panel(.34, .384, .46, .94, RETAINING_JOINT, EMBEDDED_STONE, FOOTING.joint);
         }
       }
     }
     const capWidth = width - .065, capDepth = depth - .065;
     const inset = corners(x, footZ, capWidth, capDepth);
-    const top = inset.map(([gx, gz]) => vertex(gx, gz, height, LIP));
+    const top = inset.map(([gx, gz]) => vertex(gx, gz, height, LIP, 1, 1, [.5, 1, FOOTING.riser]));
     // From this fixed ground projection the front and right cut faces carry the height.
     for (const edge of PAD_FACES) {
       const next = edge + 1, [ax, az] = outside[edge], [bx, bz] = outside[next];
       const [face, shoulder] = SIDE_STONE[edge < 4 ? 0 : 1];
-      const footA = vertex(ax, az, 0, GROUT, 1, .79), footB = vertex(bx, bz, 0, GROUT, 1, .79);
-      const lipA = vertex(ax, az, height * .76, shoulder), lipB = vertex(bx, bz, height * .76, shoulder);
+      const footA = vertex(ax, az, 0, GROUT, 1, .79, [0, 0, FOOTING.riser]);
+      const footB = vertex(bx, bz, 0, GROUT, 1, .79, [1, 0, FOOTING.riser]);
+      const lipA = vertex(ax, az, height * .76, shoulder, 1, 1, [0, .76, FOOTING.riser]);
+      const lipB = vertex(bx, bz, height * .76, shoulder, 1, 1, [1, .76, FOOTING.riser]);
       quad(footA, footB, lipB, lipA);
       quad(lipA, lipB, top[next], top[edge]);
       const length = Math.hypot(bx - ax, bz - az);
       if (length < .6) continue;
       const blocks = length > 1.2 ? 3 : 2;
-      const side = (t, rise, tint) => vertex(ax + (bx - ax) * t, az + (bz - az) * t, height * rise, tint);
+      const side = (t, rise, tint, end) => vertex(ax + (bx - ax) * t, az + (bz - az) * t, height * rise, tint,
+        1, 1, [end, rise, FOOTING.riser]);
       for (let block = 0; block < blocks; block++) {
         const from = block / blocks + .022, to = (block + 1) / blocks - .022;
-        quad(side(from, .12, face), side(to, .12, face), side(to, .68, shoulder), side(from, .68, shoulder));
+        quad(side(from, .12, face, 0), side(to, .12, face, 1), side(to, .68, shoulder, 1), side(from, .68, shoulder, 0));
       }
     }
     // The grout bed and all dressed stone stay inside the existing octagonal pad.
@@ -150,9 +159,12 @@ function geometryOf(foundations) {
     pavedCap(inset, x, footZ, capWidth, capDepth, (polygon, tint) => {
       const [cx, cz] = polygon.reduce(([sx, sz], [gx, gz]) => [sx + gx / polygon.length, sz + gz / polygon.length], [0, 0]);
       const bevel = polygon.map(([gx, gz]) => [gx + (cx - gx) * .18, gz + (cz - gz) * .18]);
+      const xs = polygon.map(([gx]) => gx), zs = polygon.map(([, gz]) => gz);
+      const minX = Math.min(...xs), minZ = Math.min(...zs);
+      const width = Math.max(.025, Math.max(...xs) - minX), depth = Math.max(.025, Math.max(...zs) - minZ);
       const lit = ([gx, gz], rise, light) => {
         const underGun = 1 - Math.min(1, Math.hypot((gx - x) / .86, (gz - footZ - .05) / .50));
-        return vertex(gx, gz, rise, tint, 1, light * (1 - .31 * underGun));
+        return vertex(gx, gz, rise, tint, 1, light * (1 - .31 * underGun), [(gx - minX) / width, (gz - minZ) / depth, FOOTING.tread]);
       };
       const rim = bevel.map(point => lit(point, height + .012, 1));
       for (let i = 1; i < rim.length - 1; i++) indices.push(rim[0], rim[i], rim[i + 1]);
@@ -167,6 +179,7 @@ function geometryOf(foundations) {
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(points, 3));
   geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 4));
+  geometry.setAttribute('footingFinish', new THREE.Float32BufferAttribute(finishes, 3));
   geometry.setIndex(indices);
   return geometry;
 }
@@ -188,10 +201,7 @@ export function makeBuildingFoundations(root, name = 'island-building-foundation
           mesh.geometry.dispose();
           mesh.geometry = geometry;
         } else {
-          const material = new THREE.MeshBasicMaterial({vertexColors: true, transparent: true,
-            side: THREE.DoubleSide, depthTest: false, depthWrite: false, toneMapped: false});
-          material.forceSinglePass = true;
-          mesh = new THREE.Mesh(geometry, material);
+          mesh = new THREE.Mesh(geometry, foundationMaterial());
           mesh.name = name;
           mesh.renderOrder = 21;
           mesh.frustumCulled = false;
