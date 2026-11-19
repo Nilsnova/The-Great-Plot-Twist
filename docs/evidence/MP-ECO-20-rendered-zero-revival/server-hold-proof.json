@@ -1,0 +1,15 @@
+{
+  "source": "Read-only completed hold, operation, receipt, journal and account-ledger joins after the ordinary rendered run",
+  "observedAt": "2026-11-19T18:28:09.533Z",
+  "facts": {
+    "required_ms": 2000,
+    "restore_hp_units": 500000,
+    "event_seq": 52,
+    "elapsed_ms": 4283,
+    "helper_private_balance": "200",
+    "shared_balance": "0",
+    "shared_committed": "0",
+    "journal_events": 1,
+    "treasury_entries": 1
+  }
+}
