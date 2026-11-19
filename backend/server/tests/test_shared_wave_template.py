@@ -1,10 +1,12 @@
 """Coherent shared bell preparation cannot mix static facts or personal-wallet views."""
 
 from copy import deepcopy
+from dataclasses import replace
 
 import pytest
 
 from server.errors import ApiError
+from server.island import rescue
 from server.island.catalogue import load_island
 from server.island.rules import weather_for
 from server.island.shared_snapshot_models import SnapshotFacts
@@ -94,3 +96,19 @@ def test_money_hp_and_personal_progress_do_not_become_the_static_world_fingerpri
     assert expected_source(SnapshotFacts.model_validate(first)) == expected_source(
         SnapshotFacts.model_validate(second)
     )
+
+
+@pytest.mark.anyio
+async def test_finish_policy_freezes_server_restart_and_kept_rescue_eligibility():
+    catalogue = load_island()
+    changed = replace(catalogue, waves=replace(catalogue.waves, restart_back=4))
+    template, _basis = await prepare_shared_wave(
+        Snapshots(), changed, ACTOR, OWNER, weather_for(changed, "calm"), 4242, ["rescue"],
+    )
+    assert template["finishPolicy"] == {
+        "restartBack": 4,
+        "rescue": {"enabled": True, "fromWave": rescue.RESCUE_FROM_WAVE,
+                   "lastWave": rescue.RESCUE_LAST_WAVE, "restartBack": 3},
+    }
+    without, _basis = await prepare(Snapshots())
+    assert without["finishPolicy"]["rescue"]["enabled"] is False

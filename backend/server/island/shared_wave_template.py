@@ -7,7 +7,7 @@ adopts health or changes a wave; the canonical SQL start performs those checks.
 from pydantic import ValidationError
 
 from server.errors import ApiError
-from server.island import rules, shared_snapshot, treasury_store
+from server.island import rescue, rules, shared_snapshot, treasury_store
 from server.island.catalogue import IslandCatalogue, Weather
 from server.island.codes import CODE_FORMAT
 from server.island.shared_snapshot_models import SnapshotFacts
@@ -78,6 +78,15 @@ async def prepare_shared_wave(
     )
     template["createWave"]["seed"] = seed
     template["weatherLabel"] = weather.label
+    template["finishPolicy"] = {
+        "restartBack": catalogue.waves.restart_back,
+        "rescue": {
+            "enabled": "rescue" in kept_rules,
+            "fromWave": rescue.RESCUE_FROM_WAVE,
+            "lastWave": rescue.RESCUE_LAST_WAVE,
+            "restartBack": rescue.restart_back(catalogue.waves.restart_back, True),
+        },
+    }
     template["expectedSource"] = expected_source(facts)
     played = rules.next_wave(catalogue, facts.waveBest, facts.nextWave)
     houses = sum(row.level for row in facts.buildings if row.kind == "house")
