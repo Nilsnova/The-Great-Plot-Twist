@@ -2,11 +2,14 @@
 
 import re
 from collections import Counter
+from collections.abc import Hashable, Iterable
 from uuid import UUID
+
+from pydantic import JsonValue
 
 from server.island.treasury_models import decimal_integer, decimal_string
 from server.wallet import WALLET_REASONS
-from tools.economy.conversion_models import Policy, Snapshot
+from tools.economy.conversion_models import Island, Obligation, Policy, Snapshot
 
 SOURCE_FAMILIES = {
     "wallets",
@@ -22,7 +25,7 @@ SOURCE_FAMILIES = {
 }
 
 
-def origin_complete(obligation):
+def origin_complete(obligation: Obligation) -> bool:
     """Require old product terms, not only a generic obligation-kind label."""
     fields = {"recipientMode"}
     if obligation.kind == "wave_claim":
@@ -70,13 +73,13 @@ def origin_complete(obligation):
     return True
 
 
-def findings(snapshot: Snapshot, policy: Policy) -> list[dict]:
+def findings(snapshot: Snapshot, policy: Policy) -> list[dict[str, str]]:
     problems = []
 
-    def record(code, subject):
+    def record(code: str, subject: object) -> None:
         problems.append({"code": code, "subject": str(subject)})
 
-    def unique(values, subject):
+    def unique(values: Iterable[Hashable], subject: object) -> None:
         if any(count > 1 for count in Counter(values).values()):
             record("duplicate_identity", subject)
 
@@ -253,7 +256,7 @@ def findings(snapshot: Snapshot, policy: Policy) -> list[dict]:
     return sorted(problems, key=lambda finding: (finding["code"], finding["subject"]))
 
 
-def island_plan(island, policy):
+def island_plan(island: Island, policy: Policy) -> dict[str, JsonValue]:
     """Describe proposed grant and refund entitlements; no cash or asset is written."""
     bases = []
     for building in sorted(island.buildings, key=lambda row: str(row.instanceId)):

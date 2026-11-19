@@ -8,27 +8,28 @@ import argparse
 import hashlib
 import json
 from pathlib import Path
+from typing import Never
 
-from pydantic import ValidationError
+from pydantic import JsonValue, ValidationError
 
 from tools.economy.conversion_models import Policy, Snapshot
 from tools.economy.conversion_rules import findings, island_plan
 
 
-def encoded(value):
+def encoded(value: object) -> str:
     return json.dumps(
         value, sort_keys=True, separators=(",", ":"), ensure_ascii=True, allow_nan=False
     )
 
 
-def fingerprint(value):
+def fingerprint(value: object) -> str:
     return hashlib.sha256(encoded(value).encode()).hexdigest()
 
 
-def strict_json(path):
+def strict_json(path: Path) -> JsonValue:
     """Duplicate keys and non-JSON numeric constants cannot hide policy decisions."""
 
-    def object_pairs(pairs):
+    def object_pairs(pairs: list[tuple[str, JsonValue]]) -> dict[str, JsonValue]:
         result = {}
         for key, value in pairs:
             if key in result:
@@ -36,7 +37,7 @@ def strict_json(path):
             result[key] = value
         return result
 
-    def reject_constant(_value):
+    def reject_constant(_value: str) -> Never:
         raise ValueError("non-JSON numeric constant")
 
     return json.loads(
@@ -44,7 +45,7 @@ def strict_json(path):
     )
 
 
-def snapshot_facts(snapshot):
+def snapshot_facts(snapshot: Snapshot) -> dict[str, JsonValue]:
     """Canonicalize collection order without rewriting saved field values."""
     value = snapshot.model_dump(mode="json")
     for family, key in (
@@ -71,14 +72,14 @@ def snapshot_facts(snapshot):
     return value
 
 
-def policy_facts(policy):
+def policy_facts(policy: Policy) -> dict[str, JsonValue]:
     value = policy.model_dump(mode="json")
     for field in ("selectedIslands", "reviewedBy", "retiredSkillIds"):
         value[field].sort()
     return value
 
 
-def invalid_findings(error, source):
+def invalid_findings(error: ValidationError, source: str) -> list[dict[str, str]]:
     return [
         {
             "code": "invalid_" + source,
@@ -89,7 +90,13 @@ def invalid_findings(error, source):
     ]
 
 
-def preview(snapshot_value, policy_value, *, expected_snapshot=None, expected_policy=None):
+def preview(
+    snapshot_value: object,
+    policy_value: object,
+    *,
+    expected_snapshot: str | None = None,
+    expected_policy: str | None = None,
+) -> dict[str, JsonValue]:
     report = {
         "schemaVersion": 1,
         "status": "blocked",
@@ -138,7 +145,7 @@ def preview(snapshot_value, policy_value, *, expected_snapshot=None, expected_po
     return report
 
 
-def main():
+def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("snapshot", type=Path)
     parser.add_argument("policy", type=Path)
