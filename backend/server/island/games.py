@@ -35,6 +35,7 @@ from server.game.islet_store import player_not_set_up
 from server.island import personal_captain_store, store
 from server.island.codes import read_code, shown
 from server.island.store import Island
+from server.island.treasury import resolve_economy_context
 from server.supabase_admin import SupabaseAdmin, SupabaseRejected
 
 logger = logging.getLogger(__name__)
@@ -203,9 +204,32 @@ async def game_of(admin: SupabaseAdmin, island: Island, role: str, members: int)
 
 
 async def create(admin: SupabaseAdmin, starting_coins: int, player_id: str) -> tuple[Game, bool]:
-    """Your own game: the island is made on first use (and the starting coins paid once), the
-    host row written or stamped. Answers (the game, whether it was made just now)."""
-    island, created = await store.open_island_made(admin, player_id, starting_coins)
+    """Open or resume your host game without initializing an admitted shared island."""
+    try:
+        context = await resolve_economy_context(admin, player_id, player_id)
+    except ApiError as error:
+        if error.code != "no_such_island":
+            raise
+        context = None
+    if context is not None and context.mode == "island_shared":
+        rows = await admin.select_rows(
+            "islands",
+            {
+                "select": "player_id,code,wave_best,flags",
+                "player_id": f"eq.{context.island_owner}",
+                "limit": "1",
+            },
+        )
+        if not rows:
+            raise no_such_game()
+        row = store.read_model(store.IslandRow, rows[0])
+        if row.player_id != context.island_owner:
+            raise store.unreadable()
+        island = Island(row.player_id, store.checked_code(row.code), row.wave_best, row.flags)
+        created = False
+    else:
+        # The existing SQL opener fences admission races before any private grant.
+        island, created = await store.open_island_made(admin, player_id, starting_coins)
     joined = await run_join(admin, island, player_id)
     return await game_of(admin, island, "host", joined.members), created
 
