@@ -10,22 +10,18 @@ const SOURCE = '3bdd8eda16470795fdedd68c42fffab54e5f2ced';
 const REPAIR = '/api/island/structures/repair';
 
 async function dismissGuides(page) {
+  let dismissed=false;
   for(let turn=0;turn<8;turn++) {
-    const cutscene=page.locator('dialog.cutscene[open]');
-    if(await cutscene.count()) {await cutscene.getByRole('button',{name:'Skip',exact:true}).click();continue;}
-    const goal=page.locator('.goal-card[open]');
-    if(await goal.count()) {await goal.getByRole('button',{name:'Got it',exact:true}).click();continue;}
-    const tutorial=page.locator('.tutorial-card[open]');
-    if(await tutorial.count()) {
-      const skip=tutorial.getByRole('button',{name:'Skip',exact:true});
-      if(await skip.count()) {await skip.click();continue;}
-    }
-    return;
+    const guides=page.locator('dialog.cutscene[open],.goal-card[open],.tutorial-card[open]');
+    if(!await guides.count())return dismissed;
+    // Escape closes the actual top modal before a delayed underlying arrival can be skipped.
+    await page.keyboard.press('Escape'); dismissed=true;
   }
   throw new Error('Ordinary guide dismissal did not finish.');
 }
 
 async function openCard(page, spot) {
+  await page.evaluate(() => window.__island?.island.ui.close());
   await dismissGuides(page);
   await page.evaluate(spot => {
     const island = window.__island?.island;
@@ -56,7 +52,7 @@ async function damagedCard(page, spot, timeout=90000) {
 
 async function paidClick(page, spot) {
   await openCard(page,spot);
-  await dismissGuides(page);
+  if(await dismissGuides(page))await openCard(page,spot);
   const response = page.waitForResponse(reply => reply.url().endsWith(REPAIR)
     && reply.request().method()==='POST',{timeout:20000});
   await page.locator('.island-card[open] .recovery-repair:not([disabled])').click();
