@@ -72,3 +72,7 @@ selection, physical-device performance, Safari or final human visual acceptance.
 
 No live migration, production flag, deployment or merge occurred. A different
 human reviews the current revision after Johannes's own explain-back.
+
+## 19 November house family revision
+
+The active [transparent source sheet](../../../frontend/public/village/houses-v2.png) uses the Home Island concept supplied by Johannes Franz Lang on 19 November for light, perspective and materials. It was generated as original artwork with OpenAI's built-in image generation. The [source report](asset-report-v2.json) records its hash, exact prompt, alpha, crops and measured ground feet. The [compiler receipt](house-bake-v2.json) covers the nine frames at 4×, 2× and 1.5×. The source and prior normalized sheet remain available for historical proofs. Production downloads only the active WebP.
