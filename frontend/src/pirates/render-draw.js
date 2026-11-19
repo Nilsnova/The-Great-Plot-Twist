@@ -14,7 +14,7 @@ import { FRAMES, SHIP_VARIANTS, SHIP_SIZE, SHIP_DRAWN_SIZE, SHIP_DRAWN, WHITE, o
 
 // The arguments in this order (render.js passes them so; positional, so the minifier shortens them).
 export function createDraw(rect, layers, bands, posts, ships, crew, guards, splashes, wallFlash, K, still, low,
-  drawnX, drawnY, effects, spark, nativeCaptains = false) {
+  drawnX, drawnY, effects, spark, nativeCaptains = false, contacts = null) {
   // The renderer's clock and latest state as update() last set them (render.js calls sync() right after, every frame).
   let clock = 0, simNow = 0, latest = null, captain = null, revive = null, figures = null;
   function sync(now, simTime, state, own, helping, drawnAt) { clock = now; simNow = simTime; latest = state; captain = own; revive = helping; figures = drawnAt; }
@@ -106,7 +106,9 @@ export function createDraw(rect, layers, bands, posts, ships, crew, guards, spla
     if (!r) return;
     // A brute (wave 20+) is bigger and redder than the rest of the crowd.
     const big = boarder.brute ? BRUTE_LOOK.scale : 1, look = boarder.brute ? BRUTE_LOOK.tint : {};
-    layer.push(r, x, y, r.w * K() * big, r.h * K() * big, .5, r.anchor * K() * big, opt(1, look, meta.facing < 0, hit ? (rect[cartoon] ? .35 : .7) : 0));
+    const scale = K() * big;
+    contacts?.add(boarder.x, boarder.z, scale);
+    layer.push(r, x, y, r.w * scale, r.h * scale, .5, r.anchor * scale, opt(1, look, meta.facing < 0, hit ? (rect[cartoon] ? .35 : .7) : 0));
     if (boarder.hp < boarder.maxHp) {
       const top = y + (r.h - r.anchor) * K() - .35, w = .9, share = Math.max(0, boarder.hp / boarder.maxHp);
       layer.push(rect[WHITE], x - w / 2 - .0625, top - .0625, w + .125, .25, 0, 0, tinted(DARK, .8));
@@ -130,7 +132,9 @@ export function createDraw(rect, layers, bands, posts, ships, crew, guards, spla
     const id = hit ? 'militia-hit' : striking ? 'militia-strike' : unit.state === 'walking' && !still() ? MILITIA_IDS[1 + step] : 'militia';
     const r = rect[id];
     if (!r) return;
-    layer.push(r, x, y, r.w * K(), r.h * K(), .5, r.anchor * K(), opt(1, null, meta.facing < 0, hit ? .35 : 0));
+    const scale = K();
+    contacts?.add(unit.x, unit.z, scale);
+    layer.push(r, x, y, r.w * scale, r.h * scale, .5, r.anchor * scale, opt(1, null, meta.facing < 0, hit ? .35 : 0));
     if (unit.hp < unit.maxHp) {
       const top = y + (r.h - r.anchor) * K() - .35, w = .9, share = Math.max(0, unit.hp / unit.maxHp);
       layer.push(rect[WHITE], x - w / 2 - .0625, top - .0625, w + .125, .25, 0, 0, tinted(DARK, .8));

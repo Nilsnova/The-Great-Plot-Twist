@@ -38,6 +38,7 @@ import { makeDefenseRange } from '../island/defense-range.js';
 import { defenseDisplayAnchors } from '../island/defense-display.js';
 import { createSmoother } from './smoothing.js';
 import { projectGround } from '../world/projection.js';
+import { createActorContacts } from '../world/actor-contact.js';
 import { towerLook } from './tower-health.js';
 import { UNIT, spriteVertex, spriteFragment, createLayer, CAPACITY, LAYER_ORDER, BANDS, BAND_CAPACITY, BAND_FROM,
   BAND, POST_CAPACITY, fogVertex, fogFragment, pool, JAM_FRAMES, opt, RED, GOLD, WHITE, DARK, WRECK_SECONDS,
@@ -73,6 +74,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   beamFrom = null, place = null, recoveryV1 = false, nativeCaptains = false, fx = () => scene.userData?.pixelFx ?? null }) {
   const owned = [], root = new THREE.Group(); root.name = 'pirate-wave'; scene.add(root);
   const combatOverlay = createCombatOverlay(root);
+  const contacts = place === 'home_islet' ? createActorContacts(root, 'pirate-foot-shadows', 320) : null;
   const rect = {};
   for (const [id, r] of Object.entries(atlas.rects)) {
     // A hair in from every edge so neighbours never bleed in.
@@ -168,7 +170,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   const spark = (x, y, options) => { const f = effects(); if (!f || still()) return; f.burst(x, y, low() ? { ...options, count: Math.ceil(options.count / 3) } : options); };
 
   const parts = createDraw(rect, layers, bands, posts, ships, crew, guards, splashes, wallFlash, K, still, low,
-    drawnX, drawnY, effects, spark, nativeCaptains);
+    drawnX, drawnY, effects, spark, nativeCaptains, contacts);
   const events = createEvents(parts, posts, ships, crew, guards, fire, wallFlash, balls, sinkers, wrecks, splashes,
     shells, bursts, tracers, jamShots, warnings, fallen, strikes, K, still, low, effects, spark);
   function onEvent(event) {
@@ -212,6 +214,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   function draw() {
     for (const layer of layerList) layer.begin();
     for (const layer of bands) layer.begin();
+    contacts?.begin();
     const state = latest;
     if (state && visible) {
       for (const wreck of wrecks.items) {
@@ -270,6 +273,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     }
     for (const layer of layerList) layer.end();
     for (const layer of bands) layer.end();
+    contacts?.end();
     wallConnections.show(posts, state?.walls ?? [], {visible, inBreak});
     // Reused every frame (no new Map per frame): this frame's walls and towers by id.
     const walls = frameWalls, towers = frameTowers;
@@ -396,6 +400,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       if (disposed) return; disposed = true;
       wallConnections.dispose();
       combatOverlay.dispose();
+      contacts?.dispose();
       defenseSelection?.dispose();
       defenseRange?.dispose();
       root.removeFromParent(); root.clear();
