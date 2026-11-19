@@ -8,7 +8,7 @@ import {ARSENAL, CAMPAIGN_BUILDINGS} from '../../src/island/spots.js';
 
 const source = readFileSync(new URL('../../public/village/services-v1.png', import.meta.url));
 const report = JSON.parse(readFileSync(new URL('../../../docs/evidence/VIS-13-services/asset-report.json', import.meta.url)));
-const fixed = JSON.parse(readFileSync(new URL('../../../docs/evidence/VIS-05-hero/fixed-buildings-v2.json', import.meta.url)));
+const fixed = JSON.parse(readFileSync(new URL('../../../docs/evidence/VIS-05-hero/fixed-buildings-v3.json', import.meta.url)));
 const fixedSource = readFileSync(new URL(`../../public/${sheets.villageArsenal.file}`, import.meta.url));
 const harbor = JSON.parse(readFileSync(new URL('../../../docs/evidence/VIS-13-services/home-harbor-asset-v2.json', import.meta.url)));
 const harborSource = readFileSync(new URL(`../../public/${sheets.villageHarbor.file}`, import.meta.url));

@@ -6,7 +6,7 @@ import {frames, sheets} from '../../src/art/village/buildings.js';
 import {islandFrame} from '../../src/art/registry.js';
 
 const source = readFileSync(new URL(`../../public/${sheets.buildingsHero.file}`, import.meta.url));
-const report = JSON.parse(readFileSync(new URL('../../../docs/evidence/VIS-05-hero/fixed-buildings-v2.json', import.meta.url)));
+const report = JSON.parse(readFileSync(new URL('../../../docs/evidence/VIS-05-hero/fixed-buildings-v3.json', import.meta.url)));
 const cabin = report.cells.cabin;
 
 describe('approved cabin source', () => {

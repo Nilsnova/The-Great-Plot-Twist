@@ -1,6 +1,6 @@
 // Original warm timber cabin, normalized to the existing world foot.
 export const sheets = {
-  buildingsHero: {file: 'village/home-fixed-v2.png', width: 1774, height: 887},
+  buildingsHero: {file: 'village/home-fixed-v3.png', width: 1774, height: 887},
 };
 
 export const frames = {
