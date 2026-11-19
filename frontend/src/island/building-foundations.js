@@ -17,16 +17,14 @@ const FORMS = {
   island_harbor: {width: 1.52, depth: .95, rear: .48},
   island_techhub: {width: 1.72, depth: 1.16, rear: .58},
 };
-const PALETTE = [0x283021, 0x666960, 0x96917a, 0xc4b185, 0xcbb68c, 0x655f51, 0xdec99f, 0xa7a38b].map(
-  hex => new THREE.Color(hex),
-);
-const [SHADOW, EAST, FRONT, BEVEL, CAP, MORTAR, SUNLIT, LEE] = PALETTE;
+const SHADOW = new THREE.Color(0x283021);
 const RETAINING_STONE = [0xc3a47b, 0xb0916b, 0x9a7f61, 0x80694f, 0x726049].map(hex => new THREE.Color(hex));
 const [SHOULDER, RETAINING_FRONT, RETAINING_SIDE, RETAINING_JOINT, EMBEDDED_STONE] = RETAINING_STONE;
-const COAST_PAVING = [0xb39372, 0xb99b79, 0xc0a381, 0xad8e6e, 0xb69b7d].map(hex => new THREE.Color(hex));
-const COAST_MORTAR = new THREE.Color(0x8d765d), COAST_LIP = new THREE.Color(0xb29a7a);
+const LIMESTONE = [0xcabea2, 0xd7c8aa, 0xb8ac96, 0xcbb79b, 0xd1c2a6].map(hex => new THREE.Color(hex));
+const GROUT = new THREE.Color(0x84765e), LIP = new THREE.Color(0xad9a7f);
+const SIDE_STONE = [[0x8d826e, 0xb0a18a], [0x9b8d77, 0xb5a289]].map(pair => pair.map(hex => new THREE.Color(hex)));
 const ROW_OFFSETS = [.19, .38, .10], BLOCK_WIDTHS = [.58, .52, .43, .60, .48];
-const PAD_FACES = [[2, EAST], [3, EAST], [4, FRONT], [5, FRONT], [6, FRONT]];
+const PAD_FACES = [2, 3, 4, 5, 6];
 const onLand = (x, z) => surfaceClass(ISLAND_PLACE, x, z) !== 0;
 
 function clipEdge(polygon, axis, limit, sign) {
@@ -43,17 +41,16 @@ function clipEdge(polygon, axis, limit, sign) {
   return clipped;
 }
 
-function pavedCap(outline, x, z, width, depth, fill) {
-  // A continuous bed closes the rim. Staggered joints remain visible between individual blocks.
-  fill(outline, COAST_MORTAR);
+function pavedCap(outline, x, z, width, depth, tile) {
+  // Staggered cuts keep the broad carriage deck legible at the mobile village zoom.
   for (const [row, offset] of ROW_OFFSETS.entries()) {
     const front = z - depth + row * depth * 2 / ROW_OFFSETS.length;
     const back = front + depth * 2 / ROW_OFFSETS.length;
-    const alongRow = clipEdge(clipEdge(outline, 1, front + .014, 1), 1, back - .014, -1);
+    const alongRow = clipEdge(clipEdge(outline, 1, front + .023, 1), 1, back - .023, -1);
     for (let left = x - width - offset, column = 0; left < x + width; column++) {
       const right = left + BLOCK_WIDTHS[(row + column) % BLOCK_WIDTHS.length];
-      const stone = clipEdge(clipEdge(alongRow, 0, left + .016, 1), 0, right - .016, -1);
-      if (stone.length >= 3) fill(stone, COAST_PAVING[(row * 3 + column * 7) % COAST_PAVING.length]);
+      const stone = clipEdge(clipEdge(alongRow, 0, left + .024, 1), 0, right - .024, -1);
+      if (stone.length >= 3) tile(stone, LIMESTONE[(row * 3 + column * 7) % LIMESTONE.length]);
       left = right;
     }
   }
@@ -93,7 +90,7 @@ function geometryOf(foundations) {
       opacity: ruin ? .24 : .53, innerOpacity: ruin ? .15 : .36,
     });
   }
-  for (const {x, z, slot, inshore} of foundations) {
+  for (const {x, z, slot} of foundations) {
     // Houses and watchtowers have finished stonework in their own art.
     if (slot !== 'tower') continue;
     const {width, depth, rear} = FORMS.tower, footZ = z - rear, height = .145;
@@ -101,10 +98,9 @@ function geometryOf(foundations) {
     if (!onLand(x, z)) continue;
     const outside = corners(x, footZ, width, depth);
     const toes = retainingToe(outside, x, z, footZ);
-    const sandstone = inshore || !!toes;
     if (toes) {
       const {lerp} = THREE.MathUtils;
-      for (const [edge] of PAD_FACES) {
+      for (const edge of PAD_FACES) {
         const next = edge + 1, stone = edge < 4 ? RETAINING_SIDE : RETAINING_FRONT;
         const [ax, az] = outside[edge], [bx, bz] = outside[next], a = toes[edge], b = toes[next];
         if (a.height === 0 && b.height === 0) continue;
@@ -129,55 +125,45 @@ function geometryOf(foundations) {
         }
       }
     }
-    const capWidth = width - .10, capDepth = depth - .10;
+    const capWidth = width - .065, capDepth = depth - .065;
     const inset = corners(x, footZ, capWidth, capDepth);
-    const top = inset.map(([gx, gz], i) => vertex(gx, gz, height, sandstone ? COAST_LIP : i < 3 ? LEE : SUNLIT));
+    const top = inset.map(([gx, gz]) => vertex(gx, gz, height, LIP));
     // From this fixed ground projection the front and right cut faces carry the height.
-    for (const [edge, tint] of PAD_FACES) {
+    for (const edge of PAD_FACES) {
       const next = edge + 1, [ax, az] = outside[edge], [bx, bz] = outside[next];
-      const coastFace = edge < 4 ? RETAINING_SIDE : RETAINING_FRONT;
-      const face = sandstone ? coastFace : tint;
-      const lip = sandstone ? COAST_LIP : BEVEL;
-      const footA = vertex(ax, az, 0, face), footB = vertex(bx, bz, 0, face);
-      const lipA = vertex(ax, az, height * .60, lip), lipB = vertex(bx, bz, height * .60, lip);
+      const [face, shoulder] = SIDE_STONE[edge < 4 ? 0 : 1];
+      const footA = vertex(ax, az, 0, GROUT, 1, .79), footB = vertex(bx, bz, 0, GROUT, 1, .79);
+      const lipA = vertex(ax, az, height * .76, shoulder), lipB = vertex(bx, bz, height * .76, shoulder);
       quad(footA, footB, lipB, lipA);
       quad(lipA, lipB, top[next], top[edge]);
-      // Mortar joints break the longest faces into blocks below the bevel.
-      if (edge === 2 || edge === 4) {
-        const joints = edge === 2 ? [.50] : [.34, .68];
-        for (const start of joints) {
-          const end = start + .018;
-          const x1 = ax + (bx - ax) * start, z1 = az + (bz - az) * start;
-          const x2 = ax + (bx - ax) * end, z2 = az + (bz - az) * end;
-          quad(vertex(x1, z1, 0, MORTAR), vertex(x2, z2, 0, MORTAR),
-            vertex(x2, z2, height * .58, MORTAR), vertex(x1, z1, height * .58, MORTAR));
-        }
+      const length = Math.hypot(bx - ax, bz - az);
+      if (length < .6) continue;
+      const blocks = length > 1.2 ? 3 : 2;
+      const side = (t, rise, tint) => vertex(ax + (bx - ax) * t, az + (bz - az) * t, height * rise, tint);
+      for (let block = 0; block < blocks; block++) {
+        const from = block / blocks + .022, to = (block + 1) / blocks - .022;
+        quad(side(from, .12, face), side(to, .12, face), side(to, .68, shoulder), side(from, .68, shoulder));
       }
     }
-    if (sandstone) {
-      pavedCap(inset, x, footZ, capWidth, capDepth, (polygon, tint) => {
-        const middle = polygon.reduce(([sx, sz], [gx, gz]) => [sx + gx / polygon.length, sz + gz / polygon.length], [0, 0]);
-        const shaded = ([gx, gz]) => {
-          const carriage = 1 - Math.min(1, Math.hypot((gx - x) / .83, (gz - footZ - .12) / .43));
-          return vertex(gx, gz, height, tint, 1, 1 - .19 * carriage);
-        };
-        const center = shaded(middle), rim = polygon.map(shaded);
-        for (let i = 0; i < rim.length; i++) indices.push(center, rim[i], rim[(i + 1) % rim.length]);
-      });
-      continue;
-    }
-    // Cut the cap into readable limestone blocks around the carriage. All corners and joints
-    // stay inside the tower's existing 2 × 2 footprint, including beside joined walls.
-    const inner = corners(x, footZ, width - .28, depth - .25);
-    const cut = inner.map(([gx, gz]) => vertex(gx, gz, height, CAP));
-    for (let edge = 0; edge < top.length; edge++) {
-      const next = (edge + 1) % top.length;
-      quad(top[edge], top[next], cut[next], cut[edge]);
-      const [ax, az] = inset[edge], [bx, bz] = inner[edge];
-      quad(vertex(ax, az, height, MORTAR, .72), vertex(ax + .022, az, height, MORTAR, .72),
-        vertex(bx + .018, bz, height, MORTAR, .60), vertex(bx, bz, height, MORTAR, .60));
-    }
-    for (let i = 1; i < cut.length - 1; i++) indices.push(cut[0], cut[i], cut[i + 1]);
+    // The grout bed and all dressed stone stay inside the existing octagonal pad.
+    const bed = inset.map(([gx, gz]) => vertex(gx, gz, height, GROUT));
+    for (let i = 1; i < bed.length - 1; i++) indices.push(bed[0], bed[i], bed[i + 1]);
+    pavedCap(inset, x, footZ, capWidth, capDepth, (polygon, tint) => {
+      const [cx, cz] = polygon.reduce(([sx, sz], [gx, gz]) => [sx + gx / polygon.length, sz + gz / polygon.length], [0, 0]);
+      const bevel = polygon.map(([gx, gz]) => [gx + (cx - gx) * .18, gz + (cz - gz) * .18]);
+      const lit = ([gx, gz], rise, light) => {
+        const underGun = 1 - Math.min(1, Math.hypot((gx - x) / .86, (gz - footZ - .05) / .50));
+        return vertex(gx, gz, rise, tint, 1, light * (1 - .31 * underGun));
+      };
+      const rim = bevel.map(point => lit(point, height + .012, 1));
+      for (let i = 1; i < rim.length - 1; i++) indices.push(rim[0], rim[i], rim[i + 1]);
+      for (let i = 0; i < polygon.length; i++) {
+        const next = (i + 1) % polygon.length, a = polygon[i], b = polygon[next];
+        const dx = b[0] - a[0], dz = b[1] - a[1];
+        const light = .97 + .24 * (dx - dz) / Math.max(.001, Math.hypot(dx, dz));
+        quad(lit(a, height, light), lit(b, height, light), rim[next], rim[i]);
+      }
+    });
   }
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(points, 3));

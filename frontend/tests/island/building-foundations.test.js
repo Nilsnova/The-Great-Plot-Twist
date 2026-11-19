@@ -33,12 +33,21 @@ it('keeps the ordinary shallow pad on an inland slot', () => {
   expect(points.every(({height}) => height >= 0)).toBe(true);
 });
 
+it('keeps dressed cap and side blocks inside the tower footprint', () => {
+  const anchor = placedSpot('cannon_6');
+  const {width, depth, rear} = TOWER_PAD;
+  const stones = readFoundation('cannon_6', anchor).filter(({height}) => height > 0);
+  expect(stones.length).toBeGreaterThan(0);
+  expect(stones.every(({x, z, height}) => Math.abs(x - anchor.x) <= width + .0001
+    && Math.abs(z - anchor.z + rear) <= depth + .0001 && height < .17)).toBe(true);
+});
+
 const coastalGuns = ['cannon_1', 'cannon_2', 'cannon_3', 'cannon_4'].map(id => {
   const {x, z} = placedSpot(id);
   return Object.freeze({id, kind: 'cannon', x, z});
 });
 
-it.each(coastalGuns.map(({id}) => id))('draws %s and its sandstone pad inland with a visible shore gap', id => {
+it.each(coastalGuns.map(({id}) => id))('draws %s and its stone pad inland with a visible shore gap', id => {
   const original = coastalGuns.find(gun => gun.id === id);
   const {x, z} = defenseDisplayAnchors('home_islet', coastalGuns).get(id);
   expect(Math.hypot(x - original.x, z - original.z)).toBeGreaterThan(1.5);
