@@ -44,10 +44,14 @@ async function finishEntry(page){
  }
  throw Error('Ordinary visible entry did not complete');
 }
-async function pointer(page,selector){const locator=typeof selector==='string'?page.locator(selector).first():selector;await locator.scrollIntoViewIfNeeded();
- const hit=await locator.evaluate(node=>{const r=node.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2;
-  return {x,y,enabled:!node.disabled,hit:node===document.elementFromPoint(x,y)||node.contains(document.elementFromPoint(x,y))};});
+async function pointer(page,selector){const locator=typeof selector==='string'?page.locator(selector).first():selector;let hit;
+ for(let attempt=0;attempt<60;attempt++){await locator.scrollIntoViewIfNeeded();
+  hit=await locator.evaluate(node=>{const r=node.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2;
+   return {x,y,enabled:!node.disabled,hit:node===document.elementFromPoint(x,y)||node.contains(document.elementFromPoint(x,y))};});
+  if(hit.enabled&&hit.hit)break;await page.waitForTimeout(50);}
  assert.ok(hit.enabled&&hit.hit,'A physical UI action must hit its current enabled control');await page.mouse.click(hit.x,hit.y);}
+const response=(page,predicate,timeout=30000)=>page.waitForResponse(predicate,{timeout}).then(reply=>({reply}),error=>({error}));
+async function settled(pending){const result=await pending;if(result.error)throw result.error;return result.reply;}
 try{
  const runtime=await loadRuntime(runtimePath),saved=JSON.parse(await readFile('/tmp/mp505-ship-legacy/host-client.json','utf8'));
  const browser=await chromium.launch({executablePath:'/usr/bin/chromium',headless:true,args:['--no-sandbox','--disable-dev-shm-usage','--disable-gpu',
@@ -67,15 +71,15 @@ try{
  let verified;for(let attempt=0;attempt<30;attempt++){verified=await api(page,'/api/me');
   if(verified.status===200&&verified.data.id===actor.actorId)break;await page.waitForTimeout(100);}
  assert.equal(ok(verified).id,actor.actorId);
- await land(page,{create:true});await finishEntry(page);
+ await land(page);await finishEntry(page);
  const wallet=async()=>(await observe(`select balance::text as balance,(select count(*)::integer from public.wallet_transactions t where t.player_id=w.player_id) as entries
   from public.wallets w where player_id=$1::uuid`,[actor.actorId],{runtimePath}))[0];
  let island=ok(await api(page,'/api/island'));assert.ok(!island.economy||island.economy.mode==='personal_legacy');
  const initialWallet=await wallet();
  await page.evaluate(()=>window.__island.island.pick('wall_1'));
  const personalCard=await page.locator('.island-card[open]').innerText();assert.match(personalCard,/10/);
- const builtPromise=page.waitForResponse(r=>new URL(r.url()).pathname==='/api/island/build'&&r.request().method()==='POST');
- await pointer(page,'.island-card[open] [data-focus="build"]');const build=await builtPromise;assert.equal(build.status(),200);
+ const builtPromise=response(page,r=>new URL(r.url()).pathname==='/api/island/build'&&r.request().method()==='POST');
+ await pointer(page,'.island-card[open] [data-focus="build"]');const build=await settled(builtPromise);assert.equal(build.status(),200);
  const afterBuild=await wallet();assert.equal(BigInt(afterBuild.balance),BigInt(initialWallet.balance)-10n);
  await note('positive personal island construction through real card',{initialWallet,afterBuild,card:personalCard,transportStatus:200});
  await page.keyboard.press('Escape');
@@ -92,9 +96,9 @@ try{
  assert.ok(spot,'A fresh eligible global Pirate Point spot is required for this bounded positive UI action');
  await page.evaluate(id=>window.__island.island.pick(id),spot.id);
  const pointBefore=await wallet(),pointCard=await page.locator('.island-card[open]').innerText();
- const pointPromise=page.waitForResponse(r=>new URL(r.url()).pathname==='/api/pirate-point/build'&&r.request().method()==='POST');
+ const pointPromise=response(page,r=>new URL(r.url()).pathname==='/api/pirate-point/build'&&r.request().method()==='POST');
  const choice=await page.locator('.island-card[open] [data-focus="build"]').count()?'.island-card[open] [data-focus="build"]':'.island-card[open] .island-choice:not([disabled])';
- await pointer(page,choice);const pointResponse=await pointPromise;assert.equal(pointResponse.status(),200);
+ await pointer(page,choice);const pointResponse=await settled(pointPromise);assert.equal(pointResponse.status(),200);
  const pointBody=pointResponse.request().postDataJSON(),pointAfter=await wallet();
  const paidPoint=BigInt(pointBefore.balance)-BigInt(pointAfter.balance);assert.ok(paidPoint>0n);
  await note('positive Pirate Point card purchase retains personal funding',{spot:spot.id,kind:pointBody.kind,paidCoins:paidPoint.toString(),before:pointBefore,after:pointAfter,card:pointCard});
@@ -120,17 +124,17 @@ try{
  await page.evaluate(()=>window.__island.island.openWreck());
  await page.locator('.island-card[open] [data-focus="boat-broadside"]:not([disabled])').waitFor();
  const shipCard=await page.locator('.island-card[open]').innerText();assert.match(shipCard,/Island/);
- const startResponse=page.waitForResponse(r=>new URL(r.url()).pathname==='/api/island/boat/start'&&r.request().method()==='POST');
- await pointer(page,'.island-card[open] [data-focus="boat-broadside"]');const started=await startResponse;assert.equal(started.status(),200);
+ const startResponse=response(page,r=>new URL(r.url()).pathname==='/api/island/boat/start'&&r.request().method()==='POST');
+ await pointer(page,'.island-card[open] [data-focus="boat-broadside"]');const started=await settled(startResponse);assert.equal(started.status(),200);
  const startedBody=await started.json();assert.equal(startedBody.receipt.origin.accountId,origin.accountId);
  await page.waitForFunction(()=>document.querySelector('.boat-game')?.dataset.phase==='play');
  const entered=await page.evaluate(()=>performance.now());
  const centers=await page.evaluate(async code=>{const r=await import('/src/pirates/boat/rules.js');return r.passesOf(r.boatSalt(code,30,'broadside'),r.boatDifficulty('broadside',30)).map(p=>Math.floor((p.from+p.to)/2)*100);},shared.code);
- const claimResponse=page.waitForResponse(r=>new URL(r.url()).pathname==='/api/island/boat/claim'&&r.request().method()==='POST',{timeout:35000});
+ const claimResponse=response(page,r=>new URL(r.url()).pathname==='/api/island/boat/claim'&&r.request().method()==='POST',35000);
  const inputs=[];
  for(const targetMs of centers){const now=await page.evaluate(()=>performance.now());if(entered+targetMs>now)await page.waitForTimeout(entered+targetMs-now);
   await pointer(page,'.boat-fire');inputs.push({targetMs,actualMs:await page.evaluate(()=>performance.now())-entered});}
- const claimed=await claimResponse;assert.equal(claimed.status(),200);const claim=await claimed.json(),claimBody=claimed.request().postDataJSON();
+ const claimed=await settled(claimResponse);assert.equal(claimed.status(),200);const claim=await claimed.json(),claimBody=claimed.request().postDataJSON();
  assert.ok(claimBody.stars>=1,'Physically played round must earn at least one star for positive accounting proof');
  assert.equal(claim.receipt.origin.accountId,origin.accountId);assert.equal(claim.receipt.result.stars,claimBody.stars);
  const earned=BigInt(claim.receipt.result.coins);assert.ok(earned>0n);const finalBank=await bank();
@@ -152,11 +156,11 @@ try{
   if(result.error||result.data.user?.id!==session.user.id)throw Error('Actual anonymous provider SDK restoration failed');
   sessionStorage.clear();sessionStorage.setItem('plot-twist-auth-v1',JSON.stringify(result.data.session));client.auth.stopAutoRefresh();
  },{session:anonymous,key:runtime.anonKey});
- const admittedResponse=page.waitForResponse(r=>new URL(r.url()).pathname==='/api/demo/join'&&r.request().method()==='POST',{timeout:30000});
+ const admittedResponse=response(page,r=>new URL(r.url()).pathname==='/api/demo/join'&&r.request().method()==='POST');
  await page.goto('http://127.0.0.1:55107/?oneisland=0&join='+encodeURIComponent(classCode),{waitUntil:'domcontentloaded'});
  await page.locator('.join-form input[name="code"]').waitFor();
  await pointer(page,'.join-form button[type="submit"]');
- const admitted=await admittedResponse;assert.equal(admitted.status(),200);assert.equal((await admitted.json()).admitted,true);
+ const admitted=await settled(admittedResponse);assert.equal(admitted.status(),200);assert.equal((await admitted.json()).admitted,true);
  for(let attempt=0;attempt<90;attempt++){
   for(const name of ['Skip','Got it','Resume']){const button=page.getByRole('button',{name,exact:true}).first();
    if(await button.isVisible().catch(()=>false))await button.click({noWaitAfter:true});}
