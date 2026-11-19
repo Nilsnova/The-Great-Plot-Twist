@@ -145,6 +145,27 @@ $$;
 comment on function public.island_lifecycle_guard_actors(uuid,uuid[]) is
   'Frozen roster/owner/actor batch, discovered before any personal lock. No live roster or assignment is invented.';
 
+create or replace function public.island_lifecycle_actor_crews(p_actor_id uuid)
+returns uuid[] language sql stable security definer set search_path='' as $$
+  select coalesce(array_agg(c.id order by c.id),'{}'::uuid[]) from public.crews c
+    where c.created_by=p_actor_id or exists(select 1 from public.crew_seats s
+      where s.crew_id=c.id and s.player_id=p_actor_id);
+$$;
+comment on function public.island_lifecycle_actor_crews(uuid) is
+  'Read-only fixed affected legacy mystery-crew inventory before Class 0 locks. Revalidated after the actor FK fence.';
+
+create or replace function public.island_lifecycle_delete_players(
+  p_actor_id uuid,p_owners uuid[],p_crews uuid[]
+) returns uuid[] language sql stable security definer set search_path='' as $$
+  select coalesce(array_agg(actor_id order by actor_id),'{}'::uuid[]) from (
+    select unnest(public.island_lifecycle_guard_actors(p_actor_id,p_owners)) as actor_id
+    union select created_by from public.crews where id=any(p_crews)
+    union select player_id from public.crew_seats where crew_id=any(p_crews)
+  ) actors where actor_id is not null;
+$$;
+comment on function public.island_lifecycle_delete_players(uuid,uuid[],uuid[]) is
+  'Fixed deletion guard/profile batch including every affected mystery-crew owner and participant, so survivor handover FK checks cannot introduce a late profile lock.';
+
 create or replace function public.island_lifecycle_lock_guards(p_actors uuid[])
 returns void language plpgsql volatile security definer set search_path='' as $$
 declare v_key bigint;
@@ -403,7 +424,8 @@ comment on function public.island_lifecycle_reset(uuid,uuid,uuid,text,text,numer
 create or replace function public.island_lifecycle_delete_transaction(
   p_actor_id uuid,p_confirm_owned_island boolean,p_legacy_only boolean
 ) returns jsonb language plpgsql volatile security definer set search_path='' as $$
-declare v_owners uuid[]; v_players uuid[]; v_retries integer:=0; v_related boolean;
+declare v_owners uuid[]; v_players uuid[]; v_crews uuid[];
+  v_retries integer:=0; v_related boolean;
   v_owned public.island_economy_state; v_account public.island_economy_accounts;
   v_attempt public.island_wave_accounting; v_copy public.arsenal_copies;
   v_disposition jsonb; v_result jsonb; v_now timestamptz; v_owner uuid;
@@ -414,29 +436,36 @@ begin
     begin
       -- This entire block is a savepoint: retry releases every earlier guard/row.
       v_owners:=public.island_lifecycle_actor_owners(p_actor_id);
-      v_players:=public.island_lifecycle_guard_actors(p_actor_id,v_owners);
+      v_crews:=public.island_lifecycle_actor_crews(p_actor_id);
+      v_players:=public.island_lifecycle_delete_players(p_actor_id,v_owners,v_crews);
       perform public.island_lifecycle_lock_guards(v_players);
       if v_owners is distinct from public.island_lifecycle_actor_owners(p_actor_id)
-        or v_players is distinct from public.island_lifecycle_guard_actors(p_actor_id,v_owners) then
+        or v_crews is distinct from public.island_lifecycle_actor_crews(p_actor_id)
+        or v_players is distinct from public.island_lifecycle_delete_players(
+          p_actor_id,v_owners,v_crews) then
         raise exception using errcode='PT516',message='lifecycle_discovery_changed'; end if;
       perform 1 from public.island_economy_accounts where island_owner=any(v_owners)
         order by id for update;
       -- An accepted legacy wallet writer must finish before physical profile deletion.
       perform 1 from public.wallets where player_id=p_actor_id for update;
       -- Preserve the existing mystery-crew/Auth order before personal anchors.
-      perform 1 from public.crews c where c.created_by=p_actor_id or exists(
-        select 1 from public.crew_seats s where s.crew_id=c.id and s.player_id=p_actor_id)
-        order by c.id for update;
+      perform 1 from public.crews where id=any(v_crews) order by id for update;
       perform 1 from auth.users where id=p_actor_id for update;
       if not found then return jsonb_build_object('status','not_found'); end if;
-      perform 1 from public.profiles where id=any(v_players) order by id for no key update;
+      -- Accepted legacy seat transfer takes profile before crew. Never wait on
+      -- those profiles while retaining crews: release this whole savepoint and
+      -- let the accepted writer finish, then rediscover its new crew membership.
+      perform 1 from public.profiles where id=any(v_players)
+        order by id for no key update nowait;
       perform 1 from public.personal_captain_profiles where player_id=any(v_players)
-        order by player_id for update;
+        order by player_id for update nowait;
       -- Freeze new FK references before the final inventory read. Unknown D-copy
       -- writers either committed before this fence (retry) or fail after deletion.
-      perform 1 from public.profiles where id=p_actor_id for update;
+      perform 1 from public.profiles where id=p_actor_id for update nowait;
       if v_owners is distinct from public.island_lifecycle_actor_owners(p_actor_id)
-        or v_players is distinct from public.island_lifecycle_guard_actors(p_actor_id,v_owners) then
+        or v_crews is distinct from public.island_lifecycle_actor_crews(p_actor_id)
+        or v_players is distinct from public.island_lifecycle_delete_players(
+          p_actor_id,v_owners,v_crews) then
         raise exception using errcode='PT516',message='lifecycle_discovery_changed'; end if;
       v_related:=public.island_lifecycle_actor_related(p_actor_id);
       if p_legacy_only and v_related then
@@ -517,7 +546,7 @@ begin
       if v_result is distinct from jsonb_build_object('status','deleted') then
         raise exception 'lifecycle_delete_failed'; end if;
       return v_result;
-    exception when sqlstate 'PT516' then
+    exception when sqlstate 'PT516' or lock_not_available then
       v_retries:=v_retries+1;
       if v_retries>=16 then raise exception 'lifecycle_busy'; end if;
     end;
@@ -530,7 +559,7 @@ exception when raise_exception then
 end;
 $$;
 comment on function public.island_lifecycle_delete_transaction(uuid,boolean,boolean) is
-  'Private single-transaction deletion composition: fixed signed guards/accounts/wallet/crew/Auth/personal order, final actor FK fence and full retry on expanded inventory. Checked canonical/copy disposition and minimal shared tombstone precede original Auth deletion. Pure legacy mode retains its original purge without a new UUID marker.';
+  'Private single-transaction deletion composition: fixed signed guards/accounts/wallet/crew/Auth/personal order, all affected crew profiles, NOWAIT personal acquisition and final actor FK fence. Full retry releases crews/guards on profile contention or expanded inventory. Checked canonical/copy disposition and minimal shared tombstone precede original Auth deletion. Pure legacy mode retains its original purge without a new UUID marker.';
 
 create or replace function public.island_lifecycle_delete_player(
   p_actor_id uuid,p_confirm_owned_island boolean

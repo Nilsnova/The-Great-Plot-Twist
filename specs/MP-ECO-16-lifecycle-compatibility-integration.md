@@ -207,3 +207,25 @@ connection with changed grant configuration recovers the original successful
 UID. Concurrent deletion commits one disposition and the other attempt observes
 `not_found`. Together with the three legacy-writer cases, **six checks passed in
 8.47 seconds**; no extra schema or runtime behavior changed in this increment.
+
+## Legacy mystery-crew lock compatibility
+
+The existing seat-transfer RPC takes the actor profile before its draft/target
+crew rows, while established deletion preserves crew/Auth-before-profile ordering.
+A committed published-RPC probe reproduced a real `40P01` cycle. The deletion
+composer must capture affected crew IDs and all their owner/participant profile
+IDs before Class 0 locks, include them in the fixed guard batch and revalidate
+the complete inventory. Every profile acquisition after crew rows uses `NOWAIT`;
+contention retries the whole guarded savepoint, releasing crew locks so the
+accepted profile-first writer can finish. The existing crew APIs stay unchanged.
+Actual actor-transfer and survivor-handover races must prove both operations
+commit, alongside the existing copy, wallet and newly discovered scope checks.
+
+Both published seat-transfer cases first failed with PostgreSQL `40P01`. After
+the fixed crew/profile inventory and nonblocking personal stage were implemented,
+the eight committed races plus lifecycle/membership regressions passed **37
+checks in 22.42 seconds**. The new-earlier-stock test now holds the early accepted
+wallet writer while the copy commits, so it tests scope discovery independently
+of intentional profile-contention refusal. The real native bell producer is an
+additional provided dependency in this run; all 100 migrations applied twice.
+Whole-backend Ruff, 100-file parsing/version uniqueness and diff checks passed.

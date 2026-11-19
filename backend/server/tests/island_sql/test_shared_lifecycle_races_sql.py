@@ -16,6 +16,7 @@ import pytest
 psycopg = pytest.importorskip("psycopg")
 
 from server.tests.case_sql.conftest import scratch_server as scratch_server  # noqa: E402
+from server.tests.followups_sql.test_delete_versions import add_crew, crew_state  # noqa: E402
 from server.tests.island_sql.test_island_treasury_sql import rpc  # noqa: E402
 from server.tests.island_sql.test_islands_and_waves_sql import (  # noqa: E402
     add_players,
@@ -172,7 +173,10 @@ def test_new_earlier_stock_scope_retries_whole_batch_before_domain_effects(scrat
             "select pg_advisory_lock(hashtextextended('island-economy:'||%s,0))",
             (str(legacy_owner),),
         )
-        writer.execute("select 1 from public.profiles where id=%s for key share", (actor,))
+        # Accepted legacy money holds the early wallet gate while the new copy
+        # commits. No profile NOWAIT retry is artificially kept busy by the test.
+        as_server(writer)
+        rpc(writer, "apply_wallet_transaction", actor, 1, "admin_adjust", "newscope-gate01")
         try:
             deleting = pool.submit(worker, scratch_server, started, lambda c: delete(c, actor))
             deleting_pid = started.get(timeout=5)
@@ -262,3 +266,47 @@ def test_concurrent_same_actor_deletion_retries_commit_one_physical_disposition(
             "select count(*) from public.island_deleted_player_dispositions where player_id=%s",
             (actor,),
         ).fetchone() == (1,)
+
+
+@pytest.mark.parametrize("survivor_transfer", [False, True])
+def test_accepted_legacy_seat_transfer_completes_before_shared_delete_handover(
+    scratch_server, survivor_transfer
+):
+    started = Queue()
+    with (
+        psycopg.connect(scratch_server.get_uri()) as seed,
+        psycopg.connect(scratch_server.get_uri()) as gate,
+        psycopg.connect(scratch_server.get_uri(), autocommit=True) as observer,
+        ThreadPoolExecutor(max_workers=2) as pool,
+    ):
+        _, actor, other, _, _ = prepare(seed)
+        as_owner(seed)
+        draft = add_crew(seed, actor, [(1, actor)] + ([(2, other)] if survivor_transfer else []))
+        if survivor_transfer:
+            # The survivor's finished membership does not block a new forming
+            # crew. Deletion's handover of this old crew needs their profile FK.
+            seed.execute("update public.crews set status='finished' where id=%s", (draft,))
+        target_owner, transferring = (actor, other) if survivor_transfer else (other, actor)
+        target = add_crew(seed, target_owner, [(1, target_owner)])
+        seed.commit()
+        gate.execute("select 1 from auth.users where id=%s for update", (actor,))
+
+        def take_seat(connection):
+            as_server(connection)
+            return rpc(connection, "crew_take_seat", target, transferring, 2, "witness", 7)
+
+        try:
+            deleting = pool.submit(worker, scratch_server, started, lambda c: delete(c, actor))
+            deleting_pid = started.get(timeout=5)
+            wait_for_block(observer, deleting_pid, gate.info.backend_pid)
+            moving = pool.submit(worker, scratch_server, started, take_seat)
+            wait_for_block(observer, started.get(timeout=5), deleting_pid)
+        finally:
+            gate.rollback()
+        assert moving.result(timeout=15)["status"] == "joined"
+        assert deleting.result(timeout=15) == {"status": "deleted"}
+        assert crew_state(observer, target) == (other, 9)
+        if survivor_transfer:
+            assert crew_state(observer, draft) == (other, 8)
+        else:
+            assert crew_state(observer, draft) is None
