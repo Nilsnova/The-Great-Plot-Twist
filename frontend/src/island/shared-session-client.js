@@ -57,7 +57,9 @@ export function createSharedSessionClient({api,getEconomy,getActorId,getAuthGene
   if(mine!==ticket || !current(captured) || !lock?.current)return abandon(lock,mine);
   if(!answer.ok){
    if(answer.code==='stale_controller'){try{intents.refuse(record);}catch{/* No replacement is allocated here. */}}
-   demote('unavailable',answer.message??'The controlling session could not attach.');schedule(captured);return answer;
+   const waiting=answer.code==='controller_held';
+   demote(waiting?'waiting':'unavailable',waiting?'Waiting for your previous session. Close another controlling tab or retry shortly.':answer.message??'The controlling session could not attach.');
+   schedule(captured);return answer;
   }
   const data=readSessionMetadata(answer.data);
   if(!data || !data.session.isController || data.session.sessionId!==record.body.sessionId){demote('unavailable','The stored attachment could not be verified.');return failed('unreadable','The stored attachment could not be verified.',502);}

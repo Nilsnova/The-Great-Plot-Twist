@@ -113,3 +113,24 @@ actor's lock. A scheduled heartbeat also releases ownership when identity is no 
 The final five-file session selection, including scheduled identity loss and the real-popup
 journey, passed 46 tests. The timer test waits for asynchronous Web Lock release before checking
 that another document can acquire it.
+
+## Unknown attachment during navigation
+
+When an attachment's outcome is unknown and navigation changes, keep its exact captured intent
+inert and release the old document lock. Do not replay that attachment to discover a generation,
+create an old-island lease or send a guessed leave. Only the original server last_seen plus the
+fixed sixty-second grace governs an uncertain old lease; navigation and retries cannot reset it.
+A destination may remain controller_held until that deadline. It retries only its own captured
+attachment and displays a waiting state. Returning to the original currently selected source may
+resume its original stored request, followed by a fresh independent control read.
+
+Known original proof follows durable immediate leave. Inert intent retention is distinct from
+current controller authority and does not select a treasury source. Each origin's unresolved
+attachment remains recoverable without allocating a replacement UID for it.
+
+The unknown-navigation regressions first failed because the single current descriptor blocked
+every destination; it now retains the old unresolved body in an inert origin entry. Destination
+retries preserve only their own captured UID/body. A late old success starts no read, heartbeat
+or control, and its original intent is retained. A resolved archived intent cannot be resurrected
+after a later stale-controller refusal. Six session files passed 50 tests, including the real
+cloned-tab and authenticated HTTP journeys, with scoped whitespace review clean.

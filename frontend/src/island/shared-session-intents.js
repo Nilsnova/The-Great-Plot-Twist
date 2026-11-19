@@ -6,15 +6,17 @@ const prefix='plot_twist_canonical_session_v1:';
 const clone=value=>JSON.parse(JSON.stringify(value));
 export function createSessionIntents({storage,makeUid,makeSessionId}={}){
  const key=actor=>`${prefix}${actor}`;
- function read(actor){
+ const inertKey=(actor,origin)=>`${prefix}inert:${actor}:${origin.islandOwner}:${origin.accountId}:${origin.runEpoch}`;
+ function readAt(actor,name){
   if(!storage || !uuid(actor))throw new Error('Session retry storage is unavailable.');
-  const raw=storage.getItem(key(actor));if(raw===null)return null;
+  const raw=storage.getItem(name);if(raw===null)return null;
   const saved=JSON.parse(raw);
   if(saved?.actorId!==actor || !sessionOrigin(saved.origin) || !uuid(saved.sessionId)
    || (saved.phase==='attach' ? !decimal(saved.expectedGeneration) || !sessionUid(saved.actionUid)
     : saved.phase!=='known' || !positiveGeneration(saved.connectionGeneration)))throw new Error('Session retry storage could not be read.');
   return saved;
  }
+ const read=actor=>readAt(actor,key(actor));
  const save=record=>{storage.setItem(key(record.actorId),JSON.stringify(record));return clone(record);};
  function attachRecord(saved){return {actorId:saved.actorId,origin:sessionOrigin(saved.origin),body:{
   economy:sessionAssertion(saved.origin),sessionId:saved.sessionId,expectedGeneration:saved.expectedGeneration,actionUid:saved.actionUid,
@@ -22,8 +24,19 @@ export function createSessionIntents({storage,makeUid,makeSessionId}={}){
  return {
   read,
   begin(actorId,origin){
-   const previous=read(actorId);
-   if(!sessionOrigin(origin) || previous && !sameEconomyScope(previous.origin,origin))throw new Error('Leave the original controlling session before changing islands.');
+   let previous=read(actorId);
+   if(!sessionOrigin(origin))throw new Error('Read the selected session origin.');
+   if(previous && !sameEconomyScope(previous.origin,origin)){
+    if(previous.phase!=='attach')throw new Error('Leave the original controlling session before changing islands.');
+    const name=inertKey(actorId,previous.origin),inert=readAt(actorId,name);
+    if(inert && (inert.phase!=='attach' || inert.actionUid!==previous.actionUid || inert.sessionId!==previous.sessionId
+      || inert.expectedGeneration!==previous.expectedGeneration))throw new Error('The original attachment retry changed.');
+    storage.setItem(name,JSON.stringify(previous));storage.removeItem(key(actorId));previous=null;
+   }
+   if(!previous){
+    const inert=readAt(actorId,inertKey(actorId,origin));
+    if(inert){if(inert.phase!=='attach')throw new Error('The retained attachment could not be read.');previous=save(inert);}
+   }
    if(previous?.phase==='attach')return attachRecord(previous);
    const saved={actorId,origin:sessionOrigin(origin),sessionId:previous?.sessionId??makeSessionId(),
     expectedGeneration:previous?.connectionGeneration??'0',actionUid:makeUid(),phase:'attach'};
@@ -34,6 +47,8 @@ export function createSessionIntents({storage,makeUid,makeSessionId}={}){
    const previous=read(record.actorId),session=metadata.session;
    if(previous?.phase!=='attach' || previous.actionUid!==record.body.actionUid || session.sessionId!==previous.sessionId
     || !sameEconomyScope(metadata.economy,previous.origin) || !positiveGeneration(session.connectionGeneration))throw new Error('The original session request changed.');
+   const name=inertKey(record.actorId,record.origin),inert=readAt(record.actorId,name);
+   if(inert?.phase==='attach' && inert.actionUid===record.body.actionUid)storage.removeItem(name);
    return save({actorId:previous.actorId,origin:previous.origin,sessionId:previous.sessionId,
     connectionGeneration:session.connectionGeneration,phase:'known'});
   },
