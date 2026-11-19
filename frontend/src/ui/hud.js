@@ -14,7 +14,7 @@ import {createQuestStrip} from './quest-strip.js';
 import {QUEST_EVENTS, PLACE_ARRIVED, HUD_OPENED, WAVE_REWARDS_RECOVERED} from './quest-events.js';
 import {applyQuestEvent, reconcileFirstQuests, createIdleHint, firstQuestView, questsFor, readFirstQuests, writeFirstQuests} from './first-quests.js';
 import {showToast} from './toasts.js';
-import {coinsSpoken, formatCoins} from '../lib/coins.js';
+import {COIN, coinsSpoken, formatCoins} from '../lib/coins.js';
 import {hudWaveView} from './wave-progress.js';
 import './hud.css';
 
@@ -33,6 +33,10 @@ export function createHud(container, actions, {on = defaultOn, emit = defaultEmi
   const overlay = node('div', 'hud hud-play');
   // 1. Coins.
   const purse = node('div', 'hud-coins'), purseText = node('span', 'hud-coins-value');
+  const coinSign = document.createTextNode(''), coinAmount = document.createTextNode('');
+  const coinMark = node('span', 'hud-coin-mark', COIN);
+  coinMark.setAttribute('aria-hidden', 'true');
+  purseText.append(coinSign, coinMark, coinAmount);
   purse.dataset.hudGroup = 'coins';purse.setAttribute('role', 'status');purse.append(purseText);
   const waveBadge = node('span', 'hud-wave'), waveText = node('span', 'hud-wave-value');
   const waveIcon = node('span', 'hud-wave-icon');waveIcon.setAttribute('aria-hidden', 'true');
@@ -82,10 +86,15 @@ export function createHud(container, actions, {on = defaultOn, emit = defaultEmi
     waveKey = key;waveView = next;waveBadge.hidden = !next;waveIcon.textContent = next ? '⚔️' : '';waveText.textContent = next?.text ?? '';
     drawPurseLabel();measureHeader();
   }
+  function showBalance(label) {
+    const [sign, amount] = label.split(COIN);
+    coinSign.data = sign;
+    coinAmount.data = amount;
+  }
   function drawCoins() {
     cancelAnimationFrame(tickFrame);
     const known = Number.isFinite(coins);
-    purseText.textContent = known ? formatCoins(coins) : '🪙 …';
+    showBalance(known ? formatCoins(coins) : `${COIN} …`);
     drawPurseLabel();
     // Signed out there is no purse to load, so no endless "🪙 …": the chip waits until there are coins.
     purse.hidden = !known && account === 'signed_out';
@@ -98,7 +107,7 @@ export function createHud(container, actions, {on = defaultOn, emit = defaultEmi
     const step = () => {
       if (disposed || coins !== target) return;
       const fraction = Math.min(1, (performance.now() - start) / COIN_TICK_MS);
-      purseText.textContent = formatCoins(counterValue(from, target, fraction));
+      showBalance(formatCoins(counterValue(from, target, fraction)));
       if (fraction < 1) tickFrame = requestAnimationFrame(step);
     };
     step();
