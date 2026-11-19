@@ -7,14 +7,14 @@ import {sandstoneFinishGlsl} from './home-relief.js';
 import {surfaces} from './surfaces.js';
 
 const COAST = surfaces.home_islet;
-// Coast samples are spaced two degrees apart. Each run goes from the visible stone foot
-// to the tapered back of its grass cap. The southern runs face towards the sea.
+// Coast samples are spaced two degrees apart. The rear banks hug the cliff so the
+// wall foundations have level ground in front. The southern banks face the sea.
 const BANKS = [
-  {first: 101, last: 108, foot: .771, back: .943, height: 2.5},
-  {first: 116, last: 132, foot: .772, back: .927, height: 2.85},
-  {first: 140, last: 155, foot: .815, back: .936, height: 2.82},
-  {first: 162, last: 173, foot: .800, back: .947, height: 2.49},
-  {first: 25, last: 34, foot: .942, back: .812, height: 1.63},
+  {first: 97, last: 106, foot: .935, back: .986, height: 3.05},
+  {first: 116.5, last: 124.5, foot: .770, back: .955, height: 2.75},
+  {first: 148, last: 156, foot: .840, back: .955, height: 3.25},
+  {first: 166, last: 171, foot: .790, back: .925, height: 3.10},
+  {first: 30, last: 38.5, foot: .745, back: .655, height: 1.70},
   {first: 55, last: 67, foot: .951, back: .847, height: 1.47},
 ];
 const STONE = ['#bf9367', '#c69d72', '#b48762', '#cbab7e', '#c09b70'].map(hex => new THREE.Color(hex));
@@ -23,23 +23,23 @@ const ENDS = [new THREE.Color('#9c7952'), new THREE.Color('#b08c61')];
 const TURF = new THREE.Color('#8da936'), LIP = new THREE.Color('#a9bf4b'), ROOTS = new THREE.Color('#78a336');
 const GRASS_CREST = TURF.clone().lerp(LIP, .56);
 const FOLIAGE = {
-  101: [['birch', .56, .70, .49], ['shrub', .19, .64, .64], ['shrub', .74, .31, .49], ['flowers', .41, .31, .52]],
-  116: [['shrub', .21, .73, .65], ['shrub', .27, .68, .51], ['grass-tuft', .56, .74, .56], ['shrub', .81, .71, .62],
+  97: [['birch', .56, .70, .49], ['shrub', .19, .64, .64], ['shrub', .74, .31, .49], ['flowers', .41, .31, .52]],
+  116.5: [['shrub', .21, .73, .65], ['shrub', .27, .68, .51], ['grass-tuft', .56, .74, .56], ['shrub', .81, .71, .62],
     ['shrub', .37, .28, .41], ['flowers', .72, .34, .56]],
-  140: [['shrub', .31, .68, .60], ['shrub', .38, .72, .51], ['grass-tuft', .66, .73, .62], ['shrub', .83, .70, .52],
+  148: [['shrub', .31, .68, .60], ['shrub', .38, .72, .51], ['grass-tuft', .66, .73, .62], ['shrub', .83, .70, .52],
     ['flowers', .15, .34, .60], ['shrub', .57, .32, .44]],
-  162: [['birch', .65, .72, .51], ['shrub', .42, .67, .66], ['shrub', .54, .69, .47], ['flowers', .21, .29, .60],
+  166: [['birch', .65, .72, .51], ['shrub', .42, .67, .66], ['shrub', .54, .69, .47], ['flowers', .21, .29, .60],
     ['grass-tuft', .81, .29, .56]],
-  25: [['shrub', .23, .72, .58], ['shrub', .35, .75, .42], ['grass-tuft', .71, .72, .62], ['flowers', .78, .33, .52]],
+  30: [['shrub', .23, .72, .58], ['shrub', .35, .75, .42], ['grass-tuft', .71, .72, .62], ['flowers', .78, .33, .52]],
   55: [['grass-tuft', .25, .69, .62], ['shrub', .46, .72, .55], ['shrub', .63, .77, .64], ['flowers', .78, .32, .55]],
 };
 // Each garden is tucked into an existing end of a bank or onto the exposed turf.
 const ROCK_GARDENS = {
-  101: [.25, .78],
-  116: [.82, -.16],
-  140: [.15, -.19],
-  162: [.28, .80],
-  25: [.60, .72],
+  97: [.25, .78],
+  116.5: [.82, -.16],
+  148: [.15, -.19],
+  166: [.28, .80],
+  30: [.60, .72],
   55: [.63, .73],
 };
 const SHADOW = new THREE.Color('#344032');
