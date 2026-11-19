@@ -167,9 +167,9 @@ const PAVERS = [
   ['#d5c6a5', '#ac9b7e', '#efdfbf'], ['#ccbda0', '#9b8e76', '#e7d7b9'],
 ];
 const WEATHERED_PAVERS = [
-  ['#d9c69c', '#b19e78', '#eee0b5'], ['#d8cba8', '#b4a584', '#eee2bd'],
-  ['#c5b695', '#a28e6c', '#e2cea4'], ['#d3ba92', '#ad9b76', '#e9d6ac'],
-  ['#cec3aa', '#ad9d82', '#e5d9b7'], ['#d2c09e', '#aa9877', '#e8d9b3'],
+  ['#dbc49b', '#b49a74', '#f1dfb4'], ['#dfcba6', '#b69f7e', '#f2e0bb'],
+  ['#c9b393', '#a78e6d', '#e3cea7'], ['#d8bc92', '#b19a74', '#efd9aa'],
+  ['#d4c3a6', '#b29a80', '#e8d9b6'], ['#d6c09b', '#b29b77', '#eddbb4'],
 ];
 // Individual stone faces cut from the sandstone sheet. Its grouted seams never cross a drawn slab.
 const PAVER_FACES = [[.026, .024, .107, .047], [.193, .025, .112, .046], [.364, .029, .106, .047],
@@ -213,7 +213,7 @@ function paintPavers(c, paths, materials) {
   const clearance = sheet ? pavingClearance(paths) : null;
   c.save();
   c.clip(pathMaterialMask(paths, PAVING_WIDTH));
-  c.fillStyle = sheet ? '#8b79554f' : '#9e936f';
+  c.fillStyle = sheet ? '#93765562' : '#9e936f';
   c.fillRect(bounds.left, bounds.top, SIZE.width, SIZE.height);
   for (let row = bounds.top; row < bounds.bottom;) {
     // Canvas rows are compressed in depth, so these read as nearly square slabs in the world.
@@ -234,7 +234,7 @@ function paintPavers(c, paths, materials) {
         if (inside < -.58) continue;
         // Alternating chipped and worn stones let the earth show through along the edges and ends.
         const wear = .13 * Math.sin(centreX * 4.6 + centreY * 2.1) + .075 * Math.cos(centreY * 6 - centreX * 4);
-        const intact = Math.max(0, Math.min(1, (inside + wear + .10) / .58));
+        const intact = Math.max(0, Math.min(1, (inside + wear + .10) / .54));
         c.globalAlpha = .045 + .945 * intact * intact * (3 - 2 * intact);
       } else if (!nearPath(paths, centreX, centreY / LEGACY_DEPTH, 2.55)) continue;
       const opacity = c.globalAlpha;
@@ -248,11 +248,11 @@ function paintPavers(c, paths, materials) {
         [right - .065, bottom - bevel], [right - .116, bottom - bevel - .018], [x + .071, bottom - bevel + .009],
         [x + .025, bottom - bevel - .019], [x + .031, y + .063]], .018);
       c.fillStyle = linear(c, x + .034, y, x + width * .61, bottom,
-        [[0, sun], [.26, face], [.65, face], [1, edge]]);
+        [[0, sun], [.32, face], [.70, face], [1, edge]]);
       c.fill(top);
       if (sheet) {
         const [sx, sy, sw, sh] = sheet, [u, v, w, h] = PAVER_FACES[pigment];
-        c.save(); c.clip(top); c.globalAlpha *= .36; c.globalCompositeOperation = 'luminosity';
+        c.save(); c.clip(top); c.globalAlpha *= .27; c.globalCompositeOperation = 'luminosity';
         c.drawImage(materials, sx + u * sw, sy + v * sh, w * sw, h * sh, x, y, right - x, bottom - y);
         c.restore();
       }
@@ -344,7 +344,8 @@ export function paintGround(id, density = 28, materials = null) {
     p.closePath(); return p;
   };
   const random = seeded(s.seed * 7919 + 17);
-  paintTerrain(c, s, coast, random, materials);
+  const relief = lawnRelief();
+  paintTerrain(c, s, coast, random, materials, relief);
   // The original path remains worn earth at the edges, with narrower stone laid on its centre.
   if (paths) {
     c.save(); c.clip(coast(.99));
@@ -369,6 +370,12 @@ export function paintGround(id, density = 28, materials = null) {
     c.restore();
     paintPlantedEdges(c, id, paths);
     paintPavers(c, paving, materials);
+    // Keep the paving in the same pool of light as the adjoining lawn.
+    c.save();
+    c.clip(pathMaterialMask(paving, PAVING_WIDTH));
+    c.globalCompositeOperation = 'soft-light'; c.globalAlpha = .62;
+    c.drawImage(relief, -SIZE.width / 2, -SIZE.height / 2, SIZE.width, SIZE.height);
+    c.restore();
     paintWeatheredPathEdges(c, id, paving, materials);
     c.clip(pathMaterialMask(paths, PATH_WIDTH));
     c.globalAlpha = materials ? .25 : 1;
@@ -404,6 +411,8 @@ const LAWN_SHOULDERS = [
   [-13.0, -7.8, 6.0, 3.9, 1.38], [-6.6, -11.5, 6.6, 3.8, 1.35],
   [7.3, -12.2, 6.4, 4.1, 1.41], [14.0, -7.2, 4.9, 3.6, 1.16],
   [-12.6, 8.6, 5.7, 4.0, 1.14], [12.1, 9.1, 5.0, 3.9, 1.08],
+  [-7.8, -4.0, 3.8, 2.7, .31], [7.0, -4.3, 3.9, 2.6, .27],
+  [-7.6, 4.9, 3.8, 2.65, .29], [1.7, .52, 4.7, 2.9, .22],
 ];
 
 // The central green opens into the sun. Cooler grass collects below the rocky shoulders.
@@ -416,7 +425,7 @@ const MEADOW_GLADES = [
   [8.5, 8.3, 6.4, 3.7, .32, '#a8d366'],
 ];
 
-function paintLawnRelief(c) {
+function lawnRelief() {
   const lightField = canvas(192, 144), ctx = lightField.getContext('2d');
   const {width, height} = lightField, image = ctx.createImageData(width, height);
   const left = -SIZE.width / 2, top = -SIZE.height / 2;
@@ -443,10 +452,10 @@ function paintLawnRelief(c) {
     }
   }
   ctx.putImageData(image, 0, 0);
-  c.drawImage(lightField, left, top, SIZE.width, SIZE.height);
+  return lightField;
 }
 
-function paintTerrain(c, s, coast, random, materials) {
+function paintTerrain(c, s, coast, random, materials, relief) {
   const rim = cliffProfile(s);
   paintCliffFaces(c, rim, materials);
   // Wet sand fading into the shallows (translucent, so the sea still reads it as water).
@@ -501,7 +510,7 @@ function paintTerrain(c, s, coast, random, materials) {
     c.fillStyle = radial(c, x, y, width, [[0, `${colour}24`], [.43, `${colour}14`], [1, `${colour}00`]]);
     c.fill(ellipse(x, y, width, depth));
   }
-  paintLawnRelief(c);
+  c.drawImage(relief, -SIZE.width / 2, -SIZE.height / 2, SIZE.width, SIZE.height);
   c.restore();
   paintTurfBevel(c, coast, meadow, grassRadius);
   stroke(c, meadow, linear(c, -16, -14, 13, 12, [[0, '#64854079'], [.53, '#496d3dac'], [1, '#425f36d6']]), .145);
