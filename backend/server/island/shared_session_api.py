@@ -142,6 +142,31 @@ def wave_reply(
         raise SupabaseRejected("The database sent an unreadable native wave.") from error
 
 
+async def replay_wave_start(
+    admin: SupabaseAdmin,
+    actor_id: str,
+    island_owner: str,
+    run_epoch: str,
+    action_uid: str,
+) -> dict | None:
+    """Probe the owned immutable bell before weather, navigation or current context work."""
+    owner, epoch = identity(island_owner), identity(run_epoch)
+    replay = checked(
+        await admin.call_function(
+            "shared_session_wave_replay",
+            {
+                "p_actor_id": identity(actor_id),
+                "p_island_owner": owner,
+                "p_run_epoch": epoch,
+                "p_action_uid": root_action_uid(action_uid),
+            },
+        )
+    )
+    if replay == {"status": "new"}:
+        return None
+    return wave_reply(replay, owner, epoch, historical=True)
+
+
 async def start_wave(
     admin: SupabaseAdmin,
     catalogue: IslandCatalogue,
@@ -159,21 +184,9 @@ async def start_wave(
 ) -> dict:
     actor, owner, epoch = identifier(actor_id), identifier(island_owner), identifier(run_epoch)
     uid = root_action_uid(action_uid)
-    replay = checked(
-        await admin.call_function(
-            "shared_session_wave_replay",
-            {
-                "p_actor_id": actor,
-                "p_island_owner": owner,
-                "p_run_epoch": epoch,
-                "p_action_uid": uid,
-            },
-        )
-    )
-    if replay.get("status") != "new":
-        return wave_reply(replay, owner, epoch, historical=True)
-    if set(replay) != {"status"}:
-        raise SupabaseRejected("The database sent an unreadable bell replay.")
+    replay = await replay_wave_start(admin, actor, owner, epoch, uid)
+    if replay is not None:
+        return replay
     if snapshot_template is None:
         seed = randbelow(2**31)
         snapshot_template, reward_basis = await shared_wave_template.prepare_shared_wave(
