@@ -300,7 +300,7 @@ completed database, authenticated-client and physical-device observations.
 
 ### Shared economy integration — 19 November 2026
 
-At application source `b239bdf094d132fc57969fb31f652f106db8abc5`, a persisted shared island has
+At application/test source `9f107a6cbb57e0a9f01b1f4b8fb60da5d19dacad`, a persisted shared island has
 an account and run epoch. Its treasury is separate from personal wallets. The API
 requires the version capability and current origin; one coherent
 [snapshot](../backend/server/island/shared_snapshot.py) supplies scoped prices and
@@ -338,9 +338,23 @@ preserves failed and interrupted historical runs, the separately bounded 219
 compatibility cases, and the successful **15,284-case backend run at `37570bf9`**.
 The complete backend, 107 migrations and native decoder closure match candidate
 `b239bdf0` exactly; its sole repository change is a tutorial sentence. That
-comparison does not constitute a frontend or rendered-product pass. Full current
-frontend/build and the completed actual two-player/accounting journey remain
-pending. Earlier SDK probes retain their own sources and setup limits; natural
+comparison does not constitute a new run. The unfiltered frontend at `9f107a6c`
+passed **5,465 tests across 507 files**, with no failures/errors/skips, and its
+standard build passed. Its production frontend matches the actual `b239bdf0`
+application; the only frontend delta is the explicit full-game Nearby test budget.
+A subsequent actual Settings reset at `b239bdf0` verified automatic session/topic
+reacquisition by both honest clients, old-socket isolation and preserved personal
+Captain data. A later genuine teammate fall/ordered hold/journal revival matched
+on both clients, and an independent committed-state observer verified no treasury,
+personal-wallet, ledger or paid-quota effect before terminal. The subsequent
+natural loss remains separate. Another defended win verified pause, Auto next,
+Resume and one worker SYS next wave on both connected clients without another
+browser start. After browser exit, the regular due worker closed the attempt with
+zero loot after the real grace deadlines. Earlier SDK probes retain their own
+sources and setup limits. A separate explicitly confirmed Account deletion of the
+local test owner cleared the peer's island room, preserved their personal Captain
+and wallet, and refused the cached deleted-owner token in both API and Auth.
+Natural
 feeds, physical devices and public legacy conversion keep separate explicit
 statuses. Combat reports retain their documented trust boundary; these checks do
 not make the server a verifier of every simulated hit. No hosted migration,
@@ -1343,11 +1357,24 @@ retained receipts and races. Native session suites use the actual canonical prov
 and producer; domain-unit facts, trusted combat reports and clock fixtures remain
 explicit. Browser component checks and `npm run test:mp` use fake APIs/rooms and do
 not prove provider authentication. A separate real local Auth/REST/Realtime probe
-has exercised three registered browser users and native session primitives; full
-rendered two-player gameplay and product topic changes remain open. Historical file
-counts elsewhere in this sheet are dated inventories, not current suite results.
+exercised three registered browser users and native session primitives. Later
+rendered two-player cases verified automatic scoped session/topic reacquisition
+after reset, cached-old-socket isolation and genuine coin-free journal revival
+with independent unchanged-wallet/ledger/quota checks. A separate genuine defended
+win verified pause, Auto next, real waiting, Resume and one SYS next wave rendered
+on both connected clients without another browser start. The normal due worker
+subsequently closed that attempt without players after their actual grace
+deadlines. These bounded results do not complete every runtime scenario.
+An additional explicit local owner-account deletion verified the two-stage UI,
+automatic peer room clearance, preserved peer Captain/wallet and cached-token
+API/Auth refusal; it does not claim immediate cache eviction or all deletion
+transport policies.
+Historical file counts elsewhere in this
+sheet are dated inventories, not current suite results.
 The [test map](TEST-MAP.md#shared-economy-integration-checkpoint--19-november-2026)
-keeps exact source/results and the pending final regression gate separate. Physical
+records 15,284 passing backend cases at `37570bf9`, 5,465 passing frontend cases and
+a standard build pass at `9f107a6c`, with exact source comparisons and preserved
+historical failures. The full scenario matrix retains its separate status. Physical
 devices, prolonged natural-provider observations and every-hit combat verification
 are not inferred from any of these layers.
 

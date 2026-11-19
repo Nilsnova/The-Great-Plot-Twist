@@ -27,16 +27,16 @@ remain separate; the existing fake-room `test:mp` check does not establish them.
 
 ## Shared economy integration checkpoint — 19 November 2026
 
-Application source inventory: `b239bdf094d132fc57969fb31f652f106db8abc5`. Canonical
+Application/test source inventory: `9f107a6cbb57e0a9f01b1f4b8fb60da5d19dacad`. Canonical
 authority, native sessions/journal/closure worker, personal Captain progression,
 domain transactions, reset/deletion and coordinated clients are present. The shared
 snapshot advertises arsenal/session/repair/reset/market/match; move remains unavailable.
 The source contains 107 migrations, including the
 [accepted-prefix freshness boundary](../supabase/migrations/20261119014418_shared_revival_checkpoint_freshness.sql),
 and the client includes the [native clock and incomplete-hold correction](../specs/MP-ECO-11-canonical-client.md#native-clock-correction-and-incomplete-holds).
-These source facts and the rows below locate checks. The full backend result is
-recorded separately; frontend/build and the authenticated rendered scenario matrix
-retain their own explicit statuses.
+These source facts and the rows below locate checks. Completed backend,
+frontend/component and build results retain their exact sources; the authenticated
+rendered scenario matrix has its own explicit status.
 
 | Layer / area | Checks | Boundary |
 |---|---|---|
@@ -55,11 +55,19 @@ Recorded checkpoints must retain their exact sources:
 | `5107d5b49516e34cd3ac51075d12321b6ebcbc24`, earlier broad backend | Interrupted, exit 130: **5,029 passed, 5 failed, 116 errors**, no skips | Partial counts only. Three semantic assertions were investigated separately; confirmed disk exhaustion invalidated the remaining affected execution. This is not a completed pass. |
 | `581b65db61692cc1a56c7e1bcff4eedfd3caffc9`, earlier full frontend | **5,262 passed, 30 failed, 121 skipped**, exit 1; separate normal build exit 0 | The frontend run remains failed, including explicit ENOSPC failures and a paid-revival assertion. Its successful build does not establish a current-candidate frontend/build pass. |
 | `37570bf9e5e3c67ebd2eb1a735c9df3c709f3b80`, full backend excluding only the documented unchanged exhaustive settings matrix, disposable SQL enabled | **15,284 passed in 958.28s**, exit 0, zero failures/errors/skips; full Ruff and **107** migration parse/unique-version checks passed | All five registry cases and both calm/storm SQL → Python → Node decoder cases executed. Backend/static evidence only; no new authenticated browser acceptance is implied. |
-| `b239bdf094d132fc57969fb31f652f106db8abc5`, comparison with tested `37570bf9` | Backend tree and all 825 backend blobs/modes, 107 migration hashes, 13 decoder-closure hashes and both dependency locks match exactly; repository diff is only `frontend/src/campaign/tutorials.json` | Comparison, not another test run. Keep the backend result assigned to `37570bf9`; full frontend/build and rendered acceptance remain pending. |
+| `b239bdf094d132fc57969fb31f652f106db8abc5`, comparison with tested `37570bf9` | Backend tree and all 825 backend blobs/modes, 107 migration hashes, 13 decoder-closure hashes and both dependency locks match exactly; repository diff is only `frontend/src/campaign/tutorials.json` | Comparison, not another test run. Keep the backend result assigned to `37570bf9`; subsequent frontend/build and rendered outcomes are separate rows. |
+| `b239bdf0`, earlier unfiltered frontend | **5,464 passed, one failed, no skips**, exit 1, 1172.06s | The Nearby desktop whole-test 20-second timeout remains a failed result. A same-budget diagnostic completed the E/Use interactions before the deadline interrupted remaining assertions; no production fix is inferred. |
+| `9f107a6cbb57e0a9f01b1f4b8fb60da5d19dacad`, full unfiltered one-worker frontend, then standard build | **5,465 passed / 507 files in 1229.67s**, exit 0, zero failures/errors/skips; standard build exit 0 | Clean source and unchanged locks/migrations. The explicit Nearby per-test budget matches existing full-game tests; assertions and fixtures are unchanged. This is frontend/component/build evidence. |
+| `37570bf9` → `9f107a6c`, backend comparison; `b239bdf0` → `9f107a6c`, production frontend comparison | Complete backend tree/all 825 blobs/modes, 107 SQL hashes, 13 decoder hashes and both locks exact; all 1,484 non-test frontend blobs/modes exact | Comparison, not another run or a changed source label. Authenticated observations retain application source `b239bdf0` and their own outcomes. |
 | `a6de304bbeb5f45983e18d043c848c71a4566609`, fresh 106-migration local stack and three actual registered Chromium/SDK users | Limited native HTTP/WSS probe completed: real attachment/adoption, bell/replay/input, outsider denial, topic isolation across admission/departure and terminal observation after last withdrawal | Service-only admission of a fresh island is labeled setup. SDK channels manually follow metadata; rendered gameplay, automatic product topic changes and the complete scenario matrix are not verified. |
 | `a8fa5de1`, rendered native combat on the subsequent 107-migration local provider | Two genuine accepted WON receipts/personal completions; independent committed-state inspection found one 35-coin original-account wave credit, treasury 100 → 135, confirmed participation and released assignments/reservation | Personal wallets stayed unchanged. This observed wave-income case does not establish free revival, automatic pacing or the complete scenario matrix. |
-| `5a111e05`, rendered idle owner reset on the 107-migration local provider | Reset changed account/epoch and owner's accepted private topic; automatic member session/topic reacquisition **failed** | Preserve this failure. The later reconciliation correction needs separate rendered verification. |
+| `5a111e05`, rendered idle owner reset on the 107-migration local provider | Reset changed account/epoch and owner's accepted private topic; automatic member session/topic reacquisition **failed** | Preserve this failure. The subsequent reconciliation verification is a separate row below. |
+| `b239bdf0`, subsequent actual Settings reset on the 107-migration local provider | Both honest clients automatically acquired replacement session/topic with accepted product WebSocket joins; cached-old-socket isolation, stale-proof refusal, original UID replay and personal Captain/wallet preservation passed | Cached old SDK sockets were established before reset; post-reset new-topic/fresh-revoked-old diagnostic joins waited for both replacement product joins. Owner deletion was disabled; other membership/deletion transitions retain separate status. The earlier failed reset remains failed. |
 | `b239bdf0`, rendered free-revival attempt on the 107-migration local provider | Ordinary guide dismissal/movement and enemy-caused fall observed; ordered helper hold-start input POST received HTTP 200; both Captains then fell before a complete hold was observed and both native loss receipts settled | **Failed** free-revival scenario. No completed revival or committed zero-cost accounting pass is claimed. |
+| `b239bdf0`, subsequent actual free teammate revival and independent committed accounting on the 107-migration local provider | Both clients observed the same fall at 23.45 and journal revival at 37.7/50 HP; repeated requests retained one original body/UID and one immutable receipt/journal effect. Before terminal, treasury 200, both personal wallets/ledgers and paid repair quota stayed unchanged, with no financial child/direct-UID debit | Free revival/accounting **passed**. The subsequent natural loss settled both own native receipts; automatic pacing and other matrix scenarios remain separate. The earlier failed attempt remains failed. |
+| `b239bdf0`, actual defended win, break controls and worker auto-next on the 107-migration local provider | Three current quoted cannon buys (200 → 110); paired distinct own WON receipts; paused Auto next held for nine real seconds, then ordinary Resume; one non-player SYS start after deadline rendered on both clients | **Passed** for an eligible connected leader. Exactly one initial browser start POST/UID and no extra start are proved by the complete browser trace, not the worker observer alone. No unconnected-leader auto-start claim. |
+| `b239bdf0`, regular due-worker closure after both pacing browsers closed | After both actual last-seen +60-second deadlines, the unchanged worker closed that SYS attempt abandoned/zero loot, withdrew slots and released controls/assignments; quiescent reread matched | Real elapsed timestamps; no injected combat state, clock changes or forced finish. This separate closure is not a win or a new grant. |
+| `b239bdf0`, separate actual local test-owned Account deletion UI | Initial confirmation returned 409; explicit additional account-and-island confirmation returned 200. Peer automatically cleared the island room and kept personal Captain/progress/wallet; cached owner API returned exact 404 `player_not_set_up` and independent Auth returned 403 | **Passed** for this temporary local owner. No reset, Auto next toggle or new grant. No immediate cache-eviction, universal 401, malicious cached-socket deletion or complete lifecycle-matrix claim. |
 
 Before the final pinned backend run, provide Node and frontend dependencies matching
 `frontend/package-lock.json` (`cd frontend && npm ci`, or a verified matching local
@@ -73,8 +81,9 @@ CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' --with pglast 
 
 This command completed at the exact backend source above. Preserve its command,
 exit status, JUnit, dependency and migration evidence; later-source applicability
-requires the recorded comparison. Full frontend tests/build and authenticated
-rendered acceptance remain separate gates. The [current acceptance gates](economy/ACCEPTANCE.md#current-integration-and-open-gates)
+requires the recorded comparison. Full frontend tests/build also completed at
+their exact source above; authenticated rendered acceptance remains separate.
+The [current acceptance gates](economy/ACCEPTANCE.md#current-integration-and-open-gates)
 also require the actual rendered two-player journey and product Realtime transitions.
 
 ## 1. Backend unit tests (pytest)

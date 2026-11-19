@@ -5,10 +5,10 @@
 > **Who uses it:** teammates validating the shared economy before release.
 
 **Status:** canonical backend and coordinated client source are integrated. The
-complete documented backend regression passed; current frontend/build checks and
-authenticated scenario acceptance remain pending.
-The application source inventory is `b239bdf094d132fc57969fb31f652f106db8abc5`.
-Published dependencies
+documented backend regression, full frontend suite and standard build passed at
+their recorded sources. Authenticated scenario acceptance remains separate.
+The application and test source inventory is `9f107a6cbb57e0a9f01b1f4b8fb60da5d19dacad`.
+Merged dependencies
 provide the [contract #515](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/515),
 [permission policy #516](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/516) and
 [treasury/operation registry #517](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/517).
@@ -44,8 +44,8 @@ Captain adoption and fresh control, native bell/replay/input, outsider refusal,
 current-topic isolation across admission/departure and terminal state after the last
 withdrawal. Fresh-island service-only treasury admission was explicit installer
 setup. This was an SDK/API primitive probe, not rendered gameplay or public
-legacy-save conversion. Honest channels manually followed current metadata; automatic
-product topic changes remain unverified. Application/migration bytes were unchanged
+legacy-save conversion. Honest channels manually followed current metadata; that
+limited probe did not verify automatic product topic changes. Application/migration bytes were unchanged
 between that source and the original `5f1cfa7c34b7610234ffaef7b76ac66c143516e2`
 inventory; the intervening change was a test. That equivalence does not apply to
 the current 107-migration source inventory.
@@ -74,6 +74,23 @@ repository diff from that tested source is one tutorial-text change in
 `frontend/src/campaign/tutorials.json`. Backend results retain their original
 `37570bf9` source; no new backend run is claimed for `b239bdf0`.
 
+The unfiltered one-worker frontend suite completed at
+`9f107a6cbb57e0a9f01b1f4b8fb60da5d19dacad`: **5,465 passed across 507 test files
+in 1229.67s**, exit 0, with no failures, errors or skips. The subsequent standard
+production build passed, exit 0. Both stages preserved a clean source, all
+migration hashes and both dependency locks. Matching Node v24.22.1 and the locked
+frontend installation were verified.
+
+That frontend/build source matches the tested backend tree, all 825 backend
+blobs/modes, 107 migration hashes, 13 decoder-closure hashes and both locks exactly.
+All **1,484 non-test frontend blobs/modes** also match rendered application source
+`b239bdf0`. Its only frontend change is the [explicit full-game Nearby test
+budget](../../specs/MP-ECO-20-nearby-input-browser-budget.md); assertions, fixtures
+and production code are unchanged. The earlier full `b239bdf0` run remains failed:
+**5,464 passed, one failed, no skips**, exit 1. Its same-20-second diagnostic and
+the later two-case focused pass remain separate records. This is a test-budget
+correction, not a production fix or a relabeled historical result.
+
 Later authenticated observations used the same local provider with one strictly
 later additive migration, bringing the installed chain to 107. The original
 106-migration installation and the additive installation retain separate source
@@ -87,16 +104,63 @@ automatic pacing.
 A real idle owner reset at `5a111e05` changed the account/epoch and the owner's
 accepted private topic, but the member did not automatically acquire its new
 session/topic. That run remains failed; the later session-reconciliation change
-requires its own rendered verification. At `b239bdf0`, both rendered clients
+was subsequently verified at `b239bdf0`: both honest product clients automatically
+acquired the new scoped session and private topic after an actual idle Settings
+reset. Cached old SDK sockets were established before reset. Post-reset
+new-topic/fresh-revoked-old diagnostic joins ran only after both replacement
+product joins had correlated accepted WebSocket replies. Cached old sockets could not exchange new
+protected data; stale proof was refused, the original reset UID replayed without a
+second effect, and personal Captain data and wallets were preserved. The earlier
+failed run remains unchanged. Account deletion was disabled in this reset case.
+
+In a separate free-revival attempt at `b239bdf0`, both rendered clients
 completed ordinary tutorial dismissal and pre-bell movement. After an enemy-caused
 fall, the helper's ordered hold-start input POST received HTTP 200, but the helper
 also fell before a complete two-second hold was observed. Both native loss
 receipts settled. This remains a failed free-revival scenario, not a zero-cost
 accounting pass.
 
+A subsequent actual two-player case at the same `b239bdf0` application source
+completed free teammate revival through the ordinary ordered hold and journal.
+Both clients observed the same enemy-caused fall at simulation time 23.45 and
+the same revival at 37.7 with 50 HP. Four captured revival requests retained
+one original body/UID, target fall, hold and control proof; one immutable receipt
+and journal operation supplied the restoration. Before either terminal started,
+an independent committed-state observer verified treasury 200 unchanged, both
+personal wallets and ledgers unchanged, paid repair quota unchanged and no
+financial child or direct-UID debit/reserve/settlement. The later natural loss
+settled both own native receipts and is separate from the successful free-help
+assertions. This does not establish automatic pacing or the complete matrix.
+
+A separate defended case at `b239bdf0` bought three cannons through ordinary
+current UI quotes (200 → 170 → 140 → 110), then received two distinct own native
+WON receipts for one canonical wave. The owner paused the break, enabled Auto
+next, waited nine real seconds with the normal worker running and resumed through
+the UI. The worker created one non-player `wave_auto_start` operation after the
+resumed deadline; both clients automatically rendered that same next wave. The
+complete browser trace contains exactly one initial start POST/UID and no
+additional browser start. This trace proof comes from the rendered harness; the
+worker observer alone does not assert it. The automatic start occurred with an
+eligible connected leader, not without connected players.
+
+After the browsers closed, the regular production due worker was invoked after
+both real `last_seen + 60 seconds` deadlines had elapsed. It closed the new attempt
+as abandoned with zero loot, withdrew both slots, released controls and cleared
+both personal assignments. A second quiescent read matched. This is a separate
+no-browser closure observation, not another victory or an accelerated clock.
+
+A final separate local test-owned Account UI case verified explicit owner deletion.
+The initial confirmation returned 409 and required the additional owned-island
+confirmation; that ordinary second action returned 200. The peer automatically
+cleared the island room and retained personal Captain data, progress and wallet.
+The deleted owner's cached token received API 404 `player_not_set_up` and
+independent Auth 403. This proves the observed refusal, not immediate token-cache
+eviction or universal 401 responses. The case performed no reset, Auto next toggle
+or new grant, and does not claim malicious cached-socket revocation on deletion.
+
 | Pending acceptance gate | Required next observation |
 |---|---|
-| Final common source | Preserve the successful backend source and exact candidate comparison above. Complete full frontend tests/build on the chosen candidate, retain subsequent source differences explicitly and finish rendered acceptance. Retain exact failures/skips and source hashes. |
+| Final common source | Preserve the completed backend/frontend/build results and exact source comparisons above. Retain subsequent source differences explicitly and finish rendered acceptance. Retain exact failures/skips and source hashes. |
 | Coordinated client behavior | The integrated snapshot advertises arsenal/session/repair/reset/market/match; move remains unavailable. Verify their reachable controls and current source/authority fences through the rendered game. An available capability does not grant membership, ownership or action permission, and direct SDK success alone does not establish product behavior. |
 | Rendered two-player journey | Actual provider sessions use ordinary game UI, coherent shared quotes, session attachment, native journal/input/checkpoints and terminal handling. Capture visible scoped funds, accepted actions and committed database effects; no fake adapters or response replacement. |
 | Product Realtime transitions | Honest rendered clients automatically follow new topic metadata across admission, membership leave, reset and deletion. Retained malicious sockets cannot receive new protected data or inject accepted gameplay. Manual SDK topic changes alone do not close this gate. |
@@ -170,7 +234,9 @@ connected member could still send and receive after leaving. Tightening the RLS
 predicate alone cannot satisfy those lifecycle gates. Canonical revocation or
 topic rotation and a new authenticated run on the complete source were required.
 The newer limited probe above verifies current-topic isolation with manual SDK
-selection; the rendered product transition gate remains open.
+selection. The later 107-migration rendered reset case verifies the bounded
+automatic transition described above; other admission, departure and deletion
+transitions retain their own scenario requirements.
 
 ## Evidence layers
 
