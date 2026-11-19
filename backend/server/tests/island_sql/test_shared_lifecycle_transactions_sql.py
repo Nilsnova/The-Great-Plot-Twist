@@ -383,7 +383,8 @@ def test_only_checked_lifecycle_entries_are_service_executable(database):
     ).fetchall()
     assert len(functions) >= 10
     for signature, name, definer, config in functions:
-        assert definer is True and config == ['search_path=""']
+        assert definer is not name.startswith("island_lifecycle_legacy_game_")
+        assert config == ['search_path=""']
         for role in ("anon", "authenticated", "service_role"):
             allowed = role == "service_role" and name in {
                 "island_lifecycle_actor_status",
