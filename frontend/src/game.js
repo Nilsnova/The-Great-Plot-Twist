@@ -124,6 +124,10 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   const world = createWorld({ emit, isBlocked:worldBlocked, disposeVisuals(){harbor?.dispose();mapTouch?.dispose();perf?.dispose();experience?.dispose();marketUi?.dispose();sportsUi.dispose();shortcuts.dispose();tutorial.dispose();isletState.dispose();stopIslet?.();stopActualIslet?.();}, transition: (id, options) => sailing.start(id, options),
     cancelTransition: sailing.end, finishTransition() { sailing.end(); graphics.renderer.domElement.focus(); }, createPlace: id => createPlace({ id, isletState, island, reducedMotion, canvas: graphics.renderer.domElement, camera: view.camera,
       battleTowers: () => (id === 'home_islet' ? waves?.island : waves?.point?.controller)?.state?.towers,
+      smugglersBoarders: () => {
+        const state = id === 'home_islet' ? waves?.island.state : null;
+        return state?.phase === 'running' && state.event?.id === 'smugglers' ? state.boarders : null;
+      },
       isActive: () => active && !outsideBlocked() && !isCaptainDown() && !currentWaveAction(), player: () => controller.player.position, onFar: id => { farHint = { id, until: performance.now() + HINT_MS }; } }), attach(place) { homePortrait.update(null); scene.add(place.group); water.setCoast(place.group); lightPools.setPlace(place.group); controller.setPlace(place); view.setPlace(place.id, controller.player.position); } });
   async function travel(id, options) {
     mapTouch?.cancel();
@@ -314,15 +318,16 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     villagePurse??=container.querySelector('.hud-coins');
     const caption=document.documentElement.style.getPropertyValue('--narrator-card-height');
     const placing=!!island.moving,selectionBar=!placing?island.ui?.selectionElement??island.selectionElement:null;
+    const selectionPad=width<640&&selectionBar&&view.villageFit?8:0;
     if(selectionBar){villageBar=selectionBar;villagePlacing=placing;}
     else if(!villageBar?.isConnected||villageBar.hidden||villagePlacing!==placing||villageBar.classList.contains('island-selection-dock')){
       villageBar=container.querySelector(placing?'.island-move-bar:not([hidden])':'.island-village-mode:not([hidden])');villagePlacing=placing;
     }
-    const key=`${width}:${height}:${caption}:${villageQuests?.textContent}:${villageQuests?.className}:${villageQuests?.hidden}:${villagePurse?.textContent}:${placing}:${villageBar?.textContent}:${villageBar?.className}:${document.documentElement.className}:${document.body.className}`;
+    const key=`${width}:${height}:${caption}:${villageQuests?.textContent}:${villageQuests?.className}:${villageQuests?.hidden}:${villagePurse?.textContent}:${placing}:${selectionPad}:${villageBar?.textContent}:${villageBar?.className}:${document.documentElement.className}:${document.body.className}`;
     if(key!==villageLayoutKey){
       const bar=villageBar;
       const top=width<640?Math.max(villageQuests?.getBoundingClientRect().bottom??0,villagePurse?.getBoundingClientRect().bottom??0):80;
-      villageViewport={width,height,top:Math.max(80,top+12),bottom:bar?height-bar.getBoundingClientRect().top+12:112};
+      villageViewport={width,height,top:Math.max(80,top+12),bottom:bar?height-bar.getBoundingClientRect().top+12+selectionPad:112};
       villageLayoutKey=key;
     }
     view.setVillageView(true,villageViewport);

@@ -300,7 +300,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       const core = decorateCore(place);
       const deco = decorateIsland(place, {container, art, reducedMotion, quality: () => preferences().quality, canvas: adapters.canvas, camera: adapters.camera,
         isActive: adapters.isActive, onPick: pick, houseSupport: activeHouseSupport, selection: selectedAnchor, defenseRange: () => isl.ui.selectionRange,
-        player: adapters.player, battleTowers: adapters.battleTowers, onFar: adapters.onFar,
+        player: adapters.player, battleTowers: adapters.battleTowers, smugglersBoarders: adapters.smugglersBoarders, onFar: adapters.onFar,
         placing: () => isl.moving.active, onGround: (x, z) => isl.moving.tap(x, z),
         canPickRemote: id => isl.village.active && !!spotById(id),
         retryAdditionalArt: () => deco.runArtTask('core', () => core.retryArt())});
