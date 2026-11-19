@@ -46,18 +46,42 @@ report.loadedExportFunctionSha256=Object.fromEntries(Object.entries(loaded).map(
 await mkdir(output,{recursive:true});
 const save=()=>writeFile(resolve(output,'driver-report.json'),`${JSON.stringify(report,null,2)}\n`);
 let ownerEnv,memberEnv;
+// Explicit failure retention lets a maintainer inspect/reuse this exact test pair.
+export const retainedClients={};
+export async function finishRepairSceneEntry(page){
+  const actions=[],until=Date.now()+60000;
+  while(Date.now()<until){
+    const action=await page.evaluate(()=>{
+      const lobby=document.querySelector('.island-card-lobby[open]');
+      if(lobby){const button=[...lobby.querySelectorAll('button')].find(node=>['Look around first','Done'].includes(node.textContent.trim()));
+        if(button){button.click();return {label:button.textContent.trim(),finalLobby:true};}}
+      for(const selector of ['dialog.cutscene[open]','.goal-card[open]','.tutorial-card[open]','.shell-screen[open]']){
+        const dialog=document.querySelector(selector),button=dialog&&[...dialog.querySelectorAll('button')]
+          .find(node=>['Skip','Got it','Resume','Start playing'].includes(node.textContent.trim()));
+        if(button){button.click();return {label:button.textContent.trim(),finalLobby:false};}
+      }
+      return null;
+    });
+    if(action){actions.push(action);if(action.finalLobby)return actions;}
+    await page.waitForTimeout(100);
+  }
+  throw Error('The actual first-game/Continue flow did not finish at its final lobby');
+}
 async function checked(page,path,body){const result=await api(page,path,{method:'POST',body});assert.equal(result.status,200,JSON.stringify(result));return result;}
 try {
   // Each invocation launches its own Chromium process, preventing cross-player focus ownership.
   ownerEnv=await createClients({labels:['quota-owner'],runtimePath,expectedCommit:BASELINE,independentBrowsers:true});
   memberEnv=await createClients({labels:['quota-member'],runtimePath,expectedCommit:BASELINE,independentBrowsers:true});
+  retainedClients.ownerEnv=ownerEnv;retainedClients.memberEnv=memberEnv;
   const owner=ownerEnv.clients[0],member=memberEnv.clients[0];
   assert.notEqual(owner.context.browser(),member.context.browser());report.distinctBrowserObjects=true;
   await checked(owner.page,'/api/games',{actionUid:uid()});
   const own=await api(owner.page,'/api/island');assert.equal(own.status,200);const code=own.data.code;
   await admit(owner.actorId,{coins:2000,runtimePath});
   await checked(member.page,'/api/games/join',{code,actionUid:uid()});
-  await land(owner.page);await land(member.page,{join:code});
+  await land(owner.page);const ownerEntry=await finishRepairSceneEntry(owner.page);
+  await land(member.page,{join:code});const memberEntry=await finishRepairSceneEntry(member.page);
+  report.setup.push({name:'ordinary complete front-door flows',ownerEntry,memberEntry});
   for(const client of [owner,member])await client.page.waitForFunction(()=>!!window.__island?.island.session.proof(),null,{timeout:30000});
   await install('update public.islands set wave_best=20,next_wave=1 where player_id=$1::uuid',[owner.actorId],
     'Explicit saved island unlock/repeat-wave fixture for paid-quota coverage; no combat, HP, outcome or clock is supplied',{runtimePath});
@@ -83,13 +107,15 @@ try {
   report.result=await runFullRepairQuotaAcceptance({ownerPage:owner.page,memberPage:member.page,
     api,observe:(sql,params)=>observe(sql,params,{runtimePath}),outputDir:output,sourceCommit:BASELINE,
     setup:report.setup,spots:['wall_1','wall_2','wall_3','wall_4','wall_5','wall_6'],
-    reconnectMember:async page=>{await page.reload();await land(page,{join:code});}});
+    reconnectMember:async page=>{await page.reload();await land(page,{join:code});await finishRepairSceneEntry(page);}});
   report.walletsAfter=await observe('select player_id,balance from public.wallets where player_id=any($1::uuid[]) order by player_id',[[owner.actorId,member.actorId]],{runtimePath});
   assert.deepEqual(report.walletsAfter,report.walletsBefore);report.status='passed';
 }catch(error){report.status='failed';report.failure={name:error.name,message:error.message,stack:error.stack};process.exitCode=1;
   for(const [label,env] of [['owner',ownerEnv],['member',memberEnv]])if(env)await env.clients[0].page.screenshot({path:resolve(output,'failure-'+label+'.png')}).catch(()=>{});
 }finally{
-  await ownerEnv?.close();await memberEnv?.close();
+  const retain=report.status==='failed'&&process.env.MP_ECO_RETAIN_FAILED_CLIENTS==='1';
+  if(!retain){await ownerEnv?.close();await memberEnv?.close();}
+  report.clientsClosed=!retain;
   report.helperHashesAfter=hashes();report.helpersUnchanged=JSON.stringify(report.helperHashesBefore)===JSON.stringify(report.helperHashesAfter);
   try{report.sourceAfter=sourceEvidence(BASELINE,{checkoutRoot:helperRoot});report.scenarioSourceAfter=sourceEvidence(BASELINE,{checkoutRoot:root});report.servedSourceAfter=servedSourceEvidence(runtime);
     assert.equal(digest(migrationManifestPath),report.providerMigrations.manifestSha256);}
