@@ -19,6 +19,7 @@ function milestone(root, name, width, height, x, z) {
   geometry.translate(0, (height / 2 - 4) / 16, 0);
   const mesh = new THREE.Mesh(geometry, spriteMaterial(null));
   const foot = projectGround(x, z); mesh.name = name; mesh.position.set(foot.x, foot.y, 0);
+  mesh.userData.ground = {x, z};
   mesh.renderOrder = 100 + z; mesh.frustumCulled = false; mesh.visible = false;
   root.add(mesh); return mesh;
 }
