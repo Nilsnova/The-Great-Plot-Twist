@@ -1,29 +1,30 @@
 import * as THREE from 'three';
 import {cliffProfile} from '../../art/coast-cliffs.js';
 import {placeArt} from '../art.js';
-import {projectGround} from '../projection.js';
+import {projectGround, projectedCoastBounds} from '../projection.js';
 import {surfaces} from './surfaces.js';
 
-const START = 212, STEP = 4;
-// Open water at 248–292° leaves room for the Smugglers' occasional north approach.
+const START = 200, STEP = 4;
+// Both shoulders sweep toward the inlet. The full 248–292° Smugglers approach stays open.
 const HEIGHTS = [
-  0, .20, .64, 1.16, 1.55, 1.84, 1.74, 1.33, .45, 0,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  .45, 1.18, 1.61, 1.83, 1.81, 1.47, .83, .46, .18, 0,
+  0, .14, .62, 1.22, 1.80, 1.80, 2.42, 2.69, 2.69, 2.54, 2.54, 1.56, 0, // West, 200–248°
+  ...Array(10).fill(0),
+  0, 1.44, 2.14, 2.54, 2.65, 2.79, 2.79, 2.44, 2.30, 1.63, 1.09, .55, .16, 0, // East, 292–344°
 ];
-const STONE_TOP = ['#e1b886', '#d7ab7a', '#dfb283', '#e4bd90'];
-const STONE_FACE = ['#be9365', '#b48a61', '#bd8f65', '#c79a6d'];
-const STONE_FOOT = '#83604a';
-const GRASS = ['#a4c54e', '#acc752', '#a8c54d', '#9ab64a'];
-const GRASS_LIP = '#89aa40', GRASS_EDGE = '#6d8532';
+const STONE_TOP = ['#e5bf8d', '#dbb283', '#e1b986', '#e7c197'];
+const STONE_FACE = ['#c29a6d', '#b9966b', '#bc8f65', '#c8a178'];
+const STONE_FOOT = '#85634b';
+const GRASS = ['#a4c855', '#a5c458', '#a1c354', '#9cb54d'];
+const GRASS_LIP = '#90ab4b', GRASS_EDGE = '#748a37';
 const TERRACE_PLANTS = [
-  {section: 3, along: .78, depth: .31, asset: 'birch', size: .66},
-  {section: 5, along: .58, depth: .78, asset: 'rock', size: .51},
-  {section: 6, along: .73, depth: .39, asset: 'shrub', size: .61},
-  {section: 22, along: .8, depth: .51, asset: 'rock', size: .57},
-  {section: 24, along: .61, depth: .60, asset: 'oak', size: .62},
-  {section: 25, along: .74, depth: .38, asset: 'flowers', size: .72},
-  {section: 27, along: .4, depth: .51, asset: 'shrub', size: .59},
+  {section: 4, along: .58, depth: .23, asset: 'birch', size: .62},
+  {section: 6, along: .68, depth: .79, asset: 'rock', size: .7},
+  {section: 8, along: .45, depth: .35, asset: 'shrub', size: .62},
+  {section: 10, along: .33, depth: .42, asset: 'rock', size: .54},
+  {section: 25, along: .61, depth: .40, asset: 'rock', size: .53},
+  {section: 27, along: .63, depth: .62, asset: 'oak', size: .60},
+  {section: 29, along: .79, depth: .41, asset: 'flowers', size: .61},
+  {section: 32, along: .55, depth: .39, asset: 'shrub', size: .71},
 ];
 // The small sea rocks sit between the three beach approaches, beyond the playable coast.
 const SEA_ROCKS = [
@@ -34,32 +35,44 @@ const SEA_ROCKS = [
 ];
 const mixPoint = (a, b, share) => a.map((value, index) => value + (b[index] - value) * share);
 
-// Both shelves sit behind the existing shore. Their caps have real display height,
+// Three shelves sit behind the existing shore. Their caps have real display height,
 // while the analytic coast remains the only walkable surface.
 function crossSections(coast) {
+  const bounds = projectedCoastBounds(coast);
   return HEIGHTS.map((lift, index) => {
     const bearing = START + index * STEP;
     const {x, z} = coast[bearing / 2], length = Math.hypot(x, z);
-    const width = .24 + Math.sqrt(lift) * 3.04;
+    const slope = projectGround(x / length, z / length).x;
+    const edge = slope < 0 ? bounds.minX + .21 : bounds.maxX - .21;
+    const room = (edge - projectGround(x, z).x) / slope - .09;
+    const width = THREE.MathUtils.clamp(room, .18, .34 + Math.sqrt(lift) * 3.6);
     const point = (share, elevation) => {
-      const out = .085 + width * share;
+      const out = .09 + width * share;
       return [x + x / length * out, elevation, z + z / length * out];
     };
-    const lower = lift * .49;
+    const lower = lift * (.32 + Math.sin(index * .71) * .032);
+    const middle = lift * (.63 + Math.cos(index * .73) * .036);
+    const midEdge = .31 + Math.sin(index * .78) * .033;
+    const upperEdge = .63 + Math.cos(index * .83) * .043;
     return {
       lift,
       front: point(0, 0),
-      frontBatter: point(.04, lower * .24),
-      frontStone: point(.07, lower * .92),
-      frontLip: point(.11, lower),
-      frontCap: point(.15, lower),
-      upperFoot: point(.58, lower),
-      upperBatter: point(.61, lower + lift * .10),
-      upperStone: point(.64, lift * .96),
-      upperLip: point(.67, lift),
-      upperCap: point(.71, lift),
+      frontBatter: point(.036, lower * .22),
+      frontStone: point(.053, lower * .91),
+      frontLip: point(.081, lower),
+      frontCap: point(.123, lower),
+      middleFoot: point(midEdge, lower),
+      middleBatter: point(midEdge + .027, lower + (middle - lower) * .17),
+      middleStone: point(midEdge + .045, middle - (middle - lower) * .08),
+      middleLip: point(midEdge + .059, middle),
+      middleCap: point(midEdge + .108, middle),
+      upperFoot: point(upperEdge, middle),
+      upperBatter: point(upperEdge + .021, middle + (lift - middle) * .16),
+      upperStone: point(upperEdge + .035, lift - (lift - middle) * .085),
+      upperLip: point(upperEdge + .063, lift),
+      upperCap: point(upperEdge + .091, lift),
       crest: point(.95, lift),
-      back: point(.99, lift * .70),
+      back: point(.993, lift * .69),
       heel: point(1, 0),
     };
   });
@@ -98,13 +111,13 @@ export function createHomeRearRim(group, art) {
     triangle(a, c, d, upper, lower, lower);
   }
   function facing(a, b, top, base, tint, joint = null) {
-    panel(a[top], b[top], b[base], a[base], '#9e825f', STONE_FOOT);
+    panel(a[top], b[top], b[base], a[base], '#a28b6a', STONE_FOOT);
     const keys = joint === null ? [0, 1] : [0, joint, 1];
     const at = (x, down) => mixPoint(mixPoint(a[top], b[top], x), mixPoint(a[base], b[base], x), down);
     for (let j = 1; j < keys.length; j++) {
-      const left = keys[j - 1] + .025, right = keys[j] - .025, bevel = .063;
-      const p = at(left, .19), q = at(left + bevel, .04), r = at(right - bevel, .05), s = at(right, .21);
-      const t = at(right, .83), u = at(right - bevel, .94), v = at(left + bevel, .93), w = at(left, .78);
+      const left = keys[j - 1] + .019, right = keys[j] - .024, bevel = .082;
+      const p = at(left, .17), q = at(left + bevel, .041), r = at(right - bevel, .061), s = at(right, .236);
+      const t = at(right, .78), u = at(right - bevel, .93), v = at(left + bevel, .945), w = at(left, .81);
       const light = STONE_TOP[(tint + j - 1) % STONE_TOP.length], face = STONE_FACE[tint];
       panel(q, r, s, p, light, face);
       panel(p, s, t, w, face, '#a38360');
@@ -159,24 +172,30 @@ export function createHomeRearRim(group, art) {
     const a = sections[i], b = sections[i + 1];
     if (a.lift === 0 && b.lift === 0) continue;
     const tint = (i + Math.floor(i / 3) * 2) % STONE_FACE.length;
+    const middleTint = (tint + 1) % STONE_FACE.length;
     const grass = GRASS[Math.floor(i / 3) % GRASS.length];
     const strip = (far, near, high, low) => panel(a[far], b[far], b[near], a[near], high, low);
     strip('heel', 'back', STONE_FOOT, STONE_FACE[tint]);
     strip('back', 'crest', GRASS_EDGE, grass);
-    strip('crest', 'upperCap', '#90aa42', grass);
+    strip('crest', 'upperCap', '#90a947', '#b0ca63');
     strip('upperCap', 'upperLip', grass, GRASS_LIP);
     strip('upperLip', 'upperStone', GRASS_LIP, STONE_TOP[tint]);
     facing(a, b, 'upperStone', 'upperBatter', tint, i % 5 === 3 ? .46 : null);
     strip('upperBatter', 'upperFoot', STONE_FACE[tint], STONE_FOOT);
-    strip('upperFoot', 'frontCap', '#82983d', grass);
+    strip('upperFoot', 'middleCap', '#8ca549', grass);
+    strip('middleCap', 'middleLip', grass, GRASS_LIP);
+    strip('middleLip', 'middleStone', GRASS_LIP, STONE_TOP[middleTint]);
+    facing(a, b, 'middleStone', 'middleBatter', middleTint, i % 5 === 2 ? .44 : null);
+    strip('middleBatter', 'middleFoot', STONE_FACE[middleTint], STONE_FOOT);
+    strip('middleFoot', 'frontCap', '#7e963e', grass);
     strip('frontCap', 'frontLip', grass, GRASS_LIP);
     strip('frontLip', 'frontStone', GRASS_LIP, STONE_TOP[tint]);
     facing(a, b, 'frontStone', 'frontBatter', tint, i % 5 === 1 ? .62 : null);
     strip('frontBatter', 'front', STONE_FACE[tint], STONE_FOOT);
 
     const cap = (near, far, along, depth) => mixPoint(mixPoint(a[near], b[near], along), mixPoint(a[far], b[far], along), depth);
-    if ([2, 4, 7, 22, 25, 27].includes(i)) grassTuft(cap('frontCap', 'upperFoot', .57, .57), 1.15);
-    if ([3, 6, 23, 26].includes(i)) {
+    if ([4, 6, 9, 25, 28, 31].includes(i)) grassTuft(cap('frontCap', 'middleFoot', .57, .57), 1.15);
+    if ([5, 7, 26, 29, 32].includes(i)) {
       grassTuft(cap('upperCap', 'crest', .64, .64), 1.08);
       rockChip(cap('upperCap', 'crest', .41, .43), .85 + .12 * (i % 3));
     }
