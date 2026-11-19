@@ -4,7 +4,8 @@
 // 64 x 48 world units as the backdrop. Alpha is the decorative cliff-base/foam silhouette; walking
 // and placement retain the separate analytic top in surfaces.js (D062).
 import {surfaces} from '../world/places/surfaces.js';
-import {canvas, ellipse, line, stroke} from './paint.js';
+import {LEGACY_DEPTH} from '../world/projection.js';
+import {canvas, ellipse, line, linear, poly, stroke} from './paint.js';
 import {cliffProfile, paintCliffFaces, paintGrassRim} from './coast-cliffs.js';
 import {meadowScale, paintMaterial, pathMaterialMask} from './village/terrain-materials.js';
 
@@ -15,6 +16,52 @@ const PATHS = {
     clearings: [[0, -14, 3.2], [-8, 6.6, 3.4], [8.5, 12.4, 2.4], [7, -6, 2.6], [-8, -6, 2.6]]},
 };
 const seeded = seed => () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+
+const PAVERS = [
+  ['#cbb998', '#a39175', '#e5d4aa'], ['#d4c19e', '#ad9b79', '#e9d7af'],
+  ['#ccbea6', '#a1947e', '#e8d9be'], ['#bfae92', '#9f8e72', '#dccaaa'],
+  ['#d5c2a3', '#ad987a', '#ebd9b6'], ['#c8b69d', '#a38e75', '#e4d2b5'],
+];
+
+/** World-anchored, staggered limestone blocks recessed into the existing path and clearing mask. */
+function paintPavers(c, paths, materials) {
+  const bounds = {left: -SIZE.width / 2, top: -SIZE.height / 2, right: SIZE.width / 2, bottom: SIZE.height / 2};
+  const random = seeded(18281), faces = new Path2D();
+  c.save();
+  c.clip(pathMaterialMask(paths));
+  c.fillStyle = '#a0947b';
+  c.fillRect(bounds.left, bounds.top, SIZE.width, SIZE.height);
+  for (let row = bounds.top; row < bounds.bottom;) {
+    const depth = .42 + random() * .24;
+    let left = bounds.left - random();
+    while (left < bounds.right) {
+      const width = .67 + random() * .7, trim = .013 + random() * .016;
+      const chip = .03 + random() * .115, drift = (random() - .5) * .061;
+      const [face, bevel, gleam] = PAVERS[Math.floor(random() * PAVERS.length)];
+      const x = left + trim, y = row + trim + drift;
+      const right = left + width - trim, bottom = row + depth - trim + drift;
+      left += width;
+      const centerZ = (y + bottom) / (2 * LEGACY_DEPTH);
+      if (!nearPath(paths, (x + right) / 2, centerZ, 2.4)) continue;
+      c.fillStyle = bevel;
+      c.fill(poly([[x + chip, y], [right - .07, y + .013], [right, y + .065],
+        [right - .029, bottom - .032], [right - .092, bottom], [x + .059, bottom],
+        [x, bottom - .067], [x, y + .071]], .012));
+      const top = poly([[x + chip, y + .014], [right - .083, y + .021], [right - .028, y + .072],
+        [right - .049, bottom - .066], [right - .108, bottom - .075], [x + .071, bottom - .067],
+        [x + .023, bottom - .103], [x + .02, y + .076]], .014);
+      c.fillStyle = linear(c, x, y, x + width * .3, bottom, [[0, gleam], [.24, face], [.78, face], [1, bevel]]);
+      c.fill(top);
+      faces.addPath(top);
+    }
+    row += depth;
+  }
+  // Reuse the atlas's original limestone grain inside each face. The carved joints stay distinct.
+  c.clip(faces);
+  c.globalCompositeOperation = 'soft-light';
+  paintMaterial(c, materials, 'path', {alpha: .15});
+  c.restore();
+}
 
 /** True when the place has a painted ground. */
 export const hasGround = id => Object.hasOwn(PATHS, id) && Object.hasOwn(surfaces, id);
@@ -74,7 +121,7 @@ export function paintGround(id, density = 28, materials = null) {
       c.lineWidth = width; c.strokeStyle = colour; c.stroke(trail);
       for (const [x, z, r] of paths.clearings) { c.fillStyle = colour; c.fill(ellipse(...at(x, z), r + (width - 2.2) / 2, (r + (width - 2.2) / 2) * .72)); }
     }
-    if (materials) { c.save(); c.clip(pathMaterialMask(paths)); paintMaterial(c, materials, 'path'); c.restore(); }
+    if (materials) paintPavers(c, paths, materials);
     c.globalAlpha = materials ? .25 : 1;
     c.fillStyle = '#d7b273'; for (let i = 0; i < 120; i++) { const [points] = [paths.lines[Math.floor(random() * paths.lines.length)]], t = random(), j = Math.floor(t * (points.length - 1)), f = t * (points.length - 1) - j;
       const [x0, z0] = points[j], [x1, z1] = points[Math.min(points.length - 1, j + 1)]; c.fill(ellipse(...at(x0 + (x1 - x0) * f + (random() - .5) * 1.4, z0 + (z1 - z0) * f + (random() - .5) * 1.4), .09, .06)); }
