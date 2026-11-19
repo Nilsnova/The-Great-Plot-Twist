@@ -560,7 +560,8 @@ export function decorateIsland(place, ctx = {}) {
         || (front && mesh.renderOrder < front.order)) continue;
       const [width, height, anchor] = artSizes[mesh.userData.art], image = mesh.material.map?.image;
       const u = .5 + (tap.x - mesh.position.x) / width;
-      const v = 1 - anchor - (tap.y - mesh.position.y) / height;
+      const portraitDepth = ctx.camera?.userData.homePortraitDepth ?? 1;
+      const v = 1 - anchor - (tap.y - mesh.position.y) * portraitDepth / height;
       if (u < 0 || u >= 1 || v < 0 || v >= 1 || !image?.getContext) continue;
       try {
         const alpha = image.getContext('2d')?.getImageData(Math.floor(u * image.width), Math.floor(v * image.height), 1, 1).data[3];
@@ -582,9 +583,11 @@ export function decorateIsland(place, ctx = {}) {
       ...(campaignMeshes.size ? CAMPAIGN_BUILDINGS.map(item => ({id: item.id, x: item.x, z: item.z, w: item.w, h: item.h})) : []),
       ...(state.visitor || layout.cabin === false ? [] : [{id: CABIN.id, x: CABIN.x, z: CABIN.z, w: 3, h: 6}])];
     let best = null, bestScore = Infinity;
+    const portraitDepth = ctx.camera?.userData.homePortraitDepth ?? 1;
     for (const item of candidates) {
       const foot = projectPoint(item.x, item.z);
-      if (Math.abs(foot.x - tap.x) > item.w || tap.y > foot.y + item.h || tap.y < foot.y - .54) continue;
+      const vertical = (tap.y - foot.y) * portraitDepth;
+      if (Math.abs(foot.x - tap.x) > item.w || vertical > item.h || vertical < -.54) continue;
       const score = Math.hypot(foot.x - tap.x, foot.y - tap.y);
       if (score < bestScore) { best = item.id; bestScore = score; }
     }
