@@ -108,18 +108,20 @@ function paintPavers(c, paths, materials) {
       const [face, edge, sun] = PAVERS[pigment];
       const x = left + joint, y = row + joint + drift;
       const right = left + width - joint, bottom = row + depth - joint + drift;
+      const bevel = .053 + chip * .44;
       left += width;
       if (!nearPath(paths, (x + right) / 2, (y + bottom) / (2 * LEGACY_DEPTH), 2.55)) continue;
 
-      c.fillStyle = edge;
+      c.fillStyle = linear(c, x + .08, y + .05, right, bottom,
+        [[0, face], [.59, edge], [.86, edge], [1, '#79684f']]);
       c.fill(poly([[x + chip, y], [right - .062, y + .009], [right, y + .056],
         [right - .018, bottom - .042], [right - .065, bottom], [x + .062, bottom - .005],
         [x, bottom - .061], [x + .012, y + .057]], .019));
-      const top = poly([[x + chip, y + .014], [right - .083, y + .022], [right - .031, y + .069],
-        [right - .048, bottom - .058], [right - .092, bottom - .073], [x + .071, bottom - .063],
-        [x + .025, bottom - .092], [x + .031, y + .063]], .018);
+      const top = poly([[x + chip, y + .014], [right - .083, y + .022], [right - .038, y + .069],
+        [right - .065, bottom - bevel], [right - .116, bottom - bevel - .018], [x + .071, bottom - bevel + .009],
+        [x + .025, bottom - bevel - .019], [x + .031, y + .063]], .018);
       c.fillStyle = linear(c, x + .034, y, x + width * .61, bottom,
-        [[0, sun], [.29, face], [.83, face], [1, edge]]);
+        [[0, sun], [.26, face], [.65, face], [1, edge]]);
       c.fill(top);
       if (sheet) {
         const [sx, sy, sw, sh] = sheet, [u, v, w, h] = PAVER_FACES[pigment];
@@ -127,6 +129,13 @@ function paintPavers(c, paths, materials) {
         c.drawImage(materials, sx + u * sw, sy + v * sh, w * sw, h * sh, x, y, right - x, bottom - y);
         c.restore();
       }
+      c.save(); c.clip(top);
+      stroke(c, [[x + chip + .021, y + .019], [x + width * .53, y + .018], [right - .097, y + .027]],
+        '#fff0c996', .035);
+      c.fillStyle = '#78634a21';
+      c.fill(poly([[x + width * .77, y + depth * .28], [right, y + depth * .37], [right, bottom - bevel],
+        [x + width * .59, bottom - bevel]], .022));
+      c.restore();
       c.fillStyle = sun + '53';
       c.fill(ellipse(x + width * .23, y + depth * .28, .024 + chip * .22, .012));
       if (chip > .104) {
