@@ -104,6 +104,7 @@ export function createGames(isl) {
     const answer = await isl.api.freshStart({confirmCode: typed});
     if (isl.disposed || !answer.ok) return answer;
     isl.resetGeneration++;
+    isl.funding.forget(isl.own?.code);
     invalidateWallFeedback();
     const code = islandCode(isl.own?.code ?? '') || islandCode(typed);
     // This page's memory of the old island goes too: its campaign, walls and tree picks.
@@ -149,6 +150,8 @@ export function createGames(isl) {
     interruptBoat();
     isl.village.leave();
     invalidateWallFeedback();
+    isl.selectionGeneration++; isl.loadTicket++;
+    isl.moving.cancel(); isl.demolishSpot = null; isl.demolishQuote = null;
     isl.visitCode = symbols; isl.visiting = null; isl.flow.reset(); isl.ui.close();
     return true;
   }

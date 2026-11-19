@@ -104,9 +104,13 @@ export function createApi({ session, fetchImpl = globalThis.fetch, timeoutMs = R
   const limit = Number.isFinite(timeoutMs) && timeoutMs > 0 ? timeoutMs : REQUEST_TIMEOUT_MS;
 
   // The options for fetch. It runs before the call, so a bad path or body throws at once.
-  function prepare(method, path, body) {
+  function prepare(method, path, body, readOptions) {
     checkPath(path);
     const headers = {};
+    if (method === 'GET' && readOptions?.headers) {
+      const version = new Headers(readOptions.headers).get('X-Island-Economy-Version');
+      if (version !== null) headers['X-Island-Economy-Version'] = version;
+    }
     const publicRead = method === 'GET'
       && ['/api/config', '/api/market'].includes(path.split('?')[0]);
     const token = publicRead ? null : session.getToken();
@@ -189,7 +193,7 @@ export function createApi({ session, fetchImpl = globalThis.fetch, timeoutMs = R
   }
 
   return {
-    get: path => send(path, prepare('GET', path)),
+    get: (path, options) => send(path, prepare('GET', path, undefined, options)),
     post: (path, body) => send(path, prepare('POST', path, body)),
     put: (path, body) => send(path, prepare('PUT', path, body)),
     del: (path, body) => send(path, prepare('DELETE', path, body)),
