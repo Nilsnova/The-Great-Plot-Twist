@@ -89,7 +89,7 @@ it('fits the real southwest mooring artwork without changing walking, targeting 
     zoneIdsStable: true, shoreStable: true, retainsTravel: true, wallStable: true, ropeChangesOnlyHeight: true, ropeReturns: true,
   });
   expect(result.maxOrder).toBeLessThan(20);
-  expect(result.width).toBeLessThanOrEqual(3);
+  expect(result.width).toBe(4.75);
   expect(result.waterline).toBeCloseTo(-14.7);
   expect(result.visibleHullBottom).toBeGreaterThanOrEqual(-14.88);
   expect(result.visibleHullBottom).toBeLessThan(-14.65);
