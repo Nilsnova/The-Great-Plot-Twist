@@ -5,6 +5,31 @@
 .hud-play .hud-coins{position:absolute;top:18px;left:20px;display:flex;align-items:center;gap:12px;min-height:44px;padding:6px 16px;box-sizing:border-box;background:var(--u-sea);font:800 22px/1 var(--u-font);color:var(--u-gold);font-variant-numeric:tabular-nums;letter-spacing:.5px;pointer-events:auto}
 .hud-play .hud-wave{display:inline-flex;align-items:center;gap:8px;padding-left:12px;border-left:1px solid var(--u-gold);color:var(--u-ink);font:700 18px/1.2 var(--u-font);letter-spacing:0;white-space:nowrap}
 .hud-play .hud-wave[hidden]{display:none}
+/* Embossed doubloon and turquoise wave crest. Their text remains available in forced colors. */
+.hud-play .hud-coin-mark,.hud-play .hud-wave-icon{display:inline-block;position:relative;width:1.08em;height:1em;line-height:1;overflow:hidden;color:transparent;flex:none}
+.hud-play .hud-coin-mark{
+  vertical-align:-.12em;box-sizing:border-box;width:1em;border:1px solid #ffe6a1;border-radius:50%;
+  background:linear-gradient(135deg,#fff0b1 5%,#ffc655 43%,#c77e13 94%);
+  box-shadow:inset 0 0 0 .075em #a96122,inset .10em .12em 0 #fff2bb,darkgoldenrod 0 .04em .04em,#092b36 0 .10em .10em;
+}
+.hud-play .hud-coin-mark::after{
+  content:"⚓︎";position:absolute;inset:0;display:grid;place-items:center;
+  color:#88501b;font-size:.73em;text-shadow:0 1px #ffdf91;
+}
+.hud-play .hud-wave-icon::before,.hud-play .hud-wave-icon::after{content:"";position:absolute}
+.hud-play .hud-wave-icon::before{
+  inset:.10em .04em .16em .23em;transform:skewX(-20deg) rotate(-11deg);
+  border:.175em solid #66ced5;border-right-color:#3299b0;border-bottom-color:transparent;border-radius:56% 61% 22% 35%;
+}
+.hud-play .hud-wave-icon::after{
+  bottom:.16em;left:.03em;width:.98em;height:.30em;background:#57bac9;
+  border-radius:70% 18% 72% 16%;transform:rotate(-7deg);
+}
+@media(forced-colors:active){
+  .hud-play .hud-coin-mark,.hud-play .hud-wave-icon{color:CanvasText;overflow:visible;background:none;border:0;box-shadow:none}
+  .hud-play .hud-coin-mark::after,.hud-play .hud-wave-icon::before,.hud-play .hud-wave-icon::after{content:none}
+}
+
 .hud-play .hud-right{position:absolute;top:18px;right:20px;width:min(310px,calc(100vw - 40px));display:grid;justify-items:end;gap:14px}
 .hud-play .hud-menu{display:inline-flex;align-items:center;gap:10px;min-height:44px;padding:8px 16px;border:0;background:var(--u-sea);color:var(--u-ink);font:700 17px/1 var(--u-font);cursor:pointer;pointer-events:auto}
 .hud-play .hud-menu:hover{background:var(--u-raise)}.hud-play .hud-menu:focus-visible{outline:3px solid var(--u-gold);outline-offset:6px}
