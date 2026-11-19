@@ -4,7 +4,7 @@
 >
 > **Who uses it:** implementers and reviewers validating the economy across database, API and authenticated clients.
 
-- **Status:** offline verification and integrated runtime source are available; final regression and authenticated scenario acceptance remain pending.
+- **Status:** local source-qualified SQL/authenticated-browser acceptance is recorded in the [completion index](../docs/evidence/MP-ECO-20-browser-completion/README.md). Hosted conversion and rollout remain outside scope.
 - **Branch:** `test/shared-economy-acceptance`
 - **Issue:** [#505](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/505)
 
