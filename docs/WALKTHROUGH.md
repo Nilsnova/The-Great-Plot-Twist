@@ -12,6 +12,10 @@
 > captain health, the campaign, research, tower tiers, tear-down, house roles, the captain tree, wave events,
 > the narrator, the cartoon art and the database. Each ends with the tests that cover it and likely questions.
 > Where a v3 part contradicts parts 8 to 14, the v3 part is right (see the list at the end).
+> The shared-economy overlay of 19 November 2026 is in
+> [part 8](#shared-economy-integration--19-november-2026) and Q1/Q2 below.
+> Earlier personal-wallet and bare-room descriptions remain legacy context;
+> they do not describe an admitted shared island.
 
 ## Overview
 
@@ -68,6 +72,7 @@ flowchart LR
 | An outside API is down | [6. External data](#6-external-data-and-what-happens-when-a-provider-is-down) and [Q3](#q3-what-happens-if-an-external-api-is-unavailable) |
 | The class demo, QR, lamps, duel | [7. The class demo](#7-the-class-demo) |
 | Islands, prices, unlocks, cheating on loot | [8. Islands, tower defense and the economy](#8-islands-tower-defense-and-the-economy-server) |
+| Shared treasury, canonical sessions and acceptance boundaries | [Shared economy integration](#shared-economy-integration--19-november-2026) |
 | Hosting, deploys, monitoring | [9. Deployment and operations](#9-deployment-and-operations) |
 | Secrets, attacks, dependencies | [10. Security](#10-security) |
 | The waves, towers, balance, determinism | [11. The tower defense in the browser](#11-the-tower-defense-in-the-browser) |
@@ -286,6 +291,74 @@ The presenter shows a QR on the projector; ~30 phones join one shared class harb
 A host-side "reset lamps" control.
 
 ## 8. Islands, tower defense and the economy (server)
+
+The following older description covers legacy personal-wallet contexts. Admitted
+shared islands use the versioned integration below, following the
+[shared island economy rules](DECISIONS.md#shared-island-economy-2026-11-18).
+[MP-ECO-20 acceptance](economy/ACCEPTANCE.md) separates implemented source from
+completed database, authenticated-client and physical-device observations.
+
+### Shared economy integration — 19 November 2026
+
+At application/test source `9f107a6cbb57e0a9f01b1f4b8fb60da5d19dacad`, a persisted shared island has
+an account and run epoch. Its treasury is separate from personal wallets. The API
+requires the version capability and current origin; one coherent
+[snapshot](../backend/server/island/shared_snapshot.py) supplies scoped prices and
+state. Shared writes use the common treasury/operation registry, immutable receipts
+and exact decimal strings. A historical success does not authorize current control
+or publish another island's current balance.
+
+[Canonical sessions](../specs/MP-ECO-11-canonical-wave-sessions.md) persist one
+controlling document/generation per player, a frozen roster/loadout and original
+accounting at accepted bell. Participation needs an accepted post-start signal.
+Disconnect has a nonrenewable 60-second grace; leadership succession does not grant
+owner reset/deletion rights. The journal and
+[standalone worker](../backend/server/island/shared_session_worker.py) close or
+advance eligible state without requiring a new browser read. Personal Captain
+progress and Engineer commitments remain personal. Reset/deletion are composed by
+the [lifecycle transaction](../specs/MP-ECO-16-island-lifecycle.md),
+including old-account wagers and surviving players' progress.
+
+The actual application registers the Captain and session routes in
+[app.py](../backend/server/app.py). The
+[document-held client](../frontend/src/island/shared-session-client.js) accepts
+control only after a fresh scoped read and an actor-global browser lock. Current
+shared topics include server-issued nonce metadata. Tests must separately prove
+that the rendered product follows topic changes; a manually redirected SDK channel
+does not establish that behavior.
+
+The integrated snapshot advertises session, arsenal, repair, reset, market and
+match capabilities; move remains unavailable. The island client respects these
+gates while current membership, origin, phase and domain checks still authorize
+each action. The coordinated paths are present in source. Final rendered-product
+acceptance remains open; direct authenticated SDK calls do not establish it.
+
+The [test map checkpoint](TEST-MAP.md#shared-economy-integration-checkpoint--19-november-2026)
+preserves failed and interrupted historical runs, the separately bounded 219
+compatibility cases, and the successful **15,284-case backend run at `37570bf9`**.
+The complete backend, 107 migrations and native decoder closure match candidate
+`b239bdf0` exactly; its sole repository change is a tutorial sentence. That
+comparison does not constitute a new run. The unfiltered frontend at `9f107a6c`
+passed **5,465 tests across 507 files**, with no failures/errors/skips, and its
+standard build passed. Its production frontend matches the actual `b239bdf0`
+application; the only frontend delta is the explicit full-game Nearby test budget.
+A subsequent actual Settings reset at `b239bdf0` verified automatic session/topic
+reacquisition by both honest clients, old-socket isolation and preserved personal
+Captain data. A later genuine teammate fall/ordered hold/journal revival matched
+on both clients, and an independent committed-state observer verified no treasury,
+personal-wallet, ledger or paid-quota effect before terminal. The subsequent
+natural loss remains separate. Another defended win verified pause, Auto next,
+Resume and one worker SYS next wave on both connected clients without another
+browser start. After browser exit, the regular due worker closed the attempt with
+zero loot after the real grace deadlines. Earlier SDK probes retain their own
+sources and setup limits. A separate explicitly confirmed Account deletion of the
+local test owner cleared the peer's island room, preserved their personal Captain
+and wallet, and refused the cached deleted-owner token in both API and Auth.
+Natural
+feeds, physical devices and public legacy conversion keep separate explicit
+statuses. Combat reports retain their documented trust boundary; these checks do
+not make the server a verifier of every simulated hit. No hosted migration,
+rollout or activation follows from a local result.
 
 ### What it does
 Each player owns an island with a code (`ISLE-` + 5 symbols) and 16 build spots. With coins they build and upgrade walls, cannons or mortars, a watchtower and houses, hire crew (gunner, carpenter, lookout) and level up their own captain. They ring a bell to start a wave (up to wave 100, a boss warship every 5th wave) and get loot for surviving. Friends on the island build there with their own coins (co-op). Pirate Point has ten shared spots that anyone can build. The rules are in [TOWER-DEFENSE.md](TOWER-DEFENSE.md); decisions [D032](DECISIONS.md) and [D036](DECISIONS.md).
@@ -1267,8 +1340,43 @@ retries or another networking layer. Live networks/physical phones remain unveri
 ### Q1. Where is the data stored?
 In one Supabase Postgres database in Ireland (`eu-west-1`), with row-level security on every table ([supabase/migrations/](../supabase/migrations/)): profiles, wallets and the coin ledger, the islands (code, best wave, next wave, crew, captain level), the buildings with their levels (`islet_buildings`), Pirate Point's buildings (`pirate_point_buildings`), the waves (`wave_runs`, `wave_participants`), market calls, match stakes, duels and demo admissions. Sign-in records are in Supabase Auth. Every price and rule number is a server file, [backend/content/islands.json](../backend/content/islands.json). A wave itself is never stored: the database keeps its seed, number, weather and result, while the ships exist only in the browsers. The browser keeps preferences, quest ticks and the "Auto next wave" switch in `localStorage`, and the sign-in session and a visited island code in `sessionStorage` ([PRIVACY.md](PRIVACY.md)). Server memory holds short caches (logins 60 s, weather 10 minutes). Live positions and shots are never stored. **Since v3:** a game is the host's island row, and who plays in it is in `island_members` ([part 16](#16-rooms-games-the-lobby-and-ten-players)); research, tear-down payments and the wreck have their own tables ([part 28](#28-the-database-and-the-server-in-v3)). The narrator's audio is 80 committed files, and what was told is kept per island in the browser's `localStorage` ([part 26](#26-the-narrator-lines-the-voice-pipeline-and-captions)).
 
+For admitted shared islands, the newer integration also persists treasury accounts,
+operations and immutable financial receipts, personal Captain progress, controller
+leases/generations, frozen roster/loadouts, ordered recovery journal/checkpoints and
+terminal accounting. These replace the old statement that all combat inputs and
+automatic-wave settings are only local; shared pacing settings are persistent.
+Ships still run in the browser simulation. See
+[shared economy integration](#shared-economy-integration--19-november-2026) and
+[durable recovery](#33-durable-structure-recovery-v1--t55t60).
+
 ### Q2. What do the tests cover, and what do they not cover?
-They cover the rules: 188 backend test files under [backend/server/tests/](../backend/server/tests/) (wallet, islands, tower defense, waves and loot caps, the invite, market calls, sports, duels, the guest gate, adapters with fake transports and a fake clock); opt-in SQL suites that apply all migrations twice to a throwaway Postgres, including the tower-defense functions; 193 Vitest files in [frontend/tests/](../frontend/tests/), with the simulation's determinism and balance curve in [tests/pirates/](../frontend/tests/pirates/); real-browser checks in `frontend/scripts/check-*.js`, among them `npm run test:mp`, which plays a wave with two and then four browser pages; and a signed-out smoke test of the live site. The v3 parts each name their test files (parts 16 to 28), and 13 SQL files in `island_sql/` (125 tests) check the money functions on a real Postgres. They do not cover physical phones, the real Supabase Realtime between four devices, 40 real users on one Wi-Fi, Pirate Point with four players and the lamps, provider outages over hours, or whether a reported `survived` is true. Details: [TEST-MAP.md](TEST-MAP.md).
+Unit and component tests cover rules, strict HTTP/DTO contracts and deterministic
+simulation with controlled services. Opt-in SQL suites apply the complete migration
+chain twice to disposable PostgreSQL and test actual transactions, grants, rollback,
+retained receipts and races. Native session suites use the actual canonical provider
+and producer; domain-unit facts, trusted combat reports and clock fixtures remain
+explicit. Browser component checks and `npm run test:mp` use fake APIs/rooms and do
+not prove provider authentication. A separate real local Auth/REST/Realtime probe
+exercised three registered browser users and native session primitives. Later
+rendered two-player cases verified automatic scoped session/topic reacquisition
+after reset, cached-old-socket isolation and genuine coin-free journal revival
+with independent unchanged-wallet/ledger/quota checks. A separate genuine defended
+win verified pause, Auto next, real waiting, Resume and one SYS next wave rendered
+on both connected clients without another browser start. The normal due worker
+subsequently closed that attempt without players after their actual grace
+deadlines. These bounded results do not complete every runtime scenario.
+An additional explicit local owner-account deletion verified the two-stage UI,
+automatic peer room clearance, preserved peer Captain/wallet and cached-token
+API/Auth refusal; it does not claim immediate cache eviction or all deletion
+transport policies.
+Historical file counts elsewhere in this
+sheet are dated inventories, not current suite results.
+The [test map](TEST-MAP.md#shared-economy-integration-checkpoint--19-november-2026)
+records 15,284 passing backend cases at `37570bf9`, 5,465 passing frontend cases and
+a standard build pass at `9f107a6c`, with exact source comparisons and preserved
+historical failures. The full scenario matrix retains its separate status. Physical
+devices, prolonged natural-provider observations and every-hit combat verification
+are not inferred from any of these layers.
 
 ### Q3. What happens if an external API is unavailable?
 The game keeps working. Every provider sits behind one server adapter with a cache and a timeout (3 seconds, 5 for football), and only the server calls it ([adapters/base.py](../backend/server/adapters/base.py)). Weather falls back to the last good answer, then a recorded real answer, and a new wave takes the default place's weather, else calm: the weather never stops a wave ([island/wave_weather.py](../backend/server/island/wave_weather.py)). Prices stay visible but marked stale, and the market stall closes that asset, so nobody profits from old prices ([D034](DECISIONS.md)). Football answers `503 sports_unavailable` and the board says so. The Keeper's Lock switches to a riddle. The tower defense itself needs no outside API. The narrator's voice comes from ElevenLabs only at build time: the audio files are committed, so a dead service changes nothing for players ([part 26](#26-the-narrator-lines-the-voice-pipeline-and-captions)). Full table in [part 6](#6-external-data-and-what-happens-when-a-provider-is-down).
@@ -1278,8 +1386,8 @@ The game keeps working. Every provider sits behind one server adapter with a cac
 1. **Why FastAPI and not Streamlit?** Streamlit draws its own pages on the server; we needed a JSON API behind a real-time pixel game. FastAPI is plain Python, validates input with Pydantic and runs as one Vercel function ([D002](DECISIONS.md), [app.py](../backend/server/app.py)).
 2. **Why Supabase?** One free project gives Postgres, sign-in and real-time rooms, in Ireland next to our functions, with row-level security as a second lock ([D002](DECISIONS.md), [ARCHITECTURE.md](ARCHITECTURE.md)).
 3. **Why validate on the server when the browser could do it?** Anyone can edit the browser's code and send their own requests. A rule in the browser is a hint; the server and the database are the rule ([D003](DECISIONS.md)).
-4. **How do you stop cheating with coins?** The browser cannot write a balance. Coins move only through `apply_wallet_transaction`, prices come from `islands.json` on the server, and each change has a unique `ref`, so repeats pay nothing ([D004](DECISIONS.md), [wallet.py](../backend/server/wallet.py), part 8).
-5. **How do you stop cheating with loot?** We cannot prove a wave was won: the battle runs in the browser. So the server bounds it: at most 10 + 5 × wave + 5 × house levels (twice on a boss wave), no finish before 15 s, one wave at a time per island, `shipsSunk` at most 1000, 20 wave calls a minute and one loot per wave and player. A cheat earns small play money, nothing more ([D032](DECISIONS.md), [routes/waves.py](../backend/server/routes/waves.py), part 8).
+4. **How do you stop cheating with coins?** The browser cannot write a balance. Legacy personal money uses `apply_wallet_transaction`; admitted shared islands use the common treasury/operation registry and original account/epoch. Server prices and immutable action identities make retries repeat their effect instead of paying twice ([D004](DECISIONS.md), [wallet.py](../backend/server/wallet.py), [part 8](#shared-economy-integration--19-november-2026)).
+5. **How do you stop cheating with loot?** Legacy personal waves use bounded loot, finish timing, one active wave and idempotent participant rewards. Shared waves freeze one account/roster/reward basis at accepted bell and close one canonical terminal result, paying the island once; qualified personal participation receipts are separate. Reports remain within the documented browser-combat trust boundary: the server does not verify every hit ([routes/waves.py](../backend/server/routes/waves.py), [part 8](#shared-economy-integration--19-november-2026)).
 6. **How do 4 players see the same battle?** The server gives one seed and a start time; every browser runs the same deterministic simulation on the same 50 ms ticks. Shots and repairs are sent to the island's Realtime room with a target tick 200 ms ahead, so everyone applies them at the same tick. A late packet makes one screen drift a little; there is no server authority over ship positions ([sync.js](../frontend/src/pirates/sync.js), part 12).
 7. **Why is the simulation in the browser and not on the server?** Vercel runs short functions, not a game loop, and a deterministic simulation lets every player compute the same wave from a seed. The price is trust: the server checks only the bounds (parts 8 and 11).
 8. **Why no prediction market?** The owner decided on 11 Nov that stakes on open-ended real-world questions read as a prediction market, which the game should not be. The fortune teller left the game; the Harbor keeps one small stake each at the market stall and the match board. The backend code stays, switched off, for a later cleanup ([D035](DECISIONS.md)).

@@ -13,10 +13,13 @@ import re
 from dataclasses import replace
 from pathlib import Path
 
+import pytest
+
 from server.flags import parse_flags
 from server.island import permissions
 from server.island.arsenal_policy import ACTIONS, MATRIX_ACTION
 from server.island.arsenal_rules import CAPACITY
+from server.tests.arsenal_runtime_helpers import FakeRuntimeArsenalDatabase, legacy_calls
 from server.tests.helpers import assert_error
 from server.tests.island_helpers import (
     COPY_ID,
@@ -31,6 +34,13 @@ ARSENAL_SETTINGS = replace(ISLAND_SETTINGS, flags=parse_flags("islands,arsenal")
 MIGRATION = (
     Path(__file__).resolve().parents[3] / "supabase" / "migrations" / "20261114120000_arsenal.sql"
 )
+
+
+@pytest.fixture(autouse=True)
+def legacy_runtime_transport(monkeypatch):
+    monkeypatch.setattr(
+        "server.tests.island_helpers.FakeIslandDatabase", FakeRuntimeArsenalDatabase
+    )
 
 
 def world_at(won: int = 0, settings=ARSENAL_SETTINGS) -> World:
@@ -112,9 +122,8 @@ def test_the_arsenal_shows_copies_holders_the_rack_and_the_types():
         "long_rifle": False,
         "fire_bombs": False,
     }
-    assert world.database.calls("arsenal_state") == [
-        {"p_player_id": PLAYER_ID, "p_island_owner": PLAYER_ID}
-    ]
+    (call,) = legacy_calls(world, "state")
+    assert call["p_actor_id"] == PLAYER_ID and call["p_island_owner"] == PLAYER_ID
     assert answer.headers["cache-control"] == "private, no-store"
 
 
@@ -144,11 +153,25 @@ def test_a_friends_arsenal_needs_membership():
 def test_a_buy_sends_the_price_and_unlock_of_the_file_and_the_click_id():
     world = world_at(2)
     assert buy(world, actionUid="click-0042").status_code == 200
-    (call,) = world.database.calls("arsenal_buy")
-    assert call == {
-        "p_player_id": PLAYER_ID, "p_island_owner": PLAYER_ID, "p_weapon": "pistols",
-        "p_action_uid": "click-0042", "p_price": 60, "p_unlock_wave": 2,
-    }  # fmt: skip
+    (call,) = legacy_calls(world, "buy")
+    assert {
+        key: call[key]
+        for key in (
+            "p_actor_id",
+            "p_island_owner",
+            "p_weapon",
+            "p_action_uid",
+            "p_price",
+            "p_unlock_wave",
+        )
+    } == {
+        "p_actor_id": PLAYER_ID,
+        "p_island_owner": PLAYER_ID,
+        "p_weapon": "pistols",
+        "p_action_uid": "click-0042",
+        "p_price": 60,
+        "p_unlock_wave": 2,
+    }
 
 
 def test_a_buy_refuses_a_bad_id_the_musket_and_a_locked_type_before_the_database():
@@ -191,7 +214,7 @@ def test_a_repeated_buy_sends_the_same_click_id_and_the_database_answers_repeat(
         "arsenal": {"capacity": 20, "stored": 0, "mine": None, "waveRunning": False, "copies": []},
     }
     assert buy(world, actionUid="click-0007").status_code == 200
-    uids = [call["p_action_uid"] for call in world.database.calls("arsenal_buy")]
+    uids = [call["p_action_uid"] for call in legacy_calls(world, "buy")]
     assert uids == ["click-0007", "click-0007"]
 
 
@@ -207,7 +230,7 @@ def test_a_buy_refuses_extra_fields_and_a_bad_click_id():
 def test_take_sends_the_copy_and_answers_taken_when_another_captain_has_it():
     world = world_at(9)
     assert take(world).status_code == 200
-    (call,) = world.database.calls("arsenal_take")
+    (call,) = legacy_calls(world, "take")
     assert call["p_copy_id"] == COPY_ID
     world.database.arsenal_replies["arsenal_take"] = refused("taken")
     assert_error(take(world), 409, "taken")

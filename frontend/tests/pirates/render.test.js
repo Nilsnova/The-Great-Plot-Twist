@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { describe, expect, it } from 'vitest';
 import { CONFIG, coastPoint, createWave } from '../../src/pirates/sim.js';
-import { ATLAS_IDS, BOARDER_BANDS, MUSKET, createWaveRenderer, packAtlas } from '../../src/pirates/render.js';
+import { ATLAS_IDS, BOARDER_BANDS, CARTOON_EXTRA_IDS, MUSKET, STANDING_IDS, createWaveRenderer, packAtlas } from '../../src/pirates/render.js';
 import { pirateDimensions } from '../../src/pixel/pirate-catalog.js';
 import {projectGround} from '../../src/world/projection.js';
 
@@ -30,6 +30,32 @@ function play(renderer, seed, wave = 6) {
 }
 
 describe('pirate wave renderer', () => {
+  it('draws native remote Captains at normal world size and their frozen-roster position', () => {
+    expect(CARTOON_EXTRA_IDS).toEqual(expect.arrayContaining(STANDING_IDS));
+    const dimensions = {...pirateDimensions,
+      ...Object.fromEntries(STANDING_IDS.map(id => [id, [24, 32, 3]]))};
+    const packed = packAtlas([...ATLAS_IDS, ...STANDING_IDS], dimensions);
+    const scene = new THREE.Scene(); scene.userData.characterScale = 1.4;
+    const renderer = createWaveRenderer({scene, nativeCaptains: true,
+      atlas: {texture: new THREE.Texture(), ...packed}, fx: () => null});
+    const hero = {id: 'opaque-roster-token', present: true, x: 6, z: 4, hp: 75, maxHp: 100, colour: 3};
+    const state = {ships: [], walls: [], towers: [], fog: 0, sight: 28, party: [hero]};
+    renderer.update({state, simTime: 1, dt: .01, captain: {id: 'mine', x: 0, z: 0, share: 1},
+      figures: new Map([[hero.id, {x: -30, z: -30}]])});
+    const band = renderer.root.children.find(item => item.name.startsWith('pirates:boarders:')
+      && item.geometry.instanceCount > 0);
+    expect(band.geometry.instanceCount).toBe(1);
+    const drawn = band.geometry.getAttribute('iPos').array;
+    expect(drawn[0]).toBeCloseTo(projectGround(hero.x, hero.z).x);
+    expect(drawn[1]).toBeCloseTo(projectGround(hero.x, hero.z).y);
+    const size = band.geometry.getAttribute('iSize').array;
+    expect(size[0]).toBeCloseTo(24 / 16 * 1.4);
+    expect(size[1]).toBeCloseTo(32 / 16 * 1.4);
+    renderer.update({state: {...state, party: [{...hero, present: false}]}, simTime: 1.1, dt: .1});
+    expect(band.geometry.instanceCount).toBe(0);
+    renderer.dispose();
+  });
+
   it('packs every sprite into one atlas without overlaps', () => {
     const { width, height, rects } = packAtlas();
     expect(width).toBe(512); expect(height).toBeLessThanOrEqual(512);

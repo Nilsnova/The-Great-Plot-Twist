@@ -54,6 +54,8 @@ function renderStructureRecoveryView(container, view, options = {}) {
   card.append(createHealthBar(document, view));
   appendText(document, card, 'p', 'recovery-hp', view.hpLabel);
 
+  if (view.payerLabel) appendText(document, card, 'p', 'recovery-payer', view.payerLabel);
+
   if (view.repairLabel) {
     const button = document.createElement('button');
     button.className = 'recovery-repair';

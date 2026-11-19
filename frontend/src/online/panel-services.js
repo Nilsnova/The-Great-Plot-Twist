@@ -1,4 +1,6 @@
 // Deferred private capabilities. Every provider and UI owner belongs to one explicit session object.
+import {isPlayerId} from '../net/live-rules.js';
+
 const providers = new WeakMap(), watchers = new WeakMap(), entries = new WeakMap();
 const weakKey = value => value !== null && ['object', 'function'].includes(typeof value);
 const safely = (read, fallback = null) => { try { return read(); } catch { return fallback; } };
@@ -41,7 +43,7 @@ function readFlags(getFlags) {
   return Object.freeze(Object.fromEntries(safely(() => Object.keys(raw ?? {}), [])
     .map(key => [key, safely(() => raw[key], false) === true])));
 }
-export function registerPanelServices(session, {api, publicApi, getFlags, isReady, getIdentity, getIslet: provideIslet,
+export function registerPanelServices(session, {api, publicApi, getFlags, isReady, getIdentity, getActorId: readActorId, getIslet: provideIslet,
   getWallet: provideWallet} = {}) {
   if (!weakKey(session)) throw new TypeError('Panel services need an explicit session.');
   const subscribers = new Set(), identities = new Set(), tickets = new WeakMap(), revisions = new Map();
@@ -75,18 +77,20 @@ export function registerPanelServices(session, {api, publicApi, getFlags, isRead
     for (const feature of changedFlags) revisions.set(feature, (revisions.get(feature) ?? 0) + 1);
     version += 1; notify(); return lease;
   }
-  async function invoke(client, method, path, body, privateRead) {
+  async function invoke(client, method, path, body, privateRead, options) {
     refresh();
     if (!usable(privateRead)) return refusal();
     try {
       const send = client?.[method];
       if (typeof send !== 'function') return refusal();
-      return await (method === 'post' ? send.call(client, path, body) : send.call(client, path));
+      const args = method === 'post' ? [path, body] : [path];
+      if (options !== undefined) args.push(options);
+      return await send.apply(client, args);
     } catch { return refusal('unavailable'); }
   }
   const publicGet = path => invoke(publicApi, 'get', path, undefined, false);
-  const request = Object.freeze({get: path => invoke(api, 'get', path, undefined, true),
-    post: (path, body) => invoke(api, 'post', path, body, true), publicGet});
+  const request = Object.freeze({get: (path, options) => invoke(api, 'get', path, undefined, true, options),
+    post: (path, body, options) => invoke(api, 'post', path, body, true, options), publicGet});
   function capture(feature, {privateRead = false, allowFlagOff = false} = {}) {
     refresh();
     if (typeof feature !== 'string' || !feature || !usable(privateRead === true)) return null;
@@ -143,6 +147,11 @@ export function registerPanelServices(session, {api, publicApi, getFlags, isRead
     },
     getFlags: () => owned() ? {...snapshot.flags} : {},
     getIdentity: () => owned() ? snapshot.identity : null,
+    getActorId() {
+      refresh();
+      const actor = usable(true) ? safely(() => readActorId?.()) : null;
+      return isPlayerId(actor) ? actor : null;
+    },
     getToken: () => usable(true) ? safely(() => session.getToken()) : null,
     marketRequest(path, {method = 'GET', body} = {}) {
       if (method === 'GET') return request.get(path);

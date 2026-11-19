@@ -338,12 +338,17 @@ def test_parallel_respec_and_discount_binding_cannot_leave_a_non_engineer_bound(
 def test_personal_freeze_and_real_legacy_finish_do_not_deadlock_on_profile_foreign_key(
     database, scratch_server,
 ):
-    owner, member, _, _, _ = initialized(database)
-    # A retained legacy settlement can still reference an adopted personal profile.
+    owner, member, _, _ = ready(database, admitted=False)
+    # Close a real preconversion personal wave with the owner's participation unpaid.
     open_island(database, member, "P6W8X")
     rpc(database, "game_join", owner, member, 10)
-    wave = start(database, owner, "legacy01", owner=member)
+    wave = start(database, member, "legacy01", owner=member)
+    rpc(database, "wave_join", owner, wave["waveId"])
     move_start(database, wave["waveId"], 30)
+    assert legacy_finish(database, member, wave["waveId"])["loot"] > 0
+    treasury = rpc(database, "island_treasury_admit", owner, owner, "admit0001", 200)
+    rpc(database, "personal_captain_initialize", owner, owner,
+        keys(treasury)[1], Jsonb(RULES))
     database.commit()
     barrier = Barrier(2)
 

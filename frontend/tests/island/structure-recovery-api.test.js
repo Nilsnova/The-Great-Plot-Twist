@@ -24,6 +24,86 @@ const recoveryWave = waveId => ({waveId, wave: 1, seed: 42, startsAt: '2026-11-1
   lastActorCounter: 0});
 
 describe('structure recovery API', () => {
+  it('delegates shared repair aliases and preserves the original common receipt', async () => {
+    const actor = '42345678-1234-4234-8234-123456789abc', owner = '52345678-1234-4234-8234-123456789abc';
+    const accountId = '62345678-1234-4234-8234-123456789abc', operation = '72345678-1234-4234-8234-123456789abc';
+    const economy = {mode: 'island_shared', version: 1, islandOwner: owner, accountId, runEpoch: token,
+      revision: '1', treasury: {balanceCoins: '100', committedCoins: '0', availableCoins: '100'}};
+    const fresh = {...economy, revision: '2', treasury: {balanceCoins: '90', committedCoins: '0', availableCoins: '90'}};
+    const currentState = state({displayPhase: 'preparing', repairWindow: 'reserved_wave', waveId, remainingPaidUses: 2,
+      structures: [{...state().structures[0], spot: 'tower_s1', kind: 'cannon'}]});
+    const sent = [], values = new Map();
+    const pendingStore = {getItem: key => values.get(key) ?? null,
+      setItem: (key, value) => values.set(key, value), removeItem: key => values.delete(key)};
+    const api = createIslandApi({getEconomy: () => economy, getActorId: () => actor, pendingStore,
+      makeUid: () => 'shared-repair-01', transport: {
+        get: async () => ({ok: true, data: {...currentState, economy}}),
+        post: async (path, body, options) => {
+          sent.push({path, body, options});
+          return {ok: true, data: {repeat: false, economy: fresh, currentState,
+            receipt: {receiptId: operation, actionUid: body.actionUid, action: 'structure_repair', actorId: actor,
+              origin: {mode: 'island_shared', version: 1, islandOwner: owner, accountId, runEpoch: token},
+              result: {spot: body.spot, instanceId, recoveryEpoch: epoch, kind: 'cannon', level: 1,
+                chargedPrice: '10', waveId, useOrdinal: 1, eventSeq: 1, repairSeq: 1,
+                financialReceipt: {id: owner, actorId: actor, accountId, runEpoch: token,
+                  actionUid: `fx_${operation.replaceAll('-', '')}_repair`, reference: `repair:${operation}`,
+                  kind: 'spend', reason: 'structure_repair', balanceDelta: '-10', committedDelta: '0',
+                  balanceAtCommit: '90', committedAtCommit: '0', revisionAtCommit: '2', sourceReservationId: null}}}}};
+        },
+      }});
+    expect((await api.structureRecovery()).data.structures[0].spot).toBe('cannon_1');
+    const answer = await api.repairStructure({quote: {...quote, spot: 'cannon_1', expectedWindow: 'reserved_wave', expectedWaveId: waveId}, code: 'ISLE-FR3ND'});
+    expect(answer.ok).toBe(true);
+    expect(sent[0].body).toMatchObject({spot: 'tower_s1', economy: {mode: 'island_shared', version: 1, islandOwner: owner, runEpoch: token}});
+    expect(sent[0].body).not.toHaveProperty('code');
+    expect(sent[0].options.headers['X-Island-Economy-Version']).toBe('1');
+    expect(answer.data.currentState.structures[0].spot).toBe('cannon_1');
+    expect(answer.data.receipt.result.spot).toBe('tower_s1');
+    expect(answer.data).not.toHaveProperty('coins');
+  });
+
+  it('refuses repair before a private POST when a supplied context is unknown', async () => {
+    const sent = [];
+    const api = createIslandApi({getEconomy: () => null, transport: {
+      get: async () => ({ok: true, data: state()}),
+      post: async (...args) => {sent.push(args); return {ok: false, status: 503};},
+    }});
+    expect((await api.repairStructure({quote})).code).toBe('economy_context_required');
+    expect(sent).toEqual([]);
+  });
+
+  it('retains the personal repair protocol for an explicitly legacy context', async () => {
+    const sent = [];
+    const api = createIslandApi({getEconomy: () => ({mode: 'personal_legacy', version: 0}), transport: {
+      get: async () => ({ok: true, data: state()}),
+      post: async (path, body) => {sent.push({path, body}); return {ok: false, status: 503};},
+    }});
+    await api.repairStructure({quote});
+    expect(sent[0].body.expectedWindow).toBe('between_waves');
+    expect(sent[0].body).not.toHaveProperty('economy');
+  });
+
+  it('rejects a legacy recovery reply after the selected mode changes during the read', async () => {
+    let selected = {mode: 'personal_legacy', version: 0}, release;
+    const held = new Promise(resolve => {release = resolve;});
+    const api = createIslandApi({getEconomy: () => selected, transport: {
+      get: () => held, post: async () => null,
+    }});
+    const reading = api.structureRecovery();
+    selected = {mode: 'island_shared', version: 1};
+    release({ok: true, data: state()});
+    expect(await reading).toMatchObject({ok: false, code: 'economy_context_required'});
+  });
+
+  it('rejects a discovery reply after the authenticated actor changes during the read', async () => {
+    let actor = 'captain-a', release;
+    const held = new Promise(resolve => {release = resolve;});
+    const api = createIslandApi({getEconomy: () => ({mode: 'personal_legacy', version: 0}), getActorId: () => actor,
+      transport: {get: () => held, post: async () => null}});
+    const reading = api.structureRecovery(); actor = 'captain-b';
+    release({ok: true, data: state()});
+    expect(await reading).toMatchObject({ok: false, status:0,code:'auth_context_changed'});
+  });
   it('requests protocol two from the persisted policy and preserves the entire recovery wave DTO', async () => {
     const sent = [];
     const waveId = '62345678-1234-4234-8234-123456789abc';

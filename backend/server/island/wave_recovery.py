@@ -12,21 +12,14 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr
 
 from server.errors import ApiError
-from server.island import layout, service, store, wall_health, wave_events
-from server.island import rules as island_rules
+from server.island import service, store
 from server.island.catalogue import (
-    RESEARCH_CAPSTONES,
     IslandCatalogue,
     Weather,
-    catalogue_for_existing_structures,
 )
+from server.island.legacy_wave_errors import control_refusal
 from server.island.store import Island, IslandRow
-from server.island.structure_recovery_manifest import (
-    MANIFEST_FILE,
-    RECOVERY_MANIFEST,
-    SUPPORTED_KINDS,
-    max_structure_hp,
-)
+from server.island.wave_snapshot_template import static_template
 from server.supabase_admin import SupabaseAdmin, SupabaseRejected
 
 UID = re.compile(r"^[A-Za-z0-9_-]{8,64}$")
@@ -243,6 +236,8 @@ def _refusal(reply: Any) -> None:
     if not isinstance(reply, dict):
         raise SupabaseRejected("The recovery journal could not be read.")
     reason = reply.get("reason")
+    if error := control_refusal(reason):
+        raise error
     if reason == "too_early":
         # A protocol-2 finish before the wave's minimum: the same 409 as the legacy finish.
         wait = reply.get("waitSeconds")
@@ -371,141 +366,10 @@ async def build_snapshot_template(
             "island_changed",
             "The island changed while the wave was being prepared. Retry the same request.",
         )
-    built_for_runtime = {spot.id: spot for spot in view.spots if spot.built}
-    runtime_catalogue = catalogue_for_existing_structures(catalogue, built_for_runtime)
-    geometry = layout.island_layout(runtime_catalogue.more_tower_spots)
-    complete_geometry = layout.island_layout(more=True)
-    defenses = []
-    structure_config: dict[str, dict[str, Any]] = {}
-    wall_tier = view.campaign.tiers.get("wall")
-    wall_research = None if wall_tier is None else wall_tier.choice_2
-    workshops = [
-        spot
-        for spot in view.spots
-        if spot.built and spot.kind == "house" and spot.spec == "workshop" and spot.level >= 2
-    ]
-    for spot in view.spots:
-        if not spot.built:
-            continue
-        item: dict[str, Any] = {
-            "id": spot.id,
-            "kind": spot.kind,
-            "level": spot.level,
-            "x": spot.x,
-            "z": spot.z,
-        }
-        # The defense in the legacy client's shape (frontend island/spots.js defenses()), so both
-        # wave systems fight the same island (fix/playtest-1117): a capstone counts only while it is
-        # the island's tier-3 pick, the tier-2 pick of the kind rides as `bonus`, and the upgrade
-        # tree is {a, b} (it was [a, b], which the sim's readTree read as no tree at all).
-        tier = view.campaign.tiers.get(spot.kind)
-        spec = spot.spec
-        if (
-            spec is not None
-            and spec in RESEARCH_CAPSTONES.get(spot.kind, ())
-            and (tier is None or tier.choice_3 != spec)
-        ):
-            spec = None
-        if spec is not None:
-            item["spec"] = spec
-        if tier is not None and tier.choice_2 is not None:
-            item["bonus"] = tier.choice_2
-        if spot.tree is not None:
-            item["tree"] = {"a": spot.tree[0], "b": spot.tree[1]}
-        defenses.append(item)
-        if spot.kind in SUPPORTED_KINDS:
-            nearby_workshops = sum(
-                1
-                for house in workshops
-                if house.x is not None
-                and house.z is not None
-                and spot.x is not None
-                and spot.z is not None
-                and (house.x - spot.x) ** 2 + (house.z - spot.z) ** 2 <= 10**2
-            )
-            selected_wall_spec = spec if spot.kind == "wall" else None
-            selected_wall_research = wall_research if spot.kind == "wall" else None
-            max_hp = max_structure_hp(
-                spot.kind, spot.level, selected_wall_spec, selected_wall_research
-            )
-            # New protocol-2 snapshots keep the historical rate fields in their wire shape, but
-            # automatic healing no longer operates between or during waves. Saved snapshots keep
-            # their original rates; only new snapshots write a neutral multiplier.
-            structure_config[spot.id] = {
-                "kind": spot.kind,
-                "level": spot.level,
-                "maxHP": float(max_hp),
-                "rateNumerator": 1,
-                "rateDenominator": 1,
-                "wallSpec": selected_wall_spec,
-                "wallResearch": selected_wall_research,
-                "nearbyWorkshops": nearby_workshops,
-            }
-
-    rule_options = {
-        "tower_health": "towerHealth",
-        "pathing": "pathing",
-        "tower_obstacles": "towerObstacles",
-        "rescue": "rescue",
-        "defenses_v2": "defensesV2",
-        "ship_fire": "shipFire",
-    }
-    create_wave: dict[str, Any] = {
-        "weather": {"ships": weather.ships, "fog": weather.fog},
-        "island": {"hp": 100},
-        "defenses": defenses,
-        "crew": dict(view.crew),
-        "flagship": False,
-        "countdown": 0,
-        "coast": {"rx": geometry.rx, "rz": geometry.rz, "seed": geometry.seed},
-        "lanes": [
-            {"id": "east", "bearing": 0},
-            {"id": "south", "bearing": 90},
-            {"id": "west", "bearing": 180},
-        ],
-        "heart": {"x": geometry.heart[0], "z": geometry.heart[1], "ring": 12},
-        "finishers": True,
-        "finisherPreparation": True,
-    }
-    for rule_name, option_name in rule_options.items():
-        create_wave[option_name] = rule_name in kept_rules or (
-            rule_name == "defenses_v2" and any(spot.kind == "culverin" for spot in view.spots)
-        )
-
-    events = {
-        str(number): wave_events.event_for(number, seed)
-        for number in range(1, catalogue.waves.highest_wave + 1)
-    }
-    bosses = {
-        str(number): number % catalogue.waves.boss_every == 0
-        for number in range(1, catalogue.waves.highest_wave + 1)
-    }
-    recovery_config = json.loads(MANIFEST_FILE.read_text(encoding="utf-8"))
-    recovery_config["baseRateUnitsPerSecond"] = [5000, 3]
-    recovery_config["recoveryRateFactors"] = {
-        "carpenterMultiplierPerWorker": 0,
-        "carpenterMaximumWorkers": 2,
-        "workshopPercentPerHouse": 0,
-        "workshopPercentCap": 0,
-        "workshopRadius": 10,
-        "wallSpecRateFactors": {"quick_mend": [1, 1], "bastion": [1, 1]},
-        "wallResearchRateFactors": {"mason_drill": [1, 1]},
-    }
-    default_positions = {spot.spot: {"x": spot.x, "z": spot.z} for spot in complete_geometry.spots}
-    return {
-        "expectedRevision": expected_revision,
-        "weather": dict(create_wave["weather"]),
-        "createWave": create_wave,
-        "priceSchedule": island_rules.price_table(runtime_catalogue),
-        "eventByWave": events,
-        "bossByWave": bosses,
-        "recoveryConfig": recovery_config,
-        "defaultPositions": default_positions,
-        "structureConfigBySpot": structure_config,
-        "legacyWallRecoverSeconds": wall_health.RECOVERY_SECONDS,
-        "configVersion": RECOVERY_MANIFEST.recovery_version,
-        "supportedStructureKinds": list(SUPPORTED_KINDS),
-    }
+    return static_template(
+        catalogue, view.spots, view.crew, view.campaign.tiers, weather, seed,
+        kept_rules, expected_revision,
+    )
 
 
 async def read_recovery_revision(admin: SupabaseAdmin, owner: str) -> int:

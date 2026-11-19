@@ -41,7 +41,14 @@
 // actionUid: build and start carry one id per click. When the outcome is unknown (no answer, a timeout
 // or a 5xx such as 503 database_unavailable) the id is kept, and the next try of the same spot (or the
 // same bell) sends it again, so the server never charges or starts twice. Any clear answer drops it.
+import {readSharedSnapshot, declaresSharedSnapshot, sharedPresentation, readSharedDemolition} from './shared-snapshot.js';
+import {quoteFor, quoteReason, sameTarget} from './shared-quotes.js';
+import {createSharedIntents} from './shared-intents.js';
+import {isSharedReceipt} from './shared-receipts.js';
 import {makeActionUid} from '../screens/islet/action-uid.js';
+import {ECONOMY_CAPABILITY_HEADERS} from '../online/api.js';
+import {createSharedCombatApi} from './shared-combat-api.js';
+const DISCOVERY_OPTIONS = Object.freeze({headers: ECONOMY_CAPABILITY_HEADERS});
 import {islandCode, displayIslandCode} from './codes.js';
 import {localSpotId} from './spots.js';
 import {SKILL_BY_ID, isRole} from '../pirates/captain-ids.js';
@@ -49,7 +56,7 @@ import {BRANCH_BY_ID, SPECS, optionsOf} from '../campaign/tech.js';
 import {isRole as isHouseRole} from '../campaign/houses.js';
 import {readRecoverySnapshot} from '../pirates/recovery-snapshot.js';
 import {isParticipantToken} from '../pirates/recovery-policy.js';
-import {declaresEconomy, economyContext, economySnapshot, readEconomy} from './economy-view.js';
+import {declaresEconomy, economyContext, economySnapshot, readEconomy, readLegacyEconomy, sameEconomyScope} from './economy-view.js';
 import {declaresPersonalCaptain, readPersonalCaptain} from './economy-captain.js';
 
 export const PATHS = Object.freeze({
@@ -112,7 +119,9 @@ export function isSpot(spot) {
   return !!spot && isText(spot.id) && isText(spot.kind) && typeof spot.built === 'boolean' && isCount(spot.cost);
 }
 export function isIsland(data) {
-  return !!data && isText(data.code) && (declaresEconomy(data) ? economySnapshot(data) !== null : isCount(data.coins)) && isCount(data.waveBest) && isCount(data.flags)
+  if (declaresSharedSnapshot(data)) return readSharedSnapshot(data) !== null;
+  if (declaresEconomy(data) && !readLegacyEconomy(data.economy)) return false;
+  return !!data && isText(data.code) && isCount(data.coins) && isCount(data.waveBest) && isCount(data.flags)
     && (data.recoveryVersion === undefined || data.recoveryVersion === 0 || data.recoveryVersion === 1)
     && Array.isArray(data.spots) && data.spots.every(isSpot);
 }
@@ -124,8 +133,9 @@ export function isPersonalCaptainReply(data) {
     && Array.isArray(skills.known) && skills.known.every(isText);
 }
 export function isVisit(data) {
+  if (declaresSharedSnapshot(data)) return readSharedSnapshot(data) !== null;
+  if (declaresEconomy(data) && !readLegacyEconomy(data.economy)) return false;
   return !!data && isText(data.code) && typeof data.ownerName === 'string' && isCount(data.waveBest)
-    && (!declaresEconomy(data) || economySnapshot(data) !== null)
     && Array.isArray(data.spots) && data.spots.every(isSpot);
 }
 // GET /api/pirate-point: {spots, waveBest, coins} (coins: your own balance).
@@ -277,20 +287,28 @@ export function readFailure(result) {
 export const outcomeUnknown = failure => !failure.ok && (failure.status === 0 || failure.status >= 500);
 
 export function createIslandApi({transport, makeUid = makeActionUid, waveProtocol = () => 1, now = () => Date.now(), economy = () => undefined,
-  personalCaptain = () => null, personalScope = () => '', negotiateEconomy = false} = {}) {
+  personalCaptain = () => null, personalScope = () => '', negotiateEconomy = false, sharedSnapshot = () => null, pendingStorage = null, authGeneration = null,
+  getEconomy, getActorId = () => null, onEconomy = () => {}, pendingStore, sharedWaves = () => null, sharedReset = () => null} = {}) {
   if (!transport || typeof transport.get !== 'function' || typeof transport.post !== 'function') {
     throw new TypeError('createIslandApi needs a transport with get and post.');
   }
+  if (getEconomy !== undefined && typeof getEconomy !== 'function') throw new TypeError('getEconomy must be a function.');
   const held = new Map(); // 'build:cannon_1' or 'start:own' -> the click id of an unknown outcome
   const personalHeld = new Map();
-  const selectedEconomy = () => { try { return typeof economy === 'function' ? economy() : economy; } catch { return null; } };
+  const generation = () => typeof authGeneration === 'function' ? authGeneration() : 0;
+  const boundActors = new Map();
+  const intents = createSharedIntents({storage: pendingStorage, makeUid});
+  const selectedSnapshot = () => typeof sharedSnapshot === 'function' ? sharedSnapshot() : sharedSnapshot;
+  const rawEconomy = () => {try {return getEconomy ? getEconomy() : typeof economy === 'function' ? economy() : economy;} catch {return null;}};
+  const selectedEconomy = () => {const value=rawEconomy();return readLegacyEconomy(value) ? undefined : value;};
+  const context = rawEconomy, actor = () => {try{return getActorId();}catch{return null;}};
+  const contextKey = value => JSON.stringify(['mode','version','islandOwner','accountId','runEpoch'].map(key=>value?.[key]??null));
+  const sharedCombat = createSharedCombatApi({transport,getEconomy:rawEconomy,getActorId,onEconomy,makeUid,pendingStore});
   const selectedCaptain = () => { try { return typeof personalCaptain === 'function' ? personalCaptain() : personalCaptain; } catch { return {progressionVersion: 1}; } };
   const personalVersion = () => declaresPersonalCaptain(selectedCaptain());
   const readIsland = (path, options) => {
     if (!negotiateEconomy && selectedEconomy() === undefined) return options ? transport.get(path, options) : transport.get(path);
-    const headers = new Headers(options?.headers);
-    headers.set('X-Island-Economy-Version', '1');
-    return transport.get(path, {...options, headers: Object.fromEntries(headers)});
+    return transport.get(path, {headers: ECONOMY_CAPABILITY_HEADERS});
   };
   const postIsland = (path, body) => {
     const selected = selectedEconomy();
@@ -307,7 +325,7 @@ export function createIslandApi({transport, makeUid = makeActionUid, waveProtoco
     const body = personalHeld.get(key) ?? {progressionVersion: 1, expectedRevision: profile.revision, actionUid: makeUid(), ...choice};
     personalHeld.set(key, body);
     const answer = await ask(() => transport.post(`${PATHS.personalCaptain}/${action}`, body), isPersonalCaptainReply);
-    if (answer.ok || (!outcomeUnknown(answer) && answer.status !== 429)) personalHeld.delete(key);
+    if (answer.ok || (!outcomeUnknown(answer) && ![401,429].includes(answer.status))) personalHeld.delete(key);
     return answer;
   }
   const protocolFor = where => {
@@ -318,8 +336,10 @@ export function createIslandApi({transport, makeUid = makeActionUid, waveProtoco
   };
 
   async function ask(send, accept) {
+    const dispatchedGeneration = generation(), dispatchedActor = actor();
     let result;
     try { result = await send(); } catch { result = {ok: false, status: 0, code: 'network_error', message: MESSAGES.network}; }
+    if (!Object.is(dispatchedGeneration, generation()) || dispatchedActor !== actor()) return {ok: false, status: 0, code: 'auth_context_changed', message: 'The signed-in account changed. Reload the island.'};
     if (!result?.ok) return readFailure(result);
     const data = result.data ?? null;
     if (!accept(data)) return {ok: false, status: 502, code: 'unreadable', message: MESSAGES.unreadable};
@@ -329,18 +349,18 @@ export function createIslandApi({transport, makeUid = makeActionUid, waveProtoco
   async function write(key, send, accept) {
     const context = readEconomy(selectedEconomy());
     if (context) key = `${context.islandOwner}:${context.accountId}:${context.runEpoch}:${key}`;
-    const heldUid = held.get(key), actionUid = heldUid ?? makeUid();
+    const previous = held.get(key), actionUid = previous ?? makeUid();
     held.set(key, actionUid);
     const answer = await ask(() => send(actionUid), data => accept(data, actionUid));
     if (answer.ok || !outcomeUnknown(answer)) held.delete(key);
-    // A successful retry can be a replay of a purchase that already landed.
-    return heldUid && answer.ok ? {...answer, reconciled: true} : answer;
+    return previous && answer.ok ? {...answer,reconciled:true} : answer;
   }
   // The server's own spelling of each spot id, learnt from its answers (spots.js SPOT_ALIASES).
   const serverIds = new Map();
   const recoverySpots = data => localRecovery(data, (local, server) => serverIds.set(local, server));
   function readSpots(data) {
     if (!data || !Array.isArray(data.spots)) return data;
+    if (readSharedSnapshot(data)) data = sharedPresentation(data);
     return {...data, spots: data.spots.map(spot => {
       if (!spot || typeof spot.id !== 'string') return spot;
       const id = localSpotId(spot.id);
@@ -350,7 +370,41 @@ export function createIslandApi({transport, makeUid = makeActionUid, waveProtoco
   }
   const sent = id => serverIds.get(id) ?? id;
   const askSpots = (send, accept) => ask(send, accept).then(answer => (answer.ok ? {...answer, data: readSpots(answer.data)} : answer));
+  const sharedReads = new Set(), sharedCodes = new Set();
+  let readGeneration = generation();
+  async function askIslandRead(path, options, accept) {
+    if (!Object.is(readGeneration, generation())) { readGeneration = generation(); sharedReads.clear(); boundActors.clear(); held.clear(); }
+    const answer = await askSpots(() => readIsland(path, options), data => accept(data)
+      && (data?.snapshotVersion !== 1 || actor() === null || data.actorId === actor())
+      && (!negotiateEconomy || readSharedSnapshot(data) || readLegacyEconomy(data.economy))
+      && (!(sharedReads.has(path) || sharedCodes.has(islandCode(data?.code ?? ''))) || !!readSharedSnapshot(data)));
+    if (answer.ok && answer.data.snapshotVersion === 1) { sharedReads.add(path); sharedCodes.add(islandCode(answer.data.code)); boundActors.set(answer.data.actorId, generation()); }
+    return answer;
+  }
   const writeSpots = (key, send, accept) => write(key, send, accept).then(answer => (answer.ok ? {...answer, data: readSpots(answer.data)} : answer));
+  async function writeShared(group, target, path, code = null, capturedQuote = null) {
+    const snapshot = selectedSnapshot(), context = readEconomy(selectedEconomy());
+    if (!readSharedSnapshot(snapshot) || !context || !sameEconomyScope(context, snapshot.economy)) return refuse(409, 'economy_context_required', 'Reload the island to refresh its treasury.');
+    if (typeof authGeneration === 'function' && (!boundActors.has(snapshot.actorId) || !Object.is(boundActors.get(snapshot.actorId), generation())))
+      return refuse(409, 'economy_context_required', 'Reload the island for the signed-in account.');
+    if ((getEconomy || actor() !== null) && snapshot.actorId !== actor()) return refuse(409,'economy_context_required','Reload the island for the signed-in account.');
+    let body = intents.pending(snapshot, group, target);
+    if (!body) {
+      if (capturedQuote && (!readSharedDemolition(capturedQuote) || capturedQuote.actorId !== snapshot.actorId || !sameEconomyScope(capturedQuote.economy, context) || !sameTarget(capturedQuote.quote.target, target)))
+        return refuse(409, 'economy_quote_unavailable', 'Reload the island to refresh its quote.');
+      const quote = capturedQuote?.quote ?? quoteFor(snapshot, group, target);
+      const offer = group === 'hire' ? snapshot.crewOffers?.find(row => row.crew === target.crew) : quote;
+      if (snapshot.quotesStale || snapshot.admissionState !== 'active' || !offer?.available || group !== 'hire' && !quote?.intent)
+        return refuse(409, 'economy_quote_unavailable', quoteReason(group === 'hire' ? null : quote));
+      body = intents.begin(snapshot, group, target, group === 'hire' ? target : quote.intent, code);
+    }
+    if (!body) return refuse(409, 'economy_quote_unavailable', 'Reload the island to refresh its quote.');
+    const answer = await ask(() => transport.post(path, body, {headers:ECONOMY_CAPABILITY_HEADERS}), data => isSharedReceipt(data, {snapshot, group, body}));
+    if (answer.ok || !outcomeUnknown(answer) && ![401,429].includes(answer.status)) intents.finish(snapshot, group, target, body.actionUid);
+    if (!answer.ok) return answer;
+    const live = readEconomy(answer.data.currentEconomy);
+    return {...answer, data: {...answer.data, currentEconomy: live && sameEconomyScope(live, snapshot.economy) ? live : null}, sharedReceipt: true};
+  }
   const where = value => (value === 'own' || value === 'pirate_point' ? value : displayIslandCode(value) || null);
   const refuse = (status, code, message) => Promise.resolve({ok: false, status, code, message});
   // A wave answer with the browser's clock offset (clockOffset above), stamped as it arrives.
@@ -364,18 +418,20 @@ export function createIslandApi({transport, makeUid = makeActionUid, waveProtoco
     // scope 'week' (T7) or 'all' (T45, all time). The answer must be the board that was asked for.
     leaderboard: (scope = 'week') => ask(() => transport.get(scope === 'all' ? `${PATHS.leaderboard}?scope=all` : PATHS.leaderboard),
       data => isLeaderboard(data, scope)),
-    getIsland: options => askSpots(() => readIsland(PATHS.island, options), isIsland),
+    getIsland: options => askIslandRead(PATHS.island, options, isIsland),
     getCaptain: () => ask(() => transport.get(PATHS.personalCaptain), isPersonalCaptainReply),
     // code selects the island. The persisted mode determines its treasury or the legacy personal wallet.
     build({spot, kind, code = null} = {}) {
       const where = code ? displayIslandCode(code) : '';
       if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
+      if (selectedEconomy() !== undefined) return writeShared('build', {spot, kind}, PATHS.build, where);
       return writeSpots(where ? `build:${where}:${spot}` : `build:${spot}`, actionUid => postIsland(PATHS.build, {spot: sent(spot), kind, actionUid, ...(where ? {code: where} : {})}),
         where ? hasSpots : isIsland);
     },
     upgrade({spot, code = null} = {}) {
       const where = code ? displayIslandCode(code) : '';
       if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
+      if (selectedEconomy() !== undefined) return writeShared('upgrade', {spot}, PATHS.upgrade, where);
       return writeSpots(where ? `upgrade:${where}:${spot}` : `upgrade:${spot}`, actionUid => postIsland(PATHS.upgrade, {spot: sent(spot), actionUid, ...(where ? {code: where} : {})}),
         where ? hasSpots : isIsland);
     },
@@ -383,6 +439,7 @@ export function createIslandApi({transport, makeUid = makeActionUid, waveProtoco
       if (!CREW_IDS.includes(crew)) return refuse(422, 'validation_error', MESSAGES.badCrew);
       const where = code ? displayIslandCode(code) : '';
       if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
+      if (selectedEconomy() !== undefined) return writeShared('hire', {crew}, PATHS.hire, where);
       return writeSpots(`hire:${where}:${crew}`, actionUid => postIsland(PATHS.hire, {crew, actionUid, ...(where ? {code: where} : {})}), where ? hasSpots : isIsland);
     },
     upgradeCaptain() {
@@ -414,6 +471,7 @@ export function createIslandApi({transport, makeUid = makeActionUid, waveProtoco
       if (![1, 2, 3].includes(tier) || (tier === 1 ? choice !== null : !optionsOf(branch, tier).includes(choice))) return refuse(400, 'bad_research', MESSAGES.badResearch);
       if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
       const body = {branch, ...(tier > 1 ? {tier, choice, ...(change ? {change: true} : {})} : {}), ...(where ? {code: where} : {})};
+      if (selectedEconomy() !== undefined) return writeShared('research', {branch,tier,choice,change}, PATHS.research, where);
       return writeSpots(`research:${where}:${branch}:${tier}:${choice ?? ''}:${change ? 'change' : 'pick'}`, actionUid => postIsland(PATHS.research, {...body, actionUid}),
         where ? hasSpots : isIsland);
     },
@@ -423,6 +481,7 @@ export function createIslandApi({transport, makeUid = makeActionUid, waveProtoco
       const where = code ? displayIslandCode(code) : '';
       if (!Object.hasOwn(SPECS, spec ?? '') && !isHouseRole(spec)) return refuse(400, 'bad_spec', MESSAGES.badSpec);
       if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
+      if (selectedEconomy() !== undefined) return writeShared('towerSkill', {spot,spec}, PATHS.specialise, where);
       return writeSpots(`spec:${where}:${spot}:${spec}`, actionUid => postIsland(PATHS.specialise, {spot: sent(spot), spec, actionUid, ...(where ? {code: where} : {})}),
         where ? hasSpots : isIsland);
     },
@@ -432,6 +491,7 @@ export function createIslandApi({transport, makeUid = makeActionUid, waveProtoco
       const where = code ? displayIslandCode(code) : '';
       if (!['a', 'b'].includes(path) || ![1, 2, 3].includes(tier)) return refuse(400, 'bad_tree', MESSAGES.badTree);
       if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
+      if (selectedEconomy() !== undefined) return writeShared('towerTree', {spot,path,tier}, PATHS.towerTree, where);
       return writeSpots(`tree:${where}:${spot}:${path}:${tier}`, actionUid => postIsland(PATHS.towerTree, {spot: sent(spot), path, tier, actionUid, ...(where ? {code: where} : {})}),
         where ? hasSpots : isIsland);
     },
@@ -440,17 +500,20 @@ export function createIslandApi({transport, makeUid = makeActionUid, waveProtoco
       const where = code ? displayIslandCode(code) : '';
       if (!Number.isSafeInteger(amount) || amount < 1) return refuse(400, 'bad_gift', MESSAGES.badGift);
       if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
+      if (selectedEconomy() !== undefined) return writeShared('wreck', {amount}, PATHS.wreck, where);
       return writeSpots(`wreck:${where}:${amount}`, actionUid => postIsland(PATHS.wreck, {amount, actionUid, ...(where ? {code: where} : {})}),
         where ? hasSpots : isIsland);
     },
     // D057: the island's boat (code: the game's island, without it your own). A round's claim carries no click id: the
     // server pays each game once per player, island and best wave, so a retry can never be paid twice.
     boatStatus({code = null} = {}) {
+      if (selectedEconomy() !== undefined) return refuse(409, 'economy_path_unavailable', 'This action is unavailable on shared islands.');
       const where = code ? displayIslandCode(code) : '';
       if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
       return ask(() => readIsland(PATHS.boat(where)), isBoatStatus);
     },
     boatReward({game, stars, code = null} = {}) {
+      if (selectedEconomy() !== undefined) return refuse(409, 'economy_path_unavailable', 'This action is unavailable on shared islands.');
       const where = code ? displayIslandCode(code) : '';
       if (typeof game !== 'string' || !Number.isSafeInteger(stars) || stars < 0 || stars > 3) return refuse(400, 'bad_game', MESSAGES.badBoat);
       if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
@@ -461,18 +524,20 @@ export function createIslandApi({transport, makeUid = makeActionUid, waveProtoco
     demolishQuote({spot, code = null} = {}) {
       const where = code ? displayIslandCode(code) : '';
       if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
-      return ask(() => readIsland(PATHS.demolishQuote(sent(spot), where)), isDemolishQuote)
+      return ask(() => readIsland(PATHS.demolishQuote(sent(spot), where)), data => Object.hasOwn(data ?? {}, 'quoteVersion') ? !!readSharedDemolition(data) : selectedEconomy() === undefined && isDemolishQuote(data))
         .then(answer => (answer.ok ? {...answer, data: {...answer.data, spot: localSpotId(answer.data.spot)}} : answer));
     },
-    demolish({spot, code = null} = {}) {
+    demolish({spot, code = null, quote = null} = {}) {
       const where = code ? displayIslandCode(code) : '';
       if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
+      if (selectedEconomy() !== undefined) return writeShared('demolish', {spot}, PATHS.demolish, where, quote);
       return writeSpots(`demolish:${where}:${spot}`, actionUid => postIsland(PATHS.demolish, {spot: sent(spot), actionUid, ...(where ? {code: where} : {})}),
         isDemolished);
     },
     // T36: move a spot (built or empty) to a cell of the build grid, between waves, free. Moving it to where it
     // stands is harmless, so a repeat needs no click id. code: the game's island, without it your own.
     move({spot, x, z, code = null} = {}) {
+      if (selectedEconomy() !== undefined) return refuse(409, 'economy_path_unavailable', 'This action is unavailable on shared islands.');
       const where = code ? displayIslandCode(code) : '';
       if (![x, z].every(value => Number.isFinite(value) && Number.isInteger(value * 2))) return refuse(422, 'off_grid', MESSAGES.badCell);
       if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
@@ -484,16 +549,20 @@ export function createIslandApi({transport, makeUid = makeActionUid, waveProtoco
     // T53: reset your own island (Settings), between waves, after typing its code. The click id makes a
     // retry after an unknown outcome safe: the server answers the first reset and never resets twice.
     freshStart({confirmCode} = {}) {
+      let reset,pending;try{reset=sharedReset();pending=reset?.pending(confirmCode);}catch{return refuse(503,'reset_retry_unavailable','The original reset request could not be read.');}
+      if (pending || selectedEconomy() !== undefined) return reset?.reset(confirmCode)??refuse(409, 'economy_path_unavailable', 'This action is unavailable on shared islands.');
       if (!islandCode(confirmCode ?? '')) return refuse(400, 'wrong_code', MESSAGES.badConfirm);
       return write('fresh-start', actionUid => transport.post(PATHS.freshStart, {confirmCode: displayIslandCode(confirmCode), actionUid}), isFreshStart);
     },
     // D039 (flag wall_recovery): every built wall's health, timer and Repair price; a Repair or Rebuild.
     walls({code = null} = {}) {
+      if (selectedEconomy() !== undefined) return refuse(409, 'economy_path_unavailable', 'This action is unavailable on shared islands.');
       const where = code ? displayIslandCode(code) : '';
       if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
       return ask(() => readIsland(PATHS.walls(where)), isWalls).then(localWalls);
     },
     repairWall({spot, code = null} = {}) {
+      if (selectedEconomy() !== undefined) return refuse(409, 'economy_path_unavailable', 'This action is unavailable on shared islands.');
       const where = code ? displayIslandCode(code) : '';
       if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
       return write(`repair:${where}:${spot}`, actionUid => transport.post(PATHS.repair, {spot: sent(spot), actionUid, ...(where ? {code: where} : {})}), isWalls)
@@ -502,12 +571,30 @@ export function createIslandApi({transport, makeUid = makeActionUid, waveProtoco
     // T55/T56: read canonical HP and quote context, then submit exactly that quote. The server owns
     // all HP, price, quota and wallet decisions; unknown outcomes keep the same click UID for retry.
     structureRecovery({code = null} = {}) {
+      const selected = context(), expectedContext = contextKey(selected), expectedActor = actor();
       const where = code ? displayIslandCode(code) : '';
       if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
-      return ask(() => readIsland(PATHS.structures(where)), isStructureRecovery)
+      if (selected?.mode === 'island_shared') return sharedCombat.structureRecovery({code})
         .then(answer => answer.ok ? {...answer, data: recoverySpots(answer.data)} : answer);
+      return ask(() => transport.get(PATHS.structures(where), DISCOVERY_OPTIONS), isStructureRecovery)
+        .then(answer => {
+          if (!answer.ok) return answer;
+          if (getEconomy && (contextKey(context()) !== expectedContext || actor() !== expectedActor)) {
+            return refuse(409, 'economy_context_required', 'The island or sign-in changed. Read this building again.');
+          }
+          return {...answer, data: recoverySpots(answer.data)};
+        });
     },
     repairStructure({quote, code = null} = {}) {
+      const selected = context();
+      if (getEconomy && selected?.mode === 'island_shared') {
+        return sharedCombat.repairStructure({quote: quote ? {...quote, spot: sent(quote.spot)} : quote})
+          .then(answer => answer.ok && answer.data.currentState
+            ? {...answer, data: {...answer.data, currentState: recoverySpots(answer.data.currentState)}} : answer);
+      }
+      if (getEconomy && (selected?.mode !== 'personal_legacy' || selected.version !== 0)) {
+        return refuse(409, 'economy_context_required', 'Read the current island before confirming this repair.');
+      }
       const where = code ? displayIslandCode(code) : '';
       if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
       if (!quote || !isText(quote.spot) || !isUuid(quote.instanceId) || !isUuid(quote.expectedEpoch)
@@ -561,9 +648,10 @@ export function createIslandApi({transport, makeUid = makeActionUid, waveProtoco
     visit(code) {
       const symbols = islandCode(code);
       if (!symbols) return refuse(422, 'validation_error', MESSAGES.badCode);
-      return askSpots(() => readIsland(PATHS.visit(displayIslandCode(symbols))), isVisit);
+      return askIslandRead(PATHS.visit(displayIslandCode(symbols)), undefined, isVisit);
     },
     startWave({where: place = 'own', waveProtocol: askedProtocol = null} = {}) {
+      if (selectedEconomy() !== undefined) return (sharedWaves()?.startWave({where:place})??refuse(409, 'economy_path_unavailable', 'This action is unavailable on shared islands.')).then(timed);
       const target = where(place);
       if (!target) return refuse(422, 'validation_error', MESSAGES.badCode);
       const version = askedProtocol === 2 ? 2 : protocolFor(target);
@@ -571,17 +659,20 @@ export function createIslandApi({transport, makeUid = makeActionUid, waveProtoco
         {where: target, actionUid, ...(version === 2 ? {waveProtocol: 2} : {})}), isWave).then(timed);
     },
     joinWave({waveId, waveProtocol: askedProtocol = null} = {}) {
+      if (selectedEconomy() !== undefined) return (sharedWaves()?.joinWave({waveId})??refuse(409, 'economy_path_unavailable', 'This action is unavailable on shared islands.')).then(timed);
       if (!isText(waveId)) return refuse(404, 'no_such_wave', MESSAGES.badWave);
       const version = askedProtocol === 2 ? 2 : protocolFor();
       return ask(() => transport.post(PATHS.join, {waveId, ...(version === 2 ? {waveProtocol: 2} : {})}), isWave).then(timed);
     },
     currentWave({where: place = 'own', waveProtocol: askedProtocol = null} = {}) {
+      if (selectedEconomy() !== undefined) return (sharedWaves()?.currentWave({where:place})??refuse(409, 'economy_path_unavailable', 'This action is unavailable on shared islands.')).then(timed);
       const target = where(place);
       if (!target) return refuse(422, 'validation_error', MESSAGES.badCode);
       const version = askedProtocol === 2 ? 2 : protocolFor(target);
       return ask(() => transport.get(PATHS.current(target, version)), data => data === null || isWave(data) || isJoinableWave(data)).then(timed);
     },
     finishWave({waveId, survived, shipsSunk = 0, bonuses, rescued, walls} = {}) {
+      if (selectedEconomy() !== undefined) return refuse(409, 'economy_path_unavailable', 'This action is unavailable on shared islands.');
       if (!isText(waveId)) return refuse(404, 'no_such_wave', MESSAGES.badWave);
       // v3 waves: the galleon sunk, a finisher won (known kinds only, each once; the server checks the wave).
       const asked = Array.isArray(bonuses) ? [...new Set(bonuses.filter(kind => kind === 'galleon' || kind === 'finisher'))] : [];
@@ -595,6 +686,7 @@ export function createIslandApi({transport, makeUid = makeActionUid, waveProtoco
     // A fallen teammate stood up (captain health): you pay 20 + 5 × wave; fallen is their id in the wave's sim,
     // downAt the tick of their fall (one fall is paid once: a second helper is refused 409 already_up).
     reviveCaptain({waveId, fallen, downAt, waveProtocol = 1, x, z} = {}) {
+      if (selectedEconomy() !== undefined) return refuse(409, 'economy_path_unavailable', 'This action is unavailable on shared islands.');
       if (!isText(waveId)) return refuse(404, 'no_such_wave', MESSAGES.badWave);
       if (typeof fallen !== 'string' || !/^[A-Za-z0-9_.:-]{1,64}$/.test(fallen)) return refuse(422, 'validation_error', MESSAGES.unknown);
       if (!Number.isSafeInteger(downAt) || downAt < 0 || downAt > 100000) return refuse(422, 'validation_error', MESSAGES.unknown);

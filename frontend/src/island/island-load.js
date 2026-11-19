@@ -9,6 +9,8 @@ import {WEAPONS} from '../pirates/captain-ids.js';
 import {displayIslandCode, islandCode, forgetVisit} from './codes.js';
 import {readUnlocks} from './td-rules.js';
 import {declaresEconomy} from './economy-view.js';
+import {readEconomy, sameEconomyScope} from './economy-view.js';
+import {islandCampaign} from './shared-snapshot.js';
 import {declaresPersonalCaptain, preferPersonalSnapshot, readPersonalCaptain} from './economy-captain.js';
 import {visitChip, visitName} from './one-island.js';
 import {NEWS_KEY, CAMPAIGN_UNLOCKED, VISIT_NAMED, mayPass} from './island-shared.js';
@@ -16,14 +18,19 @@ import {NEWS_KEY, CAMPAIGN_UNLOCKED, VISIT_NAMED, mayPass} from './island-shared
 export function createLoading(isl) {
   const {emit, storage, visitStorage, onCoins, onCaptain, onQuestIsland, travel} = isl;
   const personalPinned = new Set();
-  const currentFunds = () => isl.funding.view(isl.visiting ?? isl.own, isl.own?.coins ?? null);
-  const sharedCard = () => { const source = currentFunds(); return source.shared ? {economy: source.economy} : {}; };
+  const currentFunds = () => isl.visitCode && !isl.visiting || !isl.own && !isl.visiting && isl.mode !== 'fake'
+    ? {shared:true,coins:null,economy:null,key:isl.visitCode??null}
+    : isl.funding.view(isl.visiting ?? isl.own, isl.own?.coins ?? null);
+  const sharedCard = () => { const source = currentFunds(); return source.shared ? {economy: source.economy,
+    sharedSnapshot: isl.visitCode && !isl.visiting ? null : isl.visiting ?? isl.own} : {}; };
   async function readOwn() {
     const [answer, personal] = await Promise.all([isl.api.getIsland(), isl.api.getCaptain()]);
     if (!answer.ok) return answer;
-    if (personal.ok) return {...answer, data: {...answer.data, ...personal.data}, personalReadState: 'v1'};
+    if (personal.ok) return {...answer, data: preferPersonalSnapshot(answer.data,{...answer.data,...personal.data}), personalReadState: 'v1'};
+    if (readPersonalCaptain(answer.data?.captain)) return {...answer, personalReadState:'v1'};
     const legacy = !personalPinned.has(islandCode(answer.data?.code ?? '')) && (personal.status === 404 || personal.code === 'captain_not_initialized');
-    if (legacy && !currentFunds().shared && !declaresEconomy(answer.data)) return {...answer, personalReadState: 'legacy'};
+    if (legacy && !declaresPersonalCaptain(answer.data?.captain)
+      && (!declaresEconomy(answer.data) || answer.data.economy?.mode==='personal_legacy')) return {...answer, personalReadState: 'legacy'};
     return {...answer, data: {...answer.data, captain: {progressionVersion: 1}, skills: null}, personalReadState: 'unavailable'};
   }
   const applyPersonal = data => setOwn(declaresPersonalCaptain(data?.captain) && isl.own ? {...isl.own, ...data} : data);
@@ -75,7 +82,11 @@ export function createLoading(isl) {
   // A fresh island answer: coins and captain to the HUD, and the campaign of your own island (§4).
   const setOwn = (next, personalReadState = null, {fromRead = false} = {}) => {
     if (personalReadState !== null && !isl.funding.acceptRead(next)) return;
+    if (personalReadState !== null) isl.personalUnavailable = personalReadState === 'unavailable';
     const before = isl.own;
+    if (personalReadState === null && before?.economy?.mode === 'personal_legacy' && !declaresEconomy(next)) {
+      next = {...next,economy:before.economy};
+    }
     if (!fromRead) {
       if (isl.pendingWallet) wrote('own');
       isl.pendingWallet = null; isl.walletGeneration++;
@@ -111,15 +122,15 @@ export function createLoading(isl) {
     if (currentFunds().shared) return there;
     return mine ? {...there, crew: mine.crew, captain: mine.captain} : there;
   };
-  const campaign = () => (target() ? campaignOf(target()) : null);
+  const campaign = () => (target() ? islandCampaign(target()) : null);
   // Reads and writes of one island can cross: a read asked before our own build or upgrade may answer after
   // it, with the island as it was. reading(kind) gives a check for the answer: false when a newer read was
   // already used or a write answered meanwhile (that answer is newer than the read), so the island on screen
   // never steps back a level.
   const turns = {own: {asked: 0, used: 0, wrote: 0}, visit: {asked: 0, used: 0, wrote: 0}, point: {asked: 0, used: 0, wrote: 0}};
   const reading = kind => {
-    const turn = turns[kind], mine = ++turn.asked, wrote = turn.wrote, selection = isl.selectionGeneration;
-    return () => { if (mine < turn.used || turn.wrote !== wrote || kind === 'visit' && selection !== isl.selectionGeneration) return false; turn.used = mine; return true; };
+    const turn = turns[kind], mine = ++turn.asked, wrote = turn.wrote, selection = isl.selectionGeneration, identity=isl.authGeneration();
+    return () => { if (!Object.is(identity,isl.authGeneration()) || mine < turn.used || turn.wrote !== wrote || kind === 'visit' && selection !== isl.selectionGeneration) return false; turn.used = mine; return true; };
   };
   const wrote = kind => { turns[kind].wrote++; };
   const setOwnRead = (next, personalReadState = null) => {
@@ -128,6 +139,7 @@ export function createLoading(isl) {
     // Consuming the highest covered read fences every smaller ID; earlier reads must keep the guard.
     if (isl.pendingWallet && turns.own.used >= isl.pendingWallet.through) isl.pendingWallet = null;
     setOwn(next, personalReadState, {fromRead: true});
+    isl.session?.reconcile?.();
   };
   // Coins that another answer carries (the arsenal's): stale once an island read asked later was shown or a
   // write answered. Unlike reading('own') it does not use the turn, so a load's island read still lands.
@@ -170,6 +182,7 @@ export function createLoading(isl) {
     }
   }
   function endVisit(invalidateLoad = true) {
+    void isl.session?.leave();
     invalidateWallFeedback();
     isl.selectionGeneration++; if (invalidateLoad) isl.loadTicket++;
     isl.moving.cancel(); isl.demolishSpot = null; isl.demolishQuote = null;
@@ -194,9 +207,13 @@ export function createLoading(isl) {
   // One join per code at a time: the landing (load) and a wave already running there (joinRunningWave)
   // share it, so the wave is joined only once the game is (the server wants a member: 403 not_member).
   const joining = new Map();
+  const clearJoins = () => {joining.clear();isl.joined.clear();};
   function joinFirst(code) {
     if (isl.joined.has(code)) return Promise.resolve(true);
-    if (!joining.has(code)) joining.set(code, joinGameOnce(code).finally(() => joining.delete(code)));
+    if (!joining.has(code)) {
+      const pending=joinGameOnce(code).finally(() => {if(joining.get(code)===pending)joining.delete(code);});
+      joining.set(code,pending);
+    }
     return joining.get(code);
   }
   async function joinGameOnce(code) {
@@ -209,20 +226,21 @@ export function createLoading(isl) {
     return true; // signed out or offline: the visit still shows; building answers on its own
   }
   async function load() {
-    const ticket = ++isl.loadTicket;
+    const ticket = ++isl.loadTicket, actor = isl.getActorId(), identity = isl.authGeneration();
+    const currentLoad = () => !isl.disposed && ticket === isl.loadTicket && actor === isl.getActorId() && Object.is(identity,isl.authGeneration());
     const travelGeneration = isl.coreTravelGeneration;
     let loadedTarget = null;
     if (isl.visitCode && !(await joinFirst(isl.visitCode))) {
-      if (isl.disposed || ticket !== isl.loadTicket) return {ok: false};
+      if (!currentLoad()) return {ok: false};
       endVisit(false);
     }
-    if (isl.disposed || ticket !== isl.loadTicket) return {ok: false};
+    if (!currentLoad()) return {ok: false};
     if (isl.visitCode) {
       const current = reading('visit');
       const answer = await isl.api.visit(isl.visitCode);
-      if (isl.disposed || ticket !== isl.loadTicket) return answer;
+      if (!currentLoad()) return answer;
       if (answer.ok) {
-        if (current() && isl.funding.acceptRead(answer.data)) { isl.visiting = {...answer.data, code: islandCode(answer.data.code)}; loadedTarget = shownIsland(); noteCampaign(isl.visiting); }
+        if (current() && isl.funding.acceptRead(answer.data)) { isl.visiting = {...answer.data, code: islandCode(answer.data.code)}; loadedTarget = shownIsland(); noteCampaign(isl.visiting); isl.session?.reconcile?.(); }
 
         showVisit();
       } else {
@@ -233,7 +251,7 @@ export function createLoading(isl) {
       // Read personal progress and legacy funding while the defended island supplies any shared treasury.
       const current = reading('own');
       const answer = await readOwn();
-      if (isl.disposed || ticket !== isl.loadTicket) return answer;
+      if (!currentLoad()) return answer;
       if (answer.ok) {
         if (current()) { setOwnRead(answer.data, answer.personalReadState); if (!isl.visiting) loadedTarget = shownIsland(); }
 
@@ -245,11 +263,15 @@ export function createLoading(isl) {
     void syncGame();
     void isl.arsenal.refresh();
     if (target()) {
+      await isl.session?.ensure();
+      if(!currentLoad())return {ok:false};
+      await isl.sharedWaves?.retryFinishes();
+      if(!currentLoad())return {ok:false};
       const context = syncCoreContext();
       const answer = await isl.flow.look(where());
       // A retained controller may resume only after this landing confirms its actual server wave.
       // Reject a late load across travel, another load, target change or reset.
-      if (!isl.disposed && ticket === isl.loadTicket && travelGeneration === isl.coreTravelGeneration && loadedTarget !== null && loadedTarget === shownIsland()
+      if (currentLoad() && travelGeneration === isl.coreTravelGeneration && loadedTarget !== null && loadedTarget === shownIsland()
           && context.key && context.key === syncCoreContext().key && answer?.ok
           && typeof answer.data?.waveId === 'string' && answer.data.waveId
           && isl.flow.current?.wave?.waveId === answer.data.waveId) {
@@ -294,15 +316,15 @@ export function createLoading(isl) {
     if (isl.own) isl.own.coins = coins;
     tellCoins(coins);
   };
-  async function reloadVisit() {
+  async function reloadVisit({guard=()=>true}={}) {
     if (!isl.visiting) return;
     const code = isl.visiting.code, current = reading('visit'), fresh = await isl.api.visit(code);
-    if (!isl.disposed && fresh.ok && isl.visiting?.code === code && current() && isl.funding.acceptRead(fresh.data)) { isl.visiting = {...isl.visiting, ...fresh.data, code: islandCode(fresh.data.code)}; noteCampaign(isl.visiting); }
+    if (!isl.disposed && guard() && fresh.ok && isl.visiting?.code === code && current() && isl.funding.acceptRead(fresh.data)) { isl.visiting = {...isl.visiting, ...fresh.data, code: islandCode(fresh.data.code)}; noteCampaign(isl.visiting); isl.session?.reconcile?.(); }
   }
-  async function reloadOwn() {
+  async function reloadOwn({guard=()=>true}={}) {
     const current = reading('own'), mine = await readOwn();
-    if (isl.disposed) return;
-    if (mine.ok) { isl.ownRetry = false; isl.ownMessage = ''; if (current()) setOwnRead(mine.data, mine.personalReadState); } else if (!isl.own) { isl.ownMessage = mine.message; isl.ownRetry = mayPass(mine); }
+    if (isl.disposed || !guard() || !current()) return;
+    if (mine.ok) { isl.ownRetry = false; isl.ownMessage = ''; setOwnRead(mine.data, mine.personalReadState); } else if (!isl.own) { isl.ownMessage = mine.message; isl.ownRetry = mayPass(mine); }
   }
   // The island being defended, read again: after a friend built or upgraded there (island_changed in
   // the island's room, src/pirates/game-wiring.js) and before every wave, so all defenders agree.
@@ -317,6 +339,17 @@ export function createLoading(isl) {
   }
   async function took(answer, place) {
     wrote(place === 'point' ? 'point' : place === 'visit' ? 'visit' : 'own');
+    if (answer.sharedReceipt) {
+      const selected=place==='visit'?isl.visiting:isl.own;
+      if(!selected || !sameEconomyScope(selected.economy,answer.data.receipt.origin)) return;
+      const next=readEconomy(answer.data.currentEconomy), before=readEconomy(selected.economy);
+      const economy=next && sameEconomyScope(next,before) && BigInt(next.revision)>=BigInt(before.revision)?next:before;
+      const pending={...selected,economy,quotesStale:true};
+      if(place==='visit') {isl.visiting=pending;tellCoins();} else setOwn(pending);
+      if(place==='visit') await reloadVisit(); else await reloadOwn();
+      if((place==='visit'?isl.visiting:isl.own)?.quotesStale) isl.cardMessage='Purchase confirmed. Reload the island to refresh its offers.';
+      return;
+    }
     if (place === 'point') { isl.point = answer.data; if (Number.isSafeInteger(answer.data.coins)) tookCoins(answer.data.coins); else await reloadOwn(); }
     else if (place === 'visit') { wrote('own'); await Promise.all([reloadVisit(), reloadOwn()]); }
     else setOwn(answer.data);
@@ -324,7 +357,12 @@ export function createLoading(isl) {
   async function refused(answer, place, spotId = null) {
     if (!spotId || isl.openSpot === spotId) isl.cardMessage = answer.message;
     else isl.ui.toast(answer.message, 'error');
-    if (['spot_taken', 'insufficient_funds', 'max_level', 'not_built', 'locked', 'crew_full'].includes(answer.code)) {
+    const sharedRefusal = place !== 'point' && currentFunds().shared && [403,409].includes(answer.status);
+    if (sharedRefusal) {
+      const selected=place==='visit'?isl.visiting:isl.own;
+      if (selected) selected.quotesStale=true;
+    }
+    if (sharedRefusal || ['spot_taken', 'insufficient_funds', 'max_level', 'not_built', 'locked', 'crew_full'].includes(answer.code)) {
       if (place === 'point') { const current = reading('point'), fresh = await isl.api.piratePoint(); if (!isl.disposed && fresh.ok && current()) { isl.point = fresh.data; tookCoins(fresh.data.coins); } }
       else if (place === 'visit') await Promise.all([reloadVisit(), reloadOwn()]);
       else await reloadOwn();
@@ -336,6 +374,6 @@ export function createLoading(isl) {
   }
   return {currentFunds, sharedCard, readOwn, applyPersonal, firstTime, tellCoins, campaignSeen, campaignTold, setOwn, unlocks, islandUnlocks, campaign, reading, wrote,
     setOwnRead, coinsAsked, target, where, applyWorld, syncCoreContext, setCoreCombatState, endVisit, placeName,
-    joinFirst, load, loadPoint, freshOwn, placeOf, tookCoins, arsenalCoins, reloadVisit, reloadOwn, refreshDefended,
+    clearJoins, joinFirst, load, loadPoint, freshOwn, placeOf, tookCoins, arsenalCoins, reloadVisit, reloadOwn, refreshDefended,
     took, refused, link};
 }

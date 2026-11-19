@@ -22,7 +22,7 @@ export function initialPresenceState({count=30,now=Date.now()}={}){
 }
 
 export function presenceView(state){
-  const others=state.peers.filter(peer=>peer.active).map(({phase,active,seat,...peer})=>({...peer,kit:{...peer.kit},at:peer.at}));
+  const others=state.place===null?[]:state.peers.filter(peer=>peer.active).map(({phase,active,seat,...peer})=>({...peer,kit:{...peer.kit},at:peer.at}));
   const crew=state.peers.filter(peer=>peer.isCrew).map(peer=>({id:`${state.rosterId}-${peer.seat}`,seat:peer.seat,name:peer.name,kit:{...peer.kit},online:peer.active,place:peer.place,isPartner:false}));
   const remaining=Math.max(0,state.emoteCooldownUntil-state.now);
   const localEmote=state.localEmote&&state.localEmote.until>state.now?{...state.localEmote}:null;
@@ -50,6 +50,7 @@ export function tickPresence(state,dt){
 }
 
 export function reportPosition(state,sample){
+  if(sample && typeof sample==='object' && !Array.isArray(sample) && sample.place===null && Object.keys(sample).length===1){Object.assign(state,{place:null,moving:false,localEmote:null,hiddenCount:0});return answer(true,null,'Position cleared.');}
   const valid=sample&&typeof sample.place==='string'&&sample.place.length>0&&Number.isFinite(sample.x)&&Number.isFinite(sample.y)&&facings.includes(sample.facing)&&typeof sample.moving==='boolean';
   if(!valid)return answer(false,'invalid_position','That position could not be read.');
   Object.assign(state,{place:sample.place,x:sample.x,y:sample.y,facing:sample.facing,moving:sample.moving,sampledAt:state.now});

@@ -227,10 +227,10 @@ export function createFrame(ctl) {
     const fallen = isDown(current), me = meIn(current);
     if (fallen && player) { current.pin ??= { x: player.x, z: player.z }; player.x = current.pin.x; player.z = current.pin.z; } else current.pin = null;
     sendPosition(current, player);
-    const running = player && current.shown && !current.done && current.state.phase === 'running';
+    const running = player && current.shown && !current.done && current.state.phase === 'running' && ctl.controls(current);
     const reviveTarget = running && !fallen && !blocked() ? fallenNear(current, player) : null;
     holdRevive(current, reviveTarget, player);
-    current.action = !current.done && current.shown && !blocked() && player && !fallen && !finishing(current)
+    current.action = running && !blocked() && player && !fallen && !finishing(current)
       ? (reviveTarget ? { kind: 'revive', targetId: reviveTarget.id, price: helpPrice(current), x: reviveTarget.x, z: reviveTarget.z }
         : withoutFreeRepair(current, actionAt({ x: player.x, z: player.z }, current.defenses, current.state, { repairReach: stats.repairReach }))) : null;
     if (current.action?.kind === 'revive') current.hud?.prompt(revivePrompt(current), true, current.revive?.share ?? 0);
@@ -304,11 +304,19 @@ export function createFrame(ctl) {
 
   function updatePause(current) {
     const pause = current.pause, hold = held();
+    if(current.info.nativeShared){
+      const settings=ctl.getSessionSettings(),manages=ctl.controls(current) && settings?.canManage===true,ready=current.answer!==undefined && manages;
+      pause.ready=ready;
+      current.hud?.pause?.({title:`Wave ${current.info.wave} won!`,line:pause.note??(settings?.breakPaused?'The next wave is paused.':settings?.autoNext?'Waiting for the next wave.':'Ring the bell when you are ready.'),
+        seconds:0,auto:settings?.autoNext===true,autoEnabled:manages,ready:ready && !pause.requested && !settings.breakPaused,paused:settings?.breakPaused===true,
+        hold:{label:settings?.breakPaused?'Resume':'Pause',enabled:manages}});
+      return;
+    }
     // Paused by the room: the break keeps its full length until Resume.
     if (hold?.paused) pause.until = Math.max(pause.until, now() + breakSeconds * 1000);
     const left = Math.max(0, Math.ceil((pause.until - now()) / 1000 - 1e-9));
     pause.ready = current.answer !== undefined || pause.failed === true || current.recoveryFinishFailed === true;
-    if (left <= 0 && !pause.requested && !hold?.paused) {
+    if (!current.info.nativeShared && left <= 0 && !pause.requested && !hold?.paused) {
       if (ctl.auto && pause.ready && !pause.note) next();
       // The break is over: ring the bell again for the next wave. With Auto next on, a refused try (note)
       // or a loot answer that never came must not keep the break (and the blocked input) forever.

@@ -228,6 +228,33 @@ def test_cleanup_deletes_only_old_guests_through_delete_player():
     assert response.headers["cache-control"] == "private, no-store"
 
 
+def test_cleanup_preserves_shared_owners_without_starving_later_deletions():
+    import asyncio
+
+    from server.demo.guests import cleanup_guests
+
+    app, database, _clock = make_demo_app()
+    owner = guest_user(1)
+    member = guest_user(2)
+    database.auth_users = [owner, member]
+    original = database.delete_player
+
+    def remove(arguments):
+        if arguments["p_player_id"] == owner["id"]:
+            return {"status": "refused", "reason": "owned_island_confirmation_required"}
+        return original(arguments)
+
+    database.delete_player = remove
+    answer = asyncio.run(cleanup_guests(app.state.admin, NOW, frozenset(), max_deletions=1))
+    assert (answer.checked, answer.deleted, answer.more) == (2, 1, False)
+    assert database.deleted == [member["id"]]
+    assert database.auth_users == [owner]
+    assert database.calls("island_lifecycle_delete_player") == [
+        {"p_actor_id": owner["id"], "p_confirm_owned_island": False},
+        {"p_actor_id": member["id"], "p_confirm_owned_island": False},
+    ]
+
+
 def test_cleanup_reads_every_page_and_stops_at_the_deletion_limit():
     app, database, clock = make_demo_app()
     clock.now = NOW

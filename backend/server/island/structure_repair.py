@@ -10,7 +10,7 @@ from uuid import UUID
 from pydantic import BaseModel, StrictBool, StrictInt, StrictStr
 
 from server.errors import ApiError
-from server.island import permissions, service
+from server.island import structure_recovery
 from server.island.catalogue import IslandCatalogue
 from server.island.store import Island, read_model
 from server.island.structure_repair_models import RepairReceipt, RepairRequest
@@ -71,9 +71,7 @@ async def repair(
     `read_state` is T55's canonical, read-only recovery adapter. It is called only when this UID
     has no receipt, so a previous successful UID can be returned even after a reset or demolition.
     """
-    island, _ = await service.target_island(
-        admin, catalogue, player_id, body.code, permissions.REPAIR
-    )
+    island = await structure_recovery.resolve_target_island(admin, catalogue, player_id, body.code)
     repair_kind = await kind_for_intent(admin, catalogue, island.owner, player_id, body, read_state)
     arguments = rpc_arguments(catalogue, island, player_id, body, repair_kind)
     reply = await admin.call_function("island_structure_repair", arguments)
@@ -170,6 +168,8 @@ def kind_for_instance(state: object, instance_id: UUID) -> str | None:
 
 def repair_refusal(row: RepairRefusalRow) -> ApiError:
     """Map transaction refusals to existing API errors without inventing wallet reasons."""
+    if row.reason == "economy_context_required":
+        return ApiError(409, row.reason, "Reload this island's shared repair offer.")
     if row.reason == "not_member":
         return ApiError(403, "not_member", "Join this game first to repair buildings here.")
     if row.reason == "no_such_island":

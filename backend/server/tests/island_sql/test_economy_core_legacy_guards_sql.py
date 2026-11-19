@@ -40,7 +40,8 @@ ALIASES = {
 
 
 def code_for(player):
-    alphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
+    # The public island-code alphabet is not a credential.
+    alphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"  # pragma: allowlist secret
     return "".join(alphabet[(player.int >> (5 * index)) % len(alphabet)] for index in range(5))
 
 

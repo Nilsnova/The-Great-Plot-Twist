@@ -9,11 +9,11 @@ import { FRAMES, SHIP_VARIANTS, SHIP_SIZE, SHIP_DRAWN_SIZE, SHIP_DRAWN, WHITE, o
   RED, GREEN, GOLD, tinted, DARK, bandOf, BOARDER_ART, BRUTE_LOOK, MILITIA_IDS, TEAL, FALL_SECONDS, SPRAY,
   SHOT_TRAIL, SPARK_TRAIL, SHOT, CANNONBALL_LOOK, CANNONBALL_TAIL, BOMB_TRAIL, FIRE_BALL, BOMB_BURST, BURST_SECONDS,
   EXPLOSION_FRAMES, MUSKET, lookOf, facingTo, SWEEP_SECONDS, STAR, BRASS, TOWER_BAR_LIFT, DOWN_IDS, TRACER,
-  FLASH_SECONDS } from './render-sprites.js';
+  FLASH_SECONDS, STANDING_IDS } from './render-sprites.js';
 
 // The arguments in this order (render.js passes them so; positional, so the minifier shortens them).
 export function createDraw(rect, layers, bands, posts, ships, crew, guards, splashes, wallFlash, K, still, low,
-  drawnX, drawnY, effects, spark) {
+  drawnX, drawnY, effects, spark, nativeCaptains = false) {
   // The renderer's clock and latest state as update() last set them (render.js calls sync() right after, every frame).
   let clock = 0, simNow = 0, latest = null, captain = null, revive = null, figures = null;
   function sync(now, simTime, state, own, helping, drawnAt) { clock = now; simNow = simTime; latest = state; captain = own; revive = helping; figures = drawnAt; }
@@ -397,7 +397,15 @@ export function createDraw(rect, layers, bands, posts, ships, crew, guards, spla
       const mine = captain && hero.id === captain.id, x = mine ? captain.x : hero.x, z = mine ? captain.z : hero.z;
       if (hero.down) { drawDown(hero, x, z, revive?.targetId === hero.id ? revive.share : null); continue; }
       // A teammate's bar sits over their presence figure when it is drawn (src/pirates/figures.js).
-      const figure = mine ? null : figures?.get?.(hero.id);
+      const figure = mine || nativeCaptains ? null : figures?.get?.(hero.id);
+      if (nativeCaptains && !mine) {
+        const r = rect[STANDING_IDS[Math.max(0, Math.min(9, hero.colour ?? 0))]];
+        if (r) {
+          // Atlas rectangles already use world units, like the fallen Captains.
+          const at = projectGround(x, z), k = K();
+          bands[bandOf(z)].push(r, at.x, at.y, r.w * k, r.h * k, .5, r.anchor * k);
+        }
+      }
       drawHealthBar(figure ? figure.x : x, figure ? figure.z : z, hero.hp, hero.maxHp);
     }
   }

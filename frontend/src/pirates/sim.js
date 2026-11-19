@@ -30,6 +30,7 @@ import { createBoarders } from './sim-boarders.js';
 import { createTick } from './sim-tick.js';
 import { createShipFire } from './ship-fire.js';
 import { finite, round2, coverageProfile } from './sim-read.js';
+import {isParticipantToken} from './recovery-policy.js';
 
 // The public API, unchanged: CONFIG and the pure helpers live in their own files now.
 export { CONFIG } from './sim-config.js';
@@ -113,6 +114,16 @@ export function createWave(options = {}) {
   return {
     applyRecoveryEvent,
     recoveryHealthVector,
+    bindCaptainFalls(facts,throughTick){
+      if(!sim.canonicalCaptains || sim.ticks-1!==throughTick || !facts || typeof facts!=='object')return false;
+      for(const [token,fact] of Object.entries(facts)){
+        const hero=party.get(token);
+        if(!hero || hero.withdrawn || fact.hpUnits!==Math.round(hero.hp/hero.maxHp*1000000) || fact.reviveBasisSeq!==hero.reviveBasisSeq
+          || fact.downAtTick!==(hero.down?Math.round(hero.downAt/C.tick):null) || (hero.down?!isParticipantToken(fact.fallId):fact.fallId!==null))return false;
+      }
+      for(const [token,fact] of Object.entries(facts))if(party.get(token).down)party.get(token).fallId=fact.fallId;
+      return true;
+    },
     // Raw sight and reload from this wave's frozen defenses. `litRange` is only available to lit targets at night.
     attackCoverage(id) {
       const tower = towerById.get(id);
@@ -145,7 +156,7 @@ export function createWave(options = {}) {
         // Captain health (GAME-V3.md §3), by id: present is false for a captain who is away or not heard lately.
         party: [...party.values()].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)).map(hero => ({ id: hero.id,
           x: round2(hero.x), z: round2(hero.z), hp: hero.hp, maxHp: hero.maxHp, down: hero.down, downAt: hero.downAt,
-          colour: hero.colour, present: presentAt(hero, t) })),
+          colour: hero.colour, present: presentAt(hero, t),...(sim.canonicalCaptains?{withdrawn:hero.withdrawn,reviveBasisSeq:hero.reviveBasisSeq}:{}) })),
         // The house roles (GAME-V3.md "Houses"): the Barracks' militia in the wave, and the houses that act.
         militia: militia.map(unit => ({ id: unit.id, houseId: unit.houseId, ...(unit.guard ? { guard: true } : {}), x: unit.x, z: unit.z, hp: unit.hp, maxHp: unit.maxHp,
           state: unit.state, foe: unit.foe, facing: unit.facing, level: unit.level })),

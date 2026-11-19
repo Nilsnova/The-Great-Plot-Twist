@@ -9,6 +9,7 @@ import {isExtraSpot} from './extra-spots.js';
 import {opensText, spotWave, waveOf, isOpen, tierItem, tierWave} from '../campaign/index.js';
 import {BRANCH_BY_ID, SPECS, TOP_TIER, isCapstone, optionLine, optionName, optionsOf, readSpec, readTier, skillPrice} from '../campaign/tech.js';
 import {BOAT, GAME_TEXT as BOAT_TEXT, coinsFor} from '../pirates/boat/rules.js';
+import {sharedBoatPay} from './shared-boat-card.js';
 import {ROLES as HOUSE_ROLES, ROLE_IDS, ROLE_LEVEL as HOUSE_ROLE_LEVEL, readRole, roleLine} from '../campaign/houses.js';
 import {towerTreeModel} from './tree-model.js';
 import {nextWaveNumber} from './preparation-model.js';
@@ -16,6 +17,7 @@ import {buildStructureRecoveryView} from './structure-recovery-model.js';
 import {isRetiredCaptainSkill, recoveryTechLine} from '../campaign/captain-repair-policy.js';
 import {cardFunds, canAffordCoins, exactCoinText, missingCoins} from './economy-view.js';
 import {declaresPersonalCaptain, engineerCommitmentLine, personalRespecReason, readPersonalCaptain} from './economy-captain.js';
+import {sharedBuildCard, sharedCrewCard, sharedTechCard, sharedWreckCard, sharedDemolitionCard} from './shared-cards.js';
 
 // Coins always read "🪙 120" through formatCoins (BUILD-PLAN 3.2); an unknown amount reads "🪙 ?".
 export const coinText = n => (Number.isSafeInteger(n) ? formatCoins(n) : exactCoinText(n));
@@ -45,7 +47,16 @@ const RECOVERY_HEALTH_KINDS = new Set(['wall', 'cannon', 'mortar', 'harpoon', 'c
 export function buildCardModel({spotId, kind, slot = null, spot = null, coins = null, visitor = false, ownerName = '',
   busy = false, message = '', unlocks = null, prices = null, point = false, campaign = null, battle = false, movable = false,
   treePicked = null, recoveryState = null, recoveryStatus = 'disabled', recoveryError = null, recoveryPending = false,
-  recoveryVersion = 0, economy = undefined} = {}) {
+  recoveryVersion = 0, economy = undefined, sharedSnapshot = null} = {}) {
+  if (!point && economy !== undefined) {
+    const model = sharedBuildCard({spotId,kind,slot,spot,busy,message,battle,economy,sharedSnapshot,treePicked});
+    if (spot?.built && RECOVERY_HEALTH_KINDS.has(spot.kind) && recoveryStatus !== 'disabled') {
+      const row = recoveryState?.structures?.find(item => item.spot === spotId) ?? null;
+      model.recoveryLevel = row?.level ?? null;
+      model.recovery = buildStructureRecoveryView(recoveryState,row,{status:recoveryPending?'submitting':recoveryStatus,errorCode:recoveryError,coins,economy});
+    }
+    return model;
+  }
   const funds = cardFunds(economy, coins); coins = funds.coins;
   const reserved = funds.shared && battle;
   const loading = funds.shared ? 'Island treasury unavailable. Reload the island.' : 'Your coins are still loading.';
@@ -200,7 +211,8 @@ function rolesOf(spot, level, busy, recoveryVersion = 0) {
 }
 
 // The crew panel (§3): one row per crew member that is unlocked; the locked ones in `soon`.
-export function crewModel({crew = {}, coins = null, unlocks = null, busy = null, message = '', prices = null, battle = false, economy = undefined, recoveryVersion = 0} = {}) {
+export function crewModel({crew = {}, coins = null, unlocks = null, busy = null, message = '', prices = null, battle = false, economy = undefined, recoveryVersion = 0, sharedSnapshot = null} = {}) {
+  if (economy !== undefined) return sharedCrewCard({crew,busy,message,battle,economy,sharedSnapshot});
   const funds = cardFunds(economy, coins); coins = funds.coins;
   const rows = [], soon = [];
   for (const id of CREW_IDS) {
@@ -411,7 +423,8 @@ export function harborModel({campaign = null} = {}) {
 //   branches: [{branch, name, tier, summary, folded, tiers: [{tier, state, fork, reason, nodes: [{id, name,
 //     line, state, note, button: {label, aria, disabled, reason, action: {branch, tier, choice, change}} | null}]}]}]
 //   tier state: done · next · locked;  node state: done · chosen · closed · open · locked
-export function techModel({campaign = null, coins = null, busy = null, message = '', battle = false, recoveryVersion = 0, economy = undefined} = {}) {
+export function techModel({campaign = null, coins = null, busy = null, message = '', battle = false, recoveryVersion = 0, economy = undefined, sharedSnapshot = null} = {}) {
+  if (economy !== undefined) return sharedTechCard({economy,sharedSnapshot,busy,message,battle,recoveryVersion});
   const funds = cardFunds(economy, coins); coins = funds.coins;
   const open = isOpen(campaign, 'tech_hub');
   const sent = new Map((campaign?.research?.branches ?? []).map(item => [item?.branch, item]));
@@ -479,14 +492,28 @@ export function techModel({campaign = null, coins = null, busy = null, message =
 
 // The wreck (after wave 6): members pay coins into her repair. D057: from wave 30 the repaired wreck is the
 // island's own boat: her card lists the boat's games (boat: GET /api/island/boat, null while it loads).
-export function wreckModel({campaign = null, coins = null, busy = null, message = '', boat = null, battle = false, economy = undefined} = {}) {
+export function wreckModel({campaign = null, coins = null, busy = null, message = '', boat = null, battle = false, economy = undefined, requireRewardScope = false, sharedSnapshot = null} = {}) {
+  if (economy !== undefined) {
+    const model = sharedWreckCard({economy,sharedSnapshot,busy,message,battle});
+    model.sail = sailModel({campaign,done:model.done,boat,battle,requireRewardScope});
+    if (model.sail.open) {
+      model.title = 'Your ship';
+      model.line = boat?.rewardScope === 'island'
+        ? 'Attempts are free. Each game pays the island only for positive improvements, up to its shared cap for this island wave record.'
+        : 'Refresh the ship to read its current reward scope before sailing.';
+    }
+    return model;
+  }
   const funds = cardFunds(economy, coins); coins = funds.coins;
   const open = isOpen(campaign, 'wreck'), wreck = campaign?.wreck ?? {paid: 0, goal: 500, gifts: [25, 100]};
   const paid = Math.min(wreck.goal, wreck.paid), left = wreck.goal - paid, done = left <= 0;
   const percent = Math.floor(paid / wreck.goal * 100);
-  const sail = sailModel({campaign, done, boat, battle});
+  const sail = sailModel({campaign, done, boat, battle, requireRewardScope});
   const model = {title: sail.open ? 'Your ship' : 'The wreck', open, done, paid, goal: wreck.goal, percent, progress: `${coinText(paid)} of ${coinText(wreck.goal)}`,
-    line: !open ? lockedLine('wreck') : sail.open ? 'Attempts are free. Each game pays only for your first round with at least 1 star after a won wave. Later rounds pay no extra coins for a higher score. Win another wave to earn again.'
+    line: !open ? lockedLine('wreck') : sail.open && requireRewardScope && !['island','player'].includes(boat?.rewardScope)
+      ? 'Refresh the ship to read its current reward scope before sailing.' : sail.open && boat?.rewardScope === 'island'
+      ? 'Attempts are free. Each game pays the island only for positive improvements, up to its shared cap for this island wave record.'
+      : sail.open ? 'Attempts are free. Each game pays only for your first round with at least 1 star after a won wave. Later rounds pay no extra coins for a higher score. Win another wave to earn again.'
       : done ? 'Her hull is whole again, thanks to the whole crew.' : 'Pay a few coins into her repair after every wave. Anyone in the game can help.',
     gifts: [], message, coins: funds.line, sail};
   if (!open || done) return model;
@@ -505,15 +532,20 @@ export function wreckModel({campaign = null, coins = null, busy = null, message 
 
 // D057: the boat's part of the wreck card. Open once the ship step (wave 30) is reached and the repair is done;
 // one tile per game with what 3 stars pay at this wave, or "Paid ✓" once this player was paid at this wave.
-export function sailModel({campaign = null, done = false, boat = null, battle = false} = {}) {
+export function sailModel({campaign = null, done = false, boat = null, battle = false, requireRewardScope = false} = {}) {
   const wave = campaign?.wave ?? 0, shipOpen = isOpen(campaign, 'ship'), open = shipOpen && done && boat?.open !== false;
   const note = !shipOpen ? `She sails after wave ${waveOf('ship')}.` : !done ? 'Finish her repair and she sails.'
     : battle ? 'Sail between waves.' : '';
   const paid = new Map((boat?.games ?? []).map(item => [item.id, item.paid === true]));
+  const unknownRewards = requireRewardScope && !['island', 'player'].includes(boat?.rewardScope);
   const games = BOAT.games.map(id => {
-    const best = coinsFor(BOAT.stars, wave), isPaid = paid.get(id) === true;
+    const shared = boat?.rewardScope === 'island';
+    const reward = shared ? boat.games.find(game => game.id === id) : null;
+    const best = reward?.best ?? coinsFor(BOAT.stars, wave), isPaid = paid.get(id) === true;
     return {id, icon: BOAT_TEXT[id].icon, title: BOAT_TEXT[id].title, paid: isPaid, best,
-      pay: isPaid ? 'Paid ✓ · play for fun' : `★★★ = ${coinText(best)}`, disabled: !open || battle};
+      pay: unknownRewards ? 'Rewards unavailable · refresh the ship' : reward ? sharedBoatPay(reward) : shared ? 'Loading island rewards…'
+        : isPaid ? 'Paid ✓ · play for fun' : `★★★ = ${coinText(best)}`,
+      disabled: !open || battle || unknownRewards || (shared && !reward)};
   });
   return {open, note, wave, games: open ? games : []};
 }
@@ -522,6 +554,7 @@ export function sailModel({campaign = null, done = false, boat = null, battle = 
 // [{id, name, coins, you}]} (null while it loads); busy: the tear-down is on its way. The safe button
 // ("Keep it") is the one that takes the focus.
 export function demolishModel({quote = null, busy = false, message = ''} = {}) {
+  if (quote?.quoteVersion === 1) return sharedDemolitionCard({quote,busy,message});
   const name = quote?.name ?? BUILDINGS[quote?.kind]?.name ?? 'building';
   const title = quote ? `Tear down this ${name}?` : 'Tear down?';
   const model = {title, question: '', lines: [], refunds: [], button: busy ? 'Tearing down…' : 'Tear down', disabled: !quote || busy,

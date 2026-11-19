@@ -180,6 +180,11 @@ export function setupWave(options = {}) {
   const ships = [], wrecks = [], balls = [], shells = [], captains = new Map(), blades = new Map(), boarders = [], fires = [];
   // Captain health (GAME-V3.md §3): id -> {id, x, z, hp, maxHp, down, downAt, seen, colour, away}.
   const H = C.health, party = new Map();
+  const canonicalCaptains=options.canonicalCaptains??null;
+  const canonicalLoadouts=options.canonicalLoadouts??null;
+  if(canonicalCaptains)for(const [id,row] of Object.entries(canonicalCaptains))party.set(id,{id,x:row.x,z:row.z,
+    hp:H.hp*row.hpUnits/1000000,maxHp:H.hp,down:row.hpUnits===0,downAt:row.downAtTick===null?null:row.downAtTick*C.tick,
+    seen:0,colour:0,away:false,withdrawn:false,fallId:row.fallId,reviveBasisSeq:row.reviveBasisSeq});
   // The Barracks' militia (CONFIG.houses.barracks): {id, militia: true, houseId, homeX, homeZ, x, z, hp, maxHp,
   // damage, state: idle|walking|fighting, foe, hitIn, facing}. They walk out at the start of the wave.
   const militia = [], militiaById = new Map();
@@ -192,5 +197,5 @@ export function setupWave(options = {}) {
     crew, curve, happening, finisher, rescue, S, fogShare, warnLead, coast, towers, cannons, sight, HO, roles,
     barracks, taverns, W, housesNear, walls, cannonById, towerHealth, towerById, wallById, wallsInOrder,
     blockingObjects, towerBlocking, paths, jammed, lanes, laneCount, bosses, tier, plan, eventLanes, ships, wrecks,
-    balls, shells, captains, blades, boarders, fires, H, party, militia, militiaById, now, flagshipAfloat, statsOf });
+    balls, shells, captains, blades, boarders, fires, H, party, canonicalCaptains, canonicalLoadouts, militia, militiaById, now, flagshipAfloat, statsOf });
 }

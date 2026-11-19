@@ -1314,7 +1314,7 @@ G7 and G8 draw other captains from the case adapter's view (`presence` in `front
 
 | What | G7/G8 adapter view and intents | A4 module (`frontend/src/online/realtime.js`) | What G9 does |
 |---|---|---|---|
-| Our position | `reportPosition({place, x, y, facing, moving})`; `y` is the world's z | `live.setPlace(place)` on travel and arrival, then `live.update({x, z, facing, moving})` | pass `y` as `z`; call `setPlace(null)` during the intro, the cinematics and the tour |
+| Our position | `reportPosition({place, x, y, facing, moving})`; `y` is the world's z. Exact `{place: null}` clears the selected room and queued position without coordinates. | `live.setPlace(place)` on travel and arrival, then `live.update({x, z, facing, moving})`; clear uses `live.setPlace(null)` | Shared islands use the fresh canonical session's exact `isle_<code>_<24hex>` nonce, room 1. Unknown shared context clears; only explicit verified legacy context uses `isle_<code>`. Pass `y` as `z`; clear during unlocated transitions. |
 | Others' position | `presence.others[]` with `x`, `y` | `live_peer_moved {id, x, z, facing, moving, everyMs}` | `y` = `z`; keep `everyMs` for the glide |
 | Facing | `front`, `back`, `left`, `right` | `up`, `down`, `left`, `right` (`facingFrom`) | `back` = `up` (moving to a smaller z), `front` = `down` |
 | Emotes | `wave`, `cheer`, `point`, `lantern`, `shrug` (art `public/pixel/emote-*.png`) | `wave`, `cheer`, `nod`, `shrug`, `follow_me`, `help` (`EMOTES` in `live-rules.js`) | only `wave`, `cheer` and `shrug` exist on both sides, and A4's module refuses any other id. One list has to be chosen before the wiring (D006 left emotes to a later package) |
@@ -1872,15 +1872,16 @@ with paid-restore race protection in `20261115150000_wall_restore_record_fence.s
 The main game owns the pirate update loop by passing `loop:false` to `wireWaves`; its `update(delta)` forwards the existing `mountPirates.update`. The optional third argument of `createController.update(delta, active, beforeAnimate)` runs after movement/collision/facing and before `character.animate`. The game uses it for combat sampling and pose consumption in one frame. Default module loops and existing two-argument movement callers keep their behavior.
 
 Legacy body poses may also use accepted outcomes correlated to live local/validated-room inputs admitted after initial catch-up. This channel preserves original event order, rejects ambiguous actor/type batches, and clears on travel/hidden/stop/disposal. It changes neither simulation inputs nor generic renderer/audio history filtering. Recovery feedback keeps its existing prediction/dedup rules. See `live-attack-feedback.js`, the controller and D066.
-
 ## Shared island treasury foundation (MP-ECO-02)
 
 The additive foundation in `backend/server/island/treasury.py`, `treasury_models.py` and
 `treasury_store.py` defines exact accounts per island/run. Contracts are in migrations
 `20261118050050_island_treasury.sql` / `20261118050100_island_treasury_functions.sql`,
 [database rights and checks](../supabase/README.md#shared-island-treasury-foundation-mp-eco-02)
-and [the package spec](../specs/MP-ECO-02-island-treasury.md). Existing HTTP routes do not call
-admission or these money functions; personal-wallet runtime remains unchanged.
+and [the package spec](../specs/MP-ECO-02-island-treasury.md). Arsenal, structure repair,
+Harbor wagers and boat HTTP adapters now consume the guarded domain transactions below.
+Admission remains explicit; complete shared gameplay still requires the canonical persisted
+authority, island projection and lifecycle integrations.
 
 `EconomyContext(mode,version,actor_id,island_owner,account_id,run_epoch,revision)` and
 `resolve_economy_context(admin,actor_id,island_owner,*,expected_epoch=None)` live in
@@ -1949,6 +1950,52 @@ must expose fresh economy/assets only if that origin is still the active current
 the actor is a current member. A departed or retired-origin retry may return its authorized immutable
 receipt, with current projections null/omitted. Never display an old receipt balance as current funds.
 
+## Guarded shared economy domain transactions
+
+Service-only arsenal, combat repair, wager and ship-game transaction functions
+consume the version-one treasury and common operation registry. Their exact
+SQL signatures, HTTP adapters, receipt/replay rules, grants and
+remaining authority/session gates are described in
+[Guarded shared economy transactions](economy/DOMAIN-TRANSACTIONS.md).
+The adapters require explicit accounting mode and the shared capability header;
+their presence does not admit existing islands or activate a deployment.
+
+## Shared island core HTTP boundary
+
+The [core API spec](../specs/MP-ECO-CORE-API.md) defines the version-one read/quote contract.
+`backend/server/routes/island.py` preserves the existing URLs and legacy serializers. Persisted
+mode is resolved read-only before dispatch; missing or unreadable database state cannot select
+a legacy wallet path. Shared GET `/api/island`, `/api/island/visit/{code}` and demolition quotes
+require `X-Island-Economy-Version: 1`. Shared reads return one member-authorized snapshot with
+authenticated `actorId`, target economy/crew/progress/structures, actor personal projection and
+exact decimal-string quotes. Paused members may read. There is no implicit admission/import,
+wave expiration, fake stock, live roster or world revision derived from financial revision.
+
+Strict shared POST bodies are defined in `server/island/economy_http_models.py`: server-prepared
+flat intent/CAS/quote fields plus `actionUid`, optional `code`, and exactly
+`economy: {mode: 'island_shared', version: 1, islandOwner, runEpoch}`. Build/upgrade/demolish,
+research, tower-skill/tree, wreck and hire dispatch to their existing atomic domain adapters.
+No client-selected actor/account/payer/catalogue/action is accepted. Old-shaped requests on
+persisted shared targets refuse before legacy side effects; malformed shared fields remain
+validation errors. New shared writes require the actual persisted permission provider;
+`economy_path_unavailable` remains the result when it is absent.
+
+Before current preflight, service-only `island_economy_operation_origin` resolves an authenticated
+actor's existing root to its original account/epoch/domain. The domain transaction still checks
+the complete frozen intent and immutable receipt. Historical exact retries can survive departure,
+pause or retirement without unauthorized fresh projections. Shared success returns that original
+domain receipt unchanged; a later coherent refresh is independent and may fail without changing
+the committed outcome. Treasury revisions order only monetary projections.
+
+The application registers the existing global GET `/api/captain` and POST
+`/api/captain/{role,skill,respec}` router with the atomic legacy-guard migration dependency.
+Its strict personal version/revision/root contract is independent of the viewed island's money
+mode, and missing adoption is explicitly `409 captain_not_initialized` on GET. Read failures
+never mean an unadopted profile. Shared snapshots advertise the implemented versioned
+arsenal/session/repair/reset/market/match paths. Move remains unavailable pending its
+coordinated client path. A capability is protocol support, not permission: existing route
+flags, membership, origin and controller checks still apply. This adds no public conversion.
+
 ## Shared wave accounting foundation (MP-ECO-03)
 
 [The additive migration](../supabase/migrations/20261118050200_wave_treasury_settlement.sql)
@@ -1983,3 +2030,54 @@ anchors use `FOR NO KEY UPDATE` to remain compatible with unrelated legacy forei
 This guard does not replace future route context checks or full canonical lifecycle integration.
 Missing personal hooks/state fail closed; deletion dispositions and continuing-island closure
 must be explicitly integrated before affected account deletion is admitted.
+
+## Canonical wave transport and lifecycle composition
+
+The [shared wave boundary](../specs/MP-ECO-11-shared-wave-http.md) extends the
+existing start/join/current/finish and protocol-two journal paths. Shared write
+bodies carry the exact four-field economy intent plus UUID `sessionId` and a
+canonical decimal-string `connectionGeneration`. Journal GET uses paired
+`islandOwner`/`runEpoch` query fields and optional complete session proof. A valid
+member may spectate without controlling a Captain. Persisted mode is discovered
+before any legacy island initializer; old requests cannot choose shared money or
+restore old control for a globally adopted Captain. Native transport requires
+the common version-one header and protocol two. The combined native producer
+and client must be installed before these capabilities are advertised.
+
+`POST /api/island/revive` uses the [free revival contract](../specs/MP-ECO-12-free-revival-runtime.md).
+Its strict body captures origin, action UID, wave, target token, fall, hold and
+controller proof. The existing ordered input journal alone starts/cancels a hold.
+Completion returns an immutable receipt and journal identity; no coins, payment
+receipt or fresh HP patch is returned. Ordinary and Medic hold duration, reach,
+fall identity and sealed journal state are checked in the canonical transaction.
+
+`POST /api/island/fresh-start` retains its legacy body and additionally accepts
+`{economy,actionUid,confirmCode}` for an admitted shared island. The server selects
+the once-only starting grant. The public shared reply keeps the original reset
+receipt with `currentEconomy:null`; a fresh GET alone adopts its replacement
+account/epoch. Old bets remain bound to the retired account. Reset preserves all
+personal Captain progress and never transfers the old cash into the new run.
+
+`DELETE /api/me` retains mandatory strict `confirm:true` and adds optional strict
+`confirmOwnedIslandDeletion` (default false). One atomic service-only lifecycle
+RPC classifies the actor's persisted ownership and disposes held copies, controls,
+owned assets, crew handover and Auth deletion. An admitted owned island requires
+the separate true confirmation (`409 owned_island_confirmation_required`). A
+member's visited island and other players' personal progress survive. Automatic
+guest cleanup uses the same transaction and skips owners needing confirmation
+while continuing later eligible guests. Legacy-only accounts retain their purge.
+See [lifecycle composition](../specs/MP-ECO-20-lifecycle-compatibility.md).
+
+Valid island/journal requests check the live deleted-actor guard after their
+request budget. Malformed bodies/queries and incompatible native requests reach
+no domain transaction. Historical exact retries still belong to their original
+actor/account/epoch; an Auth cache cannot resurrect a deleted player.
+
+Existing `game_join`/`game_leave` RPC signatures and the invite alias share the
+canonical membership transaction. A real departure withdraws only that island's
+control/slot and held copies; pending returns follow the actual accepted wave.
+Join/rejoin/leave rotate the current private topic when membership changes.
+Redundant operations and refused owner departure have no lifecycle effect. The
+HTTP create/join/list/lobby/leave routes check live actor status after their
+budgets. Lobby roles use global adopted Captain state, with legacy reads only
+for explicitly unadopted players and no initialization or read-failure fallback.

@@ -342,12 +342,15 @@ def test_recovery_rpc_is_service_only_and_has_a_pending_player_index(database):
     ]
     for role in ("anon", "authenticated", "service_role"):
         allowed = database.execute(
-            "select has_function_privilege(%s,p.oid,'execute') from pg_proc p "
+            "select p.proname,has_function_privilege(%s,p.oid,'execute') from pg_proc p "
             "where p.pronamespace='public'::regnamespace and p.proname=any(%s::text[])",
             (role, names),
         ).fetchall()
         assert len(allowed) == len(names)
-        assert all(row[0] is (role == "service_role") for row in allowed)
+        for name, executable in allowed:
+            # The saved pre-recovery body is now an owner-only private alias.
+            assert executable is (role == "service_role" and
+                                  name != "recovery_wave_finish_before_reward_recovery")
     definition = database.execute(
         "select indexdef from pg_indexes where schemaname='public' "
         "and indexname='wave_participants_pending_player_idx'"
