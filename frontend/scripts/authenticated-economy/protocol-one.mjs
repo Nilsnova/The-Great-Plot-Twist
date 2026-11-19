@@ -7,7 +7,8 @@ import {pathToFileURL,fileURLToPath} from 'node:url';
 registerHooks({load(url,context,next){return next(url,url.endsWith('.json')?{...context,importAttributes:{type:'json'}}:context);}});
 const {createWaveController}=await import('../../src/pirates/controller.js');
 const {defenses}=await import('../../src/island/spots.js');
-const helperRoot=pathToFileURL((process.env.MP_ECO_HELPER_ROOT??'/workspace/mp-economy/next-505-provider/frontend/scripts/authenticated-economy/').replace(/\/?$/,'/'));
+const helperRoot=process.env.MP_ECO_HELPER_ROOT
+ ?pathToFileURL(process.env.MP_ECO_HELPER_ROOT.replace(/\/?$/,'/')):new URL('./',import.meta.url);
 const {createApiClients}=await import(new URL('api-clients.mjs',helperRoot));
 const {observe,admit}=await import(new URL('observer.mjs',helperRoot));
 const {sourceEvidence,servedSourceEvidence}=await import(new URL('source.mjs',helperRoot));
