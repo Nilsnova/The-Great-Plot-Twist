@@ -1,7 +1,7 @@
 // Original world-only material atlas. Sampled into the existing backdrop, never a new land mask.
 import {shippedTerrain} from './shipped.js';
 export const TERRAIN_SOURCE_SHEET = Object.freeze({file: 'village/terrain-materials-v1.png', width: 1254, height: 1254});
-// The ground is painted at most 32 texels per world unit; the shipped atlas (scripts/ship-village-art.mjs)
+// The ground is painted at most 39 texels per world unit; the shipped atlas (scripts/ship-village-art.mjs)
 // resamples each authored crop to at least 39 texels per unit, with its own repeated one-texel border.
 export const TERRAIN_SHEET = Object.freeze(shippedTerrain
   ? {file: shippedTerrain.file, width: shippedTerrain.width, height: shippedTerrain.height} : TERRAIN_SOURCE_SHEET);

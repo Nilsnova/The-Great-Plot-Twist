@@ -306,7 +306,7 @@
         312
       ]
     },
-    "maxGroundTexelsPerUnit": 32
+    "maxGroundTexelsPerUnit": 39
   },
   "initialTransfer": {
     "masterPlusTerrainBytes": 13331050,

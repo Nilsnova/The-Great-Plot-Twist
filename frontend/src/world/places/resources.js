@@ -1,5 +1,6 @@
 // A place owns its root, textures, materials, geometry and explicit subscriptions.
 import * as THREE from 'three';
+import {QUALITY, settings} from '../../config.js';
 import {legacyBackdrop} from '../ground-transform.js';
 import { loadTexture } from '../texture.js';
 import { hasGround, paintGround } from '../../art/ground.js';
@@ -7,13 +8,15 @@ import { premultiply, screenDensity, smoothTexture } from '../../art/textures.js
 import {acquireRasterSheet} from '../../art/village-raster.js';
 import {TERRAIN_SHEET} from '../../art/village/terrain-materials.js';
 // A place with a painted cartoon ground (src/art/ground.js) gets it instead of its pixel backdrop:
-// 16 to 32 texels per world unit, by the screen's density.
-export async function loadBackdrop(path, { quality = 'high' } = {}) {
+// Rasterise the ground at the screen's density up to the shipped terrain atlas limit.
+export async function loadBackdrop(path, {quality = settings.quality} = {}) {
   const id = /^places\/([a-z_]+)\.png$/.exec(path)?.[1];
   if (id && hasGround(id) && typeof document !== 'undefined') {
     const lease = await acquireRasterSheet(TERRAIN_SHEET);
     try {
-      return smoothTexture(paintGround(id, Math.max(16, Math.min(32, screenDensity(quality) * 8)), lease.image));
+      const limit = (QUALITY[quality] ?? QUALITY.high).groundTexels;
+      const density = Math.max(16, Math.min(limit, screenDensity(quality) * 10));
+      return smoothTexture(paintGround(id, density, lease.image));
     } finally { lease.release(); }
   }
   const texture = await loadTexture(`${import.meta.env.BASE_URL}${path}`);
