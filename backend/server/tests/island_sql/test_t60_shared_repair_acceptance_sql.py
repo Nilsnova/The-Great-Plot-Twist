@@ -1,7 +1,7 @@
 """Native bell -> two HTTP actors -> reconnect -> closed HP, on disposable PostgreSQL.
 
-Only login verification and accepted damage reports are synthetic fixtures. The
-actual persisted provider, producer, financial RPC and canonical close are used.
+Login verification, accepted damage reports and the trusted terminal outcome are
+explicit fixtures. Actual provider, producer, financial RPC and canonical close are used.
 No source, frozen snapshot or journal row is overwritten to authorize a result.
 """
 
@@ -176,6 +176,8 @@ def test_two_http_actors_share_bell_quota_reconnect_replay_and_canonical_full_he
             assert current["remainingPaidUses"] == 0
             assert current["economy"]["treasury"]["availableCoins"] == "10"
             assert current["structures"][0]["hpUnits"] == 400000
+        # This verifies the canonical hook's effects for each trusted outcome;
+        # outcome/expiry selection by the public wrapper or worker is separate.
         closed = close(database, {"waveId": str(world.wave)}, outcome)
         assert closed["status"] == "done", closed
         as_owner(database)

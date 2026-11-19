@@ -15,8 +15,11 @@ gradual-recovery and fake-room results in the parent directory remain historical
   fourth action, same-UID replay after later damage, disconnect/reattach and
   immutable original receipt are verified. Both HTTP actors read the same funds,
   quota and HP. Closure gives full current HP while preserving damaged closed HP.
-  Authentication and accepted damage reports are explicitly synthetic; there is
-  no substitute persisted authority or overwritten canonical state.
+  Authentication and accepted damage reports are explicitly synthetic, and each
+  terminal outcome is a trusted test parameter to the actual private canonical
+  close hook. This proves closure effects, rather than natural expiry/outcome
+  selection by a public handler or worker. There is no substitute persisted
+  authority or overwritten canonical state.
 - **Thirteen budget/HTTP cases passed in 8.37 seconds**: the new native journal
   diagnostic, ten planner cases and two existing real shared-repair HTTP cases.
   The full 107-migration chain is applied twice to disposable PostgreSQL. This is
