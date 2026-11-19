@@ -2,6 +2,14 @@
 
 Follow-up to [playable scene acceptance](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/236). The scope starts at `d98a21ce`, and the final world art captures use `8bf8d65b`. Individual comparisons use the relevant earlier build and the same local island state and camera within each pair. The browser checks used a loopback game with the built-in fake island and weather. Desktop and touch viewports ran on the Mac. Physical-phone performance remains open.
 
+## Home village review
+
+[Desktop before and after](home-island-desktop-before-after.jpg) · [Touch before and after](home-island-touch-before-after.jpg) · [Stone corner on desktop and touch](level-3-wall-corner-desktop-touch.jpg) · [Live wall upgrade](wall-level-3-upgrade-live.gif)
+
+The Home bench, barrel, lantern, Harbor stall and campaign signs now share the village’s brass, dark blue, varnished timber and soft shading. Native keyboard and touch tests confirmed that the captain stops at standing buildings and can still use the Cannon, House and Watchtower. The Harbor Market and Lighthouse Cottage entrances passed separately.
+
+Desktop mouse and touch placed a three-piece corner beside one cannon and paid 40 coins to upgrade a wall to level 3. Both joins stayed flush after the upgrade. The oak partly covers the bend in the normal walking view. Selecting the wall fades its canopy to reveal the joins. The existing pirate-lane rule still limits the legal cells around most building plots. Broader placement remains open in [#236](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/236).
+
 ## Island edge and touch controls
 
 [Desktop shoreline](shore-desktop.jpg) · [Phone shoreline](shore-phone.jpg) · [WebKit dropdown targets](dropdowns-webkit.jpg)
