@@ -27,7 +27,7 @@ await mkdir(output, {recursive: false, mode: 0o700});
 const report = {startedAt: new Date().toISOString(), baseline, scenarioSha256: hash(await readFile(new URL(import.meta.url))),
   sourceBefore: sourceEvidence(baseline, {checkoutRoot: root}), helpersBefore: await helperHashes(), facts: [],
   setup: 'Real registered GoTrue pair and normal game entry; explicit fresh service admission with 5000 test coins and saved island unlock50. No naturally earned unlock, combat, clock, HP or outcome claim.',
-  boundaries: ['Visible product mutations are distinguished from browser-authenticated fetch probes and read-only PostgreSQL observations.',
+  boundaries: ['An explicit normal product refresh follows free role selection; run3 separately demonstrates the unrefreshed first-click stale construction quote on this unchanged product source.','Visible product mutations are distinguished from browser-authenticated fetch probes and read-only PostgreSQL observations.',
     'Local actual-provider candidate only; no hosted application, full multiplayer matrix or combat acceptance claim.']};
 let environment;
 const note = (event, details = {}) => { report.facts.push({event, at: new Date().toISOString(), ...details}); console.log(event); };
@@ -72,6 +72,7 @@ async function mutation(page, path, button) {
   await button.click({noWaitAfter: true});
   const response = await pending;
   const data = await response.json();
+  if (response.status() !== 200) report.refusedVisibleAttempt = {path, status: response.status(), body: response.request().postDataJSON(), data};
   assert.equal(response.status(), 200, path + ': ' + JSON.stringify(data));
   return {status: response.status(), body: response.request().postDataJSON(), data};
 }
@@ -121,12 +122,15 @@ try {
   }
   note('visible-shared-bank-on-two-registered-clients', {layer: 'rendered product', available: '5000', committed: '0'});
 
+  // Explicit normal product refresh after personal role selection; source64 has a separately retained first-click stale-quote finding.
+  await refresh(member.page);
   await closeCards(member.page);
   await member.page.evaluate(() => window.__island.island.pick('wall_1'));
   const buildCard = member.page.locator('.island-card-build[open]');
   const buildText = await buildCard.innerText(); assert.match(buildText, /island treasury/i);
   const built = await mutation(member.page, '/api/island/build', buildCard.getByRole('button', {name: /^Build ·/}));
   view = await snapshot(); assert.equal(view.spots.find(spot => spot.id === 'wall_1').built, true);
+  assert.equal(built.body.quotedCoins, '9');
   const afterBuild = view.economy.treasury.availableCoins;
   assert.equal(BigInt(afterBuild), 5000n - BigInt(built.body.quotedCoins));
   await buildCard.screenshot({path: output + '/member-quoted-build.png'});
@@ -175,6 +179,10 @@ try {
   await mutation(member.page, '/api/island/arsenal/return', arsenal.locator('[data-focus="arsenal-return"]'));
   const stock = await api(member.page, '/api/island/arsenal?code=' + encodeURIComponent(code)); assert.equal(stock.status, 200);
   assert.equal(stock.data.total, 1); assert.equal(stock.data.copies[0].holder, null);
+  await mutation(member.page, '/api/island/arsenal/take', arsenal.locator('.island-arsenal-copy').getByRole('button', {name: /^Take/}));
+  const carried = await api(member.page, '/api/island/arsenal?code=' + encodeURIComponent(code));
+  assert.equal(carried.data.copies[0].holder, member.actorId);
+  await mutation(member.page, '/api/island/arsenal/return', arsenal.locator('[data-focus="arsenal-return"]'));
   note('visible-member-shared-arsenal-buy-and-return', {layer: 'rendered product', displayed: weaponText, total: stock.data.total, stored: stock.data.stored});
   await arsenal.screenshot({path: output + '/member-arsenal-return.png'});
 
@@ -186,6 +194,7 @@ try {
   await closeCards(member.page);
   // Keep an actual old-epoch building selection open while the owner resets.
   await member.page.evaluate(() => window.__island.island.pick('wall_2'));
+  await refresh(owner.page);
   await settings(owner.page);
   const resetSection = owner.page.locator('.island-reset');
   const resetText = await resetSection.innerText(); assert.match(resetText, /pending wager returns stay in the retired run/);
