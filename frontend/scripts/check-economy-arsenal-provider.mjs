@@ -34,7 +34,9 @@ const scenarioSha256 = sha256(await readFile(fileURLToPath(import.meta.url)));
 const helperUrls = [helperUrl, observerUrl, sourceUrl, new URL('./runtime.mjs', helperUrl),
   new URL('../../../backend/tools/authenticated_economy/observe.py', helperUrl),
   new URL('../../../backend/tools/authenticated_economy/config.py', helperUrl),
+  new URL('../../../backend/tools/authenticated_economy/application.py', helperUrl),
   new URL('../../../backend/tools/authenticated_economy/worker.py', helperUrl),
+  new URL('../../../backend/tools/shared_session_worker.py', helperUrl),
   new URL('./record-source.mjs', helperUrl)];
 async function helperHashes() {
   const hashes = {};
