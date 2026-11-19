@@ -26,8 +26,28 @@ authenticated human approval. Unknown or incomplete input blocks the proposed pl
 
 ## Executed checks
 
-The focused commands and final source-qualified results are recorded below before
-review. Earlier failed fixture setups remain development diagnostics, not successful
+The executable and test sources at `2ffb97179cb3bd964d528d564dd008f3a93ca460`
+were checked on 2026-11-19. The following command ran from `backend/` with
+`UV_CACHE_DIR=/workspace/.cache/uv` and `CASE_PG_SCRATCH=1`:
+
+```sh
+uv run --no-sync --with pgserver --with 'psycopg[binary]' --with pglast \
+  python -m pytest -q --tb=short \
+  server/tests/test_conversion_preview.py \
+  server/tests/island_sql/test_conversion_rehearsal_sql.py \
+  server/tests/island_sql/test_legacy_wave_fences_sql.py::test_closed_personal_protocol_two_reward_survives_adoption_and_replays_once \
+  server/tests/island_sql/test_shared_arsenal_sql.py::test_valid_legacy_twenty_stored_four_carried_converts_and_all_returns_commit \
+  server/tests/test_demo_host_routes.py::test_cleanup_preserves_shared_owners_without_starving_later_deletions
+```
+
+Result: **69 passed in 16.89 seconds**, with no skipped cases. This includes
+50 pure preview cases, 15 populated conversion cases and four existing regression
+cases for closed personal claims, excess-copy returns and guest cleanup.
+`uv run --no-sync ruff check .` from `backend/` passed, as did `git diff --check`.
+The example command above produced an exact byte match with `synthetic-preview.json`
+(SHA-256 `38c2f5042a773dbd1eb7777348c095129b72098494eb65857e7f3d77351afcdc`).
+
+Earlier failed fixture setups remain development diagnostics, not successful
 rehearsal evidence. No full backend/frontend or authenticated provider suite is claimed
 for this component.
 
