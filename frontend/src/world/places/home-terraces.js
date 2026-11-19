@@ -1,6 +1,7 @@
 // Sandstone terraces along the shoulders of Home Island. Elevation belongs only to the view.
 import * as THREE from 'three';
 import {cliffProfile} from '../../art/coast-cliffs.js';
+import {artSizes} from '../art.js';
 import {groundProjectionGlsl, LEGACY_DEPTH, projectGround, unprojectGround} from '../projection.js';
 import {surfaces} from './surfaces.js';
 
@@ -8,17 +9,28 @@ const COAST = surfaces.home_islet;
 // Coast samples are spaced two degrees apart. Each run goes from the visible stone foot
 // to the tapered back of its grass cap. The southern runs face towards the sea.
 const BANKS = [
-  {first: 101, last: 108, foot: .771, back: .913, height: 2.5},
-  {first: 116, last: 132, foot: .772, back: .891, height: 2.85},
-  {first: 140, last: 155, foot: .815, back: .896, height: 2.82},
-  {first: 162, last: 173, foot: .800, back: .912, height: 2.49},
+  {first: 101, last: 108, foot: .771, back: .943, height: 2.5},
+  {first: 116, last: 132, foot: .772, back: .927, height: 2.85},
+  {first: 140, last: 155, foot: .815, back: .936, height: 2.82},
+  {first: 162, last: 173, foot: .800, back: .947, height: 2.49},
   {first: 25, last: 34, foot: .942, back: .812, height: 1.63},
   {first: 55, last: 67, foot: .951, back: .847, height: 1.47},
 ];
 const STONE = ['#bf9367', '#c69d72', '#b48762', '#cbab7e', '#c09b70'].map(hex => new THREE.Color(hex));
 const MORTAR = new THREE.Color('#8d6d4e'), RECESS = new THREE.Color('#785d43');
 const ENDS = [new THREE.Color('#9c7952'), new THREE.Color('#b08c61')];
-const TURF = new THREE.Color('#97b742'), LIP = new THREE.Color('#a8bf50'), ROOTS = new THREE.Color('#90a841');
+const TURF = new THREE.Color('#8da936'), LIP = new THREE.Color('#a9bf4b'), ROOTS = new THREE.Color('#78a336');
+const FOLIAGE = {
+  101: [['birch', .56, .70, .49], ['shrub', .19, .64, .64], ['shrub', .74, .31, .49], ['flowers', .41, .31, .52]],
+  116: [['shrub', .21, .73, .65], ['shrub', .27, .68, .51], ['grass-tuft', .56, .74, .56], ['shrub', .81, .71, .62],
+    ['shrub', .37, .28, .41], ['flowers', .72, .34, .56]],
+  140: [['shrub', .31, .68, .60], ['shrub', .38, .72, .51], ['grass-tuft', .66, .73, .62], ['shrub', .83, .70, .52],
+    ['flowers', .15, .34, .60], ['shrub', .57, .32, .44]],
+  162: [['birch', .65, .72, .51], ['shrub', .42, .67, .66], ['shrub', .54, .69, .47], ['flowers', .21, .29, .60],
+    ['grass-tuft', .81, .29, .56]],
+  25: [['shrub', .23, .72, .58], ['shrub', .35, .75, .42], ['grass-tuft', .71, .72, .62], ['flowers', .78, .33, .52]],
+  55: [['grass-tuft', .25, .69, .62], ['shrub', .46, .72, .55], ['shrub', .63, .77, .64], ['flowers', .78, .32, .55]],
+};
 const SHADOW = new THREE.Color('#3e4a2d');
 const SUN = new THREE.Vector3(-.6, .71, .43).normalize();
 const STEP = .5;
@@ -62,8 +74,38 @@ function shelfPoint(row, foot, back, taper, rise, radius, elevation) {
   return p;
 }
 
-export function createHomeTerraces(root, coastArt) {
+// These short plants grow on the decorated treads. Use one batch per sprite material and
+// paint the entire garden before any interactable upright objects, even when zoomed in.
+function addTerraceFoliage(root, art, plantings) {
+  for (const [name, plants] of plantings) {
+    if (!art[name]) continue;
+    const [width, height, foot] = artSizes[name];
+    const positions = [], uv = [], indices = [];
+    for (const [plant, scale] of plants.sort(([a], [b]) => a.z - b.z)) {
+      const projected = projectGround(plant.x, plant.z);
+      const half = width * scale * .5, bottom = projected.y + plant.y - height * scale * foot;
+      const top = bottom + height * scale, base = positions.length / 3;
+      positions.push(projected.x - half, bottom, 0, projected.x + half, bottom, 0,
+        projected.x + half, top, 0, projected.x - half, top, 0);
+      uv.push(0, 0, 1, 0, 1, 1, 0, 1);
+      indices.push(base, base + 1, base + 2, base, base + 2, base + 3);
+    }
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+    geometry.setIndex(indices);
+    const mesh = new THREE.Mesh(geometry, art[name]);
+    const order = {'birch': 0, shrub: 1, 'grass-tuft': 2, flowers: 3};
+    mesh.name = `home-terrace-${name}`;
+    mesh.renderOrder = 4.8 + order[name] * .01;
+    mesh.raycast = () => {};
+    root.add(mesh);
+  }
+}
+
+export function createHomeTerraces(root, coastArt, art) {
   const coast = cliffProfile(COAST), positions = [], colors = [], materials = [];
+  const plantings = new Map();
   const normal = new THREE.Vector3(), edge = new THREE.Vector3();
   function sunlight(a, b, d) {
     normal.subVectors(b, a).cross(edge.subVectors(d, a)).normalize();
@@ -121,6 +163,14 @@ export function createHomeTerraces(root, coastArt) {
       const shape = profile.map(([radius, elevation, , material]) =>
         point(radius - (material === LIP ? .031 + .006 * Math.sin(sample * 2.3) : 0), elevation));
       rows.push({sample, point, shape});
+    }
+    if (art) for (const [name, along, across, scale] of FOLIAGE[first]) {
+      const sample = THREE.MathUtils.lerp(start, finish, along);
+      const high = across > .50;
+      const elevation = high ? (front ? .99 : 1) : (front ? .572 : .517);
+      const plant = samplePoint(sample)(across, elevation);
+      if (!plantings.has(name)) plantings.set(name, []);
+      plantings.get(name).push([plant, scale]);
     }
     for (let i = 0; i < rows.length - 1; i++) {
       const a = rows[i].point, b = rows[i + 1].point;
@@ -267,9 +317,9 @@ export function createHomeTerraces(root, coastArt) {
         float lip = smoothstep(1.0, 2.0, vTerrace.z);
         float tufts = noise2(vec2(vTerrace.x * 29.0, vTerrace.y * 23.0));
         float moss = smoothstep(.35, .67, grainBreak);
-        vec3 turfColor = mix(vTone, source, .31);
-        turfColor = mix(turfColor, vec3(.47, .56, .13), lip * (.08 + moss * .12));
-        vec3 turf = turfColor * (mix(.89, 1.12, grain) + (tufts - .5) * .19 + lip * .05);
+        vec3 turfColor = mix(vTone, source, .23);
+        turfColor = mix(turfColor, vec3(.49, .62, .14), lip * (.10 + moss * .15));
+        vec3 turf = turfColor * (mix(.90, 1.12, grain) + (tufts - .5) * .19 + lip * .06);
         gl_FragColor = vec4(mix(stone, turf, clamp(vTerrace.z, 0.0, 1.0)), vTerrace.w);
         #include <colorspace_fragment>
       }`,
@@ -279,5 +329,6 @@ export function createHomeTerraces(root, coastArt) {
   mesh.renderOrder = 4.7;
   mesh.raycast = () => {};
   root.add(mesh);
+  if (art) addTerraceFoliage(root, art, plantings);
   return mesh;
 }
