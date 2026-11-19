@@ -22,6 +22,9 @@ const PALETTE = [0x283021, 0x666960, 0x96917a, 0xc4b185, 0xcbb68c, 0x655f51, 0xd
 const [SHADOW, EAST, FRONT, BEVEL, CAP, MORTAR, SUNLIT, LEE] = PALETTE;
 const RETAINING_STONE = [0xc3a47b, 0xb0916b, 0x9a7f61, 0x80694f, 0x726049].map(hex => new THREE.Color(hex));
 const [SHOULDER, RETAINING_FRONT, RETAINING_SIDE, RETAINING_JOINT, EMBEDDED_STONE] = RETAINING_STONE;
+const COAST_PAVING = [0xb39372, 0xb99b79, 0xc0a381, 0xad8e6e, 0xb69b7d].map(hex => new THREE.Color(hex));
+const COAST_MORTAR = new THREE.Color(0x8d765d), COAST_LIP = new THREE.Color(0xb29a7a);
+const ROW_OFFSETS = [.19, .38, .10], BLOCK_WIDTHS = [.58, .52, .43, .60, .48];
 const PAD_FACES = [[2, EAST], [3, EAST], [4, FRONT], [5, FRONT], [6, FRONT]];
 const onLand = (x, z) => surfaceClass(ISLAND_PLACE, x, z) !== 0;
 
@@ -32,6 +35,36 @@ function corners(x, z, width, depth) {
     [x+width,z+depth-clip], [x+width-clip,z+depth], [x-width+clip,z+depth],
     [x-width,z+depth-clip], [x-width,z-depth+clip],
   ];
+}
+
+function clipEdge(polygon, axis, limit, sign) {
+  const clipped = [];
+  for (let i = 0; i < polygon.length; i++) {
+    const point = polygon[i], previous = polygon[(i + polygon.length - 1) % polygon.length];
+    const inside = (point[axis] - limit) * sign >= 0, wasInside = (previous[axis] - limit) * sign >= 0;
+    if (inside !== wasInside) {
+      const t = (limit - previous[axis]) / (point[axis] - previous[axis]);
+      clipped.push([THREE.MathUtils.lerp(previous[0], point[0], t), THREE.MathUtils.lerp(previous[1], point[1], t)]);
+    }
+    if (inside) clipped.push(point);
+  }
+  return clipped;
+}
+
+function pavedCap(outline, x, z, width, depth, fill) {
+  // A continuous bed closes the rim. Staggered joints remain visible between individual blocks.
+  fill(outline, COAST_MORTAR);
+  for (const [row, offset] of ROW_OFFSETS.entries()) {
+    const front = z - depth + row * depth * 2 / ROW_OFFSETS.length;
+    const back = front + depth * 2 / ROW_OFFSETS.length;
+    const alongRow = clipEdge(clipEdge(outline, 1, front + .014, 1), 1, back - .014, -1);
+    for (let left = x - width - offset, column = 0; left < x + width; column++) {
+      const right = left + BLOCK_WIDTHS[(row + column) % BLOCK_WIDTHS.length];
+      const stone = clipEdge(clipEdge(alongRow, 0, left + .016, 1), 0, right - .016, -1);
+      if (stone.length >= 3) fill(stone, COAST_PAVING[(row * 3 + column * 7) % COAST_PAVING.length]);
+      left = right;
+    }
+  }
 }
 
 // The pad stays under the original gun. Only its masonry below the rim tucks inland.
@@ -52,10 +85,10 @@ function retainingToe(outside, x, z, footZ) {
 
 function geometryOf(foundations) {
   const points = [], colors = [], indices = [];
-  function vertex(x, z, rise, color, alpha = 1) {
+  function vertex(x, z, rise, color, alpha = 1, light = 1) {
     const point = projectGround(x, z), index = points.length / 3;
     points.push(point.x, point.y + rise, rise);
-    colors.push(color.r, color.g, color.b, alpha);
+    colors.push(color.r * light, color.g * light, color.b * light, alpha);
     return index;
   }
   function quad(a, b, c, d) { indices.push(a, b, c, a, c, d); }
@@ -103,13 +136,17 @@ function geometryOf(foundations) {
         }
       }
     }
-    const inset = corners(x, footZ, width - .10, depth - .10);
-    const top = inset.map(([gx, gz], i) => vertex(gx, gz, height, i < 3 ? LEE : SUNLIT));
+    const capWidth = width - .10, capDepth = depth - .10;
+    const inset = corners(x, footZ, capWidth, capDepth);
+    const top = inset.map(([gx, gz], i) => vertex(gx, gz, height, toes ? COAST_LIP : i < 3 ? LEE : SUNLIT));
     // From this fixed ground projection the front and right cut faces carry the height.
     for (const [edge, tint] of PAD_FACES) {
       const next = edge + 1, [ax, az] = outside[edge], [bx, bz] = outside[next];
-      const footA = vertex(ax, az, 0, tint), footB = vertex(bx, bz, 0, tint);
-      const lipA = vertex(ax, az, height * .60, BEVEL), lipB = vertex(bx, bz, height * .60, BEVEL);
+      const coastFace = edge < 4 ? RETAINING_SIDE : RETAINING_FRONT;
+      const face = toes ? coastFace : tint;
+      const lip = toes ? COAST_LIP : BEVEL;
+      const footA = vertex(ax, az, 0, face), footB = vertex(bx, bz, 0, face);
+      const lipA = vertex(ax, az, height * .60, lip), lipB = vertex(bx, bz, height * .60, lip);
       quad(footA, footB, lipB, lipA);
       quad(lipA, lipB, top[next], top[edge]);
       // Mortar joints break the longest faces into blocks below the bevel.
@@ -123,6 +160,18 @@ function geometryOf(foundations) {
             vertex(x2, z2, height * .58, MORTAR), vertex(x1, z1, height * .58, MORTAR));
         }
       }
+    }
+    if (toes) {
+      pavedCap(inset, x, footZ, capWidth, capDepth, (polygon, tint) => {
+        const middle = polygon.reduce(([sx, sz], [gx, gz]) => [sx + gx / polygon.length, sz + gz / polygon.length], [0, 0]);
+        const shaded = ([gx, gz]) => {
+          const carriage = 1 - Math.min(1, Math.hypot((gx - x) / .83, (gz - footZ - .12) / .43));
+          return vertex(gx, gz, height, tint, 1, 1 - .19 * carriage);
+        };
+        const center = shaded(middle), rim = polygon.map(shaded);
+        for (let i = 0; i < rim.length; i++) indices.push(center, rim[i], rim[(i + 1) % rim.length]);
+      });
+      continue;
     }
     // Cut the cap into readable limestone blocks around the carriage. All corners and joints
     // stay inside the tower's existing 2 × 2 footprint, including beside joined walls.
