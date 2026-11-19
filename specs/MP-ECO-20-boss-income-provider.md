@@ -3,6 +3,9 @@
 Responsible teammate: Ianno Hollensteiner (`Iannomh123456`). This separate bounded
 #505 case supplements the existing personal/Engineer evidence without replaying it.
 
+The implemented scenario and source-qualified result are recorded in
+[the owned evidence note](../docs/evidence/MP-ECO-20-boss-income-provider/README.md).
+
 Use three actual local Auth sessions and normal production game, session and boss
 bell routes. Saved fortress, two houses totaling five levels, crew and wave-five
 unlock are explicit setup fixtures. The unchanged production simulation consumes
