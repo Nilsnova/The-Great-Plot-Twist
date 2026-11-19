@@ -1,0 +1,199 @@
+{
+  "sourceCommit": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+  "scenario": "actual-provider-legacy-protocol-one",
+  "status": "passed",
+  "startedAt": "2026-11-19T17:36:23.764Z",
+  "scenarioSha256": "d2e34ea4a59c91084ad98d7a0a5606b11bb91ab391dc79dc700ae8a8534eb437",
+  "launcherSha256": "2d90140159247d8e908581a3b00c50f494e481407d4744cfa85575c98a392521",
+  "helperHashesBefore": {
+    "api-clients.mjs": "a9369da75350b882ac6a312c20903965a362409978e86e108c256f9cc450a9f7",
+    "observer.mjs": "40cb288da9f9a80e337fba5a39a12b1b23501ad1ff48a2a4614975492997f140",
+    "runtime.mjs": "d1387a35fd7243df58e8d9589586034b3a098489bb20e43bece9b6b45040865f",
+    "source.mjs": "56d138914dc5b4e15159162bb21db68c985b2c9083c2e5bac4b34a90502ea8d9"
+  },
+  "sourceBefore": {
+    "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+    "actualCheckoutHead": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+    "productionDiffFromBaseline": "empty",
+    "paths": [
+      "backend/server",
+      "backend/content",
+      "frontend/src",
+      "supabase/migrations",
+      "backend/uv.lock",
+      "backend/pyproject.toml",
+      "frontend/package-lock.json",
+      "frontend/package.json",
+      ":(exclude)backend/server/tests"
+    ]
+  },
+  "steps": [
+    {
+      "name": "supported protocol-one same-UID bell race and different-UID refusal",
+      "wave": {
+        "waveId": "e3970c28-3a2d-4690-9507-e3e61e44af86",
+        "wave": 1,
+        "seed": 770062123,
+        "startsAt": "2026-11-19T17:36:32Z",
+        "weather": {
+          "kind": "calm",
+          "label": "Calm sea",
+          "ships": 1,
+          "fog": 0
+        },
+        "flagship": false,
+        "boss": false,
+        "recoveryVersion": 0,
+        "waveProtocol": 1,
+        "walls": {},
+        "rules": [
+          "tower_health",
+          "pathing",
+          "tower_obstacles",
+          "rescue",
+          "defenses_v2",
+          "ship_fire"
+        ],
+        "serverNow": "2026-11-19T17:36:27.841Z"
+      },
+      "otherBell": {
+        "status": 409,
+        "data": {
+          "error": {
+            "code": "wave_running",
+            "message": "A wave is already under way on this island."
+          }
+        }
+      },
+      "canonicalTiming": {
+        "starts_at": "2026-11-19T17:36:32+00:00",
+        "minimum_seconds": 10,
+        "maximum_seconds": 900
+      }
+    },
+    {
+      "name": "natural controller result, canonical finish and exact immutable payout retry",
+      "finishBody": {
+        "waveId": "e3970c28-3a2d-4690-9507-e3e61e44af86",
+        "survived": true,
+        "shipsSunk": 3,
+        "walls": {},
+        "waveProtocol": 1
+      },
+      "result": {
+        "loot": 35,
+        "coins": 145,
+        "waveBest": 1,
+        "flags": 1,
+        "boss": false
+      },
+      "pre": {
+        "balance": "110",
+        "entries": 4
+      },
+      "after": {
+        "balance": "145",
+        "entries": 5
+      },
+      "participant": {
+        "finished_at": "2026-11-19T17:36:45.256195+00:00",
+        "survived": true,
+        "ships_sunk": 3,
+        "loot": 35,
+        "expired": false
+      },
+      "elapsedSinceStartSeconds": 15.178
+    },
+    {
+      "name": "shared admission still refuses legacy bell with no private payout fallback",
+      "refused": {
+        "status": 409,
+        "data": {
+          "error": {
+            "code": "client_update_required",
+            "message": "Reload to join this shared island wave."
+          }
+        }
+      },
+      "privateBefore": {
+        "balance": "200",
+        "entries": 1
+      },
+      "privateAfter": {
+        "balance": "200",
+        "entries": 1
+      }
+    }
+  ],
+  "configuration": {
+    "api": "http://127.0.0.1:58007",
+    "structureRecovery": false
+  },
+  "limits": [
+    "A separate actual production create_app API disables recovery admission as explicit legacy compatibility configuration; the primary API is unchanged.",
+    "Real registered local provider users, real HTTP and unmodified production controller; no rendered browser claim.",
+    "No stored clock, HP, seed, simulation outcome or authority is replaced. Actual elapsed finish timing is retained.",
+    "Natural expiry is not claimed if its configured deadline is outside this bounded run."
+  ],
+  "servedPrimarySources": [
+    {
+      "service": "api",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "02905c8386323814bfef05462854bded278b6859",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    },
+    {
+      "service": "frontend",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "02905c8386323814bfef05462854bded278b6859",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    }
+  ],
+  "finishedAt": "2026-11-19T17:36:49.823Z",
+  "scenarioAfterSha256": "d2e34ea4a59c91084ad98d7a0a5606b11bb91ab391dc79dc700ae8a8534eb437",
+  "launcherAfterSha256": "2d90140159247d8e908581a3b00c50f494e481407d4744cfa85575c98a392521",
+  "helperHashesAfter": {
+    "api-clients.mjs": "a9369da75350b882ac6a312c20903965a362409978e86e108c256f9cc450a9f7",
+    "observer.mjs": "40cb288da9f9a80e337fba5a39a12b1b23501ad1ff48a2a4614975492997f140",
+    "runtime.mjs": "d1387a35fd7243df58e8d9589586034b3a098489bb20e43bece9b6b45040865f",
+    "source.mjs": "56d138914dc5b4e15159162bb21db68c985b2c9083c2e5bac4b34a90502ea8d9"
+  },
+  "sourceAfter": {
+    "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+    "actualCheckoutHead": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+    "productionDiffFromBaseline": "empty",
+    "paths": [
+      "backend/server",
+      "backend/content",
+      "frontend/src",
+      "supabase/migrations",
+      "backend/uv.lock",
+      "backend/pyproject.toml",
+      "frontend/package-lock.json",
+      "frontend/package.json",
+      ":(exclude)backend/server/tests"
+    ]
+  }
+}
