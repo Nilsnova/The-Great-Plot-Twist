@@ -51,6 +51,7 @@ const BLOCK_BEVEL = [
   [.12, 0], [.86, 0], [1, .18], [1, .79], [.85, 1], [.14, 1], [0, .83], [0, .18],
 ];
 const BEVEL_LIGHT = [-.22, -.19, -.08, .02, .28, .24, .09, -.07];
+const RISER_BEVEL = [.10, .19, .25, .14, .26, .32, .23, .12];
 // A narrow turn under the turf gives the grass a soil edge. The last point rejoins
 // the original tread exactly, including the elevation used by the existing plantings.
 const SOD_PROFILE = [
@@ -167,21 +168,63 @@ export function createHomeTerraces(root, coastArt, art) {
       vertex(p, tint, sun + (corner < 2 ? lightA : lightB), grass, opacity[corner], detail?.[corner], recessed);
     }
   }
-  function stone(point, color, worn, underTurf) {
-    // A proud center and cut corners give every stone a lit top bevel and a shaded lower lip.
+  function stone(point, color, worn, underTurf, split = false) {
+    // The original block outline stays put. Rolling the inner rim towards its
+    // crown opens broader bevels along the riser and makes the cut change with the grain.
     const outer = BLOCK_BEVEL.map(([u, v]) => point(u, v, 0));
     const innerCut = BLOCK_BEVEL.map(([u, v]) => [.10 + u * .8, .13 + v * .73]);
     const inner = innerCut.map(([u, v]) => point(u, v, .024 + worn * .008));
     const center = point(.5, .5, .039 + worn * .011);
+    let crown = [.5, .5], fold;
+    if (split) {
+      const turn = worn < 0 ? -1 : 1;
+      const ridge = turn < 0 ? 6 : 3;
+      const lean = .11 + Math.abs(worn) * .08;
+      center.lerp(inner[ridge], lean);
+      crown = innerCut[ridge].map(coord => THREE.MathUtils.lerp(.5, coord, lean));
+      for (let i = 0; i < inner.length; i++) {
+        const roll = RISER_BEVEL[(i + turn + 8) % 8] + .05 * Math.abs(worn);
+        inner[i].lerp(center, roll);
+        innerCut[i] = innerCut[i].map((coord, axis) => THREE.MathUtils.lerp(coord, crown[axis], roll));
+      }
+      const favorLeft = .5 + worn * .19;
+      const upperShoulder = inner[4].clone().lerp(inner[5], favorLeft);
+      const lowerFace = outer[0].clone().lerp(outer[1], favorLeft);
+      const ledge = center.clone().lerp(upperShoulder, .52);
+      const pocket = center.clone().lerp(lowerFace, .35 + Math.abs(worn) * .12);
+      const ledgeUV = crown.map((coord, axis) => THREE.MathUtils.lerp(coord,
+        THREE.MathUtils.lerp(innerCut[4][axis], innerCut[5][axis], favorLeft), .52));
+      const pocketUV = crown.map((coord, axis) => THREE.MathUtils.lerp(coord,
+        THREE.MathUtils.lerp(BLOCK_BEVEL[0][axis], BLOCK_BEVEL[1][axis], favorLeft), .35 + Math.abs(worn) * .12));
+      fold = {left: turn < 0 ? 6 : 7, right: turn < 0 ? 2 : 3, ledge, pocket, ledgeUV, pocketUV};
+    }
+    function facet(peak, a, b, peakUV, aUV, bUV, shade, aTone = aUV[1], bTone = bUV[1]) {
+      const light = sunlight(peak, a, b) + .02 + worn * .057 + shade;
+      vertex(peak, color, light, 0, 1, peakUV, underTurf);
+      vertex(a, color, light + aTone * .11, 0, 1, aUV, underTurf);
+      vertex(b, color, light + bTone * .11, 0, 1, bUV, underTurf);
+    }
     for (let i = 0; i < outer.length; i++) {
       const next = (i + 1) % outer.length;
-      const lip = BEVEL_LIGHT[i] + worn * .04;
+      const [u0, v0] = BLOCK_BEVEL[i], [u1, v1] = BLOCK_BEVEL[next];
+      const alongGrain = (v0 + v1) * .5 - .55 + (u0 + u1 - 1) * worn * .38;
+      const splitLight = split ? THREE.MathUtils.clamp(alongGrain, -.53, .39) * .32 : 0;
+      const lip = BEVEL_LIGHT[i] + worn * .04 + splitLight;
       face(outer[i], outer[next], inner[next], inner[i], color, lip - .04, lip + .045,
         0, undefined, [BLOCK_BEVEL[i], BLOCK_BEVEL[next], innerCut[next], innerCut[i]], underTurf);
-      const light = sunlight(center, inner[i], inner[next]) + .02 + worn * .057;
-      vertex(center, color, light, 0, 1, [.5, .5], underTurf);
-      vertex(inner[i], color, light + BLOCK_BEVEL[i][1] * .11, 0, 1, innerCut[i], underTurf);
-      vertex(inner[next], color, light + BLOCK_BEVEL[next][1] * .11, 0, 1, innerCut[next], underTurf);
+      const raised = fold && i >= fold.right && i < fold.left;
+      const peak = fold ? raised ? fold.ledge : fold.pocket : center;
+      const peakUV = fold ? raised ? fold.ledgeUV : fold.pocketUV : crown;
+      const shade = fold ? (raised ? .105 + splitLight * .34 : -.10 + splitLight * .40) : 0;
+      facet(peak, inner[i], inner[next], peakUV, innerCut[i], innerCut[next], shade, v0, v1);
+    }
+    if (fold) {
+      // The high shelf and the lower facet share the same off-center hinge.
+      const {left, right, ledge, pocket, ledgeUV, pocketUV} = fold;
+      facet(ledge, inner[left], center, ledgeUV, innerCut[left], crown, .121);
+      facet(ledge, center, inner[right], ledgeUV, crown, innerCut[right], .092);
+      facet(pocket, inner[right], center, pocketUV, innerCut[right], crown, -.117);
+      facet(pocket, center, inner[left], pocketUV, crown, innerCut[left], -.088);
     }
   }
 
@@ -298,20 +341,20 @@ export function createHomeTerraces(root, coastArt, art) {
         const [r0, h0] = span[index - 1], [r1, h1] = span[index];
         return samplePoint(sample)(THREE.MathUtils.lerp(r0, r1, (h - h0) / (h1 - h0)) - bulge, h);
       }
-      // Two shorter courses use different widths and offsets, so their joints never form a grid.
-      for (let course = 1; course >= 0; course--) {
-        const bottom = course ? .46 : .035, top = course ? .965 : .43;
-        const shift = course ? .61 : 0;
+      // A massive lower plinth carries the finer, staggered stone courses above it.
+      const courses = upper ? [[.46, .965, .61, 1], [.035, .43, 0, 0]] : [[.036, .963, 0, 0]];
+      const grout = upper ? .044 : .049;
+      for (const [bottom, top, shift, course] of courses) {
         let column = 0;
         for (let next = start - shift; next < finish; column++) {
-          const width = BLOCK_WIDTHS[(column + from + (upper ? 2 : 0)) % BLOCK_WIDTHS.length];
-          const left = Math.max(start + .014, next + .044), right = Math.min(finish - .014, next + width - .044);
+          const width = BLOCK_WIDTHS[(column + from + (upper ? 2 : 0)) % BLOCK_WIDTHS.length] * (upper ? 1 : .91);
+          const left = Math.max(start + .014, next + grout), right = Math.min(finish - .014, next + width - grout);
           if (right - left > .19) {
             const worn = Math.sin(column * 2.41 + start * .77 + course * 1.9 + from);
             const groutRipple = .022 * worn;
             const point = (u, v, bulge) => across(THREE.MathUtils.lerp(left, right, u),
               THREE.MathUtils.lerp(bottom, top, v) + (1 - 2 * u) * groutRipple, bulge);
-            stone(point, STONE[(column + course * 3 + from) % STONE.length], worn, course === 1);
+            stone(point, STONE[(column + course * 3 + from) % STONE.length], worn, !upper || course === 1, !upper);
           }
           next += width;
         }
