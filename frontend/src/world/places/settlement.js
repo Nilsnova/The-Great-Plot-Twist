@@ -12,7 +12,7 @@ import { layouts, edgeTrees, homeMooring } from './layouts.js';
 import { placeGround } from './surfaces.js';
 import { backdrop, createLifetime, loadBackdrop } from './resources.js';
 import { makeSelectedCanopy } from './selected-canopy.js';
-import { makeMooringRope } from './mooring.js';
+import { makeMooring } from './mooring.js';
 import {projectGround} from '../projection.js';
 import {createHomeRelief} from './home-relief.js';
 
@@ -21,7 +21,8 @@ export async function createSettlement(ctx) {
   const { id } = ctx;
   const data = places[id];
   const placements = [...(layouts[id] ?? []), ...(ctx.placements ?? [])];
-  const mooring = id === 'home_islet' ? homeMooring : [];
+  const home = id === 'home_islet';
+  const mooring = home ? homeMooring : [];
   const trees = edgeTrees[id] ?? [];
   const extraArtIds = [
     ...(id === 'saltreach_harbor' ? ['harbour-office-glow'] : []),
@@ -60,15 +61,17 @@ export async function createSettlement(ctx) {
       mesh.raycast = () => {};
       return mesh;
     });
-    const mooringRope = skiff ? makeMooringRope(group, bollard, skiff) : null;
+    const shoreBoat = skiff ? makeMooring(group, bollard, skiff) : null;
     const foliage = trees.map(([x, z], i) => {
       const mesh = placeArt(group, art, ['oak', 'pine', 'birch'][i % 3], x, z);
       // Smaller home canopies reveal walls; house growth multiplies this visual baseline.
       // The ground foot, radius-.48 blocker and painter order remain unchanged.
-      if (id === 'home_islet') mesh.scale.setScalar(.7);
-      mesh.material = swayMaterial(mesh.material.clone(), mesh.userData.asset); return mesh;
+      if (home) mesh.scale.setScalar(.7);
+      const crown = home ? {bendFrom: .48, phase: i * 2.399} : undefined;
+      mesh.material = swayMaterial(mesh.material.clone(), mesh.userData.asset, crown);
+      return mesh;
     });
-    const selectedCanopy = id === 'home_islet' ? makeSelectedCanopy(foliage) : null;
+    const selectedCanopy = home ? makeSelectedCanopy(foliage) : null;
     let player = {x: data.spawn[0], z: data.spawn[1]};
     function updateCanopyOpacity(mesh) {
       const p = mesh.userData.ground;
@@ -76,9 +79,17 @@ export async function createSettlement(ctx) {
       // Each tree already owns its wind material. Selection and captain occlusion share one opacity writer.
       mesh.material.opacity = selectedCanopy?.has(mesh) ? .24 : playerBehind ? .3 : 1;
     }
+    const undergrowth = [];
+    function plant(asset, x, z, phase) {
+      const mesh = placeArt(group, art, asset, x, z);
+      if (home) {
+        mesh.material = swayMaterial(mesh.material.clone(), asset, {bendFrom: .22, phase});
+        undergrowth.push(mesh);
+      }
+    }
     trees.forEach(([x, z], i) => {
-      placeArt(group, art, 'grass-tuft', x + 2, z + 1);
-      if (i % 2 === 0) placeArt(group, art, 'flowers', x - 1.6, z + 1);
+      plant('grass-tuft', x + 2, z + 1, 1.3 + i * 2.399);
+      if (i % 2 === 0) plant('flowers', x - 1.6, z + 1, 2.1 + i * 2.399);
     });
     const lights = data.lights.map(light => {
       const { x, y } = light.beamOrigin;
@@ -111,10 +122,14 @@ export async function createSettlement(ctx) {
       update(dt, state) {
         state = frameState(dt, state);
         player = state.player;
+        const still = home && (typeof ctx.reducedMotion === 'function' ? ctx.reducedMotion() : !!ctx.reducedMotion);
+        const wind = state.weather?.wind ?? 0, breeze = Math.max(.14, wind);
         foliage.forEach(mesh => {
           updateCanopyOpacity(mesh);
-          updateSway(mesh.material, state.time, state.weather?.wind ?? 0);
+          updateSway(mesh.material, state.time, home ? breeze : wind, still ? 0 : home ? 1.36 : 1);
         });
+        undergrowth.forEach(mesh => updateSway(mesh.material, state.time * 1.21, breeze, still ? 0 : .84));
+        shoreBoat?.update(state.time, wind, still);
         if (windowGlow) windowGlow.material.opacity = state.night * .95;
         const brightness = state.night;
         lights.forEach(light => {
@@ -126,10 +141,8 @@ export async function createSettlement(ctx) {
         if (stormFlag) stormFlag.visible = stormFlagShouldShow(state);
       }, dispose,
     };
-    if (mooringRope) {
-      // The southwest wave approach crosses the skiff; the beach post stays on the sand.
-      place.setMooringBattle = active => { skiff.visible = mooringRope.visible = !active; };
-    }
+    // The southwest wave approach crosses the skiff; the beach post stays on the sand.
+    if (shoreBoat) place.setMooringBattle = shoreBoat.setBattle;
     ctx.decorate?.(place, art, cleanups);
     if (id === 'home_islet' || id === 'saltreach_harbor') {
       const life = createHarborLife({ place, art, ctx });
