@@ -84,3 +84,25 @@ and effective tick determine replay. The browser cannot submit this event as a
 command or synthesize it from presence or a deadline. The 61-case adapter suite
 passes in 0.73s after adding seven withdrawal-wire cases; actual SQL emission
 and grace rendering remain separately tested by their owning lifecycle/client.
+
+## Persisted adapter composition
+
+Eight new disposable PostgreSQL cases exercise the Python adapters against the
+real canonical provider, profile adoption, coherent source preparation, paid
+Arsenal copies, frozen loadouts, input journal, structure/Captain checkpoints,
+canonical completion and silent expiry worker. Every successful RPC commits
+independently, including deferred constraints; accepted-root replay reads
+persisted history. A real return-versus-bell race freezes the loadout actually
+held under the common locks. Pending copies survive grace and return only when
+the original canonical finish or autonomous expiry commits, with treasury ledger
+reconciliation and no stock loss.
+
+Generation zero is the SQL unknown/released-lease sentinel. Attachment accepts
+its strictly positive server successor with matching session/origin; nonzero
+requests still require exact decimal increment. Both a direct case and a real
+released generation-one/new-session generation-two case failed before this fix.
+The actual case also verifies historical attachment replay followed by fresh
+proof fencing. The combined adapter/PostgreSQL selection passes **70 cases in
+11.71s**. Legacy progression and shortened trusted test timings are explicit
+seeds; authentication and browser behavior are not claimed by this database
+composition. The full migration chain is applied twice to Unix-socket PostgreSQL.

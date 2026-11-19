@@ -549,15 +549,18 @@ async def session_call(
         ) != (owner, epoch):
             raise ValueError("Wrong session origin.")
         if row.session is not None and row.session.isController:
-            expected = (
-                decimal_string(decimal_integer(data["expectedGeneration"]) + 1)
-                if command == "attach"
-                else data["connectionGeneration"]
-            )
-            if (
-                str(row.session.sessionId) != data["sessionId"]
-                or row.session.connectionGeneration != expected
-            ):
+            if str(row.session.sessionId) != data["sessionId"]:
+                raise ValueError("Wrong session identity.")
+            if command == "attach":
+                # Zero is the unknown/released-lease sentinel. Only SQL knows its
+                # retained global counter; every nonzero request remains exact CAS.
+                if data[
+                    "expectedGeneration"
+                ] != "0" and row.session.connectionGeneration != decimal_string(
+                    decimal_integer(data["expectedGeneration"]) + 1
+                ):
+                    raise ValueError("Wrong attachment generation.")
+            elif row.session.connectionGeneration != data["connectionGeneration"]:
                 raise ValueError("Wrong session proof.")
         if command in {"leave", "settings"}:
             receipt = row.receipt
