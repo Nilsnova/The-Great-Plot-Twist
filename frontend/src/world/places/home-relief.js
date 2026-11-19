@@ -75,7 +75,7 @@ export function homeCliffGeometry(rows = cliffProfile(surface)) {
 export function createHomeRelief(group, coastArt) {
   const material = new THREE.ShaderMaterial({
     uniforms: {uCoastArt: {value: coastArt}},
-    vertexColors: true, side: THREE.DoubleSide, transparent: true, depthTest: true, depthWrite: true, toneMapped: false,
+    vertexColors: true, side: THREE.DoubleSide, forceSinglePass: true, transparent: true, depthTest: true, depthWrite: true, toneMapped: false,
     vertexShader: /* glsl */`
       varying vec2 vReliefPoint;
       varying vec3 vStone;
