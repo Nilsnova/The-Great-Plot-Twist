@@ -119,3 +119,32 @@ requires a separate actual-provider proof on served candidate `90a9a822`: same
 actor, ordinary rejoin/Leave, authentic old-scope `403 not_member` and product
 handoff to a fresh own session after the recorded normal UI/focus trigger. The
 comparison does not manufacture that result or waive other authority gates.
+
+## Conditional connected-controller pacing reuse
+
+The retained pacing observation keeps application source
+`b239bdf094d132fc57969fb31f652f106db8abc5`. Its committed test-map and
+walkthrough account records three quoted cannon buys (200 to 110), distinct own
+WON receipts, nine real seconds of Pause with Auto next enabled, then ordinary
+Resume. One non-player SYS start after the deadline rendered the same next wave
+on both clients. The recorded complete browser trace contained only the initial
+browser start POST/UID; the worker observer alone does not establish that trace.
+After both browsers closed and both real 60-second grace deadlines elapsed, the
+production worker closed that attempt abandoned/zero loot, released controls and
+assignments, and a quiescent reread matched. These are retained outcomes, not a
+new run or a reconstructed trace.
+
+This reuse is limited to the observed already-connected controlling-client
+branch. The added `refreshControl` returns immediately when no wave is current
+or its session is already controlling. Normal `begin` leaves `controlRefresh`
+false: the old same-wave short-circuit is equivalent, and a different SYS wave ID
+uses the unchanged normal start/emission path. The renderer's new same-wave
+spectator-promotion branch is not entered by an existing controller or a
+different next wave ID. Role/respec and removed-membership departure fixes are
+also outside this case. Settings/clock/UI and production worker dependencies
+match; their exact source SHA256s are recorded in JSON.
+
+This comparison does not establish auto-start without an eligible connected
+leader, restored-document promotion, fallen/cooldown reconnect behavior or a new
+victory/grant. Those scenarios retain their separate current evidence. There is
+no blanket active-wave waiver and no rerun of the original pacing case.
