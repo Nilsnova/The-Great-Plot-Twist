@@ -8,6 +8,8 @@ import {ARSENAL, CAMPAIGN_BUILDINGS} from '../../src/island/spots.js';
 
 const source = readFileSync(new URL('../../public/village/services-v1.png', import.meta.url));
 const report = JSON.parse(readFileSync(new URL('../../../docs/evidence/VIS-13-services/asset-report.json', import.meta.url)));
+const fixed = JSON.parse(readFileSync(new URL('../../../docs/evidence/VIS-05-hero/fixed-buildings-v2.json', import.meta.url)));
+const fixedSource = readFileSync(new URL(`../../public/${sheets.villageArsenal.file}`, import.meta.url));
 
 describe('approved service sources', () => {
   it('uses the exact inspected RGBA source with a transparent separator', () => {
@@ -17,6 +19,10 @@ describe('approved service sources', () => {
     expect(createHash('sha256').update(source).digest('hex')).toBe(report.sha256);
     expect(report.alpha.corners.every(alpha => alpha < report.alpha.meaningfulThreshold)).toBe(true);
     expect(report.alpha.separatorCenter).toBe(0);
+    expect(fixedSource.subarray(0, 8).toString('hex')).toBe('89504e470d0a1a0a');
+    expect(fixedSource[25]).toBe(6);
+    expect([fixedSource.readUInt32BE(16), fixedSource.readUInt32BE(20)]).toEqual([sheets.villageArsenal.width, sheets.villageArsenal.height]);
+    expect(createHash('sha256').update(fixedSource).digest('hex')).toBe(fixed.sha256);
   });
 
   it('keeps real service frame names and all registered logical geometry', () => {
@@ -28,7 +34,8 @@ describe('approved service sources', () => {
   });
 
   it('retains complete measured signs/instruments and bounded, separate source feet', () => {
-    for (const cell of report.cells) {
+    const cells = [...report.cells.filter(cell => cell.id === 'island-techhub'), {id: 'island-arsenal', ...fixed.cells['island-arsenal']}];
+    for (const cell of cells) {
       const frame = frames[cell.id], sheet = sheets[frame.sheet];
       expect(frame.rect).toEqual(cell.rect);
       expect(frame.sourceFoot).toEqual(cell.sourceFoot);
@@ -42,7 +49,7 @@ describe('approved service sources', () => {
       expect(frame.sourceFoot[0]).toBeLessThan(right);
       expect(frame.sourceFoot[1]).toBeLessThan(bottom);
     }
-    const [a, b] = Object.values(frames).map(frame => frame.rect);
-    expect(a[0] + a[2]).toBeLessThanOrEqual(b[0]);
+    const [cabinLeft, , cabinWidth] = fixed.cells.cabin.rect;
+    expect(cabinLeft + cabinWidth).toBeLessThanOrEqual(fixed.cells['island-arsenal'].rect[0]);
   });
 });
