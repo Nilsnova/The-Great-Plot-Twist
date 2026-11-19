@@ -72,6 +72,8 @@ async function mutation(page, path, button) {
   await button.click({noWaitAfter: true});
   const response = await pending;
   const data = await response.json();
+  (report.visibleRequests ??= []).push({path, status: response.status(), body: response.request().postDataJSON(), data});
+  console.log('Visible request ' + path + ' ' + response.status());
   if (response.status() !== 200) report.refusedVisibleAttempt = {path, status: response.status(), body: response.request().postDataJSON(), data};
   assert.equal(response.status(), 200, path + ': ' + JSON.stringify(data));
   return {status: response.status(), body: response.request().postDataJSON(), data};
@@ -128,12 +130,12 @@ try {
   await member.page.evaluate(() => window.__island.island.pick('wall_1'));
   const buildCard = member.page.locator('.island-card-build[open]');
   const buildText = await buildCard.innerText(); assert.match(buildText, /island treasury/i);
+  await buildCard.screenshot({path: output + '/member-quoted-build.png'});
   const built = await mutation(member.page, '/api/island/build', buildCard.getByRole('button', {name: /^Build ·/}));
   view = await snapshot(); assert.equal(view.spots.find(spot => spot.id === 'wall_1').built, true);
   assert.equal(built.body.quotedCoins, '9');
   const afterBuild = view.economy.treasury.availableCoins;
   assert.equal(BigInt(afterBuild), 5000n - BigInt(built.body.quotedCoins));
-  await buildCard.screenshot({path: output + '/member-quoted-build.png'});
   note('visible-invited-member-quoted-build', {layer: 'rendered product', quote: built.body.quotedCoins, available: afterBuild, cardText: buildText});
   const retry = await api(member.page, '/api/island/build', {method: 'POST', body: built.body}); assert.equal(retry.status, 200);
   const changed = await api(member.page, '/api/island/build', {method: 'POST', body: {...built.body, quotedCoins: String(BigInt(built.body.quotedCoins) + 1n)}}); assert.equal(changed.status, 409);
