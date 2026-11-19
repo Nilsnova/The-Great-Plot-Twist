@@ -45,6 +45,14 @@ The driver refuses a candidate with changed frontend/server production code,
 catalogue or migration source relative to that baseline. A different candidate
 requires fresh source qualification; this checkpoint is not silently relabeled.
 
+After this historical provider checkpoint, the driver adopted the generic
+`sourceEvidence` guard. It compares the complete working tree and rejects
+untracked production files, including production dependency manifests, before
+any provider work and again before reporting success. The shared guard's
+tracked-test, dirty-production and untracked-production regression and a source
+check passed. This guard-only follow-up is not another provider run; the result
+above remains tied to its recorded original driver and helper hashes.
+
 ## Reproduction
 
 After the generic local provider stack is ready, from `frontend/`:

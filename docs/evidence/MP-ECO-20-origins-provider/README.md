@@ -41,6 +41,25 @@ unchanged from `3bdd8eda16470795fdedd68c42fffab54e5f2ced`. Its branch starts at
 `82abc298570ce5436c721a992f538c16d04c30e5`; this is source-equivalence evidence,
 not a claim that the running API was restarted at a later documentation commit.
 
+## Source-guard follow-up
+
+The historical tested driver compared committed product history. Its recorded run
+remains qualified by the separate actual provider working-tree comparisons and
+absence-of-new-product-files checks described in the report. That financial run
+and its original driver/hash are retained unchanged.
+
+Future executions reuse `authenticated-economy/source.mjs` from the configured
+helper root. It checks the provider-owning checkout's actual tracked working-tree
+bytes and rejects untracked production files, including server/content/frontend,
+migrations and dependency manifests/locks. The guard evidence is recorded in new
+reports. This follow-up changes the guard and report metadata only.
+
+`node --test frontend/scripts/authenticated-economy/source.test.mjs` passed one
+meaningful temporary-Git regression (test-only commits accepted; dirty production
+and untracked production files rejected). The guard also accepted the actual
+provider-owning production checkout; syntax and whitespace checks passed. No
+provider operation or financial clock was rerun for this guard-only change.
+
 With the isolated provider running, from the repository root:
 
 ```sh
