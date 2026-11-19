@@ -18,6 +18,21 @@ const CUT_CORNERS = [[.11, 0], [.80, 0], [1, .20], [.98, .78], [.82, 1], [.16, 1
 const surface = surfaces.home_islet;
 const SUN = new THREE.Vector3(-.61, .71, .30).normalize();
 
+/** Share sunlight across a stone's connected faces so each bevel rolls into the crown. */
+export function averageStoneLight(faces, pointOf, sunlight) {
+  const corners = new Map();
+  for (const face of faces) {
+    const light = sunlight(...face.map(pointOf));
+    for (const corner of face) {
+      const result = corners.get(corner) ?? {sum: 0, count: 0};
+      result.sum += light;
+      result.count++;
+      corners.set(corner, result);
+    }
+  }
+  return new Map(Array.from(corners, ([corner, {sum, count}]) => [corner, sum / count]));
+}
+
 function clearShoulderSpans(shoulders) {
   for (const [left, right] of WALL_FOOTING_ARCS) {
     shoulders = shoulders.flatMap(([start, end]) => {
@@ -78,6 +93,26 @@ export const sandstoneFinishGlsl = /* glsl */`
     relief += exposed * (.29 * ledgeLight - .22 * ledgeShade);
     coarse *= 1.0 + laidFace * relief;
     return coarse;
+  }
+`;
+
+export const weatheredSandstoneGlsl = /* glsl */`
+  vec3 weatheredSandstone(vec3 base, vec2 point, vec2 cut, float face) {
+    vec3 bed = sandstoneGrain(point * vec2(.85, 1.60));
+    vec3 dust = sandstoneGrain(point * vec2(5.6, 8.8) + vec2(.73, .62));
+    float weathering = (bed.x - .5) * .21 + (dust.x - .5) * .11;
+    float pore = dot(dust.yz, vec2(-.031, .045));
+    vec2 bevel = (cut - .5) * 2.0 + (vec2(bed.x, dust.x) - .5) * .11;
+    vec2 curve = bevel * (.28 + .72 * bevel * bevel);
+    float sun = dot(curve, vec2(-.21, .24));
+    float shadow = smoothstep(.55, 1.01, -bevel.y);
+    // Rounded faces catch a wide highlight. Weathered beds leave a shallow broken line.
+    float level = point.y * 1.24 + point.x * .075 + bed.x * .27;
+    float seam = abs(fract(level) - .43);
+    float edge = min(.24, fwidth(level));
+    float layer = (1.0 - smoothstep(.018, .105 + edge, seam)) * smoothstep(.28, .68, bed.x);
+    vec3 finish = base * (1.02 + weathering + pore - .095 * layer + face * (sun - .16 * shadow));
+    return mix(finish, finish * vec3(1.15, 1.041, .94), face * max(0.0, sun) * 1.65);
   }
 `;
 
@@ -171,17 +206,18 @@ function homeCliffGeometry(rows = cliffProfile(surface)) {
         const shoulder = outline.map(([u, v], i) => at([.135 + .73 * u, .18 + .64 * v],
           .038 + .041 * (.5 + .5 * Math.sin(seed + i * 1.47))));
         const peak = at([.46 + .10 * Math.sin(seed), .51 + .105 * Math.cos(seed)], .006);
-        function facet(a, b, c, tones) {
-          triangle(a.point, b.point, c.point, pigment, tones, 0, [a.drop, b.drop, c.drop], 0, undefined,
-            [a.uv, b.uv, c.uv]);
-        }
+        const facets = [];
         for (let i = 0; i < rim.length; i++) {
           const next = (i + 1) % rim.length;
-          const upper = (rim[i].uv[1] + rim[next].uv[1]) * .5;
-          const edgeTone = -.12 + upper * .25;
-          facet(rim[i], rim[next], shoulder[next], [edgeTone - .07, edgeTone - .07, edgeTone + .055]);
-          facet(rim[i], shoulder[next], shoulder[i], [edgeTone - .07, edgeTone + .055, edgeTone + .055]);
-          facet(peak, shoulder[i], shoulder[next], [.065, edgeTone * .34, edgeTone * .34]);
+          facets.push([rim[i], rim[next], shoulder[next]], [rim[i], shoulder[next], shoulder[i]],
+            [peak, shoulder[i], shoulder[next]]);
+        }
+        const daylight = averageStoneLight(facets, corner => corner.point, sunlight);
+        const lip = new Set(rim);
+        for (const [a, b, c] of facets) {
+          const tones = [a, b, c].map(corner => daylight.get(corner) * .75 + (corner.uv[1] - .44) * .19
+            - (lip.has(corner) ? .075 : 0));
+          triangle(a.point, b.point, c.point, pigment, tones, 0, [a.drop, b.drop, c.drop], 0, 0, [a.uv, b.uv, c.uv]);
         }
       }
     }
@@ -358,6 +394,7 @@ export function createHomeRelief(group, coastArt) {
     fragmentShader: /* glsl */`
       ${groundProjectionGlsl}
       ${sandstoneFinishGlsl}
+      ${weatheredSandstoneGlsl}
       uniform sampler2D uCoastArt;
       varying vec2 vReliefPoint;
       varying vec3 vStone;
@@ -393,7 +430,7 @@ export function createHomeRelief(group, coastArt) {
             float seam = green * (1.0 - ends * (1.0 - inner));
             gl_FragColor = vec4(mix(turf, rock.rgb, seam), opacity);
           } else {
-            vec3 shoulder = cutSandstone(vStone * (.95 + weather * .24), layers, vec2(.5), 0.0);
+            vec3 shoulder = weatheredSandstone(vStone * (.96 + weather * .16), layers, vec2(.5), 0.0);
             // Let the ground's sand colour collect in the foot of the same raised shoulder.
             float silt = sandPigment * (1.0 - smoothstep(.12, .68, height + weather * .23));
             shoulder = mix(shoulder, rock.rgb * (.93 + pore * .10), .91 * silt);
@@ -424,15 +461,15 @@ export function createHomeRelief(group, coastArt) {
           + cos(logical.x * 4.23 - logical.y * 3.23) * .07;
         float damp = smoothstep(.53, 1.0, depth + grainBreak) * smoothstep(.45, 1.7, vShoreRelief.x);
         vec3 stone = vStone * (mix(.91, 1.12, rockGrain) + grainBreak * .102);
-        stone = cutSandstone(stone, layers, vShoreCut.xy, vShoreCut.z);
+        stone = weatheredSandstone(stone, layers, vShoreCut.xy, vShoreCut.z);
         float cap = (1.0 - smoothstep(.07, .28, depth)) * smoothstep(.11, .51, dot(vStone, vec3(.30, .58, .12)));
         stone = mix(stone, stone * vec3(1.19, 1.09, 1.02), cap);
         float overhang = (1.0 - smoothstep(.001, .082, depth)) * vShoreCut.z;
-        stone *= 1.0 - overhang * .28;
+        stone *= 1.0 - overhang * .19;
         float moss = smoothstep(.62, .84, rockGrain + grainBreak * .7)
           * (1.0 - smoothstep(.04, .26, depth)) * .52;
         stone = mix(stone, stone * vec3(.82, 1.05, .67), moss);
-        stone = mix(stone, stone * vec3(.49, .67, .74) + vec3(.007, .025, .039), damp * .78);
+        stone = mix(stone, stone * vec3(.57, .69, .74) + vec3(.010, .025, .030), damp * .73);
         float tide = smoothstep(.67, .84, depth + grainBreak) * (1.0 - smoothstep(.85, .99, depth)) * damp;
         stone += tide * vec3(.006, .020, .023);
         float settledSand = sandPigment * (1.0 - smoothstep(.15, .78, vShoreRelief.x + grainBreak));

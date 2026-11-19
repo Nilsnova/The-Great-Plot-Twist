@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import {cliffProfile} from '../../art/coast-cliffs.js';
 import {artSizes} from '../art.js';
 import {groundProjectionGlsl, LEGACY_DEPTH, projectGround, unprojectGround} from '../projection.js';
-import {sandstoneFinishGlsl} from './home-relief.js';
+import {averageStoneLight, sandstoneFinishGlsl, weatheredSandstoneGlsl} from './home-relief.js';
 import {surfaces} from './surfaces.js';
 
 const COAST = surfaces.home_islet;
@@ -56,7 +56,6 @@ const BLOCK_WIDTHS = [1.72, 2.24, 2.41, 1.68, 2.16, 1.52];
 const BLOCK_BEVEL = [
   [.12, 0], [.86, 0], [1, .18], [1, .79], [.85, 1], [.14, 1], [0, .83], [0, .18],
 ];
-const BEVEL_LIGHT = [-.22, -.19, -.08, .02, .28, .24, .09, -.07];
 const RISER_BEVEL = [.10, .19, .25, .14, .26, .32, .23, .12];
 // A narrow turn under the turf gives the grass a soil edge. The last point rejoins
 // the original tread exactly, including the elevation used by the existing plantings.
@@ -211,33 +210,36 @@ export function createHomeTerraces(root, coastArt, art) {
         THREE.MathUtils.lerp(BLOCK_BEVEL[0][axis], BLOCK_BEVEL[1][axis], favorLeft), .35 + Math.abs(worn) * .12));
       fold = {left: turn < 0 ? 6 : 7, right: turn < 0 ? 2 : 3, ledge, pocket, ledgeUV, pocketUV};
     }
-    function facet(peak, a, b, peakUV, aUV, bUV, shade, aTone = aUV[1], bTone = bUV[1]) {
-      const light = sunlight(peak, a, b) + .02 + worn * .057 + shade;
-      vertex(peak, color, light, 0, 1, peakUV, underTurf);
-      vertex(a, color, light + aTone * .11, 0, 1, aUV, underTurf);
-      vertex(b, color, light + bTone * .11, 0, 1, bUV, underTurf);
+    const facets = [];
+    function facet(a, b, c, aUV, bUV, cUV) {
+      facets.push({points: [a, b, c], coordinates: [aUV, bUV, cUV]});
     }
     for (let i = 0; i < outer.length; i++) {
       const next = (i + 1) % outer.length;
-      const [u0, v0] = BLOCK_BEVEL[i], [u1, v1] = BLOCK_BEVEL[next];
-      const alongGrain = (v0 + v1) * .5 - .55 + (u0 + u1 - 1) * worn * .38;
-      const splitLight = split ? THREE.MathUtils.clamp(alongGrain, -.53, .39) * .32 : 0;
-      const lip = BEVEL_LIGHT[i] + worn * .04 + splitLight;
-      face(outer[i], outer[next], inner[next], inner[i], color, lip - .04, lip + .045,
-        0, undefined, [BLOCK_BEVEL[i], BLOCK_BEVEL[next], innerCut[next], innerCut[i]], underTurf);
+      facet(outer[i], outer[next], inner[next], BLOCK_BEVEL[i], BLOCK_BEVEL[next], innerCut[next]);
+      facet(outer[i], inner[next], inner[i], BLOCK_BEVEL[i], innerCut[next], innerCut[i]);
       const raised = fold && i >= fold.right && i < fold.left;
       const peak = fold ? raised ? fold.ledge : fold.pocket : center;
       const peakUV = fold ? raised ? fold.ledgeUV : fold.pocketUV : crown;
-      const shade = fold ? (raised ? .105 + splitLight * .34 : -.10 + splitLight * .40) : 0;
-      facet(peak, inner[i], inner[next], peakUV, innerCut[i], innerCut[next], shade, v0, v1);
+      facet(peak, inner[i], inner[next], peakUV, innerCut[i], innerCut[next]);
     }
     if (fold) {
       // The high shelf and the lower facet share the same off-center hinge.
       const {left, right, ledge, pocket, ledgeUV, pocketUV} = fold;
-      facet(ledge, inner[left], center, ledgeUV, innerCut[left], crown, .121);
-      facet(ledge, center, inner[right], ledgeUV, crown, innerCut[right], .092);
-      facet(pocket, inner[right], center, pocketUV, innerCut[right], crown, -.117);
-      facet(pocket, center, inner[left], pocketUV, crown, innerCut[left], -.088);
+      facet(ledge, inner[left], center, ledgeUV, innerCut[left], crown);
+      facet(ledge, center, inner[right], ledgeUV, crown, innerCut[right]);
+      facet(pocket, inner[right], center, pocketUV, innerCut[right], crown);
+      facet(pocket, center, inner[left], pocketUV, crown, innerCut[left]);
+    }
+    const daylight = averageStoneLight(facets.map(({points}) => points), point => point, sunlight);
+    const seam = new Set(outer);
+    for (const {points, coordinates} of facets) {
+      for (const [i, point] of points.entries()) {
+        const uv = coordinates[i];
+        const light = .82 + (daylight.get(point) - .82) * .67 + (uv[1] - .45) * .12
+          + worn * .037 - (seam.has(point) ? .071 : 0);
+        vertex(point, color, light, 0, 1, uv, underTurf);
+      }
     }
   }
 
@@ -446,6 +448,7 @@ export function createHomeTerraces(root, coastArt, art) {
     fragmentShader: /* glsl */`
       ${groundProjectionGlsl}
       ${sandstoneFinishGlsl}
+      ${weatheredSandstoneGlsl}
       uniform sampler2D uCoastArt;
       varying vec4 vTerrace;
       varying vec3 vTone;
@@ -501,7 +504,7 @@ export function createHomeTerraces(root, coastArt, art) {
           vec3 stone = vTone * mix(.91, 1.10, grain);
           vec2 layers = vec2(vTerrace.x + vTerrace.y * .36, height + vTerrace.y * .13);
           float cut = min(vSurface.z, 1.0);
-          stone = cutSandstone(stone, layers, vSurface.xy, cut);
+          stone = weatheredSandstone(stone, layers, vSurface.xy, cut);
           // Tight earth contact grounds the lower stone bevel and the uncut mortar.
           float rootShadow = (1.0 - smoothstep(.015, .21, height)) * .25;
           float patina = smoothstep(.50, .83, grainBreak) * (1.0 - smoothstep(.08, .37, vSurface.y));
