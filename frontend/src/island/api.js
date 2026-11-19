@@ -49,6 +49,8 @@ import {BRANCH_BY_ID, SPECS, optionsOf} from '../campaign/tech.js';
 import {isRole as isHouseRole} from '../campaign/houses.js';
 import {readRecoverySnapshot} from '../pirates/recovery-snapshot.js';
 import {isParticipantToken} from '../pirates/recovery-policy.js';
+import {declaresEconomy, economyContext, economySnapshot, readEconomy} from './economy-view.js';
+import {declaresPersonalCaptain, readPersonalCaptain} from './economy-captain.js';
 
 export const PATHS = Object.freeze({
   leaderboard: '/api/island/leaderboard', island: '/api/island', build: '/api/island/build', visit: code => `/api/island/visit/${code}`,
@@ -70,6 +72,7 @@ export const PATHS = Object.freeze({
   boat: code => `/api/island/boat${code ? `?code=${encodeURIComponent(code)}` : ''}`, boatReward: '/api/island/boat',
   // T53: reset your own island to a fresh start (Settings).
   freshStart: '/api/island/fresh-start',
+  personalCaptain: '/api/captain',
 });
 export const CREW_IDS = Object.freeze(['gunner', 'carpenter', 'lookout', 'guard']);
 export const MESSAGES = Object.freeze({
@@ -109,12 +112,20 @@ export function isSpot(spot) {
   return !!spot && isText(spot.id) && isText(spot.kind) && typeof spot.built === 'boolean' && isCount(spot.cost);
 }
 export function isIsland(data) {
-  return !!data && isText(data.code) && isCount(data.coins) && isCount(data.waveBest) && isCount(data.flags)
+  return !!data && isText(data.code) && (declaresEconomy(data) ? economySnapshot(data) !== null : isCount(data.coins)) && isCount(data.waveBest) && isCount(data.flags)
     && (data.recoveryVersion === undefined || data.recoveryVersion === 0 || data.recoveryVersion === 1)
     && Array.isArray(data.spots) && data.spots.every(isSpot);
 }
+export function isPersonalCaptainReply(data) {
+  const skills = data?.skills;
+  return readPersonalCaptain(data?.captain) !== null && !!skills
+    && isCount(skills.points) && isCount(skills.earned) && isCount(skills.spent)
+    && skills.points + skills.spent === skills.earned
+    && Array.isArray(skills.known) && skills.known.every(isText);
+}
 export function isVisit(data) {
   return !!data && isText(data.code) && typeof data.ownerName === 'string' && isCount(data.waveBest)
+    && (!declaresEconomy(data) || economySnapshot(data) !== null)
     && Array.isArray(data.spots) && data.spots.every(isSpot);
 }
 // GET /api/pirate-point: {spots, waveBest, coins} (coins: your own balance).
@@ -122,7 +133,8 @@ export function isPoint(data) {
   return !!data && Array.isArray(data.spots) && data.spots.every(isSpot) && isCount(data.waveBest ?? 0) && (data.coins === undefined || isCount(data.coins));
 }
 // A build or upgrade on a friend's island answers that island (or yours): anything with its spots.
-export const hasSpots = data => !!data && Array.isArray(data.spots) && data.spots.every(isSpot);
+export const hasSpots = data => !!data && Array.isArray(data.spots) && data.spots.every(isSpot)
+  && (!declaresEconomy(data) || economySnapshot(data) !== null);
 export function isInvite(data) {
   return !!data && data.admitted === true && !!data.island && isText(data.island.code) && typeof data.island.ownerName === 'string';
 }
@@ -258,16 +270,46 @@ export function readFailure(result) {
   if (isCount(result?.retryAfterSeconds) && result.retryAfterSeconds > 0) failure.retryAfterSeconds = result.retryAfterSeconds;
   if (isStructureRecovery(result?.data?.currentState)) failure.currentState = localRecovery(result.data.currentState);
   if (isCount(result?.data?.coins)) failure.coins = result.data.coins;
+  if (economySnapshot(result?.data)) failure.currentEconomy = economySnapshot(result.data);
   return failure;
 }
 // No answer, a timeout or a server-side failure: the write may or may not have happened.
 export const outcomeUnknown = failure => !failure.ok && (failure.status === 0 || failure.status >= 500);
 
-export function createIslandApi({transport, makeUid = makeActionUid, waveProtocol = () => 1, now = () => Date.now()} = {}) {
+export function createIslandApi({transport, makeUid = makeActionUid, waveProtocol = () => 1, now = () => Date.now(), economy = () => undefined,
+  personalCaptain = () => null, personalScope = () => '', negotiateEconomy = false} = {}) {
   if (!transport || typeof transport.get !== 'function' || typeof transport.post !== 'function') {
     throw new TypeError('createIslandApi needs a transport with get and post.');
   }
   const held = new Map(); // 'build:cannon_1' or 'start:own' -> the click id of an unknown outcome
+  const personalHeld = new Map();
+  const selectedEconomy = () => { try { return typeof economy === 'function' ? economy() : economy; } catch { return null; } };
+  const selectedCaptain = () => { try { return typeof personalCaptain === 'function' ? personalCaptain() : personalCaptain; } catch { return {progressionVersion: 1}; } };
+  const personalVersion = () => declaresPersonalCaptain(selectedCaptain());
+  const readIsland = (path, options) => {
+    if (!negotiateEconomy && selectedEconomy() === undefined) return options ? transport.get(path, options) : transport.get(path);
+    const headers = new Headers(options?.headers);
+    headers.set('X-Island-Economy-Version', '1');
+    return transport.get(path, {...options, headers: Object.fromEntries(headers)});
+  };
+  const postIsland = (path, body) => {
+    const selected = selectedEconomy();
+    if (selected === undefined) return transport.post(path, body);
+    const context = economyContext(selected);
+    if (!context) return Promise.resolve({ok: false, status: 409, code: 'economy_context_required', message: 'Reload the island to refresh its treasury.'});
+    return transport.post(path, {...body, economy: context});
+  };
+  async function writePersonal(action, choice = {}) {
+    const profile = readPersonalCaptain(selectedCaptain());
+    if (!profile) return {ok: false, status: 409, code: 'captain_context_required', message: 'Reload your captain to refresh personal progress.'};
+    const scope = typeof personalScope === 'function' ? personalScope() : personalScope;
+    const key = `${scope}:${action}:${choice.role ?? choice.skill ?? ''}`;
+    const body = personalHeld.get(key) ?? {progressionVersion: 1, expectedRevision: profile.revision, actionUid: makeUid(), ...choice};
+    personalHeld.set(key, body);
+    const answer = await ask(() => transport.post(`${PATHS.personalCaptain}/${action}`, body), isPersonalCaptainReply);
+    if (answer.ok || (!outcomeUnknown(answer) && answer.status !== 429)) personalHeld.delete(key);
+    return answer;
+  }
   const protocolFor = where => {
     try {
       const value = typeof waveProtocol === 'function' ? waveProtocol(where) : waveProtocol;
@@ -285,6 +327,8 @@ export function createIslandApi({transport, makeUid = makeActionUid, waveProtoco
   }
   // A write with a click id: reuse the held id after an unknown outcome, drop it after a clear answer.
   async function write(key, send, accept) {
+    const context = readEconomy(selectedEconomy());
+    if (context) key = `${context.islandOwner}:${context.accountId}:${context.runEpoch}:${key}`;
     const heldUid = held.get(key), actionUid = heldUid ?? makeUid();
     held.set(key, actionUid);
     const answer = await ask(() => send(actionUid), data => accept(data, actionUid));
@@ -320,41 +364,48 @@ export function createIslandApi({transport, makeUid = makeActionUid, waveProtoco
     // scope 'week' (T7) or 'all' (T45, all time). The answer must be the board that was asked for.
     leaderboard: (scope = 'week') => ask(() => transport.get(scope === 'all' ? `${PATHS.leaderboard}?scope=all` : PATHS.leaderboard),
       data => isLeaderboard(data, scope)),
-    getIsland: () => askSpots(() => transport.get(PATHS.island), isIsland),
-    // code: a friend's island (ISLE-XXXXX) to build on with your own coins; without it your own island.
+    getIsland: options => askSpots(() => readIsland(PATHS.island, options), isIsland),
+    getCaptain: () => ask(() => transport.get(PATHS.personalCaptain), isPersonalCaptainReply),
+    // code selects the island. The persisted mode determines its treasury or the legacy personal wallet.
     build({spot, kind, code = null} = {}) {
       const where = code ? displayIslandCode(code) : '';
       if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
-      return writeSpots(where ? `build:${where}:${spot}` : `build:${spot}`, actionUid => transport.post(PATHS.build, {spot: sent(spot), kind, actionUid, ...(where ? {code: where} : {})}),
+      return writeSpots(where ? `build:${where}:${spot}` : `build:${spot}`, actionUid => postIsland(PATHS.build, {spot: sent(spot), kind, actionUid, ...(where ? {code: where} : {})}),
         where ? hasSpots : isIsland);
     },
     upgrade({spot, code = null} = {}) {
       const where = code ? displayIslandCode(code) : '';
       if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
-      return writeSpots(where ? `upgrade:${where}:${spot}` : `upgrade:${spot}`, actionUid => transport.post(PATHS.upgrade, {spot: sent(spot), actionUid, ...(where ? {code: where} : {})}),
+      return writeSpots(where ? `upgrade:${where}:${spot}` : `upgrade:${spot}`, actionUid => postIsland(PATHS.upgrade, {spot: sent(spot), actionUid, ...(where ? {code: where} : {})}),
         where ? hasSpots : isIsland);
     },
-    hire({crew} = {}) {
+    hire({crew, code = null} = {}) {
       if (!CREW_IDS.includes(crew)) return refuse(422, 'validation_error', MESSAGES.badCrew);
-      return writeSpots(`hire:${crew}`, actionUid => transport.post(PATHS.hire, {crew, actionUid}), isIsland);
+      const where = code ? displayIslandCode(code) : '';
+      if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
+      return writeSpots(`hire:${where}:${crew}`, actionUid => postIsland(PATHS.hire, {crew, actionUid, ...(where ? {code: where} : {})}), where ? hasSpots : isIsland);
     },
     upgradeCaptain() {
-      return writeSpots('captain', actionUid => transport.post(PATHS.captain, {actionUid}), isIsland);
+      if (personalVersion() || selectedEconomy() !== undefined) return refuse(409, 'economy_path_unavailable', 'Captain levels advance through personal wave milestones.');
+      return writeSpots('captain', actionUid => postIsland(PATHS.captain, {actionUid}), isIsland);
     },
     // §14: learn one skill (no coins: skill points). The click id makes a repeat safe.
     learnSkill({skill} = {}) {
       if (!Object.hasOwn(SKILL_BY_ID, skill ?? '')) return refuse(400, 'bad_skill', MESSAGES.badSkill);
-      return writeSpots(`skill:${skill}`, actionUid => transport.post(PATHS.skill, {skill, actionUid}), isIsland);
+      if (personalVersion() || selectedEconomy() !== undefined) return writePersonal('skill', {skill});
+      return writeSpots(`skill:${skill}`, actionUid => postIsland(PATHS.skill, {skill, actionUid}), isIsland);
     },
-    // The role choice (medic, engineer or gunner) at captain level 3, once; a respec (coins, scaled by your captain
-    // level) clears every skill and the role (GAME-V3.md, Captain tree and roles).
+    // Personal v1 roles/respec use the authenticated Captain API. Legacy profiles retain their existing routes.
     pickRole({role} = {}) {
       if (!isRole(role)) return refuse(400, 'bad_role', MESSAGES.badRole);
+      if (personalVersion() || selectedEconomy() !== undefined) return writePersonal('role', {role});
       return askSpots(() => transport.post(PATHS.role, {role}), isIsland);
     },
     respec() {
-      return writeSpots('respec', actionUid => transport.post(PATHS.respec, {actionUid}), isIsland);
+      if (personalVersion() || selectedEconomy() !== undefined) return writePersonal('respec');
+      return writeSpots('respec', actionUid => postIsland(PATHS.respec, {actionUid}), isIsland);
     },
+
     // GAME-V3.md §5, §5.1: one research step at the Tech hub of the island (yours, or the game of `code`):
     // tier 1 of a branch, or one option of tier 2 or 3 (`change`: switch from the option the crew chose before).
     research({branch, tier = 1, choice = null, change = false, code = null} = {}) {
@@ -363,7 +414,7 @@ export function createIslandApi({transport, makeUid = makeActionUid, waveProtoco
       if (![1, 2, 3].includes(tier) || (tier === 1 ? choice !== null : !optionsOf(branch, tier).includes(choice))) return refuse(400, 'bad_research', MESSAGES.badResearch);
       if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
       const body = {branch, ...(tier > 1 ? {tier, choice, ...(change ? {change: true} : {})} : {}), ...(where ? {code: where} : {})};
-      return writeSpots(`research:${where}:${branch}:${tier}:${choice ?? ''}:${change ? 'change' : 'pick'}`, actionUid => transport.post(PATHS.research, {...body, actionUid}),
+      return writeSpots(`research:${where}:${branch}:${tier}:${choice ?? ''}:${change ? 'change' : 'pick'}`, actionUid => postIsland(PATHS.research, {...body, actionUid}),
         where ? hasSpots : isIsland);
     },
     // A tower picks one skill of its researched kind, paid with the clicker's coins (D051), so it carries a click
@@ -372,7 +423,7 @@ export function createIslandApi({transport, makeUid = makeActionUid, waveProtoco
       const where = code ? displayIslandCode(code) : '';
       if (!Object.hasOwn(SPECS, spec ?? '') && !isHouseRole(spec)) return refuse(400, 'bad_spec', MESSAGES.badSpec);
       if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
-      return writeSpots(`spec:${where}:${spot}:${spec}`, actionUid => transport.post(PATHS.specialise, {spot: sent(spot), spec, actionUid, ...(where ? {code: where} : {})}),
+      return writeSpots(`spec:${where}:${spot}:${spec}`, actionUid => postIsland(PATHS.specialise, {spot: sent(spot), spec, actionUid, ...(where ? {code: where} : {})}),
         where ? hasSpots : isIsland);
     },
     // D055: one tier of a level-5 tower's upgrade tree (path a or b, tier 1 to 3), paid with the clicker's coins, so
@@ -381,7 +432,7 @@ export function createIslandApi({transport, makeUid = makeActionUid, waveProtoco
       const where = code ? displayIslandCode(code) : '';
       if (!['a', 'b'].includes(path) || ![1, 2, 3].includes(tier)) return refuse(400, 'bad_tree', MESSAGES.badTree);
       if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
-      return writeSpots(`tree:${where}:${spot}:${path}:${tier}`, actionUid => transport.post(PATHS.towerTree, {spot: sent(spot), path, tier, actionUid, ...(where ? {code: where} : {})}),
+      return writeSpots(`tree:${where}:${spot}:${path}:${tier}`, actionUid => postIsland(PATHS.towerTree, {spot: sent(spot), path, tier, actionUid, ...(where ? {code: where} : {})}),
         where ? hasSpots : isIsland);
     },
     // GAME-V3.md §4: coins into the island's wreck (one of the gifts the answer lists).
@@ -389,7 +440,7 @@ export function createIslandApi({transport, makeUid = makeActionUid, waveProtoco
       const where = code ? displayIslandCode(code) : '';
       if (!Number.isSafeInteger(amount) || amount < 1) return refuse(400, 'bad_gift', MESSAGES.badGift);
       if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
-      return writeSpots(`wreck:${where}:${amount}`, actionUid => transport.post(PATHS.wreck, {amount, actionUid, ...(where ? {code: where} : {})}),
+      return writeSpots(`wreck:${where}:${amount}`, actionUid => postIsland(PATHS.wreck, {amount, actionUid, ...(where ? {code: where} : {})}),
         where ? hasSpots : isIsland);
     },
     // D057: the island's boat (code: the game's island, without it your own). A round's claim carries no click id: the
@@ -397,7 +448,7 @@ export function createIslandApi({transport, makeUid = makeActionUid, waveProtoco
     boatStatus({code = null} = {}) {
       const where = code ? displayIslandCode(code) : '';
       if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
-      return ask(() => transport.get(PATHS.boat(where)), isBoatStatus);
+      return ask(() => readIsland(PATHS.boat(where)), isBoatStatus);
     },
     boatReward({game, stars, code = null} = {}) {
       const where = code ? displayIslandCode(code) : '';
@@ -410,13 +461,13 @@ export function createIslandApi({transport, makeUid = makeActionUid, waveProtoco
     demolishQuote({spot, code = null} = {}) {
       const where = code ? displayIslandCode(code) : '';
       if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
-      return ask(() => transport.get(PATHS.demolishQuote(sent(spot), where)), isDemolishQuote)
+      return ask(() => readIsland(PATHS.demolishQuote(sent(spot), where)), isDemolishQuote)
         .then(answer => (answer.ok ? {...answer, data: {...answer.data, spot: localSpotId(answer.data.spot)}} : answer));
     },
     demolish({spot, code = null} = {}) {
       const where = code ? displayIslandCode(code) : '';
       if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
-      return writeSpots(`demolish:${where}:${spot}`, actionUid => transport.post(PATHS.demolish, {spot: sent(spot), actionUid, ...(where ? {code: where} : {})}),
+      return writeSpots(`demolish:${where}:${spot}`, actionUid => postIsland(PATHS.demolish, {spot: sent(spot), actionUid, ...(where ? {code: where} : {})}),
         isDemolished);
     },
     // T36: move a spot (built or empty) to a cell of the build grid, between waves, free. Moving it to where it
@@ -425,7 +476,10 @@ export function createIslandApi({transport, makeUid = makeActionUid, waveProtoco
       const where = code ? displayIslandCode(code) : '';
       if (![x, z].every(value => Number.isFinite(value) && Number.isInteger(value * 2))) return refuse(422, 'off_grid', MESSAGES.badCell);
       if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
-      return askSpots(() => transport.post(PATHS.move, {spot: sent(spot), x, z, ...(where ? {code: where} : {})}), where ? hasSpots : isIsland);
+      const body = {spot: sent(spot), x, z, ...(where ? {code: where} : {})};
+      if (selectedEconomy() !== undefined) return writeSpots(`move:${where}:${spot}:${x}:${z}`,
+        actionUid => postIsland(PATHS.move, {...body, actionUid}), where ? hasSpots : isIsland);
+      return askSpots(() => transport.post(PATHS.move, body), where ? hasSpots : isIsland);
     },
     // T53: reset your own island (Settings), between waves, after typing its code. The click id makes a
     // retry after an unknown outcome safe: the server answers the first reset and never resets twice.
@@ -437,7 +491,7 @@ export function createIslandApi({transport, makeUid = makeActionUid, waveProtoco
     walls({code = null} = {}) {
       const where = code ? displayIslandCode(code) : '';
       if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
-      return ask(() => transport.get(PATHS.walls(where)), isWalls).then(localWalls);
+      return ask(() => readIsland(PATHS.walls(where)), isWalls).then(localWalls);
     },
     repairWall({spot, code = null} = {}) {
       const where = code ? displayIslandCode(code) : '';
@@ -450,7 +504,7 @@ export function createIslandApi({transport, makeUid = makeActionUid, waveProtoco
     structureRecovery({code = null} = {}) {
       const where = code ? displayIslandCode(code) : '';
       if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
-      return ask(() => transport.get(PATHS.structures(where)), isStructureRecovery)
+      return ask(() => readIsland(PATHS.structures(where)), isStructureRecovery)
         .then(answer => answer.ok ? {...answer, data: recoverySpots(answer.data)} : answer);
     },
     repairStructure({quote, code = null} = {}) {
@@ -507,7 +561,7 @@ export function createIslandApi({transport, makeUid = makeActionUid, waveProtoco
     visit(code) {
       const symbols = islandCode(code);
       if (!symbols) return refuse(422, 'validation_error', MESSAGES.badCode);
-      return askSpots(() => transport.get(PATHS.visit(displayIslandCode(symbols))), isVisit);
+      return askSpots(() => readIsland(PATHS.visit(displayIslandCode(symbols))), isVisit);
     },
     startWave({where: place = 'own', waveProtocol: askedProtocol = null} = {}) {
       const target = where(place);
