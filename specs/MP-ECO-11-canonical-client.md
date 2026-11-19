@@ -278,3 +278,36 @@ shared-core and rejoin selection passed 75 tests across six files in 40.00 secon
 immediate owner/visitor profile and quote refresh, no heartbeat reread, delayed actor/selection
 rejection and obsolete lock release. Build and spoiler guard passed (257 text files, 12 protected
 lines); whitespace review passed.
+
+## Final regression corrections
+
+Restore the existing personal legacy recovery-protocol-two paid-revival request from the current
+main implementation: finite helper coordinates within the existing bounds, protocol marker and a
+journaled success requirement. Keep the shared/unknown-context refusal before this legacy branch;
+ordinary protocol-one requests retain their prior shape. This repairs a client reconciliation
+regression without adding authority to coordinates or opening shared fallback.
+
+Legacy card tests must use the negotiated explicit personal_legacy marker and an authenticated UUID
+for the positive legacy path; unmarked live reads must still refuse mutation and leave funds unknown.
+Funding notifications may repeat while world/source selection is reasserted. Validate every amount
+and its explicit legacy funding context, compact only adjacent identical amount/context pairs, then
+require the original ordered balance transitions. Do not suppress real source notifications merely
+to obtain the former callback count.
+
+Review new correctly spelled English vocabulary under the existing text-lint policy before adding
+it to the project dictionary. No rule, extraction path, exclusion or timeout changes are permitted.
+The original full frozen regression result, including capacity-related ENOSPC failures and skipped
+cases, remains separate evidence; these corrections do not relabel it as a pass.
+
+The original full frozen run completed all 499 files: 470 passed and 29 failed; 5,262 test cases
+passed, four failed and 121 were skipped. Twenty-six suite hooks failed with explicit ENOSPC,
+which JUnit records as additional synthetic failure cases. The four actual test failures were
+reviewed vocabulary, the two legacy card contracts and the lost paid-revival DTO. The original
+normal build and spoiler guard passed; the frozen source stayed clean before and after.
+
+The paid-revival restoration first failed eleven bounded cases, then the paid-revival and text
+selection passed all 33 cases in 5.19 seconds. The three affected real-DOM cases passed in
+21.37 seconds; six other cases were intentionally outside that focused selection. A final paid
+selection passed all fifteen cases after strengthening the valid shared-context refusal check.
+Whitespace review passed. A new complete regression run remains required after these corrections
+and restored disk capacity; the earlier failed/skipped cases remain recorded as such.

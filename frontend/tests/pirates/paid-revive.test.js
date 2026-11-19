@@ -4,6 +4,7 @@ import { createIslandApi } from '../../src/island/api.js';
 import { CONFIG, createWave } from '../../src/pirates/sim.js';
 import { simulationInputFromJournal } from '../../src/pirates/recovery-transport.js';
 import { createWaveController } from '../../src/pirates/controller.js';
+import {economy as sharedEconomy} from '../island/shared-session-fixture.js';
 
 const HELPER = '7165d60f-14f5-4b9e-96a0-2ed457b4c219';
 const TARGET = '2b8c0f0e-5a71-4c2e-9d55-0f6b2b7e9a10';
@@ -116,4 +117,19 @@ describe('durable paid revival', () => {
       .some(item => item.command.type === 'captain_revive')).toBe(false);
     h.controller.dispose();
   });
+});
+
+it.each([[NaN,0],[Infinity,0],[-Infinity,0],[500,0],[-500,0],['1',0],[true,0],[0,500],[0,'2'],[undefined,0]])('refuses invalid protocol-two helper coordinates (%s,%s) before any paid request',async(x,z)=>{
+ const post=vi.fn();const api=createIslandApi({transport:{get:vi.fn(),post}});
+ expect((await api.reviveCaptain({waveId:'wave-paid',fallen:TARGET,downAt:10,waveProtocol:2,x,z})).ok).toBe(false);expect(post).not.toHaveBeenCalled();
+});
+it('keeps the ordinary legacy request shape and refuses explicit unknown/shared contexts before paid revival',async()=>{
+ const post=vi.fn(async()=>({ok:true,data:{price:25,coins:75,repeat:false}})),body={waveId:'wave-paid',fallen:TARGET,downAt:10};
+ const legacy=createIslandApi({transport:{get:vi.fn(),post},makeUid:()=> 'ordinary_revive_001'});
+ expect((await legacy.reviveCaptain({...body,waveProtocol:1,x:1,z:2})).ok).toBe(true);
+ expect(post).toHaveBeenCalledWith('/api/waves/revive',{...body,actionUid:'ordinary_revive_001'});
+ post.mockClear();for(const context of [null,sharedEconomy()]){
+  const api=createIslandApi({transport:{get:vi.fn(),post},getEconomy:()=>context});
+  expect((await api.reviveCaptain({...body,waveProtocol:2,x:1,z:2})).ok).toBe(false);
+ }expect(post).not.toHaveBeenCalled();
 });
