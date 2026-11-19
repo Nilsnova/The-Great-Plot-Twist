@@ -19,6 +19,8 @@ const STONE = [
 ];
 const BEACH_MOUTHS = [[0, 12.35], [45, 12.35], [90, 12.35], [135, 19.38]];
 const CUT = [[0, .27], [.12, .08], [.72, 0], [.93, .12], [1, .58], [.88, .87], [.66, 1], [.16, .95], [.035, .70]];
+// The seaward feet of the two southern terraces. The dock sits between the west shoulder and cove.
+const TERRACE_FEET = [[24.8, 31.5, .127, 5.38], [60.8, 68.1, .135, 11.7]];
 
 function coastalPoint(rim, sample, scale) {
   const count = rim.length - 1;
@@ -135,6 +137,18 @@ export function paintShorePockets(c, rim, materials) {
   c.clip(rockyShoulders(rim), 'evenodd');
   for (const [index, [from, to, reach, seed]] of SHELVES.entries()) {
     drawShelf(c, rim, from, to, reach, seed, rockSheet, materials, index % 2 === 0);
+  }
+  c.restore();
+}
+
+/** Expose the same fractured rock through the turf at the seaward feet of the southern terraces. */
+export function paintTerraceFeet(c, beach, rim, materials) {
+  const rockSheet = materials && materialRect(materials, 'rock');
+  c.save();
+  c.clip(beach);
+  c.globalCompositeOperation = 'source-atop';
+  for (const [index, [from, to, reach, seed]] of TERRACE_FEET.entries()) {
+    drawShelf(c, rim, from, to, reach, seed, rockSheet, materials, index === 1);
   }
   c.restore();
 }

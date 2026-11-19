@@ -227,10 +227,15 @@ function homeCliffGeometry(rows = cliffProfile(surface)) {
         const right = stoneVertex(rows, toe + half, 1.33, inset - .16);
         const ridge = stoneVertex(rows, toe, 1.34, inset - .46);
         const foot = stoneVertex(rows, toe - .22 * turn, 1.55 + bevel * .11, inset - .51);
-        triangle(left, top, ridge, SUBMERGED_STONE, [-.08, .41, .15], -.43, [.48, 0, .36], 1);
-        triangle(top, right, ridge, SUBMERGED_STONE, [.41, -.1, .065], -.43, [0, .54, .36], 1);
-        triangle(left, ridge, foot, SUBMERGED_STONE, [-.08, .10, -.3], -.43, [.48, .36, 1], 1);
-        triangle(ridge, right, foot, SUBMERGED_STONE, [.055, -.1, -.3], -.43, [.36, .54, 1], 1);
+        function underwaterFace(a, b, c, tones, depths) {
+          // The outline disappears into the shallows around the raised centre of each stone.
+          const coverage = [a, b, c].map(point => [point === ridge ? 1 : 0, 0]);
+          triangle(a, b, c, SUBMERGED_STONE, tones, -.43, depths, 1, undefined, coverage);
+        }
+        underwaterFace(left, top, ridge, [-.08, .41, .15], [.48, 0, .36]);
+        underwaterFace(top, right, ridge, [.41, -.1, .065], [0, .54, .36]);
+        underwaterFace(left, ridge, foot, [-.08, .10, -.3], [.48, .36, 1]);
+        underwaterFace(ridge, right, foot, [.055, -.1, -.3], [.36, .54, 1]);
 
         // Grass rolls back into the meadow above short, independent stone shoulders.
         // The low seam next to an interior terrace remains clear for its own rockwork.
@@ -385,6 +390,7 @@ export function createHomeRelief(group, coastArt) {
           float wave = sin(logical.x * 6.0 + logical.y * 3.0 + sin(logical.y * 4.2)) * .045;
           float opacity = (1.0 - smoothstep(.25, 1.0, depth + wave)) * .47;
           opacity *= 1.0 - smoothstep(.13, .5, rock.a);
+          opacity *= smoothstep(.04, .74, vShoreCut.x);
           if (opacity < .01) discard;
           float surfaceLight = .88 + wave * 2.0;
           gl_FragColor = vec4(vStone * surfaceLight, opacity);
