@@ -9,6 +9,12 @@ const FORMS = {
   house: {width: 1.36, depth: .86, rear: .46},
   watchtower: {width: 1.17, depth: .90, rear: .52},
   tower: {width: .98, depth: .64, rear: .31},
+  heart: {width: 2.03, depth: 1.20, rear: .59},
+  island_cabin: {width: 1.55, depth: .98, rear: .52},
+  island_bell: {width: .96, depth: .66, rear: .31},
+  island_arsenal: {width: 1.56, depth: .94, rear: .50},
+  island_harbor: {width: 1.52, depth: .95, rear: .48},
+  island_techhub: {width: 1.72, depth: 1.16, rear: .58},
 };
 const PALETTE = [0x283021, 0x666960, 0x96917a, 0xc4b185, 0xcbb68c, 0x655f51, 0xdec99f, 0xa7a38b].map(
   hex => new THREE.Color(hex),
@@ -90,7 +96,7 @@ function geometryOf(foundations) {
   return geometry;
 }
 
-export function makeBuildingFoundations(root) {
+export function makeBuildingFoundations(root, name = 'island-building-foundations') {
   let mesh = null, current = '';
   return {
     show(items) {
@@ -111,7 +117,7 @@ export function makeBuildingFoundations(root) {
             side: THREE.DoubleSide, depthTest: false, depthWrite: false, toneMapped: false});
           material.forceSinglePass = true;
           mesh = new THREE.Mesh(geometry, material);
-          mesh.name = 'island-building-foundations';
+          mesh.name = name;
           mesh.renderOrder = 21;
           mesh.frustumCulled = false;
           mesh.raycast = () => {};

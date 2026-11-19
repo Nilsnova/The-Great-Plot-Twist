@@ -297,7 +297,8 @@ export function decorateIsland(place, ctx = {}) {
     }
     return arsenalMesh;
   };
-  if (layout.cabin !== false && ctx.art?.cabin) placeArt(root, ctx.art, 'cabin', CABIN.x, CABIN.z).name = 'island-cabin';
+  const cabin = layout.cabin !== false && ctx.art?.cabin ? placeArt(root, ctx.art, 'cabin', CABIN.x, CABIN.z) : null;
+  if (cabin) cabin.name = 'island-cabin';
   // The reach of a house's role while its card is open (GAME-V3.md "Houses"): a soft disc with a bright rim on
   // the ground, in the role's colour. ctx.range() says which ({x, z, radius, role} or null), read every frame.
   const houseSupport = typeof ctx.houseSupport === 'function' ? makeHouseSupportMarkers(root) : null;
@@ -428,11 +429,16 @@ export function decorateIsland(place, ctx = {}) {
     const shownArsenal = showArsenal(known && state.arsenal);
     if (shownArsenal) shownArsenal.visible = known && state.arsenal;
     progress?.apply(campaign, spots, known);
-    for (const [id, meshes] of campaignMeshes) {
-      const frame = known ? campaignArt(CAMPAIGN_BUILDINGS.find(item => item.id === id), campaign) : null;
-      for (const [name, mesh] of Object.entries(meshes)) mesh.visible = name === frame;
-    }
     const standing = [];
+    if (bell) standing.push({slot: BELL.id, x: BELL.x, z: BELL.z});
+    if (cabin) standing.push({slot: CABIN.id, x: CABIN.x, z: CABIN.z});
+    if (shownArsenal?.visible) standing.push({slot: ARSENAL.id, x: ARSENAL.x, z: ARSENAL.z});
+    for (const [id, meshes] of campaignMeshes) {
+      const building = CAMPAIGN_BUILDINGS.find(item => item.id === id);
+      const frame = known ? campaignArt(building, campaign) : null;
+      for (const [name, mesh] of Object.entries(meshes)) mesh.visible = name === frame;
+      if (frame === building.art) standing.push({slot: id, x: building.x, z: building.z});
+    }
     for (const spot of SPOTS) {
       const answer = spots.find(item => item.id === spot.id), built = answer?.built === true, where = whereOf(spot);
       const marker = markers.get(spot.id);
