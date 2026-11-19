@@ -171,3 +171,16 @@ PostgreSQL selection passed **196 tests in 24.28 seconds**, with no skips and th
 applied twice. Backend Ruff and **79 unique migration parses** passed. No assertion was
 weakened or skipped. Full backend/browser acceptance, registered shared authority,
 live migration and human approval remain separate.
+
+The final prerequisite-only update adds four current-runtime extra-slot boundary cases.
+Those cases were also run with progression and all core guards installed at source
+`6528ba75`:
+
+```bash
+CASE_PG_SCRATCH=1 uv run --no-sync --with pgserver --with 'psycopg[binary]' pytest -q server/tests/island_sql/test_shared_construction_sql.py::test_current_runtime_extra_spots_keep_their_target_island_unlock
+```
+
+All **four cases passed in 2.74 seconds**. Their target-island unlock, refusal rollback and
+actual discounted charge checks retain the intended milestones for cannon spots 8–11.
+Production Python and SQL trees remain identical to the earlier mixed verification cut;
+the later updates change test coverage and verification text only.
