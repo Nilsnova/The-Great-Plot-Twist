@@ -6,9 +6,18 @@ const WOOD_RIM = '#49372d';
 function limestone(c, points, light, dark, radius = 1.6) {
   const surface = poly(points, radius);
   const [first, second] = points;
+  const left = Math.min(...points.map(([x]) => x)), right = Math.max(...points.map(([x]) => x));
+  const highest = Math.min(...points.map(([, y]) => y));
   const lowest = Math.max(...points.map(([, y]) => y));
   part(c, surface, linear(c, first[0], first[1], second[0] + 6, Math.max(first[1] + 4, lowest),
     [[0, light], [.44, light], [1, dark]]), {line: STONE_RIM, width: 1.08, shade: false});
+  c.save(); c.clip(surface);
+  for (let y = highest + 3; y < lowest; y += 4.7) for (let x = left + 2; x < right; x += 5.9) {
+    const n = Math.sin(x * 4.617 + y * 9.81);
+    c.fillStyle = n > .18 ? '#fdf1ca24' : '#554b431b';
+    c.fill(ellipse(x + n * 2.5, y + n * 1.4, .34 + Math.abs(n) * .78, .31));
+  }
+  c.restore();
   return surface;
 }
 
