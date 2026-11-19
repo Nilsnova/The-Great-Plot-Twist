@@ -17,10 +17,10 @@ export const layouts = {
 export const homeBuildings = Object.entries(isletPlots).map(([plot, item]) => ({ plot, ...item }));
 layouts.home_islet = [{ asset: 'bench', x: 4, z: 13 },
   { asset: 'barrel', x: -12, z: 7 }, { asset: 'lantern', x: -3, z: 12 }];
-// Presentation only. The home layout's permanent scenery also reserves wall placement.
+// The south pier and its tender are scenery at the existing shore.
 export const homeMooring = [
-  { asset: 'home-mooring-bollard', x: -9.5, z: 19.5 },
-  { asset: 'home-mooring-skiff', x: -8, z: 24.5 },
+  { asset: 'home-mooring-bollard', x: 4.15, z: 19.75 },
+  { asset: 'home-mooring-skiff', x: 7.7, z: 27.05 },
 ];
 // Low greenery clusters frame the home meadow. They sit under the world sprites and have no footprint.
 export const homeUndergrowth = [

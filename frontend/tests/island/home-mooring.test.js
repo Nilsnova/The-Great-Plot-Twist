@@ -3,7 +3,7 @@ import {browserHarness} from '../g20-browser.js';
 
 const browser = browserHarness();
 
-it('fits the real southwest mooring artwork without changing walking, targeting or the wave view', async () => {
+it('fits the south pier, starboard berth and tender without changing walking, targeting or the wave view', async () => {
   const result = await browser(async () => {
     const THREE = await window.g20Import('/node_modules/three/build/three.module.js');
     const {createPlace} = await window.g20Import('/src/world/places/factory.js');
@@ -25,6 +25,7 @@ it('fits the real southwest mooring artwork without changing walking, targeting 
       const bollard = place.group.getObjectByName('home-mooring-bollard');
       const skiff = place.group.getObjectByName('home-mooring-skiff');
       const rope = place.group.getObjectByName('home-mooring-rope');
+      const landing = place.group.getObjectByName('home-timber-landing');
       const stage = place.group.getObjectByName('home-mooring-stage');
       const parts = [bollard, skiff, rope, stage];
       const resources = [skiff.material, bollard.material, ...rope.children.map(mesh => mesh.geometry), stage.geometry, stage.material];
@@ -56,10 +57,15 @@ it('fits the real southwest mooring artwork without changing walking, targeting 
       const visibleHullBottom = skiff.position.y + max.y - (max.y - min.y) * bottom / image.height;
       const actualHits = new THREE.Raycaster(new THREE.Vector3(skiff.position.x, skiff.position.y + .5, 10), new THREE.Vector3(0, 0, -1))
         .intersectObjects(parts, true).length;
-      const target = island.pickAt(-8, 24.5);
-      const standsAshore = canStand(-9.5, 19, place.colliders, place.groundHeight);
-      const standsOnSkiff = canStand(-8, 24.5, place.colliders, place.groundHeight);
-      const standsOnStage = canStand(-6.4, 23.8, place.colliders, place.groundHeight);
+      const target = island.pickAt(7.7, 27.05);
+      const standsAshore = canStand(1.1, 19.3, place.colliders, place.groundHeight);
+      const standsOnSkiff = canStand(7.7, 27.05, place.colliders, place.groundHeight);
+      const standsOnStage = canStand(2.5, 26.75, place.colliders, place.groundHeight);
+      landing.geometry.computeBoundingBox();
+      stage.geometry.computeBoundingBox();
+      const deck = stage.geometry.boundingBox, ramp = landing.geometry.boundingBox;
+      const alignedDeck = deck.min.z > ramp.min.z + 2 && deck.max.z > deck.min.z + 6
+        && deck.max.x > ramp.max.x + 4 && skiff.position.x > deck.max.x;
       const sharesCollider = eyes.some(at => place.colliders.some(({x, z}) => x === at.x && z === at.z));
       const originalZones = place.zones.map(({id}) => id);
       const shoreZones = () => place.zones.filter(({id}) => id === 'island_harbor' || id === 'island_bell');
@@ -79,18 +85,18 @@ it('fits the real southwest mooring artwork without changing walking, targeting 
       place.dispose();
       return {home, battle, returned, eyes, positionsMatchGround, maxOrder, stable, released, actualHits, target,
         width: max.x - min.x, waterline: skiff.position.y, visibleHullBottom, standsAshore, standsOnSkiff, standsOnStage, sharesCollider,
-        zoneIdsStable, shoreStable, retainsTravel, wallStable, ropeChangesOnlyHeight, ropeReturns};
+        zoneIdsStable, shoreStable, retainsTravel, wallStable, ropeChangesOnlyHeight, ropeReturns, alignedDeck};
     } finally { place.dispose(); }
   });
   expect(result).toMatchObject({
     home: [true, true, true, true], battle: [true, false, false, false], returned: [true, true, true, true],
-    eyes: [{x: -9.5, z: 19.5}, {x: -8, z: 24.5}], positionsMatchGround: true, stable: true, released: [1, 1, 1, 1, 1, 1],
+    eyes: [{x: 4.15, z: 19.75}, {x: 7.7, z: 27.05}], positionsMatchGround: true, stable: true, released: [1, 1, 1, 1, 1, 1],
     actualHits: 0, target: null, standsAshore: true, standsOnSkiff: false, standsOnStage: false, sharesCollider: false,
-    zoneIdsStable: true, shoreStable: true, retainsTravel: true, wallStable: true, ropeChangesOnlyHeight: true, ropeReturns: true,
+    zoneIdsStable: true, shoreStable: true, retainsTravel: true, wallStable: true, ropeChangesOnlyHeight: true, ropeReturns: true, alignedDeck: true,
   });
   expect(result.maxOrder).toBeLessThan(20);
-  expect(result.width).toBe(4.75);
-  expect(result.waterline).toBeCloseTo(-14.7);
-  expect(result.visibleHullBottom).toBeGreaterThanOrEqual(-14.88);
-  expect(result.visibleHullBottom).toBeLessThan(-14.65);
+  expect(result.width).toBe(6.75);
+  expect(result.waterline).toBeCloseTo(-16.23);
+  expect(result.visibleHullBottom).toBeGreaterThanOrEqual(-16.43);
+  expect(result.visibleHullBottom).toBeLessThan(-16.18);
 });

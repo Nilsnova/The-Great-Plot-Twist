@@ -1,13 +1,13 @@
 import {ellipse, linear, part, rect, shadow, stroke, svg} from './paint.js';
 
 const INK = '#3c2927', WOOD = '#a86c42', BRASS = '#c29a5e';
-const SKIFF_WIDTH = 76, HULL_SCALE = SKIFF_WIDTH / 48, SAIL_ROOM = 36;
+const SKIFF_WIDTH = 108, HULL_SCALE = SKIFF_WIDTH / 48, SAIL_ROOM = 36, SAIL_SCALE = 1.24;
 const SKIFF_EYE = [6.7, 10.9];
 
 // The rope joins these painted eyes. Coordinates are in each frame's logical pixels.
 export const MOORING_EYES = Object.freeze({
   'home-mooring-bollard': Object.freeze([17, 13]),
-  'home-mooring-skiff': Object.freeze([SKIFF_EYE[0] * HULL_SCALE, SKIFF_EYE[1] + SAIL_ROOM]),
+  'home-mooring-skiff': Object.freeze([SKIFF_EYE[0] * HULL_SCALE, (SKIFF_EYE[1] + SAIL_ROOM) * SAIL_SCALE]),
 });
 
 function bollard(c) {
@@ -30,7 +30,7 @@ function bollard(c) {
 
 function skiff(c) {
   c.save();
-  c.scale(HULL_SCALE, 1);
+  c.scale(HULL_SCALE, SAIL_SCALE);
   c.translate(0, SAIL_ROOM);
   shadow(c, 25, 24.6, 17.4, 1.65, .27);
   stroke(c, svg('M4.9 17.2 Q7.4 21.3 11.6 21.9 M10.3 23.2 Q24.4 28.1 38 24.1 M39.8 23.6 Q42.8 22.6 44.3 21'), '#b3eee5', .64, .53);
@@ -91,6 +91,6 @@ function skiff(c) {
 export function homeShoreFrames() {
   return {
     'home-mooring-bollard': [32, 27, 4, bollard, {outline: .55}],
-    'home-mooring-skiff': [SKIFF_WIDTH, 27 + SAIL_ROOM, 2.5, skiff, {outline: .55}],
+    'home-mooring-skiff': [SKIFF_WIDTH, Math.ceil((27 + SAIL_ROOM) * SAIL_SCALE), 2.5 * SAIL_SCALE, skiff, {outline: .55}],
   };
 }

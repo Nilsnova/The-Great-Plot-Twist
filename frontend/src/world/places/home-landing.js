@@ -1,13 +1,13 @@
 import * as THREE from 'three';
 import {projectGround} from '../projection.js';
 
-// The southwest slipway sits west of the wall approach and keeps its original ground anchor.
-const START = 18.65, STEP = .303, PLANKS = 7;
-const center = z => -5.49 - (z - START) * .64;
-const height = z => .044 + (z - START) * .135;
-const halfWidth = i => THREE.MathUtils.lerp(1.43, 1.13, i / (PLANKS - 1));
-const boards = ['#c99560', '#d6aa76', '#ae774d', '#cfa071', '#c28b5d', '#d1a16e', '#c38e5d'];
-const endGrain = '#7e4e36', longGrain = '#a16843', darkGrain = '#81583a', lightGrain = '#e4b888';
+// The landing follows the beach path. The offset spur leaves the forward deck beside the tender.
+const START = 19.30, STEP = .345, PLANKS = 7;
+const center = z => 1.1 + (z - START) * .25;
+const height = z => .062 + (z - START) * .195;
+const halfWidth = i => THREE.MathUtils.lerp(1.44, 1.75, i / (PLANKS - 1));
+const boards = ['#bc854e', '#cc9a64', '#a97147', '#c18e5c', '#b77f51', '#c49159', '#b78453'];
+const endGrain = '#694331', longGrain = '#925a37', darkGrain = '#7d4e34', lightGrain = '#dea974';
 
 // Build the dry slipway and floating stage as two painted meshes.
 export function createHomeLanding(group) {
@@ -39,7 +39,7 @@ export function createHomeLanding(group) {
       const angle = side * Math.PI * 2 / sides;
       return [x + Math.cos(angle) * radius, y, z + Math.sin(angle) * radius];
     });
-    const base = ring(width * .8, offshore ? -.31 : .018);
+    const base = ring(width * .8, offshore ? -.55 : .018);
     const shoulder = ring(width, top - .072), cap = ring(width * .79, top), heart = ring(width * .52, top + .001);
     const bands = [.20, .27, .34].map((distance, index) => {
       const edge = y => ring(width * 1.055, top - distance + y).map(([x, y, z], side) => (
@@ -63,7 +63,7 @@ export function createHomeLanding(group) {
   function rail(side, start, end) {
     const at = (fraction, edge) => {
       const z = THREE.MathUtils.lerp(start, end, fraction);
-      const x = center(z) + side * THREE.MathUtils.lerp(1.27, 1, fraction);
+      const x = center(z) + side * THREE.MathUtils.lerp(1.29, 1.6, fraction);
       const slack = Math.sin(Math.PI * fraction) * .17;
       return [x, height(z) + .55 - slack + edge, z];
     };
@@ -72,15 +72,15 @@ export function createHomeLanding(group) {
       quad(at(from, 0), at(to, 0), at(to, .062), at(from, .062), '#8b6d48');
       quad(at(from, .035), at(to, .035), at(to, .062), at(from, .062), '#cfab74');
     }
-    pile(center(start) + side * 1.27, start, height(start) + .735);
-    pile(center(end) + side, end, height(end) + .735);
+    pile(center(start) + side * 1.29, start, height(start) + .735);
+    pile(center(end) + side * 1.6, end, height(end) + .735);
   }
 
   const far = START + STEP * PLANKS;
   for (const x of [-.68, .68]) {
     timber(x - .105, x + .105, START + .35, far + .009, () => .015, z => height(z) - .064, '#ab7850', '#927050');
   }
-  timber(-.86, .86, far - .071, far + .018, z => height(z) - .19, z => height(z) + .014, '#c38f5a');
+  timber(-1.65, 1.65, far - .071, far + .018, z => height(z) - .19, z => height(z) + .014, '#c38f5a');
   for (let i = 0; i < PLANKS; i++) {
     const from = START + i * STEP, to = from + STEP - .024;
     const width = halfWidth(i);
@@ -99,7 +99,7 @@ export function createHomeLanding(group) {
   // A slack rope at the end of the dry landing makes the floating stage read as mooring scenery.
   const gate = far - .23;
   const knot = (fraction, offset) => [
-    center(gate) + THREE.MathUtils.lerp(-1, 1, fraction),
+    center(gate) + THREE.MathUtils.lerp(-1.6, 1.6, fraction),
     height(gate) + .55 - Math.sin(Math.PI * fraction) * .15 + offset, gate,
   ];
   for (let i = 0; i < 5; i++) {
@@ -120,24 +120,21 @@ export function createHomeLanding(group) {
   }
   mount('home-timber-landing', 6);
 
-  const stageStart = far + .02, stageStep = .32, stagePlanks = 18;
-  const stageEnd = stageStart + stageStep * stagePlanks, elbow = stageStart + 2.9;
-  const stageCenter = z => {
-    // Swing clear of the tender, then follow its berth toward the water.
-    return center(far) - (Math.min(z, elbow) - stageStart) * 1.41 - Math.max(0, z - elbow) * .23;
-  };
-  const deckTop = () => .275, deckBottom = () => .045;
-  // A short right berth projects beside the gangway. The main deck runs along the skiff.
-  for (const offset of [-1.14, .91]) {
-    for (const [from, to] of [[stageStart, elbow], [elbow, stageEnd + .03]]) {
-      timber(offset - .105, offset + .105, from, to, () => -.22, deckBottom, longGrain, endGrain, stageCenter);
-    }
+  const stageStart = far + .018, stageStep = .385, stagePlanks = 16;
+  const stageEnd = stageStart + stageStep * stagePlanks;
+  const stageCenter = z => center(far) + (z - stageStart) * .18;
+  const deckTop = () => height(far), deckBottom = () => height(far) - .245;
+  // The main pier leads toward the front and a broad spur opens on the tender side.
+  for (const offset of [-1.52, 1.55]) {
+    timber(offset - .125, offset + .125, stageStart, stageEnd + .03, () => -.23, deckBottom, longGrain, endGrain, stageCenter);
   }
+  const firstBerthPlank = 1, lastBerthPlank = 4;
   for (let i = 0; i < stagePlanks; i++) {
     const from = stageStart + stageStep * i, to = from + stageStep - .022;
-    const left = -1.34 - (i % 5) * .025;
-    const berth = i >= 1 && i <= 3;
-    const right = (berth ? 3.23 : 1.24) + (i % 3) * .046;
+    const flare = .22 * i / (stagePlanks - 1);
+    const left = -1.71 - flare - (i % 5) * .025;
+    const berth = i >= firstBerthPlank && i <= lastBerthPlank;
+    const right = (berth ? 5.41 : 1.73 + flare) + (i % 3) * .046;
     timber(left, right, from, to, deckBottom, deckTop, boards[(i + 2) % boards.length], longGrain, stageCenter);
     const grain = (across, z, lift) => [stageCenter(z) + across, deckTop() + lift, z];
     const a = left + .17, b = .18 + Math.sin(i * 2.19) * .25;
@@ -146,14 +143,18 @@ export function createHomeLanding(group) {
     quad(grain(b + .22, from + .188, .008), grain(right - .15, from + .173, .008),
       grain(right - .26, from + .208, .008), grain(b + .28, from + .213, .008), darkGrain);
   }
-  const berthStart = stageStart + stageStep, berthEnd = stageStart + stageStep * 4;
-  timber(2.85, 3.05, berthStart - .02, berthEnd + .02, () => -.20, deckBottom,
-    longGrain, endGrain, stageCenter);
+  const berthStart = stageStart + stageStep * firstBerthPlank;
+  const berthEnd = stageStart + stageStep * (lastBerthPlank + 1);
+  for (const offset of [3.27, 5.15]) {
+    timber(offset - .115, offset + .115, berthStart - .02, berthEnd + .02, () => -.24,
+      deckBottom, longGrain, endGrain, stageCenter);
+  }
   for (const [offset, z, top] of [
-    [-1.16, stageStart + .23, .94], [1.05, stageStart + .24, .93],
-    [3.10, berthStart + .21, 1.1], [3.04, berthEnd - .21, 1.13],
-    [-1.17, stageStart + 2.58, 1.12], [1.03, stageStart + 2.74, .94],
-    [-1.17, stageEnd - .22, 1.24], [1.06, stageEnd - .24, 1.19],
+    [-1.46, stageStart + .23, .96], [1.51, stageStart + .24, .96],
+    [3.30, berthStart + .19, 1.11], [5.17, berthStart + .20, 1.16],
+    [5.20, berthEnd - .20, 1.21],
+    [-1.49, stageStart + 2.74, 1.20], [1.51, stageStart + 2.69, 1.05],
+    [-1.75, stageEnd - .23, 1.37], [1.76, stageEnd - .23, 1.32],
   ]) {
     pile(stageCenter(z) + offset, z, top, true);
   }
