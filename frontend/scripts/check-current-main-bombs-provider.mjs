@@ -143,6 +143,9 @@ try {
   const started = ok(await api(owner.page, '/api/waves/start', {method: 'POST', body: {
     where: code, waveProtocol: 2, actionUid: uid()}}), 'Actual legacy protocol-2 start');
   note('actual-legacy-start-api', {recoveryVersion: started.recoveryVersion, waveProtocol: started.waveProtocol});
+  // Legacy games join an existing attempt on arrival, not by the native idle poll.
+  // Invoke that ordinary authenticated current/join flow after the explicit API bell.
+  for (const actor of [owner, mate]) await actor.page.evaluate(() => window.__island.island.joinRunningWave());
   const ownWave = await watch(owner.page);
   assert.equal(ownWave.native, false); assert.equal(ownWave.recoveryVersion, 1); assert.equal(ownWave.protocol, 2);
   const mateWave = await watch(mate.page);
