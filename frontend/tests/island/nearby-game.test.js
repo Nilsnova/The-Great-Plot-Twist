@@ -69,4 +69,4 @@ it.each([false, true])('nearby E/Use works and a reported revive blocks building
     expect(await page.locator('.island-card[open]').count()).toBe(0);
     expect(await page.locator('.touch-actions button').getAttribute('hidden')).not.toBeNull();
   });
-});
+}, 60000); // Complete game boot and input checks exceed the component harness's 20 s budget.
