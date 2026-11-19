@@ -28,6 +28,11 @@ const PAD_FACES = [2, 3, 4, 5, 6];
 const onLand = (x, z) => surfaceClass(ISLAND_PLACE, x, z) !== 0;
 const MORTAR_FINISH = [0, 0, FOOTING.joint];
 const APRON_BED = new THREE.Color(0x91876c);
+const HEART_SHADE = new THREE.Color(0x354d42);
+// A soft shadow follows the existing pavers through the open arch.
+const HEART_SHADE_ROWS = [
+  [-2.95, .97, 0], [-2.21, 1.07, .41], [-1.12, 1.14, .55], [-.1, .96, .42], [.57, .84, 0],
+];
 
 function clippedCorners(x, z, width, depth, trim) {
   // Widen the cut corners of the service aprons to follow their painted masonry.
@@ -92,6 +97,16 @@ function geometryOf(foundations) {
     return index;
   }
   function quad(a, b, c, d) { indices.push(a, b, c, a, c, d); }
+  function shadePassage(x, z) {
+    const crossSection = [-1, -.58, .58, 1];
+    const rows = HEART_SHADE_ROWS.map(([depth, halfWidth, alpha]) => crossSection.map(across => vertex(
+      x + halfWidth * across, z + depth, 0, HEART_SHADE, Math.abs(across) === 1 ? 0 : alpha, 1, [0, 0, FOOTING.shadow],
+    )));
+    for (let row = 1; row < rows.length; row++) for (let section = 1; section < crossSection.length; section++) {
+      const rear = rows[row - 1], front = rows[row];
+      quad(rear[section - 1], rear[section], front[section], front[section - 1]);
+    }
+  }
 
   // Ground shadows all go first, so a nearby occupied footing keeps its own highlights.
   for (const {x, z, slot, ruin} of foundations) {
@@ -102,6 +117,7 @@ function geometryOf(foundations) {
       x, z: footZ, width: halfWidth, depth: halfDepth,
       reach: reach * (ruin ? .32 : 1), opacity: ruin ? .51 : 1,
     });
+    if (slot === 'heart' && !ruin) shadePassage(x, z);
   }
   for (const {x, z, slot, ruin} of foundations) {
     const {width, depth, rear, plinth: height, cornerInset = 0} = FORMS[slot], footZ = z - rear;
