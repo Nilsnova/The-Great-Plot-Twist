@@ -78,7 +78,7 @@ Acquired personal data may be deleted with that player's account; shared canonic
 
 The integrated client refreshes authoritative shared-island offers after successful role selection or respec. The Engineer price depends on the buyer's personal role: updating the personal card alone leaves the selected island's previous construction intent behind. Both cached shared home and visited snapshots are marked stale, and older reads are fenced before the personal profile is applied. Authenticated-actor guards protect the subsequent reads. Failed reads keep the offers unavailable; the client never invents a discounted quote.
 
-`frontend/tests/island/engineer-role-quotes-dom.test.js` covers the first construction request after selecting Engineer or leaving Engineer through respec, for both home and visited islands, plus failed quote refreshes. These use the actual island assembly and Chromium DOM with synthetic authoritative transport responses. Actual authenticated-provider first-click verification is a separate acceptance boundary.
+`frontend/tests/island/engineer-role-quotes-dom.test.js` covers the first construction request after selecting Engineer or leaving Engineer through respec, for both home and visited islands, plus failed quote refreshes. These use the actual island assembly and Chromium DOM with synthetic authoritative transport responses. The separately recorded [actual-provider first-click proof](../docs/evidence/MP-ECO-20-engineer-first-buy/README.md) covers visible Engineer selection and the first physical construction purchase for both an owner and invited visitor, including exact 9-coin requests, receipts and independent ledger reconciliation.
 
 ## Acceptance and verification
 

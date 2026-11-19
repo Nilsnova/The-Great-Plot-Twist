@@ -1,0 +1,146 @@
+{
+  "startedAt": "2026-11-19T18:42:35.040Z",
+  "candidateFrontend": "74be485507fbdbf1eb662f96f11a40c5e902e507",
+  "backendBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+  "scenarioSha256": "53d450a5b80f947a3f052bb3f57933be017982dc5c73aecbb40153787b8a438a",
+  "sourceBefore": {
+    "expectedProductionBaseline": "74be485507fbdbf1eb662f96f11a40c5e902e507",
+    "actualCheckoutHead": "74be485507fbdbf1eb662f96f11a40c5e902e507",
+    "productionDiffFromBaseline": "empty",
+    "paths": [
+      "backend/server",
+      "backend/content",
+      "frontend/src",
+      "supabase/migrations",
+      "backend/uv.lock",
+      "backend/pyproject.toml",
+      "frontend/package-lock.json",
+      "frontend/package.json",
+      ":(exclude)backend/server/tests"
+    ]
+  },
+  "helpersBefore": {
+    "api-clients.mjs": "a9369da75350b882ac6a312c20903965a362409978e86e108c256f9cc450a9f7",
+    "clients.mjs": "dfa176b33a56bc0f6c5a19a219d5c01ddb2c071fe66331d6d15cb181cf7ac6c0",
+    "observer.mjs": "40cb288da9f9a80e337fba5a39a12b1b23501ad1ff48a2a4614975492997f140",
+    "runtime.mjs": "d1387a35fd7243df58e8d9589586034b3a098489bb20e43bece9b6b45040865f",
+    "source.mjs": "56d138914dc5b4e15159162bb21db68c985b2c9083c2e5bac4b34a90502ea8d9"
+  },
+  "cases": [
+    {
+      "visiting": false,
+      "actorId": "160d3c8a-c588-40b8-a87c-01399a49a63f",
+      "islandOwner": "160d3c8a-c588-40b8-a87c-01399a49a63f",
+      "code": "ISLE-AYX98"
+    }
+  ],
+  "setup": "Real local GoTrue registrations and production JWT verification. Fresh5000coin service admission and saved personal level5/earned10 eligibility are explicit fixtures, not naturally earned progress. Other island owner uses API only. One Chromium process, sequential isolated contexts.",
+  "boundaries": [
+    "Actual SDK session restore through a same-origin proxy to the same TLS-authenticated provider; no fake bearer or response.",
+    "Visible Engineer role and Build mutations are physical pointer clicks; opening Captain/build cards uses the existing product selection methods.",
+    "No explicit island refresh, reload, travel or setup mutation occurs between visible role selection and the first Build click.",
+    "Candidate frontend74 is source-pinned separately from unchanged dependency-equivalent backend64; this is a bounded first-buy acceptance case."
+  ],
+  "primarySourcesBefore": [
+    {
+      "service": "api",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "2de87a1c7a95423f93e83f7f254bff624f8b9eba",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    },
+    {
+      "service": "frontend",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "2de87a1c7a95423f93e83f7f254bff624f8b9eba",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    }
+  ],
+  "backendProductionDiff": "empty",
+  "result": "failed",
+  "failure": {
+    "name": "AssertionError",
+    "message": "Expected values to be strictly equal:\n\n401 !== 200\n"
+  },
+  "sourceAfter": {
+    "expectedProductionBaseline": "74be485507fbdbf1eb662f96f11a40c5e902e507",
+    "actualCheckoutHead": "74be485507fbdbf1eb662f96f11a40c5e902e507",
+    "productionDiffFromBaseline": "empty",
+    "paths": [
+      "backend/server",
+      "backend/content",
+      "frontend/src",
+      "supabase/migrations",
+      "backend/uv.lock",
+      "backend/pyproject.toml",
+      "frontend/package-lock.json",
+      "frontend/package.json",
+      ":(exclude)backend/server/tests"
+    ]
+  },
+  "primarySourcesAfter": [
+    {
+      "service": "api",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "2de87a1c7a95423f93e83f7f254bff624f8b9eba",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    },
+    {
+      "service": "frontend",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "2de87a1c7a95423f93e83f7f254bff624f8b9eba",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    }
+  ],
+  "helpersAfter": {
+    "api-clients.mjs": "a9369da75350b882ac6a312c20903965a362409978e86e108c256f9cc450a9f7",
+    "clients.mjs": "dfa176b33a56bc0f6c5a19a219d5c01ddb2c071fe66331d6d15cb181cf7ac6c0",
+    "observer.mjs": "40cb288da9f9a80e337fba5a39a12b1b23501ad1ff48a2a4614975492997f140",
+    "runtime.mjs": "d1387a35fd7243df58e8d9589586034b3a098489bb20e43bece9b6b45040865f",
+    "source.mjs": "56d138914dc5b4e15159162bb21db68c985b2c9083c2e5bac4b34a90502ea8d9"
+  },
+  "finishedAt": "2026-11-19T18:42:38.374Z"
+}
