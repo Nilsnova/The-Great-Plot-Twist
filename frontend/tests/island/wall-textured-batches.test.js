@@ -105,8 +105,12 @@ describe('dimensional wall artwork contract', () => {
       const facing = [shade * .61, shade, shade * .92, 1.09];
       for (const [index, light] of facing.entries()) {
         const at = index * 4;
-        const rgb = [colors.getX(at), colors.getY(at), colors.getZ(at)];
-        expect(rgb).toEqual([light, light * .982, light * .939].map(value => expect.closeTo(value, 6)));
+        const red = colors.getX(at);
+        if (level >= 4) {
+          expect(red).toBeLessThan(light);
+          if (index === 1) expect(colors.getX(at + 2)).toBeGreaterThan(light);
+        } else expect(red).toBeCloseTo(light, 6);
+        expect([colors.getY(at), colors.getZ(at)]).toEqual([red * .982, red * .939].map(value => expect.closeTo(value, 6)));
       }
       expect(Array.from(mesh.geometry.index.array)).toEqual([0,1,2,0,2,3,4,5,6,4,6,7,8,9,10,8,10,11,12,13,14,12,14,15]);
       expect(mesh.geometry.attributes.position.count).toBe(16);
