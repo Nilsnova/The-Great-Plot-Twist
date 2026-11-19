@@ -4,6 +4,7 @@
 // Everything is added under place.group, so the place's own
 // lifetime (resources.js) releases every texture, material and geometry when the player leaves.
 import * as THREE from 'three';
+import {portraitStructureScale} from '../player/home-portrait.js';
 import {unprojectGround} from '../world/projection.js';
 import {groundGeometry} from '../world/ground-transform.js';
 import {artSizes, loadArt, placeArt, projectPoint} from '../world/art.js';
@@ -281,11 +282,12 @@ export function decorateIsland(place, ctx = {}) {
       set locked(value) { lock.visible = value; lockRing.visible = value; }});
     for (const kind of kindsOf(spot)) {
       const building = sprite(root, textures[kind], spot.x, spot.z, `island-${kind}:${spot.id}`);
-      building.visible = false; buildings.set(`${spot.id}:${kind}`, building);
+      building.visible = false; building.userData.portraitStructure = kind !== 'wall';
+      buildings.set(`${spot.id}:${kind}`, building);
     }
   }
   const bell = layout.bell === false ? null : sprite(root, textures.bell, BELL.x, BELL.z, 'island-bell');
-  if (bell) staticArt.track(bell, 'island-bell');
+  if (bell) { bell.userData.portraitStructure = true; staticArt.track(bell, 'island-bell'); }
   // The campaign's buildings (home island only): one mesh per frame they can show, the right one visible.
   const campaignMeshes = new Map(); // building id -> {frame name -> mesh}
   const campaignTextures = new Map();
@@ -297,6 +299,7 @@ export function decorateIsland(place, ctx = {}) {
       const texture = campaignTextures.get(name) ?? drawn(name); campaignTextures.set(name, texture);
       const mesh = sprite(root, texture, building.x, building.z, `island-campaign:${building.id}:${name}`);
       mesh.visible = false; mesh.userData.campaign = building.id; meshes[name] = mesh;
+      mesh.userData.portraitStructure = name === building.art || name === building.mended;
       staticArt.track(mesh, name);
       if (landmarkProfiles[name]) campaignLandmarks.push([mesh, name]);
     }
@@ -307,12 +310,13 @@ export function decorateIsland(place, ctx = {}) {
   let arsenalMesh = null;
   const showArsenal = on => {
     if (on && !arsenalMesh && layout.bell !== false) {
-      arsenalMesh = sprite(root, drawn(ARSENAL.art), ARSENAL.x, ARSENAL.z, 'island-arsenal'); staticArt.track(arsenalMesh, ARSENAL.art);
+      arsenalMesh = sprite(root, drawn(ARSENAL.art), ARSENAL.x, ARSENAL.z, 'island-arsenal');
+      arsenalMesh.userData.portraitStructure = true; staticArt.track(arsenalMesh, ARSENAL.art);
     }
     return arsenalMesh;
   };
   const cabin = layout.cabin !== false && ctx.art?.cabin ? placeArt(root, ctx.art, 'cabin', CABIN.x, CABIN.z) : null;
-  if (cabin) cabin.name = 'island-cabin';
+  if (cabin) { cabin.name = 'island-cabin'; cabin.userData.portraitStructure = true; }
   // The reach of a house's role while its card is open (GAME-V3.md "Houses"): a soft disc with a bright rim on
   // the ground, in the role's colour. ctx.range() says which ({x, z, radius, role} or null), read every frame.
   let displayAnchors = new Map();
@@ -390,16 +394,20 @@ export function decorateIsland(place, ctx = {}) {
     if (joined) mesh.scale.x = .62; // Keep the original level art as posts; the join draws the span.
     mesh.userData.role = activeRole({kind, level, spec: answer?.spec}); mesh.userData.art = id;
     mesh.userData.recoveryLook = appearance?.look ?? 'intact';
+    mesh.userData.portraitStructure = kind !== 'wall';
+    const portraitLabelAnchor = mesh.userData.portraitStructure ? projectPoint(where.x, where.z) : null;
     trackMotion(mesh, id);
     const meshes = [mesh], [, height, anchor] = artSizes[id], top = height * (1 - anchor) + .15;
     // One row (pipRow): 4 and 5 smaller and spaced wider than a disc, so the gold stars never overlap.
     const row = pips ? pipRow(level, {step: .6}) : {offsets: []}, pipWidth = artSizes[PIP_ART][0];
     row.offsets.forEach((offset, i) => {
-      const pip = put(pipArt(level), where.x + offset * pipWidth, where.z, top, .01, row.scale); pip.name = `island-pip:${spot.id}:${i + 1}`; meshes.push(pip);
+      const pip = put(pipArt(level), where.x + offset * pipWidth, where.z, top, .01, row.scale); pip.name = `island-pip:${spot.id}:${i + 1}`;
+      pip.userData.portraitLabelAnchor = portraitLabelAnchor; meshes.push(pip);
     });
     for (const mark of marks) {
       if (!art[mark.art]) continue;
-      const plate = put(mark.art, where.x, where.z, mark.dy, .015); plate.position.x += mark.dx; plate.name = `island-mark:${spot.id}:${mark.part}`; plate.userData.mark = mark.art; meshes.push(plate);
+      const plate = put(mark.art, where.x, where.z, mark.dy, .015); plate.position.x += mark.dx; plate.name = `island-mark:${spot.id}:${mark.part}`; plate.userData.mark = mark.art;
+      plate.userData.portraitLabelAnchor = portraitLabelAnchor; meshes.push(plate);
     }
     shown.set(spot.id, {key, meshes});
   }
@@ -559,8 +567,9 @@ export function decorateIsland(place, ctx = {}) {
       if (!mesh?.visible || !mesh.userData.art || mesh.name.startsWith('island-wall:')
         || (front && mesh.renderOrder < front.order)) continue;
       const [width, height, anchor] = artSizes[mesh.userData.art], image = mesh.material.map?.image;
-      const u = .5 + (tap.x - mesh.position.x) / width;
-      const v = 1 - anchor - (tap.y - mesh.position.y) * portraitDepth / height;
+      const scale = mesh.userData.portraitStructure ? portraitStructureScale(portraitDepth) : 1;
+      const u = .5 + (tap.x - mesh.position.x) / (width * scale);
+      const v = 1 - anchor - (tap.y - mesh.position.y) * portraitDepth / (height * scale);
       if (u < 0 || u >= 1 || v < 0 || v >= 1 || !image?.getContext) continue;
       try {
         const alpha = image.getContext('2d')?.getImageData(Math.floor(u * image.width), Math.floor(v * image.height), 1, 1).data[3];
@@ -579,18 +588,20 @@ export function decorateIsland(place, ctx = {}) {
     const candidates = [...SPOTS.filter(spot => !isExtraSpot(spot.id) || state.spots.some(item => item.id === spot.id))
         .flatMap(spot => {
           const where = whereOf(spot), view = viewOf(spot.id, where);
-          const bounds = {id: spot.id, ...where, w: 2.4, h: spot.kind === 'watchtower' ? 5 : 3};
+          const built = state.spots.some(item => item.id === spot.id && item.built && item.kind !== 'wall');
+          const bounds = {id: spot.id, ...where, w: 2.4, h: spot.kind === 'watchtower' ? 5 : 3, built};
           return view === where ? [bounds] : [bounds, {...bounds, ...view}];
         }),
-      ...(bell ? [{id: BELL.id, x: BELL.x, z: BELL.z, w: 1.6, h: 3.4}] : []),
-      ...(arsenalMesh?.visible ? [{id: ARSENAL.id, x: ARSENAL.x, z: ARSENAL.z, w: ARSENAL.w / 2, h: ARSENAL.h}] : []),
-      ...(campaignMeshes.size ? CAMPAIGN_BUILDINGS.map(item => ({id: item.id, x: item.x, z: item.z, w: item.w, h: item.h})) : []),
-      ...(state.visitor || layout.cabin === false ? [] : [{id: CABIN.id, x: CABIN.x, z: CABIN.z, w: 3, h: 6}])];
+      ...(bell ? [{id: BELL.id, x: BELL.x, z: BELL.z, w: 1.6, h: 3.4, built: true}] : []),
+      ...(arsenalMesh?.visible ? [{id: ARSENAL.id, x: ARSENAL.x, z: ARSENAL.z, w: ARSENAL.w / 2, h: ARSENAL.h, built: true}] : []),
+      ...(campaignMeshes.size ? CAMPAIGN_BUILDINGS.map(item => ({id: item.id, x: item.x, z: item.z, w: item.w, h: item.h, built: Object.values(campaignMeshes.get(item.id) ?? {}).some(mesh => mesh.visible && mesh.userData.portraitStructure)})) : []),
+      ...(state.visitor || layout.cabin === false ? [] : [{id: CABIN.id, x: CABIN.x, z: CABIN.z, w: 3, h: 6, built: true}])];
     let best = null, bestScore = Infinity;
     for (const item of candidates) {
       const foot = projectPoint(item.x, item.z);
       const dy = (tap.y - foot.y) * portraitDepth;
-      if (Math.abs(foot.x - tap.x) > item.w || dy > item.h || dy < -.54) continue;
+      const scale = item.built ? portraitStructureScale(portraitDepth) : 1;
+      if (Math.abs(foot.x - tap.x) > item.w * scale || dy > item.h * scale || dy < -.54 * scale) continue;
       const score = Math.hypot(foot.x - tap.x, dy);
       if (score < bestScore) { best = item.id; bestScore = score; }
     }

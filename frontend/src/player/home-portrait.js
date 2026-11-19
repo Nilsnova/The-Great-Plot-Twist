@@ -5,12 +5,16 @@ import {projectedCoastBounds} from '../world/projection.js';
 const shore = projectedCoastBounds(cliffProfile(surfaces.home_islet));
 // Allow room for the raised shoreline, landmarks and pier beyond the playable surface.
 const ISLAND_HEIGHT = shore.maxY - shore.minY + 5;
-const MAX_PORTRAIT_DEPTH = 2.35;
+const MAX_PORTRAIT_DEPTH = 2.68;
 const SHORE_MARGIN = 5;
 
 export function usesPortraitVillage(viewport) {
   return Number.isFinite(viewport?.width) && Number.isFinite(viewport?.height)
     && viewport.width > SHORE_MARGIN * 2 && viewport.height > 0 && viewport.width / viewport.height < .72;
+}
+
+export function portraitStructureScale(depth) {
+  return depth > 1 ? 1.26 : 1;
 }
 
 export function portraitIslandFrame(camera, viewport) {
@@ -42,16 +46,28 @@ export function createHomePortrait(camera) {
     draw(scene, render) {
       if (!frame) return render();
       try {
+        const depth = camera.userData.homePortraitDepth;
         scene.traverseVisible(object => {
           if (!object.isMesh || !object.userData.ground) return;
-          restored.push(object, object.scale.y);
-          object.scale.y /= camera.userData.homePortraitDepth;
+          const {portraitStructure, portraitLabelAnchor} = object.userData;
+          const scale = portraitStructure || portraitLabelAnchor ? portraitStructureScale(depth) : 1;
+          restored.push(object, object.scale.x, object.scale.y, object.position.x, object.position.y);
+          object.scale.x *= scale;
+          object.scale.y *= scale / depth;
+          if (portraitLabelAnchor) {
+            const {x,y} = portraitLabelAnchor;
+            object.position.x = x + (object.position.x - x) * scale;
+            object.position.y = y + (object.position.y - y) * scale / depth;
+          }
         });
         return render();
       } finally {
-        for (let i = 0; i < restored.length; i += 2) {
+        for (let i = 0; i < restored.length; i += 5) {
           const object = restored[i];
-          object.scale.y = restored[i + 1];
+          object.scale.x = restored[i + 1];
+          object.scale.y = restored[i + 2];
+          object.position.x = restored[i + 3];
+          object.position.y = restored[i + 4];
           object.updateMatrixWorld(true);
         }
         restored.length = 0;

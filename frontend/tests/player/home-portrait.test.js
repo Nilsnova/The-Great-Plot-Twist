@@ -44,3 +44,26 @@ it('keeps upright proportions and restores the world transforms after drawing', 
   expect(tree.scale.y).toBe(.7);
   expect(tree.matrix.elements[5]).toBe(.7);
 });
+
+it('enlarges structure artwork and its label around the same ground foot only during portrait Fit', () => {
+  const camera = makeCamera(), portrait = createHomePortrait(camera);
+  const scene = new THREE.Scene(), building = new THREE.Mesh(), label = new THREE.Mesh();
+  building.userData = {ground: {x: 0, z: 0}, portraitStructure: true};
+  label.userData = {ground: {x: 0, z: 0}, portraitLabelAnchor: {x: 2, y: -3}};
+  building.position.set(2, -3, 0);
+  label.position.set(2.5, 1, 0);
+  scene.add(building, label);
+  portrait.update(phone);
+  const factor = camera.userData.homePortraitDepth;
+  portrait.draw(scene, () => {
+    expect(building.position.toArray()).toEqual([2, -3, 0]);
+    expect(building.scale.x).toBeCloseTo(1.26);
+    expect(building.scale.y * factor).toBeCloseTo(1.26);
+    expect(label.position.x).toBeCloseTo(2 + .5 * 1.26);
+    expect((label.position.y + 3) * factor).toBeCloseTo(4 * 1.26);
+  });
+  expect(building.scale.toArray()).toEqual([1, 1, 1]);
+  expect(label.position.toArray()).toEqual([2.5, 1, 0]);
+  portrait.update(null);
+  portrait.draw(scene, () => expect(building.scale.toArray()).toEqual([1, 1, 1]));
+});
