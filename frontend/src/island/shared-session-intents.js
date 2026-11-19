@@ -7,6 +7,7 @@ const clone=value=>JSON.parse(JSON.stringify(value));
 export function createSessionIntents({storage,makeUid,makeSessionId}={}){
  const key=actor=>`${prefix}${actor}`;
  const leaveKey=actor=>`${prefix}leave:${actor}`;
+ const settingsKey=actor=>`${prefix}settings:${actor}`;
  const inertKey=(actor,origin)=>`${prefix}inert:${actor}:${origin.islandOwner}:${origin.accountId}:${origin.runEpoch}`;
  function readAt(actor,name){
   if(!storage || !uuid(actor))throw new Error('Session retry storage is unavailable.');
@@ -26,12 +27,40 @@ export function createSessionIntents({storage,makeUid,makeSessionId}={}){
   if(!validSessionProof(saved) || saved.actorId!==actor || !sessionUid(saved.actionUid))throw new Error('The original departure could not be read.');
   return saved;
  }
+ const settingNames=['breakPaused','autoNext','countdownSeconds'];
+ const validSettings=record=>validSessionProof(record) && sessionUid(record.actionUid)
+  && Object.keys(record).every(key=>['actorId','origin','sessionId','connectionGeneration','actionUid',...settingNames].includes(key))
+  && settingNames.some(key=>Object.hasOwn(record,key)) && settingNames.every(key=>!Object.hasOwn(record,key)
+    || (key==='countdownSeconds'?Number.isInteger(record[key]) && record[key]>=0 && record[key]<=60:typeof record[key]==='boolean'));
+ function settings(actor){
+  if(!storage || !uuid(actor))throw new Error('Session retry storage is unavailable.');
+  const raw=storage.getItem(settingsKey(actor));if(raw===null)return null;
+  const saved=JSON.parse(raw);if(saved.actorId!==actor || !validSettings(saved))throw new Error('The original settings request could not be read.');return saved;
+ }
  function attachRecord(saved){return {actorId:saved.actorId,origin:sessionOrigin(saved.origin),body:{
   economy:sessionAssertion(saved.origin),sessionId:saved.sessionId,expectedGeneration:saved.expectedGeneration,actionUid:saved.actionUid,
  }};}
  return {
   read,
   departure,
+  settings,
+  retire(actor,origin){
+   if(!sessionOrigin(origin))throw new Error('Read the confirmed original run.');
+   const saved=read(actor),leaving=departure(actor),changing=settings(actor);
+   if(saved?.phase==='known' && sameEconomyScope(saved.origin,origin))storage.removeItem(key(actor));
+   if(leaving && sameEconomyScope(leaving.origin,origin))storage.removeItem(leaveKey(actor));
+   if(changing && sameEconomyScope(changing.origin,origin))storage.removeItem(settingsKey(actor));
+  },
+  changeSettings(proof,changes){
+   const saved=settings(proof?.actorId);if(saved)return clone(saved);
+   if(!changes || typeof changes!=='object' || Array.isArray(changes) || !Object.keys(changes).length || Object.keys(changes).some(key=>!settingNames.includes(key)))throw new Error('Choose valid session settings.');
+   const record={...clone(proof),...clone(changes??{}),actionUid:makeUid()};
+   if(!validSettings(record))throw new Error('Choose valid session settings.');
+   storage.setItem(settingsKey(record.actorId),JSON.stringify(record));return clone(record);
+  },
+  changedSettings(record){
+   const saved=settings(record.actorId);if(saved && JSON.stringify(saved)===JSON.stringify(record))storage.removeItem(settingsKey(record.actorId));
+  },
   depart(actor){
    const pending=departure(actor);if(pending)return clone(pending);
    const saved=read(actor);if(saved?.phase!=='known')return null;

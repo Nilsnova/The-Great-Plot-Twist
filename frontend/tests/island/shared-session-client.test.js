@@ -11,7 +11,7 @@ function setup(extra={}){
  const api={attach:vi.fn(async record=>{const data=metadata();if(record.body.expectedGeneration!=='0')data.session.connectionGeneration=String(BigInt(record.body.expectedGeneration)+1n);return {ok:true,data};}),
   read:vi.fn(async proof=>{const data=metadata(!!proof);if(proof)data.session.connectionGeneration=proof.connectionGeneration;return {ok:true,data};}),
   heartbeat:vi.fn(async proof=>{const data=metadata();data.session.connectionGeneration=proof.connectionGeneration;return {ok:true,data};}),disconnect:vi.fn(async()=>({ok:true,data:metadata(false)})),
-  leave:vi.fn(async record=>({ok:true,data:controlReceipt('session_leave',record)}))};
+  leave:vi.fn(async record=>({ok:true,data:controlReceipt('session_leave',record)})),settings:vi.fn(async record=>({ok:true,data:controlReceipt('session_settings',record)}))};
  const client=createSharedSessionClient({api,getActorId:()=>actor,getEconomy:()=>selected,storage:saved,locks:provider,
   makeUid:()=>`session_uid_${fixture}_${++uids}`,makeSessionId:extra.makeSessionId??(()=>sessionId),setTimer:run=>{timers.push(run);return timers.length;},clearTimer(){},onState:value=>states.push(value)});
  clients.push(client);return {client,api,saved,states,timers,provider,setActor:value=>{actor=value;},setEconomy:value=>{selected=value;},allocated:()=>uids};
@@ -137,4 +137,27 @@ it('retires only a definitively stale departure after another document rotated t
  await f.client.leave();f.api.attach.mockResolvedValue({ok:false,status:409,code:'controller_held'});await f.client.open();
  expect(f.api.leave).toHaveBeenCalledOnce();expect(f.api.attach).toHaveBeenCalledTimes(2);
  expect(f.api.attach.mock.calls[1][0].body.expectedGeneration).toBe('0');expect(f.client.proof()).toBeNull();
+});
+it('retains unknown settings through401 and reads fresh metadata after the exact original operation resolves',async()=>{
+ const f=setup();await f.client.open();f.api.settings.mockResolvedValueOnce({ok:false,status:0}).mockResolvedValueOnce({ok:false,status:401});
+ await f.client.settings({autoNext:false});const old=structuredClone(f.api.settings.mock.calls[0][0]);
+ await f.client.settings({autoNext:true});expect(f.api.settings.mock.calls[1][0]).toEqual(old);expect(f.api.read).toHaveBeenCalledOnce();expect(f.client.proof()).toBeNull();
+ await f.client.open();await f.client.settings({autoNext:true});expect(f.api.settings.mock.calls[2][0]).toEqual(old);expect(f.api.read).toHaveBeenCalledTimes(3);
+ expect(f.client.metadata.session.autoNext).toBe(true); // The current read can differ from the old false receipt.
+});
+it('retires confirmed old source locally without issuing a leave or cancelling newer control',async()=>{
+ const f=setup();await f.client.open();const old=f.client.proof().origin;f.client.retireOrigin(old);expect(f.client.proof()).toBeNull();expect(f.api.leave).not.toHaveBeenCalled();
+ await Promise.resolve();await Promise.resolve(); // A released Web Lock finishes asynchronously.
+ const next={...economy(),runEpoch:'88888888-8888-4888-8888-888888888888'};f.setEconomy(next);
+ f.api.attach.mockImplementation(async record=>{const data=metadata();data.economy=next;data.session.sessionId=record.body.sessionId;return {ok:true,data};});
+ f.api.read.mockImplementation(async()=>({ok:true,data:{...metadata(),economy:next}}));await f.client.open();expect(f.client.proof()?.origin.runEpoch).toBe(next.runEpoch);
+ f.client.retireOrigin(old);expect(f.client.proof()?.origin.runEpoch).toBe(next.runEpoch);
+});
+it('retires known old-run departure only on definite epoch mismatch against a fresh same-owner replacement',async()=>{
+ const first=setup();await first.client.open();await first.client.dispose();const f=setup({storage:first.saved,locks:first.provider});
+ const next={...economy(),accountId:'77777777-7777-4777-8777-777777777777',runEpoch:'88888888-8888-4888-8888-888888888888'};f.setEconomy(next);
+ f.api.leave.mockResolvedValue({ok:false,status:409,code:'economy_epoch_mismatch'});
+ f.api.attach.mockImplementation(async record=>({ok:true,data:{...metadata(),economy:next,session:{...metadata().session,sessionId:record.body.sessionId}}}));
+ f.api.read.mockImplementation(async record=>({ok:true,data:{...metadata(!!record),economy:next}}));await f.client.open();
+ expect(f.api.leave).toHaveBeenCalledOnce();expect(f.api.attach).toHaveBeenCalledOnce();expect(f.client.proof()?.origin.accountId).toBe(next.accountId);
 });

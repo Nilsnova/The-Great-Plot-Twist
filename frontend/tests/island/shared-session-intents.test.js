@@ -1,7 +1,7 @@
 // Unknown source attachments remain inert across navigation, without losing their original identity.
 import {it,expect} from 'vitest';
 import {createSessionIntents} from '../../src/island/shared-session-intents.js';
-import {actorId,origin,metadata,sessionId} from './shared-session-fixture.js';
+import {actorId,origin,metadata,sessionId,proof} from './shared-session-fixture.js';
 function setup(){
  const rows=new Map();let count=0;
  const storage={getItem:key=>rows.get(key)??null,setItem:(key,value)=>rows.set(key,value),removeItem:key=>rows.delete(key)};
@@ -34,4 +34,14 @@ it('persists a known departure exactly through retries and removes only its orig
 });
 it('never invents departure proof for an uncertain attachment',()=>{
  const f=setup();f.intents.begin(actorId,origin());expect(f.intents.depart(actorId)).toBeNull();expect(f.count()).toBe(1);
+});
+it('retains the original settings change and source proof until its own confirmation',()=>{
+ const f=setup(),original=f.intents.changeSettings(proof(),{autoNext:false});
+ expect(f.intents.changeSettings(proof(),{autoNext:true})).toEqual(original);expect(original.actionUid).toBe('original_uid_1');
+ f.intents.changedSettings(original);expect(f.intents.changeSettings(proof(),{autoNext:true}).actionUid).toBe('original_uid_2');
+});
+it('retires only confirmed old-source local descriptors while preserving an unknown attachment',()=>{
+ const f=setup(),opening=f.intents.begin(actorId,origin());f.intents.confirm(opening,metadata());f.intents.depart(actorId);f.intents.changeSettings(proof(),{autoNext:false});
+ f.intents.retire(actorId,origin());expect(f.intents.read(actorId)).toBeNull();expect(f.intents.departure(actorId)).toBeNull();expect(f.intents.settings(actorId)).toBeNull();
+ const unknown=f.intents.begin(actorId,origin());f.intents.retire(actorId,origin());expect(f.intents.begin(actorId,origin())).toEqual(unknown);
 });

@@ -342,12 +342,12 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
     // The break: {title, line, seconds, auto, ready, paused, hold: {label, enabled} | null} or null to hide it.
     pause(info) {
       if (!info) { pause.hidden = true; mini.hidden = true; pauseClosed = false; lastPause = ''; document.documentElement.style.removeProperty('--pirate-break-bottom'); return; }
-      const key = `${info.title}|${info.line}|${info.seconds}|${info.auto}|${info.ready}|${info.paused}|${info.hold?.label}|${info.hold?.enabled}|${pauseClosed}`;
+      const key = `${info.title}|${info.line}|${info.seconds}|${info.auto}|${info.autoEnabled}|${info.ready}|${info.paused}|${info.hold?.label}|${info.hold?.enabled}|${pauseClosed}`;
       pause.hidden = pauseClosed; mini.hidden = !pauseClosed;
       if (key === lastPause) return;
       lastPause = key; pauseTitle.textContent = info.title; pauseLine.textContent = info.line ?? '';
       next.textContent = info.paused ? 'Paused' : info.ready ? (info.seconds > 0 ? `Next wave · ${info.seconds}` : 'Next wave') : 'Counting the loot…';
-      next.disabled = !info.ready; auto.checked = info.auto === true;
+      next.disabled = !info.ready; auto.checked = info.auto === true;auto.disabled=info.autoEnabled===false;
       hold.hidden = !info.hold; hold.textContent = info.hold?.label ?? ''; hold.disabled = info.hold?.enabled !== true;
       pause.classList.toggle('is-paused', info.paused === true);
       mini.textContent = next.textContent; mini.disabled = next.disabled;

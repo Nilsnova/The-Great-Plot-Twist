@@ -12,7 +12,7 @@ export function createSharedSessionClient({api,getEconomy,getActorId,getAuthGene
  makeUid=makeActionUid,makeSessionId=()=>globalThis.crypto.randomUUID(),onState=()=>{},
  setTimer=(run,ms)=>setTimeout(run,ms),clearTimer=id=>clearTimeout(id)}={}){
  const tab=createSessionTabLock({locks}),intents=createSessionIntents({storage,makeUid,makeSessionId});
- let disposed=false,ticket=0,flight=null,pingFlight=null,timer=null,held=null,active=null,scope=null,snapshot=null;
+ let disposed=false,ticket=0,flight=null,pingFlight=null,settingsFlight=null,settingsScope=null,timer=null,held=null,active=null,scope=null,snapshot=null;
  let state=Object.freeze({phase:'idle',message:''});
  const context=()=>{try{return {actorId:getActorId(),origin:sessionOrigin(readEconomy(getEconomy())),identity:getAuthGeneration()};}catch{return null;}};
  const current=captured=>{const now=context();return !disposed && !!captured?.origin && !!now && captured.actorId===now.actorId
@@ -20,7 +20,7 @@ export function createSharedSessionClient({api,getEconomy,getActorId,getAuthGene
  const notify=(phase,message='')=>{state=Object.freeze({phase,message});try{onState({...state});}catch{/* A display cannot grant control. */}};
  const cancelTimer=()=>{if(timer!==null)clearTimer(timer);timer=null;};
  function schedule(captured){
-  cancelTimer();if(!current(captured))return;
+  cancelTimer();if(!current(captured) || settingsFlight && captured===settingsScope)return;
   timer=setTimer(()=>{timer=null;
    if(current(captured))void (active?heartbeat():open());
    else if(scope===captured)abandon(held,ticket);
@@ -54,7 +54,7 @@ export function createSharedSessionClient({api,getEconomy,getActorId,getAuthGene
   try{
    const saved=intents.read(captured.actorId);
    if(intents.departure(captured.actorId) || saved?.phase==='known' && !sameEconomyScope(saved.origin,captured.origin)){
-    const answer=await depart(captured.actorId);
+    const answer=await depart(captured.actorId,captured.origin);
     if(mine!==ticket || !current(captured) || !lock.current)return abandon(lock,mine);
     if(!answer.ok){demote('waiting','Confirming departure from your previous session. Retry shortly.');schedule(captured);return answer;}
    }
@@ -94,14 +94,39 @@ export function createSharedSessionClient({api,getEconomy,getActorId,getAuthGene
   schedule(captured);return answer;
  }
  function heartbeat(){
+  if(settingsFlight && scope===settingsScope)return settingsFlight;
   if(pingFlight)return pingFlight;
   const pending=sendHeartbeat();
   const finished=pending.finally(()=>{if(pingFlight===finished)pingFlight=null;});pingFlight=finished;return finished;
  }
- async function depart(actor){
+ function settings(changes){
+  if(settingsFlight)return settingsFlight;
+  const captured=scope,mine=ticket,actorId=context()?.actorId;let record;
+  try{
+   record=intents.settings(actorId);
+   if(!record){const original=proof();if(!original)return Promise.resolve(failed('session_context_required','Read your current controlling session.'));record=intents.changeSettings(original,changes);}
+  }catch(error){return Promise.resolve(failed('session_retry_unavailable',error.message,503));}
+  const prior=pingFlight;settingsScope=captured;cancelTimer();
+  const pending=(async()=>{
+   if(prior)await prior;
+   let answer;try{answer=await api.settings(record);}catch{return failed('network_error','The settings change did not finish. Retry it.',0);}
+   if(answer.ok || answer.status===409 && answer.code==='stale_controller')intents.changedSettings(record);
+   if(mine!==ticket || !current(captured))return answer;
+   if(answer.ok && proof())await refresh(captured,mine,proof());
+   else if(answer.status===401)demote('unavailable','Sign in again to confirm the original settings change.');
+   else notify(active?'controller':'unavailable',answer.ok?'':answer.message??'The settings change is not confirmed. Retry it.');
+   return answer;
+  })().catch(()=>failed('session_retry_unavailable','The original settings change could not be saved.',503));
+  const finished=pending.finally(()=>{if(settingsFlight===finished){settingsFlight=null;settingsScope=null;if(current(scope))schedule(scope);}});
+  settingsFlight=finished;return finished;
+ }
+ async function depart(actor,replacement=null){
   const record=intents.depart(actor);if(!record)return {ok:true,data:null};
   let answer;try{answer=await api.leave(record);}catch{return failed('network_error','The departure did not finish. Retry it.',0);}
   const stale=answer.status===409 && answer.code==='stale_controller';
+  const retired=answer.status===409 && answer.code==='economy_epoch_mismatch' && replacement && context()?.actorId===record.actorId
+    && record.origin.islandOwner===replacement.islandOwner && record.origin.accountId!==replacement.accountId && record.origin.runEpoch!==replacement.runEpoch;
+  if(retired){intents.retire(record.actorId,record.origin);return {ok:true,data:null,retired:true};}
   if(answer.ok || stale)intents.departed(record);
   if(stale)return {ok:true,data:null,retired:true}; // The obsolete generation grants no present control.
   return answer;
@@ -121,9 +146,18 @@ export function createSharedSessionClient({api,getEconomy,getActorId,getAuthGene
   const record=active;ticket++;cancelTimer();flight=null;pingFlight=null;demote('idle','');scope=null;
   return record?api.disconnect(record):{ok:true,data:null};
  }
- return {open,heartbeat,disconnect,leave,proof,
+ function retireOrigin(origin){
+  const actorId=context()?.actorId;if(!uuid(actorId))return false;
+  try{intents.retire(actorId,origin);}catch{return false;}
+  if(sameEconomyScope(scope?.origin,origin)){
+   ticket++;cancelTimer();flight=null;pingFlight=null;demote('idle','');scope=null;
+  }
+  return true;
+ }
+ return {open,heartbeat,disconnect,leave,settings,retireOrigin,proof,
   roomPlace:()=>snapshot && current(scope)?snapshot.session.place:null,
   get state(){return {...state};},
+  get updating(){return settingsFlight!==null;},
   get metadata(){return snapshot && current(scope)?clone(snapshot):null;},
   async dispose(){if(disposed)return;const closing=disconnect();disposed=true;tab.dispose();return closing;},
  };

@@ -26,10 +26,15 @@ export function createIslandSession(isl,{client=null,windowTarget=globalThis,doc
  windowTarget?.addEventListener?.('pagehide',blur);
  documentTarget?.addEventListener?.('visibilitychange',visibility);
  return {
-  ensure,leave:()=>control.leave(),disconnect:blur,
+  ensure,leave:()=>control.leave(),disconnect:blur,settings:changes=>control.settings(changes),retireOrigin:origin=>control.retireOrigin(origin),
   proof:()=>selected()?control.proof():null,
   roomPlace:()=>selected()?control.roomPlace():null,
   get state(){return control.state;},get metadata(){return selected()?control.metadata:null;},
+  get updating(){return control.updating;},
+  get settingsView(){
+   const meta=selected()?control.metadata?.session:null;
+   return meta?{...meta,canManage:!!control.proof() && meta.leaderId===isl.getActorId() && !control.updating}:null;
+  },
   dispose(){
    if(disposed)return;disposed=true;
    windowTarget?.removeEventListener?.('blur',blur);windowTarget?.removeEventListener?.('focus',focus);windowTarget?.removeEventListener?.('pagehide',blur);

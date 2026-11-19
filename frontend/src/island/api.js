@@ -288,7 +288,7 @@ export const outcomeUnknown = failure => !failure.ok && (failure.status === 0 ||
 
 export function createIslandApi({transport, makeUid = makeActionUid, waveProtocol = () => 1, now = () => Date.now(), economy = () => undefined,
   personalCaptain = () => null, personalScope = () => '', negotiateEconomy = false, sharedSnapshot = () => null, pendingStorage = null, authGeneration = null,
-  getEconomy, getActorId = () => null, onEconomy = () => {}, pendingStore, sharedWaves = () => null} = {}) {
+  getEconomy, getActorId = () => null, onEconomy = () => {}, pendingStore, sharedWaves = () => null, sharedReset = () => null} = {}) {
   if (!transport || typeof transport.get !== 'function' || typeof transport.post !== 'function') {
     throw new TypeError('createIslandApi needs a transport with get and post.');
   }
@@ -549,7 +549,8 @@ export function createIslandApi({transport, makeUid = makeActionUid, waveProtoco
     // T53: reset your own island (Settings), between waves, after typing its code. The click id makes a
     // retry after an unknown outcome safe: the server answers the first reset and never resets twice.
     freshStart({confirmCode} = {}) {
-      if (selectedEconomy() !== undefined) return refuse(409, 'economy_path_unavailable', 'This action is unavailable on shared islands.');
+      let reset,pending;try{reset=sharedReset();pending=reset?.pending(confirmCode);}catch{return refuse(503,'reset_retry_unavailable','The original reset request could not be read.');}
+      if (pending || selectedEconomy() !== undefined) return reset?.reset(confirmCode)??refuse(409, 'economy_path_unavailable', 'This action is unavailable on shared islands.');
       if (!islandCode(confirmCode ?? '')) return refuse(400, 'wrong_code', MESSAGES.badConfirm);
       return write('fresh-start', actionUid => transport.post(PATHS.freshStart, {confirmCode: displayIslandCode(confirmCode), actionUid}), isFreshStart);
     },

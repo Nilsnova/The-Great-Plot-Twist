@@ -515,6 +515,7 @@ export function createTransport(ctl) {
   // (a bell is refused while one runs), so our part goes in now with what this sim has; the server pays the
   // outcome of the first close. Retries keep running independently of the wave on screen.
   function handOffRecoveryFinish(current, extra = {}) {
+    if(current.info.nativeShared && !ctl.controls(current) && !current.recoveryFinishRequest)return;
     if (!current.recoveryReplay || current.recoveryFinishAnswered || current.recoveryFinishFailed) return;
     current.recoveryDetached = true;
     current.recoveryFinishExtra = extra;

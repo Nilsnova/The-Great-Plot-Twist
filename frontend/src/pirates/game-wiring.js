@@ -103,6 +103,8 @@ export function wireWaves(ctx) {
     recoveryTransport,
     getSessionProof:()=>island?.session?.proof()??null,
     completeRevival:intent=>island.completeRevival(intent),
+    getSessionSettings:()=>island?.session?.settingsView??null,
+    setSessionSettings:changes=>island.session.settings(changes),
     practiceIdentity: () => ({player: practicePlayer(ctx.getPracticeToken?.()) ?? ctx.practicePlayer ?? null, island: island?.gameCode ?? roomTopic}),
     islandRoom, islandPlace: ISLAND_PLACE,
     getCrew: () => defended()?.crew ?? null,
@@ -118,7 +120,11 @@ export function wireWaves(ctx) {
     beforePointWave: island ? () => island.loadPoint() : null,
     startNextWave: island ? () => island.ringBell() : null,
     // The room-wide Pause between waves: the break stays open and Auto next waits (GAME-V3.md §2).
-    holdBreak: game ? () => game.hold() : null, toggleHold: game ? () => game.togglePause() : null});
+    holdBreak: game ? () => game.hold() : null, toggleHold: game ? () => {
+      const settings=island?.session?.settingsView;
+      if(island?.economy?.mode==='island_shared')return settings?.canManage?island.session.settings({breakPaused:!settings.breakPaused}):null;
+      return game.togglePause();
+    } : null});
   island?.setRecoveryCheckpointHandler?.(() => pirates.island.checkpointBeforeRepair());
   publishCore = createCorePublisher({controller: () => pirates.island, context: () => island?.coreContext,
     publish: snapshot => island?.setCoreCombatState?.(snapshot)});
@@ -154,6 +160,7 @@ export function wireWaves(ctx) {
   // Every second: the room of the island we stand on, and once per landing a wave already running there.
   function tick() {
     if (disposed) return;
+    pirates.island.stopIfOriginChanged?.(island?.economy);
     followRoom();
     if(world.current?.id===ISLAND_PLACE && island?.economy?.mode==='island_shared' && (!pirates.island.wave || pirates.island.wave.done))joinRunning();
     // A wave under way keeps the island it started with (builds wait for its break): the quiet clock waits too.

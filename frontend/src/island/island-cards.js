@@ -217,8 +217,20 @@ export function createCards(isl) {
       visitor: !!isl.visiting, ownerName: isl.visiting?.ownerName, waveBest: island?.waveBest ?? 0, nextWave: island?.nextWave,
       preparation: preparationModel({island, wallRecovery: !recoveryControlsOn(),
         wallState: {code: isl.wallsFor, rows: [...isl.walls.values()]}}), message: isl.cardMessage});
-    return currentFunds().shared && !isl.domainAvailable('session')
-      ? {...model,disabled:true,action:'none',line:'Island defense is unavailable. Reload the island.'} : model;
+    if(!currentFunds().shared)return model;
+    if(!isl.domainAvailable('session'))return {...model,disabled:true,action:'none',line:'Island defense is unavailable. Reload the island.'};
+    const session=isl.session,settings=session.settingsView;
+    if(!session.proof()){
+      if(wave)return {...model,button:wave.joined?'Watching defense':'Watch defense',disabled:wave.joined || isl.flow.busy,
+        action:wave.joined?'none':'join',message:'Spectating this island. Connect your Captain before the next bell to join its roster.'};
+      const connecting=session.state.phase==='connecting';
+      return {...model,button:connecting?'Connecting…':'Retry connection',disabled:connecting,action:'session',line:session.state.message || 'Watching this island. Retry to connect your Captain.'};
+    }
+    if(!wave){
+      if(settings?.canManage!==true)return {...model,disabled:true,action:'none',line:'Waiting for the session leader to ring the bell.'};
+      return {...model,line:`Ring it and wave ${island.nextWave} sails in after a ${settings.countdownSeconds} second countdown.`};
+    }
+    return model;
   }
   function refreshCard() {
     if (isl.disposed) return;

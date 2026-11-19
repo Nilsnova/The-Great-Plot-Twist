@@ -75,6 +75,7 @@ import {createIslandSession} from './island-session.js';
 import {readLegacyEconomy} from './economy-view.js';
 import {createSharedWaveApi} from './shared-wave-api.js';
 import {createSharedRevivalApi} from './shared-revival-api.js';
+import {createSharedResetApi} from './shared-reset-api.js';
 
 export {ARRIVAL_KEY, SPOTS_CHANGED, NEWS_KEY, CAMPAIGN_UNLOCKED, TOWER_SPECIALISED, TOWER_TREE_BOUGHT,
   HOUSE_ROLE_PICKED, VISIT_NAMED, ISLAND_RESET, CHART_NAMES, ALL_REPAIRED} from './island-shared.js';
@@ -150,8 +151,11 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   isl.sharedWaves = createSharedWaveApi({transport:isl.islandTransport,getEconomy:isl.getEconomy,getActorId,
     getProof:()=>isl.session.proof(),onEconomy:isl.refreshEconomy,storage,allowLegacy:()=>mode==='fake' || !!readLegacyEconomy(isl.getEconomy())});
   isl.sharedRevival=createSharedRevivalApi({transport:isl.islandTransport,getEconomy:isl.getEconomy,getActorId,getProof:()=>isl.session.proof(),storage});
+  isl.sharedReset=createSharedResetApi({transport:isl.islandTransport,getEconomy:isl.getEconomy,getActorId,getCode:()=>isl.own?.code,
+    canReset:()=>isl.domainAvailable('reset') && !isl.visitCode && !isl.visiting,storage});
   isl.api = createIslandApi({transport: isl.islandTransport, ...economyContext, onEconomy: isl.refreshEconomy,
     sharedWaves:()=>mode!=='fake' && isl.domainAvailable('session')?isl.sharedWaves:null,
+    sharedReset:()=>mode!=='fake'?isl.sharedReset:null,
     economy: () => isl.currentFunds().shared ? isl.currentFunds().economy : undefined, sharedSnapshot: () => isl.visitCode && !isl.visiting ? null : isl.visiting ?? isl.own,
     personalCaptain: () => isl.own?.captain ?? (isl.personalUnavailable ? {progressionVersion: 1} : null),
     personalScope: () => `${getActorId() ?? ''}:${isl.own?.code ?? ''}`, pendingStorage: storage, authGeneration, negotiateEconomy: mode !== 'fake',

@@ -72,7 +72,7 @@ import { createPrediction } from './controller-predict.js';
 import { createCaptainActions } from './controller-captain.js';
 import { createFrame } from './controller-frame.js';
 import { createFinish } from './controller-finish.js';
-import {sameEconomyScope} from '../island/economy-view.js';
+import {readEconomy,sameEconomyScope} from '../island/economy-view.js';
 import {validSessionProof} from '../island/shared-session-shapes.js';
 
 export { RECOVERY_PLAYOUT_MS, RECOVERY_PLAYOUT_MIN_MS, recoveryPlayoutTarget, COSMETIC_PER_SECOND, MOVE_EVERY_MS,
@@ -92,7 +92,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   loadAuto = readAuto, saveAuto = writeAuto, holdBreak = null, toggleHold = null, reviveCaptain = null,
   createEventArt = defaultEventArt, createFinisherScene = defaultFinisherScene, easyFinishers = readEasy, practiceIdentity = () => null,
   guide: guideOn = false, createGuide = defaultGuide, recoveryTransport = null, inspectDefenses = false, getSessionProof = () => null,
-  completeRevival=async()=>({ok:false,code:'economy_path_unavailable'}) } = {}) {
+  completeRevival=async()=>({ok:false,code:'economy_path_unavailable'}),getSessionSettings=()=>null,setSessionSettings=async()=>({ok:false}) } = {}) {
   // The captains' poses (src/pirates/poses.js): your character and the teammates' figures fire in their own body.
   const poses = createPoses({ now: () => now() / 1000 });
   const rangeFeedback = createRangeFeedback(), dangerFeedback = createDangerFeedback();
@@ -173,7 +173,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     createRenderer, createHud, setTimer, clearTimer, onEvents, getCrew, captainLevel, captainSkills, captainWeapon,
     captainColour, startNextWave, breakSeconds, recoveryPlayoutMs, loadAuto, saveAuto, holdBreak, toggleHold,
     reviveCaptain, createEventArt, createFinisherScene, easyFinishers, practiceIdentity, guideOn, createGuide,
-    recoveryTransport, inspectDefenses, poses, myLevel, read, mySkills, myWeapon, actorId, myStats, controls, completeRevival, timers, stops,
+    recoveryTransport, inspectDefenses, poses, myLevel, read, mySkills, myWeapon, actorId, myStats, controls, completeRevival, getSessionSettings,setSessionSettings,timers, stops,
     later, emit, cue, here, blocked, rangeFeedback, dangerFeedback, canInspect, focusCanvas, closeDefenseInspection,
     openDefenseInspection, updateDefenseInspection, clearLiveFeedback, noteLiveInput });
   // The parts, each a closure over ctl; they call each other through names linked once all exist.
@@ -283,9 +283,9 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
       }).catch(error => console.error(error));
     }
     if (world.container) {
-      Promise.resolve(createHud({ container: world.container, onAction: () => act(), onNext: () => next(), onAuto: value => setAuto(value),
+      Promise.resolve(createHud({ container: world.container, onAction: () => act(), onNext: () => {if(ctl.wave===current)next();}, onAuto: value => {if(ctl.wave===current)setAuto(value);},
         onPromptHold: held => { ctl.holdPrompt = held === true; },
-        onHold: () => { try { toggleHold?.(); } catch (error) { console.error(error); } },
+        onHold: () => {if(ctl.wave!==current || current.info.nativeShared && !controls(current))return;try { toggleHold?.(); } catch (error) { console.error(error); } },
         onShoot: held => { ctl.shootHeld = held === true; if (held) ctl.shootPressed = true; },
         onRangePreview: value => { ctl.rangePreview = value === true; },
         ...(inspectDefenses ? {inspectDefenses: {
@@ -314,6 +314,11 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
 
   return {
     start, update,
+    stopIfOriginChanged(economy){
+      const next=readEconomy(economy),current=ctl.wave;
+      if(!current?.info.nativeShared || !next || sameEconomyScope(current.info.initialSnapshot.economy,next))return false;
+      stop();return true;
+    },
     openDefenseInspection,
     closeDefenseInspection: () => closeDefenseInspection(ctl.wave, true),
     get canInspectDefense() { return !!canInspect(ctl.wave); },
@@ -337,7 +342,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     fire: (cannonId, targetId) => submit({ type: 'fire', cannonId, targetId }),
     syncCaptains:()=>ctl.syncCaptains(),
     shoot, aim: point => aimAt(point, null), next, setAuto,
-    get auto() { return ctl.auto; },
+    get auto() { return ctl.wave?.info.nativeShared?getSessionSettings()?.autoNext===true:ctl.auto; },
     get runLoot() { return ctl.runLoot; },
     get inBreak() { return !!ctl.wave?.pause; },
     // Captain health (GAME-V3.md §3): your captain in the sim ({id, x, z, hp, maxHp, down, ...} or null),
