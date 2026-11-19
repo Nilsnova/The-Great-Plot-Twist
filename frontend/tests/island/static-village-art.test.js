@@ -1,6 +1,6 @@
 import {afterEach, expect, it, vi} from 'vitest';
 import * as THREE from 'three';
-vi.mock('../../src/art/village-families.js', async () => ({villageFamilies: [await import('../../src/art/village/landmarks.js'), await import('../../src/art/village/services.js')]}));
+vi.mock('../../src/art/village-families.js', async () => ({villageFamilies: [await import('../../src/art/village/landmarks.js'), await import('../../src/art/village/services.js'), await import('../../src/art/village/houses.js')]}));
 vi.mock('../../src/art/textures.js', async () => { const T = await import('three'); return {frameCanvas: () => ({}), smoothTexture: () => new T.Texture(), spriteMaterial: map => new T.MeshBasicMaterial({map})}; });
 vi.mock('../../src/island/decorations.js', () => ({decorateProgress: () => ({apply() {}, dispose() {}})}));
 vi.mock('../../src/island/structure-recovery-indicators.js', () => ({createStructureRecoveryIndicators: () => ({setState() {}, update() {}, dispose() {}})}));
@@ -59,6 +59,37 @@ it('fits the decorative cottages and live bell around accepted persistent placem
   expect(hasCottage(east)).toBe(true); expect(blocked(east)).toBe(true);
   expect(place.colliders.find(item => item.spotId === 'cannon_1')).toMatchObject(SOUTH_BELL);
   drawing.dispose();
+});
+
+it('reveals approaching boarders through one cottage and restores its shared artwork', async () => {
+  const load = async ids => Object.fromEntries(ids.map(id => [id, material()]));
+  const [west, east] = HOME_COTTAGES;
+  let boarders = [{x: west.x, z: west.z - west.d / 2 - 1, hp: 6}];
+  const {drawing} = start(load, {smugglersBoarders: () => boarders});
+  await flush();
+  const cottage = drawing.root.getObjectByName(west.id), neighbor = drawing.root.getObjectByName(east.id);
+  const original = cottage.material;
+  expect(neighbor.material).toBe(original);
+  drawing.update(0);
+  expect(cottage.material).toBe(original);
+
+  drawing.apply({...state(), battle: true});
+  drawing.update(0);
+  const faded = cottage.material, dispose = vi.spyOn(faded, 'dispose');
+  expect(faded).not.toBe(original);
+  expect(faded.opacity).toBeLessThan(.5);
+  expect(neighbor.material).toBe(original);
+  expect(original.opacity).toBe(1);
+
+  boarders[0].hp = 0;
+  drawing.update(0);
+  expect(cottage.material).toBe(original);
+  boarders[0].hp = 6;
+  drawing.update(0);
+  expect(cottage.material).toBe(faded);
+  drawing.dispose();
+  expect(cottage.material).toBe(original);
+  expect(dispose).toHaveBeenCalledOnce();
 });
 
 it('reports main artwork failure, coalesces actual retries and clears the failure only after success', async () => {

@@ -292,6 +292,22 @@ export function decorateIsland(place, ctx = {}) {
     staticArt.track(mesh, 'island-house');
     return {site, mesh};
   }) : [];
+  function revealCottageApproach(boarders) {
+    for (const cottage of cottages) {
+      const {site, mesh} = cottage;
+      // The northern approach is unchanged. Make a pirate near the cottage readable through its roof.
+      // Wait for the authored art to load before cloning the shared material.
+      const obscured = mesh.visible && mesh.userData.art && boarders?.some(({x, z, hp}) => hp > 0
+        && Math.abs(x - site.x) <= site.w / 2 + .8
+        && z >= site.z - site.d / 2 - 1.25 && z <= site.z + site.d / 2);
+      if (obscured && !cottage.faded) {
+        cottage.opaque = mesh.material;
+        cottage.faded = mesh.material.clone();
+        cottage.faded.opacity = .28;
+      }
+      if (cottage.faded) mesh.material = obscured ? cottage.faded : cottage.opaque;
+    }
+  }
   let bellPosition = BELL;
   function updateScenery(spots) {
     if (!bell || layout.zones !== islandZones) return;
@@ -778,6 +794,7 @@ export function decorateIsland(place, ctx = {}) {
     update(dt, time = 0, paused = false) {
       if (disposed) return;
       refreshTowerColliders();
+      revealCottageApproach(state.battle ? ctx.smugglersBoarders?.() : null);
       notice.update();
       const selection = preview ? null : ctx.selection?.();
       const portraitDepth = ctx.camera?.userData.homePortraitDepth ?? 1;
@@ -829,6 +846,8 @@ export function decorateIsland(place, ctx = {}) {
     dispose() {
       if (disposed) return; disposed = true; cleanups.splice(0).forEach(stop => stop());
       place.colliders.splice(0, place.colliders.length, ...baseColliders);
+      revealCottageApproach(null);
+      for (const cottage of cottages) cottage.faded?.dispose();
       tasks.dispose(); notice.dispose(); staticArt.dispose();
       progress?.dispose(); recoveryIndicators.dispose();
       wallConnections.dispose(); selectionBracket.dispose(); foundations?.dispose();
