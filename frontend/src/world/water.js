@@ -172,8 +172,7 @@ void main(){
     colour=mix(colour,uDeep,max(contact*.24,rockShore*stoneShelf*mix(.25,.51,lee)));
     shoreLight=mix(shoreLight,mix(.49,.85,1.0-lee),rockShore*.52);
   }
-  // Curled noise contours break up highlights without two crossing families of periodic lines.
-  // The entire extra material branch is disabled by the existing low-quality uniform.
+  // Skip the surface lighting and fine contours in low quality.
   if(uDetail>.5){
     vec2 drift=vec2(t*(.06+uWind*.06),-t*.045);
     float curl=pxNoise(p*.42+drift), coarse=pxNoise(p*.19-drift);
@@ -187,32 +186,38 @@ void main(){
     colour=mix(colour,uDeep,(1.0-broad)*.09);
     colour=mix(colour,uLight,sheen*.05);
     // Reserve the brightest surface strokes for the shallows. Broad swells still show offshore depth.
-    colour=mix(colour,uStroke,crest*mix(.16,.10,depth)*mix(1.0,.46,uHomeCoast));
+    colour=mix(colour,uStroke,crest*mix(.16,.10,depth)*mix(1.0,.22,uHomeCoast));
     vec2 q=p*2.2+vec2(broad,pxNoise(p*.65-drift))*.8;
     float cells=pxNoise(q+drift)+pxNoise(q*1.95-drift)*.2;
     float caustic=(1.0-band(abs(cells-.6),.02))*smoothstep(.6,1.2,d)*(1.0-smoothstep(1.5,3.0,d));
     colour=mix(colour,uShallow2,caustic*mix(.12,.07,uHomeCoast));
     if(uHomeCoast>.5){
-      // Broad blue-green faces carry the swells. The light breaks into short flecks as
-      // it moves offshore so the brighter wash still follows the shape of the island.
-      vec2 current=vec2(.32*p.x-.16*p.y, 1.37*p.y+.25*p.x);
-      float phase=current.y+curl*1.85+sin(current.x-t*.24)*.92-t*.67;
-      float front=sin(phase), slope=cos(phase);
-      float field=smoothstep(.28,.72,coarse+curl*.17);
-      float face=smoothstep(.40,.98,front)*field;
-      float trough=smoothstep(.14,.99,-front)*field;
-      colour=mix(colour,uDeep,trough*.14*offshore);
-      colour=mix(colour,uLight,face*.19*offshore);
-      float rim=(1.0-band(abs(front-.79),.088))*smoothstep(.08,.69,slope);
-      float spray=smoothstep(.38,.73,ripple+curl*.14)*smoothstep(.32,.66,curl);
-      float nearLight=mix(.49,.15,smoothstep(2.2,10.0,d));
-      colour=mix(colour,mix(uStroke,uFoam,.24),rim*field*spray*nearLight*offshore);
-      float reflection=(1.0-band(abs(front-.37),.055))*smoothstep(.24,.77,slope);
-      colour=mix(colour,uStroke,reflection*field*spray*.10*offshore);
-      // Soft aqua lace under the near water, visible through the shelf rather than on the grass.
-      float lace=(1.0-band(abs(cells-.66),.034))*smoothstep(.51,.76,coarse);
-      float litShelf=smoothstep(.33,1.1,d)*(1.0-smoothstep(2.4,5.2,d))*smoothstep(.50,.78,broad);
-      colour=mix(colour,uShallow2,lace*litShelf*.34);
+      // Cross swells give the surface lit slopes and dark troughs. Breaking the
+      // reflected light into patches keeps the offshore marks from forming stripes.
+      vec2 current=vec2(.94*p.x-.2*p.y,p.y+.23*p.x);
+      float run=sin(current.x*.18+coarse*1.5-t*.26);
+      float longWave=current.y*1.12+run*1.7+curl*.78-t*(.79+uWind*.41);
+      float shortWave=current.y*2.64-current.x*.69+curl*1.49-t*.98;
+      float height=sin(longWave)*.73+sin(shortWave)*.27;
+      float slope=cos(longWave)*.65+cos(shortWave)*.35;
+      float field=smoothstep(.21,.73,coarse+curl*.15);
+      float face=smoothstep(.11,.73,height)*smoothstep(-.3,.88,slope);
+      float trough=smoothstep(.17,.84,-height);
+      colour=mix(colour,uDeep,trough*(.11+field*.14)*offshore);
+      colour=mix(colour,uLight,face*(.08+field*.28)*offshore);
+      float ridge=(1.0-band(abs(height-.71),.044))*smoothstep(.07,.66,slope);
+      float spray=smoothstep(.41,.73,ripple+curl*.19)*smoothstep(.26,.74,field);
+      float nearLight=mix(.62,.27,smoothstep(1.8,12.0,d));
+      colour=mix(colour,mix(uStroke,uFoam,.31),ridge*spray*nearLight*offshore);
+      float afterglow=(1.0-band(abs(height-.49),.091))*smoothstep(.3,.87,slope);
+      colour=mix(colour,uStroke,afterglow*spray*.14*offshore);
+
+      // Submerged stone and narrow refracted marks sit beneath the white breaking water.
+      float shelf=smoothstep(.28,1.0,d)*(1.0-smoothstep(2.3,5.5,d));
+      float submerged=smoothstep(.57,.91,cells)*rockShore*shelf;
+      colour=mix(colour,mix(uMid,uDeep,.46),submerged*.26);
+      float lace=(1.0-band(abs(cells-.66),.025))*smoothstep(.44,.8,coarse);
+      colour=mix(colour,uShallow2,lace*shelf*smoothstep(.39,.79,broad)*.20);
     }
   }
   // The close edge is still in low quality; its extra movement and broken surf are high-only.
@@ -267,8 +272,8 @@ void main(){
 
 export function createWater(scene) {
   const colours = { uDeep: '#07566e', uMid: '#087f96', uLight: '#3dbdc9', uShallow: '#38c9b5', uShallow2: '#8be2c5', uFoam: '#f4fffa', uGlint: '#e6fff5', uStroke: '#63cfd6' };
-  const homeColours = {...colours, uDeep: '#075b74', uMid: '#088fa5', uLight: '#3dd0d3',
-    uShallow: '#27cfb5', uShallow2: '#a1e8d4', uFoam: '#f4fff5', uStroke: '#74e2e6'};
+  const homeColours = {...colours, uDeep: '#07546d', uMid: '#078fa5', uLight: '#39cdd8',
+    uShallow: '#26cbb5', uShallow2: '#a2e9d6', uFoam: '#f4fff5', uStroke: '#87e8e8'};
   const uniforms = { ...seaUniforms, uHomeCoast: {value: 0} };
   for (const [key, value] of Object.entries(colours)) uniforms[key] = { value: new THREE.Color(value) };
   const material = new THREE.ShaderMaterial({ uniforms, vertexShader: worldVertex, fragmentShader: fragment,

@@ -1,6 +1,7 @@
 import {BufferAttribute, BufferGeometry, DoubleSide, DynamicDrawUsage, Group, Mesh, MeshBasicMaterial, PlaneGeometry, ShaderMaterial, Vector3} from 'three';
 import {MOORING_EYES} from '../../art/home-shore.js';
 import {artSizes} from '../art.js';
+import {seaGlsl, seaUniforms} from '../water.js';
 import {createHomeLanding} from './home-landing.js';
 
 const SEGMENTS = 12;
@@ -29,16 +30,19 @@ function strand(rope, color, order, opacity) {
 }
 
 function hullRipples(root, x, waterline) {
-  const uniforms = {uWakePhase: {value: 0}, uWakeNight: {value: 0}};
+  const uniforms = {...seaUniforms, uWakePhase: {value: 0}, uWakeNight: {value: 0}};
   const material = new ShaderMaterial({uniforms, transparent: true, depthTest: false, depthWrite: false, toneMapped: false,
     vertexShader: /* glsl */`
-      varying vec2 vWaterUv;
+      varying vec2 vWaterUv, vWorld;
       void main() {
         vWaterUv = uv;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        vec4 world = modelMatrix * vec4(position, 1.0);
+        vWorld = world.xy;
+        gl_Position = projectionMatrix * viewMatrix * world;
       }`,
     fragmentShader: /* glsl */`
-      varying vec2 vWaterUv;
+      ${seaGlsl}
+      varying vec2 vWaterUv, vWorld;
       uniform float uWakePhase, uWakeNight;
 
       float crest(float age) {
@@ -52,9 +56,16 @@ function hullRipples(root, x, waterline) {
       }
 
       void main() {
-        float foam = max(crest(fract(uWakePhase)), .64 * crest(fract(uWakePhase + .5)));
-        vec3 waterTint = mix(vec3(.52, .91, .81), vec3(.08, .29, .35), uWakeNight);
-        gl_FragColor = vec4(waterTint, foam * .46);
+        float shore = smoothstep(.32, 1.6, coastDistance(vWorld));
+        float ripple = uDetail > .5 ? max(crest(fract(uWakePhase)), .64 * crest(fract(uWakePhase + .5))) : 0.0;
+        // The hull darkens the water under its resting depth, with a short reflection just ahead of it.
+        vec2 reflectionUv = vWaterUv - vec2(.51, .71);
+        reflectionUv.x += sin(vWaterUv.y * 15.0 + uWakePhase * 3.14) * .028 * uDetail;
+        float shade = 1.0 - smoothstep(.36, 1.0, length(reflectionUv * vec2(2.7, 2.28)));
+        float lit = ripple * mix(.52, .25, uWakeNight);
+        vec3 waterTint = mix(vec3(.38, .79, .68), vec3(.08, .29, .35), uWakeNight);
+        vec3 hullTint = mix(vec3(.028, .17, .15), vec3(.012, .062, .084), uWakeNight);
+        gl_FragColor = vec4(mix(hullTint, waterTint, smoothstep(.05, .35, lit)), max(shade * .24, lit) * shore);
         #include <colorspace_fragment>
       }`,
   });
@@ -123,6 +134,7 @@ export function makeMooring(root, bollard, skiff) {
         skiff.position.y = restY + swell * (.068 + wind * .046);
         skiff.rotation.z = Math.sin(time * 1.7 - .86) * (.027 + wind * .012);
       }
+      contact.position.x = skiff.position.x;
       resting = still;
     },
   };

@@ -3,7 +3,7 @@ import {surfaceClass} from './places/surfaces.js';
 import {projectGround} from './projection.js';
 
 const CAST_X = .66, CAST_Z = Math.sqrt(1 - CAST_X * CAST_X);
-const CAST_SHADE = new THREE.Color('#344127'), CONTACT_SHADE = new THREE.Color('#2b2f1d');
+const CAST_SHADE = new THREE.Color('#293e29'), CONTACT_SHADE = new THREE.Color('#3b3425');
 const OUTLINE = Array.from({length: 16}, (_, index) => index * Math.PI / 8);
 const roundedCorner = value => Math.sign(value) * Math.abs(value) ** .71;
 
@@ -37,15 +37,15 @@ export function appendGroundShadow(vertex, indices, {x, z, width, depth, reach, 
   }
 
   // The contact hugs the existing foot. The high part of a roof or canopy projects southeast.
-  const center = reach * .62, length = reach * .66 + depth * .4, breadth = width * .94 + .16;
-  gradient(x + center * CAST_X, z + center * CAST_Z, CAST_SHADE, .43, .3, .67, angle => {
+  const center = reach * .68, length = reach * .62 + depth * .27, breadth = width * .86 + .09;
+  gradient(x + center * CAST_X, z + center * CAST_Z, CAST_SHADE, .46, .27, .8, angle => {
     const u = Math.cos(angle), v = Math.sin(angle);
     const crown = canopy ? 1 + Math.cos(5 * angle) * .08 : 1;
     const along = length * (canopy ? u : roundedCorner(u)) * crown;
     const across = breadth * (canopy ? v * (.85 + .14 * u) : roundedCorner(v)) * crown;
     return [CAST_X * along - CAST_Z * across, CAST_Z * along + CAST_X * across];
   });
-  gradient(x, z, CONTACT_SHADE, .5, .33, .58, angle => [width * Math.cos(angle), depth * Math.sin(angle)]);
+  gradient(x, z, CONTACT_SHADE, .57, .39, .69, angle => [width * Math.cos(angle), depth * Math.sin(angle)]);
 }
 
 export function createGroundShadows(group, shadows) {
