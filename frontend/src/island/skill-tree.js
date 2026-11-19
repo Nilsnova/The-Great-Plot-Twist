@@ -114,7 +114,7 @@ function branchTabs(branches, current, label, choose) {
 }
 
 // The detail panel: the picked tile big, its one line in numbers, why not (if so), and ONE big button.
-function detailPanel(className, {id, icon, state, name, sub, line: text, note, reason}, act, kit) {
+function detailPanel(className, {id, icon, state, name, sub, line: text, note, reason, context}, act, kit) {
   const detail = node('div', `island-skill-detail ${className} is-${state}`); detail.setAttribute('aria-live', 'polite');
   const head = node('div', 'island-skill-detail-head');
   const disc = node('span', 'island-node-icon', glyph(id, icon)); disc.setAttribute('aria-hidden', 'true');
@@ -124,7 +124,9 @@ function detailPanel(className, {id, icon, state, name, sub, line: text, note, r
   const why = kit.line('island-reason', reason);
   if (reason) { why.id = `island-reason-${className}`; act.setAttribute('aria-describedby', why.id); }
   act.classList.add('island-primary');
-  detail.append(head, kit.line('island-skill-line', text), kit.line('island-skill-note', note), why, act);
+  detail.append(head, kit.line('island-skill-line', text));
+  if (context) detail.append(context);
+  detail.append(kit.line('island-skill-note', note), why, act);
   return detail;
 }
 
@@ -219,6 +221,60 @@ function respecPart(respec, on, kit) {
 // --- the Tech hub (GAME-V3.md §5.1): one tree per tower kind, tier 1 at the root, tiers 2 and 3 a fork of two ---
 const TECH_VISUAL = {done: 'learned', chosen: 'learned', open: 'ready', locked: 'locked', closed: 'closed'};
 const TECH_WORD = {done: 'researched', chosen: 'chosen by your crew', open: 'can research', locked: 'locked', closed: 'closed'};
+const spotNumber = id => `#${id.split('_').at(-1)}`;
+
+function capstoneComparison({current, alternative, equippedIds, researchPrice, equipPrice}) {
+  const compare = node('section', 'island-capstone-compare');
+  compare.setAttribute('aria-label', 'Capstone comparison');
+  const choices = node('div', 'island-capstone-choices');
+  for (const [label, choice, cost] of [['Current', current, null], ['Other choice', alternative, researchPrice]]) {
+    const card = node('div', 'island-capstone-choice');
+    const price = node('p', 'island-capstone-price', cost ? 'Research · ' : 'Researched');
+    if (cost) price.append(node('span', 'island-capstone-cost', cost));
+    card.append(node('p', 'island-capstone-label', label), node('strong', '', choice.name), node('p', '', choice.line), price);
+    choices.append(card);
+  }
+  const loss = equippedIds === null ? 'Checking tower skills…' : equippedIds.length
+    ? `A switch removes ${current.name} from ${equippedIds.map(spotNumber).join(', ')}.`
+    : `${current.name} is equipped on 0 buildings.`;
+  const equip = node('p', 'island-capstone-equip', 'Equip the new capstone for ');
+  equip.append(node('span', 'island-capstone-cost', equipPrice), ' per defense after research.');
+  compare.append(choices, node('p', 'island-capstone-loss', loss), equip);
+  return compare;
+}
+
+function researchContext(row, effect, view, kit) {
+  const {ids, kind, tree} = row.scope;
+  const scope = node('div', 'island-tech-scope');
+  const count = ids?.length;
+  const label = count === undefined ? 'Defense list loading.' : count === 0 ? `No ${kind}s built here yet.`
+    : `${count} built ${kind}${count === 1 ? '' : 's'} · ${ids.map(spotNumber).join(', ')}`;
+  const buildings = node('p', 'island-tech-buildings', label);
+  if (ids) buildings.dataset.spotIds = ids.join(' ');
+  const explanation = [effect, tree ? 'Tower upgrade paths are separate.' : ''].filter(Boolean).join(' ');
+  scope.append(buildings);
+  if (explanation) scope.append(node('p', '', explanation));
+  if (count && view.find) {
+    const controls = node('div', 'island-tech-find');
+    const picker = node('select');
+    picker.setAttribute('aria-label', 'Defense to find');
+    picker.dataset.focus = 'tech-find-choice';
+    for (const id of ids) {
+      const option = node('option', '', `${row.short} ${spotNumber(id)}`);
+      option.value = id;
+      picker.append(option);
+    }
+    if (ids.includes(view.findSpot)) picker.value = view.findSpot;
+    const go = kit.button('Find', () => view.find(picker.value, row.branch), true);
+    go.dataset.focus = 'tech-find-defense';
+    const label = () => go.setAttribute('aria-label', `Find ${picker.selectedOptions[0].textContent}`);
+    picker.addEventListener('change', () => { view.rememberFind(picker.value); label(); });
+    label();
+    controls.append(picker, go);
+    scope.append(controls);
+  }
+  return scope;
+}
 
 export function drawTech(body, model, view, kit) {
   const part = node('div', 'island-tech island-tree-card');
@@ -262,9 +318,14 @@ export function drawTech(body, model, view, kit) {
     act.dataset.focus = go ? `research-${option.id}` : 'research-none';
     act.disabled = go ? go.disabled : true;
     if (go) act.setAttribute('aria-label', go.aria);
-    const sub = `${row.short ?? row.name} · tier ${tier.tier}${tier.fork ? ' · pick one of two' : ''}`;
+    const progression = ['Skill unlock', 'Island bonus', 'Capstone unlock'][tier.tier - 1];
+    const sub = `${row.short ?? row.name} · tier ${tier.tier} · ${progression}`;
+    const context = document.createDocumentFragment();
+    if (tier.capstone) context.append(capstoneComparison(tier.capstone));
+    context.append(researchContext(row, tier.capstone ? '' : option.scopeLine, view, kit));
     part.append(detailPanel('island-tech-detail', {id: tier.tier === 1 ? row.branch : option.id, state: TECH_VISUAL[option.state] ?? 'locked', name: option.name, sub,
-      line: recoveryTechLine(option.id, option.line, model.recoveryVersion), note: option.note,
+      line: tier.capstone ? '' : recoveryTechLine(option.id, option.line, model.recoveryVersion), note: tier.capstone ? '' : option.note,
+      context,
       reason: go ? go.reason : option.state === 'locked' ? tier.reason : ''}, act, kit));
     focusable = !act.disabled && !go?.action.change ? act : null;
   }

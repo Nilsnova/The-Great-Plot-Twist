@@ -4,17 +4,25 @@ export const REPORT_STRUCTURE_LIMIT = 64;
 const amount = value => typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : 0;
 const plus = (a, b) => Math.round((a + b) * 100) / 100;
 
+export function reportSite(structures = []) {
+  const sites = structures.filter(row => row.taken > 0 && [row.x, row.z].every(Number.isFinite));
+  const priority = row => row.breaks ? (row.kind === 'wall' ? 2 : 1) : 0;
+  return sites.sort((a, b) => priority(b) - priority(a) || b.taken - a.taken)[0] ?? null;
+}
+
 export function createDefenseReport() {
   let current = null, last = null;
-  function begin({waveId, wave, context, recovery = false} = {}, defenses = []) {
+  function begin({waveId, wave, context, recovery = false, navigation = null} = {}, defenses = []) {
     if (typeof waveId !== 'string' || !waveId || current?.waveId === waveId) return;
     if (current && !current.ended) { current.ended = true; last = current; }
-    current = {waveId, wave, context, recovery, ended: false, partial: true, reason: null, heartDamage: 0,
+    current = {waveId, wave, context, recovery, navigation: navigation && {...navigation},
+      ended: false, partial: true, reason: null, heartDamage: 0,
       payout: {status: 'pending', coins: null}, structures: new Map()};
     for (const item of defenses) {
       if (current.structures.size >= REPORT_STRUCTURE_LIMIT) break;
       if (!KINDS.has(item?.kind) || typeof item.id !== 'string') continue;
       current.structures.set(item.id, {id: item.id, kind: item.kind, x: item.x, z: item.z,
+        instanceId: typeof item.instanceId === 'string' ? item.instanceId : null,
         taken: 0, dealt: 0, breaks: 0, broken: false});
     }
   }
@@ -54,7 +62,8 @@ export function createDefenseReport() {
     clear() { current = null; last = null; },
     read(context) {
       if (!last || last.context !== context) return null;
-      return {...last, payout: {...last.payout}, structures: [...last.structures.values()].map(item => ({...item}))};
+      return {...last, navigation: last.navigation && {...last.navigation}, payout: {...last.payout},
+        structures: [...last.structures.values()].map(item => ({...item}))};
     },
   };
 }

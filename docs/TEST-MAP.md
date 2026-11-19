@@ -332,6 +332,12 @@ and [results, screenshots and manual checkpoints](evidence/T28/README.md).
 
 COC-39 ownership follow-up: `frontend/tests/pirates/defense-report-ownership.test.js` uses the actual running game with a local fake island and standard-mapped gamepad. Window-level keyboard state and analog input cannot move the captain while `waves.reportActive` owns both global overlay guards; closing restores motion. Isolated result:1 passed /14.34s. The report still does not pause canonical wave ticking.
 
+## BASE-40 — Battle report to village
+
+- `frontend/tests/pirates/defense-report.test.js` verifies that an observed wall break wins over ordinary hits and keeps the accepted wave position.
+- `frontend/tests/pirates/defense-report-dom.test.js` checks desktop and phone layouts, current payout updates, keyboard focus, incomplete reports and canceling a pending location search when a new wave begins.
+- `frontend/tests/island/report-site-game.test.js` uses the real village controller and controlled recovery reads to check existing and replacement instances, epoch mismatch, an active reservation, travel cancellation and zero purchase calls.
+
 ## COC-31 — Johannes: base overview
 
 | What / where | Evidence | Coverage and limits |

@@ -1,5 +1,5 @@
 import {describe, expect, it} from 'vitest';
-import {createDefenseReport, REPORT_STRUCTURE_LIMIT} from '../../src/pirates/defense-report.js';
+import {createDefenseReport, REPORT_STRUCTURE_LIMIT, reportSite} from '../../src/pirates/defense-report.js';
 import {reportEnding} from '../../src/pirates/defense-report-feature.js';
 import {mountPirates} from '../../src/pirates/index.js';
 import {wireWaves} from '../../src/pirates/game-wiring.js';
@@ -36,6 +36,19 @@ describe('local defense report', () => {
       {type: 'wall_damaged', wallId: 'wall_1', damage: 20, hp: 0}]); end(report);
     // Legacy ship shells report raw damage even when only 5 HP remained.
     expect(report.read('A').structures[0]).toMatchObject({taken: 30, breaks: 1});
+  });
+  it('uses the observed wall break and its frozen instance before suggesting a damaged tower', () => {
+    const report = createDefenseReport();
+    const frozen = {...defenses[0], instanceId: 'wall-instance'};
+    report.begin({waveId: 'w', context: 'A', navigation: {identity: 'there', epoch: 'epoch'}}, [frozen, defenses[1]]);
+    frozen.x = 500;
+    report.events([{type: 'wall_damaged', wallId: 'wall_1', damage: 20, hp: 0},
+      {type: 'tower_damaged', towerId: 'cannon_1', damage: 50, hp: 0}]); end(report);
+    const value = report.read('A');
+    expect(reportSite(value.structures)).toMatchObject({id: 'wall_1', x: 2, z: 3, instanceId: 'wall-instance'});
+    expect(value.navigation).toEqual({identity: 'there', epoch: 'epoch'});
+    expect(reportSite(value.structures.map(item => ({...item, x: null})))).toBe(null);
+    expect(reportSite([{...value.structures[0], taken: 0, breaks: 0, dealt: 20}])).toBe(null);
   });
   it('does not reset a duplicate start, and explicitly clears before rebuilding a replay', () => {
     const report = createDefenseReport(); start(report);

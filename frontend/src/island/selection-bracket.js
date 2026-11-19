@@ -31,7 +31,7 @@ export function makeSelectionBracket(root, {support = false} = {}) {
     mesh.name = padding ? 'selection-corner-outline' : 'selection-corner-brass';
     mesh.renderOrder = order; mesh.frustumCulled = false; mesh.raycast = () => {}; group.add(mesh); return mesh;
   });
-  let disposed = false, lastX = null, lastZ = null, lastSize = 2, structure = false;
+  let disposed = false, lastX = null, lastZ = null, lastSize = 2, structure = false, historical = false;
   return {show(anchor) {
     if (disposed) return;
     group.visible = !!anchor && Number.isFinite(anchor.x) && Number.isFinite(anchor.z);
@@ -47,6 +47,11 @@ export function makeSelectionBracket(root, {support = false} = {}) {
       // Deep foliage and the structure's own base still draw in front of its ground marker.
       meshes[0].renderOrder = structure && !support ? 69 : 94; meshes[0].material.opacity = structure ? .74 : .86;
       meshes[1].renderOrder = structure && !support ? 70 : 95; meshes[1].material.opacity = structure ? .88 : .98;
+    }
+    if ((anchor.positionOnly === true) !== historical) {
+      historical = anchor.positionOnly === true;
+      meshes[0].material.color.setHex(historical ? 0x164449 : 0x51351d);
+      meshes[1].material.color.setHex(historical ? 0xa5e2dc : 0xf9de95);
     }
     group.userData.spotId = anchor.spotId;
     group.userData.level = Number.isSafeInteger(anchor.level) && anchor.level > 0 ? anchor.level : null;

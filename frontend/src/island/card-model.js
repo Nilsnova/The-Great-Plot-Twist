@@ -14,6 +14,8 @@ import {towerTreeModel} from './tree-model.js';
 import {nextWaveNumber} from './preparation-model.js';
 import {buildStructureRecoveryView} from './structure-recovery-model.js';
 import {isRetiredCaptainSkill, recoveryTechLine} from '../campaign/captain-repair-policy.js';
+import {defenses, spotById} from './spots.js';
+import {TOWER_TREES} from '../pirates/tower-trees.js';
 
 // Coins always read "🪙 120" through formatCoins (BUILD-PLAN 3.2); an unknown amount reads "🪙 ?".
 export const coinText = n => (Number.isSafeInteger(n) ? formatCoins(n) : '🪙 ?');
@@ -378,9 +380,10 @@ export function harborModel({campaign = null} = {}) {
 //   branches: [{branch, name, tier, summary, folded, tiers: [{tier, state, fork, reason, nodes: [{id, name,
 //     line, state, note, button: {label, aria, disabled, reason, action: {branch, tier, choice, change}} | null}]}]}]
 //   tier state: done · next · locked;  node state: done · chosen · closed · open · locked
-export function techModel({campaign = null, coins = null, busy = null, message = '', battle = false, recoveryVersion = 0} = {}) {
+export function techModel({campaign = null, spots = null, towerPrices = null, coins = null, busy = null, message = '', battle = false, recoveryVersion = 0} = {}) {
   const open = isOpen(campaign, 'tech_hub');
   const sent = new Map((campaign?.research?.branches ?? []).map(item => [item?.branch, item]));
+  const installed = Array.isArray(spots) ? defenses(spots, campaign?.research?.tiers).filter(spot => spotById(spot.id)) : null;
   const busyKey = action => `${action.branch}:${action.tier}:${action.choice ?? ''}`;
   let next = null;
   const branches = Object.values(BRANCH_BY_ID).map(branch => {
@@ -388,6 +391,10 @@ export function techModel({campaign = null, coins = null, busy = null, message =
       : index === 0 && Number.isSafeInteger(sent.get(branch.branch)?.price) ? sent.get(branch.branch).price : price));
     const state = campaign?.research?.tiers?.[branch.branch] ?? readTier(branch.branch, campaign?.research?.done?.has(branch.branch) ? {tier: 1} : null);
     const kind = BUILDINGS[branch.branch].name.toLowerCase();
+    const built = installed?.filter(spot => spot.kind === branch.branch) ?? null;
+    const eligibleLookouts = built?.filter(spot => spot.spec === 'spotter' || spot.spec === 'signal_fire') ?? null;
+    const scope = {ids: built?.map(spot => spotById(spot.id).id) ?? null, kind, tree: !!TOWER_TREES[branch.branch],
+      eligibleLookouts: eligibleLookouts?.length ?? null};
     // Why a step cannot be taken now ('' when it can), and the button that takes it.
     const why = (tier, price) => {
       if (!open) return lockedLine('tech_hub');
@@ -414,28 +421,37 @@ export function techModel({campaign = null, coins = null, busy = null, message =
     tiers.push({tier: 1, state: first, fork: false, reason: first === 'locked' ? lockText(1) : '',
       nodes: [{id: `${branch.branch}-1`, name: 'Tower skills', line: availableSpecs.map(id => SPECS[id].name).join(' · '),
         state: first === 'done' ? 'done' : first === 'next' ? 'open' : 'locked',
-        note: first === 'done' ? `Every ${kind} here can pick one of them.` : '',
+        note: '', scopeLine: 'Unlocks a paid skill choice per defense.',
         button: first === 'next' ? act({branch: branch.branch, tier: 1, choice: null, change: false}, 'Research', branch.name) : null}]});
     // Tiers 2 and 3: a fork of two options.
     for (const tier of [2, 3]) {
       const picked = tier === 2 ? state.tier2 : state.tier3, status = tierState(tier);
       const choices = optionsOf(branch.branch, tier).filter(id => recoveryVersion !== 1 || id !== 'mason_drill' || picked === id);
-      tiers.push({tier, state: status, fork: choices.length > 1, reason: status === 'locked' ? lockText(tier) : '',
-        nodes: choices.map(id => {
-          const name = optionName(id), base = {id, name, line: recoveryTechLine(id, optionLine(id), recoveryVersion)};
-          if (picked === id) return {...base, state: 'chosen', note: recoveryVersion === 1 && id === 'mason_drill'
-            ? 'Saved choice; it no longer affects repair.' : tier === 3 ? `Every ${kind} here can pick ${name}.` : 'Your crew chose this.', button: null};
-          if (picked) return {...base, state: 'closed', note: `Closed: your crew chose ${optionName(picked)}.`,
-            button: act({branch: branch.branch, tier, choice: id, change: true}, 'Change to it', name)};
-          if (status === 'next') return {...base, state: 'open', note: '', button: act({branch: branch.branch, tier, choice: id, change: false}, 'Pick', name)};
-          return {...base, state: 'locked', note: '', button: null};
-        })});
+      const nodes = choices.map(id => {
+        const retiredDrill = recoveryVersion === 1 && id === 'mason_drill';
+        const name = optionName(id);
+        let scopeLine = tier === 3 ? 'Each defense needs its own paid capstone pick.' : 'Research adds this bonus automatically.';
+        if (id === 'lookout_drill') scopeLine = `Requires Spotter or Signal Fire.${built?.length ? ` Equipped on ${scope.eligibleLookouts} of ${built.length}.` : ''}`;
+        if (retiredDrill) scopeLine = '';
+        const base = {id, name, line: recoveryTechLine(id, optionLine(id), recoveryVersion), scopeLine};
+        if (picked === id) return {...base, state: 'chosen', note: retiredDrill ? '' : 'Your crew chose this.', button: null};
+        if (picked) return {...base, state: 'closed', note: `Closed: your crew chose ${optionName(picked)}.`,
+          button: act({branch: branch.branch, tier, choice: id, change: true}, 'Change to it', name)};
+        if (status === 'next') return {...base, state: 'open', note: '', button: act({branch: branch.branch, tier, choice: id, change: false}, 'Pick', name)};
+        return {...base, state: 'locked', note: '', button: null};
+      });
+      const capstone = tier === 3 && picked && nodes.length === 2 ? {
+        current: nodes.find(node => node.id === picked), alternative: nodes.find(node => node.id !== picked),
+        equippedIds: built?.filter(spot => spot.spec === picked).map(spot => spotById(spot.id).id) ?? null,
+        researchPrice: coinText(prices[tier - 1]), equipPrice: coinText(skillPrice(branch.branch, picked, towerPrices)),
+      } : null;
+      tiers.push({tier, state: status, fork: choices.length > 1, reason: status === 'locked' ? lockText(tier) : '', nodes, capstone});
     }
     const step = tiers.find(item => item.state === 'next');
     if (step && !next) next = {branch: branch.branch, tier: step.tier,
       text: step.tier === 1 ? `Next: research ${branch.name.toLowerCase()} for ${coinText(prices[0])}.`
         : `Next: ${branch.name.toLowerCase()}, tier ${step.tier}. Pick one of two for ${coinText(prices[step.tier - 1])}.`};
-    return {branch: branch.branch, name: branch.name, short: BUILDINGS[branch.branch].name, tier: state.tier, folded: state.tier >= 1,
+    return {branch: branch.branch, name: branch.name, short: BUILDINGS[branch.branch].name, tier: state.tier, folded: state.tier >= 1, scope,
       summary: state.tier >= 1 ? `${branch.name} · tier ${state.tier} of ${TOP_TIER} ✓` : branch.name,
       prices: prices.map(coinText), tiers, next: !!step};
   });
