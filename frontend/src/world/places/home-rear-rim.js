@@ -17,7 +17,7 @@ const STONE_FOOT = '#83604a';
 const GRASS = ['#a4c54e', '#acc752', '#a8c54d', '#9ab64a'];
 const GRASS_LIP = '#89aa40', GRASS_EDGE = '#6d8532';
 const TERRACE_PLANTS = [
-  {section: 4, along: .44, depth: .51, asset: 'birch', size: .75},
+  {section: 3, along: .78, depth: .31, asset: 'birch', size: .66},
   {section: 5, along: .58, depth: .78, asset: 'rock', size: .51},
   {section: 6, along: .73, depth: .39, asset: 'shrub', size: .61},
   {section: 22, along: .8, depth: .51, asset: 'rock', size: .57},

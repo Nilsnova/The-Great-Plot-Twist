@@ -696,7 +696,7 @@ export function decorateIsland(place, ctx = {}) {
       refreshTowerColliders();
       notice.update();
       const selection = preview ? null : ctx.selection?.();
-      selectionBracket.show(selection);
+      selectionBracket.show(selection, (ctx.camera?.userData.homePortraitDepth ?? 1) > 1);
       wallConnections.select(state.battle || state.visitor ? null : selection?.spotId);
       let canopyTarget = null;
       if (selection?.kind && !state.battle && !state.visitor) {

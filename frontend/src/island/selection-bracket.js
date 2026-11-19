@@ -1,6 +1,7 @@
 // Brass corners on the selected building's ground footprint.
 import * as THREE from 'three';
 import {projectGround} from '../world/projection.js';
+import {groundGeometry} from '../world/ground-transform.js';
 
 function cornerGeometry(padding = 0) {
   const positions = [], indices = [], half = 1, arm = .56, width = .13;
@@ -31,8 +32,10 @@ export function makeSelectionBracket(root, {support = false} = {}) {
     mesh.name = padding ? 'selection-corner-outline' : 'selection-corner-brass';
     mesh.renderOrder = order; mesh.frustumCulled = false; mesh.raycast = () => {}; group.add(mesh); return mesh;
   });
-  let disposed = false, lastX = null, lastZ = null, lastSize = 2, structure = false, historical = false;
-  return {show(anchor) {
+  const corners = meshes.map(mesh => mesh.geometry);
+  let outline = null, disposed = false, lastX = null, lastZ = null, lastSize = 2;
+  let structure = false, historical = false, overview = false;
+  return {show(anchor, portrait = false) {
     if (disposed) return;
     group.visible = !!anchor && Number.isFinite(anchor.x) && Number.isFinite(anchor.z);
     if (!group.visible) { group.userData.spotId = null; group.userData.level = null; return; }
@@ -40,23 +43,32 @@ export function makeSelectionBracket(root, {support = false} = {}) {
       const p = projectGround(anchor.x, anchor.z); group.position.set(p.x, p.y, 0); lastX = anchor.x; lastZ = anchor.z;
     }
     const nextStructure = typeof anchor.kind === 'string' && anchor.kind !== 'wall';
-    const size = nextStructure && Number.isFinite(anchor.size) && anchor.size > 0 ? anchor.size : 2;
+    const nextOverview = portrait && !support && nextStructure && anchor.positionOnly !== true;
+    const newOutline = nextOverview !== overview;
+    const size = (nextStructure && Number.isFinite(anchor.size) && anchor.size > 0 ? anchor.size : 2) * (nextOverview ? 1.24 : 1);
     if (size !== lastSize) { group.scale.set(size / 2, size / 2, 1); lastSize = size; }
-    if (nextStructure !== structure) {
+    if (nextStructure !== structure || newOutline) {
       structure = nextStructure;
+      overview = nextOverview;
       // Deep foliage and the structure's own base still draw in front of its ground marker.
       meshes[0].renderOrder = structure && !support ? 69 : 94; meshes[0].material.opacity = structure ? .74 : .86;
-      meshes[1].renderOrder = structure && !support ? 70 : 95; meshes[1].material.opacity = structure ? .88 : .98;
+      meshes[1].renderOrder = structure && !support ? 70 : 95; meshes[1].material.opacity = structure && !overview ? .88 : .98;
+      if (overview && !outline) {
+        outline = [[.83, 1.14], [.89, 1.08]].map(([inside, outside]) =>
+          groundGeometry(new THREE.RingGeometry(inside, outside, 8, 1, Math.PI / 8)));
+      }
+      meshes.forEach((mesh, index) => { mesh.geometry = overview ? outline[index] : corners[index]; });
     }
-    if ((anchor.positionOnly === true) !== historical) {
+    if ((anchor.positionOnly === true) !== historical || newOutline) {
       historical = anchor.positionOnly === true;
       meshes[0].material.color.setHex(historical ? 0x164449 : 0x51351d);
-      meshes[1].material.color.setHex(historical ? 0xa5e2dc : 0xf9de95);
+      meshes[1].material.color.setHex(historical ? 0xa5e2dc : overview ? 0xfff3bd : 0xf9de95);
     }
     group.userData.spotId = anchor.spotId;
     group.userData.level = Number.isSafeInteger(anchor.level) && anchor.level > 0 ? anchor.level : null;
   }, dispose() {
     if (disposed) return; disposed = true; group.visible = false; group.removeFromParent();
-    for (const mesh of meshes) { mesh.geometry.dispose(); mesh.material.dispose(); }
+    for (const geometry of [...corners, ...(outline ?? [])]) geometry.dispose();
+    for (const mesh of meshes) mesh.material.dispose();
   }};
 }
