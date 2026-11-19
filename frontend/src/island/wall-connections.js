@@ -58,6 +58,7 @@ export function makeWallConnections(root, {purchaseLight = null} = {}) {
         geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3)); geometry.setIndex(indices);
         const mesh = new THREE.Mesh(geometry, material); mesh.name = `wall-art-layer:${order}`;
         mesh.renderOrder = order; mesh.frustumCulled = false; mesh.raycast = () => {}; group.add(mesh);
+        if (purchaseLight) mesh.onBeforeRender = (_renderer, _scene, camera) => purchaseLight.setPortraitDepth(camera.userData.homePortraitDepth);
         if (selectedPost !== undefined) selectedCanopyTarget = {mesh, firstVertex: selectedPost};
       }
       return current;
