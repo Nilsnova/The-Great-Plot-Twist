@@ -39,6 +39,7 @@ import {defenseDisplayAnchors} from '../island/defense-display.js';
 import {makeDefenseRange} from '../island/defense-range.js';
 import {makeSelectionBracket} from '../island/selection-bracket.js';
 import {createActorContacts} from '../world/actor-contact.js';
+import {paintSailingWake, SAILING_WAKE} from '../art/fleet-wake.js';
 
 const UNIT = 16;
 const facingTo = item => projectGroundVector(item.toX - item.x, (item.toZ ?? item.z ?? 0) - (item.z ?? 0)).x < 0 ? -1 : 1;
@@ -181,12 +182,18 @@ export async function loadAtlas({ quality = 'high', colour = 0, towerStates = fa
   const ids = [...new Set([...ATLAS_IDS.filter(id => !PIXEL_ONLY_IDS.includes(id)), ...CARTOON_EXTRA_IDS, ...TIER_IDS, ...WALL_ATLAS_IDS, ...FIRE_LEVEL_IDS, ...HARPOON_IDS, ...GUNBOAT_IDS,
     ...(towerStates ? TOWER_STATE_IDS : []), ...(culverins ? CULVERIN_IDS : []), ...(culverins && towerStates ? CULVERIN_STATE_IDS : []),
     ...(swivels ? SWIVEL_IDS : []), ...(swivels && towerStates ? SWIVEL_STATE_IDS : []), ...MARK_ATLAS_IDS])];
-  const extra = [[WHITE, 8, 8]];
+  const extra = [[WHITE, 8, 8], [SAILING_WAKE.id, SAILING_WAKE.width, SAILING_WAKE.height]];
   if (towerStates) extra.push([HEALTH_BADGE, RECOVERY_BADGE.width, RECOVERY_BADGE.height],
     [RUIN_BADGE, RECOVERY_BADGE.width, RECOVERY_BADGE.height]);
   const atlas = await cartoonAtlas(ids, { quality, extra });
   const white = atlas.rects[WHITE], context = atlas.image.getContext('2d');
   context.fillStyle = '#fff'; context.fillRect(white.x * atlas.density, white.y * atlas.density, white.w * atlas.density, white.h * atlas.density);
+  const wake = atlas.rects[SAILING_WAKE.id];
+  context.save();
+  context.translate(wake.x * atlas.density, wake.y * atlas.density);
+  context.scale(atlas.density, atlas.density);
+  paintSailingWake(context);
+  context.restore();
   if (towerStates) {
     for (const id of [HEALTH_BADGE, RUIN_BADGE]) {
       const { x, y } = atlas.rects[id];
@@ -464,10 +471,12 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   function shipMeta(id, kind, x, z, toX, toZ) {
     let meta = ships.get(id);
     if (!meta) {
-      const at = projectGround(x, z), dx = projectGround(toX ?? 0, toZ ?? 0).x - at.x;
+      const heading = projectGroundVector((toX ?? 0) - x, (toZ ?? 0) - z), dx = heading.x;
+      const at = projectGround(x, z);
       const facing = Math.abs(dx) > .5 ? (dx < 0 ? -1 : 1) : (at.x > 0 ? -1 : 1);
       let hash = 0; for (const char of id) hash = (hash * 31 + char.charCodeAt(0)) | 0;
-      meta = { kind, facing, phase: (hash >>> 0) % 997 / 997 * 4, flashUntil: -1, bornAt: clock };
+      meta = { kind, facing, wakeAngle: Math.atan2(heading.y, dx), x, z,
+        phase: (hash >>> 0) % 997 / 997 * 4, flashUntil: -1, bornAt: clock };
       ships.set(id, meta);
     }
     return meta;
@@ -752,11 +761,20 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     // A hit shows as a short warm flash, kept light so a ship under steady fire never turns white.
     const fadeIn = Math.min(1, (clock - meta.bornAt) / .6), flashing = clock < meta.flashUntil ? (ship.boss ? .2 : .3) : 0;
     const share = ship.maxHp > 0 ? Math.max(0, Math.min(1, ship.hp / ship.maxHp)) : 1, burning = ship.hp > 0 && share < 1 / 3;
-    // A wake behind a sailing ship: two pale strokes on the water.
+    // One painted wake per Home ship, aligned to the sailing route in the projected water plane.
     if (ship.state === 'sailing' && !low() && !still()) {
-      const back = -meta.facing * size.w * .45, wob = Math.floor(clock * 6 + meta.phase) % 2;
-      layer.push(rect[WHITE], x + back, y - .05, size.w * .28, .06, .5, 0, opt(.45 * fadeIn));
-      layer.push(rect[WHITE], x + back * 1.35 - wob * .1, y + .08, size.w * .18, .06, .5, 0, opt(.3 * fadeIn));
+      const wake = place === 'home_islet' ? rect[SAILING_WAKE.id] : null;
+      if (wake) {
+        const angle = meta.wakeAngle, wash = Math.sin(clock * 4.2 + meta.phase);
+        const stern = size.w * .26;
+        const height = size.w * (.22 + wash * .014);
+        layer.push(wake, x - stern * Math.cos(angle), y - stern * Math.sin(angle) - .10,
+          size.w * (.91 + wash * .045), height, .84, height * .5, opt(fadeIn * (.77 + wash * .08), null, false, 0, angle));
+      } else {
+        const back = -meta.facing * size.w * .45, wob = Math.floor(clock * 6 + meta.phase) % 2;
+        layer.push(rect[WHITE], x + back, y - .05, size.w * .28, .06, .5, 0, opt(.45 * fadeIn));
+        layer.push(rect[WHITE], x + back * 1.35 - wob * .1, y + .08, size.w * .18, .06, .5, 0, opt(.3 * fadeIn));
+      }
     }
     // A ship a harpoon (or Chain shot) holds back (GAME-V3.md §5): foam rings on the water around the hull, swelling
     // a little, and a small coil of rope over it. Cartoon-only: a pixel atlas has neither frame.
@@ -1183,7 +1201,14 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       }
       for (const ship of state.ships) {
         const at = smooth(ship);
-        drawShip(at, shipMeta(ship.id, ship.kind, at.x, at.z));
+        const meta = shipMeta(ship.id, ship.kind, at.x, at.z);
+        if (place === 'home_islet' && ship.state === 'sailing' && Math.hypot(ship.x - meta.x, ship.z - meta.z) > .08) {
+          const heading = projectGroundVector(ship.x - meta.x, ship.z - meta.z);
+          meta.wakeAngle = Math.atan2(heading.y, heading.x);
+          meta.x = ship.x;
+          meta.z = ship.z;
+        }
+        drawShip(at, meta);
       }
       for (const boarder of state.boarders ?? []) drawBoarder(smooth(boarder));
       for (const unit of state.militia ?? []) drawMilitia(unit);
