@@ -96,6 +96,12 @@ Stored participation survives withdrawal and later disconnect.
 
 Shared Captain state/checkpoints bind the accepted sealed journal frontier,
 normalized HP, fallen nonce/tick, position, cooldown state and revival basis.
+Revival uses the latest complete accepted helper/target prefix with an exact
+2000ms trusted-clock age bound, actual event/basis coverage and unchanged current
+fall/control/pose/life fences. Reader-only global seal progress neither renews
+nor invalidates that prefix. This explicit correction remains within the existing
+authenticated combat-report trust boundary; see
+[bounded revival freshness](MP-ECO-11-revival-checkpoint-freshness.md).
 Reconnect replays that same history. During absence the frozen Captain remains
 stationary and targetable until withdrawal; existing short presence timeouts
 cannot remove it. Authenticated combat reports retain the existing report trust

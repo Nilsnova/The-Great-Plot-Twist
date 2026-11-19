@@ -15,6 +15,7 @@ from psycopg.types.json import Jsonb  # noqa: E402
 
 from server.tests.island_sql.test_island_treasury_sql import keys, rpc  # noqa: E402
 from server.tests.island_sql.test_islands_and_waves_sql import as_owner, as_server  # noqa: E402
+from server.tests.island_sql.test_shared_session_revival_freshness_sql import fresh_report  # noqa: E402
 from server.tests.island_sql.test_shared_session_wave_sql import (  # noqa: E402
     bell,
     captain_report,
@@ -59,6 +60,7 @@ def test_fresh_basis_refuses_pre_revival_down_time_but_accepts_same_tick_fall(da
     )
     hold = accepted["accepted"][0]["payload"]["hold"]
     sleep(2.05)  # Real ordinary hold elapsed; no trusted timestamp is overwritten.
+    fresh_report(database, room, started, first_report)
     as_server(database)
     completed = rpc(
         database,
