@@ -140,6 +140,26 @@ The wave SQL module now explicitly registers the existing module-local `scratch_
 
 After the local fixture import, the identical one-process selection passed **45 tests in 9.46s**. The complete migration chain still applies twice; backend-wide Ruff and scoped whitespace checks passed. No global fixture, original assertion, production SQL or gameplay behavior changed. The preceding 163-case result remains the broader baseline before this test-only isolation correction.
 
+### Always-on catalogue integration
+
+Main `1350c2ba` retires the availability and wave-rule flags and always applies the runtime catalogue. The accounting Python, migration and financial-receipt regressions remain unchanged. The complete comparison against personal prerequisite `063aa3f5` now contains nine files, including one existing recovery HTTP/PostgreSQL compatibility module.
+
+Two existing recovery tests assumed that omitting the retired availability flags would remove extra spots and culverin offers. The same failures were reproduced on pure main `1350c2ba`: **2 failed in 4.08s**. The test setup now first asserts that the default runtime still includes extra spots and culverins, then explicitly supplies a narrower authoritative catalogue to exercise saved defenses removed from future offers. All previous stored-instance, frozen snapshot/join/current, repair receipt, wallet, unoffered-build refusal and no-extra-effect assertions remain. No production flag or old feature gate was restored.
+
+The corrected two-case selection passed **2 tests in 3.26s**. The affected selections below then passed with main `1350c2ba` integrated:
+
+```bash
+uv run --no-sync pytest -q server/tests/test_wave_economy.py server/tests/test_personal_captain.py server/tests/test_captain_progression_routes.py server/tests/test_economy_operations.py server/tests/test_island_treasury.py server/tests/test_island_treasury_store.py server/tests/test_wave_routes.py server/tests/test_wave_recovery_transport.py server/tests/test_island_routes.py server/tests/test_island_rules.py server/tests/test_structure_repair_rules.py server/tests/test_migration_versions.py server/tests/test_wave_rules.py server/tests/test_wave_rescue.py server/tests/test_defenses_v2.py server/tests/test_more_tower_spots.py server/tests/test_wall_recovery.py
+CASE_PG_SCRATCH=1 uv run --no-sync --with pgserver --with 'psycopg[binary]' --with pglast pytest -q server/tests/island_sql/test_wave_treasury_settlement_sql.py server/tests/island_sql/test_island_treasury_sql.py server/tests/island_sql/test_personal_captain_sql.py server/tests/island_sql/test_economy_operations_sql.py server/tests/island_sql/test_economy_operations_cutover_sql.py server/tests/island_sql/test_wave_crews_sql.py server/tests/island_sql/test_recovery_wave_end_sql.py server/tests/island_sql/test_structure_recovery_http_pg.py server/tests/island_sql/test_personal_captain_operations_sql.py server/tests/island_sql/test_islands_and_waves_sql.py
+uv run --no-sync ruff check .
+```
+
+- Python: **514 passed in 15.83s**, including current wave-route, rescue, rules, defenses, extra-spot and wall-recovery behavior.
+- PostgreSQL: **186 passed in 35.32s** in one process; the complete 75-migration chain applies twice. This includes the accounting credit-proof, module-isolation, personal/operation, legacy wave and recovery HTTP checks together.
+- Backend-wide Ruff, all **75 unique migration parses**, and scoped whitespace checks passed.
+
+This test-only compatibility correction changes no accounting code, price, reward or participation policy. Full backend/browser reruns, canonical live authority, deletion/conversion and authenticated shared-mode acceptance remain separate gates.
+
 ## Reviewer
 
-A different human teammate must review the current change before merge. Last updated: 2026-11-18.
+A different human teammate must review the current change before merge. Last updated: 2026-11-19.
