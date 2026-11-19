@@ -14,6 +14,31 @@ describe('other-captain renderer',()=>{
     try{const scene=new THREE.Scene(),layer=createOtherCaptains(scene,element(),makeArt(),true);expect(layer.stats).toEqual({drawn:0,hidden:0,ids:[]});layer.dispose();}
     finally{globalThis.document=previous;}
   });
+  it('animates an idle captain in a shared Home room around the original foot',()=>{
+    const previous=globalThis.document;globalThis.document={createElement:()=>labelElement()};
+    const scene=new THREE.Scene();
+    let reduced=false;
+    const layer=createOtherCaptains(scene,element(),makeArt(),()=>reduced);
+    try{
+      const place='isle_k7q2m',member=peer('visitor',2,3,{place,moving:false});
+      const draw=(now,other={})=>layer.update(.1,{place,now,...other});
+      const body=()=>scene.getObjectByName('other-captains').children[0].children[0];
+      layer.ingest({sampledAt:1000,others:[member]});
+      draw(1000);
+      const foot=body().parent.position.clone(),figures=layer.figures();
+      for(let time=1100;time<=2000;time+=100)draw(time);
+      expect(body().scale.y).toBeGreaterThan(1.006);
+      expect(body().position.toArray()).toEqual([0,0,0]);
+      expect(body().parent.position.equals(foot)).toBe(true);
+      expect(layer.figures()).toEqual(figures);
+      draw(2100,{blocked:true});expect(layer.stats.drawn).toBe(0);
+      reduced=true;draw(2200);expect(body().scale.y).toBe(1);
+      reduced=false;layer.ingest({sampledAt:2300,others:[{...member,moving:true}]});
+      draw(2600);expect(body().scale.y).toBe(1);
+      layer.ingest({sampledAt:2700,others:[{...member,place:'saltreach_harbor'}]});
+      draw(3000,{place:'saltreach_harbor'});expect(body().scale.y).toBe(1);
+    }finally{layer.dispose();globalThis.document=previous;}
+  });
   it('draws nearest eight, filters by crew/place, and stacks labels at phone width',()=>{
     const previous=globalThis.document;globalThis.document={createElement:()=>labelElement()};
     try{
