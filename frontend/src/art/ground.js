@@ -44,6 +44,17 @@ function paintBeachDetails(c, coast, beach, rim, materials) {
     c.fillStyle = linear(c, -14, -12, 14, 8, [[0, '#c9a27434'], [.44, '#a57c572c'], [1, '#945f512f']]);
     c.fill(wetSand, 'evenodd');
   }
+  // Rocky shoulders shade the sand at their feet. The four open approaches keep a warm centre.
+  for (let i = 2; i < rim.length - 1; i += 5) {
+    const {x, y, depth} = rim[i];
+    if (depth < 1.35 || Math.abs(i - 135) < 13) continue;
+    const reach = .82 + .27 * depth;
+    const angle = Math.atan2(y, x) + Math.PI / 2;
+    c.save(); c.translate(.978 * x, .978 * y); c.rotate(angle); c.scale(1, .61);
+    c.fillStyle = radial(c, 0, 0, reach, [[0, '#635d516e'], [.48, '#74695547'], [1, '#74695500']]);
+    c.fill(ellipse(0, 0, reach));
+    c.restore();
+  }
   // Scattered ridges and warm highlights stay in the dry top between the water and turf.
   const texture = seeded(31507);
   for (let i = 0; i < 48; i++) {
