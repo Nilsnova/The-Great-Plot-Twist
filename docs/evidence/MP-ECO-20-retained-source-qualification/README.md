@@ -57,3 +57,25 @@ by this comparison.
 The [test map](../../TEST-MAP.md) and individual scenario reports remain the place
 to combine actual observations into the fifteen rows. This package alone does not
 close MP-ECO-20, claim physical-device coverage or authorize hosted activation.
+
+## Quote-refresh follow-up candidate
+
+Candidate `74be485507fbdbf1eb662f96f11a40c5e902e507` changes only
+`frontend/src/island/island-actions.js` in protected production; integration
+candidate `dc20dd3839785e32ee8c973413fae958ddbf8efa` has the same protected
+files. Backend, content, all 108 migrations, locks and Auth/SDK remain identical
+to served candidate `64ee02b3`.
+
+The new helper invalidates and reloads shared construction offers after a role
+change or respec. Those callers await the new quotes. Existing build, demolition,
+research and crew function source before that helper is identical; JSON records
+its SHA256. Reset and Account deletion use separate unchanged implementations,
+whose SHA256s are also recorded. This qualifies those unchanged branches without
+claiming that the whole actions module matches.
+
+The old core/session HTTP refusals retain their unchanged authority dependencies;
+role-free combat, revival, repair, wager and ship cases retain their stated
+sources and limits. **Role/respec UI and the first construction afterward require
+a new actual-provider browser observation on the served fix candidate.** The
+separately reported 29 Chromium DOM checks and build are not rerun here and do not
+replace that observation. The original stale-quote failure remains a failure.

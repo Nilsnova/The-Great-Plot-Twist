@@ -146,5 +146,41 @@
     "Original tests retain original sources and results.",
     "Component comparison is not a rerun or proof of the complete fifteen-row matrix.",
     "Physical-device coverage and hosted rollout are not claimed."
-  ]
+  ],
+  "quoteRefreshFollowup": {
+    "comparedAt": "2026-11-19T18:39:34.191625+00:00",
+    "priorServedCandidate": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+    "newFrontendCandidate": "74be485507fbdbf1eb662f96f11a40c5e902e507",
+    "integrationCandidate": "dc20dd3839785e32ee8c973413fae958ddbf8efa",
+    "integrationProtectedEquivalent": true,
+    "changedProductionPaths": [
+      "frontend/src/island/island-actions.js"
+    ],
+    "unchangedProductionScope": "All backend production, content, 108 migrations, dependency locks and Auth/SDK files are byte-identical. All frontend files except island-actions.js are byte-identical.",
+    "changedFunctions": [
+      "new applyRoleProfile helper",
+      "takeRole awaits fresh shared construction quotes",
+      "respecCaptain awaits fresh shared construction quotes"
+    ],
+    "unchangedActionPrefixSha256": "a2aceb65ad41c28d1ba5df599bfa65487168fd89f1d9e870ce0907c4c4815c97",
+    "unchangedActionPrefixScope": "All island-actions.js source before the new applyRoleProfile helper, including build, demolition, research, crew, quote/selection fences and captainRequest, is byte-identical.",
+    "unchangedLifecycleFilesSha256": {
+      "frontend/src/island/island-game.js": "2983eb96c2ad301314f93391e9c757204100ecedf1705ad4f864d282001a63ce",
+      "frontend/src/island/reset.js": "20fe0275750276dd4a1d9efcf9e0ad21ff704e67424dca4499981b03238b49bf",
+      "frontend/src/island/shared-reset-api.js": "521925a5ed92bed561a11a9093c23d50ada14b09b790952cd0c161ef110db7ed",
+      "frontend/src/screens/account/index.js": "92cfda98b029b69bbb282f32dbcd481567c7f7aeebe72e7cc5a9c4f9bc11fc7d",
+      "frontend/src/online/adapter/account-view.js": "e081ede1644111fe8e2d682fae104d9bb9655348ec0b657999070977cb95b42b"
+    },
+    "retainedApplicability": [
+      "Core/browser HTTP refusals and accounting use unchanged backend, Auth/SDK and API proof dependencies.",
+      "Reset/deletion do not invoke the changed role/respec helper; their direct implementation files and unchanged action prefix are recorded separately rather than claiming a whole-module match.",
+      "Role-free combat/repair/revival and wager/ship routes do not call the changed helper; preserve each original64 source/result and settings."
+    ],
+    "requiresNewObservation": "Selecting/respecifying role and the first construction action afterward require actual served74 frontend evidence. Earlier64 role/quote failures remain failures; DOM tests and build do not replace the current provider browser check.",
+    "testProvenance": "The candidate fix package records 29 Chromium DOM checks and its frontend build separately. This source comparison reruns neither.",
+    "limits": [
+      "No blanket active-wave or lifecycle-transition waiver.",
+      "This comparison does not establish automatic admission/leave topics or a missing rendered action."
+    ]
+  }
 }
