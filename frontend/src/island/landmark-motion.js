@@ -127,9 +127,9 @@ export function animateLandmarkMaterial(material, {pennant, bell, smoke, sweep, 
             float distanceToLight = abs(barrel.x + barrel.y * .27 - (passage * 1.78 - .25));
             float band = 1.0 - smoothstep(.05, .27, distanceToLight);
             float value = max(max(village.r, village.g), village.b);
-            float polished = smoothstep(.08, .30, value) * (1.0 - smoothstep(.66, .92, value));
-            float sheen = .34 * band * polished * regionalWeight(barrel) * (1.0 - 5.0 * uLandmarkLight);
-            village.rgb += max(vec3(0.0), village.aaa - village.rgb) * vec3(1.0, .94, .82) * sheen;
+            float polished = smoothstep(.08, .30, value) * (1.0 - smoothstep(.42, .81, value));
+            float sheen = .46 * band * polished * regionalWeight(barrel) * (1.0 - 5.0 * uLandmarkLight);
+            village.rgb *= 1.0 + vec3(1.0, .94, .82) * sheen;
           }
         ` : ''}
         ${smoke ? /* glsl */`
