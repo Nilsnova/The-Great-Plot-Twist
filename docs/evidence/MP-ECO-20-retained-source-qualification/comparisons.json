@@ -1,0 +1,150 @@
+{
+  "purpose": "Component applicability of retained evidence; no tests or browser scenarios were rerun.",
+  "recordedAt": "2026-11-19T18:24:23.083143+00:00",
+  "historicalRenderedSource": "b239bdf094d132fc57969fb31f652f106db8abc5",
+  "currentProductionCandidate": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+  "publishedMainAtComparison": "3bd2588cdc88bfd5ce8f0e64e9ae607841851065",
+  "candidateToPublishedMain": {
+    "protectedPathspecs": [
+      "backend/server",
+      "backend/content",
+      "frontend/src",
+      "supabase/migrations",
+      "backend/uv.lock",
+      "backend/pyproject.toml",
+      "frontend/package-lock.json",
+      "frontend/package.json",
+      ":(exclude)backend/server/tests"
+    ],
+    "changedPaths": []
+  },
+  "historicalToCandidate": {
+    "changedProductionPaths": [
+      "backend/server/island/construction_rules.py",
+      "frontend/src/island/index.js",
+      "frontend/src/island/island-load.js",
+      "frontend/src/island/island-session.js",
+      "frontend/src/island/shared-wave-shapes.js",
+      "frontend/src/island/wave-flow.js",
+      "frontend/src/pirates/controller.js",
+      "supabase/migrations/20261119144620_island_economy_operator_recovery.sql"
+    ],
+    "backendOnlyChange": "backend/server/island/construction_rules.py",
+    "backendAstEqualAfterRemovingDocstrings": true,
+    "unchangedAuthSdkFiles": 34,
+    "authSdkGitManifestSha256": "70b91c2ff2a3b4ac387cb85d2bb792b4d33a3277730bd43895e82eeb0f0851f0",
+    "unchangedOldApplicationMigrations": 107,
+    "oldMigrationGitManifestSha256": "fb43275ade2d93799672899508aebf99a04d97f049a250404f3b01c6f0201f85",
+    "addedMigrations": [
+      "supabase/migrations/20261119144620_island_economy_operator_recovery.sql"
+    ],
+    "operatorScope": "Migration 108 adds private operator receipts and service-only operator context/offer functions. The retained normal-path cases invoke no operator routine; full schemas are not identical."
+  },
+  "retainedCore": {
+    "report": "docs/evidence/MP-ECO-20-local-provider/core.json",
+    "originalApplicationSource": "3bdd8eda16470795fdedd68c42fffab54e5f2ced",
+    "executedCheckoutBefore": "71f5374b68a0d1ad5cea282903a9cd69567adc2f",
+    "executedCheckoutAfter": "61f244873bb0dc59831e1b09313ff05fdce07b87",
+    "entrySha256": "a271f58fe7c7985656bd86c1241e925ced45af5fb98fc5eba55406d98e27adc1",
+    "helperBlobs": {
+      "frontend/scripts/authenticated-economy/core.mjs": {
+        "sha256": "a271f58fe7c7985656bd86c1241e925ced45af5fb98fc5eba55406d98e27adc1",
+        "executedBlobMatches": true
+      },
+      "frontend/scripts/authenticated-economy/clients.mjs": {
+        "sha256": "641ae6018386213ac78efcab217167c44c80d91ac63d301922f66575892127f8",
+        "executedBlobMatches": true
+      },
+      "frontend/scripts/authenticated-economy/runtime.mjs": {
+        "sha256": "489a4d89302c6eda6618a20fe9beb4165942b108c01a42f265b18d0c9e558e37",
+        "executedBlobMatches": true
+      },
+      "frontend/scripts/authenticated-economy/observer.mjs": {
+        "sha256": "40cb288da9f9a80e337fba5a39a12b1b23501ad1ff48a2a4614975492997f140",
+        "executedBlobMatches": true
+      },
+      "frontend/scripts/authenticated-economy/private-realtime.mjs": {
+        "sha256": "5b7a0968d39ff1acaa0ac2e30c61f0fa373d4cf51ddc3b6ec8a5450ac41de198",
+        "executedBlobMatches": true
+      },
+      "frontend/scripts/authenticated-economy/source.mjs": {
+        "sha256": "e1f2b4d9a9652285e2c9cb26e4fe96e92119f78583768b5b4fc957e65b273952",
+        "executedBlobMatches": true
+      },
+      "backend/tools/authenticated_economy/observe.py": {
+        "sha256": "18707a8ed12d18c69a4c04de1a416089ccbe89619f5f6f6e9a270840df551839",
+        "executedBlobMatches": true
+      },
+      "backend/tools/authenticated_economy/config.py": {
+        "sha256": "f066a3e3e1d1a0643ce3ba6da9d28a42f23dbe4f5b3358319aa13345e2aabb92",
+        "executedBlobMatches": true
+      }
+    },
+    "unchangedDependencyPathspecs": [
+      "backend/server",
+      "backend/content",
+      "frontend/src/online",
+      "backend/uv.lock",
+      "backend/pyproject.toml",
+      "frontend/package-lock.json",
+      "frontend/package.json",
+      ":(exclude)backend/server/tests"
+    ],
+    "changedDependencyPaths": [],
+    "actualLayer": "Real Chromium contexts, public GoTrue SDK signup, production session restoration and browser-origin fetch. Default core does not enter the rendered game.",
+    "applicableFacts": [
+      "Missing/unsupported capability reads and missing-capability mutation 409; missing epoch 422; outsider 403; forged actor 422; authorized initial shared read 200.",
+      "Invited registered-member fresh-quote construction; exact same-UID replay 200 and changed-intent 409.",
+      "Construction-only last-funds contention and independent treasury/private-wallet reconciliation.",
+      "Free personal respec did not spend island funds; new Carpenter purchase was refused 409."
+    ],
+    "excludedClaims": [
+      "Rendered cards or gameplay",
+      "Anonymous UI",
+      "Purchase/wager/repair cross-domain contention",
+      "Engineer generation completion"
+    ]
+  },
+  "retainedSessions": {
+    "report": "docs/evidence/MP-ECO-20-sessions/result.json",
+    "originalApplicationSource": "82abc298570ce5436c721a992f538c16d04c30e5",
+    "executedScenarioSource": "051d6b0544b7b48ea5b3efdd2bf39181b7e4864e",
+    "entryPath": "frontend/scripts/check-economy-sessions-provider.mjs",
+    "entrySha256": "8ee117bf1c04c058989684c41eb94fa0ba9999ea8ce003c2d12909e5318054e7",
+    "entryBlobMatches": true,
+    "changedBackendContentAuthSdkPaths": [],
+    "applicableFacts": [
+      "Actual authenticated duplicate-session and cross-island controller refusals 409.",
+      "Proofless cloned browser tab remained read-only; the new renderer promotion requires a valid controlling participant proof.",
+      "Canonical retained UUID/new generation, HP 1000000, down false, position (0,12) and empty cooldown facts on unchanged authority code.",
+      "Explicit departure withdrew control and conserved both original accounts."
+    ],
+    "excludedClaims": [
+      "Current rendered controller-promotion correctness from this historical run alone",
+      "Fallen reconnect",
+      "Nonempty cooldown persistence",
+      "Natural grace expiry in this particular journey"
+    ]
+  },
+  "conditionalRenderedReuse": [
+    {
+      "observation": "Historical idle Settings reset and peer topic reacquisition",
+      "conditions": "No current wave. The added refreshControl returns before effects; new account/epoch/full-economy funding stamps still emit the original payload. Keep original source and observed cached-socket boundaries explicit."
+    },
+    {
+      "observation": "Historical Account deletion and preservation",
+      "conditions": "Unchanged backend effects are applicable. Idle peer UI clearance requires the same no-current-wave branch assessment; do not infer malicious cached-socket deletion or universal immediate cache eviction."
+    }
+  ],
+  "notReusableAsBlanketCurrentProof": [
+    "Active-wave spectator/reconnect/controller promotion or pacing crosses six changed frontend modules and needs its own branch-specific evidence.",
+    "Historical rendered revival at treasury 200 is not a rendered zero-bank revival.",
+    "New API-only or sealed-simulation scenarios cannot become browser evidence by relabeling.",
+    "A first-build stale quote after Engineer selection remains an observed product concern; this comparison does not waive it."
+  ],
+  "limits": [
+    "Original tests retain original sources and results.",
+    "Component comparison is not a rerun or proof of the complete fifteen-row matrix.",
+    "Physical-device coverage and hosted rollout are not claimed."
+  ]
+}
