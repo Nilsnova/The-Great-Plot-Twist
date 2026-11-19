@@ -4,9 +4,9 @@
 >
 > **Who uses it:** economy, lifecycle, gameplay, UI and release reviewers preparing integrated multiplayer acceptance.
 
-- **Status:** specification and test planning only; shared-mode runtime acceptance remains open.
+- **Status:** combined domain/API recovery and desktop/phone component checks implemented; authenticated recovery acceptance remains pending.
 - **Responsible teammate:** Ianno Hollensteiner (`Iannomh123456`), assisted by Codex.
-- **Branch:** `docs/mp-eco-22-zero-funds`.
+- **Branch:** `test/mp-eco-zero-funds-recovery`.
 - **Issue:** [#514](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/514), under [epic #492](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/492).
 - **Rules:** [agreed shared economy](../docs/DECISIONS.md#shared-island-economy-and-personal-captain-progression) and [MP-ECO task acceptance](../docs/OPEN-TODOS.md#12-shared-island-economy-and-multiplayer-rules).
 - **Dependencies:** MP-ECO-01/02 account contract, 03 canonical income, 07 personal progress, 08 permissions, 10/11 inventory/session lifecycle, 12 repairs/revival, 14 wagers, 15 ship rewards and [16 reset](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/511). Coordinate measurements with [19 balance](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/512), authenticated evidence with MP-ECO-20 and release gates with [21 runbook](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/513).
@@ -103,15 +103,56 @@ The main-source baseline above was inspected. The separate MP-ECO-02/03/04/07/08
 | 22.5 Prove authenticated acceptance | Run Z01–Z16 and boundary races with real authenticated clients, owner absent/present, departure/reconnect, stale clients, retired-origin reset obligations and server-only closure with all browsers gone. | MP-ECO-20; approved scratch environment and exact implemented commands. |
 | 22.6 Review release readiness | Attach exact commands/results/skips, identity/conservation counts and remaining limits to the candidate. Feed owner-only zero-funds and pause/recovery evidence into the runbook. | MP-ECO-21; independent human review and separate release authorization. |
 
-## Verification and remaining work
+## Earlier preparation verification
 
-This contribution changes only this specification. Check relative links/anchors, matrix coverage against the settled rules, current catalogue arithmetic and `git diff --check`. No game code, test harness, API, migration, feature flag or balance value changes. No live account, provider, deployment or shared admission is exercised.
+The 18 November contribution changed only this specification. Relative links/anchors, matrix coverage against the settled rules, current catalogue arithmetic and `git diff --check` were its checks. It changed no game code, test harness, API, migration, feature flag or balance value and exercised no account, provider, deployment or shared admission.
 
 Preparation checks passed on 18 Nov 2026: all seven relative links and anchors resolve, all 16 scenario IDs are present, current catalogue examples reproduce 200 starting coins, 35/45 wave income and 36/78 ship caps, and whitespace checks pass. This is documentation/source verification only.
 
-Integrated SQL/API/browser tests, authenticated multiplayer evidence, MP-ECO-19 gameplay measurements and complete MP-ECO-16 reset/deletion integration remain open. Their absence is reported as pending acceptance, never as a passing zero-funds journey. Record actual executable commands from the integrated implementations before marking any matrix row passed.
+At that preparation checkpoint, integrated SQL/API/browser tests, authenticated multiplayer evidence, MP-ECO-19 gameplay measurements and complete MP-ECO-16 reset/deletion integration remained open. The later bounded checks below supersede only the stated missing layers; they do not turn an unobserved gameplay outcome into a pass.
 
 - **Independent human reviewer:** pending.
-- **Last updated:** 2026-11-18.
+- **Last updated:** 2026-11-19.
 
 Selected-policy follow-up: owner reset with open wagers retains all old cash/holds/returns solely in the retired bank; confirmed owner-account deletion removes the owned island without a successor or new grant and preserves other Captains. The scenario/task matrix uses those choices. Runtime integration, historical retention/disposition and authenticated acceptance are still pending; no application behavior is claimed by this documentation update.
+
+## Combined recovery checkpoint — 19 November 2026
+
+The new checks use the integrated application at main `3bdd8eda16470795fdedd68c42fffab54e5f2ced` without changing product code, prices, migrations, admission policy or ordinary wave selection. Source inputs are pinned by SHA-256:
+
+| Input | SHA-256 |
+|---|---|
+| `backend/content/islands.json` | `cf18f3f6df388f23058591d76a48169ef5fb8d22be26f81409b966ef4a541a95` |
+| `backend/content/campaign.json` | `7cfd3e5517d101ae8a25f1a1fefa9eac847d5ed958d4413a6d65a86c6719b0a6` |
+| `backend/content/boat.json` | `6e1d402e1417749a1a0a722bb8c99a38fdda31c527053af2dd0ee80b11822311` |
+
+[The combined PostgreSQL cases](../backend/server/tests/island_sql/test_zero_funds_recovery_sql.py) and [registered HTTP journey](../backend/server/tests/island_sql/test_zero_funds_recovery_http_pg.py) share [explicit disposable setup](../backend/server/tests/zero_funds_recovery.py). Real canonical authority, controller, personal, construction, wager, ship and reset functions execute. The actual authority RPC is never replaced. The complete migration chain is installed twice on a disposable Unix-socket server.
+
+The advanced saved island, initial 100-coin test grant, retained recovery template, market readings and due timestamps are explicit fixture setup. The retained template is generated by the production coherent snapshot/catalogue builder. New reset capital comes from the actual configured 200-coin starting amount; no test changes that policy. Scripted defeat, market outcome and ship stars are transaction inputs, not proof of natural gameplay or independently achieved scores.
+
+The combined sequence builds a wall for 10 and a cannon for 30, demolishes both through the ordinary actual-cost refund path, stakes the full remaining 80 and settles a legitimate fixture loss. Both paid defenses are absent, exact cash/holds/available are zero, personal wallets are unchanged, and a replay with a winning price cannot rewrite the loss. An invited session leader can still ring the ordinary wave 31 with the actual minimum time and full normal rule set. The configured defeat restarts at best record 30 minus two, wave 28; no recovery-wave selector or easier policy is introduced. A late victory acknowledgment retains that loss and zero loot.
+
+Owner-absent cohorts have 1, 2, 4 and 9 active invited Captains. The existing ten-seat limit counts the offline owner, so nine is the legal owner-absent maximum. A separate ten-active-Captain case includes the owner. New joins at zero add no island money. In every case, the member leader cannot reset; the owner cannot bypass an unsealed reservation, and an allowed idle owner reset creates one replacement account/grant while preserving all personal profiles and wallets. Exact reset replay does not create another grant. No test promises that a zero-defense crew will win or that waiting itself creates money.
+
+Separate combined branches preserve legitimate ordinary income:
+
+- A previously authorized 10-coin stake may leave all funds committed after the other all-in is lost. Its correct saved-origin win returns 20 once and can fund an ordinary new wall. If the owner resets first, the same 20 stays only in the retired account; the replacement keeps exactly its configured grant.
+- An unlocked repaired ship starts at zero cost. The selected one-star result pays 12, which can fund a wall; a later three-star improvement pays 24 more. Another Captain's same three-star result pays zero. Zero funds never waive a locked ship or unfinished wreck.
+- The actual HTTP visitor read reports zero available funds and no buildings. The member's reset is forbidden, their proof-qualified normal bell succeeds without a debit, an active owner reset is refused, and the later ordinary owner reset/replay creates one new run. Authentication responses and the trusted terminal outcome in this HTTP check remain explicit fixtures.
+
+[Four Chromium component cases](../frontend/tests/island/zero-funds-recovery-dom.test.js) cover 1280 × 800 and 375 × 812. They render the actual island assembly with a zero-budget member controller: paid crew controls stay disabled, the normal wave-31 bell stays available and Settings grants no member reset. A separate actual owner Settings section can confirm the typed island code at zero, discloses personal preservation and old-run funds, and sends no request in that display-only case. Private wallet updates cannot replace the shared zero. [Captured evidence](../docs/evidence/MP-ECO-22/README.md) retains the synthetic transport qualification.
+
+Run from `backend/`:
+
+```sh
+CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' --with pglast python -m pytest -q --tb=short server/tests/island_sql/test_zero_funds_recovery_sql.py server/tests/island_sql/test_zero_funds_recovery_http_pg.py
+uv run ruff check .
+```
+
+Run from `frontend/`:
+
+```sh
+MP_ECO_EVIDENCE_DIR=../docs/evidence/MP-ECO-22 npm test -- --maxWorkers=1 tests/island/zero-funds-recovery-dom.test.js
+```
+
+The final combined SQL/HTTP selection passed 11 cases in 66.09 seconds. The four captured Chromium cases passed in 5.31 seconds. Whole-backend Ruff and scoped whitespace checks passed. These are domain/HTTP/component results. The complete authenticated Z01–Z16 matrix, natural feed/time observations and solo/2/4/10 gameplay playability measurements retain their separate status; none is inferred from scripted accepted outcomes. No hosted database, deployment or production activation is touched.
