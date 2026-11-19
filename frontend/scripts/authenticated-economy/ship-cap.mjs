@@ -8,6 +8,8 @@ const intent=e=>Object.fromEntries(['mode','version','islandOwner','runEpoch'].m
 const checked=(answer,status=200)=>{assert.equal(answer.status,status,JSON.stringify(answer.data));return answer.data;};
 const gamePath='/api/island/boat';
 const sum=rows=>rows.reduce((n,row)=>n+Number(row.receipt.result.coins),0);
+export const sameSourceScope=(before,after)=>JSON.stringify(before,(key,value)=>key==='actualCheckoutHead'?undefined:value)
+ ===JSON.stringify(after,(key,value)=>key==='actualCheckoutHead'?undefined:value);
 
 export async function runShipCap({clients,observe,install,admit,sourceEvidence,helperEvidence}) {
  assert.equal(clients.length,11,'Ten primary members plus one independent island owner are required');
@@ -150,9 +152,10 @@ export async function runShipCap({clients,observe,install,admit,sourceEvidence,h
  finally{
   report.helperAfter=await helperEvidence();report.sourceAfter=await sourceEvidence();report.runnerAfterSha256=await hash();
   report.sourcesUnchanged=report.runnerAfterSha256===runnerBefore&&JSON.stringify(report.helperAfter)===JSON.stringify(helperBefore)
-   &&JSON.stringify(report.sourceAfter)===JSON.stringify(sourceBefore);
+   &&sameSourceScope(report.sourceAfter,sourceBefore);
+  report.sourceComparison='Same protected production baseline/diff scope and exact pinned helper hashes; checkout HEAD is recorded separately because unrelated tests may be committed.';
   if(!report.sourcesUnchanged){report.status='failed';report.sourceFailure='Scenario/helper/served sources changed';}
  }
- assert.equal(report.sourcesUnchanged,true,'The actual measured sources must remain frozen');
+ if(!report.sourcesUnchanged)throw Object.assign(new Error('The actual measured source inputs changed'),{shipReport:report});
  return report;
 }
