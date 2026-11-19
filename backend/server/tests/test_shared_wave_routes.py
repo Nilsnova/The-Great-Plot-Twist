@@ -2,9 +2,17 @@
 
 import pytest
 
+from server.routes import waves as wave_routes
 from server.tests.helpers import assert_error
 from server.tests.island_helpers import PLAYER, PLAYER_ID, WAVE_ID, World
 from server.tests.test_personal_captain import reply as captain_reply
+from server.tests.test_shared_session_api import (
+    EPOCH as NATIVE_EPOCH,
+)
+from server.tests.test_shared_session_api import OWNER as NATIVE_OWNER
+from server.tests.test_shared_session_api import SESSION as NATIVE_SESSION
+from server.tests.test_shared_session_api import WAVE as NATIVE_WAVE
+from server.tests.test_shared_session_api import historical_wave
 from server.tests.test_shared_snapshot import raw_snapshot
 from server.tests.test_shared_wave_http import proof
 
@@ -135,3 +143,73 @@ def test_cached_deleted_actor_cannot_reach_any_legacy_journal_path(suffix):
         })
     assert_error(response, 401, "unauthorized")
     assert world.database.paths() == ["POST /rpc/island_lifecycle_actor_status"]
+
+
+class ReplayDatabase:
+    def __init__(self, replay):
+        self.replay, self.calls = replay, []
+
+    async def call_function(self, name, arguments):
+        self.calls.append((name, arguments))
+        if name == "island_lifecycle_actor_status":
+            return {"status": "active"}
+        assert name == "shared_session_wave_replay"
+        return self.replay
+
+
+def native_start_body():
+    return {"where": "ISLE-K7Q2M", "actionUid": "bell-0001", "waveProtocol": 2,
+            "economy": {"mode": "island_shared", "version": 1,
+                        "islandOwner": NATIVE_OWNER, "runEpoch": NATIVE_EPOCH},
+            "sessionId": NATIVE_SESSION, "connectionGeneration": "1"}
+
+
+def test_historical_bell_returns_before_current_weather_or_code_resolution(monkeypatch):
+    world = World()
+    database = ReplayDatabase(historical_wave())
+    world.app.state.admin = database
+
+    async def unexpected(*_args):
+        raise AssertionError("Historical replay must not depend on today's weather or code.")
+
+    monkeypatch.setattr(wave_routes, "wave_weather", unexpected)
+    monkeypatch.setattr(wave_routes, "target_owner", unexpected)
+    response = world.client.post("/api/waves/start", headers=SHARED_HEADERS,
+                                 json=native_start_body())
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["historical"] and body["repeat"] and body["waveId"] == NATIVE_WAVE
+    assert body["economy"] is None and body["session"] is None
+    assert body["participantToken"] is None and body["lastActorCounter"] is None
+    assert body["weather"]["label"] == body["initialSnapshot"]["weatherLabel"]
+    assert [name for name, _arguments in database.calls] == [
+        "island_lifecycle_actor_status", "shared_session_wave_replay",
+    ]
+    assert database.calls[-1][1] == {
+        "p_actor_id": PLAYER_ID, "p_island_owner": NATIVE_OWNER,
+        "p_run_epoch": NATIVE_EPOCH, "p_action_uid": "bell-0001",
+    }
+
+
+def test_new_bell_code_must_name_its_captured_origin_before_weather_or_mutation(monkeypatch):
+    world = World()
+    database = ReplayDatabase({"status": "new"})
+    world.app.state.admin = database
+    resolved = []
+
+    async def another_owner(_admin, actor, code):
+        resolved.append((actor, code))
+        return PLAYER_ID
+
+    async def unexpected(*_args):
+        raise AssertionError("A mismatched new bell must stop before weather or mutation.")
+
+    monkeypatch.setattr(wave_routes, "target_owner", another_owner)
+    monkeypatch.setattr(wave_routes, "wave_weather", unexpected)
+    response = world.client.post("/api/waves/start", headers=SHARED_HEADERS,
+                                 json=native_start_body())
+    assert_error(response, 409, "economy_context_required")
+    assert resolved == [(PLAYER_ID, "ISLE-K7Q2M")]
+    assert [name for name, _arguments in database.calls] == [
+        "island_lifecycle_actor_status", "shared_session_wave_replay",
+    ]

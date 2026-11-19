@@ -49,3 +49,9 @@ controller lease. Every valid journal request checks deleted-actor status after
 its budget, while malformed queries/bodies and incompatible native clients reach
 no domain transaction. The native adapter still checks origin, membership,
 controller generation and sealed journal state atomically.
+
+The HTTP bell probes its authenticated original root before looking up today's
+navigation code or weather feed. An immutable replay uses its saved weather and
+returns no current controller or treasury projection. A new bell's non-`own`
+compatibility code must resolve to its captured island owner before preparation;
+the adapter probes again after that network work to handle a concurrent replay.

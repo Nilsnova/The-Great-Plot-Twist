@@ -8,7 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from server.errors import ApiError
 from server.flags import is_enabled
-from server.island import shared_lifecycle, wave_recovery
+from server.island import shared_lifecycle, shared_session_api, wave_recovery
 from server.island.shared_wave_http import SharedWaveProof, require_shared_wave_client
 from server.routes.island import IslandPlayerDep
 from server.settings import SettingsDep
@@ -60,8 +60,6 @@ async def post_inputs(
         require_shared_wave_client(request, body.waveProtocol)
     await shared_lifecycle.ensure_not_deleted(admin, player.id)
     if isinstance(body, SharedInputBatch):
-        from server.island import shared_session_api
-
         result = await shared_session_api.append_inputs(
             admin, player.id, wave_id, str(body.economy.islandOwner),
             str(body.economy.runEpoch), str(body.sessionId), body.connectionGeneration,
@@ -109,8 +107,6 @@ async def get_events(
         require_shared_wave_client(request, 2)
     await shared_lifecycle.ensure_not_deleted(admin, player.id)
     if island_owner is not None:
-        from server.island import shared_session_api
-
         result = await shared_session_api.read_events(
             admin, player.id, wave_id, str(island_owner), str(run_epoch),
             str(session_id) if session_id is not None else None, connection_generation,
@@ -137,8 +133,6 @@ async def post_health(
         require_shared_wave_client(request, body.waveProtocol)
     await shared_lifecycle.ensure_not_deleted(admin, player.id)
     if isinstance(body, SharedHealthRequest):
-        from server.island import shared_session_api
-
         result = await shared_session_api.report_health(
             admin, player.id, wave_id, str(body.economy.islandOwner),
             str(body.economy.runEpoch), str(body.sessionId), body.connectionGeneration,

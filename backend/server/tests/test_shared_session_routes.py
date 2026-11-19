@@ -6,7 +6,6 @@ from dataclasses import replace
 import pytest
 
 from server.flags import parse_flags
-from server.routes import shared_sessions
 from server.tests.helpers import assert_error
 from server.tests.island_helpers import ISLAND_SETTINGS, PLAYER, PLAYER_ID, World
 from server.tests.test_shared_session_api import EPOCH, OWNER, SESSION, economy, metadata
@@ -36,7 +35,6 @@ class Database:
 
 def setup(*, result=None, deleted=False, settings=ISLAND_SETTINGS):
     world = World(settings=settings)
-    world.app.include_router(shared_sessions.router, prefix="/api")
     database = Database(result, deleted)
     world.app.state.admin = database
     return world, database

@@ -80,6 +80,7 @@ from server.routes import (
     predictions,
     save,
     shared_revival,
+    shared_sessions,
     sports,
     structure_repair,
     wall_recovery,
@@ -321,6 +322,7 @@ def create_app(
     app.include_router(island_structures.router, prefix="/api")
     app.include_router(structure_repair.router, prefix="/api")
     app.include_router(shared_revival.router, prefix="/api")
+    app.include_router(shared_sessions.router, prefix="/api")
     app.include_router(island_layout.router, prefix="/api")
     app.include_router(island_boat.router, prefix="/api")
     app.include_router(island_wagers.router, prefix="/api")

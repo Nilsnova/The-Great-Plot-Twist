@@ -3593,7 +3593,7 @@ The four session tables are not a second wave or assignment system: operational
 waves/recovery journals and `personal_captain_profiles.assignment_wave_id` remain
 canonical. Controller loss has one fixed sixty-second return deadline; unrelated
 spectator reads cannot renew it. Nonce topics follow
-`isle_<five-letter-lowercase-code>_<24-hex-nonce>` and reuse the existing private
+`isle_<five-character-lowercase-code>_<24-hex-nonce>` and reuse the existing private
 Realtime predicate without exposing its schema through PostgREST. Current-data
 revocation and the autonomous worker still need final multi-client acceptance.
 

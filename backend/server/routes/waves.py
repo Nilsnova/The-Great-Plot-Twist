@@ -153,8 +153,17 @@ from pydantic import (
 from server.auth import PlayerDep
 from server.errors import ApiError
 from server.flags import is_enabled
-from server.island import service, shared_lifecycle, wall_repair, wave_rewards, wave_rules, waves
+from server.island import (
+    service,
+    shared_lifecycle,
+    shared_session_api,
+    wall_repair,
+    wave_rewards,
+    wave_rules,
+    waves,
+)
 from server.island import wave_recovery as recovery
+from server.island.economy_http import target_owner
 from server.island.economy_operations import root_action_uid
 from server.island.service import IslandCatalogueDep
 from server.island.shared_wave_http import (
@@ -400,7 +409,22 @@ async def post_start(
         require_shared_wave_client(request, body.waveProtocol)
         root_action_uid(body.actionUid)
     await shared_lifecycle.ensure_not_deleted(admin, player.id)
-    if not isinstance(body, SharedStartRequest):
+    if isinstance(body, SharedStartRequest):
+        replay = await shared_session_api.replay_wave_start(
+            admin, player.id, str(body.economy.islandOwner), str(body.economy.runEpoch),
+            body.actionUid,
+        )
+        if replay is not None:
+            return replay
+        if body.where == waves.PIRATE_POINT or (
+            body.where == waves.OWN and str(body.economy.islandOwner) != player.id
+        ):
+            raise ApiError(409, "economy_context_required", "Choose this shared island.")
+        if body.where != waves.OWN and (
+            await target_owner(admin, player.id, body.where) != str(body.economy.islandOwner)
+        ):
+            raise ApiError(409, "economy_context_required", "The code names another island.")
+    else:
         context = await read_target_context(admin, player.id, body.where)
         if context is not None and context.mode == "island_shared":
             require_shared_wave_client(request, body.waveProtocol)
@@ -412,12 +436,6 @@ async def post_start(
         catalogue, source, state_rules, request.app.state.lock_weather, area
     )
     if isinstance(body, SharedStartRequest):
-        from server.island import shared_session_api
-
-        if body.where == waves.PIRATE_POINT or (
-            body.where == waves.OWN and str(body.economy.islandOwner) != player.id
-        ):
-            raise ApiError(409, "economy_context_required", "Choose this shared island.")
         return await shared_session_api.start_wave(
             admin, catalogue, weather, player.id, str(body.economy.islandOwner),
             str(body.economy.runEpoch), str(body.sessionId), body.connectionGeneration,
@@ -482,8 +500,6 @@ async def post_join(
         require_shared_wave_client(request, body.waveProtocol)
     await shared_lifecycle.ensure_not_deleted(admin, player.id)
     if isinstance(body, SharedJoinRequest):
-        from server.island import shared_session_api
-
         return await shared_session_api.join_wave(
             admin, player.id, body.waveId, str(body.economy.islandOwner),
             str(body.economy.runEpoch), str(body.sessionId), body.connectionGeneration,
@@ -527,8 +543,6 @@ async def get_current(
     context = await read_target_context(admin, player.id, where)
     if context is not None and context.mode == "island_shared":
         require_shared_wave_client(request, wave_protocol)
-        from server.island import shared_session_api
-
         return await shared_session_api.current_wave(
             admin, player.id, context.island_owner,
             session_id=str(session_id) if session_id is not None else None,
@@ -561,8 +575,6 @@ async def post_finish(
         require_shared_wave_client(request, body.waveProtocol)
     await shared_lifecycle.ensure_not_deleted(admin, player.id)
     if isinstance(body, SharedFinishRequest):
-        from server.island import shared_session_api
-
         return await shared_session_api.finish_wave(
             admin, catalogue, player.id, body.waveId, str(body.economy.islandOwner),
             str(body.economy.runEpoch), str(body.sessionId), body.connectionGeneration,
