@@ -72,6 +72,10 @@ try{
  const joined=await api(member,'/api/games/join',{method:'POST',body:{code,actionUid:uid()}});assert.equal(joined.status,200);
  const view=await api(member,'/api/island/visit/'+code);assert.equal(view.status,200);
  const original=await current(owner.actorId),economy={mode:'island_shared',version:1,islandOwner:owner.actorId,runEpoch:original.epoch};
+ for(const actor of [owner,member]){
+  const attached=await api(actor,'/api/island/session/attach',{method:'POST',body:{economy,sessionId:randomUUID(),expectedGeneration:'0',actionUid:uid()}});
+  assert.equal(attached.status,200);
+ }
  const wallets=await read('select player_id,balance::text from public.wallets where player_id in ($1::uuid,$2::uuid) order by player_id',[owner.actorId,member.actorId]);
  const captainBefore=await api(owner,'/api/captain');assert.equal(captainBefore.status,200);
  const nativeBody={economy,actionUid:uid(),asset:'harbor-trust',direction:'up',stake:'1'};
