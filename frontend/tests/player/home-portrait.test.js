@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import {expect, it} from 'vitest';
-import {createHomePortrait, portraitIslandFrame} from '../../src/player/home-portrait.js';
+import {createHomePortrait, portraitIslandFrame, portraitSpriteSize} from '../../src/player/home-portrait.js';
 
 const phone = {width: 375, height: 812, top: 80, bottom: 142};
 const makeCamera = () => {
@@ -43,4 +43,28 @@ it('keeps upright proportions and restores the world transforms after drawing', 
   })).toThrow('frame stopped');
   expect(tree.scale.y).toBe(.7);
   expect(tree.matrix.elements[5]).toBe(.7);
+});
+
+it('enlarges the authored building and keeps its attached details aligned without moving the foot', () => {
+  const camera = makeCamera(), portrait = createHomePortrait(camera), scene = new THREE.Scene();
+  const house = new THREE.Mesh(), pip = new THREE.Mesh();
+  house.userData = {ground: {x: 1, z: -4}, portraitSize: 1.46};
+  house.position.set(2, 4, 0);
+  pip.userData = {ground: {x: 1.5, z: -4}, portraitFollows: house};
+  pip.position.set(2.5, 8, 0); scene.add(house, pip);
+  portrait.update(phone);
+  const depth = camera.userData.homePortraitDepth;
+  const size = portraitSpriteSize(house, depth);
+  portrait.draw(scene, () => {
+    expect(house.scale.x).toBeCloseTo(size);
+    expect(house.scale.y * depth).toBeCloseTo(size);
+    expect(house.position.toArray()).toEqual([2, 4, 0]);
+    expect(pip.scale.y * depth).toBeCloseTo(1);
+    expect(pip.position.x).toBeCloseTo(2 + .5 * size);
+    expect(pip.position.y).toBeCloseTo(4 + 4 * size / depth);
+  });
+  expect(pip.position.toArray()).toEqual([2.5, 8, 0]);
+  expect(house.scale.toArray()).toEqual([1, 1, 1]);
+  portrait.update(null);
+  expect(portraitSpriteSize(house, camera.userData.homePortraitDepth)).toBe(1);
 });

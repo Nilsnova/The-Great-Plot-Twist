@@ -20,8 +20,12 @@ export function portraitIslandFrame(camera, viewport) {
   return {width, height, offset: (1 + top - bottom) * (1 - height) / 2};
 }
 
+export function portraitSpriteSize(mesh, depth) {
+  return depth > 1 ? mesh.userData.portraitSize ?? 1 : 1;
+}
+
 // A view offset changes both projection and unprojection. Upright sprites keep their authored
-// proportions at their projected feet; only the spacing across the ground grows in portrait Fit.
+// proportions at their projected feet. Key buildings can also read larger in the overview.
 export function createHomePortrait(camera) {
   let frame = null;
   const restored = [];
@@ -36,17 +40,31 @@ export function createHomePortrait(camera) {
     },
     draw(scene, render) {
       if (!frame) return render();
+      const depth = camera.userData.homePortraitDepth;
       try {
         scene.traverseVisible(object => {
           if (!object.isMesh || !object.userData.ground) return;
-          restored.push(object, object.scale.y);
-          object.scale.y *= frame.height / frame.width;
+          const {scale, position, userData} = object;
+          restored.push(object, scale.x, scale.y, position.x, position.y);
+          const size = portraitSpriteSize(object, depth);
+          scale.x *= size;
+          scale.y *= size / depth;
+          const base = userData.portraitFollows;
+          if (base) {
+            const reach = portraitSpriteSize(base, depth);
+            position.x = base.position.x + (position.x - base.position.x) * reach;
+            position.y = base.position.y + (position.y - base.position.y) * reach / depth;
+          }
         });
         return render();
       } finally {
-        for (let i = 0; i < restored.length; i += 2) {
-          restored[i].scale.y = restored[i + 1];
-          restored[i].updateMatrix();
+        for (let i = 0; i < restored.length; i += 5) {
+          const object = restored[i];
+          object.scale.x = restored[i + 1];
+          object.scale.y = restored[i + 2];
+          object.position.x = restored[i + 3];
+          object.position.y = restored[i + 4];
+          object.updateMatrix();
         }
         restored.length = 0;
       }
