@@ -19,7 +19,13 @@ try{
     await page.locator('.touch-controls:not([hidden])').waitFor();
     const client=await context.newCDPSession(page),touch=async(type,points=[])=>client.send('Input.dispatchTouchEvent',{type,touchPoints:points});
     const reset=()=>page.evaluate(()=>{const g=window.__island;g.mapTouch.cancel();g.player.position.set(-1,g.world.current.groundHeight(-1,10),10);});
-    const target=()=>page.evaluate(()=>{const g=window.__island,p=g.player.position.clone();p.x+=2;p.y=-p.z*.72;p.z=0;p.project(g.camera);const r=g.renderer.domElement.getBoundingClientRect();return{x:r.left+(p.x+1)*r.width/2,y:r.top+(1-p.y)*r.height/2};});
+    const target=()=>page.evaluate(async()=>{
+      const g=window.__island,{projectGround}=await import('/src/world/projection.js');
+      const foot=projectGround(g.player.position.x+2,g.player.position.z);
+      const p=g.player.position.clone().set(foot.x,foot.y,0).project(g.camera);
+      const r=g.renderer.domElement.getBoundingClientRect();
+      return{x:r.left+(p.x+1)*r.width/2,y:r.top+(1-p.y)*r.height/2};
+    });
     await reset();await page.waitForTimeout(250);
     const point=await target();check(await page.evaluate(p=>document.elementFromPoint(p.x,p.y)?.matches('#game>canvas'),point),'clear world tap target '+viewport.width);
     await touch('touchStart',[point]);await touch('touchEnd');
@@ -30,9 +36,10 @@ try{
     const stopped=await page.evaluate(()=>window.__island.player.position.toArray());await page.waitForTimeout(400);
     check(await page.evaluate(p=>window.__island.player.position.distanceTo({x:p[0],y:p[1],z:p[2]})<.001,stopped),'tap stops at destination '+viewport.width);
     await reset();await page.waitForTimeout(250);const next=await target();await touch('touchStart',[next]);await touch('touchEnd');await page.waitForFunction(()=>window.__island.mapTouch.active);
-    await page.locator('.touch-actions button').filter({hasText:'Menu'}).click();await page.locator('.shell-screen[open][data-mode=pause]').waitFor();
+    await page.getByRole('button',{name:'Menu',exact:true}).click();await page.locator('.shell-screen[open][data-mode=pause]').waitFor();
     check(await page.evaluate(()=>!window.__island.mapTouch.active),'menu cancels route '+viewport.width);
     await page.getByRole('button',{name:'Resume',exact:true}).click();
+    await page.locator('.touch-stick').waitFor({state:'visible'});
     const stick=await page.locator('.touch-stick').boundingBox(),x=stick.x+stick.width/2,y=stick.y+stick.height/2;
     check(await page.evaluate(p=>document.elementFromPoint(p.x,p.y)?.classList.contains('touch-stick'),{x,y}),'stick hit target unobstructed '+viewport.width);
     const before=await page.evaluate(()=>window.__island.player.position.x);

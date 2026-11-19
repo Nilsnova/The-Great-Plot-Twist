@@ -382,7 +382,8 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     // During a wave E belongs to the wave's own prompt (fire, repair, rebuild, help up: TOWER-DEFENSE.md §12, GAME-V3.md §3) when it
     // has one, so a building's card never opens instead, and the phone's Use button hides while the wave owns E.
     const waveAction=currentWaveAction();
-    touch.update(zone&&!waveAction?zone:null,active&&!captainBlocked(),zone&&!waveAction?panelLabel(zone):'');
+    const worldPrompt=waveAction?null:zone, interactionLabel=worldPrompt?panelLabel(worldPrompt):undefined;
+    touch.update(worldPrompt,active&&!captainBlocked(),interactionLabel,inBattle);
     classDemo?.update(delta,{blocked:!active||outsideBlocked(),zoneActive:!!zone});
     const reviving=!!(waves?.island.revive||waves?.point?.controller.revive);
     if(input.consume('KeyE')&&eDecision({zone,waveAction,reviving})==='open')world.interact(zone);
@@ -394,7 +395,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     const info = graphics.renderer.info.render;
     const displayedWave=world.current?.id==='home_islet'?waves?.island:waves?.point?.controller;
     const waveStatus=readHudWaveStatus({place:world.current?.id,ownBest:island?.ownWaveBest,visiting:island?.visiting,wave:displayedWave?.wave});
-    hud.update(waveAction?null:zone, { fps, calls: info.calls, triangles: info.triangles, night,interactionLabel:waveAction?undefined:panelLabel(zone),promptAt:zone&&!waveAction?screenAt(zone):null,
+    hud.update(worldPrompt, { fps, calls: info.calls, triangles: info.triangles, night,interactionLabel,promptAt:worldPrompt?screenAt(worldPrompt):null,combatPrompt:inBattle&&!!interactionLabel,
       hint:farHint?{text:WALK_CLOSER,at:screenAt(farHint.id)}:null,managing:island?.managing===true&&!inBattle,waveStatus,speed,blocked:!active||outsideBlocked()||!!waves?.island.wave||!!waves?.point?.controller.wave }); tutorials?.update(delta); input.endFrame();
   }, () => {
     const draw=shell.mode!=='title';

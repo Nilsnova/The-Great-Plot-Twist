@@ -282,7 +282,7 @@ function fallenCaptain(pal) {
 }
 // Crew figures (16 x 32): smaller, with the tool of their trade.
 function crewFigure(kind) {
-  const look = {gunner: {shirt: '#e8e2d2', stripe: '#c8423b', cap: '#c8423b'}, carpenter: {shirt: '#d8a35a', stripe: null, cap: '#5a6b7a'},
+  const look = {gunner: {shirt: '#e8e2d2', stripe: '#307681', cap: '#314e70'}, carpenter: {shirt: '#d8a35a', stripe: null, cap: '#5a6b7a'},
     lookout: {shirt: '#3a78c8', stripe: '#e8e2d2', cap: '#25324a'}}[kind];
   return c => {
     const cx = 8; shadow(c, cx, 29.3, 4.8, 1.4);
@@ -298,7 +298,10 @@ function crewFigure(kind) {
     part(c, ellipse(cx - 2.6, 14.6, .8, .5), '#ef9f86', {line: false, shade: false, alpha: .6});
     // Headwear: the gunner's bandana, the carpenter's cap, the lookout's cap with a spyglass.
     part(c, poly([[cx - 4.4, 11.4], [cx - 3, 8], [cx + 3, 8], [cx + 4.4, 11.4]], [1.2, 2.4, 2.4, 1.2]), look.cap, {depth: .9});
-    if (kind === 'gunner') part(c, poly([[cx + 3.6, 10.4], [cx + 6.4, 11.6], [cx + 5, 13]], .6), look.cap, {depth: .4, width: .8});
+    if (kind === 'gunner') {
+      part(c, poly([[cx + 3.6, 10.4], [cx + 6.4, 11.6], [cx + 5, 13]], .6), look.cap, {depth: .4, width: .8});
+      part(c, rect(cx - 2.15, 9.65, 4.3, .95, .3), GOLD, {line: false, shade: false});
+    }
     if (kind === 'lookout') { part(c, rect(cx + 2.6, 14.6, 5, 1.8, .7), '#b8862e', {depth: .5, width: .8}); part(c, rect(cx + 6.2, 14.3, 1.4, 2.4, .5), '#e2b75a', {width: .7}); }
   };
 }

@@ -1677,6 +1677,8 @@ COC-39 input ownership: native dialog inertness does not stop global keyboard st
 
 My menu overview reads the existing accepted island answer, groups built buildings and reuses the normal building-card model for prices and lock reasons. Its type and next-level filters only change local rows; there are no purchase callbacks. The normal island modal owns focus, Escape and disposal, and accepted data reloads redraw the list. A top building level does not mean all tower paths are finished. [Code, trace examples, limits and three practice questions](../specs/COC-31-base-overview.md); [test and screenshot evidence](evidence/COC-31-base-overview/README.md). This text is explain-back preparation, not proof that my rehearsal or independent review has happened.
 
+Choose **Find** beside a building on your own island between waves. Its exact plot opens through the same village selection and building card as a map pick. Updated positions come from the last accepted island answer. Finding a building leaves its level, health and coins alone.
+
 ## COC-49 — Optional village management — Johannes Franz Lang
 
 Draft implementation in [PR #192](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/192),
@@ -1778,5 +1780,9 @@ dependency review and release acceptance remain pending.
 ## Village inspection and shoreline
 
 Select a built structure in Village Mode for its level, installed role or skill, and confirmed health when available. **E** opens the keyboard finder. **Range** shows the selected defense's clear-weather firing area between waves.
+
+Open **Details** on an upgradeable tower to compare the next level with the same confirmed layout, skills, research and crew. The comparison uses the wave simulation's damage, reload and nominal range. For Mortars and Swivels it shows damage per blast or pellet. Fog and wave events can shorten sight. A Gunner can switch towers when the damage and reload ranking changes. The existing upgrade action remains the way to buy the level.
+
+Select a house with an active role to see its support area. **Move** compares the accepted footprint with a legal proposed square while retaining the current saved layout. Workshop outlines eligible walls under the legacy rules. Tavern marks the local captain if they are in reach. Barracks shows its militia posts within the island limit. The markers clear when you close the card or cancel Move. Saved Workshops show their inactive status under recovery v1.
 
 The southwest mooring uses the existing walkable beach and paints the skiff on the sea. The skiff and rope clear the naval approach at countdown, while the beach bollard remains visible. The Harbor route still uses its own marked access point. [Desktop and phone evidence](evidence/village-polish/README.md)

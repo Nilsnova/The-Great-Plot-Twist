@@ -46,6 +46,7 @@ import {createMoveBar} from './move-bar.js';
 import {createVillageMode, isTextEntry} from './village-mode.js';
 import {createVillageBar} from './village-bar.js';
 import {approachSnapshot} from './coverage-planning.js';
+import {houseMoveSummary} from './building-inspection.js';
 import {SPOTS, KINDS, BELL, CABIN, ISLAND_PLACE, POINT_PLACE, PP_SPOTS, isIslandZone, isPointSpot, spotById,
   ppSpotById, pointZones, defenses, slotName, campaignBuilding, placedSpot, ARSENAL} from './spots.js';
 import {createArsenal} from './arsenal.js';
@@ -98,12 +99,13 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     interruptBoat, refreshCard, refreshCardIfBuild, openHarbor, openTechHub, openWreck, selectedAnchor, openCrew,
     openOverview, openCaptain, openLeaderboard, openCaptains, openInvite, pick, invalidateWallFeedback, build, readWalls,
     upgrade, askDemolish, confirmDemolish, heardDemolish, specialise, buyTree, toggleVillage, startMove, moved,
-    houseRange, research, giveWreck, hire, upgradeCaptain, learnSkill, takeRole, respecCaptain} = isl;
+    inspectHouse, activeHouseSupport, research, giveWreck, hire, upgradeCaptain, learnSkill, takeRole, respecCaptain} = isl;
   // ownRetry: your own island's read failed for a passing reason, so the next reread (the wave wiring's
   // 15 s timer, the bell or a build card) reads it again instead of leaving the island empty for good.
   isl.disposed = false; isl.own = null; isl.ownMessage = ''; isl.ownRetry = false; isl.visiting = null; isl.visitCode = readVisit(visitStorage); isl.busySpot = null; isl.cardMessage = '';
   isl.pendingWallet = null; isl.walletGeneration = 0;
   isl.world = null; isl.cutscene = null; isl.openSpot = null; isl.loadTicket = 0; isl.battle = false;
+  isl.housePlayer = null; isl.selectedHouse = null; isl.movingHouse = null;
   isl.wallFeedbackGeneration = 0;
   isl.coreState = createCoreState();
   isl.coreWorld = null; isl.coreContextKey = null; isl.coreTravelGeneration = 0; isl.coreRejoin = null;
@@ -139,9 +141,12 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   // T36, flexible placement: Move mode (move-mode.js) with its bar (move-bar.js) and the preview on the island.
   let approachTarget = '', approachMove = null, approachCache = null;
   isl.moving = createMoveMode({api: isl.api, render: model => {
-    const draft = approachTarget && model ? isl.moving.state : null;
-    approachMove = draft?.ok && !draft.message ? draft : null;
-    isl.moveBar.render(model && approachTarget ? {...model, coverage: approachTarget, coverageDraft: !!approachMove} : model);
+    const move = model ? isl.moving.state : null;
+    isl.movingHouse = move ? inspectHouse(move.spotId, move) : null;
+    // The selected house and the approach guide both mark the ground. Show one at a time.
+    const coverage = isl.movingHouse?.support ? '' : approachTarget;
+    approachMove = coverage && move?.ok && !move.message ? move : null;
+    isl.moveBar.render(model && {...model, coverage, coverageDraft: !!approachMove, support: houseMoveSummary(isl.movingHouse?.support)});
     isl.villageBar.render(isl.village.active && !model);
   }, preview: cell => isl.world?.preview(cell),
     spots: () => target()?.spots ?? [], code: () => (isl.visiting ? isl.visiting.code : null), onMoved: (answer, spotId) => void moved(answer, spotId)});
@@ -170,7 +175,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   }
   function approachCoverage() {
     const {own, recoveryState, recoveryStatus, recoveryIslandCode, walls, wallsFor, ui, village} = isl;
-    if (!approachTarget || !village.active || !own || ui.active || ui.selectionElement) return null;
+    if (!approachTarget || !village.active || !own || ui.active || ui.selectionElement || isl.movingHouse?.support) return null;
     const needsRecovery = recoveryControlsOn();
     const recovery = needsRecovery && recoveryStatus === 'ready' && recoveryIslandCode === own.code
       && recoveryState?.recoveryVersion === 1 && recoveryState.displayPhase === 'between_waves'
@@ -286,9 +291,10 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     decorate(place, art, cleanups, adapters = {}) {
       isl.world?.dispose();
       isl.coreWorld?.dispose();
+      isl.housePlayer = adapters.player ?? null;
       const core = decorateCore(place);
       const deco = decorateIsland(place, {container, art, reducedMotion, quality: () => preferences().quality, canvas: adapters.canvas, camera: adapters.camera,
-        isActive: adapters.isActive, onPick: pick, range: houseRange, selection: selectedAnchor, defenseRange: () => isl.ui.selectionRange,
+        isActive: adapters.isActive, onPick: pick, houseSupport: activeHouseSupport, selection: selectedAnchor, defenseRange: () => isl.ui.selectionRange,
         player: adapters.player, onFar: adapters.onFar,
         placing: () => isl.moving.active, onGround: (x, z) => isl.moving.tap(x, z),
         canPickRemote: id => isl.village.active && !!spotById(id),
@@ -297,7 +303,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       deco.runArtTask('core', () => core.retryArt());
       const original = place.update;
       place.update = (dt, frame) => { original(dt, frame); deco.update(dt, frame?.time ?? 0, frame?.paused); };
-      cleanups.push(() => { deco.dispose(); core.dispose(); if (isl.world === deco) isl.world = null; if (isl.coreWorld === core) isl.coreWorld = null; place.update = original; });
+      cleanups.push(() => { deco.dispose(); core.dispose(); if (isl.world === deco) { isl.world = null; isl.housePlayer = null; } if (isl.coreWorld === core) isl.coreWorld = null; place.update = original; });
     },
     // Pirate Point's shared build spots on lighthouse_isle (factory.js); its bell and lamps stay lane P's.
     decoratePoint(place, adapters = {}) {

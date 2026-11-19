@@ -35,8 +35,9 @@ const LIMIT_MS = 2000, SLACK_MS = 200;
 async function enter(captain, {create = false, join = null} = {}) {
   const {page} = captain;
   await page.locator('#play').click();
-  const landed = () => page.evaluate(() => !!document.querySelector('.island-card-lobby[open]')
-    || (window.__island?.world.current?.id === 'home_islet' && !!window.__island.island?.island && !document.querySelector('dialog[open]')));
+  const landed = () => page.evaluate(requireLobby => !!document.querySelector('.island-card-lobby[open]')
+    || (!requireLobby && window.__island?.world.current?.id === 'home_islet'
+      && !!window.__island.island?.island && !document.querySelector('dialog[open]')), !!(create || join));
   for (let i = 0; i < 30; i++) {
     await page.waitForFunction(() => document.querySelector('dialog.cutscene[open],.tutorial-card[open],.goal-card[open],.games-card[open],.island-card-lobby[open]')
       || (window.__island?.world.current?.id === 'home_islet' && window.__island.island?.island && !document.querySelector('dialog[open]')), null, {timeout: 60000, polling: 100});
@@ -56,6 +57,23 @@ async function enter(captain, {create = false, join = null} = {}) {
   // The friend plays on the host's island: wait until it has answered (the join's visit read).
   await page.waitForFunction(friend => (friend ? !!window.__island.island.visiting?.spots : !!window.__island.island.island?.spots), captain.playerId !== 'me', {timeout: 30000, polling: 100});
   await page.evaluate(() => { window.__island.settings.hour = 12; });
+  await page.addScriptTag({type: 'module', content: `
+    import {observeMultiplayerMap} from '/scripts/multiplayer-map-observer.js';
+    window.__placementMap = spot => {
+      const {scene} = window.__island;
+      if (spot.startsWith('wall_')) {
+        if (observeMultiplayerMap(scene, spot).mode !== 'wall-batch') return null;
+        const post = scene.getObjectByName('island-wall-connections')?.wallPosts?.find(row => row.id === spot);
+        return post ? {x: post.x, z: post.z} : null;
+      }
+      let map = null;
+      scene.traverse(object => {
+        if (/^island-(cannon|mortar|harpoon|watchtower|house):/.test(object.name) && object.name.endsWith(':' + spot)
+          && object.visible && object.userData.level !== undefined) map = {x: object.userData.ground.x, z: object.userData.ground.z};
+      });
+      return map;
+    };
+  `});
 }
 async function openCaptain(name, playerId, options) {
   const page = pages.length ? await context.newPage() : env.page, first = !pages.length;
@@ -79,16 +97,12 @@ const shot = async name => {
   log(`screenshots ${name}`);
 };
 // Where a page has one spot: the island answer's x/z (the host's own island, the friend's visit) and the building
-// the map draws for it (the real art, island-<kind>:<spot>, at its ground x/z: art.js placeArt), or null while none is drawn.
+// the map draws for it, from the wall batch's verified quad or a building sprite, or null until drawn.
 const placeOf = (captain, spot) => captain.page.evaluate(spot => {
   const i = window.__island.island, target = i.visiting?.spots ? i.visiting : i.island;
   const answer = target?.spots?.find(item => item.id === spot) ?? null;
-  let map = null;
-  window.__island.scene.traverse(object => {
-    if (/^island-(wall|cannon|mortar|harpoon|watchtower|house):/.test(object.name) && object.name.endsWith(`:${spot}`)
-      && object.visible && object.userData.level !== undefined) map = {x: object.userData.ground.x, z: object.userData.ground.z};
-  });
-  return {answer: answer && Number.isFinite(answer.x) ? {x: answer.x, z: answer.z} : null, map};
+  return {answer: answer && Number.isFinite(answer.x) ? {x: answer.x, z: answer.z} : null,
+    map: window.__placementMap(spot)};
 }, spot);
 const near = (a, b) => !!a && Math.abs(a.x - b.x) < 1e-6 && Math.abs(a.z - b.z) < 1e-6;
 // Waits (at most 2 s) until the answer and the map of `captain` show `spot` at `at`; answers the ms it took.
@@ -169,7 +183,9 @@ try {
   // 2 The host builds a wall and a cannon on their fixed spots; the friend sees both.
   await island(host, async i => { i.dev.setCoins(400); await i.load(); await i.build('wall_1', 'wall'); await i.build('cannon_1', 'cannon'); });
   await ben.page.waitForFunction(() => ['wall_1', 'cannon_1'].every(id => window.__island.island.visiting?.spots?.find(spot => spot.id === id)?.built), null, {timeout: 5000, polling: 100});
-  for (const captain of pages) await captain.page.waitForFunction(() => { let n = 0; window.__island.scene.traverse(o => { if (/^island-(wall|cannon):(wall_1|cannon_1)$/.test(o.name) && o.visible && o.userData.level !== undefined) n++; }); return n === 2; }, null, {timeout: 30000, polling: 200});
+  for (const captain of pages) await captain.page.waitForFunction(
+    ([wall, cannon]) => window.__placementMap?.(wall) && window.__placementMap(cannon),
+    [WALL, CANNON], {timeout: 30000, polling: 200});
   const fixedWall = await placeOf(ben, WALL);
   assert.deepEqual(fixedWall, {answer: null, map: {x: -18.5, z: -1}}, 'an unmoved wall stands on its fixed spot (no x/z in the answer)');
   await shot('01-built');
@@ -253,7 +269,8 @@ try {
     await captain.page.reload();
     await enter(captain);
     for (const [spot, at] of [[WALL, WALL_AT], [CANNON, FRIEND_AT]]) {
-      await captain.page.waitForFunction(spot => { let drawn = false; window.__island.scene.traverse(o => { if (o.name.endsWith(`:${spot}`) && /^island-(wall|cannon):/.test(o.name) && o.visible && o.userData.level !== undefined) drawn = true; }); return drawn; }, spot, {timeout: 30000, polling: 200});
+      await captain.page.waitForFunction(spot => window.__placementMap?.(spot), spot,
+        {timeout: 30000, polling: 200});
       const seen = await placeOf(captain, spot);
       assert.ok(near(seen.answer, at) && near(seen.map, at), `${captain.name} still has ${spot} at ${at.x},${at.z} after a reload: ${JSON.stringify(seen)}`);
     }

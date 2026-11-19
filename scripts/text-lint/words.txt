@@ -97,6 +97,7 @@ apple
 applicable
 application
 applied
+applies
 apply
 approval
 approved
@@ -441,6 +442,7 @@ commander
 companies
 company
 compare
+comparison
 compass
 complete
 completed
@@ -584,6 +586,7 @@ delivery
 demand
 demo
 demolish
+deploys
 deposit
 deposits
 descriptions
@@ -698,6 +701,7 @@ english
 enough
 enter
 entering
+enters
 entries
 entry
 envelopes
@@ -1002,6 +1006,7 @@ head
 headers
 heading
 heal
+healing
 health
 heap
 hear
@@ -1752,6 +1757,7 @@ prologue
 prompt
 prompts
 proof
+proposed
 props
 prose
 protect
@@ -2113,6 +2119,7 @@ shores
 short
 shortcut
 shortcuts
+shorten
 shorter
 shortly
 shot
@@ -2218,6 +2225,7 @@ speak
 speaker
 speech
 speed
+speeds
 spelling
 spend
 spends
@@ -2268,6 +2276,7 @@ state
 stated
 states
 station
+stats
 status
 stay
 stayed
@@ -2526,6 +2535,7 @@ underway
 undone
 unexplored
 unfinished
+unit
 units
 unknown
 unlock

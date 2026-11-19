@@ -2,12 +2,13 @@
 // tree tier, Move mode and Village mode, research, give to the wreck, hire crew, and the captain's level,
 // skills, role and respec. Each calls the server and lands its answer. A closure over the island's state `isl`.
 
-import {KINDS, isPointSpot, spotById, ppSpotById, placedSpot} from './spots.js';
+import {KINDS, isPointSpot, spotById, ppSpotById} from './spots.js';
 import {coinText, refundToast} from './card-model.js';
+import {previewHouseSupport} from './house-support-model.js';
 import {isOpen, waveOf} from '../campaign/index.js';
 import {BRANCH_BY_ID, SPECS, optionName} from '../campaign/tech.js';
 import {TOWER_TREES} from '../pirates/tower-trees.js';
-import {ROLES, activeRole, roleRadius} from '../campaign/houses.js';
+import {ROLES, activeRole} from '../campaign/houses.js';
 import {ROLE_BY_ID, SKILL_BY_ID, isRole} from '../pirates/captain-ids.js';
 import {islandCode} from './codes.js';
 import {ISLAND_BUILT, ISLAND_UPGRADED, CREW_HIRED} from '../ui/quest-events.js';
@@ -17,7 +18,7 @@ import {SPOTS_CHANGED, TOWER_SPECIALISED, TOWER_TREE_BOUGHT, HOUSE_ROLE_PICKED} 
 export function createActions(isl) {
   const {emit, focus, resetInput, reducedMotion, now} = isl;
   // From the other parts (island-*.js), linked once every part exists.
-  let recoveryControlsOn, recoveryModelVersion, readStructureRecovery, setOwn, campaign, wrote, target, where,
+  let recoveryControlsOn, recoveryPolicyOn, readStructureRecovery, setOwn, campaign, wrote, target, where,
     placeOf, tookCoins, reloadVisit, reloadOwn, refreshDefended, took, refused, lobby, colours, bellAction,
     demolishHandlers, demolishCardModel, readBoat, bell, refreshCard, refreshCardIfBuild;
   const onWhere = place => (place === 'point' ? ' for Pirate Point' : place === 'visit' ? ` on ${isl.visiting?.ownerName ? `${isl.visiting.ownerName}'s` : 'this'} island` : '');
@@ -221,7 +222,6 @@ export function createActions(isl) {
     } else { isl.cardMessage = answer.message; if (['not_built', 'needs_level', 'known', 'needs_tier', 'closed', 'locked', 'insufficient_funds'].includes(answer.code)) await refreshDefended(); }
     refreshCard();
   }
-  // The reach of the open house card's role, for the ring on the ground (world.js), or null.
   function toggleVillage() {
     if (isl.village.active) return isl.village.leave();
     isl.ui.close(); isl.moving.cancel(); isl.openSpot = null; resetInput(); focus();
@@ -243,11 +243,19 @@ export function createActions(isl) {
     refreshCard();
     isl.ui.toast(`Moved${onWhere(place)}. Your defenders fight from the new spot.`, 'success');
   }
-  function houseRange() {
-    if (isl.ui.open !== 'build' || !isl.openSpot) return null;
-    const where = placedSpot(isl.openSpot, target()?.spots), role = activeRole((target()?.spots ?? []).find(item => item.id === isl.openSpot));
-    if (recoveryModelVersion() === 1 && role === 'workshop') return null;
-    return where && role ? {x: where.x, z: where.z, radius: roleRadius(role), role} : null;
+  function inspectHouse(houseId, move = null) {
+    const island = target();
+    if (!island?.spots || spotById(houseId)?.slot !== 'house' || (isl.battle && !isl.waveOver)) return null;
+    const at = isl.housePlayer?.();
+    const captains = at && Number.isFinite(at.x) && Number.isFinite(at.z)
+      ? [{id: 'you', x: at.x, z: at.z, present: true, down: false}] : null;
+    const recoveryVersion = recoveryPolicyOn() ? 1 : island.recoveryVersion ?? 0;
+    return {island, support: previewHouseSupport({houseId, spots: island.spots, recoveryVersion, captains, move})};
+  }
+  function activeHouseSupport() {
+    if (isl.battle && !isl.waveOver) return null;
+    const shown = isl.moving.active ? isl.movingHouse : isl.ui.open === 'build' ? isl.selectedHouse : null;
+    return shown && shown.island === target() ? shown.support : null;
   }
   // GAME-V3.md §5.1: one research step: tier 1 of a branch, or one of the two options of tier 2 or 3 (change:
   // the crew picked the other one before and pays the tier's price again to switch).
@@ -353,11 +361,11 @@ export function createActions(isl) {
     refreshCard();
   }
   function link() { // the names of the other parts, once every part exists (index.js)
-    ({recoveryControlsOn, recoveryModelVersion, readStructureRecovery, setOwn, campaign, wrote, target, where,
+    ({recoveryControlsOn, recoveryPolicyOn, readStructureRecovery, setOwn, campaign, wrote, target, where,
       placeOf, tookCoins, reloadVisit, reloadOwn, refreshDefended, took, refused, lobby, colours, bellAction,
       demolishHandlers, demolishCardModel, readBoat, bell, refreshCard, refreshCardIfBuild} = isl);
   }
   return {invalidateWallFeedback, wallFeedbackScope, build, readWalls, repairWall, upgrade, askDemolish,
-    confirmDemolish, heardDemolish, placeCode, specialise, buyTree, toggleVillage, startMove, moved, houseRange,
+    confirmDemolish, heardDemolish, placeCode, specialise, buyTree, toggleVillage, startMove, moved, inspectHouse, activeHouseSupport,
     research, giveWreck, hire, upgradeCaptain, learnSkill, takeRole, respecCaptain, link};
 }

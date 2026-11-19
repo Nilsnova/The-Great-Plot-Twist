@@ -41,4 +41,40 @@ describe('path marks on the island', () => {
     // In a wave the renderer draws walls and towers (and their marks); the island's step aside.
     expect(result.battle).toEqual([]);
   });
+
+  it('restores tower level pips only when confirmed recovery raises health above zero', async () => {
+    const result = await evaluate(async () => {
+      const THREE = await window.g20Import('/node_modules/three/build/three.module.js');
+      const {decorateIsland} = await window.g20Import('/src/island/world.js');
+      const place = {group: new THREE.Group(), colliders: [], zones: []};
+      const drawing = decorateIsland(place, {
+        layout: {spots: [{id: 'cannon_1', slot: 'tower', x: 3, z: 4}], zones: () => [], cabin: false, bell: false},
+        loadArt: async names => Object.fromEntries(names.map(id => [id, new THREE.MeshBasicMaterial()])),
+      });
+      await Promise.resolve(); await Promise.resolve();
+      const cannon = {id: 'cannon_1', kind: 'cannon', level: 3, built: true};
+      const observe = () => {
+        const visible = drawing.root.children.filter(mesh => mesh.visible);
+        return {
+          look: visible.find(mesh => mesh.name === 'island-cannon:cannon_1')?.userData.recoveryLook,
+          pips: visible.filter(mesh => mesh.name.startsWith('island-pip:cannon_1:')).length,
+          health: visible.some(mesh => mesh.name === 'structure-recovery:cannon_1'),
+        };
+      };
+      const recovery = (hpUnits, recoveryVersion = 1) => ({recoveryVersion, displayPhase: 'between_waves', islandEpoch: 'test-island',
+        structures: [{spot: cannon.id, kind: cannon.kind, level: cannon.level, instanceId: 'test-cannon', hpUnits, maxHP: 60}]});
+      try {
+        drawing.apply({spots: [cannon]});
+        drawing.setRecoveryState(recovery(0)); const broken = observe();
+        drawing.setRecoveryState(recovery(1)); const damaged = observe();
+        drawing.setRecoveryState(recovery(1_000_000)); const whole = observe();
+        drawing.setRecoveryState(recovery(0, 0)); const legacy = observe();
+        return {broken, damaged, whole, legacy};
+      } finally { drawing.dispose(); }
+    });
+    expect(result.broken).toEqual({look: 'broken', pips: 0, health: true});
+    expect(result.damaged).toEqual({look: 'damaged', pips: 3, health: true});
+    expect(result.whole).toEqual({look: 'intact', pips: 3, health: false});
+    expect(result.legacy).toEqual(result.whole);
+  });
 });

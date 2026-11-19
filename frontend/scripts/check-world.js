@@ -23,7 +23,8 @@ try {
     fixtures: BOARD.fixtures.map(fixture => ({...fixture, source: 'recorded', canStake: false}))};
   await page.route('**/api/sports', route => route.request().method() === 'GET'
     ? route.fulfill({json: sports}) : route.fallback());
-  await page.goto(env.url + '?market=local');await startFromTitle(page);
+  // Exercise the retained travel paths even while the one-island policy is the default.
+  await page.goto(env.url + '?market=local&oneisland=0');await startFromTitle(page);
   await page.evaluate(() => {
     window.__worldEvents = [];
     for (const type of ['travel', 'arrived', 'interact', 'plot_clicked']) window.__island.on(type, e => window.__worldEvents.push(e));

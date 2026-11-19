@@ -3,6 +3,7 @@
 // fires that land (landShots) and the towers that reload and fire (fireTowers). A closure over `sim` (sim-setup.js).
 
 import { round2, distance } from './sim-read.js';
+import { clusterBlastDamage } from './sim-towers.js';
 import { DEFENSES_V2 } from './defenses-v2.js';
 
 export function createWeapons(sim) {
@@ -263,7 +264,7 @@ export function createWeapons(sim) {
       const blasts = cluster
         ? Array.from({ length: cluster.blasts }, (_, k) => { const a = k / cluster.blasts * Math.PI * 2 + shell.toX;
           return { x: round2(shell.toX + Math.cos(a) * cluster.spread), z: round2(shell.toZ + Math.sin(a) * cluster.spread),
-            radius: round2(cluster.radius * wide), damage: round2(shell.damage * cluster.damage) }; })
+            radius: round2(cluster.radius * wide), damage: clusterBlastDamage(shell.damage, cluster) }; })
         : [{ x: shell.toX, z: shell.toZ, radius, damage: shell.damage }];
       for (const blast of blasts) {
         const hits = ships.filter(ship => distance(ship.x, ship.z, blast.x, blast.z) <= blast.radius);
