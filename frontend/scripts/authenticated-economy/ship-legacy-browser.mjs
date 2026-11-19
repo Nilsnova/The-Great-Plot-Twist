@@ -45,11 +45,12 @@ async function finishEntry(page){
  throw Error('Ordinary visible entry did not complete');
 }
 async function pointer(page,selector){const locator=typeof selector==='string'?page.locator(selector).first():selector;let hit;
- for(let attempt=0;attempt<60;attempt++){await locator.scrollIntoViewIfNeeded();
+ for(let attempt=0;attempt<60;attempt++){try{await locator.scrollIntoViewIfNeeded();
   hit=await locator.evaluate(node=>{const r=node.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2;
    return {x,y,enabled:!node.disabled,hit:node===document.elementFromPoint(x,y)||node.contains(document.elementFromPoint(x,y))};});
-  if(hit.enabled&&hit.hit)break;await page.waitForTimeout(50);}
- assert.ok(hit.enabled&&hit.hit,'A physical UI action must hit its current enabled control');await page.mouse.click(hit.x,hit.y);}
+  }catch(error){if(!/detach|attached|resolve/i.test(error.message))throw error;hit=null;}
+  if(hit?.enabled&&hit.hit)break;await page.waitForTimeout(50);}
+ assert.ok(hit?.enabled&&hit.hit,'A physical UI action must hit its current enabled control');await page.mouse.click(hit.x,hit.y);}
 const response=(page,predicate,timeout=30000)=>page.waitForResponse(predicate,{timeout}).then(reply=>({reply}),error=>({error}));
 async function settled(pending){const result=await pending;if(result.error)throw result.error;return result.reply;}
 try{
@@ -57,7 +58,7 @@ try{
  const browser=await chromium.launch({executablePath:'/usr/bin/chromium',headless:true,args:['--no-sandbox','--disable-dev-shm-usage','--disable-gpu',
   '--ignore-certificate-errors-spki-list='+runtime.certificateSpki]});
  env={runtime,servedSources:servedSourceEvidence(runtime),close:()=>browser.close()};
- const page=await browser.newPage({viewport:{width:1280,height:800}}),actor={actorId:saved.actorId,label:'ship-legacy-owner'};
+ const page=await browser.newPage({viewport:{width:1280,height:800}}),actor={actorId:saved.actorId,label:'ship-legacy-owner'};env.page=page;
  report.servedPrimaryBefore=env.servedSources;
  await page.goto('http://127.0.0.1:55107/?oneisland=0',{waitUntil:'domcontentloaded'});
  await page.evaluate(async({key,session,id})=>{const {createAuthClient}=await import('/src/online/supabase-sdk.js');
@@ -184,7 +185,8 @@ try{
   actualPlace:'saltreach_harbor',personalCoins:guestBefore.balance,marketCoins:String(guestMarket.balance),marketCard:classMarketCard,sharedBankUnchanged:true,
   hostSetup:'One real registered local host was explicitly allowlisted only on the side API; normal host code endpoint generated the disposable code.'});
  report.status='passed';
-}catch(error){report.status='failed';report.error={name:error.name,message:error.message};process.exitCode=1;}
+}catch(error){report.status='failed';report.error={name:error.name,message:error.message};
+ await env?.page?.screenshot({path:output+'/failure-private.png'}).catch(()=>{});process.exitCode=1;}
 finally{await env?.close();report.finishedAt=new Date().toISOString();report.hashesAfter=await hashes();
  if(JSON.stringify(report.hashesBefore)!==JSON.stringify(report.hashesAfter)){report.status='failed';report.sourceFailure='Measured helper/launcher/scenario changed';process.exitCode=1;}
  try{report.sourceAfter=sourceEvidence(candidate,{checkoutRoot:root});report.equivalenceAfter=sourceEvidence(production,{checkoutRoot:root});}
