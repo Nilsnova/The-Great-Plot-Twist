@@ -32,7 +32,7 @@
     "nature": "eb157fc82bd7e1192f65d7cca439fc166bc2fed1",
     "cannons": "eb157fc82bd7e1192f65d7cca439fc166bc2fed1",
     "walls": "15d8362f5e1d93699fcc96074450c2387d5f291b",
-    "core": "5aca7df3c35000721bcd080159cea764becf6fcb",
+    "core": "77d0f508dab059697370f225b3db45dfc35062a3",
     "progress": "eb157fc82bd7e1192f65d7cca439fc166bc2fed1",
     "mortars": "f635640ec959c08c7cc57856db1bf83533973b9d",
     "harpoons": "d39ba70278c7060774a7cc03aa01e44e159cf1ac",
@@ -150,10 +150,17 @@
         "sha256": "a21c44f3a329abe2fa80b292e20d9c1baa7fc33bf1fc1cd67c7325dd488e9221",
         "width": 1254,
         "height": 1254
+      },
+      {
+        "file": "village/home-heart-v3.png",
+        "bytes": 1401486,
+        "sha256": "e11a3ce67f647f77b1634dcc63dde2a0070c60ef66e8569a7a2e4f715ea501fb",
+        "width": 1312,
+        "height": 1199
       }
     ],
-    "encodedBytes": 28442054,
-    "summedDecodedBytes": 94373756
+    "encodedBytes": 29843540,
+    "summedDecodedBytes": 100666108
   },
   "compiled": {
     "files": [
@@ -207,9 +214,9 @@
         "height": 1008
       },
       {
-        "file": "village/compiled/core-4x-1-f1012866ac2d.png",
-        "bytes": 713942,
-        "sha256": "f1012866ac2d3b196049f32df0e466a3620f7179ffef54e5f3cd062adda51281",
+        "file": "village/compiled/core-4x-1-f44cae0d9e52.png",
+        "bytes": 778201,
+        "sha256": "f44cae0d9e5227ac71d6d6a1ef59d90dd775ed88ae81a34b282227baa86da58a",
         "width": 520,
         "height": 1560
       },
@@ -249,14 +256,14 @@
         "height": 1000
       }
     ],
-    "encodedBytes": 10622802,
+    "encodedBytes": 10687061,
     "summedDecodedBytes": 41016064,
     "peakSingleDecodedBytes": 5541888
   },
   "initialTransfer": {
     "unchangedTerrainBytes": 2683357,
-    "rawPlusTerrainBytes": 31125411,
-    "compiledPlusTerrainBytes": 13306159,
+    "rawPlusTerrainBytes": 32526897,
+    "compiledPlusTerrainBytes": 13370418,
     "targetBytes": 8388608,
     "targetMet": false
   },
@@ -2531,23 +2538,23 @@
     {
       "name": "core",
       "module": "src/art/village/core.js",
-      "sha256": "569a7fbf53d28503cc2e77d472c08c1a2a44499402db12ef87020fb01eb5cf38",
+      "sha256": "7b6d2ac3ea5f8590585935d4f5d9fc59eb60d5a027f022d4e7a794f5377f80b9",
       "frames": {
         "island_core": {
           "sheet": {
-            "file": "village/home-heart-v2.png",
+            "file": "village/home-heart-v3.png",
             "width": 1312,
             "height": 1199
           },
           "rect": [
-            55,
+            27,
             0,
-            543,
-            614
+            603,
+            698
           ],
           "sourceFoot": [
-            271,
-            598
+            263,
+            684
           ],
           "logical": [
             128,
@@ -2555,27 +2562,27 @@
             12
           ],
           "fitBounds": [
-            281,
-            603,
-            281,
-            16
+            263,
+            684,
+            340,
+            14
           ]
         },
         "island_core_damaged": {
           "sheet": {
-            "file": "village/home-heart-v2.png",
+            "file": "village/home-heart-v3.png",
             "width": 1312,
             "height": 1199
           },
           "rect": [
-            709,
+            684,
             0,
-            547,
-            619
+            602,
+            698
           ],
           "sourceFoot": [
-            273,
-            603
+            262,
+            684
           ],
           "logical": [
             128,
@@ -2583,27 +2590,27 @@
             12
           ],
           "fitBounds": [
-            281,
-            603,
-            281,
-            16
+            263,
+            684,
+            340,
+            14
           ]
         },
         "island_core_broken": {
           "sheet": {
-            "file": "village/home-heart-v2.png",
+            "file": "village/home-heart-v3.png",
             "width": 1312,
             "height": 1199
           },
           "rect": [
-            54,
-            917,
-            562,
-            248
+            29,
+            896,
+            600,
+            289
           ],
           "sourceFoot": [
-            281,
-            232
+            261,
+            275
           ],
           "logical": [
             128,
@@ -2611,10 +2618,10 @@
             12
           ],
           "fitBounds": [
-            281,
-            603,
-            281,
-            16
+            263,
+            684,
+            340,
+            14
           ]
         }
       }
@@ -7302,7 +7309,7 @@
       "name": "core",
       "pages": [
         {
-          "file": "village/compiled/core-4x-1-f1012866ac2d.png",
+          "file": "village/compiled/core-4x-1-f44cae0d9e52.png",
           "width": 520,
           "height": 1560,
           "items": [
@@ -7338,7 +7345,7 @@
       ],
       "sheets": {
         "coreBaked1": {
-          "file": "village/compiled/core-4x-1-f1012866ac2d.png",
+          "file": "village/compiled/core-4x-1-f44cae0d9e52.png",
           "width": 520,
           "height": 1560
         }
@@ -13111,7 +13118,7 @@
           "id": "island_core",
           "density": 4,
           "pixels": 262144,
-          "visiblePixels": 103112,
+          "visiblePixels": 114972,
           "differingPixels": 0,
           "maxVisibleDelta": 0,
           "maxAlphaDelta": 0,
@@ -13121,37 +13128,37 @@
           "id": "island_core",
           "density": 2.5,
           "pixels": 102400,
-          "visiblePixels": 41067,
-          "differingPixels": 37680,
+          "visiblePixels": 45721,
+          "differingPixels": 42144,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 49,
+          "alphaWeightedMeanRgbDelta": 2.5283011845860814
+        },
+        {
+          "id": "island_core",
+          "density": 2,
+          "pixels": 65536,
+          "visiblePixels": 29213,
+          "differingPixels": 26987,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 43,
+          "alphaWeightedMeanRgbDelta": 2.2015603651160136
+        },
+        {
+          "id": "island_core",
+          "density": 1.5,
+          "pixels": 36864,
+          "visiblePixels": 16400,
+          "differingPixels": 15151,
           "maxVisibleDelta": 255,
           "maxAlphaDelta": 48,
-          "alphaWeightedMeanRgbDelta": 2.6996750872959834
-        },
-        {
-          "id": "island_core",
-          "density": 2,
-          "pixels": 65536,
-          "visiblePixels": 26165,
-          "differingPixels": 24032,
-          "maxVisibleDelta": 255,
-          "maxAlphaDelta": 36,
-          "alphaWeightedMeanRgbDelta": 2.3778319292196364
-        },
-        {
-          "id": "island_core",
-          "density": 1.5,
-          "pixels": 36864,
-          "visiblePixels": 14798,
-          "differingPixels": 13683,
-          "maxVisibleDelta": 255,
-          "maxAlphaDelta": 51,
-          "alphaWeightedMeanRgbDelta": 2.4859067053650503
+          "alphaWeightedMeanRgbDelta": 2.549303600321783
         },
         {
           "id": "island_core_damaged",
           "density": 4,
           "pixels": 262144,
-          "visiblePixels": 102560,
+          "visiblePixels": 113391,
           "differingPixels": 0,
           "maxVisibleDelta": 0,
           "maxAlphaDelta": 0,
@@ -13161,37 +13168,37 @@
           "id": "island_core_damaged",
           "density": 2.5,
           "pixels": 102400,
-          "visiblePixels": 40753,
-          "differingPixels": 37677,
+          "visiblePixels": 45050,
+          "differingPixels": 42019,
           "maxVisibleDelta": 255,
           "maxAlphaDelta": 54,
-          "alphaWeightedMeanRgbDelta": 2.897515684595372
+          "alphaWeightedMeanRgbDelta": 2.6460448928821103
         },
         {
           "id": "island_core_damaged",
           "density": 2,
           "pixels": 65536,
-          "visiblePixels": 25985,
-          "differingPixels": 24077,
+          "visiblePixels": 28794,
+          "differingPixels": 26886,
           "maxVisibleDelta": 255,
-          "maxAlphaDelta": 42,
-          "alphaWeightedMeanRgbDelta": 2.528469887600181
+          "maxAlphaDelta": 40,
+          "alphaWeightedMeanRgbDelta": 2.298555008559247
         },
         {
           "id": "island_core_damaged",
           "density": 1.5,
           "pixels": 36864,
-          "visiblePixels": 14695,
-          "differingPixels": 13745,
+          "visiblePixels": 16140,
+          "differingPixels": 15141,
           "maxVisibleDelta": 255,
-          "maxAlphaDelta": 53,
-          "alphaWeightedMeanRgbDelta": 2.663135874799386
+          "maxAlphaDelta": 49,
+          "alphaWeightedMeanRgbDelta": 2.65840970268146
         },
         {
           "id": "island_core_broken",
           "density": 4,
           "pixels": 262144,
-          "visiblePixels": 47604,
+          "visiblePixels": 51129,
           "differingPixels": 0,
           "maxVisibleDelta": 0,
           "maxAlphaDelta": 0,
@@ -13201,31 +13208,31 @@
           "id": "island_core_broken",
           "density": 2.5,
           "pixels": 102400,
-          "visiblePixels": 18859,
-          "differingPixels": 17717,
+          "visiblePixels": 20194,
+          "differingPixels": 19114,
           "maxVisibleDelta": 255,
-          "maxAlphaDelta": 41,
-          "alphaWeightedMeanRgbDelta": 2.9351385053973456
+          "maxAlphaDelta": 43,
+          "alphaWeightedMeanRgbDelta": 2.7414697315773178
         },
         {
           "id": "island_core_broken",
           "density": 2,
           "pixels": 65536,
-          "visiblePixels": 12020,
-          "differingPixels": 11198,
+          "visiblePixels": 12925,
+          "differingPixels": 12138,
           "maxVisibleDelta": 255,
-          "maxAlphaDelta": 31,
-          "alphaWeightedMeanRgbDelta": 2.4637338770466175
+          "maxAlphaDelta": 27,
+          "alphaWeightedMeanRgbDelta": 2.375597436329445
         },
         {
           "id": "island_core_broken",
           "density": 1.5,
           "pixels": 36864,
-          "visiblePixels": 6828,
-          "differingPixels": 6416,
+          "visiblePixels": 7239,
+          "differingPixels": 6861,
           "maxVisibleDelta": 255,
-          "maxAlphaDelta": 34,
-          "alphaWeightedMeanRgbDelta": 2.635209875187682
+          "maxAlphaDelta": 37,
+          "alphaWeightedMeanRgbDelta": 2.964805484575998
         }
       ],
       "peakSourceBytes": 6292352,
@@ -17584,6 +17591,21 @@
         "village/compiled/services-4x-1-7a3d2f9b5d5b.png"
       ],
       "note": "The shared service atlas adds the existing Harbor, wreck and repaired wreck art IDs at their established sizes and anchors. Historical transport evidence remains readable."
+    },
+    {
+      "family": "core",
+      "sourceCommit": "77d0f508dab059697370f225b3db45dfc35062a3",
+      "previousReportRevision": "f83b0d56dff12ac704b9ef640d2fa3cabf5d0a41",
+      "previousReportSha256": "3686b261de4271c6c963262f4a7487c9911feee7ae3b995538a6e990590590e7",
+      "compilerReport": "../VIS-05-hero/heart-bake-v3.json",
+      "compilerReportSha256": "cac02904087fbdcaa23ac3a0b283ec12caf22367304df306f699033950365fae",
+      "oldSheets": [
+        "village/compiled/core-4x-1-f1012866ac2d.png"
+      ],
+      "newSheets": [
+        "village/compiled/core-4x-1-f44cae0d9e52.png"
+      ],
+      "note": "The core remains the same normalized logical size and foot. The previous shared source still supplies the Harbor Bell."
     }
   ],
   "normalizerHistory": [

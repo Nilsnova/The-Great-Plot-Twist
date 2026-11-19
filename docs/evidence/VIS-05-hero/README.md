@@ -85,3 +85,7 @@ The active [Cabin and Arsenal source](../../../frontend/public/village/home-fixe
 ## 19 November Heart and Bell revision
 
 The [Heart and Harbor Bell source](../../../frontend/public/village/home-heart-v2.png) includes the intact pavilion, cracked pavilion, low rubble and open bell arch. The [source report](heart-bell-v2.json) preserves the OpenAI image generation prompt and measures the same alpha-clear rectangular opening under the intact and damaged pavilion. Both have a fully transparent witness region. The [native compiler receipt](heart-bell-bake-v2.json) records normalized artwork at the existing frame sizes and scale. The watchtower artwork uses its original source and frame definitions.
+
+## 19 November Heart tide hall
+
+The [Heart tide hall source](../../../frontend/public/village/home-heart-v3.png) brings a deeper slate roof, stepped limestone entrance and readable shaded side wall to Home's central building. The [source report](heart-v3.json) records the doorway witness, ground feet and shared scale for the healthy hall, damaged hall and rubble. The [compiler receipt](heart-bake-v3.json) covers all three states at the existing logical size. The previous source still supplies the Harbor Bell.
