@@ -1,6 +1,8 @@
 // Actual-provider T60 scenario. The caller owns isolated users/bootstrap and schedules mutations.
 // No intercepted responses, injected HP, fabricated journal events or database writes are used.
 import assert from 'node:assert/strict';
+import {createHash} from 'node:crypto';
+import {readFileSync} from 'node:fs';
 import {mkdir, writeFile} from 'node:fs/promises';
 import {join} from 'node:path';
 
@@ -60,12 +62,13 @@ async function accounting(observe, account, wave) {
  * Direct same-UID/fourth-request probes are explicitly transport-layer checks, not UI-click claims.
  */
 export async function runPaidRepairAcceptance({ownerPage,memberPage,observe,api,outputDir,
-  spot='wall_1',reconnectMember=page=>page.reload()}) {
+  spot='wall_1',spots=[spot],reconnectMember=page=>page.reload()}) {
   const report = {sourceCommit:SOURCE,status:'running',scenario:'actual-provider-paid-repair',steps:[],limits:[
     'Temporary local provider accounts; no hosted service or deployment.',
     'Natural simulation checkpoints retain the existing accepted-combat-report trust model.',
     'Same-UID and refused fourth requests use actual authenticated transport, not a UI click.',
   ]};
+  report.scenarioSha256=createHash('sha256').update(readFileSync(new URL(import.meta.url))).digest('hex');
   const trace = [];
   const record = page => request => {
     if (request.url().endsWith(REPAIR) && request.method()==='POST') trace.push(request.postDataJSON());
@@ -77,7 +80,8 @@ export async function runPaidRepairAcceptance({ownerPage,memberPage,observe,api,
     const ownerEconomy = await ownerPage.evaluate(() => window.__island.island.economy);
     const memberEconomy = await memberPage.evaluate(() => window.__island.island.economy);
     assert.equal(memberEconomy.accountId,ownerEconomy.accountId);
-    const initial = await recovery(ownerPage), initialRow=initial.structures.find(row=>row.spot===spot);
+    const initial = await recovery(ownerPage);
+    let initialRow=initial.structures.find(row=>row.spot===spot);
     assert.equal(initial.displayPhase,'between_waves','start at the real idle boundary');
     assert.ok(initialRow,'caller must build the target through the real product first');
     assert.ok(BigInt(ownerEconomy.treasury.availableCoins)>=BigInt(initialRow.fixedPrice*3));
@@ -85,6 +89,13 @@ export async function runPaidRepairAcceptance({ownerPage,memberPage,observe,api,
     await ownerPage.locator('.island-card[open] [data-focus="bell"]:not([disabled])').click();
     await ownerPage.waitForFunction(() => !!window.__island?.waves?.island.wave,null,{timeout:20000});
     await memberPage.waitForFunction(() => !!window.__island?.waves?.island.wave,null,{timeout:20000});
+    const naturallyDamaged=await ownerPage.waitForFunction(spots => {
+      const state=window.__island?.waves?.island.wave?.state;
+      return [...(state?.walls??[]),...(state?.towers??[])]
+        .find(row=>spots.includes(row.id) && row.hp<row.maxHp)?.id??null;
+    },spots,{timeout:90000});
+    spot=await naturallyDamaged.jsonValue();
+    initialRow=initial.structures.find(row=>row.spot===spot);
     const firstDamage = await damagedCard(ownerPage,spot);
     const wave = firstDamage.read.waveId, account=ownerEconomy.accountId;
     assert.equal(firstDamage.read.remainingPaidUses,3);
@@ -114,10 +125,11 @@ export async function runPaidRepairAcceptance({ownerPage,memberPage,observe,api,
       report.steps.push({name:`genuine shared repair ${ordinal}`,receipt:paid.data.receipt});
     }
     // With quota exhausted the UI correctly disables its button. Submit a fresh invalid intent only to the API.
-    await ownerPage.waitForFunction(() => {
+    await ownerPage.waitForFunction(spot => {
       const state=window.__island?.waves?.island.wave?.state;
-      return state?.walls?.some(row=>row.hp<row.maxHp) || state?.towers?.some(row=>row.hp<row.maxHp);
-    },null,{timeout:90000});
+      return [...(state?.walls??[]),...(state?.towers??[])]
+        .some(row=>row.id===spot && row.hp<row.maxHp);
+    },spot,{timeout:90000});
     assert.equal((await ownerPage.evaluate(() => window.__island.waves.island.checkpointBeforeRepair())).ok,true);
     const last = await recovery(ownerPage), row=last.structures.find(item=>item.spot===spot);
     assert.ok(row.hpUnits<1000000); assert.equal(last.remainingPaidUses,0);
