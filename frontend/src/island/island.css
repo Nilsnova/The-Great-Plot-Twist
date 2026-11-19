@@ -321,6 +321,7 @@
 @media(max-width:900px){
   .kit-modal.island-card.island-card-docked[open]{position:fixed;inset:auto 0 0 0;margin:0;width:100%;max-width:none;max-height:60dvh;overflow:auto;overscroll-behavior:contain;
     border-radius:var(--u-radius) var(--u-radius) 0 0;padding:0 14px max(16px,env(safe-area-inset-bottom))}
+  .island-card.island-card-docked .kit-modal-header{margin-inline:-14px}
 }
 /* The goals panel folds away while a docked card is open; the musket button moves out from under the card:
    to the left of the side panel on a desktop, just above the bottom sheet on a phone. */

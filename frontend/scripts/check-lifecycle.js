@@ -1,4 +1,4 @@
-// A failed first island load must not dispose the adapter shared with title/account.
+// A failed graphics start must not dispose the adapter shared with title/account.
 import assert from 'node:assert/strict';
 import {mkdir,writeFile} from 'node:fs/promises';
 import {openWorldBrowser} from './world-browser-tools.js';
@@ -6,19 +6,28 @@ import {openSettingsAccount,playFromTitle} from './online-browser-actions.js';
 import {startFromTitle} from './shell-browser-tools.js';
 const captureRoot=process.env.CAPTURE_DIR||'captures';await mkdir(captureRoot,{recursive:true});
 const env=await openWorldBrowser(),{page}=env,report={checks:[]};page.setDefaultTimeout(12000);
-const terrainRoute=/\/pixel\/(?:hd\/)?ground\.png(?:\?|$)/;
+const startupFailure='Controlled WebGL startup failure';
 const check=(ok,label)=>{assert.ok(ok,label);report.checks.push(label);};
 try{
  await page.route('**/api/**',route=>route.fulfill({status:503,contentType:'application/json',body:'{}'}));
  await page.goto(env.url+'/?adapter=local');await page.locator('#play').waitFor();await openSettingsAccount(page);
  await page.getByRole('button',{name:'Sign in with GitHub',exact:true}).click();await page.waitForFunction(()=>window.__plotTwist.adapter.read().account.state==='signed_in');
  await page.evaluate(()=>{const adapter=window.__plotTwist.adapter,dispose=adapter.dispose;window.__disposeCount=0;adapter.dispose=()=>{window.__disposeCount++;dispose();};});
- await page.route(terrainRoute,route=>route.fulfill({status:503,body:''}));await playFromTitle(page);
+ await page.evaluate(message=>{
+   const getContext=HTMLCanvasElement.prototype.getContext;
+   HTMLCanvasElement.prototype.getContext=function(type,...args){
+     if(type!=='webgl2') return getContext.call(this,type,...args);
+     HTMLCanvasElement.prototype.getContext=getContext;
+     throw new Error(message);
+   };
+ },startupFailure);
+ await playFromTitle(page);
  await page.getByText('The coast could not load. Reload the page; if it still fails, check the connection and WebGL 2.',{exact:true}).waitFor();
+ check(env.errors.some(message=>message.includes(startupFailure)),'The first Play attempt reaches the controlled graphics failure');
  check(await page.evaluate(()=>window.__disposeCount===0),'A failed world load keeps the caller-owned account adapter alive');
  check(await page.evaluate(async()=>{const result=await window.__plotTwist.adapter.setEmote('wave');return result.accepted;}),'The same adapter still accepts intents after the failure');
  report.expectedLoadDiagnostics=[...env.errors];const priorErrors=env.errors.length;
- await page.unroute(terrainRoute);await startFromTitle(page);
+ await startFromTitle(page);
  check(await page.evaluate(()=>window.__plotTwist.adapter.read().account.state==='signed_in'),'Retry preserves the signed-in account state');
  check(await page.locator('#game > canvas[tabindex="0"]').count()===1,'Retry owns one world canvas');
  check(await page.evaluate(()=>window.__island.scene.children.filter(item=>item.name.startsWith('place:')).length===1),'Retry owns one place root');

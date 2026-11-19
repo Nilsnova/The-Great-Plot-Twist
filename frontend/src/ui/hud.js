@@ -248,6 +248,7 @@ export function createHud(container, actions, {on = defaultOn, emit = defaultEmi
       // Over the building when its screen point is known (promptAt: fractions of the screen), else at the bottom.
       const at = zone ? stats.promptAt : null;
       prompt.classList.toggle('floating', !!at);
+      prompt.classList.toggle('combat-context', !!zone && stats.combatPrompt === true);
       prompt.style.left = at ? `${Math.max(8, Math.min(92, at.x * 100))}%` : '';prompt.style.top = at ? `${Math.max(10, Math.min(92, at.y * 100))}%` : '';
       if (zone) prompt.setAttribute('aria-label', `E · ${promptLabel.textContent}`); else prompt.removeAttribute('aria-label');
       const hint = stats.hint;

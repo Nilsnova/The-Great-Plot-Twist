@@ -5,8 +5,10 @@
 
 import { CONFIG } from './sim-config.js';
 import { finite, clamp, round2, distance, createRandom, seedNumber, coastPoint, readDefenses, skillOf, bonusOf,
-  readCoast, readLanes, readHeart, readCrew, isAttackTower, lookoutsOf, lookoutsWith, reach, attackRanges } from './sim-read.js';
+  readCoast, readLanes, readHeart, readCrew, lookoutsOf, lookoutsWith } from './sim-read.js';
 import { houseRoles, fleetOf, curveFor, shuffle } from './sim-fleet.js';
+import { effectiveAttackTowers } from './sim-towers.js';
+import { inHouseReach } from '../campaign/houses.js';
 import { captainStats } from './captain-stats.js';
 import { createEventRules } from './wave-events.js';
 import { createFinisher } from './finisher/rules.js';
@@ -15,7 +17,6 @@ import { startHp } from './wall-health.js';
 import { createTowerHealth } from './tower-health.js';
 import { createBoarderPaths } from './boarder-paths.js';
 import { blocksAsTower } from './tower-obstacles.js';
-import { treeStats } from './tower-trees.js';
 import { canFreeStructureRepair, readRecoveryPolicy } from './recovery-policy.js';
 
 export function setupWave(options = {}) {
@@ -48,44 +49,24 @@ export function setupWave(options = {}) {
   // T38: a lost wave from wave 4 (not Pirate Point) first offers the captains still on the island one co-op haul.
   const rescue = createRescue({ wave: waveNumber, seed: options?.seed, enabled: options?.rescue === true && !withFlagship,
     preparation: options?.finisherPreparation === true, gapMs: typeof options?.gapMs === 'function' ? options.gapMs : null });
-  const lookouts = lookoutsOf(defenses), { towerBonus, rangeFor } = attackRanges(lookouts);
-  const boost = Math.max(1, ...lookouts.map(item => C.levels.watchtower[item.level - 1].boost ?? 1));
-  const S = C.specs, near = spec => lookoutsWith(lookouts, spec);
-  const spotters = near('spotter'), drummers = near('war_drums');
-  const signal = Math.max(0, ...near('signal_fire').map(item => item.skill.warn));
+  const lookouts = lookoutsOf(defenses), S = C.specs;
+  const signal = Math.max(0, ...lookoutsWith(lookouts, 'signal_fire').map(item => item.skill.warn));
   let fogShare = waveNumber === 1 ? Math.max(1 - fog, C.fog.firstWaveSight) : 1 - fog;
   if (crew.lookout && fog > 0) fogShare = Math.min(1, fogShare * C.crew.lookout.sight);
   const warnLead = (crew.lookout ? C.crew.lookout.warn : 0) + signal;
   const coast = readCoast(options?.coast), laneList = readLanes(options?.lanes);
   // Cannons, mortars, harpoons, culverins and swivel nests, in id order; the gunners man the strongest (damage per second, then level).
   const firstReload = { mortar: C.mortar.firstReload, harpoon: C.harpoon.firstReload, culverin: C.culverin.firstReload, swivel: C.swivel.firstReload };
-  const towers = defenses.filter(item => isAttackTower(item.kind)).map(item => {
-    const stats = C.levels[item.kind][item.level - 1], spec = skillOf(item, C);
-    const range = rangeFor(item, stats.range, spec.range ?? 0);
-    // A spotter watchtower in reach adds its share of damage (GAME-V3.md §5); the skill's own numbers on top.
-    const spotted = reach(spotters, item)?.skill.damage ?? 1, drums = reach(drummers, item)?.skill.reload ?? 1;
-    // D055: the tower's upgrade tree. A tower without one keeps the old sums exactly (no factor is applied at all).
-    const tree = item.tree ? treeStats(item.kind, item.tree) : null, grown = (value, key) => (tree ? value * tree[key] : value);
-    const radius = item.kind === 'mortar' ? round2(grown(C.mortar.radius * bonusOf(item, 'radius', C), 'radius')) : undefined;
-    const damage = round2(grown(stats.damage * (spec.damage ?? 1) * spotted * boost, 'damage'));
-    const baseReload = round2(grown(stats.reload * C.pace.reload * (spec.reload ?? 1) * bonusOf(item, 'reload', C) * drums, 'reload'));
-    return { ...item, skill: spec, damage, baseReload,
-      range, sight: range * fogShare * happening.sightOf(item, defenses), manned: false, reload: firstReload[item.kind] ?? 0, lastShot: -Infinity, shots: 0,
-      ...(radius !== undefined ? { radius } : {}),
-      ...(item.kind === 'harpoon' ? { slow: { slow: tree ? round2(stats.slow + tree.slow) : stats.slow, seconds: tree ? round2(stats.seconds + tree.seconds) : stats.seconds } } : {}),
-      ...(item.kind === 'swivel' ? { pellets: stats.pellets + (tree?.pellets ?? 0) } : {}) };
-  });
-  const strength = tower => tower.damage / tower.baseReload * (tower.kind === 'mortar' ? 1.5 : 1);
-  // Gunners stay on cannons and mortars (not on a harpoon tower, a culverin or a swivel nest).
-  towers.filter(item => item.kind !== 'harpoon' && item.kind !== 'culverin' && item.kind !== 'swivel').sort((a, b) => strength(b) - strength(a) || b.level - a.level || (a.id < b.id ? -1 : 1))
-    .slice(0, crew.gunner).forEach(tower => { tower.manned = true; tower.baseReload = round2(tower.baseReload * C.crew.gunner.reload); });
+  const { towerBonus, towers: configured } = effectiveAttackTowers(defenses, lookouts, crew.gunner);
+  const towers = configured.map(tower => ({ ...tower, sight: tower.range * fogShare * happening.sightOf(tower, defenses),
+    reload: firstReload[tower.kind] ?? 0, lastShot: -Infinity, shots: 0 }));
   const cannons = towers.filter(item => item.kind === 'cannon'), mortars = towers.filter(item => item.kind === 'mortar');
   // The sight the island shows (fog edge, the manual-fire reach): the level-1 cannon's, or the best cannon's.
   const sight = Math.max(C.cannon.range + towerBonus, ...cannons.map(item => item.range)) * fogShare;
   // The house roles (CONFIG.houses): the houses of level 2 and up that picked one, in id order.
   const HO = C.houses, roles = houseRoles(defenses), withRole = role => roles.filter(item => item.role === role);
   const barracks = withRole('barracks'), taverns = withRole('tavern'), workshops = withRole('workshop');
-  const W = HO.workshop, housesNear = (list, item, radius) => list.filter(house => distance(house.x, house.z, item.x, item.z) <= radius + 1e-9).length;
+  const W = HO.workshop, housesNear = (list, item, radius) => list.filter(house => inHouseReach(house, item, radius)).length;
   const walls = defenses.filter(item => item.kind === 'wall').map(item => {
     const skill = skillOf(item, C), baseHp = round2(C.levels.wall[item.level - 1].hp * (skill.hp ?? 1) * bonusOf(item, 'hp', C));
     const hp = recoveryPolicy === 'structure-recovery-v1' && finite(item.maxHP) && item.maxHP > 0 ? item.maxHP : baseHp;

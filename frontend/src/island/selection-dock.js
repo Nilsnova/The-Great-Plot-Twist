@@ -3,6 +3,7 @@ import {node} from '../ui/kit/dom.js';
 import {activeRole, ROLES} from '../campaign/houses.js';
 import {SPECS} from '../campaign/tech.js';
 import {createBuildingPortrait} from './building-portrait.js';
+import {houseSupportView} from './building-inspection.js';
 import './selection-dock.css';
 
 export const canDockSelection = model => model?.built === true && !!model.kind
@@ -30,6 +31,7 @@ export function createSelectionDock({container, onClose, onDetails, loadPortrait
   const meter = node('div', 'island-selection-meter'), fill = node('span'); meter.setAttribute('role', 'meter'); meter.setAttribute('aria-label', 'Building health'); meter.append(fill);
   copy.append(title, identity, hp, meter);
   const actions = node('div', 'island-selection-actions'), messages = node('div', 'island-selection-messages');
+  const support = node('section', 'island-house-support');
   const coverageRow = node('div', 'island-selection-coverage');
   const coverageCopy = node('p', ''); coverageCopy.setAttribute('role', 'status');
   const views = node('div', 'island-selection-views'); views.setAttribute('role', 'group'); views.setAttribute('aria-label', 'Village camera');
@@ -57,7 +59,7 @@ export function createSelectionDock({container, onClose, onDetails, loadPortrait
   const range = make('Range', 'range', true, () => { rangeShown = !!model.coverage && !rangeShown; updateRange(); });
   range.setAttribute('aria-controls', coverageRow.id);
   const details = make('Details', 'details', true, onDetails), close = make('Close', 'close', true, onClose);
-  element.append(portrait.element, copy, actions, messages, coverageRow); container.append(element);
+  element.append(portrait.element, copy, actions, messages, coverageRow, support); container.append(element);
   return {
     element,
     get coverage() { return rangeShown ? model?.coverage ?? null : null; },
@@ -89,6 +91,7 @@ export function createSelectionDock({container, onClose, onDetails, loadPortrait
       upgrade.textContent = model.upgradePrice ? `${model.button} · ${model.upgradePrice}` : model.button;
       if (!model.coverage && (document.activeElement === range || views.contains(document.activeElement))) details.focus({preventScroll: true});
       updateRange();
+      houseSupportView(support, model.houseSupport);
       messages.replaceChildren();
       for (const [text, alert] of [[model.tree ? '' : model.reason], [model.tree ? '' : model.soon], [model.message, true]]) {
         if (!text) continue;

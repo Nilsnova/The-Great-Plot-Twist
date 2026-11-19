@@ -4,7 +4,7 @@
 
 import {canDockSelection, holdOtherBuildingAction} from './selection-dock.js';
 import {footprintOf} from './placement.js';
-import {previewDefenseCoverage} from '../pirates/sim.js';
+import {previewDefenseCoverage, previewDefenseUpgrade} from '../pirates/sim.js';
 import {BELL, CABIN, isPointSpot, spotById, ppSpotById, defenses, placedSpot, ARSENAL} from './spots.js';
 import {buildCardModel, bellModel, inviteModel, crewModel, captainModel, captainsModel, skillsModel, coinText,
   harborModel, techModel, wreckModel, demolishModel} from './card-model.js';
@@ -17,14 +17,13 @@ import {withWallRecovery} from './wall-recovery.js';
 import {preparationModel} from './preparation-model.js';
 
 export function createCards(isl) {
-  const {emit, on, focus, resetInput, reducedMotion, preferences, loadBoatScene, openHarborStall, villageCamera,
-    } = isl;
+  const {emit, on, focus, resetInput, reducedMotion, preferences, loadBoatScene, openHarborStall, villageCamera} = isl;
   // From the other parts (island-*.js), linked once every part exists.
   let clearRecoveryError, recoveryPolicyOn, recoveryControlsOn, recoveryModelVersion, readStructureRecovery,
     repairStructure, tellCoins, unlocks, islandUnlocks, campaign, target, where, applyWorld, freshOwn, reloadOwn,
     refreshDefended, lobby, startGame, openLobby, bellAction, build, readWalls, repairWall, upgrade, askDemolish,
     confirmDemolish, placeCode, specialise, buyTree, startMove, research, giveWreck, hire, upgradeCaptain, learnSkill,
-    takeRole, respecCaptain;
+    takeRole, respecCaptain, inspectHouse;
   // --- cards ---------------------------------------------------------------------------------
   function buildModel(spotId) {
     if (isPointSpot(spotId)) {
@@ -58,10 +57,19 @@ export function createCards(isl) {
       movable: island?.layout?.movable === true, treePicked: isl.treePicked.get(spotId) ?? null,
       recoveryState: recoveryView, recoveryStatus: recoveryEnabled ? (recoveryReady ? 'ready' : isl.recoveryStatus) : 'disabled',
       recoveryError: isl.recoveryError, recoveryPending: isl.recoveryPendingSpot === spotId, recoveryVersion: recoveryModelVersion()});
+    const version = island?.recoveryVersion ?? 0;
+    if (model.mode === 'upgrade' && Number.isSafeInteger(spot?.upgradeCost) && model.tree?.detail.action?.type === 'upgrade' && !isl.busySpot
+      && (version === 0 || version === 1 && recoveryEnabled) && (!isl.battle || isl.waveOver)
+      && (!recoveryEnabled || (recoveryReady && recoveryRow?.level === model.level
+        && recoveryRow.hpUnits === 1_000_000 && recoveryView.repairWindow !== 'reserved_wave'))) {
+      model.upgradeComparison = previewDefenseUpgrade({defenses: defenses(island.spots, campaign()?.research?.tiers),
+        selectedId: spotId, currentLevel: model.level, gunnerCount: island.crew?.gunner,
+        defensesV2: true});
+    }
     if (recoveryEnabled && isl.recoveryState?.displayPhase === 'combat' && !live) {
       model.recovery = {visible: false, status: 'error', message: 'Battle health is still loading.'};
     }
-    // D039: a damaged or destroyed wall shows Repair or Rebuild instead of Upgrade (flag wall_recovery).
+    // D039: a damaged or destroyed legacy wall shows Repair or Rebuild instead of Upgrade.
     const shown = isl.wallsFor !== null && isl.wallsFor === island?.code ? isl.walls.get(spotId) ?? null : null;
     return holdOtherBuildingAction(recoveryControlsOn() ? model : withWallRecovery(model, {wall: shown, coins: isl.own?.coins ?? null,
       busy: isl.busySpot === spotId ? isl.busyKind : false, battle: isl.battle && !isl.waveOver}), isl.busySpot);
@@ -162,6 +170,7 @@ export function createCards(isl) {
     if (isl.disposed) return;
     isl.village.refresh();
     applyWorld();
+    if (isl.moving.active) isl.moving.refresh();
     if (isl.ui.open === 'build' && isl.openSpot) showBuild(isl.openSpot);
     else if (isl.ui.open === 'bell') isl.ui.bellCard(bell(), bellAction);
     else if (isl.ui.open === 'invite') isl.ui.inviteCard(inviteModel(isl.own?.code));
@@ -174,7 +183,7 @@ export function createCards(isl) {
     else if (isl.ui.open === 'wreck') isl.ui.wreckCard(wreck(), wreckHandlers);
     else if (isl.ui.open === 'demolish') isl.ui.demolishCard(demolishCardModel(), demolishHandlers);
     else if (isl.ui.open === 'arsenal') isl.arsenal.redraw();
-    else if (isl.ui.open === 'overview') isl.ui.overviewCard(overview());
+    else if (isl.ui.open === 'overview') showOverview();
   }
   // The Tear down button follows the wave on screen (off while it runs, on again in its break).
   function refreshCardIfBuild() { if (isl.ui.open === 'build' && isl.openSpot) refreshCard(); }
@@ -192,6 +201,8 @@ export function createCards(isl) {
   }
   function showBuild(spotId) {
     const model = buildModel(spotId);
+    isl.selectedHouse = model.kind === 'house' ? inspectHouse(spotId) : null;
+    model.houseSupport = isl.selectedHouse?.support ?? null;
     if (isl.ui.selectionSpot === spotId && !model.built) { isl.ui.close(); isl.openSpot = null; return; }
     const dock = isl.village.active && !isl.visiting && !isPointSpot(spotId) && canDockSelection(model);
     const destroyed = model.recovery?.actualHp === 0 && model.recoveryLevel === model.level;
@@ -210,8 +221,25 @@ export function createCards(isl) {
       size: footprintOf(isl.openSpot), lift: 1, keepFit: spot?.kind !== 'wall'};
   }
   function openCrew() { isl.openSpot = null; isl.cardMessage = ''; isl.ui.crewCard(crew(), hire); void freshOwn(); }
-  const overview = () => upgradeOverviewModel({island: isl.own, battle: isl.battle && !isl.waveOver, message: isl.ownMessage});
-  function openOverview() { isl.openSpot = null; isl.cardMessage = ''; isl.ui.overviewCard(overview()); void freshOwn(); }
+  const overviewScope = () => JSON.stringify([isl.own?.code, isl.own?.islandEpoch, isl.resetGeneration, isl.coreTravelGeneration]);
+  const canFindBuilding = () => isl.village.available && !isl.moving.active;
+  function showOverview(message = isl.ownMessage) {
+    const find = canFindBuilding(), scope = overviewScope();
+    isl.ui.overviewCard(upgradeOverviewModel({island: isl.own, battle: isl.battle && !isl.waveOver, find, message}), {
+      find: find ? id => findOverviewBuilding(id, scope) : null,
+    });
+  }
+  function findOverviewBuilding(id, scope) {
+    if (isl.ui.open !== 'overview' || scope !== overviewScope() || !canFindBuilding()) return;
+    if (!spotById(id) || !isl.own.spots.some(spot => spot.id === id && spot.built === true)) {
+      showOverview('This building is no longer on your island.');
+      return;
+    }
+    if (!isl.village.enter()) return;
+    isl.ui.close();
+    openBuild(id);
+  }
+  function openOverview() { isl.openSpot = null; isl.cardMessage = ''; showOverview(); void freshOwn(); }
   function openCaptain(tab = null) {
     isl.openSpot = null; isl.cardMessage = ''; if (['captain', 'skills'].includes(tab)) isl.captainTab = tab;
     isl.ui.captainCard(captain(), captainHandlers); void freshOwn();
@@ -260,7 +288,7 @@ export function createCards(isl) {
       repairStructure, tellCoins, unlocks, islandUnlocks, campaign, target, where, applyWorld, freshOwn, reloadOwn,
       refreshDefended, lobby, startGame, openLobby, bellAction, build, readWalls, repairWall, upgrade, askDemolish,
       confirmDemolish, placeCode, specialise, buyTree, startMove, research, giveWreck, hire, upgradeCaptain,
-      learnSkill, takeRole, respecCaptain} = isl);
+      learnSkill, takeRole, respecCaptain, inspectHouse} = isl);
   }
   return {demolishHandlers, demolishCardModel, interruptBoat, readBoat, bell, refreshCard, refreshCardIfBuild,
     openHarbor, openTechHub, openWreck, selectedAnchor, openCrew, openOverview, openCaptain, openLeaderboard,

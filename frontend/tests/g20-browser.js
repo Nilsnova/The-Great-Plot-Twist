@@ -25,8 +25,8 @@ export function browserHarness() {
     browser = await chromium.launch({ executablePath: process.env.CHROME_PATH || '/usr/bin/chromium', headless: true });
   }, 30000);
   afterAll(async () => {try{await browser?.close();}finally{await server?.close();}});
-  const evaluate = async (action, argument, modules = {}, usePage = false) => {
-    const context = await browser.newContext();
+  const evaluate = async (action, argument, modules = {}, usePage = false, options = {}) => {
+    const context = await browser.newContext(options);
     try {
       const page = await context.newPage();
       await page.route('**/*', route => {
@@ -44,6 +44,6 @@ export function browserHarness() {
       return usePage ? await action(page, base) : await page.evaluate(action, argument);
     } finally { await context.close(); }
   };
-  evaluate.withPage = action => evaluate(action, undefined, {}, true);
+  evaluate.withPage = (action, options) => evaluate(action, undefined, {}, true, options);
   return evaluate;
 }

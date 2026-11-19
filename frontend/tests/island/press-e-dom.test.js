@@ -8,6 +8,9 @@ it('shows the Use button only when something is in reach, and presses E with it'
   const result = await evaluate(async () => {
     const {createTouchControls} = await window.g20Import('/src/controls/touch.js');
     Object.defineProperty(navigator, 'maxTouchPoints', {value: 1});
+    const realMedia = window.matchMedia.bind(window);
+    let coarse = false;
+    window.matchMedia = query => query === '(pointer:coarse)' ? {matches: coarse} : realMedia(query);
     const presses = [];
     const controls = createTouchControls(document.body, {setVirtual() {}, press: key => presses.push(key)}, {});
     const use = () => document.querySelector('.touch-actions button');
@@ -16,12 +19,22 @@ it('shows the Use button only when something is in reach, and presses E with it'
     controls.update('cannon_1', true, 'Upgrade Cannon');
     const near = {hidden: use().hidden, disabled: use().disabled, text: use().textContent, label: use().getAttribute('aria-label')};
     use().click();
+    controls.update('cannon_1', true, 'Upgrade Cannon', true);
+    const hybrid = use().textContent;
+    coarse = true;
+    controls.update('cannon_1', true, 'Upgrade Cannon', true);
+    const during = {text: use().textContent, label: use().getAttribute('aria-label')};
+    use().click();
+    controls.update('cannon_1', true, 'Upgrade Cannon');
+    const restored = use().textContent;
     controls.update(null, true);
     const away = use().hidden;
     controls.dispose();
-    return {none, near, presses, away};
+    window.matchMedia = realMedia;
+    return {none, near, hybrid, during, restored, presses, away};
   });
-  expect(result).toEqual({none: {hidden: true, disabled: true}, near: {hidden: false, disabled: false, text: 'Use', label: 'Use: Upgrade Cannon'}, presses: ['KeyE'], away: true});
+  expect(result).toEqual({none: {hidden: true, disabled: true}, near: {hidden: false, disabled: false, text: 'Use', label: 'Use: Upgrade Cannon'},
+    hybrid: 'Use', during: {text: 'Upgrade Cannon', label: 'Use: Upgrade Cannon'}, restored: 'Use', presses: ['KeyE', 'KeyE'], away: true});
 });
 
 it('hangs the prompt over the building and says "Walk closer" next to a far click', async () => {
