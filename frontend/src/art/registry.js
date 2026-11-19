@@ -12,12 +12,13 @@ import {pathMarkFrames} from './path-marks.js'; // D055/D051: the path plates an
 import {homeShoreFrames} from './home-shore.js';
 import {outpostSceneryFrames} from './outpost-scenery.js';
 import {harborBuildingFrames} from './harbor-buildings.js';
+import {lighthouseFrames} from './lighthouse-buildings.js';
 
 let local = null;
 const island = () => (local ??= {
   ...peopleFrames(), ...islandFrames(), ...campaignFrames(), ...extraFrames(),
   ...defensesV2Frames(), ...swivelFrames(), ...arsenalFrames(), ...pathMarkFrames(),
-  ...homeShoreFrames(), ...outpostSceneryFrames(), ...harborBuildingFrames(),
+  ...homeShoreFrames(), ...outpostSceneryFrames(), ...harborBuildingFrames(), ...lighthouseFrames(),
 });
 let fleet = null;
 const FLEET = /^(pirate-|fx-)/;
