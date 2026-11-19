@@ -5,6 +5,8 @@ import { createPlace } from '../src/world/places/factory.js';
 import { places, placeIds } from '../src/world/places/registry.js';
 import {edgeTrees, layouts} from '../src/world/places/layouts.js';
 import {projectGround} from '../src/world/projection.js';
+import {outpostArtwork} from '../src/art/outpost-scenery.js';
+import {pixelSizes} from '../src/pixel/catalog.js';
 import {decorateProgress} from '../src/island/decorations.js';
 import { canStand } from '../src/player/collision.js';
 import { on, emit } from '../src/core/events.js';
@@ -13,6 +15,21 @@ const adapters = {
   loadBackdrop: async () => new THREE.Texture(),
 };
 describe('real place lifetime', () => {
+  it.each(['smugglers_cove', 'wreck_point', 'the_teeth'])('keeps the original %s scenery boxes and feet', async id => {
+    const place = await createPlace({id, ...adapters});
+    try {
+      for (const {asset, x, z} of layouts[id].filter(({asset}) => outpostArtwork(asset) !== asset)) {
+        const mesh = place.group.children.find(node => node.userData.asset === asset
+          && node.userData.ground?.x === x && node.userData.ground?.z === z);
+        const [width, height, anchor] = pixelSizes[asset];
+        const foot = projectGround(x, z);
+        expect(mesh.position.toArray()).toEqual([foot.x, foot.y, 0]);
+        expect(mesh.geometry.parameters).toMatchObject({width, height});
+        mesh.geometry.computeBoundingBox();
+        expect(mesh.geometry.boundingBox.min.y).toBeCloseTo(-height * anchor, 6);
+      }
+    } finally { place.dispose(); }
+  });
   it.each(Object.keys(edgeTrees))('keeps %s tree feet, blockers and drawing behavior while restraining only home foliage', async id => {
     const place = await createPlace({id, ...adapters, island: {decorate() {}}});
     try {
