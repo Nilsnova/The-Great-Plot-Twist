@@ -1,0 +1,63 @@
+{
+  "candidate": "74be485507fbdbf1eb662f96f11a40c5e902e507",
+  "source": {
+    "expectedProductionBaseline": "74be485507fbdbf1eb662f96f11a40c5e902e507",
+    "actualCheckoutHead": "74be485507fbdbf1eb662f96f11a40c5e902e507",
+    "productionDiffFromBaseline": "empty",
+    "paths": [
+      "backend/server",
+      "backend/content",
+      "frontend/src",
+      "supabase/migrations",
+      "backend/uv.lock",
+      "backend/pyproject.toml",
+      "frontend/package-lock.json",
+      "frontend/package.json",
+      ":(exclude)backend/server/tests"
+    ]
+  },
+  "primarySource": [
+    {
+      "service": "api",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "2de87a1c7a95423f93e83f7f254bff624f8b9eba",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    },
+    {
+      "service": "frontend",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "2de87a1c7a95423f93e83f7f254bff624f8b9eba",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    }
+  ],
+  "frontendUrl": "http://127.0.0.1:55109",
+  "sdkRestoreProxy": "http://127.0.0.1:55109/provider",
+  "productProviderUrl": "https://localhost:54421",
+  "apiUrl": "http://127.0.0.1:58005",
+  "processId": 547985,
+  "privateViteCache": true,
+  "wrapperSha256": "ecfff2d8bc48e0a318a5cfb8b42b2ed75cfaecd1f8878df8db9fbf18524c41a0",
+  "recordedAt": "2026-11-19T18:40:07.745Z"
+}
