@@ -198,19 +198,19 @@ void main(){
       float run=sin(current.x*.18+coarse*1.5-t*.26);
       float longWave=current.y*1.12+run*1.7+curl*.78-t*(.79+uWind*.41);
       float shortWave=current.y*2.64-current.x*.69+curl*1.49-t*.98;
-      float height=sin(longWave)*.73+sin(shortWave)*.27;
-      float slope=cos(longWave)*.65+cos(shortWave)*.35;
+      float height=sin(longWave)*.62+sin(shortWave)*.38;
+      float slope=cos(longWave)*.58+cos(shortWave)*.42;
       float field=smoothstep(.21,.73,coarse+curl*.15);
       float face=smoothstep(.11,.73,height)*smoothstep(-.3,.88,slope);
       float trough=smoothstep(.17,.84,-height);
-      colour=mix(colour,uDeep,trough*(.11+field*.14)*offshore);
-      colour=mix(colour,uLight,face*(.08+field*.28)*offshore);
-      float ridge=(1.0-band(abs(height-.71),.044))*smoothstep(.07,.66,slope);
-      float spray=smoothstep(.41,.73,ripple+curl*.19)*smoothstep(.26,.74,field);
-      float nearLight=mix(.62,.27,smoothstep(1.8,12.0,d));
-      colour=mix(colour,mix(uStroke,uFoam,.31),ridge*spray*nearLight*offshore);
-      float afterglow=(1.0-band(abs(height-.49),.091))*smoothstep(.3,.87,slope);
-      colour=mix(colour,uStroke,afterglow*spray*.14*offshore);
+      colour=mix(colour,uDeep,trough*(.13+field*.15)*offshore);
+      colour=mix(colour,uLight,face*(.10+field*.33)*offshore);
+      float ridge=(1.0-band(abs(height-.71),.037))*smoothstep(.06,.68,slope);
+      float spray=smoothstep(.47,.74,ripple+curl*.21)*smoothstep(.24,.70,field);
+      float nearLight=mix(.75,.30,smoothstep(2.0,13.0,d));
+      colour=mix(colour,mix(uStroke,uFoam,.44),ridge*spray*nearLight*offshore);
+      float afterglow=(1.0-band(abs(height-.46),.11))*smoothstep(.24,.85,slope);
+      colour=mix(colour,uStroke,afterglow*spray*.19*offshore);
 
       // Submerged stone and narrow refracted marks sit beneath the white breaking water.
       float shelf=smoothstep(.28,1.0,d)*(1.0-smoothstep(2.3,5.5,d));
@@ -272,8 +272,8 @@ void main(){
 
 export function createWater(scene) {
   const colours = { uDeep: '#07566e', uMid: '#087f96', uLight: '#3dbdc9', uShallow: '#38c9b5', uShallow2: '#8be2c5', uFoam: '#f4fffa', uGlint: '#e6fff5', uStroke: '#63cfd6' };
-  const homeColours = {...colours, uDeep: '#07546d', uMid: '#078fa5', uLight: '#39cdd8',
-    uShallow: '#26cbb5', uShallow2: '#a2e9d6', uFoam: '#f4fff5', uStroke: '#87e8e8'};
+  const homeColours = {...colours, uDeep: '#064c66', uMid: '#0a91a5', uLight: '#31d3d3',
+    uShallow: '#2ed0b6', uShallow2: '#a6edd6', uFoam: '#f3fff8', uStroke: '#8df1e7'};
   const uniforms = { ...seaUniforms, uHomeCoast: {value: 0} };
   for (const [key, value] of Object.entries(colours)) uniforms[key] = { value: new THREE.Color(value) };
   const material = new THREE.ShaderMaterial({ uniforms, vertexShader: worldVertex, fragmentShader: fragment,

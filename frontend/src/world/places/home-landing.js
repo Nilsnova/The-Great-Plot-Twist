@@ -6,8 +6,8 @@ const START = 18.38, STEP = .355, PLANKS = 7;
 const center = z => -7.81 - (z - START) * .62;
 const height = z => .045 + (z - START) * .104;
 const halfWidth = i => THREE.MathUtils.lerp(1.24, .83, i / (PLANKS - 1));
-const boards = ['#b57a42', '#c69155', '#a36a3d', '#c38b4f', '#b17743', '#d19c60', '#a66a3d'];
-const endGrain = '#57382b', longGrain = '#805132', darkGrain = '#815535', lightGrain = '#ebba7c';
+const boards = ['#bc7e45', '#d19959', '#ac6d42', '#cf8c4d', '#b77945', '#dfa363', '#ab713f'];
+const endGrain = '#4d3327', longGrain = '#845436', darkGrain = '#895437', lightGrain = '#e8ad72';
 
 const TOP = 1, SIDE = 2, PILE = 3, END = 4, ROPE = 5;
 const ACROSS = [0, 0, 255, 255], UPRIGHT = [0, 255, 255, 0];
@@ -43,13 +43,13 @@ function shadeTimber(material) {
           if (surface < .5) return base;
           if (surface < 1.5) {
             float fibre = woodFibre(p.x, edge * 2.05, floor(p.y * 2.818) * .83);
-            float bevel = .22 * (1.0 - smoothstep(.05, .23, edge)) - .23 * smoothstep(.74, .98, edge);
-            float glaze = .11 * sin(p.x * 1.55 + p.y * .73);
-            return base * (1.003 + fibre + bevel + glaze);
+            float bevel = .34 * (1.0 - smoothstep(.013, .12, edge)) - .29 * smoothstep(.79, .99, edge);
+            float glaze = .14 * sin(p.x * 1.53 + p.y * .73);
+            return base * (.98 + fibre + bevel + glaze);
           }
           if (surface < 2.5) {
             float fibre = woodFibre(p.y, edge * 2.2, p.x * .83);
-            return base * (.77 + .27 * edge + fibre);
+            return base * (.66 + .48 * edge + fibre);
           }
           if (surface < 3.5) {
             float height = edge * (255.0 / 127.0) - .4;
@@ -58,13 +58,13 @@ function shadeTimber(material) {
             float tide = 1.0 - smoothstep(.02, .072, abs(height - .019));
             vec3 wood = base * (1.0 + fibre);
             vec3 soaked = wood * vec3(.46, .64, .64);
-            return mix(mix(wood, soaked, wet), vec3(.19, .44, .39), tide * (.23 + .13 * sin(p.x * 18.0)));
+            return mix(mix(wood, soaked, wet), vec3(.15, .38, .34), tide * (.36 + .13 * sin(p.x * 18.0)));
           }
           if (surface > 4.5) {
             float twist = (p.x + p.y * .46) * 31.0 + edge * 4.7;
             float weave = sin(twist) * (1.0 - smoothstep(.65, 2.8, fwidth(twist)));
             float roundness = sin(edge * 3.14159);
-            return base * (.76 + .31 * roundness + .12 * edge + .07 * weave);
+            return base * (.63 + .40 * roundness + .15 * edge + .09 * weave);
           }
           float rings = .16 * sin(edge * 19.0 + sin(p.x * 9.3) * .89 + p.y * 1.9);
           return base * (.90 + .21 * edge + rings);
@@ -107,7 +107,7 @@ export function createHomeLanding(group) {
       return [x + Math.cos(angle) * radius, y, z + Math.sin(angle) * radius];
     });
     const base = ring(.174, foot), shoulder = ring(.165, top - .067), cap = ring(.136, top);
-    const wrap = [top - .28, top - .209, top - .138].map(y => [ring(.18, y), ring(.181, y + .045)]);
+    const wrap = [top - .274, top - .208, top - .142].map(y => [ring(.181, y), ring(.181, y + .05)]);
     const elevation = y => Math.round((y + .4) * 127);
     const low = elevation(foot), high = elevation(top - .067), grain = [low, low, high, high];
     const faces = ['#87502f', '#ad7040', '#c89054', '#d4a264', '#c38b4d', '#ae7446', '#845337', '#67402c', '#73492e'];
@@ -117,7 +117,7 @@ export function createHomeLanding(group) {
       quad(shoulder[index], shoulder[next], cap[next], cap[index], index < 5 ? '#e0af78' : '#a87853');
       quad(cap[index], cap[next], [x, top, z], cap[index], '#d5a574', END, CUT_RING);
       for (const [low, high] of wrap) {
-        quad(low[index], low[next], high[next], high[index], index < 5 ? '#e3bd7c' : '#b18a57', ROPE, ACROSS);
+        quad(low[index], low[next], high[next], high[index], index < 5 ? '#f0c485' : '#a8774d', ROPE, ACROSS);
       }
     }
   }
@@ -188,11 +188,11 @@ export function createHomeLanding(group) {
   const stageCenter = z => center(far) - (z - stageStart) * .29;
   const deckTop = () => .235, deckBottom = () => .087;
   for (const offset of [-.71, .71]) {
-    timber(offset - .112, offset + .112, stageStart, stageEnd + .03, () => -.09, deckBottom,
+    timber(offset - .112, offset + .112, stageStart, stageEnd + .03, () => -.13, deckBottom,
       longGrain, endGrain, stageCenter);
   }
   for (let i = 0; i < stageSteps; i++) {
-    const from = stageStart + STEP * i, to = from + STEP - .016;
+    const from = stageStart + STEP * i, to = from + STEP - .028;
     const left = i > 7 ? -1.84 + (i - 8) * .045 : -1.02;
     const right = .96 + (i % 3) * .027;
     timber(left, right, from, to, deckBottom, deckTop, boards[(i + 2) % boards.length], longGrain, stageCenter);
@@ -203,6 +203,13 @@ export function createHomeLanding(group) {
     grain(left + .075, right - .075, from + .022);
     grain(left + .18, -.12 + .26 * Math.sin(i * 1.8), from + .08);
     grain(.25, right - .09, from + .19);
+    // Two dark nailheads are visible where each board meets the longitudinal rails.
+    for (const rail of [-.71, .71]) {
+      const z = from + STEP * .56, x = stageCenter(z) + rail, y = deckTop() + .009;
+      quad([x - .047, y, z], [x, y, z - .039], [x + .047, y, z], [x, y, z + .039], '#623f2d');
+      quad([x - .023, y + .001, z], [x, y + .001, z - .022],
+        [x + .025, y + .001, z], [x, y + .001, z + .018], '#b29873');
+    }
   }
   // A strapped crate sits in the wider end of the stage, on the side away from the hull.
   const crateX = z => stageCenter(z) - 1.29, crateZ = stageEnd - .88;
@@ -222,11 +229,14 @@ export function createHomeLanding(group) {
   }
 
   // The feet descend through the water. Only small foreground portions overlap the coast.
-  for (const [offset, z, height] of [[-.87, stageStart + .28, .78], [.84, stageStart + .28, .84],
+  const supports = [[-.87, stageStart + .28, .78], [.84, stageStart + .28, .84],
     [-.87, stageStart + 2.26, .72], [.84, stageStart + 2.26, .78],
-    [-1.65, stageEnd - .35, .82], [.82, stageEnd - .35, .91]]) {
-    pile(stageCenter(z) + offset, z, height, -.40);
-  }
+    [-1.65, stageEnd - .35, .82], [.82, stageEnd - .35, .91]];
+  for (const [offset, z, top] of supports) pile(stageCenter(z) + offset, z, top, -.40);
 
-  return mount('home-mooring-stage', 7);
+  const stage = mount('home-mooring-stage', 7);
+  // The contact shader uses the same projected pile feet as the finished stage.
+  stage.userData.waterSupports = supports.map(([offset, z]) => projectGround(stageCenter(z) + offset, z));
+  stage.userData.waterAxis = [stageStart, stageEnd].map(z => projectGround(stageCenter(z), z));
+  return stage;
 }
