@@ -22,21 +22,16 @@ it('uses visible pixels and painter order, and invalidates a selection when home
     const growing = sprite(101, [0, 0, 64, 64]).translateX(-4);
     const distant = sprite(101, [0, 0, 64, 64]).translateX(20);
     const trees = [foreground, background, clearHalf, growing, distant];
-    for (const mesh of [building, ...trees]) mesh.userData.ground = {x: mesh.position.x, z: 0};
-    building.userData.portraitSize = 1.5;
     const canopy = makeSelectedCanopy(trees);
     const matched = () => trees.map(mesh => canopy.has(mesh));
     const materials = [building, ...trees].map(({material}) => material);
     try {
       canopy.show(building);
       const first = matched(), unchanged = canopy.show(building);
-      canopy.show(building, 2);
-      const portrait = matched();
-      canopy.show(building);
       for (const mesh of trees) mesh.scale.setScalar(1.5);
       const changed = canopy.show(building), grown = matched();
       canopy.show(null);
-      return {first, unchanged, portrait, changed, grown, closed: matched(), sameMaterials: [building, ...trees].every((mesh, i) => mesh.material === materials[i])};
+      return {first, unchanged, changed, grown, closed: matched(), sameMaterials: [building, ...trees].every((mesh, i) => mesh.material === materials[i])};
     } finally {
       for (const mesh of [building, ...trees]) {
         mesh.geometry.dispose(); mesh.material.map.dispose(); mesh.material.dispose();
@@ -46,7 +41,6 @@ it('uses visible pixels and painter order, and invalidates a selection when home
   expect(result).toEqual({
     first: [true, false, false, false, false],
     unchanged: false,
-    portrait: [true, false, false, true, false],
     changed: true,
     grown: [true, false, false, true, false],
     closed: [false, false, false, false, false],
@@ -74,7 +68,7 @@ it('reveals the real Cannon #1 beneath its coastal tree and restores the tree on
       }});
     const trees = place.group.children.filter(mesh => ['oak', 'pine', 'birch'].includes(mesh.userData.asset));
     const snapshots = trees.map(mesh => ({mesh, material: mesh.material, geometry: mesh.geometry, position: mesh.position.clone(), order: mesh.renderOrder}));
-    const terrainColliders = JSON.stringify(place.colliders.filter(collider => !collider.islandBuilding));
+    const colliders = JSON.stringify(place.colliders);
     const player = {x: 0, z: 12};
     function draw(at = player) {
       place.update(1 / 60, {time: 0, player: at, night: 0, weather: {wind: 0}});
@@ -84,7 +78,6 @@ it('reveals the real Cannon #1 beneath its coastal tree and restores the tree on
     try {
       await island.retryArt();
       island.apply({spots});
-      const colliders = JSON.stringify(place.colliders);
       draw();
       const selected = faded();
       draw();
@@ -112,10 +105,8 @@ it('reveals the real Cannon #1 beneath its coastal tree and restores the tree on
       const wall = faded();
       selection = cannon;
       draw();
-      const sameColliders = JSON.stringify(place.colliders) === colliders;
       island.dispose();
-      return {selected, stillSelected, captainOpacity, moving, visiting, battling, wall, disposed: faded(), sameColliders,
-        restoredTerrainColliders: JSON.stringify(place.colliders) === terrainColliders,
+      return {selected, stillSelected, captainOpacity, moving, visiting, battling, wall, disposed: faded(), sameColliders: JSON.stringify(place.colliders) === colliders,
         sameTreeResources: snapshots.every(({mesh, material, geometry, position, order}) =>
           mesh.material === material && mesh.geometry === geometry && mesh.position.equals(position) && mesh.renderOrder === order)};
     } finally { place.dispose(); }
@@ -125,7 +116,7 @@ it('reveals the real Cannon #1 beneath its coastal tree and restores the tree on
     stillSelected: [{x: -13, z: -12}],
     captainOpacity: .3,
     moving: [], visiting: [], battling: [], wall: [], disposed: [],
-    sameColliders: true, restoredTerrainColliders: true, sameTreeResources: true,
+    sameColliders: true, sameTreeResources: true,
   });
 });
 

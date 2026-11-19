@@ -1,38 +1,20 @@
 import {Box3, Vector3} from 'three';
-import {portraitSpriteSize} from '../../player/home-portrait.js';
-import {projectGround} from '../projection.js';
 
 const MASK_SIZE = 64, GRID_SIZE = 16, SOLID_ALPHA = 48, MIN_OVERLAP = 4;
 
-function spriteBounds(mesh, depth, emphasis) {
+function spriteBounds(mesh) {
   if (!mesh.geometry.boundingBox) mesh.geometry.computeBoundingBox();
   mesh.updateWorldMatrix(true, false);
-  const box = new Box3().copy(mesh.geometry.boundingBox).applyMatrix4(mesh.matrixWorld);
-  const size = portraitSpriteSize(mesh, depth, emphasis);
-  if ((depth > 1 || size > 1) && mesh.userData.ground) {
-    const foot = new Vector3().setFromMatrixPosition(mesh.matrixWorld);
-    for (const corner of [box.min, box.max]) {
-      corner.x = foot.x + (corner.x - foot.x) * size;
-      corner.y = foot.y + (corner.y - foot.y) * size / depth;
-    }
-  }
-  return box;
+  return new Box3().copy(mesh.geometry.boundingBox).applyMatrix4(mesh.matrixWorld);
 }
 
 // A wall post is one upright quad within a shared batch. Its first and opposite vertices
 // bound the exact drawn post and the corresponding source crop, including damaged or rubble art.
-function wallPost({mesh, firstVertex}, depth) {
-  const {position, uv, wallGround} = mesh.geometry.attributes, opposite = firstVertex + 2;
+function wallPost({mesh, firstVertex}) {
+  const {position, uv} = mesh.geometry.attributes, opposite = firstVertex + 2;
   mesh.updateWorldMatrix(true, false);
-  const vertex = index => {
-    const corner = new Vector3().fromBufferAttribute(position, index);
-    if (depth > 1 && wallGround) {
-      const ground = projectGround(wallGround.getX(index), wallGround.getY(index));
-      corner.y = ground.y + (corner.y - ground.y) / depth;
-    }
-    return corner;
-  };
-  const box = new Box3(vertex(firstVertex), vertex(opposite)).applyMatrix4(mesh.matrixWorld);
+  const box = new Box3(new Vector3().fromBufferAttribute(position, firstVertex),
+    new Vector3().fromBufferAttribute(position, opposite)).applyMatrix4(mesh.matrixWorld);
   return {box, crop: [uv.getX(firstVertex), uv.getY(firstVertex), uv.getX(opposite), uv.getY(opposite)]};
 }
 
@@ -70,7 +52,7 @@ function overlapsBody(tree, treeBox, treeMask, building, bodyBox, bodyMask) {
 
 export function makeSelectedCanopy(trees) {
   const masks = new WeakMap(), occluding = new Set();
-  let context, selected = null, treeScale, portraitDepth = 1, overviewEmphasis = 0;
+  let context, selected = null, treeScale;
 
   function maskFor(texture, crop) {
     const image = texture?.image;
@@ -104,21 +86,19 @@ export function makeSelectedCanopy(trees) {
 
   return {
     has(tree) { return occluding.has(tree); },
-    show(target, depth = 1, emphasis = depth > 1 ? 1 : 0) {
+    show(target) {
       // House growth multiplies every home tree's base scale by the same value.
       const scale = target ? trees[0]?.scale.x : undefined;
-      if (target === selected && scale === treeScale && depth === portraitDepth && emphasis === overviewEmphasis) return false;
+      if (target === selected && scale === treeScale) return false;
       selected = target;
       treeScale = scale;
-      portraitDepth = depth;
-      overviewEmphasis = emphasis;
       occluding.clear();
       const building = target?.mesh ?? target;
       if (!building?.visible) return true;
-      const {box: bodyBox, crop} = target.mesh ? wallPost(target, depth) : {box: spriteBounds(building, depth, emphasis)};
+      const {box: bodyBox, crop} = target.mesh ? wallPost(target) : {box: spriteBounds(building)};
       for (const tree of trees) {
         if (!tree.visible || !drawsInFront(tree, building)) continue;
-        const treeBox = spriteBounds(tree, depth, emphasis);
+        const treeBox = spriteBounds(tree);
         if (!treeBox.intersectsBox(bodyBox)) continue;
         const bodyMask = maskFor(building.material.map, crop), treeMask = maskFor(tree.material.map);
         if (bodyMask && treeMask && overlapsBody(tree, treeBox, treeMask, building, bodyBox, bodyMask)) occluding.add(tree);

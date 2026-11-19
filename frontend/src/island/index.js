@@ -304,7 +304,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       const core = decorateCore(place);
       const deco = decorateIsland(place, {container, art, reducedMotion, quality: () => preferences().quality, canvas: adapters.canvas, camera: adapters.camera,
         isActive: adapters.isActive, onPick: pick, houseSupport: activeHouseSupport, selection: selectedAnchor, defenseRange: () => isl.ui.selectionRange,
-        player: adapters.player, battleTowers: adapters.battleTowers, smugglersBoarders: adapters.smugglersBoarders, onFar: adapters.onFar,
+        player: adapters.player, battleTowers: adapters.battleTowers, onFar: adapters.onFar,
         placing: () => isl.moving.active, onGround: (x, z) => isl.moving.tap(x, z),
         canPickRemote: id => isl.village.active && !!spotById(id),
         retryAdditionalArt: () => deco.runArtTask('core', () => core.retryArt())});
@@ -351,7 +351,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     },
     // Where the floating prompt hangs: the spot's world point and how far above it the building is drawn.
     anchor(zone) {
-      const thing = placedSpot(zone, target()?.spots) ?? ppSpotById(zone) ?? (zone === BELL.id ? isl.world?.bellPosition ?? BELL : zone === CABIN.id ? CABIN : zone === ARSENAL.id ? ARSENAL : campaignBuilding(zone));
+      const thing = placedSpot(zone, target()?.spots) ?? ppSpotById(zone) ?? (zone === BELL.id ? BELL : zone === CABIN.id ? CABIN : zone === ARSENAL.id ? ARSENAL : campaignBuilding(zone));
       if (!thing) return null;
       return {x: thing.x, z: thing.z, lift: thing.kind === 'watchtower' ? 4.6 : thing.h ? Math.min(4.6, thing.h * .7) : 2.6};
     },

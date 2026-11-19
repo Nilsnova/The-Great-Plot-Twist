@@ -60,7 +60,6 @@ import { createCharacter } from './player/character.js';
 import { POSE_IDS } from './pirates/poses.js';
 import { createController } from './player/controller.js';
 import { createCamera } from './player/camera.js';
-import {createHomePortrait} from './player/home-portrait.js';
 import {createVillageNavigation} from './player/village-navigation.js';
 import {createVillagePlacementFocus} from './player/village-placement-focus.js';
 import { createHud } from './ui/hud.js';
@@ -92,7 +91,6 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   const followLocalTime = !navigator.webdriver; if (followLocalTime) { const now = new Date(); settings.hour = now.getHours() + now.getMinutes() / 60; }
   const character = createCharacter(art, { reducedMotion }); scene.add(character.sprite);
   const controller = createController(character, input, []), view = createCamera(input);
-  const homePortrait = createHomePortrait(view.camera);
   const isletState=createIsletState({on});
   // The narrator (src/narrator/: voiced lines and captions for every new thing, keyed by island code)
   // and the tutorials (src/tutorial/tutorials.js) load in their own chunk right after the first frame (the loop below);
@@ -125,11 +123,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   const world = createWorld({ emit, isBlocked:worldBlocked, disposeVisuals(){harbor?.dispose();mapTouch?.dispose();perf?.dispose();experience?.dispose();marketUi?.dispose();sportsUi.dispose();shortcuts.dispose();tutorial.dispose();isletState.dispose();stopIslet?.();stopActualIslet?.();}, transition: (id, options) => sailing.start(id, options),
     cancelTransition: sailing.end, finishTransition() { sailing.end(); graphics.renderer.domElement.focus(); }, createPlace: id => createPlace({ id, isletState, island, reducedMotion, canvas: graphics.renderer.domElement, camera: view.camera,
       battleTowers: () => (id === 'home_islet' ? waves?.island : waves?.point?.controller)?.state?.towers,
-      smugglersBoarders: () => {
-        const state = id === 'home_islet' ? waves?.island.state : null;
-        return state?.phase === 'running' && state.event?.id === 'smugglers' ? state.boarders : null;
-      },
-      isActive: () => active && !outsideBlocked() && !isCaptainDown() && !currentWaveAction(), player: () => controller.player.position, onFar: id => { farHint = { id, until: performance.now() + HINT_MS }; } }), attach(place) { homePortrait.update(null); scene.add(place.group); water.setCoast(place.group); lightPools.setPlace(place.group); controller.setPlace(place); view.setPlace(place.id, controller.player.position); } });
+      isActive: () => active && !outsideBlocked() && !isCaptainDown() && !currentWaveAction(), player: () => controller.player.position, onFar: id => { farHint = { id, until: performance.now() + HINT_MS }; } }), attach(place) { scene.add(place.group); water.setCoast(place.group); lightPools.setPlace(place.group); controller.setPlace(place); view.setPlace(place.id, controller.player.position); } });
   async function travel(id, options) {
     mapTouch?.cancel();
     try { await world.goTo(id, options); }
@@ -322,16 +316,15 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     villagePurse??=container.querySelector('.hud-coins');
     const caption=document.documentElement.style.getPropertyValue('--narrator-card-height');
     const placing=!!island.moving,selectionBar=!placing?island.ui?.selectionElement??island.selectionElement:null;
-    const selectionPad=width<640&&selectionBar&&view.villageFit?8:0;
     if(selectionBar){villageBar=selectionBar;villagePlacing=placing;}
     else if(!villageBar?.isConnected||villageBar.hidden||villagePlacing!==placing||villageBar.classList.contains('island-selection-dock')){
       villageBar=container.querySelector(placing?'.island-move-bar:not([hidden])':'.island-village-mode:not([hidden])');villagePlacing=placing;
     }
-    const key=`${width}:${height}:${caption}:${villageQuests?.textContent}:${villageQuests?.className}:${villageQuests?.hidden}:${villagePurse?.textContent}:${placing}:${selectionPad}:${villageBar?.textContent}:${villageBar?.className}:${document.documentElement.className}:${document.body.className}`;
+    const key=`${width}:${height}:${caption}:${villageQuests?.textContent}:${villageQuests?.className}:${villageQuests?.hidden}:${villagePurse?.textContent}:${placing}:${villageBar?.textContent}:${villageBar?.className}:${document.documentElement.className}:${document.body.className}`;
     if(key!==villageLayoutKey){
       const bar=villageBar;
       const top=width<640?Math.max(villageQuests?.getBoundingClientRect().bottom??0,villagePurse?.getBoundingClientRect().bottom??0):80;
-      villageViewport={width,height,top:Math.max(80,top+12),bottom:bar?height-bar.getBoundingClientRect().top+12+selectionPad:112};
+      villageViewport={height,top:Math.max(80,top+12),bottom:bar?height-bar.getBoundingClientRect().top+12:112};
       villageLayoutKey=key;
     }
     view.setVillageView(true,villageViewport);
@@ -356,7 +349,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   }});
   function applyPreferences(value){quality(value.quality);if(active&&!shell.blocked)view.start(reducedMotion());}
   const stopPreferences=onPreferences(applyPreferences),stopMotion=watchSystemMotion();applyPreferences(getPreferences());graphics.resize(view.camera);
-  const resize = () => { homePortrait.update(null); graphics.resize(view.camera); }; window.addEventListener('resize', resize);
+  const resize = () => graphics.resize(view.camera); window.addEventListener('resize', resize);
   let framePoses=null;
   function combatAfterMove(delta){
     waves?.update?.(delta);
@@ -388,7 +381,6 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     character.setColour(island?.game?island.captainColour():null);character.setScale(characterScale);
     updateVillageView();
     view.update(delta, controller.player.position);
-    homePortrait.update(view.villageFit && !inBattle && world.current?.id === 'home_islet' ? villageViewport : null);
     // A captain down in the wave lies in the wave's drawing: their standing presence figure hides (pirates/figures.js).
     experience.update(delta,{speed,hide:waves?.figures?.(experience.figures())??null,poses:poses?.figures??null});
     const zone = active&&!captainBlocked()&&!captainDown ? findZone(controller.player.position, world.current?.zones ?? []) : null;
@@ -412,7 +404,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
       hint:farHint?{text:WALK_CLOSER,at:screenAt(farHint.id)}:null,managing:island?.managing===true&&!inBattle,waveStatus,speed,blocked:!active||outsideBlocked()||!!waves?.island.wave||!!waves?.point?.controller.wave }); tutorials?.update(delta); input.endFrame();
   }, () => {
     const draw=shell.mode!=='title';
-    if(draw)homePortrait.draw(scene,()=>graphics.renderer.render(scene,view.camera));
+    if(draw)graphics.renderer.render(scene,view.camera);
     graphics.sampleFrame(performance.now(),{active:draw&&active&&!outsideBlocked()});
   });
   // The narrator and the tutorials: right after the first frame (and again on each arrival if that load failed).
