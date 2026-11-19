@@ -103,7 +103,7 @@ try{
  report.status='passed';
 }catch(error){report.status='failed';report.failure={name:error.name,message:error.message};process.exitCode=1;console.error(error.stack);}
 finally{
- if(environment){report.sourceAfter=await sources();await environment.close();}
+ if(environment){try{report.sourceAfter=await sources();}catch(error){report.status='failed';report.sourceFailure=error.message;process.exitCode=1;}await environment.close();}
  report.hashesAfter=await hashes();report.hashesUnchanged=JSON.stringify(report.hashesAfter)===JSON.stringify(report.hashesBefore);
  if(!report.hashesUnchanged){report.status='failed';report.sourceFailure='A measured factory/scenario/helper source changed';process.exitCode=1;}
  await persist();
