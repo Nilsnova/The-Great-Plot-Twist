@@ -79,7 +79,12 @@ def test_shared_owner_and_exact_active_member_only(database, operation):
     as_server(database)
     assert rpc(database, "game_leave", member, owner)["status"] == "left"
     assert not allowed(database, member, topic, operation)
-    assert allowed(database, owner, topic, operation)
+    assert not allowed(database, owner, topic, operation)
+    as_server(database)
+    current_topic = room(database, owner)
+    assert current_topic != topic
+    assert allowed(database, owner, current_topic, operation)
+    assert not allowed(database, member, current_topic, operation)
 
 
 @pytest.mark.parametrize("operation", ["select", "insert"])
