@@ -4,9 +4,12 @@ import {projectGround} from '../projection.js';
 import {surfaces} from './surfaces.js';
 
 const START = 212, STEP = 4;
-const HEIGHTS = [0, .20, .61, .80, .81, .67, .55, 1.07, 1.12, 1.10,
-  .89, .59, 1.24, 1.39, 1.42, 1.38, 1.19, .52, .87, 1.43,
-  1.48, 1.46, 1.13, .63, .52, .97, 1.01, .83, .54, .24, 0];
+// Open water at 248–292° leaves room for the Smugglers' occasional north approach.
+const HEIGHTS = [
+  0, .20, .65, .95, 1.15, 1.18, 1.18, .87, .34, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  .35, .88, 1.18, 1.24, 1.16, .80, .52, .30, .16, 0,
+];
 const STONE_TOP = ['#d2ad82', '#c9a27a', '#d0a67c', '#d5af84'];
 const STONE_FACE = ['#b7936c', '#af8a67', '#b88d67', '#bd956d'];
 const STONE_FOOT = '#8b6c53';
@@ -34,6 +37,7 @@ function crossSections(coast) {
     };
     const lower = lift * .49;
     return {
+      lift,
       front: point(0, 0),
       frontBatter: point(.04, lower * .24),
       frontStone: point(.07, lower * .92),
@@ -143,6 +147,7 @@ export function createHomeRearRim(group) {
   }
   for (let i = 0; i + 1 < sections.length; i++) {
     const a = sections[i], b = sections[i + 1];
+    if (a.lift === 0 && b.lift === 0) continue;
     const tint = (i + Math.floor(i / 3) * 2) % STONE_FACE.length;
     const grass = GRASS[Math.floor(i / 3) % GRASS.length];
     const strip = (far, near, high, low) => panel(a[far], b[far], b[near], a[near], high, low);
@@ -160,8 +165,8 @@ export function createHomeRearRim(group) {
     strip('frontBatter', 'front', STONE_FACE[tint], STONE_FOOT);
 
     const cap = (near, far, along, depth) => mixPoint(mixPoint(a[near], b[near], along), mixPoint(a[far], b[far], along), depth);
-    if ([4, 9, 14, 18, 24, 27].includes(i)) grassTuft(cap('frontCap', 'upperFoot', .57, .57), 1.15);
-    if ([7, 12, 20, 25].includes(i)) {
+    if ([2, 4, 7, 22, 25, 27].includes(i)) grassTuft(cap('frontCap', 'upperFoot', .57, .57), 1.15);
+    if ([3, 6, 23, 26].includes(i)) {
       grassTuft(cap('upperCap', 'crest', .64, .64), 1.08);
       rockChip(cap('upperCap', 'crest', .41, .43), .85 + .12 * (i % 3));
     }
