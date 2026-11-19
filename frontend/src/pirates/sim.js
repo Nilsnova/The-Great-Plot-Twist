@@ -30,6 +30,7 @@ import { createBoarders } from './sim-boarders.js';
 import { createTick } from './sim-tick.js';
 import { createShipFire } from './ship-fire.js';
 import { finite, round2, coverageProfile } from './sim-read.js';
+import {isParticipantToken} from './recovery-policy.js';
 
 // The public API, unchanged: CONFIG and the pure helpers live in their own files now.
 export { CONFIG } from './sim-config.js';
@@ -113,6 +114,16 @@ export function createWave(options = {}) {
   return {
     applyRecoveryEvent,
     recoveryHealthVector,
+    bindCaptainFalls(facts,throughTick){
+      if(!sim.canonicalCaptains || sim.ticks-1!==throughTick || !facts || typeof facts!=='object')return false;
+      for(const [token,fact] of Object.entries(facts)){
+        const hero=party.get(token);
+        if(!hero || hero.withdrawn || fact.hpUnits!==Math.round(hero.hp/hero.maxHp*1000000) || fact.reviveBasisSeq!==hero.reviveBasisSeq
+          || fact.downAtTick!==(hero.down?Math.round(hero.downAt/C.tick):null) || (hero.down?!isParticipantToken(fact.fallId):fact.fallId!==null))return false;
+      }
+      for(const [token,fact] of Object.entries(facts))if(party.get(token).down)party.get(token).fallId=fact.fallId;
+      return true;
+    },
     // Raw sight and reload from this wave's frozen defenses. `litRange` is only available to lit targets at night.
     attackCoverage(id) {
       const tower = towerById.get(id);

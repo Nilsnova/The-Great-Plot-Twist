@@ -3,6 +3,9 @@ import {loadArt,mergeArt,placeArt,projectPoint} from './art.js';
 import {POSE_IDS} from '../pirates/poses.js';
 import {characterArtIds} from '../pixel/story-catalog.js';
 import {createPositionReporter} from '../controls/presence-report.js';
+export function resolvePresencePlace(worldPlace,resolve){
+  try{const selected=resolve?.(worldPlace);return selected===undefined?worldPlace:selected;}catch{return null;}
+}
 export function createWorldExperience(ctx){
   let latest=null,others=null,hud=null,coins=null,ownedArt=null,pending=null,disposed=false,facing='front',previous=null,localBubble=null,simulated=null;
   const reporter=createPositionReporter(sample=>ctx.send('reportPosition',sample));
@@ -41,7 +44,7 @@ export function createWorldExperience(ctx){
   function update(dt,{speed=0,hide=null,poses=null}={}){
     if((!latest&&!simulated)||disposed)return;
     // The class harbor (G29) stands in Saltreach Harbor but is its own presence place, with 40 drawn.
-    const worldPlace=ctx.world.current?.id,place=ctx.presencePlace?.(worldPlace)??worldPlace,player=ctx.player,classRoom=place!==worldPlace;
+    const worldPlace=ctx.world.current?.id,place=resolvePresencePlace(worldPlace,ctx.presencePlace),player=ctx.player,classRoom=place!==worldPlace;
     if(previous){const dx=player.position.x-previous.x,dz=player.position.z-previous.y;
       if(Math.abs(dx)+Math.abs(dz)>.001)facing=Math.abs(dx)>Math.abs(dz)?dx<0?'left':'right':dz<0?'back':'front';}
     previous={x:player.position.x,y:player.position.z};

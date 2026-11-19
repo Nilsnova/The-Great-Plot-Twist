@@ -152,7 +152,8 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   experience=createWorldExperience({scene,container,art,world,player:controller.player,camera:view.camera,canvas:graphics.renderer.domElement,reducedMotion,preferences:getPreferences,
     send:(name,...args)=>sendIntent(adapter,name,...args),
     colourOf:id=>island?.colourOf?.(id)??null,characterScale:()=>characterScale,
-    isBlocked:outsideBlocked,presencePlace:place=>island?.presencePlace(place)??(place==='lighthouse_isle'&&(island||waves?.point)?'pirate_point':null)??classDemo?.presencePlace(place)??place});
+    isBlocked:outsideBlocked,presencePlace:place=>place==='home_islet' && island?island.presencePlace(place):
+      (place==='lighthouse_isle'&&(island||waves?.point)?'pirate_point':null)??classDemo?.presencePlace(place)??place});
   // Captains and boarders draw larger during a wave (1.4x, up to 1.8x on a phone: pirates/character-scale.js),
   // so they read at the zoomed-out battle camera; back to 1 when the wave's drawing stops.
   let characterScale=1,inBattle=false;const stopScale=[on('wave_controller_started',()=>{inBattle=true;}),on('wave_controller_stopped',()=>{inBattle=false;})];

@@ -183,3 +183,33 @@ proves the native simulation is running before testing command revocation. Build
 (257 text files, 12 protected lines) and whitespace review passed. Captain reporting, free revival,
 shared settings/reset UI and concurrent-controller latency acceptance remain separate increments;
 this increment does not enable server capabilities or claim live acceptance.
+
+## Captain checkpoints and committed revival replay
+
+Before ordered hold start and completion, flush queued inputs, fetch a complete stored sealed
+prefix, replay through that seal, then report every retained Captain's normalized HP, fall tick
+and applied revive basis. Only the accepted report supplies server fall IDs. Report responses
+bind metadata to the exact reported prefix and never patch simulated HP. Source freshness remains
+strict when another controller advances the seal; the same completion UID must survive retries.
+
+A native free captain_revive journal entry requires UUID operation/fall/hold markers, matching
+frozen helper/target tokens, frozen helper loadout and the target's exact original fall tick.
+Its committed restore is applied at the journal effective tick and records serverSeq as the
+target's revive basis. Do not reauthorize helper standing/reach or restore its earlier coordinates
+after the source transaction already committed. A withdrawn target, another fall or duplicate
+sequence cannot be healed. Legacy paid events and raw input behavior remain separate.
+
+The Captain/revival increment passed 88 focused tests across fourteen files in 22.50 seconds,
+including original paid health/recovery behavior, actual native controller admission, committed
+50/75/100-percent frozen restores, malformed fall evidence, delayed cancellation ownership,
+unknown/401 completion retention, native standing-body rendering and explicit-null presence routing.
+The build and spoiler guard passed (257 text files, 12 protected lines), with whitespace review clean.
+The phone HUD component preview was generated and visually inspected under
+`docs/evidence/MP-ECO-native-revival/`; it makes no authenticated acceptance claim.
+
+Native standing bodies and health bars use retained journal positions rather than presence figures.
+Presence loss cannot make a retained Captain invisible, and duplicate matched presence bodies are
+hidden. An explicit unknown presence room suppresses reporting instead of falling back to a static
+world room. Actual simultaneous controllers with realistic latency and native gameplay falls remain
+an acceptance gate. Separate report/start/complete round trips keep the strict source freshness
+requirement; source-side atomic composition is required if that test demonstrates starvation.

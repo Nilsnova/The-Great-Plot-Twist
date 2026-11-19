@@ -110,9 +110,10 @@ export function packAtlas(ids = ATLAS_IDS, dimensions = pirateDimensions, width 
 // replace the pixel boarders (PIXEL_ONLY_IDS) in the cartoon atlas. drawBoarder() takes the cartoon frame
 // when the atlas has it, else the pixel one (pixel packAtlas, tests).
 export const DOWN_IDS = Array.from({ length: 10 }, (_, i) => `captain-down-${i + 1}`);
+export const STANDING_IDS=Array.from({length:10},(_,index)=>`captain-${index+1}`);
 // The Barracks' militia (GAME-V3.md "Houses"), cartoon only: a pixel atlas (tests) simply does not draw them.
 export const MILITIA_IDS = ['militia', 'militia-walk-1', 'militia-walk-2', 'militia-strike', 'militia-hit'];
-export const CARTOON_EXTRA_IDS = ['boarder', 'boarder-walk-1', 'boarder-walk-2', 'boarder-hit', 'boarder-hack', ...DOWN_IDS, ...MILITIA_IDS];
+export const CARTOON_EXTRA_IDS = ['boarder', 'boarder-walk-1', 'boarder-walk-2', 'boarder-hit', 'boarder-hack', ...DOWN_IDS, ...STANDING_IDS, ...MILITIA_IDS];
 export const PIXEL_ONLY_IDS = [...pirateFrames.boarder];
 // Levels 4 and 5 of walls, cannons and mortars and their gold pips (GAME-V3.md §4.1): cartoon-only, so a pixel
 // atlas (tests) draws a tier building with its level-3 art and plain pips.
@@ -342,7 +343,7 @@ export function wallShare(post, wall) {
 }
 
 export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion = () => false, quality = () => 'high',
-  beamFrom = null, recoveryV1 = false, fx = () => scene.userData?.pixelFx ?? null }) {
+  beamFrom = null, recoveryV1 = false, nativeCaptains=false, fx = () => scene.userData?.pixelFx ?? null }) {
   const owned = [], root = new THREE.Group(); root.name = 'pirate-wave'; scene.add(root);
   const combatOverlay = createCombatOverlay(root);
   const rect = {};
@@ -1069,7 +1070,11 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       const mine = captain && hero.id === captain.id, x = mine ? captain.x : hero.x, z = mine ? captain.z : hero.z;
       if (hero.down) { drawDown(hero, x, z, revive?.targetId === hero.id ? revive.share : null); continue; }
       // A teammate's bar sits over their presence figure when it is drawn (src/pirates/figures.js).
-      const figure = mine ? null : figures?.get?.(hero.id);
+      const figure = mine || nativeCaptains ? null : figures?.get?.(hero.id);
+      if(nativeCaptains && !mine){
+        const r=rect[STANDING_IDS[Math.max(0,Math.min(9,hero.colour??0))]];
+        if(r){const at=projectGround(x,z),k=K()/UNIT;bands[bandOf(z)].push(r,at.x,at.y,r.w*k,r.h*k,.5,r.anchor*k);}
+      }
       drawHealthBar(figure ? figure.x : x, figure ? figure.z : z, hero.hp, hero.maxHp);
     }
   }

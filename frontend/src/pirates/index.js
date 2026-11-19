@@ -74,7 +74,7 @@ export function mountPirates(ctx) {
     practiceIdentity: ctx.practiceIdentity, room: ctx.islandRoom ?? null, place: ctx.islandPlace ?? 'home_islet', simOptions: ctx.islandSimOptions ?? {},
     getCrew: ctx.getCrew ?? (() => null), startNextWave: ctx.startNextWave ?? null,
     holdBreak: ctx.holdBreak ?? null, toggleHold: ctx.toggleHold ?? null, guide: ctx.battleGuide !== false,
-    onEvents: ctx.onIslandEvents, recoveryTransport: ctx.recoveryTransport ?? null, inspectDefenses: ctx.inspectDefenses === true,getSessionProof:ctx.getSessionProof });
+    onEvents: ctx.onIslandEvents, recoveryTransport: ctx.recoveryTransport ?? null, inspectDefenses: ctx.inspectDefenses === true,getSessionProof:ctx.getSessionProof,completeRevival:ctx.completeRevival });
   const point = ctx.api ? createPiratePoint({ ...shared, api: ctx.api, openRoom: ctx.openRoom, input: ctx.input, getDefenses: ctx.getPointDefenses,
     rehearsal: ctx.rehearsal === true, host: ctx.host === true, notify: ctx.notify, beforeStart: ctx.beforePointWave ?? null }) : null;
   const update = dt => { island.update(dt); point?.update(dt); };

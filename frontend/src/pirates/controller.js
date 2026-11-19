@@ -91,7 +91,8 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   startNextWave = null, breakSeconds = BREAK_SECONDS, recoveryPlayoutMs = RECOVERY_PLAYOUT_MS,
   loadAuto = readAuto, saveAuto = writeAuto, holdBreak = null, toggleHold = null, reviveCaptain = null,
   createEventArt = defaultEventArt, createFinisherScene = defaultFinisherScene, easyFinishers = readEasy, practiceIdentity = () => null,
-  guide: guideOn = false, createGuide = defaultGuide, recoveryTransport = null, inspectDefenses = false, getSessionProof = () => null } = {}) {
+  guide: guideOn = false, createGuide = defaultGuide, recoveryTransport = null, inspectDefenses = false, getSessionProof = () => null,
+  completeRevival=async()=>({ok:false,code:'economy_path_unavailable'}) } = {}) {
   // The captains' poses (src/pirates/poses.js): your character and the teammates' figures fire in their own body.
   const poses = createPoses({ now: () => now() / 1000 });
   const rangeFeedback = createRangeFeedback(), dangerFeedback = createDangerFeedback();
@@ -172,7 +173,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     createRenderer, createHud, setTimer, clearTimer, onEvents, getCrew, captainLevel, captainSkills, captainWeapon,
     captainColour, startNextWave, breakSeconds, recoveryPlayoutMs, loadAuto, saveAuto, holdBreak, toggleHold,
     reviveCaptain, createEventArt, createFinisherScene, easyFinishers, practiceIdentity, guideOn, createGuide,
-    recoveryTransport, inspectDefenses, poses, myLevel, read, mySkills, myWeapon, actorId, myStats, controls, timers, stops,
+    recoveryTransport, inspectDefenses, poses, myLevel, read, mySkills, myWeapon, actorId, myStats, controls, completeRevival, timers, stops,
     later, emit, cue, here, blocked, rangeFeedback, dangerFeedback, canInspect, focusCanvas, closeDefenseInspection,
     openDefenseInspection, updateDefenseInspection, clearLiveFeedback, noteLiveInput });
   // The parts, each a closure over ctl; they call each other through names linked once all exist.
@@ -242,7 +243,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
       event: snapshot.createWave.event ?? event, finishers: true, finisherPreparation: true, gapMs: waveGapMs,
       ...info.rules, recoveryStructures: snapshot.structures, towerHealth: true,
       recoveryVersion: info.recoveryVersion, waveProtocol: info.waveProtocol,
-      ...(info.nativeShared?{canonicalCaptains:snapshot.captainInitialState}:{}) }
+      ...(info.nativeShared?{canonicalCaptains:snapshot.captainInitialState,canonicalLoadouts:Object.fromEntries(snapshot.participants.map(row=>[row.participantToken,row.captain]))}:{}) }
       : { seed: info.seed, wave: info.wave, weather: info.weather, flagship: info.flagship, defenses, countdown: 0,
         crew: getCrew() ?? undefined, ...(info.boss !== undefined ? { boss: info.boss } : {}), event, finishers: true,
         finisherPreparation: true, gapMs: waveGapMs, ...(info.rules ?? {}), ...simOptions };
@@ -276,7 +277,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     if (world.scene) {
       Promise.resolve(createRenderer({ scene: world.scene, defenses, reducedMotion, quality, beamFrom, colour: read(captainColour, 0),
         towerStates: info.rules?.towerHealth === true || !!snapshot, culverins: defenses.some(item => item.kind === 'culverin'),
-        recoveryV1: !!snapshot,
+        recoveryV1: !!snapshot,nativeCaptains:info.nativeShared===true,
         swivels: defenses.some(item => item.kind === 'swivel') })).then(renderer => {
         if (ctl.disposed || ctl.wave !== current || current.finished) renderer?.dispose(); else current.renderer = renderer;
       }).catch(error => console.error(error));
@@ -334,6 +335,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     },
     checkpointBeforeRepair,
     fire: (cannonId, targetId) => submit({ type: 'fire', cannonId, targetId }),
+    syncCaptains:()=>ctl.syncCaptains(),
     shoot, aim: point => aimAt(point, null), next, setAuto,
     get auto() { return ctl.auto; },
     get runLoot() { return ctl.runLoot; },
