@@ -38,13 +38,12 @@ const RECOVERY_HEALTH_KINDS = new Set(['wall', 'cannon', 'mortar', 'harpoon', 'c
 // One primary button at most (the build or the upgrade); `soon` is the small "Coming soon" line.
 // GAME-V3.md §4.2: a built building on an island (not Pirate Point) has a secondary "Tear down" in
 // `demolish` {label, disabled, reason}; battle: a wave runs on screen, so it waits for the break.
-// flags: the server's feature flags (GET /api/config); an empty tower spot offers towerKinds({flags, point}), so the
-// culverin (T43) only while defenses_v2 is on.
+// An empty tower spot offers towerKinds({point}): on the island the culverin (T43) too.
 // D055: a built tower of a kind with an upgrade tree (cannon, mortar, harpoon, culverin, swivel nest) on an island
 // also gets `tree` (tree-model.js): its levels as the trunk and two paths of three tiers above; `treePicked` is the
 // tile the player tapped. The card then draws the tree in place of the plain Upgrade (the trunk tile upgrades).
 export function buildCardModel({spotId, kind, slot = null, spot = null, coins = null, visitor = false, ownerName = '',
-  busy = false, message = '', unlocks = null, prices = null, point = false, campaign = null, battle = false, movable = false, flags = null,
+  busy = false, message = '', unlocks = null, prices = null, point = false, campaign = null, battle = false, movable = false,
   treePicked = null, recoveryState = null, recoveryStatus = 'disabled', recoveryError = null, recoveryPending = false,
   recoveryVersion = 0, economy = undefined} = {}) {
   const funds = cardFunds(economy, coins); coins = funds.coins;
@@ -91,7 +90,7 @@ export function buildCardModel({spotId, kind, slot = null, spot = null, coins = 
   if (!point && movable) model.move = {label: 'Move', disabled: battle || !!busy, reason: battle ? 'You can move it between waves.' : ''};
   if (!built && place === 'tower') {
     model.mode = 'choose'; model.title = 'Tower spot'; model.purpose = 'Choose what to build. You cannot change it later.';
-    for (const choice of towerKinds({flags, point})) {
+    for (const choice of towerKinds({point})) {
       const price = priceFor(choice, 0, prices);
       if (allowed(choice) < 1) {
         model.choices.push({kind: choice, name: BUILDINGS[choice].name, line: BUILDINGS[choice].line, price: coinText(price),

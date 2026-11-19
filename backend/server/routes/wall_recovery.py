@@ -1,9 +1,9 @@
 """Wall recovery routes (tasks T29-T32 and T47, decision D039, proposed;
 specs/T29-T32-wall-recovery.md): damage that stays after a wave, and the paid Repair/Rebuild.
 
-Every route needs a signed-in player and the flags "islands" and "wall_recovery" (404
-feature_off while either is off, before the body is checked or the database is asked). The
-flag stays off until supabase/migrations/20261114100000_wall_recovery.sql has been applied.
+Every route needs a signed-in player and the flag "islands" (404 feature_off while it is off,
+before the body is checked or the database is asked). The flag "wall_recovery" is retired
+(always on; the name stays accepted and changes nothing).
 
 GET /api/island/walls?code=ISLE-K7Q2M   (code optional: your own island)
     -> {"coins": 120, "walls": [{"spot": "wall_1", "level": 2, "health": 40,
@@ -25,8 +25,8 @@ POST /api/island/repair  {"spot": "wall_1", "actionUid": "...", "code"?: "ISLE-K
             too_many_requests, 503 database_unavailable (outcome unknown: repeat with the
             SAME actionUid)
 
-While the flag is on, POST /api/island/upgrade refuses a damaged wall (409 needs_repair) and
-the wave routes carry "walls" (routes/waves.py).
+POST /api/island/upgrade refuses a damaged wall (409 needs_repair) and the wave routes carry
+"walls" (routes/waves.py).
 
 Used by: the wall card of the game client (frontend/src/island/wall-recovery.js).
 """
@@ -34,13 +34,10 @@ Used by: the wall card of the game client (frontend/src/island/wall-recovery.js)
 from datetime import datetime
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Query, Request
 from pydantic import BaseModel, ConfigDict, Field
 
-from server.auth import Player
 from server.clock import ClockDep
-from server.errors import ApiError
-from server.flags import is_enabled
 from server.island import wall_repair
 from server.island.service import IslandCatalogueDep
 from server.island.wall_repair import WallsView
@@ -50,26 +47,11 @@ from server.routes.island import (
     ID_PATTERN,
     IslandPlayerDep,
 )
-from server.settings import Settings, SettingsDep
 from server.supabase_admin import AdminDep
 from server.weather.mapping import format_utc_time
 
 router = APIRouter()
-FLAG = "wall_recovery"
-
-
-def walls_on(settings: Settings) -> bool:
-    """True while lasting wall damage is switched on (the migration is applied)."""
-    return is_enabled(FLAG, settings.flags)
-
-
-async def require_walls(player: IslandPlayerDep, settings: SettingsDep) -> Player:
-    if not walls_on(settings):
-        raise ApiError(404, "feature_off", "Wall repairs are not open yet.")
-    return player
-
-
-WallsPlayerDep = Annotated[Player, Depends(require_walls)]
+WallsPlayerDep = IslandPlayerDep
 
 
 class RepairRequest(BaseModel):
