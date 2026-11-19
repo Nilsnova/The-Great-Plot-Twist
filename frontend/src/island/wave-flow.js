@@ -127,6 +127,7 @@ export function createWaveFlow({api, emit, notify = () => {}, banner = () => {},
     const generation = contextFor(where), lookup = ++lookupGeneration;
     const answer = await api.currentWave({where});
     if (disposed || generation !== contextGeneration || lookup !== lookupGeneration || !answer.ok) return answer;
+    if (answer.data === null && current === null) return answer; // An idle read must retain the focused card's DOM.
     if (answer.data && current?.wave.waveId !== answer.data.waveId) {
       stopTimers(); current = {wave: answer.data, where, joined: false, finished: false, startAt: now()};
     } else if (!answer.data && current && (!current.joined || current.where !== where)) {
