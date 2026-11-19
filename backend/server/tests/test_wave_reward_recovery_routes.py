@@ -32,6 +32,9 @@ def answer_with(monkeypatch, reply):
 
     async def call(self, name, arguments):
         calls.append((name, arguments))
+        if name == "island_lifecycle_actor_status":
+            return {"status": "active"}
+        assert name == "recovery_wave_recover_rewards"
         return deepcopy(reply)
 
     monkeypatch.setattr(SupabaseAdmin, "call_function", call)
@@ -45,7 +48,10 @@ def test_recovers_only_the_verified_callers_saved_rewards_even_with_islands_off(
     assert response.status_code == 200, response.text
     assert response.json() == {key: value for key, value in REPLY.items() if key != "status"}
     assert response.headers["cache-control"] == "private, no-store"
-    assert calls == [("recovery_wave_recover_rewards", {"p_player_id": PLAYER_ID})]
+    assert calls == [
+        ("island_lifecycle_actor_status", {"p_player_id": PLAYER_ID}),
+        ("recovery_wave_recover_rewards", {"p_player_id": PLAYER_ID}),
+    ]
 
 
 def test_an_empty_repeat_still_returns_current_wallet_and_personal_progress(monkeypatch):
@@ -78,7 +84,10 @@ def test_an_admitted_guest_recovers_only_their_own_saved_rewards(monkeypatch):
     world = World(replace(ISLAND_SETTINGS, flags=parse_flags("demo")))
     response = world.client.post("/api/waves/recover", headers=GUEST, json={})
     assert response.status_code == 200, response.text
-    assert calls == [("recovery_wave_recover_rewards", {"p_player_id": GUEST_ID})]
+    assert calls == [
+        ("island_lifecycle_actor_status", {"p_player_id": GUEST_ID}),
+        ("recovery_wave_recover_rewards", {"p_player_id": GUEST_ID}),
+    ]
 
 
 @pytest.mark.parametrize(
@@ -114,4 +123,7 @@ def test_reward_recovery_uses_the_existing_wave_budget(monkeypatch):
     response = world.client.post("/api/waves/recover", headers=PLAYER, json={})
     assert_error(response, 429, "too_many_requests")
     assert int(response.headers["retry-after"]) > 0
-    assert len(calls) == 20
+    assert calls == [
+        ("island_lifecycle_actor_status", {"p_player_id": PLAYER_ID}),
+        ("recovery_wave_recover_rewards", {"p_player_id": PLAYER_ID}),
+    ] * 20

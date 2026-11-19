@@ -29,6 +29,8 @@ from server.tests.island_sql.test_personal_captain_sql import (  # noqa: E402
     initialized,
     private,
 )
+from server.tests.island_sql.test_shared_session_close_sql import finish as native_finish  # noqa: E402
+from server.tests.island_sql.test_shared_session_wave_sql import bell, live_room  # noqa: E402
 
 
 def finish(connection, player, wave_id, survived=True, sunk=7):
@@ -365,20 +367,38 @@ def test_an_absent_owner_gets_no_personal_milestone_from_a_members_confirmed_win
 
 
 def test_confirmed_departed_member_retains_receipt_without_a_second_payment(database):
-    wave = ready_wave(database)
-    freeze(database, wave)
-    confirm(database, wave, wave.member)
+    # Membership withdrawal normalizes real canonical slots. Produce those slots
+    # through the native bell instead of pairing it with raw accounting fixtures.
+    room = live_room(database)
+    owner, member, outsider, treasury, sessions = room
+    started = bell(database, room)
+    wave_id = UUID(started["waveId"])
+    wallets = (balance(database, owner), balance(database, member))
     as_server(database)
-    rpc(database, "game_leave", wave.member, wave.owner)
-    first = close(database, wave)
+    for actor in (owner, member):
+        assert rpc(database, "shared_session_heartbeat", actor, owner,
+                   keys(treasury)[1], sessions[actor], 1)["status"] == "done"
+    assert rpc(database, "game_leave", member, owner)["status"] == "left"
+    first = native_finish(database, room, started)
+    assert first["status"] == "done" and first["outcome"] == "won"
+    original = private(database, "island_wave_accounting_result", wave_id, False)
     as_server(database)
-    own = rpc(database, "island_wave_completion_receipt", wave.member, wave.id)
+    own = rpc(database, "island_wave_completion_receipt", member, wave_id)
     assert own["receipt"]["confirmedParticipation"] is True
-    assert own["receipt"]["playerId"] == str(wave.member)
-    assert rpc(database, "island_wave_completion_receipt", wave.outsider, wave.id) == {
+    assert own["receipt"]["playerId"] == str(member)
+    assert rpc(database, "island_wave_completion_receipt", outsider, wave_id) == {
         "status": "refused", "reason": "not_in_wave",
     }
-    assert close(database, wave)["treasuryReceiptId"] == first["treasuryReceiptId"]
+    repeated = native_finish(database, room, started)
+    assert repeated["repeat"] is True and repeated["completion"] == first["completion"]
+    again = private(database, "island_wave_accounting_result", wave_id, True)
+    assert again["treasuryReceiptId"] == original["treasuryReceiptId"]
+    assert again["economy"] == original["economy"]
+    assert (balance(database, owner), balance(database, member)) == wallets
+    assert database.execute(
+        "select count(*) from public.island_treasury_transactions "
+        "where account_id=%s and reason='pirate_loot'", (keys(treasury)[0],),
+    ).fetchone() == (1,)
 
 
 def test_a_withdrawn_personal_assignment_cannot_confirm_through_an_old_slot(database):
