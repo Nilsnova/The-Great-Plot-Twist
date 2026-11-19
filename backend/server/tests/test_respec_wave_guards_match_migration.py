@@ -141,6 +141,7 @@ def test_respec_is_priced_per_level_under_the_island_lock():
 def test_the_complete_reviewed_respec_body_is_unchanged_before_alias_capture():
     body = historical_respec_definition()
     assert hashlib.sha256(body.encode()).hexdigest() == (
+        # Public reviewed SQL fingerprint; pragma: allowlist nextline secret
         "6dfc8e75c9b2c7076430d64ca350af81af089744ced636bbdf6e8d4b0b0dc457"
     )
     assert respec_definition_before_core() == (GUARDS.name, body)
