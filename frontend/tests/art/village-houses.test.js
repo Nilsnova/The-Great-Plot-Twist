@@ -50,18 +50,26 @@ describe('approved house family source', () => {
     }
   });
 
-  it('uses one fit scale per related level group so real silhouette growth is retained', () => {
-    for (const group of ['plain', 'role']) {
-      const cells = report.cells.filter(cell => cell.group === group);
-      expect(new Set(cells.map(cell => frames[cell.id].fitBounds.join(','))).size).toBe(1);
-      for (const cell of cells) {
-        const {rect, sourceFoot: [x, y], fitBounds} = frames[cell.id];
-        [x, y, rect[2] - x, rect[3] - y].forEach((extent, i) => expect(fitBounds[i]).toBeGreaterThanOrEqual(extent));
-      }
+  it('keeps the normalized silhouettes within the original cottage scale as their levels grow', () => {
+    const presentedHeight = {};
+    // Limits are logical pixels around the unchanged ground anchor.
+    const maxHeight = {
+      'island-house': 54, 'island-house-l2': 59, 'island-house-l3': 70,
+      'island-house-barracks': 62, 'island-house-tavern': 62, 'island-house-workshop': 63,
+      'island-house-barracks-l3': 78, 'island-house-tavern-l3': 78, 'island-house-workshop-l3': 79,
+    };
+    for (const cell of report.cells) {
+      const {rect, sourceFoot: [x, y], fitBounds, logical: [width, height, anchor]} = frames[cell.id];
+      [x, y, rect[2] - x, rect[3] - y].forEach((extent, i) => expect(fitBounds[i]).toBeGreaterThanOrEqual(extent));
+      const [left, top, right, bottom] = cell.solidBounds;
+      const scale = Math.min(width / 2 / fitBounds[0], (height - anchor) / fitBounds[1],
+        width / 2 / fitBounds[2], anchor / fitBounds[3]);
+      presentedHeight[cell.id] = (bottom - top) * scale;
+      expect(presentedHeight[cell.id]).toBeLessThanOrEqual(maxHeight[cell.id]);
+      expect((right - left) * scale).toBeLessThan(78);
     }
-    const height = id => { const cell = report.cells.find(cell => cell.id === id); return cell.solidBounds[3] - cell.solidBounds[1]; };
-    expect(height('island-house-l2')).toBeGreaterThan(height('island-house'));
-    expect(height('island-house-l3')).toBeGreaterThan(height('island-house-l2'));
-    for (const role of ROLE_IDS) expect(height(`island-house-${role}-l3`)).toBeGreaterThan(height(`island-house-${role}`));
+    expect(presentedHeight['island-house-l2']).toBeGreaterThan(presentedHeight['island-house']);
+    expect(presentedHeight['island-house-l3']).toBeGreaterThan(presentedHeight['island-house-l2']);
+    for (const role of ROLE_IDS) expect(presentedHeight[`island-house-${role}-l3`]).toBeGreaterThan(presentedHeight[`island-house-${role}`]);
   });
 });
