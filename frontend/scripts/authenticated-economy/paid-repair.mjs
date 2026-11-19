@@ -9,6 +9,17 @@ import {join} from 'node:path';
 const SOURCE = '3bdd8eda16470795fdedd68c42fffab54e5f2ced';
 const REPAIR = '/api/island/structures/repair';
 
+async function pointerClick(page,button) {
+  await button.waitFor({state:'visible',timeout:10000});
+  const point=await button.evaluate(element=>{
+    const box=element.getBoundingClientRect(),x=box.x+box.width/2,y=box.y+box.height/2;
+    const hit=document.elementFromPoint(x,y);
+    return !element.disabled && (hit===element || element.contains(hit))?{x,y}:null;
+  });
+  assert.ok(point,'the visible enabled button must actually receive the physical pointer');
+  await page.mouse.click(point.x,point.y);
+}
+
 async function dismissGuides(page) {
   let dismissed=false;
   for(let turn=0;turn<8;turn++) {
@@ -55,9 +66,7 @@ async function paidClick(page, spot) {
   if(await dismissGuides(page))await openCard(page,spot);
   const response = page.waitForResponse(reply => reply.url().endsWith(REPAIR)
     && reply.request().method()==='POST',{timeout:20000});
-  // A remounted card can outlive Playwright's click acknowledgement. The actual
-  // resulting POST/receipt, rather than another click identity, confirms effect.
-  await page.locator('.island-card[open] .recovery-repair:not([disabled])').click({timeout:5000}).catch(()=>{});
+  await pointerClick(page,page.locator('.island-card[open] .recovery-repair:not([disabled])'));
   const reply = await response, data = await reply.json();
   assert.equal(reply.status(),200,JSON.stringify(data));
   return {body:reply.request().postDataJSON(),data};
@@ -83,6 +92,7 @@ export async function runPaidRepairAcceptance({ownerPage,memberPage,observe,api,
     'Temporary local provider accounts; no hosted service or deployment.',
     'Natural simulation checkpoints retain the existing accepted-combat-report trust model.',
     'Same-UID and refused fourth requests use actual authenticated transport, not a UI click.',
+    'Existing development inspection selects cards; actions use hit-tested physical pointer controls.',
   ]};
   report.scenarioSha256=createHash('sha256').update(readFileSync(new URL(import.meta.url))).digest('hex');
   const trace = [];
@@ -102,7 +112,7 @@ export async function runPaidRepairAcceptance({ownerPage,memberPage,observe,api,
     // Native accepted bell owns first recovery-v1 enrollment. A new shared island
     // may still be recovery0/protocol1 before it; do not forge that transition.
     await openCard(ownerPage,'island_bell');
-    await ownerPage.locator('.island-card[open] [data-focus="bell"]:not([disabled])').click();
+    await pointerClick(ownerPage,ownerPage.locator('.island-card[open] [data-focus="bell"]:not([disabled])'));
     await ownerPage.waitForFunction(() => !!window.__island?.waves?.island.wave,null,{timeout:20000});
     await memberPage.waitForFunction(() => !!window.__island?.waves?.island.wave,null,{timeout:20000});
     const naturallyDamaged=await ownerPage.waitForFunction(spots => {
