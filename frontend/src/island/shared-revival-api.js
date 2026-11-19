@@ -43,7 +43,8 @@ export function createSharedRevivalApi({transport,getEconomy,getActorId,getProof
    const saved=read(name);
    if(saved && JSON.stringify(saved)===JSON.stringify(record)){
     if(answer?.ok)storage.removeItem(name);
-    else if(answer?.status===409 && refreshCodes.has(answer.code))storage.setItem(name,JSON.stringify({...record,refreshable:true}));
+    else if((answer?.status===409 && refreshCodes.has(answer.code))
+      || (answer?.status===403 && answer.code==='not_controller'))storage.setItem(name,JSON.stringify({...record,refreshable:true}));
    }
   }catch{return failed('revival_retry_unavailable','The original revival could not be saved.',503);}
   return answer?.ok?answer:{...answer,ok:false,status:Number.isInteger(answer?.status)?answer.status:0};

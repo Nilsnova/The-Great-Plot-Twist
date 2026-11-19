@@ -359,3 +359,22 @@ original start timestamp, at least 400 ms between completion attempts, identical
 body/UID/proof and no local HP restore. Normal build passed in 3.05 seconds, spoiler guard passed
 (257 text files, 12 protected lines), and whitespace review was clean. Synthetic clock/transport
 results remain distinct from actual rendered provider acceptance.
+
+## Definitive controller-refusal retry
+
+The free-revival server replays an owned receipt before checking fresh controller authority; a
+new operation refused as not_controller rolls back its root and effect. Its public response is
+403/not_controller. Allow exactly that definitive refusal to refresh the existing durable request's
+hold/session fences after validating the same actor, original origin and a fresh controlling proof.
+Keep the original action UID, wave, target and fall. Do not broaden other 403 responses or treat
+unknown/401/429/server failures as permission to replace the captured body. A changed actor during
+response handling must keep the original record inert. A replacement origin or missing fresh
+proof must not send a refreshed request. Historical successful receipts remain immutable facts.
+
+The reconnect regression first failed three cases: a legitimate new controller still submitted
+the old generation, and absent/replacement-scope proofs failed to gate a previously refused record.
+After the exact refusal classification change, 30 cases in four focused adapter/orchestration files
+passed in 3.04 seconds. The strengthened thirteen-case reconnect selection passed again, including
+unchanged storage when a fresh proof cannot be validated. Normal build passed in 1.32 seconds,
+spoiler guard passed (257 text files, 12 protected lines), and whitespace review was clean. The
+component transport is synthetic; no provider reconnect or SQL transaction was executed here.
