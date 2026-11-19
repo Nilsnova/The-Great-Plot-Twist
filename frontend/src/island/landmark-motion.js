@@ -1,13 +1,13 @@
 // Top-left texture coordinates from the normalized village sprites. The painted masonry and
 // foot stay still while the cloth, bell metal and warm light change inside their own regions.
 export const landmarkProfiles = {
-  cabin: {pennant: [.424, .031, .653, .237], lights: [[.184, .543, .371, .704], [.553, .542, .678, .700]]},
-  'island-bell': {bell: {region: [.320, .429, .696, .738], pivot: [.503, .457]},
+  cabin: {pennant: [.424, .031, .653, .194], lights: [[.184, .543, .371, .704], [.553, .542, .678, .700]]},
+  'island-bell': {bell: {region: [.329, .397, .684, .694], pivot: [.503, .422]},
     lights: [[.052, .605, .203, .772], [.784, .605, .933, .772]]},
-  'island-watchtower': {pennant: [.482, .145, .892, .297]},
-  'island-watchtower-l4': {pennant: [.480, .087, .886, .215]},
-  'island-watchtower-l5': {pennant: [.480, .142, .879, .275]},
-  'island-arsenal': {lights: [[.480, .650, .607, .800]]},
+  'island-watchtower': {pennant: [.482, .145, .892, .263]},
+  'island-watchtower-l4': {pennant: [.480, .087, .886, .202]},
+  'island-watchtower-l5': {pennant: [.480, .142, .879, .253]},
+  'island-arsenal': {smoke: [.590, .004, .970, .163]},
   'island-house': {lights: [[.563, .584, .731, .733]]},
   'island-house-l2': {lights: [[.187, .588, .339, .719], [.528, .617, .645, .743]]},
   'island-house-l3': {lights: [[.219, .277, .383, .442], [.568, .370, .735, .515], [.445, .614, .630, .779]]},
@@ -29,7 +29,7 @@ const mask = /* glsl */`
 
 // A material is owned by the place and can still be shared by every instance of that artwork.
 // The model origin seeds each sprite independently without per-building textures or draw calls.
-export function animateLandmarkMaterial(material, {pennant, bell, lights = []} = {}) {
+export function animateLandmarkMaterial(material, {pennant, bell, smoke, lights = []} = {}) {
   const uniforms = {uLandmarkClock: {value: 0}, uLandmarkWind: {value: 0}, uLandmarkRing: {value: 0},
     uLandmarkLight: {value: 0}, uLandmarkFlicker: {value: 0}};
   if (pennant) uniforms.uLandmarkPennant = {value: pennant};
@@ -38,6 +38,7 @@ export function animateLandmarkMaterial(material, {pennant, bell, lights = []} =
     uniforms.uLandmarkBell = {value: bell.region}; uniforms.uLandmarkPivot = {value: bell.pivot};
     uniforms.uLandmarkAspect = {value: image.width / image.height};
   }
+  if (smoke) uniforms.uLandmarkSmoke = {value: smoke};
   if (lights.length) uniforms.uLandmarkLights = {value: lights.flat()};
   const prepare = material.onBeforeCompile, baseKey = material.customProgramCacheKey();
   material.onBeforeCompile = (shader, renderer) => {
@@ -50,6 +51,7 @@ export function animateLandmarkMaterial(material, {pennant, bell, lights = []} =
       uniform float uLandmarkClock, uLandmarkWind, uLandmarkRing, uLandmarkLight, uLandmarkFlicker;
       ${pennant ? 'uniform vec4 uLandmarkPennant;' : ''}
       ${bell ? 'uniform vec4 uLandmarkBell; uniform vec2 uLandmarkPivot; uniform float uLandmarkAspect;' : ''}
+      ${smoke ? 'uniform vec4 uLandmarkSmoke;' : ''}
       ${lights.length ? `uniform vec4 uLandmarkLights[${lights.length}];` : ''}
       ${mask}
     ` + shader.fragmentShader.replace('#include <map_fragment>', /* glsl */`
@@ -69,7 +71,8 @@ export function animateLandmarkMaterial(material, {pennant, bell, lights = []} =
           vec2 hinge = (artUv - uLandmarkPivot) * aspect;
           float cosine = cos(uLandmarkRing), sine = sin(uLandmarkRing);
           vec2 atRest = (mat2(cosine, -sine, sine, cosine) * hinge) / aspect + uLandmarkPivot;
-          sampleUv += (atRest - artUv) * regionalWeight(metal);
+          vec2 metalOnly = clamp(atRest, uLandmarkBell.xy, uLandmarkBell.zw);
+          sampleUv += (metalOnly - artUv) * regionalWeight(metal);
         ` : ''}
         vec4 village = texture2D(map, vec2(sampleUv.x, 1.0 - sampleUv.y));
         ${lights.length ? /* glsl */`
@@ -83,11 +86,27 @@ export function animateLandmarkMaterial(material, {pennant, bell, lights = []} =
             + sin(uLandmarkClock * 8.1 - vLandmarkPhase * .71) * .34;
           village.rgb *= 1.0 + (uLandmarkLight + candle * uLandmarkFlicker) * amber * glass;
         ` : ''}
+        ${smoke ? /* glsl */`
+          vec2 stack = regionalPosition(artUv, uLandmarkSmoke);
+          if (uLandmarkWind > 0.0 && all(greaterThan(stack, vec2(0.0))) && all(lessThan(stack, vec2(1.0)))) {
+            float haze = 0.0;
+            for (int i = 0; i < 3; i++) {
+              float age = fract(uLandmarkClock * .55 + float(i) * .333);
+              float drift = (.18 + 14.0 * uLandmarkWind) * age + sin(age * 7.0 + float(i)) * age * .06;
+              vec2 plume = stack - vec2(.30 + drift, .93 - .79 * age);
+              vec2 spread = vec2(.06 + .09 * age, .115 + .08 * age);
+              float opacity = .30 * smoothstep(0.0, .12, age) * (1.0 - smoothstep(.30, 1.0, age));
+              haze = max(haze, opacity * (1.0 - smoothstep(0.0, 1.0, length(plume / spread))));
+            }
+            float alpha = haze * regionalWeight(stack) * (1.0 - village.a);
+            village += vec4(vec3(.53, .56, .54) * alpha, alpha);
+          }
+        ` : ''}
         diffuseColor *= village;
       #endif
     `);
   };
-  material.customProgramCacheKey = () => `${baseKey}:landmark:${!!pennant}:${!!bell}:${lights.length}`;
+  material.customProgramCacheKey = () => `${baseKey}:landmark:${!!pennant}:${!!bell}:${!!smoke}:${lights.length}`;
   material.needsUpdate = true;
   return {
     update({time = 0, wind = .2, night = 0, ring = 0, still = false} = {}) {
