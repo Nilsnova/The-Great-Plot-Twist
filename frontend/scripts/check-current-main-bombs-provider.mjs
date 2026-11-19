@@ -164,9 +164,9 @@ try {
   assert.equal(ownWave.native, false); assert.equal(ownWave.recoveryVersion, 1); assert.equal(ownWave.protocol, 2);
   const mateWave = await watch(mate.page);
   assert.equal(mateWave.waveId, ownWave.waveId);
-  await owner.page.waitForFunction(() => window.__island.waves.island.state?.ships?.length > 0, null, {timeout: 90000});
+  await owner.page.waitForFunction(() => window.__island.waves.island.state?.ships?.some(ship => ship.state === 'attacking'), null, {timeout: 90000});
   const queued = await owner.page.evaluate(() => {
-    const wave = window.__island.waves.island.wave, target = wave.state.ships[0];
+    const wave = window.__island.waves.island.wave, target = wave.state.ships.find(ship => ship.state === 'attacking');
     const tick = Math.max(wave.ticks + 4, (wave.recoveryReplay.sealedThroughTick ?? -1) + 1);
     const commands = [{type: 'captain_move', x: target.x + 3, z: target.z},
       {type: 'captain_shot', targetId: target.id, x: target.x + 3, z: target.z,
