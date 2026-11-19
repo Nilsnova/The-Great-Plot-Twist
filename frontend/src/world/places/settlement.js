@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { createFrameState } from './frame-state.js';
 import {createHarborLife} from '../ambient/harbor-life.js';
 import {HOME_LANTERN_LIGHT} from '../../art/home-shore.js';
+import {outpostArtwork} from '../../art/outpost-scenery.js';
 import {animateLandmarkMaterial} from '../../island/landmark-motion.js';
 import { loadArt, placeArt } from '../art.js';
 import { paintedBlob } from '../primitives.js';
@@ -27,7 +28,7 @@ export async function createSettlement(ctx) {
   const data = places[id];
   const placements = [...(layouts[id] ?? []), ...(ctx.placements ?? [])];
   const home = id === 'home_islet';
-  const appearance = asset => home && Object.hasOwn(HOME_PROP_ART, asset) ? HOME_PROP_ART[asset] : asset;
+  const appearance = asset => home && Object.hasOwn(HOME_PROP_ART, asset) ? HOME_PROP_ART[asset] : outpostArtwork(asset);
   const mooring = home ? homeMooring : [];
   const trees = edgeTrees[id] ?? [];
   const extraArtIds = [
@@ -60,6 +61,7 @@ export async function createSettlement(ctx) {
     placements.forEach(item => {
       const asset = appearance(item.asset);
       const mesh = placeArt(group, art, asset, item.x, item.z);
+      if (!home && asset !== item.asset) mesh.userData.asset = item.asset;
       if (asset === 'home-lantern') lanternLight ??= animateLandmarkMaterial(mesh.material, {lights: [HOME_LANTERN_LIGHT], lightStrength: 2});
       if (item.asset === 'ferry-pier') mesh.renderOrder = 6;
       if (item.asset === 'fog-bank') mesh.renderOrder = 920;
