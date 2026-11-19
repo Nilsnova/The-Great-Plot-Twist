@@ -243,5 +243,52 @@
       "No broad active-wave, arbitrary403 or realtime-transition waiver.",
       "The final new UI handoff must keep90 source distinct from older64/74 traces."
     ]
+  },
+  "conditionalConnectedControllerPacingReuse": {
+    "comparedAt": "2026-11-19T19:35:34.657860+00:00",
+    "originalReportedApplicationSource": "b239bdf094d132fc57969fb31f652f106db8abc5",
+    "comparedFrontendCandidate": "90a9a8227579c2be86cbe1d024fa75de7d61637e",
+    "retainedDocumentation": [
+      "docs/TEST-MAP.md historical defended-win/auto-next and following worker-closure rows",
+      "docs/WALKTHROUGH.md corresponding 107-migration rendered pacing account"
+    ],
+    "provenance": "Retained committed observations and source comparison, not a new run or reconstructed browser trace.",
+    "recordedObservedCase": [
+      "Three ordinary quoted cannon purchases reduced treasury 200 to 110; two distinct own WON receipts belonged to one canonical successful attempt.",
+      "With an eligible connected leader, ordinary Pause and Auto next kept the break paused for nine real seconds. Ordinary Resume allowed one non-player SYS wave_auto_start after its deadline; both clients automatically rendered that same new wave.",
+      "The recorded full browser trace showed exactly one initial browser start POST/UID and no additional browser start. The worker observer alone is not the source of that browser-trace assertion.",
+      "After both browsers closed, the production due worker ran after both real last_seen+60-second deadlines. It closed that SYS attempt abandoned with zero loot, withdrew both slots and released controls/personal assignments. A quiescent reread matched."
+    ],
+    "requiredConditions": [
+      "The recorded pacing clients are already connected controlling participants; no spectator-to-controller promotion, lost-control restore or changed actor is claimed.",
+      "The added refreshControl path sees no current wave or a current wave whose session.isController is true, so it returns before any new request/emission.",
+      "Normal wave-start paths leave controlRefresh at its default false; the worker-produced next wave has a different waveId.",
+      "No role/respec or removed-membership departure branch is invoked in this connected-controller pacing case."
+    ],
+    "changedFrontendBranchComparison": {
+      "island-session.js": "onActivated adds refreshControl after the existing reload/apply/refresh work. For the stated no-current-wave/already-controller conditions, the new helper immediately returns.",
+      "wave-flow.js": "begin adds controlRefresh=false. With false, the same-wave joined short-circuit is equivalent to the old one; a different SYS waveId follows the unchanged stopTimers/current/WAVE_STARTED path.",
+      "pirates/controller.js": "The new same-wave branch promotes only a validated native spectator. Existing controllers retain the old same-wave return; a different next waveId bypasses that branch.",
+      "island-load.js": "World-only duplicate wallet-event suppression does not change wave-start/settings/clock handlers; explicit purchases and actual funding/account changes retain their dispatch.",
+      "final-role-and-departure-fixes": "Role/respec quote hydration and exact 403 not_member saved-departure retirement are outside the recorded connected-controller branch."
+    },
+    "unchangedPacingDependencySha256": {
+      "frontend/src/pirates/game-wiring.js": "a936681a9b25353339bbc7b1a56bf4eaf09ef48d4ccc55e4a96cf3070bffae47",
+      "frontend/src/pirates/controller-frame.js": "1f3e57e60b8164754a7bb142bdad616989f28a15e504b301371f50dea716ff1a",
+      "frontend/src/pirates/controller-captain.js": "985706ca5a37f810fd387560650a981189f4088f46a1ede364d10143bb4c4e46",
+      "frontend/src/pirates/hud.js": "427bee443b466a667c9513d50301d5503be0f09675948a79e138d1ed13d51deb",
+      "frontend/src/island/shared-session-api.js": "09b7d7b3b39dec339b84a1ddd30b31d26d30199b80f6d090a5ef97e609072ec8",
+      "backend/server/island/shared_session_worker.py": "2d194424915b3e00aba82162e63180c14dacc227853e294a9cad28ab45d360ee",
+      "backend/server/island/shared_session_api.py": "3d99da5ef10f565ee6b22cb1af9c1f4d553ea337a56b930cf170268ac058a5fd",
+      "supabase/migrations/20261119002149_shared_session_pacing.sql": "9732b1e061b7fe4aa67245d0e570153a26a8b958938771ba0feff5177ded0ddb"
+    },
+    "workerClosureApplicability": "All 107 old SQL migration blobs and backend runtime code remain unchanged except the documented catalogue docstring; additive private operator 108 is not called by the observed normal pacing/worker closure. Once browsers are closed, changed frontend promotion code is not executing.",
+    "notEstablished": [
+      "Auto-start with no eligible connected leader",
+      "Spectator or restored-document promotion/reconnect correctness by this historical case",
+      "Fallen/nonempty-cooldown reconnect persistence",
+      "Any new run, changed source label, additional victory or new grant"
+    ],
+    "newTestExecution": false
   }
 }
