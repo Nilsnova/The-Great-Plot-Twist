@@ -77,8 +77,11 @@ export function createHarborLife({ place, art, ctx } = {}) {
       if (smoke) {
         smoke.visible = built.has('plot_1');
         if (!still) {
-          const drift = (elapsed % 2.8) * .22;
-          smoke.position.y = cabin.y + 5.1 + drift;
+          const plume = (elapsed % 2.8) / 2.8, wind = state.weather?.wind ?? 0;
+          smoke.position.x = cabin.x - .15 + plume * plume * wind * .42;
+          smoke.position.y = cabin.y + 5.1 + plume * (2.8 * .22);
+          smoke.scale.set(1 + plume * .65, 1 + plume * .22, 1);
+          smoke.material.opacity = .34 * Math.sin(Math.PI * plume);
         }
       }
       if (greenhouseBirds) {

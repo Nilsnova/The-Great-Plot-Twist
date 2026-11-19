@@ -84,3 +84,59 @@ it('fits the real southwest mooring artwork without changing walking, targeting 
   expect(result.visibleHullBottom).toBeGreaterThanOrEqual(-14.88);
   expect(result.visibleHullBottom).toBeLessThan(-14.65);
 });
+
+it('moves the skiff, rope and rooted vegetation together and restores their rest poses', async () => {
+  const result = await browser(async () => {
+    const THREE = await window.g20Import('/node_modules/three/build/three.module.js');
+    const {createPlace} = await window.g20Import('/src/world/places/factory.js');
+    const {MOORING_EYES} = await window.g20Import('/src/art/home-shore.js');
+    const {artSizes} = await window.g20Import('/src/world/art.js');
+    let still = false;
+    const place = await createPlace({
+      id: 'home_islet', loadBackdrop: async () => new THREE.Texture(), reducedMotion: () => still,
+      island: {decorate() {}},
+    });
+    try {
+      const skiff = place.group.getObjectByName('home-mooring-skiff');
+      const rope = place.group.getObjectByName('home-mooring-rope');
+      const cord = rope.children[0].geometry.attributes.position;
+      const plants = place.group.children.filter(mesh => mesh.material?.userData.sway);
+      const planted = plants.map(mesh => mesh.position.toArray());
+      const [x, z] = place.spawn;
+      const wave = time => place.update(1 / 60, {time, player: {x, z}, night: 0, weather: {wind: .5}});
+      const pose = () => [...skiff.position.toArray(), skiff.rotation.z];
+      const end = i => new THREE.Vector3().fromBufferAttribute(cord, i)
+        .add(new THREE.Vector3().fromBufferAttribute(cord, i + 1)).multiplyScalar(.5);
+      const rest = pose(), ashore = end(0), afloat = end(cord.count - 2);
+      wave(.84);
+      const changed = pose(), moved = end(cord.count - 2);
+      const asset = skiff.userData.asset, [w, h, foot] = artSizes[asset], [eyeX, eyeY] = MOORING_EYES[asset];
+      const cleat = skiff.localToWorld(new THREE.Vector3(eyeX / 16 - w / 2, (1 - foot) * h - eyeY / 16, 0));
+      const plantsMove = plants.every(mesh => Math.abs(mesh.material.userData.sway.uniform.value) > 0);
+      const grounded = plants.every((mesh, index) => mesh.position.toArray().every((v, i) => v === planted[index][i]));
+      const stakeStable = ashore.distanceTo(end(0));
+      place.setMooringBattle(true);
+      wave(2);
+      const hiddenDuringWave = !skiff.visible && !rope.visible && pose().every((v, i) => v === changed[i]);
+      place.setMooringBattle(false);
+      still = true;
+      wave(3);
+      return {
+        count: plants.length, grounded, plantsMove, hiddenDuringWave, stakeStable,
+        boatLift: changed[1] - rest[1], boatTilt: changed[3], ropeTravel: moved.distanceTo(afloat),
+        cleatGap: moved.distanceTo(cleat), ropeReset: end(cord.count - 2).distanceTo(afloat),
+        reset: pose().every((v, i) => v === rest[i]),
+        plantsReset: plants.every(mesh => mesh.material.userData.sway.uniform.value === 0),
+      };
+    } finally { place.dispose(); }
+  });
+  expect(result).toMatchObject({
+    count: 23, grounded: true, plantsMove: true, hiddenDuringWave: true, reset: true, plantsReset: true,
+  });
+  expect(result.stakeStable).toBeLessThan(.000002);
+  expect(result.cleatGap).toBeLessThan(.000002);
+  expect(result.ropeReset).toBeLessThan(.000002);
+  expect(result.boatLift).toBeGreaterThan(.07);
+  expect(result.boatTilt).toBeGreaterThan(.01);
+  expect(result.ropeTravel).toBeGreaterThan(.05);
+});
