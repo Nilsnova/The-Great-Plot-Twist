@@ -1,0 +1,90 @@
+{
+  "sourceFile": "frontend/public/village/home-fixed-v2.png",
+  "generatedBy": "OpenAI built-in image generation, 2026-11-19",
+  "reference": "Home Island concept supplied by Johannes Franz Lang, 2026-11-19",
+  "referenceSha256": "e93b1486918789502c33e4b3a445c1019fce5d19ade9d9e8ea41e106bae911dc",
+  "sha256": "ec6349ad26db4beefe3d539b6195c3609b749348da0c2cc16831b56386ee646a",
+  "bytes": 1585086,
+  "nativeSize": [
+    1774,
+    887
+  ],
+  "mode": "RGBA",
+  "alpha": {
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "meaningfulThreshold": 32
+  },
+  "cells": {
+    "cabin": {
+      "rect": [
+        52,
+        24,
+        774,
+        816
+      ],
+      "sourceFoot": [
+        387,
+        800
+      ],
+      "nativeGroundFoot": [
+        439,
+        824
+      ],
+      "logical": [
+        96,
+        96,
+        12
+      ],
+      "solidBounds": [
+        64,
+        36,
+        814,
+        828
+      ],
+      "meaningfulAlphaBounds": [
+        12,
+        12,
+        762,
+        804
+      ]
+    },
+    "island-arsenal": {
+      "rect": [
+        928,
+        191,
+        808,
+        640
+      ],
+      "sourceFoot": [
+        404,
+        624
+      ],
+      "nativeGroundFoot": [
+        1332,
+        815
+      ],
+      "logical": [
+        80,
+        80,
+        8
+      ],
+      "solidBounds": [
+        940,
+        203,
+        1724,
+        819
+      ],
+      "meaningfulAlphaBounds": [
+        12,
+        12,
+        796,
+        628
+      ]
+    }
+  }
+}
