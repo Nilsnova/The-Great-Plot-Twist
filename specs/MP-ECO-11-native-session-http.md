@@ -74,3 +74,13 @@ headers. Full backend Ruff and complete diff checks pass. The original 72-case
 checkpoint was older adapter source. Captain routing is now implemented; real
 SQL/Python composition and authenticated native client acceptance are still
 separate outstanding verification gates.
+
+Native grace rendering uses the server-only `captain_withdrawn` journal event,
+with the actual opaque outer participant token and exact payload
+`{participantToken, reason}`. Reason is one of `leave`, `disconnect_expired`,
+`membership_lost`, `account_deleted` or `reset`. The payload cannot supply actor,
+input UID or counter; outer and inner tokens must agree. Fixed journal sequence
+and effective tick determine replay. The browser cannot submit this event as a
+command or synthesize it from presence or a deadline. The 61-case adapter suite
+passes in 0.73s after adding seven withdrawal-wire cases; actual SQL emission
+and grace rendering remain separately tested by their owning lifecycle/client.

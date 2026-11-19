@@ -23,6 +23,7 @@ from server.island.shared_session_models import (
     NativeWave,
     Origin,
     SessionReply,
+    WithdrawnPayload,
 )
 from server.island.treasury import identifier, resolve_economy_context
 from server.island.treasury_models import decimal_integer, decimal_string
@@ -395,6 +396,14 @@ async def read_events(
         page = wave_recovery.RecoveryEventPage.model_validate(row)
         if page.through is None or page.closed is None or page.through > page.head_seq:
             raise ValueError("Missing native page boundary.")
+        for event in page.events:
+            if event.type == "captain_withdrawn":
+                payload = WithdrawnPayload.model_validate(event.payload)
+                if (
+                    event.participant_token is None
+                    or payload.participantToken != event.participant_token
+                ):
+                    raise ValueError("The withdrawal names another frozen participant.")
         sequences = [event.server_seq for event in page.events]
         if sequences != sorted(set(sequences)) or any(
             seq <= after or seq > page.through for seq in sequences

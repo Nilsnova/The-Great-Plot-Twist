@@ -429,3 +429,9 @@ class CaptainResult(BaseModel):
         if not self.accepted:
             raise ValueError("A Captain success must be accepted.")
         return self
+
+
+class WithdrawnPayload(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+    participantToken: UUID
+    reason: Literal["leave", "disconnect_expired", "membership_lost", "account_deleted", "reset"]
