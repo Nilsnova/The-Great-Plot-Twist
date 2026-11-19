@@ -182,5 +182,31 @@
       "No blanket active-wave or lifecycle-transition waiver.",
       "This comparison does not establish automatic admission/leave topics or a missing rendered action."
     ]
+  },
+  "finalActorGuardFollowup": {
+    "comparedAt": "2026-11-19T18:51:03.642079+00:00",
+    "executedProviderFrontend": "74be485507fbdbf1eb662f96f11a40c5e902e507",
+    "finalFrontendCandidate": "9c25ec4b08f30ba08b89cb84e362bdbd8e942754",
+    "changedProtectedPaths": [
+      "frontend/src/island/island-actions.js"
+    ],
+    "exactRuntimeDelta": "Two added if (!current()) return checks immediately before role/respec busy-state cleanup; no other runtime change from74.",
+    "unchangedScope": "All backend/content/108migrations/locks/AuthSDK and other frontend files remain identical. The quote-refresh helper and authoritative reads are unchanged.",
+    "actualProviderProof": "The owner/visitor successes remain attributed to74. Both retain the same authenticated actor and already passed the success-path post-refresh current() check. The two new current checks also evaluate true along those unchanged successful traces; no request, quote or financial mutation is added.",
+    "providerRerun": false,
+    "newRefusalBranchEvidence": {
+      "report": "docs/evidence/MP-ECO-20-engineer-first-buy/auth-guard-follow-up.json",
+      "runtimeGitBlob": "c33fb1dd8e16267862edec786666ebe892262df3",
+      "regressionGitBlob": "6fe3d29d8846f21e1fb846a2737ed316c0766766",
+      "redBeforeFix": 2,
+      "passedAfterFix": 31,
+      "files": 5,
+      "durationSeconds": 43.44,
+      "buildExitCode": 0
+    },
+    "limits": [
+      "The delayed-auth-refusal branch is regression evidence, not a new actual-provider browser observation.",
+      "The final source is not relabeled as the executed74frontend."
+    ]
   }
 }

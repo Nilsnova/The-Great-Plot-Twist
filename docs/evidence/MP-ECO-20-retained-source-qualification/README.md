@@ -79,3 +79,15 @@ sources and limits. **Role/respec UI and the first construction afterward requir
 a new actual-provider browser observation on the served fix candidate.** The
 separately reported 29 Chromium DOM checks and build are not rerun here and do not
 replace that observation. The original stale-quote failure remains a failure.
+
+The final actor-guard follow-up,
+`9c25ec4b08f30ba08b89cb84e362bdbd8e942754`, adds exactly two `current()`
+checks before role/respec busy-state cleanup. It leaves the quote refresh and
+all financial requests unchanged. The actual owner/visitor successes remain
+attributed to frontend `74be4855`: they kept the same actor and passed the
+existing post-refresh success check, so the added guards are true on those
+observed paths. There was no provider rerun for the follow-up. Its separate
+pinned regression report records two tests failing before the guard, then 31
+passing tests across five affected suites and a successful build. The newly
+protected delayed-refusal branch is test evidence, not a newly observed provider
+journey. Exact source/test blob IDs and result provenance are recorded in JSON.
