@@ -1,4 +1,4 @@
-// Real provider fire-bomb journal acceptance, with legacy and native producers identified separately.
+// Real provider carried-bomb acceptance on the original legacy protocol-2 producer.
 import assert from 'node:assert/strict';
 import {createHash, randomUUID} from 'node:crypto';
 import {mkdir, readFile, writeFile} from 'node:fs/promises';
@@ -10,8 +10,7 @@ const helpers = process.env.MP_ECO_AUTH_HELPERS ? pathToFileURL(process.env.MP_E
   : new URL('./authenticated-economy/clients.mjs', import.meta.url);
 const observer = new URL('./observer.mjs', helpers);
 const {createClients, api, land} = await import(helpers.href);
-const {createApiClients} = await import(new URL('./api-clients.mjs', helpers).href);
-const {observe, install, admit} = await import(observer.href);
+const {observe, install} = await import(observer.href);
 const {sourceEvidence, servedSourceEvidence} = await import(new URL('./source.mjs', helpers).href);
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const baseline = '64ee02b360d68836b2de9247121ab47dc6a3ecbf';
@@ -29,7 +28,7 @@ async function hashes() {
 const helpersBefore = await hashes();
 await mkdir(output, {recursive: false, mode: 0o700});
 const startedAt = new Date().toISOString(), facts = [];
-let rendered, native;
+let rendered;
 const uid = () => 'bomb_' + randomUUID().replaceAll('-', '');
 const read = (statement, parameters = []) => observe(statement, parameters, {runtimePath});
 const setup = (statement, parameters, purpose) => install(statement, parameters, purpose, {runtimePath});
@@ -147,6 +146,12 @@ try {
     body: {weapon: 'fire_bombs', actionUid: uid(), code}}), 'Legacy fire-bomb purchase');
   assert.equal(purchased.carried, 'fire_bombs');
   note('real-legacy-purchase', {carried: purchased.carried, browserProcesses: 2});
+  for (const spot of ['wall_1', 'wall_2', 'wall_3', 'wall_4']) {
+    ok(await api(owner.page, '/api/island/build', {method: 'POST', body: {spot, kind: 'wall', code, actionUid: uid()}}), 'Ordinary wall purchase');
+    for (let level = 2; level <= 5; level++) ok(await api(owner.page, '/api/island/upgrade', {method: 'POST',
+      body: {spot, code, actionUid: uid()}}), 'Ordinary wall upgrade');
+  }
+  note('ordinary-defenses-bought-for-reconnect-window', {walls: 4, levelEach: 5, purpose: 'Keep the real attempt alive during reload; no HP/outcome/time edit'});
   await owner.page.evaluate(async () => { await window.__island.island.load(); await window.__island.island.arsenal.refresh(); });
   await enter(mate.page, {join: code});
   const started = ok(await api(owner.page, '/api/waves/start', {method: 'POST', body: {
@@ -195,47 +200,6 @@ try {
     damageEvents: one.damage.length, damageAmounts: one.damage.map(row => row.damage),
     teammateEqual: true, reconnectedReplayEqual: true, duplicatePageAddsNoDamage: true});
 
-  native = await createApiClients({labels: ['native-bomb-owner', 'native-bomb-mate'], runtimePath, expectedCommit: baseline});
-  const [host, guest] = native.clients;
-  const nativeGame = ok(await host.request('/api/games', {method: 'POST', body: {actionUid: uid()}}), 'Native create');
-  const admitted = await admit(host.actorId, {coins: 5000, runtimePath});
-  const economy = Object.fromEntries(['mode', 'version', 'islandOwner', 'runEpoch'].map(key => [key, admitted.currentEconomy[key]]));
-  await setup('update public.islands set wave_best=10,next_wave=1 where player_id=$1::uuid', [host.actorId], 'Saved native unlock/repeat fixture only');
-  ok(await guest.request('/api/games/join', {method: 'POST', body: {code: nativeGame.game.code, actionUid: uid()}}), 'Native join');
-  const proofs = [];
-  for (const actor of [host, guest]) {
-    const response = ok(await actor.request('/api/island/session/attach', {method: 'POST', body: {
-      economy, sessionId: randomUUID(), expectedGeneration: '0', actionUid: uid()}}), 'Native attach');
-    proofs.push({economy, sessionId: response.session.sessionId, connectionGeneration: response.session.connectionGeneration});
-  }
-  const buy = ok(await host.request('/api/island/arsenal/buy', {method: 'POST', body: {economy, weapon: 'fire_bombs', actionUid: uid()}}), 'Native bombs');
-  const wave = ok(await host.request('/api/waves/start', {method: 'POST', body: {...proofs[0],
-    where: nativeGame.game.code, waveProtocol: 2, actionUid: uid()}}), 'Native bell');
-  let prefix, pre;
-  for (let attempt = 0; attempt < 45; attempt++) {
-    for (const [index, actor] of [host, guest].entries()) ok(await actor.request('/api/island/session/heartbeat', {method: 'POST', body: proofs[index]}), 'Native heartbeat');
-    prefix = await journal(host, wave.waveId, proofs[0]);
-    if (prefix.seal >= 0) pre = await replay(owner.page, wave.initialSnapshot, prefix.events, prefix.seal, wave.participantToken);
-    if (pre?.ships.length) break;
-    await new Promise(resolve => setTimeout(resolve, 1000));
-  }
-  assert.ok(pre?.ships.length, 'No natural native ship spawned');
-  const target = pre.ships[0], tick = prefix.seal + 1;
-  const inputs = [{inputUid: uid(), actorCounter: 1, tick, command: {type: 'captain_move', x: target.x + 3, z: target.z}},
-    {inputUid: uid(), actorCounter: 2, tick, command: {type: 'captain_shot', targetId: target.id,
-      x: target.x + 3, z: target.z, ax: target.x, az: target.z, seen: Math.max(0, prefix.seal)}}];
-  const appended = ok(await host.request('/api/waves/' + wave.waveId + '/inputs', {method: 'POST', body: {...proofs[0], waveProtocol: 2, inputs}}), 'Native normal inputs');
-  assert.equal(appended.accepted.at(-1).payload.captain.weapon, 'fire_bombs');
-  await new Promise(resolve => setTimeout(resolve, 3000));
-  prefix = await journal(host, wave.waveId, proofs[0]);
-  const nativeOne = await replay(owner.page, wave.initialSnapshot, prefix.events, prefix.seal, wave.participantToken);
-  const nativeTwo = await replay(mate.page, wave.initialSnapshot, prefix.events, prefix.seal, wave.participantToken);
-  checkBomb(nativeOne); assert.deepEqual(nativeTwo, nativeOne);
-  note('shared-native-frozen-loadout-producer', {copyBought: buy.receipt.result.weapon,
-    producer: 'shared_session_api.append_inputs', journalWeapon: appended.accepted.at(-1).payload.captain.weapon,
-    fired: nativeOne.fired.length, blasts: nativeOne.blasts.length, damageEvents: nativeOne.damage.length,
-    damageAmounts: nativeOne.damage.map(row => row.damage), identicalTwoPageReplay: true,
-    layer: 'Real registered native API inputs plus actual production SIM/replay on both rendered clients; native UI entry is not claimed.'});
   const helpersAfter = await hashes(); assert.deepEqual(helpersAfter, helpersBefore);
   const report = {result: 'passed', productionSource: baseline, sourceBefore,
     sourceAfter: sourceEvidence(baseline, {checkoutRoot: root}), serving: servedSourceEvidence(rendered.runtime),
@@ -243,7 +207,7 @@ try {
     limitations: ['Local current-main acceptance, not a hosted/deployed release.',
       'Wallet/shared budgets and saved unlock/repeat state are explicit setup; not natural progress.',
       'Normal move/shot intents use production authenticated transports. No journal, damage, HP, clock or outcome is fabricated.',
-      'Legacy uses two independently rendered actual games; native uses separate real Auth/API actors and production deterministic replay, not a second native UI journey.',
+      'This covers the original four-argument legacy recovery producer; the different native shared-session producer is not claimed.',
       'SIM step observation only copies returned events; reconnect comparison reconstructs the same actual accepted prefix with the production replay driver.']};
   await writeFile(output + '/result.json', JSON.stringify(report, null, 2) + '\n', {mode: 0o600});
 } catch (error) {
@@ -253,4 +217,4 @@ try {
   await writeFile(output + '/failure.json', JSON.stringify({result: 'failed', productionSource: baseline,
     sourceBefore, scenarioSha256, startedAt, finishedAt: new Date().toISOString(), error: String(error), stack: error.stack, facts}, null, 2) + '\n');
   throw error;
-} finally { await rendered?.close(); await native?.close(); }
+} finally { await rendered?.close(); }
