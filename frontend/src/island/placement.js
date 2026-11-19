@@ -7,7 +7,7 @@
 //   checkMove(spotId, x, z, positions)  {ok: true} or {ok: false, code, message} (the server's codes)
 //   routeOpen(positions)                a way from the heart to the beach (towers, houses block)
 //   onWallPerimeter(x, z)               a wall centred here sits in the island's grass-edge row
-import {ALL_SPOTS, offeredSpots, spotById, ISLAND_PLACE} from './spots.js';
+import {ALL_SPOTS, offeredSpots, spotById, wallSpaceUnavailable, ISLAND_PLACE} from './spots.js';
 import {surfaceClass} from '../world/places/surfaces.js';
 import {WALL_PERIMETER_CELLS, WALL_PERIMETER_DEFAULTS} from './wall-perimeter.js';
 import {WALL_OBSTACLES} from './wall-obstacles.js';
@@ -41,6 +41,7 @@ export function positionsOf(spots) {
   const placed = {};
   for (const spot of offeredSpots(spots ?? [])) {
     const sent = Array.isArray(spots) ? spots.find(item => item?.id === spot.id) : null;
+    if (wallSpaceUnavailable(sent)) continue;
     const perimeter = spots === undefined || sent?.built === false ? WALL_PERIMETER_DEFAULTS[spot.id] : null;
     const where = Number.isFinite(sent?.x) && Number.isFinite(sent?.z) ? sent : perimeter ?? spot;
     placed[spot.id] = {x: where.x, z: where.z};
