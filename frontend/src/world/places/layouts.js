@@ -22,15 +22,6 @@ export const homeMooring = [
   { asset: 'home-mooring-bollard', x: -9.5, z: 19.5 },
   { asset: 'home-mooring-skiff', x: -8, z: 24.5 },
 ];
-// Low greenery clusters frame the home meadow. They sit under the world sprites and have no footprint.
-export const homeUndergrowth = [
-  ['grass-tuft', -10.3, -15.9, .62], ['shrub', -8.6, -16.9, .64], ['grass-tuft', -7.1, -18.2, .48],
-  ['flowers', 6.3, -18.8, .6], ['shrub', 7.6, -18.2, .62], ['rock', 10.4, -17.5, .47],
-  ['shrub', -11.8, 14, .58], ['grass-tuft', -10.6, 14.6, .58],
-  ['rock', -11.1, 15.4, .45], ['flowers', -9.4, 15.5, .56],
-  ['grass-tuft', 14.6, 11.5, .55], ['shrub', 13.4, 12.6, .65],
-  ['rock', 12.2, 14.1, .47], ['grass-tuft', 11.7, 15.2, .55],
-];
 layouts.smugglers_cove = [building('back-room', -8, -1, 4), building('low-tide-cave', 9, 3, 5),
   building('arena-gate', 0, -10, 5), { asset: 'barrel', x: -11, z: 1 }, { asset: 'rope-coil', x: 5, z: 9 }];
 layouts.wreck_point = [building('salvage-yard', -7, -2, 6.7), { asset: 'dark-schooner', x: 13, z: 15 },

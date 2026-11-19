@@ -2,7 +2,7 @@
 // frames each, the musket pose), the hired crew and the pirates who come ashore. Original designs:
 // round heads, tricorn hats with a coloured band, long coats, chunky boots. Boxes and anchors are
 // the old atlas's (24 x 32, feet 3 px above the bottom edge; crew 16 x 32; the musket pose 48 x 32).
-import {INK, ellipse, line, mix, part, poly, rect, shadow, stroke} from './paint.js';
+import {INK, ellipse, line, linear, mix, part, poly, rect, shadow, stroke} from './paint.js';
 
 const SKIN = '#f3c39b', SKIN_DARK = '#d99a76', BOOT = '#4a2e22', PANTS = '#5b4a6e', GOLD = '#f2c14e';
 // Ten captains a crew can tell apart at a glance: coat, hat, the hat's band and the trousers.
@@ -46,13 +46,24 @@ function face(c, x, y, {side = false} = {}) {
   stroke(c, line([[x - 1, y + 2.9], [x, y + 3.4], [x + 1, y + 2.9]]), INK, .7);
 }
 // The tricorn: a wide upturned brim, a rounded crown and a coloured band.
-function hat(c, pal, x, y, view) {
+function hat(c, pal, x, y, view, sunlight) {
   const brim = view === '-side'
     ? poly([[x - 7.4, y + .4], [x - 3, y + 3], [x + 3.6, y + 3], [x + 7.6, y + 1.2], [x + 5.8, y + 6], [x - 5.8, y + 6.2]], [1.4, 2, 2, 1.4, 2, 2])
     : poly([[x - 8.4, y - .8], [x - 3.6, y + 3.6], [x + 3.6, y + 3.6], [x + 8.4, y - .8], [x + 6.4, y + 6.2], [x - 6.4, y + 6.2]], [1.4, 2, 2, 1.4, 2, 2]);
-  part(c, rect(x - 4.2, y - 1.8, 8.4, 6.6, 3.4), pal.hat, {depth: 1.4, gloss: ellipse(x - 1.8, y + .3, 1.6, .9)});
+  const crown = sunlight ? linear(c, x - 3.8, y - 1, x + 3.4, y + 5, [
+    [0, mix(pal.hat, '#f8db9e', .38)], [.48, pal.hat], [1, mix(pal.hat, '#293541', .36)],
+  ]) : pal.hat;
+  part(c, rect(x - 4.2, y - 1.8, 8.4, 6.6, 3.4), crown, {depth: 1.4, gloss: ellipse(x - 1.8, y + .3, 1.6, .9)});
   part(c, rect(x - 4, y + 1.6, 8, 1.7, .6), pal.band, {depth: .6, width: .8});
   part(c, brim, mix(pal.hat, INK, .12), {depth: 1.1, gloss: rect(x - 5, y + 3.4, 4, .8, .4)});
+  if (sunlight) {
+    c.save(); c.clip(brim);
+    const leftTip = view === '-side' ? .88 : -.28;
+    stroke(c, [[x - 8, y + leftTip], [x - 4.2, y + 3.4], [x, y + 3.9], [x + 4.4, y + 3.3], [x + 7.8, y + .36]],
+      mix(pal.band, '#e0ac58', .62), .94);
+    stroke(c, [[x - 7.8, y + leftTip], [x - 4.1, y + 3.18], [x - .9, y + 3.58]], '#fff0b7', .42, .78);
+    c.restore();
+  }
   part(c, ellipse(x, y + 4.4, 1.2, 1), pal.band, {width: .6, shade: false});
 }
 function captainBody(c, pal, view, step, armed = false) {
@@ -68,7 +79,11 @@ function captainBody(c, pal, view, step, armed = false) {
   const coat = side
     ? poly([[cx - 3.6, 15], [cx + 3.4, 15], [cx + 4.4, 24.4], [cx - 5.6, 25]], [3, 3, 1.6, 1.6])
     : poly([[cx - 4.8, 15], [cx + 4.8, 15], [cx + 6.4, 25], [cx - 6.4, 25]], [3.2, 3.2, 1.8, 1.8]);
-  part(c, coat, pal.coat, {depth: 2.2, gloss: ellipse(cx - 2.6, 17.4, 1.3, 2.2)});
+  const coatPaint = armed ? pal.coat : linear(c, cx - 5, 15, cx + 5, 25, [
+    [0, mix(pal.coat, '#eac78a', .36)], [.46, pal.coat], [1, mix(pal.coat, '#203448', .60)],
+  ]);
+  part(c, coat, coatPaint, {depth: 2.2, gloss: ellipse(cx - 2.6, 17.4, 1.3, 2.2),
+    light: armed ? undefined : mix(pal.coat, '#f8df9b', .45)});
   if (!back && !side) {
     part(c, poly([[cx - 2, 15.2], [cx + 2, 15.2], [cx, 19.6]], .6), '#f6efe0', {depth: .5, width: .8});
     for (const y of [19.8, 22.4]) part(c, ellipse(cx + 2.4, y, .62), GOLD, {width: .6, shade: false});
@@ -76,11 +91,18 @@ function captainBody(c, pal, view, step, armed = false) {
   if (back) stroke(c, line([[cx, 20.5], [cx, 25]]), mix(pal.coat, INK, .45), .8);
   part(c, rect(side ? cx - 4 : cx - 5.4, 20.6, side ? 8 : 10.8, 1.9, .7), '#3a2a24', {depth: .5, width: .8});
   if (!back) part(c, rect(side ? cx + 1.2 : cx - 1.2, 20.3, 2.4, 2.5, .6), GOLD, {width: .6, shade: false});
+  if (!armed) {
+    stroke(c, side ? [[cx - 3.6, 23.6], [cx - 3.9, 25], [cx + .4, 24.9]]
+      : [[cx - 5, 23.9], [cx - 3, 24.8], [cx + 3.7, 24.8]], mix(pal.band, '#c89452', .52), .62, .82);
+    if (!back) stroke(c, [[cx - (side ? 1.2 : 2.6), 15.8], [cx - (side ? .2 : 1.3), 18.3]], '#ecbe70', .51, .88);
+  }
   // Arms: coat sleeves with round hands; the side view shows one arm swinging.
   const arm = (x, y, angle) => {
     c.save(); c.translate(x, y); c.rotate(angle);
-    part(c, rect(-1.6, -.6, 3.2, 6.6, 1.6), pal.coat, {depth: 1});
-    part(c, ellipse(0, 6.4, 1.6), SKIN, {depth: .7});
+    const sleeve = linear(c, -1.7, 1, 1.6, 6, [[0, mix(pal.coat, '#eadcb3', .33)], [.52, pal.coat], [1, mix(pal.coat, '#273447', .56)]]);
+    part(c, rect(-1.6, -.6, 3.2, 6.6, 1.6), sleeve);
+    stroke(c, [[-1.16, 5.32], [1.14, 5.50]], '#ce9753', .57);
+    part(c, ellipse(0, 6.4, 1.6), SKIN, {depth: .7, gloss: ellipse(-.4, 6, .59, .44)});
     c.restore();
   };
   const swing = step === '-walk-1' ? .35 : step === '-walk-2' ? -.35 : 0;
@@ -96,7 +118,7 @@ function captainBody(c, pal, view, step, armed = false) {
     else for (const s of [-1, 1]) part(c, poly([[hx + s * 5.6, hy - 1.4], [hx + s * 3, hy - 2.4], [hx + s * 3.6, hy + 1.4], [hx + s * 5.4, hy + 2.6]], 1.2), '#7a4a2e', {depth: .6});
     face(c, hx + (side || diagonal ? 1 : 0), hy + .4, {side});
   }
-  hat(c, pal, hx, hy - 7, view);
+  hat(c, pal, hx, hy - 7, view, !armed);
 }
 function captain(pal, view, step) { return c => captainBody(c, pal, view, step); }
 // The musket pose, facing right: the captain stands at the middle of a 48 px box, the long gun level.
@@ -287,7 +309,8 @@ function crewFigure(kind) {
   return c => {
     const cx = 8; shadow(c, cx, 29.3, 4.8, 1.4);
     boots(c, [[cx - 3.4, 24, 5.4], [cx + .2, 24, 5.4]]);
-    part(c, poly([[cx - 3.6, 17], [cx + 3.6, 17], [cx + 4.4, 25], [cx - 4.4, 25]], [2.4, 2.4, 1.2, 1.2]), look.shirt, {depth: 1.6});
+    part(c, poly([[cx - 3.6, 17], [cx + 3.6, 17], [cx + 4.4, 25], [cx - 4.4, 25]], [2.4, 2.4, 1.2, 1.2]),
+      linear(c, cx - 3.2, 17, cx + 4.1, 25, [[0, mix(look.shirt, '#efcf95', .40)], [.54, look.shirt], [1, mix(look.shirt, '#4e3c40', .48)]]));
     if (look.stripe) for (const y of [19.2, 21.6]) part(c, rect(cx - 3.9, y, 7.8, 1.1, .4), look.stripe, {line: false, shade: false});
     if (kind === 'carpenter') { part(c, rect(cx - 3, 20, 6, 5.4, 1), '#7a5236', {depth: .8}); part(c, rect(cx + 3.4, 18.6, 1.2, 6, .4), '#8a5a36', {width: .7}); part(c, rect(cx + 2.2, 17.6, 3.6, 1.8, .5), '#9aa4ae', {width: .7}); }
     if (kind === 'gunner') { part(c, rect(cx - 6.4, 13, 1.1, 13, .5), '#8a5a36', {width: .7}); part(c, ellipse(cx - 5.85, 12.6, 1.1, 1.3), '#3a2a24', {width: .7}); }
@@ -339,7 +362,7 @@ function boarder(step = '', hit = false) {
     stroke(c, hit ? ellipse(cx, 14, 1, .8) : line([[cx - 1.4, 13.8], [cx + 1.2, 13.4]]), INK, .7);
     // The bandana with white spots and its knot.
     const scarf = poly([[cx - 5.6, 9.6], [cx - 4.6, 5.6], [cx, 4.4], [cx + 4.6, 5.6], [cx + 5.6, 9.6]], [1, 2, 3, 2, 1]);
-    part(c, scarf, '#d33a35', {depth: 1.2});
+    part(c, scarf, linear(c, cx - 5, 5, cx + 4, 9.9, [[0, '#ef8861'], [.37, '#d9513b'], [1, '#8d2b2c']]), {width: .9});
     c.save(); c.clip(scarf); c.fillStyle = '#ffffffcc'; for (const [x, y] of [[-2.6, 7.4], [.6, 6.2], [3, 8], [-.6, 8.6]]) c.fill(ellipse(cx + x, y, .6)); c.restore();
     part(c, poly([[cx - 5.2, 8.6], [cx - 8.4, 8], [cx - 7.8, 11], [cx - 5.4, 10]], .7), '#d33a35', {depth: .5, width: .8});
     c.restore();
@@ -386,7 +409,9 @@ function militiaFigure(step = '', {strike = false, hit = false} = {}) {
     part(c, ellipse(cx + 3.6, 13.2, .9, .6), '#ef9f86', {line: false, shade: false, alpha: .6});
     part(c, poly([[cx - 3.6, 13], [cx + 3.4, 13], [cx + 2, 16], [cx - 2.2, 16]], 1.2), '#7a4a2e', {depth: .5, width: .8});
     part(c, poly([[cx - 6.6, 9.2], [cx + 6.6, 9.2], [cx + 5.4, 10.6], [cx - 5.4, 10.6]], .6), mix(MILITIA.helmet, INK, .15), {depth: .5, width: .9});
-    part(c, ellipse(cx, 8.6, 4.6, 3.9), MILITIA.helmet, {depth: 1.2, width: 1, gloss: ellipse(cx - 1.8, 7, 1.4, .8), light: '#ffe08a'});
+    part(c, ellipse(cx, 8.6, 4.6, 3.9), linear(c, cx - 3.8, 5.4, cx + 3.9, 11.2,
+      [[0, '#fff1b0'], [.42, MILITIA.helmet], [.68, '#bd904c'], [1, '#80583c']]),
+    {width: 1, gloss: ellipse(cx - 1.8, 7, 1.4, .8), light: '#ffe9ad'});
     part(c, poly([[cx - 3.4, 5.2], [cx + .4, 3], [cx + 3.6, 5.2], [cx, 4.8]], .6), MILITIA.crest, {depth: .5, width: .8});
     c.restore();
   };

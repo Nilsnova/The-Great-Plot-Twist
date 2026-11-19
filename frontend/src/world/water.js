@@ -127,11 +127,20 @@ function findBackdrop(group) {
 const fragment = /* glsl */`
 ${pixelGlsl}${seaGlsl}
 uniform vec3 uDeep,uMid,uLight,uShallow,uShallow2,uFoam,uGlint,uStroke;
+uniform float uHomeCoast;
 varying vec2 vWorld;
 float band(float v,float edge){float w=fwidth(v)*.75+1e-4;return smoothstep(edge-w,edge+w,v);}
+float waterDistance(vec2 p){
+  if(uHomeCoast<.5||uCoastOn<.5)return coastDistance(p);
+  vec2 uv=(uCoastUv*vec3(p,1.0)).xy;
+  vec2 edge=clamp(uv,0.0,1.0);
+  // Continue the shallow gradient beyond the backdrop edge in the whole-island view.
+  float beyond=length((uv-edge)*vec2(${BACKDROP.width * 16}.0,${BACKDROP.height * 16}.0));
+  return min(255.0,texture2D(uCoast,edge).r*255.0+beyond);
+}
 void main(){
   vec2 p=vWorld;float t=uSeaTime;
-  float d=coastDistance(p)/16.0; // world units to the nearest land (16 = open sea)
+  float d=waterDistance(p)/16.0; // world units to the nearest land (16 = open sea)
   if(d < .02)discard; // land: the place's ground covers it
   // Broad depth pockets and crossing swells give the sea mass beneath the smaller ripples.
   // The same real coast distance still defines the shallows; none of these colours add land.
@@ -141,8 +150,10 @@ void main(){
   vec3 colour=mix(uMid,uDeep,clamp(depth*.58+smoothstep(.25,.85,far)*.4,0.0,1.0));
   colour=mix(colour,uLight,smoothstep(.3,.9,swell)*(.09+(1.0-depth)*.11));
   float shallow=1.0-smoothstep(.0,4.2,d+sin(p.x*.8+p.y*.5+t*.6)*.25);
-  colour=mix(colour,uShallow,shallow*.85);
-  colour=mix(colour,uShallow2,(1.0-smoothstep(.0,1.3,d))*.9);
+  // Sunlit foam traces the facing beach. Softer backlight keeps the northern limestone readable.
+  float shoreLight=mix(1.0,mix(.65,.92,1.0-smoothstep(-13.0,-6.0,p.y)),uHomeCoast);
+  colour=mix(colour,uShallow,shallow*.85*shoreLight);
+  colour=mix(colour,uShallow2,(1.0-smoothstep(.0,1.3,d))*.9*shoreLight);
   // Curled noise contours break up highlights without two crossing families of periodic lines.
   // The entire extra material branch is disabled by the existing low-quality uniform.
   if(uDetail>.5){
@@ -163,6 +174,17 @@ void main(){
     float cells=pxNoise(q+drift)+pxNoise(q*1.95-drift)*.2;
     float caustic=(1.0-band(abs(cells-.6),.02))*smoothstep(.6,1.2,d)*(1.0-smoothstep(1.5,3.0,d));
     colour=mix(colour,uShallow2,caustic*.12);
+    if(uHomeCoast>.5){
+      // Broad troughs and short turquoise crests give the open sea a visible rolling surface.
+      vec2 q=p*vec2(.38,.70);
+      float roll=sin(q.y+q.x*.46+sin(q.x*.54-t*.16)*1.15-t*.64);
+      float chop=pxNoise(q*vec2(.39,.8)+vec2(t*.045,-t*.027));
+      float wave=smoothstep(.45,.94,roll)*smoothstep(.23,.77,chop);
+      colour=mix(colour,uDeep,smoothstep(.14,.89,-roll)*.12*offshore);
+      colour=mix(colour,uLight,wave*.16*offshore);
+      float streak=1.0-band(abs(roll-.87),.05);
+      colour=mix(colour,uStroke,streak*smoothstep(.49,.89,chop)*.15*offshore);
+    }
   }
   // The close edge is still in low quality; its extra movement and broken surf are high-only.
   float foamTime=uDetail>.5?t:0.0;
@@ -171,9 +193,9 @@ void main(){
   float surf=.55+run*(.6+uWind*.5);
   if(uDetail>.5){
     float broken=smoothstep(.25,.7,pxNoise(p*1.4+vec2(foamTime*.08,-foamTime*.03)));
-    colour=mix(colour,uFoam,(1.0-band(abs(d-surf),.06))*.8*broken*smoothstep(.0,.25,run));
+    colour=mix(colour,uFoam,(1.0-band(abs(d-surf),.06))*.8*broken*smoothstep(.0,.25,run)*shoreLight);
   }
-  colour=mix(colour,uFoam,1.0-band(d,edge));
+  colour=mix(colour,uFoam,(1.0-band(d,edge))*shoreLight);
   // Whitecaps on crests once the wind picks up.
   if(uDetail>.5&&uWind>.45){
     vec2 cell=floor(p/vec2(3.4,1.6));float cap=pxHash(cell+vec2(floor(t*.5),0.0));
@@ -202,7 +224,8 @@ void main(){
 
 export function createWater(scene) {
   const colours = { uDeep: '#07566e', uMid: '#087f96', uLight: '#3dbdc9', uShallow: '#38c9b5', uShallow2: '#8be2c5', uFoam: '#f4fffa', uGlint: '#e6fff5', uStroke: '#63cfd6' };
-  const uniforms = { ...seaUniforms };
+  const homeColours = {...colours, uDeep: '#07667e', uMid: '#0b94a5', uLight: '#45c8cf', uShallow: '#3dcbb8', uShallow2: '#8cebd1'};
+  const uniforms = { ...seaUniforms, uHomeCoast: {value: 0} };
   for (const [key, value] of Object.entries(colours)) uniforms[key] = { value: new THREE.Color(value) };
   const material = new THREE.ShaderMaterial({ uniforms, vertexShader: worldVertex, fragmentShader: fragment,
     depthTest: false, depthWrite: false, toneMapped: false, side: THREE.DoubleSide }); // the outline follows the ground's own (maybe mirrored) frame
@@ -215,6 +238,10 @@ export function createWater(scene) {
     setQuality(name) { detail = QUALITY[name]?.waveMarks >= 160 ? 1 : 0; seaUniforms.uDetail.value = detail; },
     // Read the coast of the place just attached; without a readable backdrop the sea stays open.
     setCoast(group) {
+      const home = group?.name === 'place:home_islet';
+      const palette = home ? homeColours : colours;
+      uniforms.uHomeCoast.value = home ? 1 : 0;
+      for (const [key, value] of Object.entries(palette)) uniforms[key].value.set(value);
       const backdrop = findBackdrop(group);
       try {
         if (!backdrop) throw new Error('no backdrop');

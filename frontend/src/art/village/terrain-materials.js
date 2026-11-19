@@ -56,9 +56,10 @@ export function meadowScale(angle) {
 }
 
 /** A filled union matching round path strokes/clearings, for clipped paver sampling. */
-export function pathMaterialMask(paths, width = 2.04) {
-  const result = new Path2D(), radius = width / 2;
-  for (const points of paths.lines) {
+export function pathMaterialMask(paths, width = 2.04, padding = 0) {
+  const result = new Path2D();
+  for (const [lane, points] of paths.lines.entries()) {
+    const radius = (paths.widths?.[lane] ?? width) / 2 + padding;
     for (let i = 1; i < points.length; i++) {
       const [ax, az] = points[i - 1], [bx, bz] = points[i], ay = az * .72, by = bz * .72;
       const length = Math.hypot(bx - ax, by - ay);
@@ -69,7 +70,8 @@ export function pathMaterialMask(paths, width = 2.04) {
     }
     for (const [x, z] of points) { result.moveTo(x + radius, z * .72); result.arc(x, z * .72, radius, 0, Math.PI * 2); }
   }
-  for (const [x, z, radius] of paths.clearings) {
+  for (const [x, z, clearing] of paths.clearings) {
+    const radius = clearing + padding;
     result.moveTo(x + radius, z * .72); result.ellipse(x, z * .72, radius, radius * .72, 0, 0, Math.PI * 2);
   }
   return result;

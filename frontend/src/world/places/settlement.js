@@ -6,13 +6,15 @@ import { loadArt, placeArt } from '../art.js';
 import { paintedBlob } from '../primitives.js';
 import { swayMaterial, updateSway } from '../wind.js';
 import { createBeam } from '../beam.js';
+import {createGroundShadows} from '../ground-shadow.js';
 import { places } from './registry.js';
-import { layouts, edgeTrees, homeMooring, homeUndergrowth } from './layouts.js';
+import { layouts, edgeTrees, homeMooring } from './layouts.js';
 import { placeGround } from './surfaces.js';
 import { backdrop, createLifetime, loadBackdrop } from './resources.js';
 import { makeSelectedCanopy } from './selected-canopy.js';
 import { makeMooringRope } from './mooring.js';
 import {projectGround} from '../projection.js';
+import {createHomeRelief} from './home-relief.js';
 
 // Compose all art, colliders and cleanup under one place root for predictable travel disposal.
 export async function createSettlement(ctx) {
@@ -20,7 +22,6 @@ export async function createSettlement(ctx) {
   const data = places[id];
   const placements = [...(layouts[id] ?? []), ...(ctx.placements ?? [])];
   const mooring = id === 'home_islet' ? homeMooring : [];
-  const undergrowth = id === 'home_islet' ? homeUndergrowth : [];
   const trees = edgeTrees[id] ?? [];
   const extraArtIds = [
     ...(id === 'saltreach_harbor' ? ['harbour-office-glow'] : []),
@@ -31,7 +32,6 @@ export async function createSettlement(ctx) {
   const artIds = [...new Set([
     ...placements.map(placement => placement.asset),
     ...mooring.map(placement => placement.asset),
-    ...undergrowth.map(([asset]) => asset),
     'oak', 'pine', 'birch', 'rock', 'flowers', 'grass-tuft',
     ...extraArtIds,
   ])];
@@ -41,7 +41,13 @@ export async function createSettlement(ctx) {
   const frameState = createFrameState(ctx, data.spawn);
   const cleanups = [], dispose = createLifetime(group, art, cleanups);
   try {
-    backdrop(group, await (ctx.loadBackdrop ?? loadBackdrop)(`places/${id}.png`));
+    const ground = backdrop(group, await (ctx.loadBackdrop ?? loadBackdrop)(`places/${id}.png`));
+    if (id === 'home_islet') {
+      createHomeRelief(group, ground.material.map);
+      createGroundShadows(group, trees.map(([x, z]) => ({
+        x: x + .52, z: z + .68, width: 1.52, depth: 1.32, opacity: .34, innerOpacity: .21,
+      })));
+    }
     placements.forEach(item => {
       const mesh = placeArt(group, art, item.asset, item.x, item.z);
       if (item.asset === 'ferry-pier') mesh.renderOrder = 6;
@@ -59,8 +65,7 @@ export async function createSettlement(ctx) {
       const mesh = placeArt(group, art, ['oak', 'pine', 'birch'][i % 3], x, z);
       // Smaller home canopies reveal walls; house growth multiplies this visual baseline.
       // The ground foot, radius-.48 blocker and painter order remain unchanged.
-      // A shorter northwest palm leaves the cannon behind it readable in the village camera.
-      if (id === 'home_islet') mesh.scale.setScalar(x === -13 && z === -12 ? .42 : .7);
+      if (id === 'home_islet') mesh.scale.setScalar(.7);
       mesh.material = swayMaterial(mesh.material.clone(), mesh.userData.asset); return mesh;
     });
     const selectedCanopy = id === 'home_islet' ? makeSelectedCanopy(foliage) : null;
@@ -71,18 +76,10 @@ export async function createSettlement(ctx) {
       // Each tree already owns its wind material. Selection and captain occlusion share one opacity writer.
       mesh.material.opacity = selectedCanopy?.has(mesh) ? .24 : playerBehind ? .3 : 1;
     }
-    if (undergrowth.length) {
-      for (const [asset, x, z, scale] of undergrowth) {
-        const mesh = placeArt(group, art, asset, x, z, scale);
-        mesh.renderOrder = 30;
-        mesh.raycast = () => {};
-      }
-    } else {
-      trees.forEach(([x, z], i) => {
-        placeArt(group, art, 'grass-tuft', x + 2, z + 1);
-        if (i % 2 === 0) placeArt(group, art, 'flowers', x - 1.6, z + 1);
-      });
-    }
+    trees.forEach(([x, z], i) => {
+      placeArt(group, art, 'grass-tuft', x + 2, z + 1);
+      if (i % 2 === 0) placeArt(group, art, 'flowers', x - 1.6, z + 1);
+    });
     const lights = data.lights.map(light => {
       const { x, y } = light.beamOrigin;
       const isSignalStation = light.id === 'islet_signal_station';
