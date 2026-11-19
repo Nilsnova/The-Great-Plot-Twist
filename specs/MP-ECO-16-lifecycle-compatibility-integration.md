@@ -241,3 +241,27 @@ the new run; its next native bell carries the new original account/epoch while
 the prior reset UID still returns its immutable old receipt. **Four passed in
 7.05 seconds**. Local identities and combat configuration remain test fixtures;
 these are real domain transactions rather than provider-issued session evidence.
+
+## Actual canonical closure and deletion
+
+The provided native closure/finish/worker and captured-time health correction
+unblock full lifecycle composition. Ten native cases passed in 8.90 seconds:
+
+- A member starts the actual accepted wave, sends a real command and accepted
+  structure-health checkpoint, then physically deletes Auth. The original wave
+  starter UUID, immutable snapshot and shared checkpoint proof survive; the
+  journal actor is cleared while its participant token remains. A survivor's
+  actual finish pays one original-account reward, writes both global completion
+  receipts, advances the survivor's personal milestone and releases the exact
+  pending copy generation. A lost-response finish retry adds no effect.
+- Confirmed owner deletion closes actual countdown/combat attempts as abandoned
+  and an actually elapsed attempt as expired before live-island/Auth cascades.
+  Original wave/recovery ownership, snapshot and retired account remain, while
+  the other Captain's assignment is released and their profile preserved.
+- Actual member leave keeps a copy pending until canonical finish, including a
+  member who held stock without any controlling lease or frozen roster slot.
+
+The earlier native reset gates and replacement-bell replay cases are included
+in this ten-case total. The complete 101-migration local chain executes twice.
+Seeded Auth identities and trusted combat configuration are fixture provenance,
+not provider-issued authentication or an independent per-hit combat verifier.

@@ -19,7 +19,12 @@ from server.island.wave_economy import freeze_reward_basis  # noqa: E402
 from server.tests.case_sql.conftest import scratch_server as scratch_server  # noqa: E402
 from server.tests.island_sql.test_island_treasury_sql import keys, rpc  # noqa: E402
 from server.tests.island_sql.test_islands_and_waves_sql import as_owner, as_server  # noqa: E402
-from server.tests.island_sql.test_shared_lifecycle_transactions_sql import prepare, reset  # noqa: E402
+from server.tests.island_sql.test_shared_arsenal_sql import change  # noqa: E402
+from server.tests.island_sql.test_shared_lifecycle_transactions_sql import (  # noqa: E402
+    delete,
+    prepare,
+    reset,
+)
 from server.tests.island_sql.test_shared_session_control_sql import attach  # noqa: E402
 from server.tests.island_sql.test_structure_recovery_mutations_sql import template  # noqa: E402
 
@@ -80,6 +85,50 @@ def await_actual_deadline(database, wave):
     pytest.fail("The accepted one-second native reservation did not reach its actual deadline.")
 
 
+def native_health(database, room, started, actor):
+    limit, pause = monotonic() + 3, Event()
+    while True:
+        as_server(database)
+        page = rpc(
+            database, "shared_session_wave_events", actor, room["owner"], keys(room["treasury"])[1],
+            started["waveId"], room["sessions"][actor], room["generations"][actor], 0, None, None,
+        )
+        if page["sealedThroughTick"] >= 0:
+            break
+        assert monotonic() < limit, "The real native server clock did not seal tick zero."
+        pause.wait(0.01)
+    report = {
+        "islandEpoch": started["initialSnapshot"]["islandEpoch"],
+        "checkpointUid": uuid4().hex, "throughTick": page["sealedThroughTick"],
+        "inputHeadSeq": page["through"], "lastRepairSeq": 0, "basisRepairSeq": {}, "hpUnits": {},
+    }
+    accepted = rpc(
+        database, "shared_session_wave_health", actor, room["owner"], keys(room["treasury"])[1],
+        started["waveId"], room["sessions"][actor], room["generations"][actor], Jsonb(report),
+    )
+    assert accepted["status"] == "accepted", accepted
+    return report
+
+
+def native_finish(database, room, started, actor=None, generation=None):
+    actor = actor or room["owner"]
+    as_server(database)
+    return rpc(
+        database, "shared_session_wave_finish", actor, room["owner"], keys(room["treasury"])[1],
+        started["waveId"], room["sessions"][actor], generation or room["generations"][actor],
+        Jsonb({"survived": True, "shipsSunk": 0, "bonuses": [], "rescued": False,
+               "checkpoint": None, "walls": None}),
+    )
+
+
+def buy_member_copy(database, prepared):
+    _, member, _, treasury, _ = prepared
+    as_server(database)
+    bought = change(database, member, treasury)
+    assert bought["status"] == "done", bought
+    return bought["receipt"]["result"]["copyId"]
+
+
 @pytest.mark.parametrize("phase", ["countdown", "active", "expired_unsealed"])
 def test_actual_native_reservation_blocks_new_reset_without_withdrawal(database, phase):
     room = native_room(database)
@@ -130,3 +179,127 @@ def test_original_reset_receipt_replays_while_replacement_native_wave_is_active(
         "select count(*) from public.shared_session_slots where wave_id=%s and status='active'",
         (started["waveId"],),
     ).fetchone() == (2,)
+
+
+def test_deleted_native_starter_preserves_health_journal_copy_and_survivor_win(database):
+    prepared = prepare(database)
+    owner, member, _, treasury, _ = prepared
+    copy = buy_member_copy(database, prepared)
+    room = native_room(database, prepared=prepared, actors=(member, owner))
+    started = native_bell(database, room, actor=member)
+    as_server(database)
+    command = [{"inputUid": "deleted-starter-input01", "actorCounter": 1, "tick": 0,
+                "command": {"type": "captain_move", "x": 1, "z": 2}}]
+    accepted = rpc(
+        database, "shared_session_wave_inputs", member, owner, keys(treasury)[1],
+        started["waveId"], room["sessions"][member], room["generations"][member], Jsonb(command),
+    )
+    assert accepted["status"] == "accepted", accepted
+    report = native_health(database, room, started, member)
+    rpc(database, "shared_session_heartbeat", owner, owner, keys(treasury)[1],
+        room["sessions"][owner], room["generations"][owner])
+    assert delete(database, member) == {"status": "deleted"}
+    as_owner(database)
+    assert database.execute(
+        "select holder,holder_generation,pending_return_wave_id::text from public.arsenal_copies "
+        "where id=%s", (copy,)
+    ).fetchone() == (member, 1, started["waveId"])
+    assert database.execute(
+        "select started_by from public.wave_runs where id=%s", (started["waveId"],)
+    ).fetchone() == (member,)
+    assert database.execute(
+        "select actor_id from public.recovery_health_checkpoints where wave_id=%s "
+        "and checkpoint_uid=%s", (started["waveId"], report["checkpointUid"])
+    ).fetchone() == (member,)
+    assert database.execute(
+        "select actor_id,participant_token is not null from public.recovery_wave_events "
+        "where wave_id=%s and event_kind='captain_input'", (started["waveId"],)
+    ).fetchone() == (None, True)
+    assert database.execute(
+        "select initial_snapshot,checkpoint_actor from public.recovery_wave_states "
+        "where wave_id=%s",
+        (started["waveId"],),
+    ).fetchone() == (started["initialSnapshot"], None)
+    completed = native_finish(database, room, started)
+    assert completed["status"] == "done" and completed["outcome"] == "won", completed
+    assert completed["completion"]["confirmedParticipation"] is True
+    assert native_finish(database, room, started, generation=999)["completion"] == completed[
+        "completion"
+    ]
+    as_owner(database)
+    assert database.execute(
+        "select holder,holder_generation,pending_return_wave_id from public.arsenal_copies "
+        "where id=%s", (copy,)
+    ).fetchone() == (None, 2, None)
+    assert database.execute(
+        "select count(*) from public.island_wave_completion_receipts where wave_id=%s",
+        (started["waveId"],),
+    ).fetchone() == (2,)
+    assert database.execute(
+        "select won_wave_best,assignment_wave_id from public.personal_captain_profiles "
+        "where player_id=%s", (owner,)
+    ).fetchone() == (31, None)
+    assert database.execute(
+        "select balance_coins from public.island_economy_accounts where id=%s",
+        (keys(treasury)[0],),
+    ).fetchone() == (369,)  # 40 after the copy + one 329-coin wave-31 late-curve reward
+
+
+@pytest.mark.parametrize("phase", ["countdown", "active", "expired_unsealed"])
+def test_confirmed_owner_deletion_closes_native_attempt_before_live_cascades(database, phase):
+    room = native_room(database)
+    owner, member, treasury = room["owner"], room["member"], room["treasury"]
+    started = native_bell(
+        database, room, countdown=30 if phase == "countdown" else 0,
+        maximum=1 if phase == "expired_unsealed" else 900,
+    )
+    if phase == "expired_unsealed":
+        await_actual_deadline(database, started["waveId"])
+    assert delete(database, owner, True) == {"status": "deleted"}
+    as_owner(database)
+    assert database.execute(
+        "select outcome from public.island_wave_closures where wave_id=%s", (started["waveId"],)
+    ).fetchone() == ("expired" if phase == "expired_unsealed" else "abandoned",)
+    assert database.execute(
+        "select started_by,island_owner,finished_at is not null from public.wave_runs where id=%s",
+        (started["waveId"],),
+    ).fetchone() == (owner, owner, True)
+    assert database.execute(
+        "select island_owner,initial_snapshot,closed_at is not null "
+        "from public.recovery_wave_states where wave_id=%s", (started["waveId"],)
+    ).fetchone() == (owner, started["initialSnapshot"], True)
+    assert database.execute(
+        "select count(*) from public.islands where player_id=%s", (owner,)
+    ).fetchone() == (0,)
+    assert database.execute(
+        "select assignment_wave_id from public.personal_captain_profiles where player_id=%s",
+        (member,),
+    ).fetchone() == (None,)
+    assert database.execute(
+        "select state,balance_coins from public.island_economy_accounts where id=%s",
+        (keys(treasury)[0],),
+    ).fetchone() == ("retired", 100)
+
+
+@pytest.mark.parametrize("in_roster", [False, True])
+def test_native_member_leave_reserves_copy_until_actual_canonical_close(database, in_roster):
+    prepared = prepare(database)
+    owner, member, _, treasury, _ = prepared
+    copy = buy_member_copy(database, prepared)
+    room = native_room(
+        database, prepared=prepared, actors=(owner, member) if in_roster else (owner,)
+    )
+    started = native_bell(database, room)
+    as_server(database)
+    assert rpc(database, "game_leave", member, owner) == {"status": "left", "repeat": False}
+    as_owner(database)
+    assert database.execute(
+        "select holder,holder_generation,pending_return_wave_id::text from public.arsenal_copies "
+        "where id=%s", (copy,)
+    ).fetchone() == (member, 1, started["waveId"])
+    assert native_finish(database, room, started)["outcome"] == "won"
+    as_owner(database)
+    assert database.execute(
+        "select holder,holder_generation,pending_return_wave_id from public.arsenal_copies "
+        "where id=%s", (copy,)
+    ).fetchone() == (None, 2, None)
