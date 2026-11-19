@@ -4,6 +4,10 @@ The [disposable local API](../../docs/LOCAL-TEST-SERVER.md) runs the real API an
 with four fixed players and a database that is deleted on shutdown. The rest of this page
 describes the case timing design tool.
 
+The [shared-island balance assessment](../../docs/evidence/MP-ECO-19/README.md) is an offline
+catalogue calculation: from `backend/`, run `uv run python -m tools.economy.island_balance`.
+Its funded purchase timelines assume victories and provide no shared-mode gameplay acceptance.
+
 ## The case timing check
 
 > **The timing program:** `simulate_case.py` plays "The Light That Shouldn't Be" on paper for every crew and checks the promised minutes: about 120 for a crew of four, about 150 for one player with three NPC partners.
