@@ -499,7 +499,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     get ui() { return isl.ui; },
     get active() { return isl.ui.active || !!isl.cutscene || isl.boatLoading || !!isl.boatGame; }, // Pending rounds hold the keys too.
     get managing() { return isl.village.active; },
-    get selection() {
+    get selection() { return selectedAnchor(); },
+    get selectionView() {
       const selection = selectedAnchor();
       return selection?.kind && !selection.positionOnly
         ? {...selection, ...isl.world?.displayAnchor?.(selection.spotId)} : selection;
