@@ -34,6 +34,7 @@ import {getRasterFrame} from '../art/village-raster.js';
 import {wallFrame, WALL_POST_IDS} from '../art/village/walls.js';
 import {createArtworkTasks, createStaticVillageArt} from './static-village-art.js';
 import {createVillageArtNotice} from '../ui/village-art-notice.js';
+import {portraitSpriteSize} from '../player/home-portrait.js';
 
 const UNIT = 16;
 const FULL_HP_UNITS = 1_000_000;
@@ -121,6 +122,7 @@ function drawn(name) {
   const [width, height, anchor] = getRasterFrame(name)?.logical ?? islandFrame(name);
   return {texture: smoothTexture(frameCanvas(name)), size: [width, height], anchor};
 }
+const overviewSize = kind => kind === 'house' ? 1.46 : kind === 'wall' ? 1 : 1.26;
 // How near (world units) the captain stands for a build marker to glow at full strength; farther ones fade to MARKER_FAR.
 export const MARKER_NEAR = 9, MARKER_FAR = .4;
 function sprite(group, {texture, size: [width, height], anchor = 0}, x, z, name) {
@@ -269,11 +271,15 @@ export function decorateIsland(place, ctx = {}) {
       set locked(value) { lock.visible = value; lockRing.visible = value; }});
     for (const kind of kindsOf(spot)) {
       const building = sprite(root, textures[kind], spot.x, spot.z, `island-${kind}:${spot.id}`);
+      building.userData.portraitSize = overviewSize(kind);
       building.visible = false; buildings.set(`${spot.id}:${kind}`, building);
     }
   }
   const bell = layout.bell === false ? null : sprite(root, textures.bell, BELL.x, BELL.z, 'island-bell');
-  if (bell) staticArt.track(bell, 'island-bell');
+  if (bell) {
+    bell.userData.portraitSize = 1.4;
+    staticArt.track(bell, 'island-bell');
+  }
   // The campaign's buildings (home island only): one mesh per frame they can show, the right one visible.
   const campaignMeshes = new Map(); // building id -> {frame name -> mesh}
   const campaignTextures = new Map();
@@ -284,6 +290,7 @@ export function decorateIsland(place, ctx = {}) {
       const texture = campaignTextures.get(name) ?? drawn(name); campaignTextures.set(name, texture);
       const mesh = sprite(root, texture, building.x, building.z, `island-campaign:${building.id}:${name}`);
       mesh.visible = false; mesh.userData.campaign = building.id; meshes[name] = mesh;
+      if (name === building.art && building.id !== 'wreck') mesh.userData.portraitSize = 1.3;
       staticArt.track(mesh, name);
     }
     campaignMeshes.set(building.id, meshes);
@@ -293,11 +300,17 @@ export function decorateIsland(place, ctx = {}) {
   let arsenalMesh = null;
   const showArsenal = on => {
     if (on && !arsenalMesh && layout.bell !== false) {
-      arsenalMesh = sprite(root, drawn(ARSENAL.art), ARSENAL.x, ARSENAL.z, 'island-arsenal'); staticArt.track(arsenalMesh, ARSENAL.art);
+      arsenalMesh = sprite(root, drawn(ARSENAL.art), ARSENAL.x, ARSENAL.z, 'island-arsenal');
+      arsenalMesh.userData.portraitSize = 1.36;
+      staticArt.track(arsenalMesh, ARSENAL.art);
     }
     return arsenalMesh;
   };
-  if (layout.cabin !== false && ctx.art?.cabin) placeArt(root, ctx.art, 'cabin', CABIN.x, CABIN.z).name = 'island-cabin';
+  const cabin = layout.cabin !== false && ctx.art?.cabin ? placeArt(root, ctx.art, 'cabin', CABIN.x, CABIN.z) : null;
+  if (cabin) {
+    cabin.name = 'island-cabin';
+    cabin.userData.portraitSize = 1.45;
+  }
   // The reach of a house's role while its card is open (GAME-V3.md "Houses"): a soft disc with a bright rim on
   // the ground, in the role's colour. ctx.range() says which ({x, z, radius, role} or null), read every frame.
   const houseSupport = typeof ctx.houseSupport === 'function' ? makeHouseSupportMarkers(root) : null;
@@ -402,6 +415,7 @@ export function decorateIsland(place, ctx = {}) {
     clear(spot.id);
     if (!key) return;
     const mesh = put(id, where.x, where.z); mesh.name = `island-${kind}:${spot.id}`; mesh.userData.level = level;
+    mesh.userData.portraitSize = overviewSize(kind);
     if (joined) mesh.scale.x = .62; // Keep the original level art as posts; the join draws the span.
     mesh.userData.role = activeRole({kind, level, spec: answer?.spec}); mesh.userData.art = id;
     mesh.userData.recoveryLook = appearance?.look ?? 'intact';
@@ -409,11 +423,14 @@ export function decorateIsland(place, ctx = {}) {
     // One row (pipRow): 4 and 5 smaller and spaced wider than a disc, so the gold stars never overlap.
     const row = pips ? pipRow(level, {step: .6}) : {offsets: []}, pipWidth = artSizes[PIP_ART][0];
     row.offsets.forEach((offset, i) => {
-      const pip = put(pipArt(level), where.x + offset * pipWidth, where.z, top, .01, row.scale); pip.name = `island-pip:${spot.id}:${i + 1}`; meshes.push(pip);
+      const pip = put(pipArt(level), where.x + offset * pipWidth, where.z, top, .01, row.scale);
+      pip.name = `island-pip:${spot.id}:${i + 1}`; pip.userData.portraitFollows = mesh; meshes.push(pip);
     });
     for (const mark of marks) {
       if (!art[mark.art]) continue;
-      const plate = put(mark.art, where.x, where.z, mark.dy, .015); plate.position.x += mark.dx; plate.name = `island-mark:${spot.id}:${mark.part}`; plate.userData.mark = mark.art; meshes.push(plate);
+      const plate = put(mark.art, where.x, where.z, mark.dy, .015);
+      plate.position.x += mark.dx; plate.name = `island-mark:${spot.id}:${mark.part}`; plate.userData.mark = mark.art;
+      plate.userData.portraitSize = mesh.userData.portraitSize; plate.userData.portraitFollows = mesh; meshes.push(plate);
     }
     shown.set(spot.id, {key, meshes});
   }
@@ -559,8 +576,9 @@ export function decorateIsland(place, ctx = {}) {
       if (!mesh?.visible || !mesh.userData.art || mesh.name.startsWith('island-wall:')
         || (front && mesh.renderOrder < front.order)) continue;
       const [width, height, anchor] = artSizes[mesh.userData.art], image = mesh.material.map?.image;
-      const u = .5 + (tap.x - mesh.position.x) / width;
-      const v = 1 - anchor - (tap.y - mesh.position.y) * portraitDepth / height;
+      const size = portraitSpriteSize(mesh, portraitDepth);
+      const u = .5 + (tap.x - mesh.position.x) / (width * size);
+      const v = 1 - anchor - (tap.y - mesh.position.y) * portraitDepth / (height * size);
       if (u < 0 || u >= 1 || v < 0 || v >= 1 || !image?.getContext) continue;
       try {
         const alpha = image.getContext('2d')?.getImageData(Math.floor(u * image.width), Math.floor(v * image.height), 1, 1).data[3];
