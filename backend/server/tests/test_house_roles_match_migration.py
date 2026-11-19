@@ -108,22 +108,42 @@ def test_the_latest_wave_revive_keeps_the_tavern_rule():
         for path in sorted(MIGRATIONS.glob("*.sql"))
         if re.search(r"create or replace function public\.wave_revive\(", path.read_text())
     ]
-    latest = definitions[-1]
-    assert latest.name == "20261118051000_paid_revive_journal.sql"
-    text = latest.read_text()
+    journal = MIGRATIONS / "20261118051000_paid_revive_journal.sql"
+    mode_guard = MIGRATIONS / "20261118192007_legacy_revival_shared_mode_guard.sql"
+    fences = MIGRATIONS / "20261118225937_shared_legacy_wave_fences.sql"
+    assert definitions == [REVIVE, ROLES, journal, fences]
+    text = journal.read_text()
     # The atomic-journal update retains the existing payment implementation by renaming it.
     assert "rename to wave_revive_charge;" in text
     assert "return public.wave_revive_charge(" in function(text, "wave_revive")
-    original = definitions[-2]
-    assert original.name == ROLES.name
-    assert function(original.read_text(), "wave_revive") == function(
-        ROLES.read_text(), "wave_revive"
-    )
-    assert TAVERN in function(original.read_text(), "wave_revive")
-    # A later replacement of the delegated payment helper must retain the discount too.
-    for path in sorted(MIGRATIONS.glob("*.sql")):
-        if re.search(r"create or replace function public\.wave_revive_charge\(", path.read_text()):
-            assert TAVERN in function(path.read_text(), "wave_revive_charge"), path.name
+    assert TAVERN in function(ROLES.read_text(), "wave_revive")
+    # The shared-mode replacement is the actual payment body captured by the
+    # latest fence, so its Tavern rule must survive, rather than occur elsewhere.
+    charge_definitions = [
+        path for path in sorted(MIGRATIONS.glob("*.sql"))
+        if re.search(r"create or replace function public\.wave_revive_charge\(", path.read_text())
+    ]
+    assert charge_definitions == [mode_guard, fences]
+    assert TAVERN in function(mode_guard.read_text(), "wave_revive_charge")
+    # Pin both exact once-only captures and their guarded delegation. The private
+    # aliases must never acquire browser/service execution rights.
+    text = fences.read_text()
+    signature = "uuid,uuid,text,integer,text,integer,integer"
+    for name in ("wave_revive", "wave_revive_charge"):
+        alias = "legacy_wave_fence_" + name
+        assert (
+            f"if to_regprocedure('public.{alias}({signature})') is null then\n"
+            f"    alter function public.{name}({signature}) rename to {alias};\n"
+            "  end if;"
+        ) in text
+        body = function(text, name)
+        assert body.index("public.legacy_wave_fence_gate_locked(") < body.index(
+            f"return public.{alias}("
+        )
+        assert grants(text, alias) == [
+            f"revoke all on function public.{alias}({signature}) "
+            "from public,anon,authenticated,service_role;"
+        ]
 
 
 # The tests above pin 20261112090000 itself: it is applied to production and never edited, so what
