@@ -127,11 +127,20 @@ function findBackdrop(group) {
 const fragment = /* glsl */`
 ${pixelGlsl}${seaGlsl}
 uniform vec3 uDeep,uMid,uLight,uShallow,uShallow2,uFoam,uGlint,uStroke;
+uniform float uHomeCoast;
 varying vec2 vWorld;
 float band(float v,float edge){float w=fwidth(v)*.75+1e-4;return smoothstep(edge-w,edge+w,v);}
+float waterDistance(vec2 p){
+  if(uHomeCoast<.5||uCoastOn<.5)return coastDistance(p);
+  vec2 uv=(uCoastUv*vec3(p,1.0)).xy;
+  vec2 edge=clamp(uv,0.0,1.0);
+  // Continue the shallow gradient beyond the backdrop edge in the whole-island view.
+  float beyond=length((uv-edge)*vec2(${BACKDROP.width * 16}.0,${BACKDROP.height * 16}.0));
+  return min(255.0,texture2D(uCoast,edge).r*255.0+beyond);
+}
 void main(){
   vec2 p=vWorld;float t=uSeaTime;
-  float d=coastDistance(p)/16.0; // world units to the nearest land (16 = open sea)
+  float d=waterDistance(p)/16.0; // world units to the nearest land (16 = open sea)
   if(d < .02)discard; // land: the place's ground covers it
   // Broad depth pockets and crossing swells give the sea mass beneath the smaller ripples.
   // The same real coast distance still defines the shallows; none of these colours add land.
@@ -203,7 +212,7 @@ void main(){
 export function createWater(scene) {
   const colours = { uDeep: '#07566e', uMid: '#087f96', uLight: '#3dbdc9', uShallow: '#38c9b5', uShallow2: '#8be2c5', uFoam: '#f4fffa', uGlint: '#e6fff5', uStroke: '#63cfd6' };
   const homeColours = {...colours, uDeep: '#07667e', uMid: '#0b94a5', uLight: '#45c8cf', uShallow: '#3dcbb8', uShallow2: '#8cebd1'};
-  const uniforms = { ...seaUniforms };
+  const uniforms = { ...seaUniforms, uHomeCoast: {value: 0} };
   for (const [key, value] of Object.entries(colours)) uniforms[key] = { value: new THREE.Color(value) };
   const material = new THREE.ShaderMaterial({ uniforms, vertexShader: worldVertex, fragmentShader: fragment,
     depthTest: false, depthWrite: false, toneMapped: false, side: THREE.DoubleSide }); // the outline follows the ground's own (maybe mirrored) frame
@@ -216,7 +225,9 @@ export function createWater(scene) {
     setQuality(name) { detail = QUALITY[name]?.waveMarks >= 160 ? 1 : 0; seaUniforms.uDetail.value = detail; },
     // Read the coast of the place just attached; without a readable backdrop the sea stays open.
     setCoast(group) {
-      const palette = group?.name === 'place:home_islet' ? homeColours : colours;
+      const home = group?.name === 'place:home_islet';
+      const palette = home ? homeColours : colours;
+      uniforms.uHomeCoast.value = home ? 1 : 0;
       for (const [key, value] of Object.entries(palette)) uniforms[key].value.set(value);
       const backdrop = findBackdrop(group);
       try {
