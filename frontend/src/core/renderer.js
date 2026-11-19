@@ -1,6 +1,6 @@
 // Full-resolution, smoothly filtered rendering for the clean cartoon art (GAME-V3.md §7): the canvas
-// fills the window with up to 3 device pixels per CSS pixel in High, bounded by its 3 MP pixel
-// budget. Low stays within 720p pixels. Both adapt on slow devices. The world is
+// uses the native device density up to 4× and a 3840 × 2160 pixel budget in High. Low stays
+// within 720p pixels. Both adapt on slow devices. The world is
 // framed in world units (about 20 units tall, at least 16 wide), whatever the screen's density.
 import * as THREE from 'three';
 import {pixelViewport, worldViewport, createFrameBudget} from '../pixel/display.js';

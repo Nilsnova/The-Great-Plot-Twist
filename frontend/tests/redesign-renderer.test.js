@@ -20,9 +20,9 @@ it('fills desktop and phone viewports with bounded quality-independent framing',
         graphics.renderer.dispose();graphics.renderer.forceContextLoss();graphics.renderer.domElement.remove();return {high,low,remaining:document.querySelectorAll('canvas').length};
       },dpr);
       expect(parseFloat(result.high.cssWidth)).toBe(width);
-      expect(result.high.width*result.high.height).toBeLessThanOrEqual(3_000_000);expect(result.low.width*result.low.height).toBeLessThanOrEqual(1280*720);
+      expect(result.high.width*result.high.height).toBeLessThanOrEqual(3840*2160);expect(result.low.width*result.low.height).toBeLessThanOrEqual(1280*720);
       expect(result.high.width).toBeGreaterThan(result.low.width);
-      if(dpr===3)expect([result.high.width,result.high.height]).toEqual([width*3,height*3]);
+      expect([result.high.width,result.high.height]).toEqual([width*dpr,height*dpr]);
       for(const bound of ['left','right','top','bottom'])expect(result.high[bound]).toBe(result.low[bound]);
       expect(result.high.top-result.high.bottom).toBeCloseTo(Math.max(22,16*height/width));
       expect(result.high.right-result.high.left).toBeGreaterThanOrEqual(16-1e-9);expect(result.remaining).toBe(0);
