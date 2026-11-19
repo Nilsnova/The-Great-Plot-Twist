@@ -805,15 +805,17 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     const meta = boarderMeta(boarder.id), layer = bands[bandOf(boarder.z)], {x, y} = projectGround(boarder.x, boarder.z);
     faceActor(meta, boarder);
     const frames = FRAMES.boarder, hacking = boarder.state === 'hacking' || boarder.state === 'fighting', hit = clock < meta.flashUntil;
-    const step = still() ? 0 : Math.floor(clock * (hacking ? 3 : 5) + meta.phase) % 2;
-    const cartoon = hit ? BOARDER_ART.hit : hacking ? BOARDER_ART.hack[step] : still() ? BOARDER_ART.still : BOARDER_ART.walk[step];
+    const reduced = still(), step = reduced ? 0 : Math.floor(clock * (hacking ? 3 : 5) + meta.phase) % 2;
+    const cartoon = hit ? BOARDER_ART.hit : hacking ? BOARDER_ART.hack[step] : reduced ? BOARDER_ART.still : BOARDER_ART.walk[step];
     const r = rect[cartoon] ?? rect[hacking ? (step ? frames[2] : frames[0]) : frames[step]];
     if (!r) return;
     // A brute (wave 20+) is bigger and redder than the rest of the crowd.
     const big = boarder.brute ? BRUTE_LOOK.scale : 1, look = boarder.brute ? BRUTE_LOOK.tint : {};
     const scale = K() * big;
+    const lean = contacts && !reduced && !hit && boarder.state === 'walking' ? -.042 * meta.facing : 0;
     contacts?.add(boarder.x, boarder.z, scale);
-    layer.push(r, x, y, r.w * scale, r.h * scale, .5, r.anchor * scale, opt(1, look, meta.facing < 0, hit ? (rect[cartoon] ? .35 : .7) : 0));
+    layer.push(r, x, y, r.w * scale, r.h * scale, .5, r.anchor * scale,
+      opt(1, look, meta.facing < 0, hit ? (rect[cartoon] ? .35 : .7) : 0, lean));
     if (boarder.hp < boarder.maxHp) {
       const top = y + (r.h - r.anchor) * K() - .35, w = .9, share = Math.max(0, boarder.hp / boarder.maxHp);
       layer.push(rect[WHITE], x - w / 2 - .0625, top - .0625, w + .125, .25, 0, 0, tinted(DARK, .8));
@@ -833,13 +835,15 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   function drawMilitia(unit) {
     const meta = militiaMeta(unit.id), layer = bands[bandOf(unit.z)], {x, y} = projectGround(unit.x, unit.z);
     faceActor(meta, unit);
-    const hit = clock < meta.flashUntil, striking = clock < meta.strikeUntil, step = still() ? 0 : Math.floor(clock * 5 + meta.phase) % 2;
-    const id = hit ? 'militia-hit' : striking ? 'militia-strike' : unit.state === 'walking' && !still() ? MILITIA_IDS[1 + step] : 'militia';
+    const reduced = still(), walking = unit.state === 'walking' && !reduced;
+    const hit = clock < meta.flashUntil, striking = clock < meta.strikeUntil, step = reduced ? 0 : Math.floor(clock * 5 + meta.phase) % 2;
+    const id = hit ? 'militia-hit' : striking ? 'militia-strike' : walking ? MILITIA_IDS[1 + step] : 'militia';
     const r = rect[id];
     if (!r) return;
     const scale = K();
+    const lean = contacts && walking && !hit && !striking ? -.036 * meta.facing : 0;
     contacts?.add(unit.x, unit.z, scale);
-    layer.push(r, x, y, r.w * scale, r.h * scale, .5, r.anchor * scale, opt(1, null, meta.facing < 0, hit ? .35 : 0));
+    layer.push(r, x, y, r.w * scale, r.h * scale, .5, r.anchor * scale, opt(1, null, meta.facing < 0, hit ? .35 : 0, lean));
     if (unit.hp < unit.maxHp) {
       const top = y + (r.h - r.anchor) * K() - .35, w = .9, share = Math.max(0, unit.hp / unit.maxHp);
       layer.push(rect[WHITE], x - w / 2 - .0625, top - .0625, w + .125, .25, 0, 0, tinted(DARK, .8));
