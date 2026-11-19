@@ -29,7 +29,8 @@ export function validateIntent(name, args) {
   if (name === 'setEmote' && !['wave', 'cheer', 'point', 'lantern', 'shrug'].includes(first)) {
     return invalid('invalid_emote');
   }
-  if (name === 'reportPosition' && (!first || !Number.isFinite(first.x) || !Number.isFinite(first.y)
+  const clearingPosition=first && typeof first==='object' && !Array.isArray(first) && first.place===null && Object.keys(first).length===1;
+  if (name === 'reportPosition' && !clearingPosition && (!first || !Number.isFinite(first.x) || !Number.isFinite(first.y)
     || typeof first.place !== 'string' || typeof first.moving !== 'boolean'
     || !['front', 'back', 'left', 'right'].includes(first.facing))) return invalid('invalid_request');
   return null;

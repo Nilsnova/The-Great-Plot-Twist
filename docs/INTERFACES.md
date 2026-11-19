@@ -1314,7 +1314,7 @@ G7 and G8 draw other captains from the case adapter's view (`presence` in `front
 
 | What | G7/G8 adapter view and intents | A4 module (`frontend/src/online/realtime.js`) | What G9 does |
 |---|---|---|---|
-| Our position | `reportPosition({place, x, y, facing, moving})`; `y` is the world's z | `live.setPlace(place)` on travel and arrival, then `live.update({x, z, facing, moving})` | pass `y` as `z`; call `setPlace(null)` during the intro, the cinematics and the tour |
+| Our position | `reportPosition({place, x, y, facing, moving})`; `y` is the world's z. Exact `{place: null}` clears the selected room and queued position without coordinates. | `live.setPlace(place)` on travel and arrival, then `live.update({x, z, facing, moving})`; clear uses `live.setPlace(null)` | Shared islands use the fresh canonical session's exact `isle_<code>_<24hex>` nonce, room 1. Unknown shared context clears; only explicit verified legacy context uses `isle_<code>`. Pass `y` as `z`; clear during unlocated transitions. |
 | Others' position | `presence.others[]` with `x`, `y` | `live_peer_moved {id, x, z, facing, moving, everyMs}` | `y` = `z`; keep `everyMs` for the glide |
 | Facing | `front`, `back`, `left`, `right` | `up`, `down`, `left`, `right` (`facingFrom`) | `back` = `up` (moving to a smaller z), `front` = `down` |
 | Emotes | `wave`, `cheer`, `point`, `lantern`, `shrug` (art `public/pixel/emote-*.png`) | `wave`, `cheer`, `nod`, `shrug`, `follow_me`, `help` (`EMOTES` in `live-rules.js`) | only `wave`, `cheer` and `shrug` exist on both sides, and A4's module refuses any other id. One list has to be chosen before the wiring (D006 left emotes to a later package) |

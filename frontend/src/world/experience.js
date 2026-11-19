@@ -7,7 +7,7 @@ export function resolvePresencePlace(worldPlace,resolve){
   try{const selected=resolve?.(worldPlace);return selected===undefined?worldPlace:selected;}catch{return null;}
 }
 export function createWorldExperience(ctx){
-  let latest=null,others=null,hud=null,coins=null,ownedArt=null,pending=null,disposed=false,facing='front',previous=null,localBubble=null,simulated=null;
+  let latest=null,others=null,hud=null,coins=null,ownedArt=null,pending=null,disposed=false,facing='front',previous=null,localBubble=null,simulated=null,reportedPlace;
   const reporter=createPositionReporter(sample=>ctx.send('reportPosition',sample));
   async function prepare(){
     if(pending||others||disposed)return;
@@ -49,15 +49,17 @@ export function createWorldExperience(ctx){
       if(Math.abs(dx)+Math.abs(dz)>.001)facing=Math.abs(dx)>Math.abs(dz)?dx<0?'left':'right':dz<0?'back':'front';}
     previous={x:player.position.x,y:player.position.z};
     const filter=ctx.preferences().showCaptains??'everyone',presence=simulated??latest.presence;
-    if(place)reporter.update({place,...previous,facing,moving:speed>.05},performance.now(),{
+    if(place===null){
+      if(reportedPlace!==null){reportedPlace=null;reporter.reset();ctx.send('reportPosition',{place:null});}
+    }else if(place){reportedPlace=place;reporter.update({place,...previous,facing,moving:speed>.05},performance.now(),{
       enabled:!simulated&&['live','reconnecting'].includes(presence.status),
-    });
-    const emote=presence.localEmote;if(localBubble){localBubble.visible=!!emote&&emote.until>Date.now()&&!ctx.isBlocked();if(localBubble.visible){const point=projectPoint(player.position.x,player.position.z),scale=classRoom?2:1;localBubble.material=ownedArt[`emote-${emote.id}`]??ownedArt['emote-wave'];localBubble.scale.setScalar(scale);localBubble.position.set(Math.round(point.x*16)/16,Math.round((point.y+2.05+(scale-1)*.75)*16)/16,0);localBubble.userData.emoteId=emote.id;}}
+    });}
+    const emote=place?presence.localEmote:null;if(localBubble){localBubble.visible=!!emote&&emote.until>Date.now()&&!ctx.isBlocked();if(localBubble.visible){const point=projectPoint(player.position.x,player.position.z),scale=classRoom?2:1;localBubble.material=ownedArt[`emote-${emote.id}`]??ownedArt['emote-wave'];localBubble.scale.setScalar(scale);localBubble.position.set(Math.round(point.x*16)/16,Math.round((point.y+2.05+(scale-1)*.75)*16)/16,0);localBubble.userData.emoteId=emote.id;}}
     if(!others)return;
     const stats=others.update(dt,{place,player:previous,camera:ctx.camera,canvas:ctx.canvas,now:Date.now(),
       filter:presence.status==='off'?'off':filter,blocked:ctx.isBlocked(),hide,poses,...(classRoom?{max:40,emoteScale:2}:{})});
     hud?.setCounts(stats);
-    if(hud)hud.element.hidden=!!simulated||presence.status==='off'||ctx.isBlocked();
+    if(hud)hud.element.hidden=!!simulated||!place||presence.status==='off'||ctx.isBlocked();
   }
   return {apply,update,simulate,figures:()=>others?.figures?.()??[],get stats(){return others?.stats??{drawn:0,hidden:0,ids:[]};},
     dispose(){if(disposed)return;disposed=true;reporter.reset();others?.dispose();hud?.dispose();coins?.dispose();localBubble?.removeFromParent();localBubble?.geometry.dispose();releaseArt(ownedArt);},
