@@ -1,5 +1,5 @@
 // Keep the walk-through Heart's entry axis and scale aligned across all three states.
-export const sheets = {core: {file: 'village/home-heart-v3.png', width: 1312, height: 1199}};
+export const sheets = {core: {file: 'village/home-heart-v4.png', width: 1312, height: 1199}};
 const fitBounds = [263, 684, 340, 14];
 const frame = (rect, sourceFoot) => ({sheet: 'core', rect, sourceFoot, logical: [128, 128, 12], fitBounds});
 export const frames = {

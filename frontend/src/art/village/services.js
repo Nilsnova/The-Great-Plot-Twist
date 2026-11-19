@@ -1,7 +1,7 @@
 // Original service and coastal artwork at the existing logical boxes and ground feet.
 export const sheets = {
   villageServices: {file: 'village/services-v1.png', width: 1536, height: 1024},
-  villageArsenal: {file: 'village/home-fixed-v2.png', width: 1774, height: 887},
+  villageArsenal: {file: 'village/home-fixed-v3.png', width: 1774, height: 887},
   villageHarbor: {file: 'village/home-harbor-v2.png', width: 1254, height: 1254},
 };
 
