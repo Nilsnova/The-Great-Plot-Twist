@@ -57,7 +57,7 @@ try{
  await page.evaluate(()=>window.__island.chart.show());
  await page.locator('.sea-chart[open] .fast-travel').check();
  await page.locator('.sea-chart[open] [data-place="saltreach_harbor"]').click();
- await page.waitForFunction(()=>window.__island.world.current.id==='saltreach_harbor'&&window.__island.world.busy===false);
+ await page.waitForFunction(()=>window.__island?.world.current?.id==='saltreach_harbor'&&window.__island.world.busy===false);
  let who;for(let i=0;i<30;i++){who=await api(page,'/api/me');if(who.status===200&&who.data.id===anonymous.user.id)break;await page.waitForTimeout(100);}
  assert.equal(who.status,200);assert.equal(who.data.id,anonymous.user.id);
  const beforeGuest=(await read('select balance::text as balance from public.wallets where player_id=$1::uuid',[anonymous.user.id]))[0];
