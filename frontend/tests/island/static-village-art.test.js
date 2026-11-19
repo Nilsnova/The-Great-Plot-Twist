@@ -64,6 +64,27 @@ it('swings the native bell metal without moving its pavilion, stops for reduced 
   drawing.dispose();
 });
 
+it('adds service detail motion as the actual campaign frames become visible', async () => {
+  const ids = ['island-harbor', 'island-techhub', 'island-wreck', 'island-wreck-mended'];
+  const native = Object.fromEntries(ids.map(id => {
+    const resource = material();
+    resource.map.userData.villageArt = {source: 'png'};
+    return [id, resource];
+  }));
+  const keys = () => ids.map(id => native[id].customProgramCacheKey().includes(':landmark:'));
+  const load = async names => Object.fromEntries(names.map(id => [id, native[id] ?? material()]));
+  const {drawing} = start(load);
+  await flush(); drawing.apply(state(false, 0)); drawing.update(.02);
+  expect(keys()).toEqual([false, false, false, false]);
+  const unlocked = state(false, 13);
+  drawing.apply(unlocked); drawing.update(.02);
+  expect(keys()).toEqual([true, true, false, false]);
+  const repaired = {...unlocked, campaign: {...unlocked.campaign, wreck: {paid: 500, goal: 500}}};
+  drawing.apply(repaired); drawing.update(.02);
+  expect(keys()).toEqual([true, true, false, true]);
+  drawing.dispose();
+});
+
 it('reports main artwork failure, coalesces actual retries and clears the failure only after success', async () => {
   let fail = true; const errors = [], views = [], next = deferred();
   const load = vi.fn(async ids => {

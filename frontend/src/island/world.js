@@ -290,6 +290,7 @@ export function decorateIsland(place, ctx = {}) {
   // The campaign's buildings (home island only): one mesh per frame they can show, the right one visible.
   const campaignMeshes = new Map(); // building id -> {frame name -> mesh}
   const campaignTextures = new Map();
+  const campaignLandmarks = [];
   if (layout.bell !== false) for (const building of CAMPAIGN_BUILDINGS) {
     const names = [...new Set([building.art, building.mended, 'island-site', ...[4, 5, 6, 8].map(n => `island-site-${n}`)].filter(Boolean))];
     const meshes = {};
@@ -298,6 +299,7 @@ export function decorateIsland(place, ctx = {}) {
       const mesh = sprite(root, texture, building.x, building.z, `island-campaign:${building.id}:${name}`);
       mesh.visible = false; mesh.userData.campaign = building.id; meshes[name] = mesh;
       staticArt.track(mesh, name);
+      if (landmarkProfiles[name]) campaignLandmarks.push([mesh, name]);
     }
     campaignMeshes.set(building.id, meshes);
   }
@@ -745,6 +747,7 @@ export function decorateIsland(place, ctx = {}) {
       trackMotion(cabin, 'cabin');
       trackMotion(bell, 'island-bell');
       trackMotion(arsenalMesh, ARSENAL.art);
+      for (const [mesh, id] of campaignLandmarks) if (mesh.visible) trackMotion(mesh, id);
       if (!paused || still) {
         const step = Number.isFinite(dt) ? Math.min(.1, Math.max(0, dt)) : 0;
         if (!still) landmarkClock += step;
