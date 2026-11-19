@@ -5,7 +5,7 @@ import {createCamera,villageFrame} from '../../src/player/camera.js';
 import {worldViewport} from '../../src/pixel/display.js';
 import {projectPoint} from '../../src/world/art.js';
 import {unprojectGround} from '../../src/world/projection.js';
-const captain={x:12,z:-8},district={x:-4,z:-4};
+const captain={x:12,z:-8},cabin={x:-8,z:6};
 function setup(width=1280,height=720){
   const input={pointer:{wheel:0},held:new Set()},view=createCamera(input),viewport={height,top:width<640?180:92,bottom:width<640?112:124};
   Object.assign(view.camera,worldViewport(width,height,22,16));view.camera.updateProjectionMatrix();view.setPlace('home_islet',captain);view.start(true);
@@ -17,35 +17,48 @@ function screen(t,{x,z,lift=0}){
 }
 const state=view=>({position:view.camera.position.clone(),zoom:view.camera.zoom});
 describe('approved village working composition',()=>{
-  it.each([[1280,720,60],[375,812,68]])('opens a readable district at %s×%s while preserving the captain', (width,height,minimumCannon)=>{
+  it.each([[1280,720,60],[375,812,68],[320,568,36]])('opens a readable district at %s×%s while preserving the captain', (width,height,minimumCannon)=>{
     const t=setup(width,height),before={...captain};t.view.setVillageView(true,t.viewport);t.view.update(.05,captain);
-    const frame=villageFrame(t.view.camera,'home_islet',t.viewport);
-    expect(t.view.camera.zoom).toBeCloseTo(width<640?.9:frame.zoom*1.05);expect(captain).toEqual(before);
-    const p=width<640?projectPoint(district.x,district.z):{x:frame.centerX,y:frame.centerY};
-    t.view.camera.updateMatrixWorld();const center=new THREE.Vector3(p.x,p.y,0).project(t.view.camera);
-    if(width>=640){const landWidth=(frame.bounds.maxX-frame.bounds.minX)*t.view.camera.zoom/(t.view.camera.right-t.view.camera.left);
-      expect(landWidth).toBeGreaterThan(.75);expect(landWidth).toBeLessThan(.9);}
-    expect((center.x+1)*width/2).toBeCloseTo(width/2,10);expect((1-center.y)*height/2).toBeCloseTo((t.viewport.top+height-t.viewport.bottom)/2,10);
+    const {camera}=t.view,frame=villageFrame(camera,'home_islet',t.viewport);
+    expect(captain).toEqual(before);
+    if(width>=640){
+      expect(camera.zoom).toBeCloseTo(frame.zoom*1.05);
+      const landWidth=(frame.bounds.maxX-frame.bounds.minX)*camera.zoom/(camera.right-camera.left);
+      expect(landWidth).toBeGreaterThan(.75);expect(landWidth).toBeLessThan(.9);
+      camera.updateMatrixWorld();const center=new THREE.Vector3(frame.centerX,frame.centerY,0).project(camera);
+      expect((center.x+1)*width/2).toBeCloseTo(width/2,10);
+      expect((1-center.y)*height/2).toBeCloseTo((t.viewport.top+height-t.viewport.bottom)/2,10);
+    }else{
+      expect(camera.zoom).toBeGreaterThan(frame.zoom*1.6);
+      const heart=screen(t,{x:0,z:2});
+      expect(heart.x).toBeGreaterThan(width/2);
+      expect(heart.x).toBeLessThan(width*.82);
+      const watchtower=screen(t,{x:0,z:-14,lift:6});
+      expect(watchtower.y).toBeGreaterThan(t.viewport.top);
+      expect(screen(t,cabin).y).toBeLessThan(height-t.viewport.bottom);
+    }
     expect(screen(t,{x:1.5,z:0}).x-screen(t,{x:-1.5,z:0}).x).toBeGreaterThanOrEqual(minimumCannon);
   });
   it.each([[1280,720],[375,812]])('retains absolute working zoom and district center through real panel reflow at %s×%s', (width,height)=>{
     const t=setup(width,height);t.view.setVillageView(true,t.viewport);t.view.villageControl('in');t.view.panVillage(70,40,width,height);t.view.update(.05,captain);
-    const before=state(t.view),oldCenter=screen(t,district),relative=oldCenter.y-(t.viewport.top+height-t.viewport.bottom)/2;
+    const before=state(t.view),oldCenter=screen(t,cabin),relative=oldCenter.y-(t.viewport.top+height-t.viewport.bottom)/2;
     for(const bottom of [335,516,112]){
       const viewport={...t.viewport,bottom};if(viewport.top+bottom>=height)continue;
       t.view.setVillageView(true,viewport);t.view.update(.05,captain);
       expect(t.view.camera.zoom).toBe(before.zoom);expect(t.view.camera.position.x).toBe(before.position.x);
-      expect(screen(t,district).y-(viewport.top+height-bottom)/2).toBeCloseTo(relative,10);
+      expect(screen(t,cabin).y-(viewport.top+height-bottom)/2).toBeCloseTo(relative,10);
     }
   });
-  it.each([[1280,720],[375,812]])('keeps exact Fit/Tab and restores the saved working state at %s×%s', (width,height)=>{
-    const t=setup(width,height);t.view.setVillageView(true,t.viewport);t.view.villageControl('in');t.view.panVillage(-70,40,width,height);t.view.update(.05,captain);
+  it.each([[1280,720],[375,812],[320,568]])('keeps exact Fit/Tab and restores the saved working state at %s×%s', (width,height)=>{
+    const t=setup(width,height);t.view.setVillageView(true,t.viewport);t.view.update(.05,captain);
+    const defaultWork=state(t.view);
+    t.view.villageControl('in');t.view.panVillage(-70,40,width,height);t.view.update(.05,captain);
     const working=state(t.view),fit=villageFrame(t.view.camera,'home_islet',t.viewport);
+    expect(working).not.toEqual(defaultWork);
     t.input.held.add('Tab');t.view.update(.05,captain);expect(t.view.camera.zoom).toBe(fit.zoom);expect(t.view.camera.position.x).toBe(fit.x);expect(t.view.camera.position.y).toBe(fit.y);
     t.input.held.delete('Tab');t.view.update(.05,captain);expect(state(t.view)).toEqual(working);
     t.view.villageControl('fit');t.view.update(.05,captain);expect(t.view.camera.zoom).toBe(fit.zoom);expect(t.view.camera.position.y).toBe(fit.y);
-    t.view.villageControl('work');t.view.update(.05,captain);expect(t.view.camera.zoom).toBeCloseTo(width<640?.9:fit.zoom*1.05);
-    expect(t.view.camera.position.x).toBeCloseTo(width<640?projectPoint(district.x,district.z).x:fit.x,10);
+    t.view.villageControl('work');t.view.update(.05,captain);expect(state(t.view)).toEqual(defaultWork);
   });
   it.each([[1280,720],[375,812]])('makes remote logical anchors reachable without moving them or refocusing visible anchors at %s×%s', (width,height)=>{
     const t=setup(width,height);t.viewport.bottom=335;t.view.setVillageView(true,t.viewport);t.view.update(.05,captain);
