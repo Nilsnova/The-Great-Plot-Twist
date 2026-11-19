@@ -176,11 +176,11 @@ void main(){
     colour=mix(colour,uDeep,(1.0-broad)*.09);
     colour=mix(colour,uLight,sheen*.05);
     // Reserve the brightest surface strokes for the shallows. Broad swells still show offshore depth.
-    colour=mix(colour,uStroke,crest*mix(.16,.10,depth));
+    colour=mix(colour,uStroke,crest*mix(.16,.10,depth)*mix(1.0,.67,uHomeCoast));
     vec2 q=p*2.2+vec2(broad,pxNoise(p*.65-drift))*.8;
     float cells=pxNoise(q+drift)+pxNoise(q*1.95-drift)*.2;
     float caustic=(1.0-band(abs(cells-.6),.02))*smoothstep(.6,1.2,d)*(1.0-smoothstep(1.5,3.0,d));
-    colour=mix(colour,uShallow2,caustic*.12);
+    colour=mix(colour,uShallow2,caustic*mix(.12,.07,uHomeCoast));
     if(uHomeCoast>.5){
       // Cross the rolling ocean with shorter, less regular strokes. The old coastline still
       // supplies every break and depth ramp. Glints follow crest slopes, not the terrain grid.
@@ -198,8 +198,8 @@ void main(){
       colour=mix(colour,mix(uStroke,uFoam,.34),whiteGlint*capStrength*offshore);
       // Soft aqua lace under the near water, visible through the shelf rather than on the grass.
       float lace=(1.0-band(abs(cells-.66),.034))*smoothstep(.51,.76,coarse);
-      float litShelf=smoothstep(.33,1.1,d)*(1.0-smoothstep(2.4,5.2,d));
-      colour=mix(colour,uShallow2,lace*litShelf*.24);
+      float litShelf=smoothstep(.33,1.1,d)*(1.0-smoothstep(2.4,5.2,d))*smoothstep(.50,.78,broad);
+      colour=mix(colour,uShallow2,lace*litShelf*.18);
     }
   }
   // The close edge is still in low quality; its extra movement and broken surf are high-only.
@@ -214,8 +214,8 @@ void main(){
     colour=mix(colour,uFoam,(1.0-band(abs(d-surf),width))*.8*broken*smoothstep(.0,.25,run)*shoreLight);
     if(uHomeCoast>.5){
       // A thin interrupted wash runs ahead of the breaker. Leave dark gaps between sections.
-      float wash=(1.0-band(abs(d-surf-.23-grain*.35),.051))*smoothstep(.40,.73,grain);
-      colour=mix(colour,uShallow2,wash*.40*shoreLight);
+      float wash=(1.0-band(abs(d-surf-.23-grain*.35),.051))*smoothstep(.46,.76,grain);
+      colour=mix(colour,uShallow2,wash*.29*shoreLight);
     }
   }
   colour=mix(colour,uFoam,(1.0-band(d,edge))*shoreLight);
