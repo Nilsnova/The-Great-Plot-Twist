@@ -1,0 +1,56 @@
+{
+  "boundary": "Later read-only extraction of the already retained passive frames; no further browser actions or provider run.",
+  "sourceResultSha256": "ffc3c83822307bb11cacc552feb70bae9e62c4b2c10cf279ba6f80e92f7f9eb2",
+  "oldAcceptedJoin": {
+    "topicSha256": "9d1d83b4d068edb986342ed22293aa359c4a8ae3ede6c9f02c15d04a8dad10a2",
+    "ref": "15",
+    "replyRefMatched": true
+  },
+  "postClickOldLeave": {
+    "actor": "retained-member",
+    "direction": "sent",
+    "topicSha256": "9d1d83b4d068edb986342ed22293aa359c4a8ae3ede6c9f02c15d04a8dad10a2",
+    "kind": "phx_leave",
+    "ref": "22",
+    "joinRef": "15",
+    "status": null,
+    "postLeave": true,
+    "at": "2026-11-19T19:25:19.574Z"
+  },
+  "postClickOldLeaveReply": {
+    "actor": "retained-member",
+    "direction": "received",
+    "topicSha256": "9d1d83b4d068edb986342ed22293aa359c4a8ae3ede6c9f02c15d04a8dad10a2",
+    "kind": "phx_reply",
+    "ref": "22",
+    "joinRef": "15",
+    "status": "ok",
+    "postLeave": true,
+    "at": "2026-11-19T19:25:19.577Z"
+  },
+  "postClickNewJoin": {
+    "actor": "retained-member",
+    "direction": "sent",
+    "topicSha256": "a235da29f304a364f4a7760cb045e814dee816b9301876b370bc57349f5b8b3d",
+    "kind": "phx_join",
+    "ref": "26",
+    "joinRef": "26",
+    "status": null,
+    "postLeave": true,
+    "at": "2026-11-19T19:25:20.273Z"
+  },
+  "postClickNewJoinReply": {
+    "actor": "retained-member",
+    "direction": "received",
+    "topicSha256": "a235da29f304a364f4a7760cb045e814dee816b9301876b370bc57349f5b8b3d",
+    "kind": "phx_reply",
+    "ref": "26",
+    "joinRef": "26",
+    "status": "ok",
+    "postLeave": true,
+    "at": "2026-11-19T19:25:20.285Z"
+  },
+  "oldLeaveReplyRefMatched": true,
+  "newJoinReplyRefMatched": true,
+  "newTopicDiffers": true
+}
