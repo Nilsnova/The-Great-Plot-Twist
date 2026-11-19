@@ -2,6 +2,45 @@
 import {it,expect} from 'vitest';
 import {browserHarness} from '../g20-browser.js';
 const evaluate=browserHarness();
+it('promotes an active spectator replay after delayed canonical session attachment without restarting it',async()=>{
+ const result=await evaluate(async()=>{
+  const {createIsland}=await window.g20Import('/src/island/index.js');
+  const {createWaveController}=await window.g20Import('/src/pirates/controller.js');
+  const {sharedFixture}=await window.g20Import('/tests/island/shared-core-fixture.js');
+  const {nativeWave}=await window.g20Import('/tests/island/shared-wave-fixture.js');
+  const {actorId,economy,metadata}=await window.g20Import('/tests/island/shared-session-fixture.js');
+  const {on,emit}=await window.g20Import('/src/core/events.js');
+  const snapshot={...sharedFixture(),actorId,economy:economy()};snapshot.capabilities.session={available:true,reason:null};
+  let sid,releaseAttach;const reads=[];
+  const meta=()=>{const data=metadata();data.session.sessionId=sid;return data;};
+  const island=createIsland({container:document.body,emit,on,mode:'live',getActorId:()=>actorId,storage:localStorage,visitStorage:null,
+   menu:()=>()=>{},settings:()=>()=>{},transport:{get:async path=>{
+    if(path==='/api/island')return {ok:true,data:snapshot};
+    if(path.startsWith('/api/island/session?'))return {ok:true,data:meta()};
+    if(path.startsWith('/api/waves/current?')){const row=nativeWave(),controller=new URL(path,location.href).searchParams.has('sessionId');reads.push(controller);
+     if(controller){row.session=meta().session;row.lastActorCounter=23;}
+     else{row.session={...row.session,isController:false,isSpectator:true,sessionId:null,connectionGeneration:null};row.participantToken=null;row.lastActorCounter=null;}
+     return {ok:true,data:row};}
+    return {ok:false,status:409};
+   },post:async(path,body)=>{
+    if(path==='/api/island/session/attach'){sid=body.sessionId;return new Promise(resolve=>{releaseAttach=()=>resolve({ok:true,data:meta()});});}
+    return {ok:false,status:409};}}});
+  const controller=createWaveController({bus:{on,emit},getSessionProof:()=>island.session.proof(),
+   now:()=>Date.parse(nativeWave().startsAt)+100,world:{place:()=> 'home_islet'},place:'home_islet',
+   recoveryTransport:{readEvents:async()=>({headSeq:0,sealedThroughTick:2,events:[]}),sendInputs:async()=>({accepted:[]}),checkpoint:async()=>({ok:true}),finishWave:async()=>({})},
+   createRenderer:()=>null,createHud:()=>null,setTimer:()=>1,clearTimer(){}});
+  const loading=island.load();for(let i=0;!releaseAttach && i<100;i++)await new Promise(resolve=>setTimeout(resolve,10));
+  if(!releaseAttach)throw Error('The actual attachment did not reach the delayed boundary.');
+  await island.flow.look('own');await island.flow.join('own');
+  const before=controller.wave,sim=before.sim,replay=before.recoveryReplay,wasSpectator=before.info.spectator;
+  releaseAttach();await loading;
+  const result={wasSpectator,nowSpectator:controller.wave.info.spectator,proof:!!island.session.proof(),
+   sameWave:controller.wave===before,sameSim:controller.wave.sim===sim,sameReplay:controller.wave.recoveryReplay===replay,
+   counter:controller.wave.actorCounter,reads};controller.dispose();island.dispose();return result;
+ });
+ expect(result).toMatchObject({wasSpectator:true,nowSpectator:false,proof:true,sameWave:true,sameSim:true,sameReplay:true,counter:23});
+ expect(result.reads).toContain(false);expect(result.reads).toContain(true);
+});
 it('binds the supported visible island to its exact server room and withdraws before a visit',async()=>{
  const result=await evaluate(async()=>{
   const {createIsland}=await window.g20Import('/src/island/index.js');
