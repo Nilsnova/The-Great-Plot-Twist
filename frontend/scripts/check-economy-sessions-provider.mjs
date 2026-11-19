@@ -127,8 +127,13 @@ try {
   await member.page.bringToFront();
   await member.page.evaluate(() => window.__island.island.session.ensure());
   original = await waitProof(member.page);
+  await duplicate.waitForFunction(() => ['spectator', 'waiting', 'unavailable']
+    .includes(window.__island?.island?.session?.state.phase), null, {timeout: 30000});
   const cloned = await proof(duplicate);
   require(cloned === null, 'Browser-cloned tab exposed simultaneous controller proof');
+  const stillController = await api(member.page, sessionQuery(original));
+  require(stillController.status === 200 && stillController.data.session.isController,
+    'The original document lost current authority during the duplicate-tab assertion');
   const duplicateState = await duplicate.evaluate(() => ({
     state: window.__island.island.session.state.phase,
     signedIn: !!sessionStorage.getItem('plot-twist-auth-v1')}));
@@ -180,7 +185,8 @@ try {
   await land(member.page);
   const resumed = await waitProof(member.page);
   const after = await slot(wave.waveId, member.actorId);
-  require(after.status === 'active' && BigInt(resumed.connectionGeneration) > BigInt(original.connectionGeneration),
+  require(after.status === 'active' && resumed.sessionId === original.sessionId
+    && BigInt(resumed.connectionGeneration) > BigInt(original.connectionGeneration),
     'Reconnect did not rotate current authority');
   require(JSON.stringify(retained(after)) === JSON.stringify(retained(absent)),
     'Reconnect changed the accepted Captain facts while gameplay writes were partitioned');
