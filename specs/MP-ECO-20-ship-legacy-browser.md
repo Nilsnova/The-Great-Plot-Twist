@@ -31,5 +31,10 @@ legacy rendered combat lifecycle. Existing source-qualified broader SQL/API and
 retained browser evidence keep their own scope. No hosted operation or public
 activation is part of this contribution.
 
-Results remain pending until actual execution and source/financial receipts are
-recorded. A missing browser resource or failed prerequisite is not a pass.
+The [staged actual observations](../docs/evidence/MP-ECO-20-ship-legacy-browser/README.md)
+passed for personal/Point purchases, legacy Harbor, bounded browser compatibility
+requests, an actual zero-star/zero-reward ship claim and genuine anonymous class
+Join followed by a visible personal Harbor market. The interrupted main driver
+retains its optional positive-score assertion failure; the class continuation is
+separately source-fenced. No uninterrupted corrected whole-CLI pass, positive
+browser payout, natural feed, complete matrix or hosted release is claimed.
