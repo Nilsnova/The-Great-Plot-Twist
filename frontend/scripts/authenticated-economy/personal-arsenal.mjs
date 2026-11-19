@@ -5,12 +5,13 @@ import {readFileSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import {resolve} from 'node:path';
 import {randomUUID,createHash} from 'node:crypto';
-import {createClients,api,land,capture} from './clients.mjs';
+import {createClients,api,land,capture,loadRuntime} from './clients.mjs';
 import {observe,install,admit} from './observer.mjs';
 import {sourceEvidence} from './source.mjs';
 
 const output=process.env.MP_ECO_OUTPUT??'/tmp/mp505-personal-arsenal';
 const rendered=process.env.MP_ECO_RENDERED==='1';
+const source=(await loadRuntime(process.env.MP_ECO_RUNTIME)).expectedCommit;
 const uid=()=>randomUUID().replaceAll('-','');
 const context=e=>Object.fromEntries(['mode','version','islandOwner','runEpoch'].map(k=>[k,e[k]]));
 const root=fileURLToPath(new URL('../../../',import.meta.url));
@@ -18,10 +19,10 @@ const helperFiles=['frontend/scripts/authenticated-economy/personal-arsenal.mjs'
  'frontend/scripts/authenticated-economy/runtime.mjs','frontend/scripts/authenticated-economy/observer.mjs','frontend/scripts/authenticated-economy/source.mjs',
  'backend/tools/authenticated_economy/observe.py','backend/tools/authenticated_economy/config.py'];
 const hashes=()=>Object.fromEntries(helperFiles.map(path=>[path,createHash('sha256').update(readFileSync(resolve(root,path))).digest('hex')]));
-const report={productionSource:'3bdd8eda16470795fdedd68c42fffab54e5f2ced',
+const report={productionSource:source,
  harnessSha256:createHash('sha256').update(await readFile(new URL(import.meta.url))).digest('hex'),
  helperHashesBefore:hashes(),
- sourceBefore:sourceEvidence('3bdd8eda16470795fdedd68c42fffab54e5f2ced'),
+ sourceBefore:sourceEvidence(source),
  setup:'Real Auth identities and production game/session create/join. Explicit fresh treasury admission of 200. Only earned Captain level/points and island best-wave preconditions are installed as labeled test state; no claim that those milestones were naturally earned.',
  assertions:[],boundaries:['Authenticated transport assertions do not prove every rendered interaction, earned progression, captured-generation delayed completion, frozen combat loadouts or autonomous grace cleanup.']};
 await mkdir(output,{recursive:true});let env;
@@ -84,5 +85,5 @@ try{
  const after=await observe('select player_id,balance from public.wallets where player_id=any($1::uuid[]) order by player_id',[env.clients.map(c=>c.actorId)]);assert.deepEqual(after,wallets);
  report.walletsBefore=wallets;report.walletsAfter=after;report.status='passed';
 }catch(error){report.status='failed';report.failure={name:error.name,message:error.message,stack:error.stack};process.exitCode=1;if(env)for(const c of env.clients)await capture(c.page,output,'failure-'+c.label).catch(()=>{});}
-finally{if(env)await env.close();report.helperHashesAfter=hashes();report.helpersUnchanged=JSON.stringify(report.helperHashesAfter)===JSON.stringify(report.helperHashesBefore);try{report.sourceAfter=sourceEvidence('3bdd8eda16470795fdedd68c42fffab54e5f2ced');}catch{report.helpersUnchanged=false;}if(!report.helpersUnchanged){report.status='failed';report.helperFailure='Source changed during the run';process.exitCode=1;}await writeFile(output+'/report.json',JSON.stringify(report,null,2)+'\n');}
+finally{if(env)await env.close();report.helperHashesAfter=hashes();report.helpersUnchanged=JSON.stringify(report.helperHashesAfter)===JSON.stringify(report.helperHashesBefore);try{report.sourceAfter=sourceEvidence(source);}catch{report.helpersUnchanged=false;}if(!report.helpersUnchanged){report.status='failed';report.helperFailure='Source changed during the run';process.exitCode=1;}await writeFile(output+'/report.json',JSON.stringify(report,null,2)+'\n');}
 console.log(JSON.stringify({status:report.status,assertions:report.assertions.length,report:output+'/report.json',failure:report.failure?.message}));
