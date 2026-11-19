@@ -33,7 +33,8 @@ export function moveModel({spotId, spots, verdict, busy, message, docked}) {
 
 // api: island api.js; render(model | null): the bar; preview(cell | null): world.js; spots(): the island answer's
 // spots; code(): the game's island code or null (your own); onMoved(answer): the island after the move.
-export function createMoveMode({api, render = () => {}, preview = () => {}, spots = () => [], code = () => null, onMoved = () => {}} = {}) {
+export function createMoveMode({api, render = () => {}, preview = () => {}, spots = () => [], code = () => null,
+  canJoinWall = () => true, onMoved = () => {}} = {}) {
   let move = null; // {spotId, x, z, verdict, busy, message, start}
   const placed = () => positionsOf(spots());
   function show() {
@@ -42,12 +43,12 @@ export function createMoveMode({api, render = () => {}, preview = () => {}, spot
     render(moveModel({...move, spots: spots()}));
   }
   function dockWall(spotId, x, z, positions, accepted) {
-    const canDock = spotById(spotId)?.slot === 'wall';
-    if (!canDock) return null;
+    const moving = accepted.find(item => item?.id === spotId);
+    if (spotById(spotId)?.slot !== 'wall' || (moving?.built && !canJoinWall(moving))) return null;
     let closest = GRID * 1.25, result = null;
     const width = footprintOf(spotId);
-    for (const wall of accepted ?? []) {
-      if (wall?.built !== true || wall.kind !== 'wall' || wall.id === spotId) continue;
+    for (const wall of accepted) {
+      if (wall?.built !== true || wall.kind !== 'wall' || wall.id === spotId || !canJoinWall(wall)) continue;
       const anchor = positions[wall.id];
       if (!anchor) continue;
       for (const [dx, dz] of Object.values(KEYS)) {
@@ -62,7 +63,7 @@ export function createMoveMode({api, render = () => {}, preview = () => {}, spot
   function goTo(x, z, pointer = false) {
     if (!move || move.busy) return;
     const cell = snap(x, z);
-    const accepted = spots(), positions = positionsOf(accepted);
+    const accepted = spots() ?? [], positions = positionsOf(accepted);
     const verdict = checkMove(move.spotId, cell.x, cell.z, positions);
     // Pointer input can line up within a grid step. Explicit row-limit and sea refusals stay visible.
     const canAlign = verdict.ok || verdict.code === 'off_path' || verdict.code === 'place_taken';

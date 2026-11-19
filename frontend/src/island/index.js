@@ -150,7 +150,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     isl.moveBar.render(model && {...model, coverage, coverageDraft: !!approachMove, support: houseMoveSummary(isl.movingHouse?.support)});
     isl.villageBar.render(isl.village.active && !model);
   }, preview: cell => isl.world?.preview(cell),
-    spots: () => target()?.spots ?? [], code: () => (isl.visiting ? isl.visiting.code : null), onMoved: (answer, spotId) => void moved(answer, spotId)});
+    spots: () => target()?.spots ?? [], code: () => (isl.visiting ? isl.visiting.code : null),
+    canJoinWall: spot => isl.world?.canJoinWall?.(spot) ?? true, onMoved: (answer, spotId) => void moved(answer, spotId)});
   isl.moveBar = createMoveBar({container, handlers: {nudge: (dx, dz) => isl.moving.nudge(dx, dz), place: () => void isl.moving.confirm(), cancel: () => isl.moving.cancel()}});
   // A confirmed fresh start begins a new island identity for the core display (VIS-35).
   isl.resetGeneration = 0;
