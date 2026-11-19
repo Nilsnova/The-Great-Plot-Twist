@@ -244,6 +244,7 @@ export function createHomeTerraces(root, coastArt, art) {
   for (const {first, last, foot, back, height, shore} of BANKS) {
     const front = foot > back;
     const profile = shore ? SHORE_PROFILE : front ? FRONT_PROFILE : REAR_PROFILE;
+    const sandContact = shore ? 4 : 0;
     // The terrace ends close in stone where an old ramp began. Keep them away from the adjoining lanes.
     const start = first + (front ? 1 : 1.5), finish = last - (front ? 1 : 1.5);
     function samplePoint(sample) {
@@ -312,7 +313,8 @@ export function createHomeTerraces(root, coastArt, art) {
       const castA = castOffset(nearA, farA, .52 + .48 * fadeA);
       const castB = castOffset(nearB, farB, .52 + .48 * fadeB);
       face(farA, farB, nearB, nearA, SHADOW, 0, 0, -1, [0, 0, .58, .58],
-        [[0, castA.x, castA.y], [0, castB.x, castB.y], [1, castB.x, castB.y], [1, castA.x, castA.y]]);
+        [[sandContact, castA.x, castA.y], [sandContact, castB.x, castB.y],
+          [sandContact + 1, castB.x, castB.y], [sandContact + 1, castA.x, castA.y]]);
     }
     for (const [side, row] of [rows[0], rows.at(-1)].entries()) {
       // Return the stone courses around the exposed ends. The backs dissolve into the meadow.
@@ -328,7 +330,8 @@ export function createHomeTerraces(root, coastArt, art) {
       const farB = shadowRim(.83, 0), farA = shadowRim(.08, 0);
       const castA = castOffset(nearA, farA, .76), castB = castOffset(nearB, farB, .56);
       face(nearA, nearB, farB, farA, SHADOW, 0, 0, -1, [.43, .31, 0, 0],
-        [[3, castA.x, castA.y], [3, castB.x, castB.y], [2, castB.x, castB.y], [2, castA.x, castA.y]]);
+        [[sandContact + 3, castA.x, castA.y], [sandContact + 3, castB.x, castB.y],
+          [sandContact + 2, castB.x, castB.y], [sandContact + 2, castA.x, castA.y]]);
       for (let course = 1; course >= 0; course--) {
         const rowOffset = course ? .15 : 0;
         const lower = course ? .49 : .07, upper = course ? .94 : .46;
@@ -479,8 +482,17 @@ export function createHomeTerraces(root, coastArt, art) {
           float falloff = smoothstep(mix(.23, .01, direction), .75, towardStone);
           float grass = smoothstep(.015, .085, meadow.g - meadow.r);
           float shade = (.29 + direction * .34) * falloff * grass + .52 * contact;
-          float edgeFade = mix(1.0, .72, step(1.5, vSurface.x));
+          float edgeFade = mix(1.0, .72, step(1.5, mod(vSurface.x, 4.0)));
           vec3 soil = mix(meadow * vec3(.49, .60, .60), vTone, .15 * contact);
+          if (vSurface.x >= 4.0) {
+            // Sand pressed against the shelves picks up warm stone dust and a few sunlit grains.
+            float grit = noise2(floorPoint * vec2(9.6, 14.2));
+            float skirt = smoothstep(.10, .83, towardStone + (grit - .5) * .22);
+            float sand = (1.0 - grass) * skirt;
+            vec3 loam = meadow * mix(vec3(.63, .51, .38), vec3(.81, .70, .59), grit);
+            soil = mix(soil, loam, sand);
+            shade += sand * (.19 + direction * .19) * (1.0 - contact * .29);
+          }
           gl_FragColor = vec4(soil, min(.87, shade * edgeFade));
           #include <colorspace_fragment>
           return;
