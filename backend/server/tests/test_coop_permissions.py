@@ -62,7 +62,8 @@ def leave(world: World) -> None:
 # The database function is None where the route calls none of its own (a visit).
 ROUTES = [
     (permissions.BUILD, "POST", "/api/island/build",
-     {"spot": "wall_2", "kind": "wall", "actionUid": "click-0001", "code": CODE}, "island_build"),
+     {"spot": "wall_2", "kind": "wall", "actionUid": "click-0001", "code": CODE},
+     "island_build_checked_wall"),
     (permissions.UPGRADE, "POST", "/api/island/upgrade",
      {"spot": "wall_1", "actionUid": "click-0001", "code": CODE}, "island_upgrade"),
     (permissions.RESEARCH, "POST", "/api/island/research",
@@ -281,7 +282,7 @@ def test_a_members_build_is_paid_from_their_own_wallet_not_the_hosts():
 
     world.build(headers=GUEST, spot="wall_2", kind="wall", code=CODE)
 
-    (sent,) = world.database.calls("island_build")
+    (sent,) = world.database.calls("island_build_checked_wall")
     assert (sent["p_player_id"], sent["p_island_owner"]) == (GUEST_ID, PLAYER_ID)
     assert world.database.calls("islet_build") == []  # the host's own path is not used
 

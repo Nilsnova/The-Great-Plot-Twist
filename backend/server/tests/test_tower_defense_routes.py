@@ -697,10 +697,10 @@ def test_a_co_op_build_keeps_the_refusals():
     assert_error(coop(spot="wall_1", kind="wall"), 409, "spot_taken")
     assert_error(coop(spot="wall_2", kind="cannon"), 422, "wrong_kind")
     assert_error(world.build(headers=GUEST, code="ISLE-ZZZZZ"), 404, "no_such_island")
-    world.database.paid_replies["island_build"] = {**REFUSED, "price": 10}
+    world.database.paid_replies["island_build_checked_wall"] = {**REFUSED, "price": 10}
     assert_error(coop(spot="wall_3", kind="wall"), 409, "insufficient_funds")
     raced = {"status": "refused", "reason": "spot_taken"}
-    world.database.paid_replies["island_build"] = raced
+    world.database.paid_replies["island_build_checked_wall"] = raced
     assert_error(coop(spot="wall_4", kind="wall"), 409, "spot_taken")
 
 

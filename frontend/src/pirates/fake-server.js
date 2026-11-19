@@ -7,6 +7,7 @@ import { SKILLS, skillNeeds, ROLES, readSkills, isRole, pointsSpent, pointsEarne
   readWeapon } from './captain-ids.js';
 import { spotWave } from '../campaign/index.js';
 import { createFakeArsenal } from '../island/arsenal-fake.js';
+import { positionsOf, wallSceneryConflict } from '../island/placement.js';
 import { createFakeWorld, ISLAND_RULES, readIslandCode, CODE_ALPHABET, spotView, refuse, MAX_MEMBERS, GAME_FULL,
   unlocksAt, PRICES_V2, campaignAt, layoutOf, invalid, slotOfSpot, kindsOfSpot, kindOfSpot, lockedMessage,
   WALL_RECOVERY_MS, iso, restorePrice, rebuildPrice, SIM_RULES, isBoss, FakeApiError } from './fake-rules.js';
@@ -126,6 +127,11 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     if (unlocks && (unlocks.levels[kind] ?? 0) < 1) refuse(409, 'locked', lockedMessage(unlockWave({ kind, level: 1 })));
     // A spot of a later campaign step (the inner wall ring after wave 5), on an island only.
     if ((unlocking || isExtraSpot(spot)) && place.waveBest !== undefined && spotWave(spot) > place.waveBest) refuse(409, 'locked', lockedMessage(spotWave(spot)));
+    if (kind === 'wall' && ids === islandSpots) {
+      const {x, z} = positionsOf(spots(place))[spot];
+      const scenery = wallSceneryConflict(spot, x, z);
+      if (scenery) refuse(409, 'place_taken', `That is too close to ${scenery.name}.`);
+    }
     if (player.coins < price) refuse(409, 'insufficient_funds', `A ${name.toLowerCase()} costs ${price} coins. You need more coins.`);
     player.coins -= price; place.built.add(spot); place.levels.set(spot, 1); place.kinds.set(spot, kind); once(player, `build:${actionUid}`);
     paidFor(place, spot, 1, price);
