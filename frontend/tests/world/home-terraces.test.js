@@ -4,6 +4,7 @@ import {defenseDisplayAnchors} from '../../src/island/defense-display.js';
 import {footprintOf} from '../../src/island/placement.js';
 import {ALL_SPOTS} from '../../src/island/spots.js';
 import {WALL_LANE_ROWS} from '../../src/island/wall-lanes.js';
+import {WALL_PERIMETER_CELLS} from '../../src/island/wall-perimeter.js';
 import {projectGround, unprojectGround} from '../../src/world/projection.js';
 import {createHomeTerraces} from '../../src/world/places/home-terraces.js';
 import {backdrop, createLifetime} from '../../src/world/places/resources.js';
@@ -17,7 +18,7 @@ function covers(point, [a, b, c]) {
   return edges.every(value => value > -1e-6) || edges.every(value => value < 1e-6);
 }
 
-it('raises rear and front terraces without entering the shore or existing defense lanes', () => {
+it('raises terraces without overlapping the shore, old defenses or any new wall footprint', () => {
   const root = new THREE.Group(), shore = new THREE.Texture();
   backdrop(root, shore);
   const terrace = createHomeTerraces(root, shore);
@@ -49,6 +50,12 @@ it('raises rear and front terraces without entering the shore or existing defens
     for (let column = -4; column <= 4; column++) for (let row = -4; row <= 4; row++) {
       const point = projectGround(x + column * quarter, z + row * quarter);
       expect(triangles.some(triangle => covers(point, triangle)), id).toBe(false);
+    }
+  }
+  for (const {x, z} of WALL_PERIMETER_CELLS) {
+    for (let dx = -1; dx <= 1; dx += .25) for (let dz = -1; dz <= 1; dz += .25) {
+      const point = projectGround(x + dx, z + dz);
+      expect(triangles.some(triangle => covers(point, triangle)), `${x}, ${z}`).toBe(false);
     }
   }
   for (const [z, ...ranges] of WALL_LANE_ROWS) {
