@@ -1,27 +1,23 @@
 """Tests for POST /api/island/move and the positions in every island answer (T36, decision D041).
 
-They use the pretend database of island_helpers.py: the flag "placement" decides whether the
-layout table is asked at all, the server checks the placement rules before island_move(), and
-its refusals (wave_running, busy) reach the browser as plain 409s.
+They use the pretend database of island_helpers.py: every island answer asks the layout table (the
+flag "placement" is retired, always on), the server checks the placement rules before
+island_move(), and its refusals (wave_running, busy) reach the browser as plain 409s.
 
 Used by: pytest (cd backend && uv run pytest).
 """
 
 import json
-from dataclasses import replace
 
 import pytest
 
-from server.flags import parse_flags
 from server.island import layout
-from server.tests.island_helpers import ISLAND_SETTINGS, PLAYER_ID, World
-
-PLACEMENT = replace(ISLAND_SETTINGS, flags=parse_flags("islands,placement"))
+from server.tests.island_helpers import PLAYER_ID, World
 
 
 @pytest.fixture
 def world() -> World:
-    return World(settings=PLACEMENT)
+    return World()
 
 
 def move(world: World, **body):
@@ -42,34 +38,6 @@ def move_calls(world: World) -> list[dict]:
         for request in world.database.requests
         if request.url.path.endswith("/rpc/island_move")
     ]
-
-
-def layout_reads(world: World) -> int:
-    return sum(
-        1 for request in world.database.requests if request.url.path.endswith("/island_layout")
-    )
-
-
-# --- the flag off: everything as before ---
-
-
-def test_with_the_flag_off_the_island_shows_the_fixed_spots_and_never_asks_the_layout():
-    world = World()  # islands on, placement off
-    answer = world.island().json()
-    assert spot(answer, "wall_1") | {"x": -18.5, "z": -1.0} == spot(answer, "wall_1")
-    assert answer["layout"] == {"version": 1, "grid": 0.5, "movable": False}
-    assert layout_reads(world) == 0
-
-
-def test_with_the_flag_off_a_move_is_404_feature_off_and_nothing_is_stored():
-    world = World()
-    response = move(world)
-    assert response.status_code == 404
-    assert response.json()["error"]["code"] == "feature_off"
-    assert move_calls(world) == []
-
-
-# --- the flag on ---
 
 
 def test_an_old_save_shows_its_fixed_spots_as_grid_cells_and_may_move(world):

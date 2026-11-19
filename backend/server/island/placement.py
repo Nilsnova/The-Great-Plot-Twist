@@ -71,14 +71,12 @@ async def move(
 ) -> IslandView:
     """Move `spot_id` to (x, z) and answer the island after the move (with the mover's coins).
 
-    Errors (ApiErrors): 404 feature_off (the flag "placement" is off), 404 no_such_island,
+    Errors (ApiErrors): 404 no_such_island,
     403 not_member, 404 no_such_spot, 422 off_grid, 409 not_on_land, 409 place_taken,
     409 blocks_route, 409 wave_running, 409 busy,
     503 layout_unavailable (the layout table is not there yet), 502 database_error,
     503 database_unavailable.
     """
-    if not catalogue.placement:
-        raise ApiError(404, "feature_off", "Moving buildings is not open yet.")
     island, payer = await service.target_island(admin, catalogue, player_id, code, permissions.MOVE)
     runtime_catalogue = catalogue
     if (

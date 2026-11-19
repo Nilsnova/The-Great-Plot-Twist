@@ -299,28 +299,20 @@ describe('no island, no tutorial (the signed-out bug)', () => {
   }
 });
 
-// D060: "New tower spot!" when a win opens an extra tower spot, only while the server offers them (more_tower_spots),
-// and once per device like every unlock card (T52 memory).
+// D060: "New tower spot!" when a win opens an extra tower spot, once per device like every unlock card (T52 memory).
 describe('the new tower spot card', () => {
   const closeAll = async t => { for (let i = 0; i < 40 && t.cards.length; i++) { const card = t.cards.at(-1); card.close('ok'); await flush(); t.frame(); await flush(); if (t.cards.at(-1) === card) break; } };
-  it('comes after winning wave 10 with the flag on, once per device', async () => {
-    const t = make({game: {wave: 9}, flags: {more_tower_spots: () => true}});
+  it('comes after winning wave 10, once per device', async () => {
+    const t = make({game: {wave: 9}});
     t.frame(); await flush(); await closeAll(t);
     const before = t.cards.length;
     t.state.wave = 10; t.frame(); await flush();
     expect(t.cards.slice(before).map(card => card.title)).toContain('New tower spot!');
     await closeAll(t);
-    const other = make({storage: t.storage, game: {code: 'OTHER', wave: 9}, flags: {more_tower_spots: () => true}});
+    const other = make({storage: t.storage, game: {code: 'OTHER', wave: 9}});
     other.frame(); await flush(); await closeAll(other);
     const shown = other.cards.length;
     other.state.wave = 10; other.frame(); await flush();
     expect(other.cards.slice(shown).map(card => card.title)).not.toContain('New tower spot!');
-  });
-  it('never comes while the flag is off', async () => {
-    const t = make({game: {wave: 9}});
-    t.frame(); await flush(); await closeAll(t);
-    const before = t.cards.length;
-    t.state.wave = 10; t.frame(); await flush();
-    expect(t.cards.slice(before).map(card => card.title)).not.toContain('New tower spot!');
   });
 });
