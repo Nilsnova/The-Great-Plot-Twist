@@ -1,0 +1,108 @@
+{
+  "result": "passed",
+  "productionSource": "3bdd8eda16470795fdedd68c42fffab54e5f2ced",
+  "testSource": "0c39518241c81c3d8cd163a57a3290382a7c1117",
+  "scenarioSha256": "69ded16a9514aa6072080f7c6f743865917935add1fc9c6fcadfab3b28c98688",
+  "startedAt": "2026-11-19T15:12:26.433Z",
+  "finishedAt": "2026-11-19T15:20:04.757Z",
+  "environment": "Disposable local official Auth/Postgres/REST/Realtime provider with TLS; real registered users and production token verification.",
+  "facts": [
+    {
+      "event": "actual-provider-identities-ready",
+      "at": "2026-11-19T15:12:37.273Z"
+    },
+    {
+      "event": "owner-game-created",
+      "at": "2026-11-19T15:12:49.290Z"
+    },
+    {
+      "event": "owner-shared-read-refreshed",
+      "at": "2026-11-19T15:12:54.678Z"
+    },
+    {
+      "event": "member-game-joined",
+      "at": "2026-11-19T15:13:04.396Z"
+    },
+    {
+      "event": "real-authenticated-core-actions",
+      "at": "2026-11-19T15:13:16.233Z",
+      "balance": "180",
+      "held": "0",
+      "available": "180",
+      "defenses": 0
+    },
+    {
+      "event": "fixture-backed-all-in",
+      "at": "2026-11-19T15:13:17.437Z",
+      "stake": "180",
+      "settleAt": "2026-11-19T15:18:16.806409+00:00",
+      "terms": "Synthetic trusted market reading; actual product transaction and actual wait"
+    },
+    {
+      "event": "rendered-zero-budget-normal-bell",
+      "at": "2026-11-19T15:18:27.430Z",
+      "wave": 31,
+      "participants": 1
+    },
+    {
+      "event": "natural-zero-defense-loss",
+      "at": "2026-11-19T15:19:30.266Z",
+      "outcome": "lost",
+      "loot": "0"
+    },
+    {
+      "event": "real-authenticated-owner-reset",
+      "at": "2026-11-19T15:20:04.756Z",
+      "newBudget": "200",
+      "grantCount": 1,
+      "oldBudget": "0"
+    }
+  ],
+  "assertions": [
+    "Real authenticated invited-member construction/demolition left no paid defenses and exactly 180 coins.",
+    "Trusted fixture-backed all-in reserved all 180; actual immutable five-minute settlement time elapsed before a fixture losing price.",
+    "Zero cash, holds and available funds after the loss; owner control departed and invited member became actual session leader.",
+    "Rendered ordinary bell succeeded at zero: wave31, one frozen participant, no paid structures and no treasury change.",
+    "Unscripted normal simulation produced a canonical lost closure with zero loot and no bailout.",
+    "Member reset returned403; owner reset and exact retry returned200, with repeat=true on retry.",
+    "Exactly one new200 starting grant, a new account/epoch and retired original balance0/holds0.",
+    "Personal Captain response and both personal wallets equal immediately before and after owner reset."
+  ],
+  "independentRead": {
+    "accounts": [
+      {
+        "state": "retired",
+        "balance": "0",
+        "committed": "0",
+        "ledger_balance": "0",
+        "ledger_committed": "0",
+        "grants": 1
+      },
+      {
+        "state": "active",
+        "balance": "200",
+        "committed": "0",
+        "ledger_balance": "200",
+        "ledger_committed": "0",
+        "grants": 1
+      }
+    ],
+    "closures": [
+      {
+        "outcome": "lost",
+        "loot": "0"
+      }
+    ],
+    "result": "Both account balances/holds reconcile to immutable ledger; isolated history has two accounts and one natural lost closure."
+  },
+  "limitations": [
+    "Advanced unlock/retained saved state and market terms/outcome are explicit installer fixtures.",
+    "Market settlement waited for the actual server due time; no natural market-feed result is claimed.",
+    "Construction/demolition and owner reset used real authenticated production HTTP; zero-budget bell used the actual rendered member control.",
+    "Natural zero-defense defeat was observed separately; no arbitrary recovery wave or outcome override was used for that attempt.",
+    "No hosted service, conversion, deployment or public activation.",
+    "Pending original-account payouts and eligible ship deltas were verified by separate combined PostgreSQL cases, not natural provider events.",
+    "This single provider journey does not establish all Z01\u2013Z16 races or solo/2/4/10 playability.",
+    "Generic local provider/authentication/observer helpers are supplied separately by MP-ECO-20."
+  ]
+}

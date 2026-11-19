@@ -26,3 +26,21 @@ MP_ECO_EVIDENCE_DIR=../docs/evidence/MP-ECO-22 npm test -- --maxWorkers=1 tests/
 Four cases passed in 5.31 seconds at the first complete capture. Phone member and desktop
 owner images were visually inspected. No application behavior, dependency, price or
 economic permission was changed to create this evidence.
+
+## Local provider-authenticated journey
+
+[The additional bell capture](authenticated-zero-member-normal-bell.png) is a separate
+1280 × 800 screenshot from the real registered member's game. It shows exact zero island
+funds, no built walls or towers, and the enabled normal wave-31 bell after the owner left.
+The subsequent real pointer click started that ordinary attempt; its naturally simulated
+defeat paid zero loot. The owner then returned and reset through authenticated HTTP;
+the member's own reset request was forbidden. This image was visually inspected.
+
+[The safe result](authenticated-combined-result.json) records source hashes, exact times,
+transaction assertions and independent ledger reconciliation without credentials or raw
+account identifiers. This disposable local provider run used explicit advanced-state
+and trusted market fixtures. It observed the actual five-minute product clock and natural
+combat defeat, but does not establish a natural market result, an achieved ship score,
+the complete authenticated acceptance matrix or every cohort's playability. The
+[provider checkpoint](../../../specs/MP-ECO-22-zero-funds.md#provider-authenticated-combined-journey--19-november-2026)
+documents the distinction and reproduction command.

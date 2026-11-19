@@ -4,7 +4,7 @@
 >
 > **Who uses it:** economy, lifecycle, gameplay, UI and release reviewers preparing integrated multiplayer acceptance.
 
-- **Status:** combined domain/API recovery and desktop/phone component checks implemented; authenticated recovery acceptance remains pending.
+- **Status:** combined domain/API recovery, desktop/phone components and one provider-authenticated recovery journey verified; broader matrix and playability measurements remain separately scoped.
 - **Responsible teammate:** Ianno Hollensteiner (`Iannomh123456`), assisted by Codex.
 - **Branch:** `test/mp-eco-zero-funds-recovery`.
 - **Issue:** [#514](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/514), under [epic #492](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/492).
@@ -155,4 +155,22 @@ Run from `frontend/`:
 MP_ECO_EVIDENCE_DIR=../docs/evidence/MP-ECO-22 npm test -- --maxWorkers=1 tests/island/zero-funds-recovery-dom.test.js
 ```
 
-The final combined SQL/HTTP selection passed 11 cases in 66.09 seconds. The four captured Chromium cases passed in 5.31 seconds. Whole-backend Ruff and scoped whitespace checks passed. These are domain/HTTP/component results. The complete authenticated Z01–Z16 matrix, natural feed/time observations and solo/2/4/10 gameplay playability measurements retain their separate status; none is inferred from scripted accepted outcomes. No hosted database, deployment or production activation is touched.
+The final combined SQL/HTTP selection passed 11 cases in 66.09 seconds. The four captured Chromium cases passed in 5.31 seconds. Whole-backend Ruff and scoped whitespace checks passed. These are domain/HTTP/component results. The complete authenticated Z01–Z16 matrix, natural market-feed results and solo/2/4/10 gameplay playability measurements retain their separate status; none is inferred from scripted accepted outcomes. No hosted database, deployment or production activation is touched.
+
+## Provider-authenticated combined journey — 19 November 2026
+
+[The isolated recovery scenario](../frontend/scripts/check-zero-funds-recovery-provider.mjs) passed against the same production application source, with a disposable official Auth, Postgres, REST and Realtime stack, TLS and real registered Captain tokens. The run started at 15:12:26 UTC and finished at 15:20:04 UTC. The [safe result](../docs/evidence/MP-ECO-22/authenticated-combined-result.json) pins the application commit, scenario SHA-256, observed transaction facts and limits. Generic local provider/login/observer helpers are supplied by MP-ECO-20; this scenario adds no second authentication or installer implementation.
+
+The owner created an ordinary game and an invited member joined through the rendered interface. Service-only admission of that fresh disposable island granted the configured 200 coins. An explicit saved-state fixture selected best wave 30, next wave 31 and an unfinished wreck, so ship income was unavailable in this branch. The member's real authenticated construction and demolition requests left 180 coins and no paid defenses. Trusted synthetic market terms reserved the entire 180 through the actual product transaction. Settlement waited for the immutable server due time, exactly five minutes after opening; a labeled synthetic losing price then settled the original reservation to zero cash and holds. This is real accounting and product-clock evidence, not a natural market-feed or Harbor purchase-interface result.
+
+The owner left their controlling session and closed that game view. Actual authority selected the invited member as leader. The [rendered zero-budget bell](../docs/evidence/MP-ECO-22/authenticated-zero-member-normal-bell.png) stayed usable and started the ordinary wave 31 with one frozen participant, no paid structures, the normal countdown and no money created or charged. The normal game simulation then produced a defeat at 15:19:30 UTC; its canonical closure had zero loot and the treasury remained zero. No combat result, elapsed wave clock or closure was injected in this provider journey. This directly observes a permitted failed attempt; it does not claim that a zero-defense crew can win, or that every ordinary attempt must fail.
+
+After the owner returned, the real member reset request was forbidden. The authenticated owner's ordinary reset and exact retry created one new account/epoch with one 200-coin grant; the old account stayed retired with zero cash and holds. Personal Captain data and both personal wallets were equal immediately before and after reset. An independent read of this isolated account history reconciled both balances and holds to the immutable ledger and found the one natural lost closure. The pending-payout and eligible-ship alternatives remain the separately labeled combined PostgreSQL cases above; no natural provider payout or ship score is inferred from them.
+
+Run after the generic local provider stack is ready, from `frontend/`:
+
+```sh
+NODE_EXTRA_CA_CERTS=/path/to/local-provider-ca.crt node scripts/check-zero-funds-recovery-provider.mjs --runtime /path/to/local-runtime.json --output /path/to/private-evidence
+```
+
+The runtime file contains disposable credentials and remains outside the repository. The command performs local-only test operations and requires the generic authenticated-economy helpers. A successful run writes its source and scenario hash. An explicit `MP_ECO_AUTH_HELPERS` or `MP_ECO_OBSERVER_HELPERS` path can select those same helper interfaces from a separate local checkout. Earlier local entry/observer setup diagnostics did not reach this financial sequence; they are not passing evidence. No hosted database, deployment, conversion, release activation, additional betting restriction or game balance was changed.
