@@ -18,19 +18,27 @@ const SHIPS = {
     masts: [{x: .22, top: 18, sails: ['square', 'square']}, {x: .5, top: 6, sails: ['square', 'square', 'square']}, {x: .78, top: 14, sails: ['square', 'square']}], ports: 6, castle: 2, decks: 2},
 };
 const BOB = [0, -1, .6], BILLOW = [1, 1.08, .95];
+const FLEET_EDGE = [[0, '#735a45'], [.41, '#57443a'], [.72, '#443a3c'], [1, '#2b424d']];
 
 // Windward cloth is lighter and rounder than the narrow leeward return.
 function cloth(c, path, left, right, top, bottom, colour, billow, edgeWidth) {
   const span = right - left, drop = bottom - top;
   const light = mix(colour, '#eee1c7', .31), shade = mix(colour, '#282f44', .39);
   const boundSeam = linear(c, left, top, right, bottom, [
-    [0, mix(colour, '#684938', .46)], [.5, mix(colour, '#66504b', .55)], [1, mix(colour, '#342f3a', .76)],
+    [0, mix(colour, '#a27b55', .5)], [.43, mix(colour, '#84654b', .58)], [1, mix(colour, '#433344', .65)],
   ]);
-  part(c, path, linear(c, left, top + drop * .13, right, top + drop * .56,
-    [[0, mix(colour, shade, .59)], [.23, mix(colour, light, .48)], [.45, light], [.72, colour], [1, shade]]),
+  part(c, path, linear(c, left, top + drop * .11, right, top + drop * .65,
+    [[0, mix(colour, shade, .69)], [.29, mix(colour, light, .72)], [.49, light], [.73, colour], [1, shade]]),
     {line: boundSeam, width: edgeWidth, shade: false});
   c.save(); c.clip(path);
   const crest = span * (.13 + .41 * (billow - 1));
+  const loft = new Path2D();
+  loft.moveTo(left + span * .11, top + drop * .15);
+  loft.bezierCurveTo(left + span * .32 + crest, top + drop * .26, left + span * .49 + crest, top + drop * .60, left + span * .34, bottom);
+  loft.quadraticCurveTo(left + span * .8, top + drop * .65, left + span * .47, top);
+  loft.closePath();
+  part(c, loft, linear(c, left + span * .47, top, left + span * .50, bottom,
+    [[0, mix(colour, shade, .13)], [.49, light], [1, colour]]), {line: false, shade: false, alpha: .38});
   const curl = new Path2D();
   curl.moveTo(right - span * .22, top - 1);
   curl.quadraticCurveTo(right - span * .05 + crest, top + drop * .52, right - span * .27, bottom + 1);
@@ -42,7 +50,7 @@ function cloth(c, path, left, right, top, bottom, colour, billow, edgeWidth) {
   seam.quadraticCurveTo(left + span * .16 + crest, top + drop * .45, left + span * .20, bottom - 1);
   seam.moveTo(left + span * .73, top + 1.6);
   seam.quadraticCurveTo(left + span * .73 + crest, top + drop * .43, left + span * .69, bottom - .7);
-  stroke(c, seam, mix(shade, '#3e303c', .35), .61, .49);
+  stroke(c, seam, mix(shade, '#58412e', .23), .57, .47);
   const binding = new Path2D();
   binding.moveTo(left + 1, top + 2.2);
   binding.quadraticCurveTo(left + span * .41, top + 3.5, right - .4, top + 1.7);
@@ -73,7 +81,7 @@ function sail(c, kind, x, top, bottom, half, billow, spec, skull) {
     p.quadraticCurveTo(x - half * .22, bottom + .56, x - half * .7, bottom - 1);
     p.bezierCurveTo(x - half * .24, bottom - height * .21, x + .5, top + height * .36, x + 1, top);
     p.closePath();
-    cloth(c, p, x - half * .7, x + half * 1.24, top, bottom, spec.sail, billow, 1.2);
+    cloth(c, p, x - half * .7, x + half * 1.24, top, bottom, spec.sail, billow, .92);
     sailMark(c, p, x + half * (.21 + .34 * (billow - 1)), top + height * .60, half * .27, spec);
     stroke(c, line([[x - half * .6, bottom - 1.2], [x + 2, bottom - .6]]), mix(spec.sail, INK, .45), .8);
     return;
@@ -84,49 +92,59 @@ function sail(c, kind, x, top, bottom, half, billow, spec, skull) {
   p.quadraticCurveTo(x - half * .12, bottom + bulge * 1.39, x - half * 1.02, bottom - .66);
   p.bezierCurveTo(x - half - bulge * .32, bottom - height * .27, x - half + bulge * .62, top + height * .36, x - half, top);
   p.closePath();
-  cloth(c, p, x - half, x + half, top, bottom, spec.sail, billow, 1.2);
+  cloth(c, p, x - half, x + half, top, bottom, spec.sail, billow, .96);
   if (skull) sailMark(c, p, x + half * (.04 + .35 * (billow - 1)), top + height * .53, Math.min(half, height) * .26, spec);
 }
 
 // A warm upper rail, curved plank seams and cooler timbers where the hull meets the water.
 function plankHull(c, path, x0, x1, deck, wl, wood, stripe, stripeTop, stripeHeight, edgeWidth) {
-  const length = x1 - x0, planks = mix(wood, '#211a26', .39);
-  const light = mix(wood, '#efb175', .46), wet = mix(planks, '#39585a', .26);
-  const timberEdge = linear(c, x0, deck - 2, x0 + length * .2, wl,
-    [[0, mix(wood, '#665044', .5)], [.55, mix(wood, '#463632', .76)], [1, '#344752']]);
-  part(c, path, linear(c, x0, deck - 2, x0 + length * .2, wl,
-    [[0, light], [.34, mix(wood, light, .68)], [.56, wood], [.82, planks], [1, wet]]),
+  const length = x1 - x0, height = wl - deck, planks = mix(wood, '#322b2e', .47);
+  const light = mix(wood, '#e1ac70', .58), wet = mix(planks, '#253e53', .72);
+  const timberEdge = linear(c, x0 + length * .16, deck - 2, x0 + length * .22, wl,
+    [[0, mix(wood, '#936b4a', .56)], [.42, '#61493a'], [1, '#263843']]);
+  part(c, path, linear(c, x0 + length * .67, deck - 3, x0 + length * .57, wl,
+    [[0, light], [.39, mix(wood, light, .53)], [.62, wood], [.84, planks], [1, wet]]),
     {line: timberEdge, width: edgeWidth, shade: false});
   c.save(); c.clip(path);
-  for (let y = deck + 3.6; y < wl; y += 3.9) {
-    const seam = new Path2D();
-    seam.moveTo(x0, y - 1);
-    seam.quadraticCurveTo(x0 + length * .53, y + 1.4, x1, y - 1.5);
-    stroke(c, seam, planks, .72, .77);
+  const sheer = y => {
+    const curve = new Path2D();
+    curve.moveTo(x0, y - height * .16);
+    curve.bezierCurveTo(x0 + length * .21, y + height * .26, x0 + length * .73, y + height * .15, x1, y - height * .23);
+    return curve;
+  };
+  const navyTop = stripeTop - stripeHeight * .63;
+  const navy = sheer(navyTop);
+  navy.lineTo(x1, wl + 4); navy.lineTo(x0, wl + 4); navy.closePath();
+  part(c, navy, linear(c, x0 + length * .7, navyTop, x0 + length * .48, wl + 1,
+    [[0, mix(wood, '#456982', .75)], [.39, mix(wood, '#334e65', .86)],
+      [.72, mix(wet, '#25435a', .83)], [1, '#26323c']]), {line: false, shade: false});
+  const transom = new Path2D();
+  transom.moveTo(x0 - 1, deck - height * .46);
+  transom.quadraticCurveTo(x0 + length * .093, deck + height * .08, x0 + length * .16, wl + 2);
+  transom.lineTo(x0 - 1, wl + 3); transom.closePath();
+  part(c, transom, linear(c, x0, deck, x0 + length * .16, wl,
+    [[0, mix(wood, '#876244', .58)], [1, '#25384a']]), {line: false, shade: false, alpha: .75});
+  const bow = new Path2D();
+  bow.moveTo(x1 - length * .19, deck + height * .04);
+  bow.quadraticCurveTo(x1 - length * .075, deck + height * .09, x1, deck - height * .39);
+  bow.lineTo(x1 + 1, wl + 2);
+  bow.lineTo(x1 - length * .29, wl + 2);
+  bow.quadraticCurveTo(x1 - length * .11, deck + height * .52, x1 - length * .19, deck + height * .04);
+  bow.closePath();
+  part(c, bow, linear(c, x1 - length * .13, deck - 1, x1 - length * .15, wl,
+    [[0, '#d6a369'], [.37, mix(wood, '#bb8457', .61)], [.64, mix(wet, '#55758a', .62)], [1, '#203648']]),
+    {line: false, shade: false, alpha: .71});
+  for (let y = stripeTop + stripeHeight * 1.47; y < wl; y += Math.max(3, height * .18)) {
+    stroke(c, sheer(y), mix(wet, '#6d8b90', .44), .51, .60);
+    stroke(c, sheer(y + .68), mix(wet, '#202a35', .61), .66, .62);
   }
-  // The navy sideboards turn from the lit gunwale into darker, wet timber.
-  const beamTop = stripeTop - stripeHeight * .83, beamBottom = stripeTop + stripeHeight * 1.35;
-  const beam = new Path2D();
-  beam.moveTo(x0, beamTop - 1);
-  beam.quadraticCurveTo(x0 + length * .53, beamTop + 1.3, x1, beamTop - 1.7);
-  beam.lineTo(x1, beamBottom - 2);
-  beam.quadraticCurveTo(x0 + length * .53, beamBottom + 1, x0, beamBottom - .8);
-  beam.closePath();
-  part(c, beam, linear(c, x0, beamTop, x0 + length * .28, beamBottom,
-    [[0, mix(wood, '#345978', .78)], [.43, mix(wood, '#23435a', .83)], [1, mix(wet, '#17334b', .82)]]),
-    {line: false, shade: false});
-  c.fillStyle = linear(c, x0, stripeTop, x0 + length * .24, stripeTop + stripeHeight,
-    [[0, mix(stripe, '#fff0c4', .25)], [.48, stripe], [1, mix(stripe, '#7e442b', .22)]]);
-  c.fillRect(x0, stripeTop, length, stripeHeight);
-  stroke(c, line([[x0 + length * .08, stripeTop + .4], [x1 - 3, stripeTop + .4]]),
-    mix(stripe, '#fff0c4', .52), .66, .84);
-  const railY = deck + length * .008;
-  for (let x = x0 + length * .23; x < x1 - length * .15; x += length < 60 ? 7.8 : 9.6) {
-    stroke(c, line([[x, railY + 1.2], [x + 1.5, railY + 1.2]]), light, .47, .78);
-  }
-  stroke(c, line([[x0 + length * .22, deck + 1.1], [x0 + length * .75, deck + .9], [x1 - 4, deck - 1]]), light, .82, .82);
-  stroke(c, line([[x0 + length * .16, wl - .6], [x0 + length * .6, wl - .5], [x1 - 8, wl - 2.1]]),
-    mix(wet, '#72a5a5', .48), .8, .57);
+  stroke(c, sheer(stripeTop + stripeHeight * .46), mix(stripe, '#694630', .6), stripeHeight + .74, .9);
+  stroke(c, sheer(stripeTop + stripeHeight * .37), linear(c, x0, deck, x1, stripeTop,
+    [[0, mix(stripe, '#8f6648', .61)], [.35, stripe], [.73, mix(stripe, '#ffdc91', .31)], [1, stripe]]),
+    stripeHeight * .73);
+  stroke(c, sheer(stripeTop + .08), mix(stripe, '#f6d0a2', .54), .56, .82);
+  stroke(c, sheer(deck + .71), mix(light, '#f4cb93', .37), .81, .81);
+  stroke(c, sheer(wl - .69), mix(wet, '#7d9ea1', .56), .71, .63);
   c.restore();
 }
 
@@ -134,18 +152,21 @@ function upperDeck(c, x0, x1, deck) {
   const length = x1 - x0, stern = x0 + length * .18, prow = x1 - length * .10;
   const rim = new Path2D();
   rim.moveTo(stern, deck - 2.8);
-  rim.quadraticCurveTo(stern + length * .44, deck - 3.8, prow, deck - 2.8);
-  rim.quadraticCurveTo(prow - length * .065, deck - .1, prow - length * .11, deck + .72);
-  rim.quadraticCurveTo(stern + length * .29, deck + 2.4, stern - length * .02, deck + .07);
+  rim.quadraticCurveTo(stern + length * .44, deck - 2.5, prow, deck - 3.15);
+  rim.quadraticCurveTo(prow - length * .048, deck - .1, prow - length * .094, deck + .92);
+  rim.quadraticCurveTo(stern + length * .29, deck + 3.1, stern - length * .02, deck + .07);
   rim.closePath();
   part(c, rim, linear(c, stern, deck - 4, prow, deck + 2,
-    [[0, '#e1b474'], [.43, '#bc8653'], [.84, '#96603c'], [1, '#5e4236']]),
-  {line: '#6d4933', width: .78, shade: false});
+    [[0, '#b88453'], [.43, '#d6a164'], [.8, '#a97345'], [1, '#654836']]),
+    {line: '#805635', width: .69, shade: false});
   c.save(); c.clip(rim);
   for (let at = stern + length * .11; at < prow; at += length * .13) {
     stroke(c, [[at, deck - 3.8], [at - length * .043, deck + 2.2]], '#795033', .55, .86);
   }
-  stroke(c, [[stern, deck - 2.8], [stern + length * .28, deck - 3.35], [prow - 1, deck - 2.7]], '#f2c998', .53, .85);
+  const highlight = new Path2D();
+  highlight.moveTo(stern + 1, deck - 2.84);
+  highlight.quadraticCurveTo(stern + length * .4, deck - 2.61, prow - 1, deck - 3);
+  stroke(c, highlight, '#efc68d', .66, .85);
   c.restore();
 }
 
@@ -156,10 +177,10 @@ function hull(c, spec, wl) {
   p.lineTo(x1 - len * .14, deck); p.quadraticCurveTo(x1 - len * .02, deck - 1, x1, deck - 4);
   p.quadraticCurveTo(x1 - len * .06, wl, x1 - len * .2, wl + 2); p.lineTo(x0 + len * .12, wl + 2);
   p.quadraticCurveTo(x0 + 1, wl - 2, x0, deck - (spec.castle ? 6 : 2)); p.closePath();
-  plankHull(c, p, x0, x1, deck, wl, spec.wood, spec.stripe, deck + height * .3, Math.max(2.2, height * .14), 1.4);
+  const stripeDepth = spec.decks === 2 ? .194 : spec.ports ? .245 : .3;
+  plankHull(c, p, x0, x1, deck, wl, spec.wood, spec.stripe, deck + height * stripeDepth, Math.max(2.2, height * .14), 1.4);
   upperDeck(c, x0, x1, deck);
-  // The coloured rail and gun ports (two rows on the warship).
-  stroke(c, line([[x0 + len * .14, deck + height * .3], [x1 - 2, deck + height * .3]]), INK, .7);
+  // The gun ports (two rows on the warship).
   const rows = spec.decks === 2 ? [deck + height * .5, deck + height * .76] : [deck + height * .56];
   for (const y of rows) for (let i = 0; i < spec.ports; i++) {
     const x = x0 + len * (.26 + i * (.56 / Math.max(1, spec.ports - 1)));
@@ -183,37 +204,56 @@ function hull(c, spec, wl) {
     }
     part(c, rect(x0, deck - 7.4 - ch, len * .22, 2, .8), spec.stripe, {width: .8, shade: false});
   }
-  const rail = mix(spec.wood, '#433635', .58);
-  stroke(c, line([[x0 + len * .2, deck - 2.4], [x1 - len * .12, deck - 2.4]]), rail, 1.1);
-  for (let x = x0 + len * .22; x < x1 - len * .12; x += 5) stroke(c, line([[x, deck - 2.4], [x, deck]]), rail, .7);
+  const rail = mix(spec.wood, '#584537', .55);
+  for (let x = x0 + len * .23; x < x1 - len * .12; x += 5) {
+    stroke(c, [[x, deck - 2.48], [x - .45, deck - .34]], rail, .66, .76);
+  }
   // The bowsprit and a figure-head bead.
-  stroke(c, line([[x1 - 4, deck - 3], [x1 + Math.min(10, len * .14), deck - 8]]), rail, 2.4); stroke(c, line([[x1 - 4, deck - 3], [x1 + Math.min(10, len * .14), deck - 8]]), mix(spec.wood, '#ffffff', .2), 1);
-  part(c, ellipse(x1 - 1, deck - 3.2, 1.6), GOLD, {width: .7, shade: false});
+  const bowsprit = [[x1 - 4, deck - 3], [x1 + Math.min(10, len * .14), deck - 8]];
+  stroke(c, bowsprit, rail, 2.4);
+  stroke(c, bowsprit, mix(spec.wood, '#e9bb78', .57), .97);
+  part(c, ellipse(x1 - 1, deck - 3.2, 1.6),
+    radial(c, x1 - 1.42, deck - 3.84, 2.1, [[0, '#fce6a4'], [.52, GOLD], [1, '#9b653d']]),
+    {line: '#865e41', width: .57, shade: false});
 }
 function waterline(c, x0, x1, wl, frame, bow) {
   // Broken pale threads slide under darker boards and gather at the bow.
   const phase = [0, 2.8, 5.3][frame];
   let segment = 0;
-  for (let x = x0 + 3 + phase; x < x1 - 8; x += 10 + (segment++ % 2) * 5) {
+  for (let x = x0 + 3 + phase; x < x1 - 8; x += 10 + (segment++ % 2) * 4.7) {
     const wide = segment % 2 === 1;
     const width = Math.min(x1 - x - 2, wide ? 7.7 : 5.6), lift = wide ? .44 : 1.02;
     const ripple = new Path2D(); ripple.moveTo(x, wl + 1.9);
     ripple.quadraticCurveTo(x + width * .32, wl + 1.1 - lift, x + width * .64, wl + 1.34);
     ripple.quadraticCurveTo(x + width * .83, wl + 1.89, x + width, wl + 1.24);
-    stroke(c, ripple, wide ? '#c1edf0' : SEA_FOAM, wide ? .82 : 1.08, wide ? .57 : .79);
+    stroke(c, ripple, '#b5e3e2', wide ? .55 : .83, wide ? .53 : .65);
   }
-  part(c, ellipse(bow, wl + .6, 5 + frame, 2),
-    linear(c, bow, wl - 1.4, bow, wl + 2.6, [[0, SEA_FOAM], [.49, '#b9e8f1'], [1, '#70bfd7bc']]),
-    {line: '#8fd3e8', width: .74, shade: false});
-  const crest = new Path2D();
-  crest.moveTo(bow - (5 + frame) * .78, wl + .48);
-  crest.quadraticCurveTo(bow, wl - 1.45, bow + (5 + frame) * .83, wl + .27);
-  stroke(c, crest, SEA_FOAM, .78, .86);
-  stroke(c, [[bow - 5.6, wl + 2.9], [bow - 2.6, wl + 2.2], [bow + .63, wl + 2.98]], '#a8dce8', .69, .64);
+  const lift = [0, .41, -.2][frame], sweep = [0, .75, 2.24][frame];
+  const froth = new Path2D();
+  froth.moveTo(bow - 6, wl + 1.6);
+  froth.bezierCurveTo(bow - 3, wl + .25, bow - 1, wl + 1.15, bow + .6, wl - .71 - lift);
+  froth.quadraticCurveTo(bow + 1.44, wl - 1.41 - lift, bow + 2.8, wl - .71);
+  froth.quadraticCurveTo(bow + 1.96, wl - .22, bow + 5.2 + sweep, wl + .48);
+  froth.quadraticCurveTo(bow + .56, wl + 1.13, bow + .13, wl + 2);
+  froth.quadraticCurveTo(bow - 1.8, wl + 1.55, bow - 6, wl + 1.6);
+  part(c, froth, linear(c, bow, wl - 1.15, bow, wl + 2.48,
+    [[0, '#eafff3'], [.37, '#a3dedc'], [1, '#75bfca36']]), {line: false, shade: false, alpha: .86});
+  const glint = new Path2D();
+  glint.moveTo(bow - 4, wl + 1.07);
+  glint.quadraticCurveTo(bow - 1.1, wl + .93, bow + .51, wl - .49 - lift);
+  glint.quadraticCurveTo(bow + 1.65, wl - 1.33 - lift, bow + 2.46, wl - .98);
+  stroke(c, glint, '#ecfff5', .63, .86);
+  const wash = new Path2D();
+  wash.moveTo(bow - 5.8, wl + 2.75);
+  wash.quadraticCurveTo(bow - 2.8, wl + 1.83, bow - .1, wl + 2.5);
+  wash.moveTo(bow + 1.9, wl + 1.84);
+  wash.quadraticCurveTo(bow + 4, wl + 1.12, bow + 4.7 + sweep, wl + 1.25);
+  stroke(c, wash, '#acdeda', .58, .59);
 }
 function ship(kind, frame) {
   const spec = SHIPS[kind];
   return (c, {h}) => {
+    c.outlineStops = FLEET_EDGE;
     const wl = h - spec.anchor;
     { const [a, b] = spec.hull; c.save(); c.globalAlpha = .3; c.fillStyle = '#0d3a5a'; c.fill(ellipse((a + b) / 2, wl + 1.6, (b - a) * .54, 3.4)); c.restore(); }
     c.save(); c.translate(0, BOB[frame]);
@@ -251,6 +291,7 @@ function ship(kind, frame) {
 const GUNBOAT = {w: 56, h: 44, anchor: 8};
 function gunboat(frame) {
   return (c, {h}) => {
+    c.outlineStops = FLEET_EDGE;
     const wl = h - GUNBOAT.anchor, x0 = 4, x1 = 50, deck = wl - 12, wood = '#3d4656', red = '#b94d37';
     c.save(); c.globalAlpha = .3; c.fillStyle = '#0d3a5a'; c.fill(ellipse(27, wl + 1.6, 26, 3)); c.restore();
     c.save(); c.translate(0, BOB[frame]);
@@ -270,7 +311,6 @@ function gunboat(frame) {
     p.quadraticCurveTo(x1 - 3, wl, x1 - 12, wl + 2); p.lineTo(x0 + 7, wl + 2); p.quadraticCurveTo(x0, wl - 3, x0, deck - 3); p.closePath();
     plankHull(c, p, x0, x1 + 3, deck, wl, wood, red, deck + 4, 2.2, 1.3);
     upperDeck(c, x0 + 1, x1, deck);
-    stroke(c, line([[x0 + 6, deck + 4], [x1 - 2, deck + 4]]), INK, .7);
     for (const x of [14, 24]) part(c, rect(x - 1.8, deck + 7, 3.6, 2.8, .7), '#14110f', {width: .7, shade: false});
     c.restore();
     // The deck gun: a round swivel mount, a shield plate and a short thick barrel with a brass muzzle ring.
