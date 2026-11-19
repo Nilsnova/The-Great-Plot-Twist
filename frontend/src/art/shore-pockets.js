@@ -11,11 +11,11 @@ const SHELVES = [
   [144.92, 158.5, .137, 18.2], [160.8, 173.6, .151, 22.07],
 ];
 const STONE = [
-  ['#d7c5a2', '#ae9879', '#827563'],
-  ['#cfb694', '#a89171', '#7d6f5c'],
-  ['#d0c6ad', '#b2a58c', '#857e6c'],
-  ['#d6bd9b', '#ae9579', '#856f57'],
-  ['#c6b69b', '#a4967b', '#807466'],
+  ['#dcc6a0', '#af9370', '#897052'],
+  ['#d7b68c', '#ad8d68', '#816a50'],
+  ['#d8c6a5', '#b5a17f', '#8b7960'],
+  ['#debd92', '#b39570', '#876b51'],
+  ['#cbb397', '#a89474', '#81715c'],
 ];
 const BEACH_MOUTHS = [[0, 12.35], [45, 12.35], [90, 12.35], [135, 19.38]];
 const CUT = [[0, .27], [.12, .08], [.72, 0], [.93, .12], [1, .58], [.88, .87], [.66, 1], [.16, .95], [.035, .70]];
@@ -87,7 +87,7 @@ function drawShelf(c, rim, from, to, reach, seed, rockSheet, materials, openingA
   let u = 0;
   for (let index = 0; u < .999; index++) {
     const drift = Math.sin(seed + index * 2.47);
-    const width = (1.20 + 1.25 * (.5 + .5 * drift) + .32 * Math.cos(seed + index * 4.19)) / length;
+    const width = (1.52 + 1.68 * (.5 + .5 * drift) + .43 * Math.cos(seed + index * 4.19)) / length;
     const end = Math.min(1, u + width);
     const at = (x, y) => point(u + (end - u) * x, y);
     const pigment = STONE[(index + Math.floor(seed)) % STONE.length];
@@ -104,11 +104,11 @@ function drawShelf(c, rim, from, to, reach, seed, rockSheet, materials, openingA
     c.save();
     c.globalAlpha *= .34 + .66 * exposed;
     c.fillStyle = linear(c, footX, footY, edgeX, edgeY,
-      [[0, `${SAND}00`], [.25, `${middle}a0`], [.60, shade], [1, mix(shade, '#6f6759', .38)]]);
+      [[0, `${SAND}00`], [.31, `${middle}96`], [.64, shade], [1, mix(shade, '#786850', .37)]]);
     c.fill(boundary);
     const faceCenter = mix(top, middle, .43 + .08 * drift);
     c.fillStyle = linear(c, footX, footY, edgeX, edgeY,
-      [[0, `${SAND}00`], [.28, `${top}ad`], [.49, top], [.75, faceCenter], [1, middle]]);
+      [[0, `${SAND}00`], [.35, `${top}b8`], [.54, top], [.79, faceCenter], [1, middle]]);
     c.fill(face);
 
     c.save();
@@ -124,12 +124,12 @@ function drawShelf(c, rim, from, to, reach, seed, rockSheet, materials, openingA
       c.restore();
     }
     const split = .45 + drift * .21;
-    c.fillStyle = '#665e4f39';
+    c.fillStyle = '#63554042';
     c.fill(poly([at(split, .19), at(.97, .34), at(.93, .91), at(split + .05, .78)], .075));
     c.fillStyle = '#f4dfb75e';
     c.fill(poly([at(.12, .42), at(.23, .21), at(.65, .16), at(.88, .29), at(split + .08, .39)], .06));
     stroke(c, [at(.08, .41), at(.29, .28), at(split, .23), at(.73, .27)], '#f5e4be69', .057, exposed);
-    stroke(c, [at(.34, .65), at(.48, .55), at(.81, .67)], '#75675060', .050, exposed);
+    if (drift < .35) stroke(c, [at(.34, .65), at(.48, .55), at(.81, .67)], '#75675055', .054, exposed);
     c.restore();
     c.restore();
     u = end;
