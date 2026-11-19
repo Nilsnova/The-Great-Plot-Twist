@@ -20,6 +20,10 @@ const PALETTE = [0x283021, 0x666960, 0x96917a, 0xc4b185, 0xcbb68c, 0x655f51, 0xd
   hex => new THREE.Color(hex),
 );
 const [SHADOW, EAST, FRONT, BEVEL, CAP, MORTAR, SUNLIT, LEE] = PALETTE;
+const RETAINING_STONE = [0xb4a38a, 0x97856e, 0x7c6958, 0x6e5d4c].map(hex => new THREE.Color(hex));
+const [SHOULDER, RETAINING_FRONT, RETAINING_SIDE, RETAINING_JOINT] = RETAINING_STONE;
+const PAD_FACES = [[2, EAST], [3, EAST], [4, FRONT], [5, FRONT], [6, FRONT]];
+const onLand = (x, z) => surfaceClass(ISLAND_PLACE, x, z) !== 0;
 
 function corners(x, z, width, depth) {
   const clip = .24;
@@ -28,6 +32,19 @@ function corners(x, z, width, depth) {
     [x+width,z+depth-clip], [x+width-clip,z+depth], [x-width+clip,z+depth],
     [x-width,z+depth-clip], [x-width,z-depth+clip],
   ];
+}
+
+// The pad stays under the original gun. Only its masonry below the rim tucks inland.
+function retainingToe(outside, x, z) {
+  if (outside.every(([gx, gz]) => onLand(gx, gz))) return null;
+  return outside.map(([gx, gz]) => {
+    const rim = !onLand(gx, gz);
+    const dx = x - gx, dz = z - gz;
+    let inshore = .16;
+    while (!onLand(gx + dx * inshore, gz + dz * inshore) && inshore < 1) inshore = Math.min(1, inshore + .12);
+    inshore = Math.min(1, inshore + .14);
+    return {x: gx + dx * inshore, z: gz + dz * inshore, height: rim ? -.67 - .52 * inshore : -.19};
+  });
 }
 
 function geometryOf(foundations) {
@@ -43,7 +60,7 @@ function geometryOf(foundations) {
   // Ground shadows all go first, so a nearby occupied footing keeps its own highlights.
   for (const {x, z, slot, ruin} of foundations) {
     const {width, depth, rear} = FORMS[slot], scale = ruin ? .72 : 1;
-    appendGroundShadow((gx, gz, alpha) => vertex(gx, gz, 0, SHADOW, alpha), indices, {
+    appendGroundShadow((gx, gz, alpha) => vertex(gx, gz, 0, SHADOW, slot === 'tower' && !onLand(gx, gz) ? 0 : alpha), indices, {
       x: x + .48, z: z - rear + .65, width: (width + .83) * scale, depth: (depth + 1.1) * scale,
       opacity: ruin ? .24 : .53, innerOpacity: ruin ? .15 : .36,
     });
@@ -53,12 +70,26 @@ function geometryOf(foundations) {
     if (slot !== 'tower') continue;
     const {width, depth, rear} = FORMS.tower, footZ = z - rear, height = .145;
     // The gun carriage is painted just behind its selection anchor.
+    if (!onLand(x, z)) continue;
     const outside = corners(x, footZ, width, depth);
-    if (outside.some(([gx, gz]) => surfaceClass(ISLAND_PLACE, gx, gz) === 0)) continue;
+    const toes = retainingToe(outside, x, z);
+    if (toes) {
+      const course = (corner, fraction, tint) => {
+        const [gx, gz] = outside[corner], toe = toes[corner];
+        return vertex(THREE.MathUtils.lerp(gx, toe.x, fraction), THREE.MathUtils.lerp(gz, toe.z, fraction), toe.height * fraction, tint);
+      };
+      for (const [edge] of PAD_FACES) {
+        const next = edge + 1, stone = edge < 4 ? RETAINING_SIDE : RETAINING_FRONT;
+        quad(course(edge, .46, stone), course(next, .46, stone), course(next, 1, stone), course(edge, 1, stone));
+        quad(course(edge, .40, RETAINING_JOINT), course(next, .40, RETAINING_JOINT),
+          course(next, .46, RETAINING_JOINT), course(edge, .46, RETAINING_JOINT));
+        quad(course(edge, 0, SHOULDER), course(next, 0, SHOULDER), course(next, .40, stone), course(edge, .40, stone));
+      }
+    }
     const inset = corners(x, footZ, width - .10, depth - .10);
     const top = inset.map(([gx, gz], i) => vertex(gx, gz, height, i < 3 ? LEE : SUNLIT));
     // From this fixed ground projection the front and right cut faces carry the height.
-    for (const [edge, tint] of [[2, EAST], [3, EAST], [4, FRONT], [5, FRONT], [6, FRONT]]) {
+    for (const [edge, tint] of PAD_FACES) {
       const next = edge + 1, [ax, az] = outside[edge], [bx, bz] = outside[next];
       const footA = vertex(ax, az, 0, tint), footB = vertex(bx, bz, 0, tint);
       const lipA = vertex(ax, az, height * .60, BEVEL), lipB = vertex(bx, bz, height * .60, BEVEL);
