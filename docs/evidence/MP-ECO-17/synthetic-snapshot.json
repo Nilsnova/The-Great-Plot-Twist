@@ -1,0 +1,444 @@
+{
+  "accounts": [],
+  "islands": [
+    {
+      "accountId": null,
+      "buildings": [
+        {
+          "instanceId": "00000000-0000-0000-0000-00000000001e",
+          "kind": "cannon",
+          "layout": {
+            "x": 7,
+            "z": -3
+          },
+          "level": 1,
+          "payments": [
+            {
+              "coins": "90",
+              "level": 1,
+              "payerId": "00000000-0000-0000-0000-000000000002",
+              "refunded": false,
+              "sourceRef": "paid:actual90"
+            }
+          ],
+          "refundEligible": true,
+          "skill": null,
+          "spot": "cannon_1",
+          "treeA": 0,
+          "treeB": 0
+        }
+      ],
+      "closedWaveIds": [
+        "00000000-0000-0000-0000-000000000032"
+      ],
+      "copies": [
+        {
+          "accountId": null,
+          "buyerId": "00000000-0000-0000-0000-000000000001",
+          "copyId": "00000000-0000-0000-0000-0000000000c8",
+          "copyNumber": 1,
+          "disconnectedUntil": null,
+          "holderGeneration": "0",
+          "holderId": "00000000-0000-0000-0000-000000000001",
+          "pendingReturnWaveId": null,
+          "runEpoch": null,
+          "sourceRef": "copy:0",
+          "weapon": "pistols"
+        },
+        {
+          "accountId": null,
+          "buyerId": "00000000-0000-0000-0000-000000000001",
+          "copyId": "00000000-0000-0000-0000-0000000000c9",
+          "copyNumber": 2,
+          "disconnectedUntil": null,
+          "holderGeneration": "0",
+          "holderId": "00000000-0000-0000-0000-000000000002",
+          "pendingReturnWaveId": null,
+          "runEpoch": null,
+          "sourceRef": "copy:1",
+          "weapon": "pistols"
+        },
+        {
+          "accountId": null,
+          "buyerId": "00000000-0000-0000-0000-000000000001",
+          "copyId": "00000000-0000-0000-0000-0000000000ca",
+          "copyNumber": 3,
+          "disconnectedUntil": null,
+          "holderGeneration": "0",
+          "holderId": null,
+          "pendingReturnWaveId": null,
+          "runEpoch": null,
+          "sourceRef": "copy:2",
+          "weapon": "pistols"
+        },
+        {
+          "accountId": null,
+          "buyerId": "00000000-0000-0000-0000-000000000001",
+          "copyId": "00000000-0000-0000-0000-0000000000cb",
+          "copyNumber": 4,
+          "disconnectedUntil": null,
+          "holderGeneration": "0",
+          "holderId": null,
+          "pendingReturnWaveId": null,
+          "runEpoch": null,
+          "sourceRef": "copy:3",
+          "weapon": "pistols"
+        },
+        {
+          "accountId": null,
+          "buyerId": "00000000-0000-0000-0000-000000000001",
+          "copyId": "00000000-0000-0000-0000-0000000000cc",
+          "copyNumber": 5,
+          "disconnectedUntil": null,
+          "holderGeneration": "0",
+          "holderId": null,
+          "pendingReturnWaveId": null,
+          "runEpoch": null,
+          "sourceRef": "copy:4",
+          "weapon": "pistols"
+        },
+        {
+          "accountId": null,
+          "buyerId": "00000000-0000-0000-0000-000000000001",
+          "copyId": "00000000-0000-0000-0000-0000000000cd",
+          "copyNumber": 6,
+          "disconnectedUntil": null,
+          "holderGeneration": "0",
+          "holderId": null,
+          "pendingReturnWaveId": null,
+          "runEpoch": null,
+          "sourceRef": "copy:5",
+          "weapon": "pistols"
+        },
+        {
+          "accountId": null,
+          "buyerId": "00000000-0000-0000-0000-000000000001",
+          "copyId": "00000000-0000-0000-0000-0000000000ce",
+          "copyNumber": 7,
+          "disconnectedUntil": null,
+          "holderGeneration": "0",
+          "holderId": null,
+          "pendingReturnWaveId": null,
+          "runEpoch": null,
+          "sourceRef": "copy:6",
+          "weapon": "pistols"
+        },
+        {
+          "accountId": null,
+          "buyerId": "00000000-0000-0000-0000-000000000001",
+          "copyId": "00000000-0000-0000-0000-0000000000cf",
+          "copyNumber": 8,
+          "disconnectedUntil": null,
+          "holderGeneration": "0",
+          "holderId": null,
+          "pendingReturnWaveId": null,
+          "runEpoch": null,
+          "sourceRef": "copy:7",
+          "weapon": "pistols"
+        },
+        {
+          "accountId": null,
+          "buyerId": "00000000-0000-0000-0000-000000000001",
+          "copyId": "00000000-0000-0000-0000-0000000000d0",
+          "copyNumber": 9,
+          "disconnectedUntil": null,
+          "holderGeneration": "0",
+          "holderId": null,
+          "pendingReturnWaveId": null,
+          "runEpoch": null,
+          "sourceRef": "copy:8",
+          "weapon": "pistols"
+        },
+        {
+          "accountId": null,
+          "buyerId": "00000000-0000-0000-0000-000000000001",
+          "copyId": "00000000-0000-0000-0000-0000000000d1",
+          "copyNumber": 10,
+          "disconnectedUntil": null,
+          "holderGeneration": "0",
+          "holderId": null,
+          "pendingReturnWaveId": null,
+          "runEpoch": null,
+          "sourceRef": "copy:9",
+          "weapon": "pistols"
+        },
+        {
+          "accountId": null,
+          "buyerId": "00000000-0000-0000-0000-000000000001",
+          "copyId": "00000000-0000-0000-0000-0000000000d2",
+          "copyNumber": 11,
+          "disconnectedUntil": null,
+          "holderGeneration": "0",
+          "holderId": null,
+          "pendingReturnWaveId": null,
+          "runEpoch": null,
+          "sourceRef": "copy:10",
+          "weapon": "pistols"
+        },
+        {
+          "accountId": null,
+          "buyerId": "00000000-0000-0000-0000-000000000001",
+          "copyId": "00000000-0000-0000-0000-0000000000d3",
+          "copyNumber": 12,
+          "disconnectedUntil": null,
+          "holderGeneration": "0",
+          "holderId": null,
+          "pendingReturnWaveId": null,
+          "runEpoch": null,
+          "sourceRef": "copy:11",
+          "weapon": "pistols"
+        },
+        {
+          "accountId": null,
+          "buyerId": "00000000-0000-0000-0000-000000000001",
+          "copyId": "00000000-0000-0000-0000-0000000000d4",
+          "copyNumber": 13,
+          "disconnectedUntil": null,
+          "holderGeneration": "0",
+          "holderId": null,
+          "pendingReturnWaveId": null,
+          "runEpoch": null,
+          "sourceRef": "copy:12",
+          "weapon": "pistols"
+        },
+        {
+          "accountId": null,
+          "buyerId": "00000000-0000-0000-0000-000000000001",
+          "copyId": "00000000-0000-0000-0000-0000000000d5",
+          "copyNumber": 14,
+          "disconnectedUntil": null,
+          "holderGeneration": "0",
+          "holderId": null,
+          "pendingReturnWaveId": null,
+          "runEpoch": null,
+          "sourceRef": "copy:13",
+          "weapon": "pistols"
+        },
+        {
+          "accountId": null,
+          "buyerId": "00000000-0000-0000-0000-000000000001",
+          "copyId": "00000000-0000-0000-0000-0000000000d6",
+          "copyNumber": 15,
+          "disconnectedUntil": null,
+          "holderGeneration": "0",
+          "holderId": null,
+          "pendingReturnWaveId": null,
+          "runEpoch": null,
+          "sourceRef": "copy:14",
+          "weapon": "pistols"
+        },
+        {
+          "accountId": null,
+          "buyerId": "00000000-0000-0000-0000-000000000001",
+          "copyId": "00000000-0000-0000-0000-0000000000d7",
+          "copyNumber": 16,
+          "disconnectedUntil": null,
+          "holderGeneration": "0",
+          "holderId": null,
+          "pendingReturnWaveId": null,
+          "runEpoch": null,
+          "sourceRef": "copy:15",
+          "weapon": "pistols"
+        },
+        {
+          "accountId": null,
+          "buyerId": "00000000-0000-0000-0000-000000000001",
+          "copyId": "00000000-0000-0000-0000-0000000000d8",
+          "copyNumber": 17,
+          "disconnectedUntil": null,
+          "holderGeneration": "0",
+          "holderId": null,
+          "pendingReturnWaveId": null,
+          "runEpoch": null,
+          "sourceRef": "copy:16",
+          "weapon": "pistols"
+        },
+        {
+          "accountId": null,
+          "buyerId": "00000000-0000-0000-0000-000000000001",
+          "copyId": "00000000-0000-0000-0000-0000000000d9",
+          "copyNumber": 18,
+          "disconnectedUntil": null,
+          "holderGeneration": "0",
+          "holderId": null,
+          "pendingReturnWaveId": null,
+          "runEpoch": null,
+          "sourceRef": "copy:17",
+          "weapon": "pistols"
+        },
+        {
+          "accountId": null,
+          "buyerId": "00000000-0000-0000-0000-000000000001",
+          "copyId": "00000000-0000-0000-0000-0000000000da",
+          "copyNumber": 19,
+          "disconnectedUntil": null,
+          "holderGeneration": "0",
+          "holderId": null,
+          "pendingReturnWaveId": null,
+          "runEpoch": null,
+          "sourceRef": "copy:18",
+          "weapon": "pistols"
+        },
+        {
+          "accountId": null,
+          "buyerId": "00000000-0000-0000-0000-000000000001",
+          "copyId": "00000000-0000-0000-0000-0000000000db",
+          "copyNumber": 20,
+          "disconnectedUntil": null,
+          "holderGeneration": "0",
+          "holderId": null,
+          "pendingReturnWaveId": null,
+          "runEpoch": null,
+          "sourceRef": "copy:19",
+          "weapon": "pistols"
+        },
+        {
+          "accountId": null,
+          "buyerId": "00000000-0000-0000-0000-000000000001",
+          "copyId": "00000000-0000-0000-0000-0000000000dc",
+          "copyNumber": 21,
+          "disconnectedUntil": null,
+          "holderGeneration": "0",
+          "holderId": null,
+          "pendingReturnWaveId": null,
+          "runEpoch": null,
+          "sourceRef": "copy:20",
+          "weapon": "pistols"
+        },
+        {
+          "accountId": null,
+          "buyerId": "00000000-0000-0000-0000-000000000001",
+          "copyId": "00000000-0000-0000-0000-0000000000dd",
+          "copyNumber": 22,
+          "disconnectedUntil": null,
+          "holderGeneration": "0",
+          "holderId": null,
+          "pendingReturnWaveId": null,
+          "runEpoch": null,
+          "sourceRef": "copy:21",
+          "weapon": "pistols"
+        }
+      ],
+      "crew": {
+        "carpenter": 2,
+        "guard": 1,
+        "gunner": 3,
+        "lookout": 1
+      },
+      "legacyEquippedWeapon": "musket",
+      "legacyWeaponsOwned": [
+        "musket"
+      ],
+      "members": [
+        "00000000-0000-0000-0000-000000000002"
+      ],
+      "mode": "personal_legacy",
+      "openWaveIds": [],
+      "ownerId": "00000000-0000-0000-0000-000000000001",
+      "research": {
+        "choice": "mason_drill",
+        "wallTier": 3
+      },
+      "revision": "7",
+      "unmappedWeaponIds": [],
+      "waveBest": 80,
+      "wreckPaid": "30"
+    }
+  ],
+  "obligations": [
+    {
+      "accountId": null,
+      "actorId": "00000000-0000-0000-0000-000000000002",
+      "kind": "wave_claim",
+      "mode": "personal_legacy",
+      "obligationId": "00000000-0000-0000-0000-000000000028",
+      "origin": {
+        "claimed": false,
+        "closed": true,
+        "recipientMode": "personal_legacy",
+        "rewardCoins": "35",
+        "waveId": "00000000-0000-0000-0000-000000000032",
+        "waveProtocol": 2
+      },
+      "principalCoins": "35",
+      "recipientId": "00000000-0000-0000-0000-000000000002",
+      "runEpoch": null,
+      "settled": false,
+      "sourceRef": "closed-wave:50"
+    }
+  ],
+  "players": [
+    {
+      "assignmentWaveId": null,
+      "captainLevel": 4,
+      "earnedPoints": "4",
+      "engineerCommitmentId": null,
+      "knownSkills": [
+        "steady_aim",
+        "cutlass",
+        "quick_fix"
+      ],
+      "openLegacyWaveIds": [],
+      "personalBestWave": 8,
+      "playerId": "00000000-0000-0000-0000-000000000001",
+      "privateTimber": "17",
+      "progressionVersion": 0,
+      "role": "engineer",
+      "unspentPoints": "1",
+      "walletCoins": "900",
+      "walletLedger": [
+        {
+          "balanceDelta": "900",
+          "committedDelta": "0",
+          "entryId": "101",
+          "reason": "starting_coins",
+          "sourceRef": "opening:101"
+        }
+      ]
+    },
+    {
+      "assignmentWaveId": null,
+      "captainLevel": 4,
+      "earnedPoints": "4",
+      "engineerCommitmentId": null,
+      "knownSkills": [
+        "steady_aim",
+        "cutlass",
+        "quick_fix"
+      ],
+      "openLegacyWaveIds": [],
+      "personalBestWave": 8,
+      "playerId": "00000000-0000-0000-0000-000000000002",
+      "privateTimber": "0",
+      "progressionVersion": 0,
+      "role": "engineer",
+      "unspentPoints": "1",
+      "walletCoins": "500",
+      "walletLedger": [
+        {
+          "balanceDelta": "500",
+          "committedDelta": "0",
+          "entryId": "102",
+          "reason": "starting_coins",
+          "sourceRef": "opening:102"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 1,
+  "snapshotId": "00000000-0000-0000-0000-00000000000a",
+  "sourceCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "sourceFamilies": [
+    "wallets",
+    "captains",
+    "buildings",
+    "research",
+    "copies",
+    "waves",
+    "wagers",
+    "ship",
+    "membership",
+    "guest_cleanup"
+  ],
+  "unknownOrigins": []
+}
