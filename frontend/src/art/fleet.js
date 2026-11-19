@@ -239,11 +239,13 @@ function powderFlash(c, w, cy) {
   const burst = poly([[1, cy - 1.6], [w * .29, cy - 2.4], [w * .48, cy - w * .27],
     [w * .48, cy - 1.8], [w * .85, cy - .5], [w * .57, cy + 2], [w * .58, cy + w * .22],
     [w * .33, cy + 2.7], [1, cy + 1.6]], .42);
-  part(c, burst, linear(c, 1, cy, w * .85, cy, [[0, '#ffef9b'], [.25, '#ffd476'], [.52, '#ffbf54'], [1, '#ec7542']]),
-    {line: '#e68236', width: .7, shade: false});
-  part(c, poly([[1.6, cy], [w * .27, cy - 1.35], [w * .54, cy - .3], [w * .27, cy + .95]], .4),
-    '#fffbe2', {line: false, shade: false});
-  part(c, ellipse(w * .81, cy - w * .19, .92, .48, -.45), '#ffe095', {line: false, shade: false, alpha: .87});
+  part(c, burst, radial(c, w * .21, cy - .65, w * .65,
+    [[0, '#fff7c1'], [.24, '#ffe59d'], [.54, '#ffc45d'], [.79, '#ed943f'], [1, '#db6333']]),
+    {line: '#d47937', width: .7, shade: false});
+  const core = poly([[1.6, cy], [w * .27, cy - 1.35], [w * .54, cy - .3], [w * .27, cy + .95]], .4);
+  part(c, core, linear(c, 1.6, cy, w * .54, cy - .3, [[0, '#fffdeb'], [.7, '#fff8d3'], [1, '#ffe49c']]),
+    {line: false, shade: false});
+  part(c, ellipse(w * .81, cy - w * .19, .92, .48, -.45), '#fff0b5', {line: false, shade: false, alpha: .87});
 }
 function gunboatFlash(c, {w, h}) {
   const cy = h / 2;
@@ -294,9 +296,18 @@ function cloudOutline(blobs) {
 // Fill the union once, so overlapping lobes don't increase opacity over a target.
 function smokePuff(c, blobs, alpha, ash = false) {
   const top = Math.min(...blobs.map(([, y, r]) => y - r)), bottom = Math.max(...blobs.map(([, y, r]) => y + r));
-  const stops = ash ? [[0, '#b9adb8ba'], [.48, '#8a8299d6'], [1, '#554c6c00']]
-    : [[0, '#fff0d8b0'], [.48, '#dedbdbd1'], [1, '#9999b200']];
-  part(c, cloudOutline(blobs), linear(c, 12, top, 16, bottom, stops), {line: false, shade: false, alpha});
+  const stops = ash ? [[0, '#c3b5abba'], [.48, '#898a94d6'], [1, '#56536700']]
+    : [[0, '#f8ead5b0'], [.48, '#cfdbded1'], [1, '#738c9e00']];
+  const outline = cloudOutline(blobs);
+  part(c, outline, linear(c, 12, top, 16, bottom, stops), {line: false, shade: false, alpha});
+  // Paint the illuminated crowns into the existing translucent silhouette.
+  c.save(); c.clip(outline); c.globalCompositeOperation = 'source-atop';
+  for (const [x, y, radius, aspect = .88, tilt = 0] of blobs) {
+    const light = radial(c, x - radius * .31, y - radius * .35, radius * .92,
+      [[0, ash ? '#fff0d98c' : '#fff7e6a6'], [.54, '#efe8e242'], [1, '#b9c7d100']]);
+    part(c, ellipse(x, y, radius * .94, radius * aspect * .94, tilt), light, {line: false, shade: false});
+  }
+  c.restore();
 }
 const smokeFrames = [
   [[[15.8, 16.6, 5.6, .79, -.18], [11.5, 16, 3.5, .7], [19.8, 14.6, 3.5, .75, .25]], .86],
@@ -306,22 +317,32 @@ const smokeFrames = [
 function fire(frame) {
   return (c, {w, h}) => {
     const g = h - 4, cx = w / 2, sway = [0, 1.4, -1.2][frame], tall = [15, 18, 13][frame];
-    const flame = (x, height, width, colour) => { const p = new Path2D(); p.moveTo(x - width, g); p.quadraticCurveTo(x - width * 1.2, g - height * .5, x + sway, g - height);
-      p.quadraticCurveTo(x + width * 1.2, g - height * .5, x + width, g); p.closePath(); return [p, colour]; };
-    const [outer] = flame(cx, tall, 7, '#f2552c');
-    part(c, outer, '#f2552c', {line: '#8a2416', width: 1.2, shade: false});
-    part(c, flame(cx + .5, tall * .66, 4.6)[0], '#ff9a2c', {line: false, shade: false});
-    part(c, flame(cx + 1, tall * .36, 2.6)[0], '#ffe27a', {line: false, shade: false});
+    const flame = (x, height, width) => {
+      const path = new Path2D();
+      path.moveTo(x - width, g);
+      path.quadraticCurveTo(x - width * 1.2, g - height * .5, x + sway, g - height);
+      path.quadraticCurveTo(x + width * 1.2, g - height * .5, x + width, g);
+      path.closePath();
+      return path;
+    };
+    part(c, flame(cx, tall, 7), linear(c, cx - 3, g, cx + sway, g - tall,
+      [[0, '#f88732'], [.48, '#ef682e'], [1, '#c84d36']]), {line: '#8a2f25', width: 1.2, shade: false});
+    part(c, flame(cx + .5, tall * .66, 4.6), linear(c, cx, g, cx + sway, g - tall * .66,
+      [[0, '#ffe08e'], [.48, '#ffbc53'], [1, '#ff983e']]), {line: false, shade: false});
+    part(c, flame(cx + 1, tall * .36, 2.6), '#fff4bb', {line: false, shade: false});
     for (const [x, y] of [[cx - 6, g - tall - 1 + frame * 2], [cx + 6, g - tall * .8 - frame]]) part(c, ellipse(x, y, 1), '#ffd166', {line: false, shade: false});
   };
 }
 function splash(frame) {
   return (c, {w, h}) => {
     const g = h - 4, cx = w / 2, ring = [5.9, 8.6, 11.6][frame], depth = ring * .23;
-    stroke(c, ellipse(cx, g, ring, depth), '#62c1d6', 1.45, frame === 2 ? .53 : .87);
+    const waterline = linear(c, cx - ring, g - depth, cx + ring, g + depth,
+      [[0, '#68d5e1'], [.48, '#4da9c2'], [1, '#217f9f']]);
+    stroke(c, ellipse(cx, g, ring, depth), waterline, 1.45, frame === 2 ? .53 : .87);
     const foam = new Path2D();
     foam.ellipse(cx, g, ring, depth, 0, .1, Math.PI * .85);
-    stroke(c, foam, SEA_FOAM, 1, frame === 2 ? .58 : .94);
+    stroke(c, foam, linear(c, cx - ring, g, cx + ring, g, [[0, '#b0e8ee'], [.39, SEA_FOAM], [1, '#a2e3e9']]),
+      1, frame === 2 ? .58 : .94);
 
     if (frame < 2) {
       const jets = frame === 0 ? [[0, 15, 1.8, 1.1]] : [[-5.4, 12, -4, 2.1], [0, 20, 2, 2.4], [5.4, 15, 4.2, 2.1]];
@@ -331,8 +352,15 @@ function splash(frame) {
         crest.quadraticCurveTo(x - half, g - height * .65, x + lean, g - height);
         crest.quadraticCurveTo(x + lean * .6, g - height * .5, x + half, g);
         crest.closePath();
-        part(c, crest, linear(c, x, g - height, x, g, [[0, SEA_FOAM], [.46, '#b9edf3'], [1, '#62bfd8ab']]),
-          {line: '#72c4da', width: .65, shade: false});
+        part(c, crest, linear(c, x + lean - half, g - height, x + half, g,
+          [[0, SEA_FOAM], [.33, '#def9f9'], [.60, '#86d8e4'], [1, '#39a5c6ab']]),
+          {line: '#67bfcd', width: .65, shade: false});
+        const glint = new Path2D();
+        glint.moveTo(x + lean * .82, g - height * .88);
+        glint.quadraticCurveTo(x + lean * .42, g - height * .54, x - half * .37, g - height * .18);
+        c.save(); c.clip(crest); c.globalCompositeOperation = 'source-atop';
+        stroke(c, glint, SEA_FOAM, .58, .8);
+        c.restore();
       }
     }
     const drops = frame === 0 ? [[-4.4, 9], [5.2, 12]] : frame === 1 ? [[-10, 16], [9.4, 19], [-2, 23]] : [[-11.8, 5], [12, 6], [-5.6, 10], [6.5, 11]];
@@ -347,8 +375,8 @@ function explosion(frame) {
       const flash = [[-9, 1], [-3, -1.7], [-4.7, -7.9], [0, -3.2], [5.5, -8.6], [3.8, -1.7],
         [9.3, .7], [3.6, 2.6], [5.2, 7.2], [.3, 3.6], [-4.2, 7.1], [-3.4, 2.6]];
       part(c, poly(flash.map(([x, y]) => [cx + x, cy + y]), .55),
-        radial(c, cx, cy, 9.4, [[0, '#fffdec'], [.22, '#ffecad'], [.52, '#ffd478'], [1, '#ec8a3e']]),
-        {line: '#e99745', width: .72, shade: false});
+        radial(c, cx - 1.2, cy - .8, 10.1, [[0, '#fffdec'], [.26, '#fff4ce'], [.52, '#ffce76'], [.81, '#f5a44e'], [1, '#db733b']]),
+        {line: '#e38e46', width: .72, shade: false});
       return;
     }
     if (frame === 3) {
@@ -359,10 +387,14 @@ function explosion(frame) {
     if (frame === 2) smokePuff(c, [[cx - 5.6, cy - 8, 5.1], [cx + 4.8, cy - 7, 5.6]], .55, true);
     const rim = cloudOutline([[cx - 1, cy, 7.6 + swell], [cx - 6.3, cy + 2.8, 4.7 + swell],
       [cx + 6.5, cy + 1.4, 5.1 + swell], [cx + 1.4, cy - 5.6, 5.1 + swell]]);
-    part(c, rim, radial(c, cx - 1, cy - 1, 12.4, frame === 1
-      ? [[0, '#fff4bf'], [.23, '#ffda79'], [.75, '#f79748'], [1, '#b74e33']]
-      : [[0, '#ffe7a2'], [.35, '#ffc062'], [.69, '#e9804c'], [1, '#ab4c3f59']]),
+    part(c, rim, radial(c, cx - 2.5, cy - 2.9, 13.5, frame === 1
+      ? [[0, '#fff9d4'], [.23, '#ffe08a'], [.60, '#fbb25c'], [.83, '#d87940'], [1, '#a85137']]
+      : [[0, '#ffe9ac'], [.35, '#ffc66a'], [.68, '#df8750'], [1, '#9b565059']]),
     {line: false, shade: false, alpha: frame === 1 ? .98 : .8});
+    c.save(); c.clip(rim); c.globalCompositeOperation = 'source-atop';
+    const upper = radial(c, cx - 4, cy - 5.1, 8.1, [[0, '#fff8d6b0'], [.41, '#ffe8a369'], [1, '#ffc76200']]);
+    part(c, rim, upper, {line: false, shade: false, alpha: frame === 1 ? .9 : .47});
+    c.restore();
     for (const [x, y] of [[-11.4, -5.2 - swell], [10.7, 7.5 + swell]])
       part(c, ellipse(cx + x, cy + y, 1.35, .63, Math.sign(x) * .6), '#ffd57c',
         {line: false, shade: false, alpha: frame === 1 ? .88 : .65});

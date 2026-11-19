@@ -4,7 +4,9 @@ import {projectGround} from '../world/projection.js';
 
 const SECONDS = .72, STILL_SECONDS = .55;
 const MOTE_SECONDS = .46, LAST_MOTE = .55, LIGHT_SECONDS = .38;
-const DUST_SIDES = 12, DUST_COLOR = new THREE.Color(0xffcd91), MOTE_COLOR = new THREE.Color(0xffdfab);
+const DUST_SIDES = 12;
+const DUST_COLOR = new THREE.Color(0xffdfb4), DUST_SHADE = new THREE.Color(0xc79b6f), DUST_LIGHT = new THREE.Color(0xffeed1);
+const MOTE_COLOR = new THREE.Color(0xfff0bc), MOTE_TAIL = new THREE.Color(0xda8b43);
 // [center x/z, radius x/z], kept close to the existing tile's ground contact.
 const DUST_PUFFS = [
   [-.63, .19, .37, .32], [-.34, .43, .45, .35], [.09, .44, .47, .33],
@@ -23,18 +25,21 @@ const MOTES = [
 
 function dustGeometry(front) {
   const positions = [], colors = [], indices = [];
-  function vertex(x, z, alpha) {
+  const tint = new THREE.Color();
+  function vertex(x, z, alpha, colour) {
     const point = projectGround(x, z + front);
     positions.push(point.x, point.y, 0);
-    colors.push(DUST_COLOR.r, DUST_COLOR.g, DUST_COLOR.b, alpha);
+    colors.push(colour.r, colour.g, colour.b, alpha);
   }
   for (const [x, z, rx, rz] of DUST_PUFFS) {
     const center = positions.length / 3;
-    vertex(x, z, .82);
+    vertex(x, z, .82, DUST_COLOR);
     for (const [radius, alpha] of [[.48, .48], [1, 0]]) {
       for (let side = 0; side < DUST_SIDES; side++) {
         const angle = side * Math.PI * 2 / DUST_SIDES;
-        vertex(x + Math.cos(angle) * rx * radius, z + Math.sin(angle) * rz * radius, alpha);
+        const across = Math.cos(angle), down = Math.sin(angle);
+        tint.copy(DUST_SHADE).lerp(DUST_LIGHT, .5 - down * .36 - across * .14);
+        vertex(x + across * rx * radius, z + down * rz * radius, alpha, tint);
       }
     }
     for (let side = 0; side < DUST_SIDES; side++) {
@@ -59,7 +64,8 @@ function moteGeometry() {
     const center = n * 5;
     for (let i = 1; i <= 4; i++) {
       indices.push(center, center + i, center + i % 4 + 1);
-      colors.setXYZW(center + i, MOTE_COLOR.r, MOTE_COLOR.g, MOTE_COLOR.b, 0);
+      const tint = i === 1 ? MOTE_TAIL : MOTE_COLOR;
+      colors.setXYZW(center + i, tint.r, tint.g, tint.b, 0);
     }
   }
   geometry.setAttribute('position', positions);
