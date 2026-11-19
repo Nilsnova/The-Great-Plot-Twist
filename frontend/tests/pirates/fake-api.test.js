@@ -66,7 +66,9 @@ describe('fake island API', () => {
   it('returns Home defaults or compatible anchors while keeping saved moves and prices', async () => {
     const world = createFakeWorld(), api = createFakeIslandApi({world});
     const tower = answer => answer.spots.find(spot => spot.id === 'tower_1');
-    expect(tower(await api.island())).toMatchObject({x: 14, z: 3, cost: 40});
+    const initial = await api.island();
+    expect(tower(initial)).toMatchObject({cost: 40});
+    expect(tower(initial)).not.toHaveProperty('x');
     const owner = world.islands.get(world.players.get('me').code);
     owner.positions = new Map([['wall_1', {x: 14.5, z: 2.5}]]);
     const answer = await api.island();
