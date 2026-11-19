@@ -1,5 +1,6 @@
 // Original world-only material atlas. Sampled into the existing backdrop, never a new land mask.
 import {shippedTerrain} from './shipped.js';
+import {canvas} from '../paint.js';
 export const TERRAIN_SOURCE_SHEET = Object.freeze({file: 'village/terrain-materials-v1.png', width: 1254, height: 1254});
 // The ground is painted at most 39 texels per world unit; the shipped atlas (scripts/ship-village-art.mjs)
 // resamples each authored crop to at least 39 texels per unit, with its own repeated one-texel border.
@@ -33,6 +34,20 @@ export function materialRect(image, name) {
   // A caller may still hand over the authored original (evidence scripts); its crops are the authored rects.
   return shippedTerrain && image?.width === shippedTerrain.width && image?.height === shippedTerrain.height
     ? shippedTerrain.rects[name] : TERRAIN_MATERIALS[name].rect;
+}
+
+/** Fill a large, translucent meadow without independently blending the shared tile edges. */
+export function mirroredGrassPattern(context, image) {
+  const [x, y, width, height] = materialRect(image, 'grass');
+  const tile = canvas(width * 2, height * 2), painter = tile.getContext('2d');
+  for (const side of [0, 1]) for (const row of [0, 1]) {
+    painter.setTransform(side ? -1 : 1, 0, 0, row ? -1 : 1, side * 2 * width, row * 2 * height);
+    painter.drawImage(image, x, y, width, height, 0, 0, width, height);
+  }
+  const pattern = context.createPattern(tile, 'repeat');
+  const [worldWidth, worldHeight] = TERRAIN_MATERIALS.grass.period;
+  pattern.setTransform({a: worldWidth / width, d: worldHeight / height});
+  return pattern;
 }
 
 /** The caller owns clipping. No full-size intermediate canvas or retained decoded image. */
