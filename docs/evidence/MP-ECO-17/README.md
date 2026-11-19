@@ -26,7 +26,7 @@ authenticated human approval. Unknown or incomplete input blocks the proposed pl
 
 ## Executed checks
 
-The executable and test sources at `2ffb97179cb3bd964d528d564dd008f3a93ca460`
+The executable and test sources at `3e231a9061f1fd8ecba7f0bdd6dceb545fab02d8`
 were checked on 2026-11-19. The following command ran from `backend/` with
 `UV_CACHE_DIR=/workspace/.cache/uv` and `CASE_PG_SCRATCH=1`:
 
@@ -40,7 +40,7 @@ uv run --no-sync --with pgserver --with 'psycopg[binary]' --with pglast \
   server/tests/test_demo_host_routes.py::test_cleanup_preserves_shared_owners_without_starving_later_deletions
 ```
 
-Result: **69 passed in 16.89 seconds**, with no skipped cases. This includes
+Result: **69 passed in 37.88 seconds**, with no skipped cases. This includes
 50 pure preview cases, 15 populated conversion cases and four existing regression
 cases for closed personal claims, excess-copy returns and guest cleanup.
 `uv run --no-sync ruff check .` from `backend/` passed, as did `git diff --check`.
