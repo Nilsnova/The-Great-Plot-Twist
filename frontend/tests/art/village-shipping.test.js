@@ -22,7 +22,7 @@ describe('compiled world art production activation', () => {
   it('preserves every original source and master on disk and downloads only the shipped WebP', () => {
     const originals = [...new Set([...report.original.files, ...historical.original.files].map(row => row.file))].sort();
     // Masters (and the retired pre-VIS64 wall sheet) and the authored terrain atlas stay on disk, out of dist.
-    const held = ['village/compiled/', 'village/terrain-materials-v1.png'];
+    const held = ['village/compiled/', 'village/source/', 'village/terrain-materials-v1.png'];
     expect(UNSHIPPED.filter(file => file.startsWith('village/') && !held.includes(file)).sort()).toEqual(originals);
     expect(UNSHIPPED).toEqual(expect.arrayContaining(held));
     for (const file of [...originals, 'village/compiled/walls-4x-1-cf3e4db5982f.png', 'village/terrain-materials-v1.png']) {
@@ -38,5 +38,13 @@ describe('compiled world art production activation', () => {
       expect(unshipped(shipped), shipped).toBe(false);
     }
     expect(unshipped(shippedTerrain.file)).toBe(false);
+  });
+
+  it('includes the packed Home garden texture, with its authoring original excluded', () => {
+    const frame = getRasterFrame('home-broadleaf');
+    expect(frame).toMatchObject({logical: [40, 28, 4], rect: [4, 4, 160, 112], sourceFoot: [80, 96]});
+    expect(existsSync(new URL(`../../public/${frame.sheet.file}`, import.meta.url))).toBe(true);
+    expect(unshipped(frame.sheet.file)).toBe(false);
+    expect(unshipped('village/source/home-broadleaf-v1.png')).toBe(true);
   });
 });

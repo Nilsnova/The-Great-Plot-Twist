@@ -40,7 +40,7 @@ export async function createSettlement(ctx) {
   const extraArtIds = [
     ...(harbor ? [appearance('harbour-office-glow')] : []),
     ...(id === 'home_islet'
-      ? ['shrub', 'build-plot', 'islet-empty-plot', 'islet-locked-sign', 'islet-signal-station', 'islet-signal-station-lit', 'cabin', 'workshop', 'windmill', 'greenhouse']
+      ? ['shrub', 'home-broadleaf', 'build-plot', 'islet-empty-plot', 'islet-locked-sign', 'islet-signal-station', 'islet-signal-station-lit', 'cabin', 'workshop', 'windmill', 'greenhouse']
       : []),
   ];
   const artIds = [...new Set([
