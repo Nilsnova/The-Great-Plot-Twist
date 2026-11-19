@@ -6,10 +6,8 @@ import {surfaces} from './surfaces.js';
 const START = 232, STEP = 4;
 const HEIGHTS = [0, .12, .25, .59, 1.34, 2.17, 2.01, 1.31, .47, .34,
   1.17, 1.91, 1.55, .62, .37, 1.31, 1.96, 1.48, .44, 0];
-const STONE_LIGHT = ['#c5ad88', '#c3ad8c', '#b8a181'];
-const STONE = ['#aa9476', '#b09a7d', '#a79275'];
-const STONE_DARK = ['#81705a', '#8c785f', '#8d7b65'];
-const GRASS = ['#718f3e', '#85a54a', '#8fa84b'];
+const STONE_LIGHT = '#c5a681', STONE = '#ab8b68', STONE_DARK = '#8b7053';
+const MOSS = ['#718f3e', '#7d9844', '#839c49'];
 const mixPoint = (a, b, share) => a.map((value, index) => value + (b[index] - value) * share);
 
 // The shared silhouette supplies the exact coast. Every row is outboard of it, and the
@@ -29,7 +27,7 @@ function crossSections() {
       toe: point(0, 0),
       ledge: point(.14, lift * .25),
       shoulder: point(.31, lift * .72),
-      lip: point(.43, lift * .89),
+      lip: point(.43, lift * .81),
       crown: point(.61, lift),
       back: point(.81, lift * .76),
       heel: point(1, 0),
@@ -41,7 +39,7 @@ function crossSections() {
 function surfaceGrain() {
   const size = 16, pixels = new Uint8Array(size * size * 4);
   for (let i = 0; i < size * size; i++) {
-    const shade = 221 + ((Math.imul(i + 97, 2654435761) >>> 23) % 35);
+    const shade = 235 + ((Math.imul(i + 97, 2654435761) >>> 23) % 21);
     pixels.set([shade, shade, shade, 255], i * 4);
   }
   const texture = new THREE.DataTexture(pixels, size, size);
@@ -56,38 +54,49 @@ function surfaceGrain() {
 export function createHomeRearRim(group) {
   const positions = [], colors = [], uvs = [], sections = crossSections();
   const tint = new THREE.Color();
-  function triangle(a, b, c, style) {
-    tint.set(style);
-    for (const [x, elevation, z] of [a, b, c]) {
+  function triangle(a, b, c, first, second = first, third = first) {
+    for (const [[x, elevation, z], style] of [[a, first], [b, second], [c, third]]) {
       const ground = projectGround(x, z);
       positions.push(ground.x, ground.y + elevation, .1 * z);
+      tint.set(style);
       colors.push(tint.r, tint.g, tint.b);
       uvs.push(ground.x * .38, (ground.y + elevation) * .38);
     }
   }
-  function panel(a, b, c, d, light, dark, flip = false) {
-    if (flip) {
-      triangle(a, b, d, light);
-      triangle(b, c, d, dark);
-    } else {
-      triangle(a, b, c, light);
-      triangle(a, c, d, dark);
-    }
+  function panel(a, b, c, d, upper, lower) {
+    triangle(a, b, c, upper, upper, lower);
+    triangle(a, c, d, upper, lower, lower);
+  }
+  function fissure(top, bend, bottom) {
+    const edge = (point, offset) => [point[0] + offset, point[1], point[2]];
+    panel(edge(top, -.019), edge(top, .019), edge(bend, .031), edge(bend, -.031), '#9b7d5d', '#876b50');
+    triangle(edge(bend, -.031), edge(bend, .031), bottom, '#876b50', '#876b50', '#9c7d5f');
   }
   for (let i = 0; i + 1 < sections.length; i++) {
-    const a = sections[i], b = sections[i + 1], shade = i % 3, flip = i % 2 === 0;
-    panel(a.heel, b.heel, b.back, a.back, STONE_DARK[shade], STONE[shade], flip);
-    panel(a.back, b.back, b.crown, a.crown, GRASS[shade], '#5b7435', flip);
-    panel(a.crown, b.crown, b.lip, a.lip, GRASS[(i + 1) % 3], GRASS[shade], flip);
-    panel(a.lip, b.lip, b.shoulder, a.shoulder, STONE_LIGHT[shade], STONE[shade], flip);
-    panel(a.shoulder, b.shoulder, b.ledge, a.ledge, STONE[shade], STONE_DARK[(i + 1) % 3], flip);
-    panel(a.ledge, b.ledge, b.toe, a.toe, STONE_DARK[shade], '#635747', flip);
+    const a = sections[i], b = sections[i + 1], moss = MOSS[i < 8 ? 0 : i < 14 ? 1 : 2];
+    panel(a.heel, b.heel, b.back, a.back, STONE_DARK, STONE);
+    panel(a.back, b.back, b.crown, a.crown, '#5d7439', moss);
+    panel(a.crown, b.crown, b.lip, a.lip, moss, '#586b36');
+    panel(a.lip, b.lip, b.shoulder, a.shoulder, '#a8906a', STONE_LIGHT);
+    panel(a.shoulder, b.shoulder, b.ledge, a.ledge, STONE_LIGHT, STONE);
+    panel(a.ledge, b.ledge, b.toe, a.toe, STONE, STONE_DARK);
+    if ([4, 6, 11, 15, 17].includes(i)) {
+      const start = mixPoint(a.lip, b.lip, .27);
+      const bend = mixPoint(a.shoulder, b.shoulder, .39);
+      const end = mixPoint(a.ledge, b.ledge, .32);
+      fissure(start, bend, end);
+    }
+    if ([4, 5, 6, 10, 11, 15, 16].includes(i)) {
+      const left = mixPoint(a.shoulder, a.ledge, .38 + .08 * Math.sin(i * 2.1));
+      const right = mixPoint(b.shoulder, b.ledge, .42 + .10 * Math.cos(i * 2.3));
+      const under = point => [point[0], point[1] - .045, point[2]];
+      panel(left, right, under(right), under(left), '#9d7957', '#b59672');
+    }
     if (i > 2 && i < sections.length - 4 && i % 3 !== 1) {
       const left = mixPoint(a.crown, b.crown, .22), right = mixPoint(a.crown, b.crown, .74);
       const sprig = mixPoint(left, right, .38);
       sprig[1] += .19 + .12 * Math.sin(i * 3.7);
-      triangle(left, right, sprig, '#9eb052');
-      triangle(left, right, mixPoint(a.lip, b.lip, .54), GRASS[(i + 2) % 3]);
+      triangle(left, right, sprig, moss, moss, '#a1ad56');
     }
   }
   const geometry = new THREE.BufferGeometry();
