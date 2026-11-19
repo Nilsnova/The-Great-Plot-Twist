@@ -76,6 +76,23 @@ describe('Move mode', () => {
     expect(mode.state).toMatchObject({x: 7.5, z: -6.5});
     expect(mode.handleKey(event('e'))).toBe(false);
   });
+  it('docks a touch near a built wall onto a legal shared edge and keeps a fourth row refused', async () => {
+    const accepted = [
+      {id:'wall_2', kind:'wall', built:true, x:14.5, z:-.5},
+      {id:'wall_3', kind:'wall', built:true, x:16.5, z:-.5},
+    ];
+    const render = vi.fn(), api = {move: vi.fn(async () => ({ok:true}))};
+    const mode = createMoveMode({api, render, spots: () => accepted});
+    expect(mode.start('wall_1')).toBe(true);
+    mode.tap(17, -2.5);
+    expect(mode.state).toMatchObject({x:17, z:-2.5, ok:false});
+    expect(await mode.confirm()).toBeNull();
+    mode.tap(16.51, -2.99);
+    expect(mode.state).toMatchObject({x:16.5, z:-2.5, ok:true});
+    expect(render.mock.lastCall[0].status).toBe('Wall edges aligned.');
+    await mode.confirm();
+    expect(api.move).toHaveBeenCalledExactlyOnceWith({spot:'wall_1', x:16.5, z:-2.5, code:null});
+  });
   it('keeps the bar open with the server\'s message when the move is refused', async () => {
     const api = {move: vi.fn(async () => ({ok: false, status: 409, code: 'wave_running', message: 'A wave is under way. Move buildings between waves.'}))};
     const render = vi.fn(), mode = createMoveMode({api, render, spots: () => []});
