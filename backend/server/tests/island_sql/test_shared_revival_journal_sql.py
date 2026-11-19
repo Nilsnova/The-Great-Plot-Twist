@@ -83,8 +83,10 @@ def report(database, world, *, fallen=None, hp=None, through=None, basis=None):
         as_owner(database)
         changed = list(fallen or []) + list(hp or {})
         minimum = database.execute(
-            "select coalesce(max(state_through_tick)+1,0) from public.shared_session_slots "
-            "where wave_id=%s and player_id=any(%s)", (world.wave, changed),
+            "select greatest(coalesce(max(state_through_tick),0),"
+            "coalesce(max(state_through_tick+1) filter(where player_id=any(%s)),0)) "
+            "from public.shared_session_slots where wave_id=%s and status<>'withdrawn'",
+            (changed, world.wave),
         ).fetchone()[0]
         deadline = time.monotonic() + 2
         through = seal_current_prefix(database, world)
@@ -227,6 +229,7 @@ def test_real_free_hold_uses_frozen_rules_and_works_at_zero_coins(
         time.sleep(0.07)
         report(database, world, hp={world.owner: 900000})
     time.sleep(milliseconds / 1000 + 0.03)
+    report(database, world)
     answer = finish(database, world, hold, fall)
     assert answer["status"] == "done" and answer["repeat"] is False, answer
     facts = answer["receipt"]["result"]
@@ -286,6 +289,7 @@ def test_real_ordered_interruptions_invalidate_hold_and_roll_back_root(database,
             "status": "refused", "reason": "hold_incomplete",
         }
         time.sleep(2.03)
+        report(database, world)
         assert finish(database, world, fresh, fall)["status"] == "done"
 
 
@@ -297,8 +301,10 @@ def test_helper_fall_and_revive_at_unchanged_pose_cannot_reuse_earlier_hold(data
     report(database, world, fallen=[world.owner])
     rescue, helper_fall, _ = start_hold(database, world, actor=world.other, target=world.owner)
     time.sleep(2.03)
+    report(database, world)
     assert finish(database, world, rescue, helper_fall, actor=world.other,
                   target=world.owner, uid="helper_rescue_001")["status"] == "done"
+    report(database, world)
     assert finish(database, world, original, target_fall) == {
         "status": "refused", "reason": "hold_invalidated",
     }
@@ -312,8 +318,9 @@ def test_real_two_helpers_race_one_fall_without_money_or_duplicate_event(scratch
         first, fall, _ = start_hold(setup, world)
         second, _, _ = start_hold(setup, world, actor=world.other)
         before = no_money_or_quota(setup, world)
+        time.sleep(2.03)
+        report(setup, world)
         setup.commit()
-    time.sleep(2.03)
     barrier = Barrier(2)
 
     def compete(actor, hold, uid):
@@ -327,10 +334,17 @@ def test_real_two_helpers_race_one_fall_without_money_or_duplicate_event(scratch
                 pool.submit(compete, world.other, second, "race_help_002")]
         answers = [job.result(timeout=8) for job in jobs]
     assert sorted(row["status"] for row in answers) == ["done", "refused"], answers
-    assert next(row for row in answers if row["status"] == "refused")["reason"] == (
-        "target_unavailable"
-    )
+    loser = next(index for index, row in enumerate(answers) if row["status"] == "refused")
+    # The winner advances only the target to its new trusted revival basis. The loser
+    # first needs one real whole-party sync, then the same UID learns the target is up.
+    assert answers[loser]["reason"] == "health_sync_required"
     with psycopg.connect(scratch_server.get_uri()) as check:
+        report(check, world)
+        actor, hold, uid = [(world.owner, first, "race_help_001"),
+                            (world.other, second, "race_help_002")][loser]
+        assert finish(check, world, hold, fall, actor=actor, uid=uid) == {
+            "status": "refused", "reason": "target_unavailable",
+        }
         as_owner(check)
         assert check.execute(
             "select count(*) from public.recovery_wave_events "
@@ -347,17 +361,26 @@ def test_real_two_helpers_race_one_fall_without_money_or_duplicate_event(scratch
         assert no_money_or_quota(check, world) == before
 
 
-def test_real_hold_requires_captain_report_covering_current_sealed_frontier(database):
+def test_real_hold_requires_recent_complete_report_and_preserves_uid_on_expiry(database):
     world = real_wave(database)
     report(database, world, fallen=[world.target])
     hold, fall, _ = start_hold(database, world)
     time.sleep(0.07)
     seal_current_prefix(database, world)
     assert finish(database, world, hold, fall) == {
+        "status": "refused", "reason": "hold_incomplete",
+    }
+    time.sleep(2.05)
+    assert finish(database, world, hold, fall) == {
         "status": "refused", "reason": "health_sync_required",
     }
+    as_owner(database)
+    assert database.execute(
+        "select count(*) from public.island_economy_operations "
+        "where actor_id=%s and action_uid='free_help_001'", (world.owner,),
+    ).fetchone()[0] == 0
+    assert fall_id(database, world) == fall
     report(database, world)
-    time.sleep(2.03)
     assert finish(database, world, hold, fall)["status"] == "done"
 
 
@@ -366,6 +389,7 @@ def test_original_receipt_cannot_heal_later_damage_or_consume_another_fall(datab
     report(database, world, fallen=[world.target])
     hold, fall, _ = start_hold(database, world)
     time.sleep(2.03)
+    report(database, world)
     original = finish(database, world, hold, fall)
     assert original["status"] == "done", original
     as_owner(database)
@@ -422,6 +446,8 @@ def test_real_event_and_receipt_faults_roll_back_root_fall_hold_and_journal(data
     world = real_wave(database)
     report(database, world, fallen=[world.target])
     hold, fall, _ = start_hold(database, world)
+    time.sleep(2.03)
+    report(database, world)
     before = no_money_or_quota(database, world)
     as_owner(database)
     database.execute(
@@ -435,7 +461,6 @@ def test_real_event_and_receipt_faults_roll_back_root_fall_hold_and_journal(data
         "create trigger free_revival_write_fault_fixture before insert on public." + fault_table
         + " for each row execute function public.fail_free_revival_fixture()"
     )
-    time.sleep(2.03)
     with pytest.raises(psycopg.errors.RaiseException, match="free_revival_write_fault_fixture"):
         with database.transaction():
             finish(database, world, hold, fall)

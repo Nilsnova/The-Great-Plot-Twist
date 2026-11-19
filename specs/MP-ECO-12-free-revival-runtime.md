@@ -65,8 +65,13 @@ not a second source of Captain state. New starts replace an earlier active hold;
 retain their original time. Cancel counters cannot cancel later starts. Any accepted pose change,
 target/fall change, control-generation change, withdrawal or closure makes the proof unusable.
 Completion compares actual server elapsed time and current range against the frozen requirement.
-The canonical context also requires helper/target accepted Captain facts to cover the current
-sealed journal prefix; an old standing checkpoint cannot authorize a later completion.
+The canonical context requires the helper/target's current accepted party prefix to be complete,
+covered by the stored seal, and at most exactly 2000 ms old on the trusted server clock. Its
+input head and genuine revival bases must be covered at that prefix. Reader-only seal movement
+does not invalidate recent facts. An old standing checkpoint cannot be renewed by a new UID;
+the client performs a fresh accepted sync before completion. Current pose/fall/control/life
+checks remain independent. This retains bounded authenticated-report trust and does not claim
+instantaneous wall-clock HP or proof of every hit.
 
 ## Atomic completion and HTTP
 
