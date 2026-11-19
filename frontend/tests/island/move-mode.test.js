@@ -93,7 +93,7 @@ describe('Move mode', () => {
     ruined.clear();
     mode.tap(16.51, -2.99);
     expect(mode.state).toMatchObject({x:16.5, z:-2.5, ok:true});
-    expect(render.mock.lastCall[0].status).toBe('Wall edges aligned.');
+    expect(render.mock.lastCall[0].status).toBe('Walls join here.');
     await mode.confirm();
     expect(api.move).toHaveBeenCalledExactlyOnceWith({spot:'wall_1', x:16.5, z:-2.5, code:null});
   });

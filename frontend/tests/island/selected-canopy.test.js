@@ -68,7 +68,7 @@ it('reveals the real Cannon #1 beneath its coastal tree and restores the tree on
       }});
     const trees = place.group.children.filter(mesh => ['oak', 'pine', 'birch'].includes(mesh.userData.asset));
     const snapshots = trees.map(mesh => ({mesh, material: mesh.material, geometry: mesh.geometry, position: mesh.position.clone(), order: mesh.renderOrder}));
-    const colliders = JSON.stringify(place.colliders);
+    const terrainColliders = JSON.stringify(place.colliders.filter(collider => !collider.islandBuilding));
     const player = {x: 0, z: 12};
     function draw(at = player) {
       place.update(1 / 60, {time: 0, player: at, night: 0, weather: {wind: 0}});
@@ -78,6 +78,7 @@ it('reveals the real Cannon #1 beneath its coastal tree and restores the tree on
     try {
       await island.retryArt();
       island.apply({spots});
+      const colliders = JSON.stringify(place.colliders);
       draw();
       const selected = faded();
       draw();
@@ -105,8 +106,10 @@ it('reveals the real Cannon #1 beneath its coastal tree and restores the tree on
       const wall = faded();
       selection = cannon;
       draw();
+      const sameColliders = JSON.stringify(place.colliders) === colliders;
       island.dispose();
-      return {selected, stillSelected, captainOpacity, moving, visiting, battling, wall, disposed: faded(), sameColliders: JSON.stringify(place.colliders) === colliders,
+      return {selected, stillSelected, captainOpacity, moving, visiting, battling, wall, disposed: faded(), sameColliders,
+        restoredTerrainColliders: JSON.stringify(place.colliders) === terrainColliders,
         sameTreeResources: snapshots.every(({mesh, material, geometry, position, order}) =>
           mesh.material === material && mesh.geometry === geometry && mesh.position.equals(position) && mesh.renderOrder === order)};
     } finally { place.dispose(); }
@@ -116,7 +119,7 @@ it('reveals the real Cannon #1 beneath its coastal tree and restores the tree on
     stillSelected: [{x: -13, z: -12}],
     captainOpacity: .3,
     moving: [], visiting: [], battling: [], wall: [], disposed: [],
-    sameColliders: true, sameTreeResources: true,
+    sameColliders: true, restoredTerrainColliders: true, sameTreeResources: true,
   });
 });
 

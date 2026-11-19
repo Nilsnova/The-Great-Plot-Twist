@@ -27,7 +27,7 @@ export function moveModel({spotId, spots, verdict, busy, message, docked}) {
     ? {kind: actual.kind, level: actual.level, spec: actual.spec ?? null} : null;
   const line = spotById(spotId)?.slot === 'wall' ? 'Tap a glowing square. Up to three rows per approach.' : 'Tap the island where it should stand, or use the arrows.';
   return {title: moveTitle(spotId, spots), line, portrait,
-    status: message || (verdict.ok ? (docked ? 'Wall edges aligned.' : 'This square is free.') : verdict.message), ok, refused: !verdict.ok || !!message,
+    status: message || (verdict.ok ? (docked ? 'Walls join here.' : 'This square is free.') : verdict.message), ok, refused: !verdict.ok || !!message,
     busy, placeLabel: busy ? 'Placing…' : 'Place here'};
 }
 
