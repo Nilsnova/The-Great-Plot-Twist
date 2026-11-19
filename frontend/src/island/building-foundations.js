@@ -4,11 +4,12 @@ import {appendGroundShadow} from '../world/ground-shadow.js';
 import {projectGround, unprojectGround} from '../world/projection.js';
 import {surfaceClass} from '../world/places/surfaces.js';
 import {ISLAND_PLACE} from './spots.js';
+import {padCorners as corners, TOWER_PAD} from './defense-display.js';
 
 const FORMS = {
   house: {width: 1.36, depth: .86, rear: .46},
   watchtower: {width: 1.17, depth: .90, rear: .52},
-  tower: {width: .98, depth: .64, rear: .31},
+  tower: TOWER_PAD,
   heart: {width: 2.03, depth: 1.20, rear: .59},
   island_cabin: {width: 1.55, depth: .98, rear: .52},
   island_bell: {width: .96, depth: .66, rear: .31},
@@ -27,15 +28,6 @@ const COAST_MORTAR = new THREE.Color(0x8d765d), COAST_LIP = new THREE.Color(0xb2
 const ROW_OFFSETS = [.19, .38, .10], BLOCK_WIDTHS = [.58, .52, .43, .60, .48];
 const PAD_FACES = [[2, EAST], [3, EAST], [4, FRONT], [5, FRONT], [6, FRONT]];
 const onLand = (x, z) => surfaceClass(ISLAND_PLACE, x, z) !== 0;
-
-function corners(x, z, width, depth) {
-  const clip = .24;
-  return [
-    [x-width+clip,z-depth], [x+width-clip,z-depth], [x+width,z-depth+clip],
-    [x+width,z+depth-clip], [x+width-clip,z+depth], [x-width+clip,z+depth],
-    [x-width,z+depth-clip], [x-width,z-depth+clip],
-  ];
-}
 
 function clipEdge(polygon, axis, limit, sign) {
   const clipped = [];
@@ -101,7 +93,7 @@ function geometryOf(foundations) {
       opacity: ruin ? .24 : .53, innerOpacity: ruin ? .15 : .36,
     });
   }
-  for (const {x, z, slot} of foundations) {
+  for (const {x, z, slot, inshore} of foundations) {
     // Houses and watchtowers have finished stonework in their own art.
     if (slot !== 'tower') continue;
     const {width, depth, rear} = FORMS.tower, footZ = z - rear, height = .145;
@@ -109,6 +101,7 @@ function geometryOf(foundations) {
     if (!onLand(x, z)) continue;
     const outside = corners(x, footZ, width, depth);
     const toes = retainingToe(outside, x, z, footZ);
+    const sandstone = inshore || !!toes;
     if (toes) {
       const {lerp} = THREE.MathUtils;
       for (const [edge] of PAD_FACES) {
@@ -138,13 +131,13 @@ function geometryOf(foundations) {
     }
     const capWidth = width - .10, capDepth = depth - .10;
     const inset = corners(x, footZ, capWidth, capDepth);
-    const top = inset.map(([gx, gz], i) => vertex(gx, gz, height, toes ? COAST_LIP : i < 3 ? LEE : SUNLIT));
+    const top = inset.map(([gx, gz], i) => vertex(gx, gz, height, sandstone ? COAST_LIP : i < 3 ? LEE : SUNLIT));
     // From this fixed ground projection the front and right cut faces carry the height.
     for (const [edge, tint] of PAD_FACES) {
       const next = edge + 1, [ax, az] = outside[edge], [bx, bz] = outside[next];
       const coastFace = edge < 4 ? RETAINING_SIDE : RETAINING_FRONT;
-      const face = toes ? coastFace : tint;
-      const lip = toes ? COAST_LIP : BEVEL;
+      const face = sandstone ? coastFace : tint;
+      const lip = sandstone ? COAST_LIP : BEVEL;
       const footA = vertex(ax, az, 0, face), footB = vertex(bx, bz, 0, face);
       const lipA = vertex(ax, az, height * .60, lip), lipB = vertex(bx, bz, height * .60, lip);
       quad(footA, footB, lipB, lipA);
@@ -161,7 +154,7 @@ function geometryOf(foundations) {
         }
       }
     }
-    if (toes) {
+    if (sandstone) {
       pavedCap(inset, x, footZ, capWidth, capDepth, (polygon, tint) => {
         const middle = polygon.reduce(([sx, sz], [gx, gz]) => [sx + gx / polygon.length, sz + gz / polygon.length], [0, 0]);
         const shaded = ([gx, gz]) => {

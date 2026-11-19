@@ -7,7 +7,7 @@ import * as THREE from 'three';
 import {unprojectGround} from '../world/projection.js';
 import {groundGeometry} from '../world/ground-transform.js';
 import {artSizes, loadArt, placeArt, projectPoint} from '../world/art.js';
-import {ALL_SPOTS as ISLAND_SPOTS, CABIN, BELL, CAMPAIGN_BUILDINGS, ARSENAL, islandZones, placedSpot} from './spots.js';
+import {ALL_SPOTS as ISLAND_SPOTS, CABIN, BELL, CAMPAIGN_BUILDINGS, ARSENAL, ISLAND_PLACE, defenses, islandZones, placedSpot} from './spots.js';
 import {isExtraSpot} from './extra-spots.js';
 import {makeFootprint, makeWallLanes} from './move-preview.js';
 import {makeSelectionBracket} from './selection-bracket.js';
@@ -25,6 +25,7 @@ import {clickVerdict, WALK_CLOSER} from '../world/reach.js';
 import {decorateProgress} from './decorations.js';
 import {makeWallConnections} from './wall-connections.js';
 import {makeBuildingFoundations} from './building-foundations.js';
+import {defenseDisplayAnchors} from './defense-display.js';
 import {animateLandmarkMaterial, landmarkProfiles} from './landmark-motion.js';
 import {makeWallPurchaseLight} from './wall-purchase-light.js';
 import {createStructureRecoveryIndicators} from './structure-recovery-indicators.js';
@@ -172,7 +173,7 @@ export function makeRangeRing(root) {
   };
 }
 
-export function makeHouseSupportMarkers(root) {
+export function makeHouseSupportMarkers(root, displayAnchor = () => null) {
   const group = new THREE.Group(); group.name = 'island-house-support'; group.visible = false; root.add(group);
   const rings = [], brackets = [];
   let shown = null;
@@ -188,7 +189,7 @@ export function makeHouseSupportMarkers(root) {
       rings.forEach((ring, index) => ring.show(areas[index] ? {...areas[index], role: support.role} : null));
       brackets.forEach((bracket, index) => {
         const target = targets[index];
-        bracket.show(target ? {spotId: target.id, kind: target.kind, x: target.x, z: target.z, size: 1.6} : null);
+        bracket.show(target ? {spotId: target.id, kind: target.kind, x: target.x, z: target.z, ...displayAnchor(target.id), size: 1.6} : null);
       });
     },
     dispose() {
@@ -314,7 +315,9 @@ export function decorateIsland(place, ctx = {}) {
   if (cabin) cabin.name = 'island-cabin';
   // The reach of a house's role while its card is open (GAME-V3.md "Houses"): a soft disc with a bright rim on
   // the ground, in the role's colour. ctx.range() says which ({x, z, radius, role} or null), read every frame.
-  const houseSupport = typeof ctx.houseSupport === 'function' ? makeHouseSupportMarkers(root) : null;
+  let displayAnchors = new Map();
+  const viewOf = (id, where) => (preview?.spotId === id ? null : displayAnchors.get(id)) ?? where;
+  const houseSupport = typeof ctx.houseSupport === 'function' ? makeHouseSupportMarkers(root, id => viewOf(id, null)) : null;
   const rangeRing = houseSupport ? null : makeRangeRing(root);
   const defenseRange = typeof ctx.defenseRange === 'function' ? makeDefenseRange(root) : null;
   const homeWalls = layout.zones === islandZones;
@@ -351,7 +354,7 @@ export function decorateIsland(place, ctx = {}) {
   }
   const recoveryIndicators = createStructureRecoveryIndicators({root, locate: id => {
     const spot = SPOTS.find(item => item.id === id);
-    return spot ? whereOf(spot) : null;
+    return spot ? viewOf(id, whereOf(spot)) : null;
   }});
   let recoveryState = null, recoveryStateKey = 'null';
   // The real art once it has loaded (null until then: the drawn sprites stand in), and what each spot shows.
@@ -379,7 +382,7 @@ export function decorateIsland(place, ctx = {}) {
     const marks = kind && appearance?.look !== 'broken' ? buildingMarks(kind, level, answer?.tree, answer?.spec) : [];
     // A recovery ruin frame stands alone; only the normal level art is drawn as posts of a joined wall.
     const joined = kind === 'wall' && id === normalId && joinedWalls.has(spot.id);
-    const where = whereOf(spot), key = !id || hidden ? '' : `${id}:${pips}:${joined}:${marks.map(mark => mark.art).join('+')}@${where.x},${where.z}`;
+    const where = viewOf(spot.id, whereOf(spot)), key = !id || hidden ? '' : `${id}:${pips}:${joined}:${marks.map(mark => mark.art).join('+')}@${where.x},${where.z}`;
     if (shown.get(spot.id)?.key === key) return;
     clear(spot.id);
     if (!key) return;
@@ -402,7 +405,7 @@ export function decorateIsland(place, ctx = {}) {
   }
   function showCrew(spots, crew, hidden) {
     const places = hidden || !crew ? [] : crewPlaces(spots.map(item => {
-      const spot = SPOTS.find(entry => entry.id === item.id), where = spot ? whereOf(spot) : null;
+      const spot = SPOTS.find(entry => entry.id === item.id), where = spot ? viewOf(spot.id, whereOf(spot)) : null;
       return where ? {...item, x: where.x, z: where.z} : null;
     }).filter(Boolean), crew, {bell: layout.bell === false ? null : BELL});
     const key = places.map(item => `${item.kind}@${item.x},${item.z}`).join('|');
@@ -423,6 +426,7 @@ export function decorateIsland(place, ctx = {}) {
     if (disposed) return;
     if (battle || feedbackScope !== state.feedbackScope) clearPurchaseFeedback();
     state = {spots, visitor, battle, unlocks, crew, campaign, arsenal: arsenal === true, feedbackScope};
+    if (homeWalls) displayAnchors = defenseDisplayAnchors(ISLAND_PLACE, defenses(spots));
     place.setMooringBattle?.(battle);
     if (battle || visitor) {
       defenseRange?.show(null);
@@ -468,7 +472,8 @@ export function decorateIsland(place, ctx = {}) {
         for (const mesh of [marker.ring, marker.badge, marker.lock, marker.lockRing]) moveSprite(mesh, where.x, where.z);
         marker.x = where.x; marker.z = where.z;
       }
-      for (const kind of kindsOf(spot)) moveSprite(buildings.get(`${spot.id}:${kind}`), where.x, where.z);
+      const view = viewOf(spot.id, where);
+      for (const kind of kindsOf(spot)) moveSprite(buildings.get(`${spot.id}:${kind}`), view.x, view.z);
       // Locked things stay on the map (GAME-V3.md §4): a spot the campaign opens later, or whose kind is not
       // open yet, shows a lock badge instead of the glowing ring.
       const open = (!unlocks || kindsOf(spot).some(kind => (unlocks.levels?.[kind] ?? 0) >= 1)) && !spotLocked(spot, campaign);
@@ -476,7 +481,7 @@ export function decorateIsland(place, ctx = {}) {
       if (foundations && built && slotOf(spot) !== 'wall') {
         const recovery = recoveryState?.structures?.find(item => item.spot === spot.id);
         const ruin = structureRecoveryAppearance(answer, recovery, recoveryState)?.look === 'broken';
-        standing.push({slot: slotOf(spot), x: where.x, z: where.z, ruin});
+        standing.push({slot: slotOf(spot), x: view.x, z: view.z, ruin, inshore: view !== where});
       }
       for (const kind of kindsOf(spot)) {
         buildings.get(`${spot.id}:${kind}`).visible = !art && built && (answer.kind === kind || (kindsOf(spot).length === 1))
@@ -549,7 +554,7 @@ export function decorateIsland(place, ctx = {}) {
   function frontBuildingAt(tap) {
     let front = null;
     for (const [id, item] of shown) {
-      if (!ctx.canPickRemote?.(id)) continue;
+      if (!ctx.canPickRemote?.(id) && !displayAnchors.has(id)) continue;
       const mesh = item.meshes[0];
       if (!mesh?.visible || !mesh.userData.art || mesh.name.startsWith('island-wall:')
         || (front && mesh.renderOrder < front.order)) continue;
@@ -571,7 +576,11 @@ export function decorateIsland(place, ctx = {}) {
     const tap = projectPoint(x, z), front = frontBuildingAt(tap);
     if (front) return front;
     const candidates = [...SPOTS.filter(spot => !isExtraSpot(spot.id) || state.spots.some(item => item.id === spot.id))
-        .map(spot => ({id: spot.id, ...whereOf(spot), w: 2.4, h: spot.kind === 'watchtower' ? 5 : 3})),
+        .flatMap(spot => {
+          const where = whereOf(spot), view = viewOf(spot.id, where);
+          const bounds = {id: spot.id, ...where, w: 2.4, h: spot.kind === 'watchtower' ? 5 : 3};
+          return view === where ? [bounds] : [bounds, {...bounds, ...view}];
+        }),
       ...(bell ? [{id: BELL.id, x: BELL.x, z: BELL.z, w: 1.6, h: 3.4}] : []),
       ...(arsenalMesh?.visible ? [{id: ARSENAL.id, x: ARSENAL.x, z: ARSENAL.z, w: ARSENAL.w / 2, h: ARSENAL.h}] : []),
       ...(campaignMeshes.size ? CAMPAIGN_BUILDINGS.map(item => ({id: item.id, x: item.x, z: item.z, w: item.w, h: item.h})) : []),
@@ -618,7 +627,7 @@ export function decorateIsland(place, ctx = {}) {
   let ringing = 0;
   return {
     runArtTask: (key, operation) => tasks.run(key, operation),
-    apply, pickAt, retryArt: () => Promise.all([retryArt(), staticArt.retry(), retryWallArt(), retryProgressArt(), ctx.retryAdditionalArt?.()]),
+    apply, pickAt, displayAnchor: id => viewOf(id, null), retryArt: () => Promise.all([retryArt(), staticArt.retry(), retryWallArt(), retryProgressArt(), ctx.retryAdditionalArt?.()]),
     setRecoveryState(value) {
       const accepted = value?.recoveryVersion === 1 && RECOVERY_PHASES.has(value.displayPhase)
         && typeof value.islandEpoch === 'string' && Array.isArray(value.structures) ? value : null;
@@ -657,7 +666,7 @@ export function decorateIsland(place, ctx = {}) {
       if (disposed || !buildingFeedback || !state.feedbackScope || state.visitor || state.battle || preview
           || !confirmedBuildingAt(purchase)) return false;
       const {spotId, level} = purchase;
-      buildingFeedback.show(spotId, level, purchase, reduced(), .7 * footprintOf(spotId));
+      buildingFeedback.show(spotId, level, purchase, reduced(), .7 * footprintOf(spotId), viewOf(spotId, purchase));
       return true;
     },
     clearPurchaseFeedback,
@@ -666,7 +675,8 @@ export function decorateIsland(place, ctx = {}) {
       if (disposed) return;
       notice.update();
       const selection = preview ? null : ctx.selection?.();
-      selectionBracket.show(selection);
+      const view = selection?.kind && !selection.positionOnly ? viewOf(selection.spotId, null) : null;
+      selectionBracket.show(view ? {...selection, ...view} : selection);
       wallConnections.select(state.battle || state.visitor ? null : selection?.spotId);
       let canopyTarget = null;
       if (selection?.kind && !state.battle && !state.visitor) {
