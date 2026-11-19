@@ -1,0 +1,25 @@
+{
+  "observedAt": "2026-11-19T15:54:33.262Z",
+  "source": "3bdd8eda16470795fdedd68c42fffab54e5f2ced",
+  "setup": "Actual rendered bell, actual provider session reload and ordinary product entry; no clock/HP/journal/state fixture.",
+  "member": {
+    "sessionState": {
+      "phase": "controller",
+      "message": ""
+    },
+    "controllerProof": true,
+    "proofSessionId": "787959fd-3e22-4cb8-8320-11ae2a630322",
+    "waveId": "ec97da9d-9fc6-467e-8a3a-e366732ff921",
+    "spectator": true,
+    "controlSessionId": null,
+    "checkpoint": {
+      "ok": false,
+      "code": "session_context_required"
+    }
+  },
+  "canonical": [
+    {
+      "current_wave_id": "ec97da9d-9fc6-467e-8a3a-e366732ff921"
+    }
+  ]
+}

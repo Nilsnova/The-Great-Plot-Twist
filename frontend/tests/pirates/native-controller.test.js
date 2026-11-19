@@ -34,3 +34,23 @@ it('uses frozen personal loadout and revokes commands immediately when fresh con
  expect(f.controller.fire('cannon_1','ship_1')).toBe(true);f.setProof(null);
  expect(f.controller.fire('cannon_1','ship_1')).toBe(false);f.controller.dispose();
 });
+it('promotes a verified frozen participant without restarting its damaged replay or counters',async()=>{
+ const f=fixture(true);f.controller.start(f.info);const current=f.controller.wave;
+ f.controller.update(.05);await vi.waitFor(()=>expect(current.recoveryPolling).toBe(false));f.controller.update(.05);
+ const sim=current.sim,replay=current.recoveryReplay,state=current.state,ticks=current.ticks;
+ const next={...nativeWave(),nativeShared:true,spectator:false,controlSessionId:proof().sessionId,lastActorCounter:17};
+ expect(f.controller.start(next)).toBe(current);expect(current.sim).toBe(sim);expect(current.recoveryReplay).toBe(replay);
+ expect(current.state).toBe(state);expect(current.ticks).toBe(ticks);expect(current.actorCounter).toBe(17);
+ expect(current.info).toMatchObject({spectator:false,participantToken:token});expect(f.controller.fire('cannon_1','ship_1')).toBe(true);
+ f.controller.start({...next,lastActorCounter:3});expect(current.actorCounter).toBeGreaterThanOrEqual(17);expect(current.sim).toBe(sim);f.controller.dispose();
+});
+it.each(['no-proof','other-session','other-origin','other-snapshot','outside-roster'])('keeps the replay read-only with %s during promotion',async boundary=>{
+ const f=fixture(true);f.controller.start(f.info);const current=f.controller.wave,next={...nativeWave(),nativeShared:true,spectator:false,controlSessionId:proof().sessionId};
+ if(boundary==='no-proof')f.setProof(null);
+ if(boundary==='other-session')next.controlSessionId='cccccccc-cccc-4ccc-8ccc-cccccccccccc';
+ if(boundary==='other-origin')f.setProof({...proof(),origin:{...proof().origin,runEpoch:'cccccccc-cccc-4ccc-8ccc-cccccccccccc'}});
+ if(boundary==='other-snapshot'){next.initialSnapshot=structuredClone(next.initialSnapshot);next.initialSnapshot.configVersion++;}
+ if(boundary==='outside-roster')next.participantToken='cccccccc-cccc-4ccc-8ccc-cccccccccccc';
+ f.controller.start(next);expect(f.controller.wave).toBe(current);expect(current.info.spectator).toBe(true);
+ expect(f.controller.fire('cannon_1','ship_1')).toBe(false);expect(f.transport.sendInputs).not.toHaveBeenCalled();f.controller.dispose();
+});

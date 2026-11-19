@@ -1951,6 +1951,38 @@ must expose fresh economy/assets only if that origin is still the active current
 the actor is a current member. A departed or retired-origin retry may return its authorized immutable
 receipt, with current projections null/omitted. Never display an old receipt balance as current funds.
 
+## Operator pause and recovery (MP-ECO-21)
+
+This maintenance contract is separate from gameplay owner/member permissions. It adds no HTTP
+route, public admission, conversion or activation. Both RPCs are executable only by `service_role`;
+`PUBLIC`, `anon` and `authenticated` are revoked. Their empty search paths and owner execution are
+required because callers cannot write admission state or invoke private treasury locks directly.
+
+| Service-only RPC | Contract |
+|---|---|
+| `island_economy_operator_context(p_island_owner uuid)` | Read the current exact shared origin, active/retired account, admission state and canonical decimal-string `controlRevision`; creates nothing. |
+| `island_economy_set_offers(p_operation_uid text,p_island_owner uuid,p_account_id uuid,p_run_epoch uuid,p_expected_revision numeric,p_expected_state text,p_target_state text)` | Compare-and-set one active exact origin between `active` and `paused`. Expected revision is the **operator control** revision, independent of the financial revision. New controls never grant coins, initialize a profile, downgrade shared mode, reset an epoch or change player rights. |
+
+The private `island_economy_private.operator_offer_receipts` records the immutable request
+fingerprint and original result. Its monotonic per-account/epoch control revision prevents an old
+new-UID preflight from succeeding after pause → resume returns to the same state. An identical
+committed UID replays its original `receipt` before mutable preflight, with `repeat:true` and a
+separate fresh `current` projection; replaying an old pause after resume does **not** pause again.
+Changed UID reuse refuses `action_conflict`; stale control generation, admission state, origin
+or retired accounts refuse without an effect. Refused controls create no receipt or generation.
+
+Use each control as its own transaction. Its outer operator-UID advisory lock uses the disjoint
+two-key namespace `(19513,hashtext(uid))`; the existing island scope precedes the account UUID and
+state row. Runtime game transactions never acquire the operator lock. This is a single-origin
+control, not an atomic all-islands batch. Canonical old-origin settlement and wave closure remain
+eligible while new offers are paused; pause is distinct from the session's between-wave pause.
+
+[Database grants](../supabase/README.md#operator-pause-and-recovery-mp-eco-21) and the
+[executable rehearsal/runbook](../specs/MP-ECO-21-release-runbook.md#executable-controls-and-isolated-rehearsal)
+name migration `20261119144620_island_economy_operator_recovery.sql`. The supplied CLI accepts only
+a manifest-bound disposable Unix-socket cluster; it refuses hosted/TCP or libpq-option overrides.
+Hosted use, deployment, live migration and activation remain separately authorized release work.
+
 ## Guarded shared economy domain transactions
 
 Service-only arsenal, combat repair, wager and ship-game transaction functions

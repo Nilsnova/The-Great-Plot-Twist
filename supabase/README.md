@@ -3376,6 +3376,8 @@ and [the package spec](../specs/MP-ECO-02-island-treasury.md).
 | `island_treasury_transactions` | No reads/writes | Select only; append-only immutable cash and commitment receipts. |
 | `island_economy_context`, `island_treasury_admit`, `island_treasury_spend`, `island_treasury_reserve`, `island_treasury_credit`, `island_treasury_settle` | No execute | Execute the checked public primitives. |
 | Treasury scope, validation, envelope, replay, result and record helpers | No execute | No direct execute; only enclosing function-owner SQL can call them. |
+| `island_economy_operator_context`, `island_economy_set_offers` | No execute | Execute exact-origin maintenance control; no gameplay/public route. |
+| `island_economy_private.operator_offer_receipts` | No schema access or reads/writes | No direct schema/table access; enclosing maintenance RPCs only. |
 
 All three tables enable RLS without browser policies. Security-definer financial RPCs use an
 empty search path and fully qualified tables. A separate checked API must authorize member reads.
@@ -3431,6 +3433,50 @@ Focused verification also runs `server/tests/test_economy_operations.py`,
 `server/tests/island_sql/test_economy_operations_cutover_sql.py` with the disposable PostgreSQL tools
 above. Source settlement after departure/retirement keeps its original account; this extension does
 not grant current membership, convert saves, register routes or authorize a live migration.
+
+## Operator pause and recovery (MP-ECO-21)
+
+`20261119144620_island_economy_operator_recovery.sql` adds only the
+[service maintenance contract](../docs/INTERFACES.md#operator-pause-and-recovery-mp-eco-21).
+It admits/converts no island and changes no gameplay price, stake, permission, grant or epoch.
+The new private schema/table have all access revoked from `PUBLIC`, `anon`, `authenticated` and
+`service_role`; the table enables RLS without public policies. The two public RPCs revoke the
+default public execution grant and grant only `service_role`. Security-definer execution with an
+empty search path is limited to the existing revoked lock helpers and admission-state write.
+Never expose a service credential or these controls as a player's settings action.
+
+`island_economy_operator_context(uuid)` reads current mode/account/epoch and a separate
+`controlRevision`. `island_economy_set_offers(text,uuid,uuid,uuid,numeric,text,text)` takes UID,
+owner/account/epoch, expected control revision, expected `active`/`paused` state and target state.
+It serializes operator UID before the existing scope → account → state order. Immutable private
+receipts carry the exact fingerprint and original effect; replay precedes current origin/CAS
+checks and returns fresh context separately. A replay cannot reapply an old pause after resume.
+New-UID stale generation, changed reuse, mismatched/retired origin and wrong state have no effect.
+Financial revisions/ledger and personally owned progress are never incremented by an offer switch.
+
+Pausing stops new discretionary spending through the existing checked paths; it preserves shared
+mode, account/epoch and already-authorized canonical completion/settlement. Resume restores only
+offers for that same active origin. This is maintenance authority, not island ownership or session
+succession. All controls must run in standalone transactions; multi-island orchestration must
+record and reconcile each individually completed origin rather than claiming atomic batch pause.
+
+The supplied [CLI](../backend/tools/economy/recovery.py) is deliberately local only. Its private
+manifest pins absolute Unix socket, database/user, data directory, cluster system identity,
+ordered migration hashes and exact origin. Parsing/manifest export reject hosted targets,
+connection-string expansion, extra libpq options and `PG*` overrides **before connecting**.
+The full rehearsal applies the actual chain to fresh SQL stand-ins, reapplies populated registry
+and control migrations, restarts PostgreSQL, exports consistent snapshots with `pg_dump`, and
+uses `pg_restore --single-transaction` only in separate fresh disposable clusters. It rejects an
+older snapshot after later source settlement, restores a fresh matching checkpoint, checks all
+user-table/function hashes, grants/RLS, original receipt replay and exact ledger reconciliation.
+Generated backups/manifests stay outside Git with private permissions; database directories are
+removed afterward. Auth/Realtime SQL stand-ins are labeled; no provider Auth, external storage,
+WAL/PITR, post-checkpoint zero-loss recovery or production operation is inferred.
+
+Run the focused checks/rehearsal from `backend/` as listed in the
+[runbook](../specs/MP-ECO-21-release-runbook.md#executable-controls-and-isolated-rehearsal).
+A hosted rollout still needs the selected provider/tool/backup coverage, integrated acceptance
+and separately authorized application/activation; the local tool refuses those targets.
 
 ## Guarded shared economy domain migrations
 
