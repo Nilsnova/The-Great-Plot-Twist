@@ -66,8 +66,11 @@ function paintTurfBevel(c, coast, meadow, grassRadius) {
     c.fillStyle = '#38522a13';
     c.fill(band, 'evenodd');
   }
-  const crest = coast(angle => grassRadius(angle) - curve(angle) * .28, .012, 3);
-  stroke(c, crest, linear(c, -16, -14, 11, 12, [[0, '#d5ea89bb'], [.45, '#b7d87794'], [1, '#83ae523b']]), .125, .89);
+  // The olive cut directly below the bright grass crest gives the rocky shoulders a rounded lip.
+  const soil = coast(angle => grassRadius(angle) - curve(angle) * .14, .012, 3);
+  stroke(c, soil, linear(c, -16, -14, 13, 12, [[0, '#6d88424f'], [.48, '#58623080'], [1, '#404723ad']]), .24);
+  const crest = coast(angle => grassRadius(angle) - curve(angle) * .36, .012, 3);
+  stroke(c, crest, linear(c, -16, -14, 13, 12, [[0, '#e1ee99d9'], [.46, '#c0d978aa'], [1, '#87a54e38']]), .15, .92);
   c.restore();
 }
 
@@ -209,11 +212,15 @@ function paintTerrain(c, s, coast, random, materials) {
   c.save(); c.clip(meadow);
   // The warm light on the terraces also passes over the paved lanes and the open meadow.
   const glow = c.createRadialGradient(-9, -9, 2, 3, 1, s.rx + 2);
-  glow.addColorStop(0, '#b3d970');
-  glow.addColorStop(.49, '#87bd4c');
-  glow.addColorStop(1, '#589746');
+  glow.addColorStop(0, '#b8dc72');
+  glow.addColorStop(.49, '#8abb48');
+  glow.addColorStop(1, '#569646');
   c.fillStyle = glow; c.fill(meadow);
   if (materials) paintMaterial(c, materials, 'grass', {alpha: .34});
+  // A broad change in light from the sunlit back ledges to the lower shore ties their caps
+  // into the meadow without drawing any new path or extending the dry ground.
+  c.fillStyle = linear(c, -16, -12, 12, 13, [[0, '#f0d78429'], [.46, '#f4d36b07'], [.73, '#456b380c'], [1, '#446c393a']]);
+  c.fill(meadow);
   for (let i = 0; i < 26; i++) {
     const x = (random() - .5) * s.rx * 1.6, y = (random() - .5) * s.rz * 1.6 * LEGACY_DEPTH;
     const colour = random() > .5 ? '#c2d276' : '#3a7b3f';
