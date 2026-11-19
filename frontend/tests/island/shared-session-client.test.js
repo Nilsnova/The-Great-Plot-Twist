@@ -178,6 +178,30 @@ it('retires only a definitively stale departure after another document rotated t
  expect(f.api.leave).toHaveBeenCalledOnce();expect(f.api.attach).toHaveBeenCalledTimes(2);
  expect(f.api.attach.mock.calls[1][0].body.expectedGeneration).toBe('0');expect(f.client.proof()).toBeNull();
 });
+it('retires an exact saved departure after authoritative membership removal before attaching home',async()=>{
+ const first=setup();useScopedProvider(first);
+ const visited={...economy(),islandOwner:'66666666-6666-4666-8666-666666666666'};
+ first.setEconomy(visited);await first.client.open();
+ first.api.leave.mockResolvedValue({ok:false,status:0,code:'network_error'});
+ await first.client.leave();const original=structuredClone(first.api.leave.mock.calls[0][0]);await first.client.dispose();
+ const next=setup({storage:first.saved,locks:first.provider});useScopedProvider(next);
+ next.api.leave.mockResolvedValue({ok:false,status:403,code:'not_member'});
+ expect((await next.client.open()).ok).toBe(true);
+ expect(next.api.leave).toHaveBeenCalledExactlyOnceWith(original);
+ expect(next.api.attach).toHaveBeenCalledOnce();
+ expect(next.api.attach.mock.calls[0][0].body.expectedGeneration).toBe('0');
+ expect(next.client.proof()?.origin.islandOwner).toBe(actorId);
+ expect([...next.saved.rows.keys()].some(key=>key.includes(':leave:'))).toBe(false);
+});
+it.each([[403,'forbidden'],[403,'not_controller'],[401,'not_member'],[0,'network_error'],[503,'not_member']])(
+ 'retains an uncertain departure after status%s/code%s instead of admitting another source',async(status,code)=>{
+ const f=setup();await f.client.open();f.api.leave.mockResolvedValue({ok:false,status,code});
+ await f.client.leave();const original=structuredClone(f.api.leave.mock.calls[0][0]);
+ f.setEconomy({...economy(),islandOwner:'66666666-6666-4666-8666-666666666666'});
+ await f.client.open();
+ expect(f.api.leave.mock.calls[1][0]).toEqual(original);expect(f.api.attach).toHaveBeenCalledOnce();
+ expect(f.client.proof()).toBeNull();expect(f.client.state.phase).toBe('waiting');
+});
 it('retains unknown settings through401 and reads fresh metadata after the exact original operation resolves',async()=>{
  const f=setup();await f.client.open();f.api.settings.mockResolvedValueOnce({ok:false,status:0}).mockResolvedValueOnce({ok:false,status:401});
  await f.client.settings({autoNext:false});const old=structuredClone(f.api.settings.mock.calls[0][0]);

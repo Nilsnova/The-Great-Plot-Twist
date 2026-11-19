@@ -353,6 +353,16 @@ export function createActions(isl) {
     const identity = isl.authGeneration(), actor=isl.getActorId();
     return () => !isl.disposed && Object.is(identity, isl.authGeneration()) && actor===isl.getActorId();
   };
+  async function applyRoleProfile(data, current) {
+    // Construction quotes include the buyer's Engineer discount. Fence older reads and
+    // disable cached offers until the server quotes them for the new personal role.
+    const own = isl.own?.economy?.mode === 'island_shared';
+    const visit = isl.visiting?.economy?.mode === 'island_shared';
+    if (own) { wrote('own'); isl.own.quotesStale = true; }
+    if (visit) { wrote('visit'); isl.visiting.quotesStale = true; }
+    applyPersonal(data);
+    await Promise.all([own && reloadOwn({guard: current}), visit && reloadVisit({guard: current})]);
+  }
   async function upgradeCaptain() {
     if (isl.busyCaptain) return;
     const current = captainRequest();
@@ -389,12 +399,14 @@ export function createActions(isl) {
     isl.busyRole = true; isl.pickedRole = id; isl.cardMessage = ''; refreshCard();
     const answer = await isl.api.pickRole({role: id});
     if (!current()) return;
-    isl.busyRole = false;
     if (answer.ok) {
-      applyPersonal(answer.data);
+      await applyRoleProfile(answer.data, current);
+      if (!current()) return;
       emit({type: 'captain_role_picked', role: id});
       isl.ui.toast(`You are the ${ROLE_BY_ID[id].name} now!`, 'success');
     } else { isl.cardMessage = answer.message; if (['locked', 'role_known', 'captain_context_required', 'captain_revision_mismatch'].includes(answer.code)) await reloadOwn(); }
+    if (!current()) return;
+    isl.busyRole = false;
     if (current()) refreshCard();
   }
   async function respecCaptain() {
@@ -404,13 +416,16 @@ export function createActions(isl) {
     isl.busyRespec = true; isl.cardMessage = ''; refreshCard();
     const answer = await isl.api.respec();
     if (!current()) return;
-    isl.busyRespec = false; isl.respecAsk = false;
     if (answer.ok) {
-      applyPersonal(answer.data); isl.pickedSkill = null; isl.pickedRole = null;
+      await applyRoleProfile(answer.data, current);
+      if (!current()) return;
+      isl.pickedSkill = null; isl.pickedRole = null;
       emit({type: 'captain_respec'});
       isl.ui.toast(currentFunds().shared || declaresPersonalCaptain(isl.own?.captain) ? ['Skills reset.', engineerCommitmentLine(isl.own?.captain)].filter(Boolean).join(' ')
         : `Skills reset · ${coinText(isl.own.coins)}`, 'success');
     } else { isl.cardMessage = answer.message; if (['nothing_to_reset', 'captain_context_required', 'captain_revision_mismatch'].includes(answer.code)) await reloadOwn(); }
+    if (!current()) return;
+    isl.busyRespec = false; isl.respecAsk = false;
     if (current()) refreshCard();
   }
   function link() { // the names of the other parts, once every part exists (index.js)

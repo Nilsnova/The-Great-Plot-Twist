@@ -1,0 +1,36 @@
+{
+  "executionBaseCommit": "a7637454d25b40b5041d7cd606189d49d157a53b",
+  "executionWorkingTree": "Two final authenticated-actor checks and the new delayed-refusal test were uncommitted during verification; executed bytes are pinned by Git blob IDs below.",
+  "runtimeSource": {
+    "path": "frontend/src/island/island-actions.js",
+    "gitBlob": "c33fb1dd8e16267862edec786666ebe892262df3"
+  },
+  "regressionSource": {
+    "path": "frontend/tests/island/captain-role-refresh-race.test.js",
+    "gitBlob": "6fe3d29d8846f21e1fb846a2737ed316c0766766"
+  },
+  "beforeFix": {
+    "runtimeFrontend": "74be485507fbdbf1eb662f96f11a40c5e902e507",
+    "tests": 2,
+    "failed": 2,
+    "cause": "A delayed role/respec refusal cleared the busy flag after auth generation changed and a newer action started."
+  },
+  "afterFix": {
+    "command": "cd frontend && npm test -- --maxWorkers=1 tests/island/captain-role-refresh-race.test.js tests/island/engineer-role-quotes-dom.test.js tests/island/captain-auth-race-dom.test.js tests/island/economy-captain-dom.test.js tests/island/shared-core-dom.test.js",
+    "exitCode": 0,
+    "passed": 31,
+    "files": 5,
+    "durationSeconds": 43.44
+  },
+  "build": {
+    "command": "cd frontend && npm run build",
+    "exitCode": 0,
+    "spoilerGuard": "passed"
+  },
+  "actualProviderEvidence": {
+    "executedFrontend": "74be485507fbdbf1eb662f96f11a40c5e902e507",
+    "backend": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+    "rerunForFollowUp": false,
+    "boundedApplicability": "The successful owner/visitor traces keep the same authenticated actor. Both already pass the post-refresh current() check on the success branch; the added checks before resetting busy state also evaluate true on those unchanged success traces. No additional request, quote, receipt or financial mutation is introduced. Actual provider execution is still attributed to74, not to this follow-up."
+  }
+}

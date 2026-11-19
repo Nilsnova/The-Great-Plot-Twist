@@ -132,11 +132,14 @@ export function createSharedSessionClient({api,getEconomy,getActorId,getAuthGene
   const record=intents.depart(actor);if(!record)return {ok:true,data:null};
   let answer;try{answer=await api.leave(record);}catch{return failed('network_error','The departure did not finish. Retry it.',0);}
   const stale=answer.status===409 && answer.code==='stale_controller';
+  // Membership departure already withdraws this island's control atomically.
+  // Its authenticated not_member refusal cannot leave an old controller to retry.
+  const removed=answer.status===403 && answer.code==='not_member';
   const retired=answer.status===409 && answer.code==='economy_epoch_mismatch' && replacement && context()?.actorId===record.actorId
     && record.origin.islandOwner===replacement.islandOwner && record.origin.accountId!==replacement.accountId && record.origin.runEpoch!==replacement.runEpoch;
   if(retired){intents.retire(record.actorId,record.origin);return {ok:true,data:null,retired:true};}
-  if(answer.ok || stale)intents.departed(record);
-  if(stale)return {ok:true,data:null,retired:true}; // The obsolete generation grants no present control.
+  if(answer.ok || stale || removed)intents.departed(record);
+  if(stale || removed)return {ok:true,data:null,retired:true}; // Neither response grants present control.
   return answer;
  }
  async function leave(){

@@ -25,6 +25,26 @@ inputs. They do not verify treasury RPCs, hosted authentication or the integrate
 multiplayer economy. Runtime SQL, authenticated-browser and physical-device evidence
 remain separate; the existing fake-room `test:mp` check does not establish them.
 
+## Local economy acceptance completion
+
+The [completion index](evidence/MP-ECO-20-browser-completion/README.md) records all
+15 scenarios and their SQL/authenticated-browser layers against the qualified
+application candidate `90a9a8227579c2be86cbe1d024fa75de7d61637e`. Its 30-entry
+[metadata manifest](evidence/MP-ECO-20-final-manifest.json) links the actual
+artifacts and hashes; it does not turn retained results into reruns.
+
+Fresh focused results are 380 disposable-SQL cases, 31 role/auth cases and 76 session
+cases, each at its recorded source; fresh builds/spoiler guards passed for the
+two client fixes. Actual first-purchase and post-membership-leave proofs verify
+those fixes. Real paired zero-bank revival, visible wagers with actual deadlines,
+crew/arsenal, class/ship and real-grace restoration complete the recorded witnesses.
+Fixtures, staged driver failures, historical branch qualifications and unclaimed
+hosted/physical-device coverage are explicit in the index.
+
+The following checkpoint sections preserve earlier scopes and pending inventories
+at their original dates/sources. Their partial labels describe those checkpoints;
+the completion index above records the final local acceptance resolution.
+
 ## Shared economy integration checkpoint — 19 November 2026
 
 Application/test source inventory: `9f107a6cbb57e0a9f01b1f4b8fb60da5d19dacad`. Canonical

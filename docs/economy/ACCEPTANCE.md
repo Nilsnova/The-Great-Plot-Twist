@@ -4,27 +4,27 @@
 >
 > **Who uses it:** teammates validating the shared economy before release.
 
-**Status:** canonical backend and coordinated client source are integrated. The
-documented backend regression, full frontend suite and standard build passed at
-their recorded sources. Authenticated scenario acceptance remains separate.
-The [current-candidate follow-up](../TEST-MAP.md#fifteen-row-accounting-for-candidate-64ee02b3)
-records additional bounded observations on production candidate
-`64ee02b360d68836b2de9247121ab47dc6a3ecbf` and its 108-migration local provider.
-Its SQL, API, headless-simulation and authenticated-browser layers stay separate;
-the complete required browser matrix remains open. Historical results below
-retain their original source and are not reported as rerun.
-The application and test source inventory is `9f107a6cbb57e0a9f01b1f4b8fb60da5d19dacad`.
+**Status:** the [local acceptance completion index](../evidence/MP-ECO-20-browser-completion/README.md)
+records the fifteen SQL/authenticated-browser scenarios and global observations
+for qualified application candidate `90a9a8227579c2be86cbe1d024fa75de7d61637e`.
+The 108-migration local provider, actual Auth/API/browser layers, source comparisons,
+staged failures and fixture boundaries are explicit. This is not hosted rollout.
+Historical checkpoints below retain their original sources and results; the
+earlier application/test inventory was `9f107a6cbb57e0a9f01b1f4b8fb60da5d19dacad`.
 Merged dependencies
 provide the [contract #515](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/515),
 [permission policy #516](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/516) and
 [treasury/operation registry #517](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/517).
 The production persistent authority provider, personal Captain/Engineer assignments,
 native session/journal producer, closure worker and reset/deletion composition are
-now present. Their presence is not a completed runtime scenario matrix.
-The required scenario matrix remains incomplete. See [#505](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/505)
+now present. Their presence alone is not runtime evidence; the completion index
+supplies the separately reviewed observations for [#505](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/505)
 and the [bounded specification](../../specs/MP-ECO-20-integration-acceptance.md).
 
 ## Current integration and open gates
+
+This section preserves the earlier integration checkpoint and gate inventory.
+Current local resolution is recorded in the completion index above.
 
 The [canonical session specification](../../specs/MP-ECO-11-canonical-wave-sessions.md),
 [lifecycle composition](../../specs/MP-ECO-16-island-lifecycle.md)

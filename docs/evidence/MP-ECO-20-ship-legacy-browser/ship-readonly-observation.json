@@ -1,0 +1,20 @@
+{
+  "observedAt": "2026-11-19T19:02:06.440Z",
+  "layer": "Read-only committed-state supplement after the actual zero-star browser scene",
+  "rows": [
+    {
+      "game": "broadside",
+      "record_wave": 30,
+      "stars": 0,
+      "coins": 0,
+      "cumulative_coins": 0,
+      "maximum_coins": 36,
+      "shared_balance": "200",
+      "shared_committed": "0",
+      "shared_entries": 1,
+      "shared_ledger_balance": "200",
+      "personal_balance": "160",
+      "personal_entries": 5
+    }
+  ]
+}

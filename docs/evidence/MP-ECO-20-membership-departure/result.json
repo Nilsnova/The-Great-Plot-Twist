@@ -1,0 +1,368 @@
+{
+  "startedAt": "2026-11-19T19:24:56.836Z",
+  "candidateFrontend": "90a9a8227579c2be86cbe1d024fa75de7d61637e",
+  "backendBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+  "scenarioSha256": "181f4b9df5e3407cff599a1837aa0f3f97a73540e9d5526cdb2935226776f070",
+  "sourceBefore": {
+    "expectedProductionBaseline": "90a9a8227579c2be86cbe1d024fa75de7d61637e",
+    "actualCheckoutHead": "90a9a8227579c2be86cbe1d024fa75de7d61637e",
+    "productionDiffFromBaseline": "empty",
+    "paths": [
+      "backend/server",
+      "backend/content",
+      "frontend/src",
+      "supabase/migrations",
+      "backend/uv.lock",
+      "backend/pyproject.toml",
+      "frontend/package-lock.json",
+      "frontend/package.json",
+      ":(exclude)backend/server/tests"
+    ]
+  },
+  "helpersBefore": {
+    "clients.mjs": "dfa176b33a56bc0f6c5a19a219d5c01ddb2c071fe66331d6d15cb181cf7ac6c0",
+    "api-clients.mjs": "a9369da75350b882ac6a312c20903965a362409978e86e108c256f9cc450a9f7",
+    "observer.mjs": "40cb288da9f9a80e337fba5a39a12b1b23501ad1ff48a2a4614975492997f140",
+    "runtime.mjs": "d1387a35fd7243df58e8d9589586034b3a098489bb20e43bece9b6b45040865f",
+    "source.mjs": "56d138914dc5b4e15159162bb21db68c985b2c9083c2e5bac4b34a90502ea8d9"
+  },
+  "facts": [
+    {
+      "name": "same-actual-actor-restored-and-verified",
+      "at": "2026-11-19T19:24:59.326Z"
+    },
+    {
+      "name": "normal-rejoin-has-accepted-product-canonical-topic",
+      "at": "2026-11-19T19:25:15.430Z"
+    },
+    {
+      "name": "normal-leave-retires-403-not-member-and-automatically-controls-own-island",
+      "at": "2026-11-19T19:25:25.266Z"
+    }
+  ],
+  "frames": [
+    {
+      "actor": "retained-member",
+      "direction": "sent",
+      "topicSha256": "ca0354bc205957c283dd472de8c937e1671a07b01451565a16859d1fafa3ef75",
+      "kind": "phx_join",
+      "ref": "9",
+      "joinRef": "9",
+      "status": null,
+      "postLeave": false,
+      "at": "2026-11-19T19:25:00.386Z"
+    },
+    {
+      "actor": "retained-member",
+      "direction": "received",
+      "topicSha256": "ca0354bc205957c283dd472de8c937e1671a07b01451565a16859d1fafa3ef75",
+      "kind": "phx_reply",
+      "ref": "9",
+      "joinRef": "9",
+      "status": "ok",
+      "postLeave": false,
+      "at": "2026-11-19T19:25:00.453Z"
+    },
+    {
+      "actor": "retained-member",
+      "direction": "sent",
+      "topicSha256": "ca0354bc205957c283dd472de8c937e1671a07b01451565a16859d1fafa3ef75",
+      "kind": "phx_leave",
+      "ref": "11",
+      "joinRef": "9",
+      "status": null,
+      "postLeave": false,
+      "at": "2026-11-19T19:25:05.994Z"
+    },
+    {
+      "actor": "retained-member",
+      "direction": "received",
+      "topicSha256": "ca0354bc205957c283dd472de8c937e1671a07b01451565a16859d1fafa3ef75",
+      "kind": "phx_reply",
+      "ref": "11",
+      "joinRef": "9",
+      "status": "ok",
+      "postLeave": false,
+      "at": "2026-11-19T19:25:06.002Z"
+    },
+    {
+      "actor": "retained-member",
+      "direction": "sent",
+      "topicSha256": "9d1d83b4d068edb986342ed22293aa359c4a8ae3ede6c9f02c15d04a8dad10a2",
+      "kind": "phx_join",
+      "ref": "15",
+      "joinRef": "15",
+      "status": null,
+      "postLeave": false,
+      "at": "2026-11-19T19:25:07.172Z"
+    },
+    {
+      "actor": "retained-member",
+      "direction": "received",
+      "topicSha256": "9d1d83b4d068edb986342ed22293aa359c4a8ae3ede6c9f02c15d04a8dad10a2",
+      "kind": "phx_reply",
+      "ref": "15",
+      "joinRef": "15",
+      "status": "ok",
+      "postLeave": false,
+      "at": "2026-11-19T19:25:07.177Z"
+    },
+    {
+      "actor": "retained-member",
+      "direction": "sent",
+      "topicSha256": "9d1d83b4d068edb986342ed22293aa359c4a8ae3ede6c9f02c15d04a8dad10a2",
+      "kind": "phx_leave",
+      "ref": "22",
+      "joinRef": "15",
+      "status": null,
+      "postLeave": true,
+      "at": "2026-11-19T19:25:19.574Z"
+    },
+    {
+      "actor": "retained-member",
+      "direction": "received",
+      "topicSha256": "9d1d83b4d068edb986342ed22293aa359c4a8ae3ede6c9f02c15d04a8dad10a2",
+      "kind": "phx_reply",
+      "ref": "22",
+      "joinRef": "15",
+      "status": "ok",
+      "postLeave": true,
+      "at": "2026-11-19T19:25:19.577Z"
+    },
+    {
+      "actor": "retained-member",
+      "direction": "sent",
+      "topicSha256": "a235da29f304a364f4a7760cb045e814dee816b9301876b370bc57349f5b8b3d",
+      "kind": "phx_join",
+      "ref": "26",
+      "joinRef": "26",
+      "status": null,
+      "postLeave": true,
+      "at": "2026-11-19T19:25:20.273Z"
+    },
+    {
+      "actor": "retained-member",
+      "direction": "received",
+      "topicSha256": "a235da29f304a364f4a7760cb045e814dee816b9301876b370bc57349f5b8b3d",
+      "kind": "phx_reply",
+      "ref": "26",
+      "joinRef": "26",
+      "status": "ok",
+      "postLeave": true,
+      "at": "2026-11-19T19:25:20.285Z"
+    }
+  ],
+  "setup": "Exact privately retained real Auth actor and host, existing islands and balances; no registration, admission, grant, progression fixture, pending-queue clear or money mutation.",
+  "boundaries": [
+    "Genuine SDK setSession uses a transparent same-origin proxy to the same trusted real provider; product Auth retains its original HTTPS root.",
+    "Normal rendered Join and Menu Leave plus normal tutorial dismissal/tab focus only. No manual island.load, session.ensure or SDK topic call.",
+    "Raw tokens, controller proof values and topic names are omitted; passive actor-tagged frame refs and SHA256 topic fingerprints support correlation."
+  ],
+  "primarySourceBefore": [
+    {
+      "service": "api",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "2de87a1c7a95423f93e83f7f254bff624f8b9eba",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    },
+    {
+      "service": "frontend",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "2de87a1c7a95423f93e83f7f254bff624f8b9eba",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    }
+  ],
+  "backendProductionDiff": "empty",
+  "before": {
+    "accounts": [
+      {
+        "island_owner": "214a1e4a-a35c-46a4-986c-2bcfeffc198e",
+        "id": "fd5f345f-ae94-479a-bcec-95676bfba140",
+        "run_epoch": "46c5b079-0381-4fd8-8c16-6c490b855415",
+        "balance": "200",
+        "held": "0",
+        "transactions": 1,
+        "ledger_balance": "200"
+      },
+      {
+        "island_owner": "8d6e341c-b8d1-4f9d-95b5-8cce9499ae8a",
+        "id": "f2570bc4-41d3-4ba3-b0b6-2726e18455d5",
+        "run_epoch": "f0ca6ce3-b6c2-4a3b-9696-973b94633a9f",
+        "balance": "140",
+        "held": "0",
+        "transactions": 2,
+        "ledger_balance": "140"
+      }
+    ],
+    "wallets": [
+      {
+        "player_id": "214a1e4a-a35c-46a4-986c-2bcfeffc198e",
+        "balance": 200,
+        "transactions": 1
+      },
+      {
+        "player_id": "8d6e341c-b8d1-4f9d-95b5-8cce9499ae8a",
+        "balance": 200,
+        "transactions": 1
+      }
+    ]
+  },
+  "verifierStatuses": [
+    401,
+    401,
+    200
+  ],
+  "oldAcceptedJoin": {
+    "topicSha256": "9d1d83b4d068edb986342ed22293aa359c4a8ae3ede6c9f02c15d04a8dad10a2",
+    "ref": "15",
+    "replyRefMatched": true
+  },
+  "leaveClickedAt": "2026-11-19T19:25:18.788Z",
+  "membershipLeave": {
+    "path": "/api/games/leave",
+    "status": 200
+  },
+  "oldDeparture": {
+    "path": "/api/island/session/leave",
+    "status": 403,
+    "code": "not_member",
+    "originalOwnerMatched": true,
+    "originalSessionMatched": true,
+    "originalGenerationMatched": true,
+    "actionUidSha256": "d66a7f0ad5bb717d100ad90778ee296ee42c2f2cf4f44b36b324d9190847aa48",
+    "sameAuthenticatedActor": true
+  },
+  "home": {
+    "sameActor": true,
+    "ownerMatched": true,
+    "visiting": false,
+    "phase": "controller",
+    "freshControlRead": true,
+    "roomPlaceChanged": true,
+    "available": "200"
+  },
+  "oldTopicLeft": {
+    "topicSha256": "9d1d83b4d068edb986342ed22293aa359c4a8ae3ede6c9f02c15d04a8dad10a2",
+    "postClick": true,
+    "joinRef": "15",
+    "ref": "22"
+  },
+  "after": {
+    "accounts": [
+      {
+        "island_owner": "214a1e4a-a35c-46a4-986c-2bcfeffc198e",
+        "id": "fd5f345f-ae94-479a-bcec-95676bfba140",
+        "run_epoch": "46c5b079-0381-4fd8-8c16-6c490b855415",
+        "balance": "200",
+        "held": "0",
+        "transactions": 1,
+        "ledger_balance": "200"
+      },
+      {
+        "island_owner": "8d6e341c-b8d1-4f9d-95b5-8cce9499ae8a",
+        "id": "f2570bc4-41d3-4ba3-b0b6-2726e18455d5",
+        "run_epoch": "f0ca6ce3-b6c2-4a3b-9696-973b94633a9f",
+        "balance": "140",
+        "held": "0",
+        "transactions": 2,
+        "ledger_balance": "140"
+      }
+    ],
+    "wallets": [
+      {
+        "player_id": "214a1e4a-a35c-46a4-986c-2bcfeffc198e",
+        "balance": 200,
+        "transactions": 1
+      },
+      {
+        "player_id": "8d6e341c-b8d1-4f9d-95b5-8cce9499ae8a",
+        "balance": 200,
+        "transactions": 1
+      }
+    ]
+  },
+  "recoveryMilliseconds": 5687,
+  "result": "passed",
+  "sourceAfter": {
+    "expectedProductionBaseline": "90a9a8227579c2be86cbe1d024fa75de7d61637e",
+    "actualCheckoutHead": "90a9a8227579c2be86cbe1d024fa75de7d61637e",
+    "productionDiffFromBaseline": "empty",
+    "paths": [
+      "backend/server",
+      "backend/content",
+      "frontend/src",
+      "supabase/migrations",
+      "backend/uv.lock",
+      "backend/pyproject.toml",
+      "frontend/package-lock.json",
+      "frontend/package.json",
+      ":(exclude)backend/server/tests"
+    ]
+  },
+  "primarySourceAfter": [
+    {
+      "service": "api",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "2de87a1c7a95423f93e83f7f254bff624f8b9eba",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    },
+    {
+      "service": "frontend",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "2de87a1c7a95423f93e83f7f254bff624f8b9eba",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    }
+  ],
+  "helpersAfter": {
+    "clients.mjs": "dfa176b33a56bc0f6c5a19a219d5c01ddb2c071fe66331d6d15cb181cf7ac6c0",
+    "api-clients.mjs": "a9369da75350b882ac6a312c20903965a362409978e86e108c256f9cc450a9f7",
+    "observer.mjs": "40cb288da9f9a80e337fba5a39a12b1b23501ad1ff48a2a4614975492997f140",
+    "runtime.mjs": "d1387a35fd7243df58e8d9589586034b3a098489bb20e43bece9b6b45040865f",
+    "source.mjs": "56d138914dc5b4e15159162bb21db68c985b2c9083c2e5bac4b34a90502ea8d9"
+  },
+  "finishedAt": "2026-11-19T19:25:25.738Z"
+}

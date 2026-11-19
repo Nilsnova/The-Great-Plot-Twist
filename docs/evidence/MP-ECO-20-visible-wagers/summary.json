@@ -1,0 +1,195 @@
+{
+  "status": "passed",
+  "productionCandidate": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+  "openingMeasuredCommit": "1cff99f30c0599f1fc8dc46b97f901705877187a",
+  "continuationMeasuredCommit": "db627d2e58d3e92b82470c08de120aec5bff21a7",
+  "matchMeasuredCommit": "45a89e5461e67a1aa99f87a8d311f78da42db22c",
+  "openingRunStatus": "failed after two passed groups because a later native unlock dialog intercepted Settings; two bounded opening groups passed, not the whole driver",
+  "openingPassedGroups": 2,
+  "continuationPassedGroups": 6,
+  "stagedContinuation": true,
+  "continuationStartedAt": "2026-11-19T18:53:55.397Z",
+  "continuationFinishedAt": "2026-11-19T19:03:27.920Z",
+  "originalOpeningAt": "2026-11-19T18:44:55.673832Z",
+  "nativeActions": [
+    "member1up",
+    "owner separate1down on same event",
+    "member All in198",
+    "owner All in398 after payout",
+    "owner Settings code-confirmed reset"
+  ],
+  "firstPayouts": [
+    {
+      "selection": "down",
+      "stake": "1",
+      "outcome": "lost",
+      "payout": "0"
+    },
+    {
+      "selection": "up",
+      "stake": "1",
+      "outcome": "won",
+      "payout": "2"
+    },
+    {
+      "selection": "up",
+      "stake": "198",
+      "outcome": "won",
+      "payout": "396"
+    }
+  ],
+  "memberNewEpochAdoption": "automatic",
+  "final": {
+    "name": "second actual maturity stays retired and both current rendered banks stay200",
+    "at": "2026-11-19T19:03:27.395Z",
+    "elapsedWaitSeconds": 292.14,
+    "schedulerAttempts": [
+      {
+        "at": "2026-11-19T19:03:23.100Z",
+        "scheduler": {
+          "considered": 1,
+          "settled": 1,
+          "retried": 0
+        }
+      }
+    ],
+    "settlement": [
+      {
+        "outcome": "won",
+        "payout": "796"
+      }
+    ],
+    "old": {
+      "state": "retired",
+      "balance": "796",
+      "held": "0",
+      "revision": "9",
+      "ledger_balance": "796",
+      "ledger_held": "0",
+      "entries": "9"
+    },
+    "replacement": {
+      "state": "active",
+      "balance": "200",
+      "held": "0",
+      "revision": "1",
+      "ledger_balance": "200",
+      "ledger_held": "0",
+      "entries": "1"
+    },
+    "bankTexts": [
+      "Island treasury\n\ud83e\ude99 200\n\ud83e\ude99 0 committed \u00b7 \ud83e\ude99 200 total\n\u2694\ufe0f\nBest wave 0",
+      "Island treasury\n\ud83e\ude99 200\n\ud83e\ude99 0 committed \u00b7 \ud83e\ude99 200 total\n\u2694\ufe0f\nBest wave 0"
+    ],
+    "privateWalletHistoriesUnchanged": true
+  },
+  "match": {
+    "startedAt": "2026-11-19T19:01:48.951Z",
+    "finishedAt": "2026-11-19T19:02:22.887Z",
+    "observation": {
+      "actualFootballReadStatus": 200,
+      "choices": [],
+      "visibleText": "Island match board\n\u00d7\n\nIsland available: \ud83e\ude99 200 \u00b7 Held: \ud83e\ude99 0\n\nLive events are unavailable. Your existing stakes remain recorded.\n\nIsland stakes\n\nShared island play coins only. They cannot be bought or cashed out.",
+      "noBetConfirmation": true,
+      "sharedAndPrivateHistoryUnchanged": true
+    },
+    "before": {
+      "account": [
+        {
+          "balance_coins": "200",
+          "committed_coins": "0",
+          "revision": "1"
+        }
+      ],
+      "history": [
+        {
+          "entries": 1,
+          "balance": "200",
+          "held": "0"
+        }
+      ],
+      "wagers": [
+        {
+          "count": 0
+        }
+      ],
+      "wallet": [
+        {
+          "balance": "200",
+          "entries": 1
+        }
+      ]
+    },
+    "after": {
+      "account": [
+        {
+          "balance_coins": "200",
+          "committed_coins": "0",
+          "revision": "1"
+        }
+      ],
+      "history": [
+        {
+          "entries": 1,
+          "balance": "200",
+          "held": "0"
+        }
+      ],
+      "wagers": [
+        {
+          "count": 0
+        }
+      ],
+      "wallet": [
+        {
+          "balance": "200",
+          "entries": 1
+        }
+      ]
+    }
+  },
+  "sourceFences": {
+    "opening": true,
+    "continuation": true,
+    "match": true,
+    "productionProtectedDiffs": "empty against the full candidate before and after",
+    "continuationHeadMetadataChange": "db627d2e to45a89e54 adds only the separate unimported Match scenario; every loaded continuation/helper/factory hash is unchanged",
+    "sideApiStartupHead": "cc111eec5f665965636c85432729f6546caa0ed0",
+    "sideFrontendStartupHead": "2a4dbb46b48f3e953696da8539913f6cbebf6649",
+    "primaryVsSideBoundary": "primary servedSourceEvidence does not attest side58006/55106; separate side process/factory/wrapper/config manifests do"
+  },
+  "privateMoneyBoundary": "Private histories have no entries from first rendered shared-bank observation through final payout. Initial pre-render setup balances are separate: normal rendered entry initialized existing legacy personal wallets before that observation.",
+  "artifacts": {
+    "opening-report.json.gz": {
+      "rawSha256": "5bd3be54c1942613573471001a2dd12d000719045788f2a1cd1558c7b31d574b",
+      "compressedSha256": "09d706706b51e8b5d9972f5437995d963cf6cb5bd8d86f41a94845696394e189"
+    },
+    "continuation-report.json.gz": {
+      "rawSha256": "b8ca037d880982607f7bf7b7e03149b76df1336d7a24772b9d8711173ff777d1",
+      "compressedSha256": "463b2ebdd26bfe127a3999d81ebcb1ed8994fd0ec99827121d9cbf0c41d29638"
+    },
+    "deferred-observation-report.json.gz": {
+      "rawSha256": "886d00249a463796e5284b452c4f0fdfe713b1baa15cf7cba79bf0d55193f98b",
+      "compressedSha256": "847599fdce9fb05b97069b6875d2f4f124e76b1e4dfeda8578cee38a24f4cd81"
+    },
+    "match-unavailable.json.gz": {
+      "rawSha256": "61917209f881a95a53635f8c38e4499c703ad5e82bfc83f71636b2406084a9c8",
+      "compressedSha256": "9b13ceece668c83f8c452706f422cbf784e48c0a3516b484255e764c82fc38a0"
+    },
+    "setup-failures.json.gz": {
+      "rawSha256": "80de8d01235360732487c681c4f29f4847764dfde9d8287cdfbbcba1cdd87480",
+      "compressedSha256": "0fc7d7b725d11c6749e2dfa0a14fdf93213d95d6eb199054fc2ad8a7db828bc4"
+    }
+  },
+  "limits": [
+    "Two independent rendered browsers with actual provider SDK session restoration; normal development inspection selects existing cards only.",
+    "All stakes/All in/confirmation/reset actions use native visible controls and physical pointer buttons, not direct financial requests.",
+    "Own same-origin /provider proxy forwards genuine Auth/REST/Realtime with trusted TLS; no identity or payload fabrication.",
+    "Saved Harbor record4 and one200grant are explicit initial setup; only external quote transport is a fixture.",
+    "Default real UTC clocks and actual five-minute deadlines; ordinary scheduler HTTP is a service action, not a visible user control.",
+    "No natural-price, football, anonymous-browser or complete fifteen-row acceptance claim.",
+    "Opening and continuation are staged across genuinely closed/restored browsers; no uninterrupted-browser claim.",
+    "Original300s maturities are exact. First observation deferred on pre-maturity cached quote evidence and used the real five-minute durable retry. Second observation deliberately followed the real60s board cache window.",
+    "The Match case proves actual unavailable-provider UI and unchanged funds; it does not claim a successful football stake or natural result."
+  ]
+}
