@@ -187,13 +187,13 @@ void main(){
       vec2 current=vec2(.29*p.x-.13*p.y, .77*p.y+.17*p.x);
       float swellPhase=current.y+curl*1.32+sin(current.x-t*.18)*.65-t*.43;
       float front=sin(swellPhase), back=cos(swellPhase);
-      float patch=smoothstep(.27,.71,coarse+curl*.13);
-      float lifting=smoothstep(.12,.86,front)*patch;
-      float down=smoothstep(.04,.96,-front)*patch;
+      float swellCoverage=smoothstep(.27,.71,coarse+curl*.13);
+      float lifting=smoothstep(.12,.86,front)*swellCoverage;
+      float down=smoothstep(.04,.96,-front)*swellCoverage;
       colour=mix(colour,uDeep,down*.19*offshore);
       colour=mix(colour,uLight,lifting*.23*offshore);
       float crestLine=(1.0-band(abs(front-.73),.048))*smoothstep(.28,.86,back);
-      float whiteGlint=crestLine*patch*smoothstep(.48,.79,ripple);
+      float whiteGlint=crestLine*swellCoverage*smoothstep(.48,.79,ripple);
       float capStrength=mix(.34,.12,smoothstep(1.5,13.0,d));
       colour=mix(colour,mix(uStroke,uFoam,.34),whiteGlint*capStrength*offshore);
       // Soft aqua lace under the near water, visible through the shelf rather than on the grass.
