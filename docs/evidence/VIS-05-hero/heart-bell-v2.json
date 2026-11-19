@@ -1,0 +1,160 @@
+{
+  "sourceFile": "frontend/public/village/home-heart-v2.png",
+  "generatedBy": "OpenAI built-in image generation, 2026-11-19",
+  "reference": "Home Island concept supplied by Johannes Franz Lang, 2026-11-19",
+  "referenceSha256": "e93b1486918789502c33e4b3a445c1019fce5d19ade9d9e8ea41e106bae911dc",
+  "sha256": "bdb838f162ce1ecc37d402aa4a20f2fd323cb1ae6299b14dac10bc1588fb5ce6",
+  "bytes": 1370760,
+  "nativeSize": [
+    1312,
+    1199
+  ],
+  "mode": "RGBA",
+  "alpha": {
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "meaningfulThreshold": 16
+  },
+  "cells": {
+    "island_core": {
+      "id": "island_core",
+      "rect": [
+        55,
+        0,
+        543,
+        614
+      ],
+      "sourceFoot": [
+        271,
+        598
+      ],
+      "nativeGroundFoot": [
+        326,
+        598
+      ],
+      "logical": [
+        128,
+        128,
+        12
+      ],
+      "meaningfulAlphaBounds": [
+        12,
+        10,
+        531,
+        602
+      ],
+      "frontOpening": {
+        "sample": [
+          277,
+          414,
+          373,
+          505
+        ],
+        "alphaBelow16Fraction": 1.0
+      }
+    },
+    "island_core_damaged": {
+      "id": "island_core_damaged",
+      "rect": [
+        709,
+        0,
+        547,
+        619
+      ],
+      "sourceFoot": [
+        273,
+        603
+      ],
+      "nativeGroundFoot": [
+        982,
+        603
+      ],
+      "logical": [
+        128,
+        128,
+        12
+      ],
+      "meaningfulAlphaBounds": [
+        12,
+        10,
+        535,
+        607
+      ],
+      "frontOpening": {
+        "sample": [
+          933,
+          414,
+          1029,
+          505
+        ],
+        "alphaBelow16Fraction": 1.0
+      }
+    },
+    "island_core_broken": {
+      "id": "island_core_broken",
+      "rect": [
+        54,
+        917,
+        562,
+        248
+      ],
+      "sourceFoot": [
+        281,
+        232
+      ],
+      "nativeGroundFoot": [
+        335,
+        1149
+      ],
+      "logical": [
+        128,
+        128,
+        12
+      ],
+      "meaningfulAlphaBounds": [
+        12,
+        12,
+        550,
+        236
+      ]
+    },
+    "island-bell": {
+      "id": "island-bell",
+      "rect": [
+        710,
+        644,
+        535,
+        513
+      ],
+      "sourceFoot": [
+        267,
+        497
+      ],
+      "nativeGroundFoot": [
+        977,
+        1141
+      ],
+      "logical": [
+        56,
+        72,
+        8
+      ],
+      "meaningfulAlphaBounds": [
+        12,
+        12,
+        523,
+        501
+      ]
+    }
+  },
+  "coreFitBounds": [
+    281,
+    603,
+    281,
+    16
+  ]
+}

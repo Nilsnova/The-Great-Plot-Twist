@@ -1,12 +1,13 @@
 // Original bell/lookout sources. Bell's larger presentation box is the explicit VIS-04 decision.
 export const sheets = {
   villageLandmarks: {file: 'village/landmarks-v1.png', width: 1254, height: 1254},
+  villageBell: {file: 'village/home-heart-v2.png', width: 1312, height: 1199},
 };
 
 export const frames = {
   'island-bell': {
-    sheet: 'villageLandmarks', rect: [112, 69, 459, 497],
-    logical: [56, 72, 8], sourceFoot: [225, 483],
+    sheet: 'villageBell', rect: [710, 644, 535, 513],
+    logical: [56, 72, 8], sourceFoot: [267, 497],
   },
   'island-watchtower': {
     sheet: 'villageLandmarks', rect: [760, 8, 325, 558],
