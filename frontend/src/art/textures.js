@@ -7,6 +7,7 @@ import {paint} from './paint.js';
 import {islandFrame, framesFor} from './registry.js';
 import {NO_OUTLINE} from './island.js';
 import {acquireRasterSheet, getRasterFrame, normalizeRasterFrame} from './village-raster.js';
+import {applyVillagePalette} from './village-palette.js';
 
 const CAP = {high: 4, low: 2};
 // Logical px per screen height at zoom 1 (the camera frames about 20 units = 320 logical px).
@@ -81,7 +82,13 @@ export async function paintIds(ids, density, visit, {frames = null, acquire = ac
   }
   for (const {sheet, ids: names} of groups.values()) {
     const lease = await acquire(sheet);
-    try { for (const id of names) visit(id, paintId(id, density, frames[id], lease.image)); } finally { lease.release(); }
+    try {
+      for (const id of names) {
+        const canvas = paintId(id, density, frames[id], lease.image);
+        applyVillagePalette(id, canvas);
+        visit(id, canvas);
+      }
+    } finally { lease.release(); }
   }
 }
 

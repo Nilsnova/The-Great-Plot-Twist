@@ -17,10 +17,10 @@ const FORMS = {
   island_harbor: {width: 1.52, depth: .95, rear: .48},
   island_techhub: {width: 1.72, depth: 1.16, rear: .58},
 };
-const SHADOW = new THREE.Color(0x283021);
+const SHADOW = new THREE.Color(0x313d25), CONTACT = new THREE.Color(0x25291c);
 const RETAINING_STONE = [0xc3a47b, 0xb0916b, 0x9a7f61, 0x80694f, 0x726049].map(hex => new THREE.Color(hex));
 const [SHOULDER, RETAINING_FRONT, RETAINING_SIDE, RETAINING_JOINT, EMBEDDED_STONE] = RETAINING_STONE;
-const LIMESTONE = [0xcabea2, 0xd7c8aa, 0xb8ac96, 0xcbb79b, 0xd1c2a6].map(hex => new THREE.Color(hex));
+const LIMESTONE = [0xcebea0, 0xdbcaac, 0xbeb094, 0xceb89b, 0xd5c3a5].map(hex => new THREE.Color(hex));
 const GROUT = new THREE.Color(0x84765e), LIP = new THREE.Color(0xad9a7f);
 const SIDE_STONE = [[0x8d826e, 0xb0a18a], [0x9b8d77, 0xb5a289]].map(pair => pair.map(hex => new THREE.Color(hex)));
 const ROW_OFFSETS = [.19, .38, .10], BLOCK_WIDTHS = [.58, .52, .43, .60, .48];
@@ -87,7 +87,11 @@ function geometryOf(foundations) {
     const {width, depth, rear} = FORMS[slot], scale = ruin ? .72 : 1;
     appendGroundShadow((gx, gz, alpha) => vertex(gx, gz, 0, SHADOW, slot === 'tower' && !onLand(gx, gz) ? 0 : alpha), indices, {
       x: x + .48, z: z - rear + .65, width: (width + .83) * scale, depth: (depth + 1.1) * scale,
-      opacity: ruin ? .24 : .53, innerOpacity: ruin ? .15 : .36,
+      opacity: ruin ? .22 : .40, innerOpacity: ruin ? .12 : .26,
+    });
+    appendGroundShadow((gx, gz, alpha) => vertex(gx, gz, 0, CONTACT, slot === 'tower' && !onLand(gx, gz) ? 0 : alpha), indices, {
+      x, z: z - rear + .15, width: (width + .11) * scale, depth: (depth + .26) * scale,
+      opacity: ruin ? .20 : .50, innerOpacity: ruin ? .11 : .35,
     });
   }
   for (const {x, z, slot} of foundations) {
