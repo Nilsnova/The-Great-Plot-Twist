@@ -151,7 +151,7 @@ export async function createSettlement(ctx) {
       }, dispose,
     };
     if (mooringRope) {
-      // The southwest wave approach crosses the skiff; the beach post stays on the sand.
+      // Keep the southern wave view clear. The beach ramp and post stay on dry sand.
       place.setMooringBattle = active => { skiff.visible = mooringRope.visible = mooringStage.visible = !active; };
     }
     ctx.decorate?.(place, art, cleanups);

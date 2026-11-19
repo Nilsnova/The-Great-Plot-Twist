@@ -15,7 +15,7 @@ export const layouts = {
   ],
 };
 export const homeBuildings = Object.entries(isletPlots).map(([plot, item]) => ({ plot, ...item }));
-layouts.home_islet = [{ asset: 'bench', x: 4, z: 13 },
+layouts.home_islet = [{ asset: 'bench', x: 8.75, z: 14 },
   { asset: 'barrel', x: -12, z: 7 }, { asset: 'lantern', x: -3, z: 12 }];
 // The south pier and its tender are scenery at the existing shore.
 export const homeMooring = [

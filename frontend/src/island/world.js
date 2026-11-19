@@ -314,7 +314,9 @@ export function decorateIsland(place, ctx = {}) {
       const texture = campaignTextures.get(name) ?? drawn(name); campaignTextures.set(name, texture);
       const mesh = sprite(root, texture, building.x, building.z, `island-campaign:${building.id}:${name}`);
       mesh.visible = false; mesh.userData.campaign = building.id; meshes[name] = mesh;
-      if (name === building.art && building.id !== 'island_wreck') mesh.userData.portraitSize = 2.12;
+      if (name === building.art && building.id !== 'island_wreck') {
+        mesh.userData.portraitSize = building.id === 'island_harbor' ? 1.89 : 2.12;
+      }
       staticArt.track(mesh, name);
     }
     campaignMeshes.set(building.id, meshes);
