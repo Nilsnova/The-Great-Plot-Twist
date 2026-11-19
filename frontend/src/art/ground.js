@@ -7,7 +7,7 @@ import {surfaceClass, surfaces} from '../world/places/surfaces.js';
 import {WALL_PERIMETER_CELLS} from '../island/wall-perimeter.js';
 import {LEGACY_DEPTH} from '../world/projection.js';
 import {canvas, ellipse, linear, poly, radial, stroke} from './paint.js';
-import {cliffProfile, paintCliffFaces, paintGrassRim} from './coast-cliffs.js';
+import {APPROACH_DEPTH, cliffProfile, paintCliffFaces, paintGrassRim} from './coast-cliffs.js';
 import {paintShorePockets, paintTerraceFeet} from './shore-pockets.js';
 import {materialRect, meadowScale, mirroredGrassPattern, paintMaterial, pathMaterialMask} from './village/terrain-materials.js';
 
@@ -76,6 +76,36 @@ function wallGrassEdge(surface, meadow) {
   };
 }
 
+function paintSandWaterline(c, rim) {
+  const segments = rim.length - 1;
+  for (let i = 0; i < segments; i += 3) {
+    const {x, y, depth} = rim[i];
+    const previous = rim[(i + segments - 1) % segments], next = rim[(i + 1) % segments];
+    // The north cove opens onto the water behind the island. Elsewhere the cliff drop
+    // determines how much of the top the tide can appear to reach.
+    const north = Math.abs(i - segments * .75);
+    const exposure = Math.max(0, 1 - (depth - APPROACH_DEPTH) / 1.25, 1 - Math.max(0, north - 7) / 8);
+    if (exposure < .035) continue;
+    const tangent = Math.atan2(next.y - previous.y, next.x - previous.x);
+    const swell = .5 + .28 * Math.sin(i * .31 + 1.2) + .22 * Math.cos(i * .71);
+    c.save(); c.globalAlpha *= exposure;
+    // A narrow scalloped stain where the water darkens the sand.
+    const wet = .993 - .009 * swell;
+    c.translate(x * wet, y * wet); c.rotate(tangent); c.scale(1.37 + swell * .81, .40 + swell * .42);
+    c.fillStyle = radial(c, 0, 0, 1,
+      [[0, '#86674e94'], [.37, '#a67c595b'], [.72, '#b6926c2b'], [1, '#b6926c00']]);
+    c.fill(ellipse(0, 0, 1));
+    c.restore();
+
+    const dry = .953 - .012 * swell;
+    c.save(); c.globalAlpha *= exposure;
+    c.translate(x * dry, y * dry); c.rotate(tangent); c.scale(1.52 + swell * .61, .38 + swell * .20);
+    c.fillStyle = radial(c, 0, 0, 1, [[0, '#ffe9aa50'], [.43, '#ffdd9b37'], [1, '#ffdd9b00']]);
+    c.fill(ellipse(0, 0, 1));
+    c.restore();
+  }
+}
+
 function paintBeachDetails(c, beach, rim, materials) {
   c.save();
   c.clip(beach);
@@ -83,16 +113,7 @@ function paintBeachDetails(c, beach, rim, materials) {
   c.globalAlpha = .88;
   c.fillStyle = linear(c, -16, -13, 15, 13, [[0, '#fff0bf83'], [.40, '#fbda9f38'], [.73, '#d2a97508'], [1, '#926d583d']]);
   c.fill(beach);
-  // Overlapping washes follow the waterline as one varied stain, with a soft edge on dry sand.
-  for (let i = 1; i < rim.length - 1; i += 2) {
-    const {x, y} = rim[i], previous = rim[i - 1], next = rim[i + 1];
-    const tangent = Math.atan2(next.y - previous.y, next.x - previous.x);
-    const reach = 1.02 + .27 * Math.sin(i * .41) + .17 * Math.cos(i * .77);
-    c.save(); c.translate(.997 * x, .997 * y); c.rotate(tangent); c.scale(2.55, reach);
-    c.fillStyle = radial(c, 0, 0, 1, [[0, '#976e4e55'], [.40, '#a7815d31'], [.72, '#b18c6217'], [1, '#b18c6200']]);
-    c.fill(ellipse(0, 0, 1));
-    c.restore();
-  }
+  paintSandWaterline(c, rim);
   // Rocky shoulders shade the sand at their feet. The four open approaches keep a warm centre.
   for (let i = 2; i < rim.length - 1; i += 5) {
     const {x, y, depth} = rim[i];
@@ -100,7 +121,7 @@ function paintBeachDetails(c, beach, rim, materials) {
     const reach = .82 + .27 * depth;
     const angle = Math.atan2(y, x) + Math.PI / 2;
     c.save(); c.translate(.978 * x, .978 * y); c.rotate(angle); c.scale(1, .61);
-    c.fillStyle = radial(c, 0, 0, reach, [[0, '#635d516e'], [.48, '#74695547'], [1, '#74695500']]);
+    c.fillStyle = radial(c, 0, 0, reach, [[0, '#78624f68'], [.35, '#9977593e'], [.72, '#a3846325'], [1, '#a3846300']]);
     c.fill(ellipse(0, 0, reach));
     c.restore();
   }
@@ -126,17 +147,17 @@ function paintTurfBevel(c, coast, meadow, grassRadius) {
   c.clip(meadow);
   c.globalCompositeOperation = 'source-atop';
   const curve = angle => .023 + .021 * (.5 + .5 * Math.sin(angle * 6 + .5)) + .009 * Math.cos(angle * 13);
+  c.fillStyle = linear(c, -17, -13, 14, 11, [[0, '#5676390d'], [.52, '#44693811'], [1, '#3d53321a']]);
   for (const width of [1.58, 1.39, 1.13, .92, .70, .47]) {
     const band = new Path2D(meadow);
     band.addPath(coast(angle => grassRadius(angle) - width * curve(angle), .012, 3));
-    c.fillStyle = '#38522a13';
     c.fill(band, 'evenodd');
   }
-  // The olive cut directly below the bright grass crest gives the rocky shoulders a rounded lip.
+  // Warm soil shows below the sunlit grass on the same rounded cut.
   const soil = coast(angle => grassRadius(angle) - curve(angle) * .14, .012, 3);
-  stroke(c, soil, linear(c, -16, -14, 13, 12, [[0, '#6d88424f'], [.48, '#58623080'], [1, '#404723ad']]), .24);
+  stroke(c, soil, linear(c, -16, -14, 13, 12, [[0, '#7185454b'], [.48, '#6d6d3d77'], [1, '#584c32a2']]), .19);
   const crest = coast(angle => grassRadius(angle) - curve(angle) * .36, .012, 3);
-  stroke(c, crest, linear(c, -16, -14, 13, 12, [[0, '#e1ee99d9'], [.46, '#c0d978aa'], [1, '#87a54e38']]), .15, .92);
+  stroke(c, crest, linear(c, -16, -14, 13, 12, [[0, '#dceba6a5'], [.46, '#c8d58285'], [1, '#91a25338']]), .11, .92);
   c.restore();
 }
 
@@ -429,7 +450,7 @@ function paintTerrain(c, s, coast, random, materials) {
   const rim = cliffProfile(s);
   paintCliffFaces(c, rim, materials);
   // Wet sand fading into the shallows (translucent, so the sea still reads it as water).
-  c.fillStyle = '#e8cf8e70'; c.fill(coast(1.035));
+  c.fillStyle = '#c7b79c70'; c.fill(coast(1.035));
   // The beach: warm sand, darker at the waterline, lighter towards the meadow.
   const beach = coast(1);
   c.fillStyle = '#f2d595'; c.fill(beach);
