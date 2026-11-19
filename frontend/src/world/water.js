@@ -193,24 +193,24 @@ void main(){
     float caustic=(1.0-band(abs(cells-.6),.02))*smoothstep(.6,1.2,d)*(1.0-smoothstep(1.5,3.0,d));
     colour=mix(colour,uShallow2,caustic*mix(.12,.07,uHomeCoast));
     if(uHomeCoast>.5){
-      // Cross the rolling ocean with shorter, less regular strokes. The old coastline still
-      // supplies every break and depth ramp. Glints follow crest slopes, not the terrain grid.
-      vec2 current=vec2(.29*p.x-.13*p.y, .77*p.y+.17*p.x);
-      float swellPhase=current.y+curl*1.32+sin(current.x-t*.18)*.65-t*.43;
-      float front=sin(swellPhase), back=cos(swellPhase);
-      float swellCoverage=smoothstep(.27,.71,coarse+curl*.13);
-      float lifting=smoothstep(.12,.86,front)*swellCoverage;
-      float down=smoothstep(.04,.96,-front)*swellCoverage;
-      colour=mix(colour,uDeep,down*.19*offshore);
-      colour=mix(colour,uLight,lifting*.23*offshore);
-      float crestLine=(1.0-band(abs(front-.73),.048))*smoothstep(.28,.86,back);
-      float whiteGlint=crestLine*swellCoverage*smoothstep(.48,.79,ripple);
-      float capStrength=mix(.39,.14,smoothstep(1.5,13.0,d));
-      colour=mix(colour,mix(uStroke,uFoam,.34),whiteGlint*capStrength*offshore);
+      // Oblique swells have a broad lit face and a short, brighter rim on the sunward side.
+      // A second wave distorts their lengths so they break into irregular strokes offshore.
+      vec2 current=vec2(.37*p.x-.18*p.y, .92*p.y+.22*p.x);
+      float phase=current.y+curl*2.5+sin(current.x-t*.24)*.78-t*.67;
+      float front=sin(phase), slope=cos(phase);
+      float field=smoothstep(.28,.72,coarse+curl*.17);
+      float face=smoothstep(.09,.92,front)*field;
+      float trough=smoothstep(.14,.99,-front)*field;
+      colour=mix(colour,uDeep,trough*.27*offshore);
+      colour=mix(colour,uLight,face*.34*offshore);
+      float rim=(1.0-band(abs(front-.76),.07))*smoothstep(.20,.76,slope);
+      float spray=smoothstep(.43,.75,ripple+curl*.15);
+      float nearLight=mix(.53,.20,smoothstep(2.2,13.0,d));
+      colour=mix(colour,mix(uStroke,uFoam,.39),rim*field*spray*nearLight*offshore);
       // Soft aqua lace under the near water, visible through the shelf rather than on the grass.
       float lace=(1.0-band(abs(cells-.66),.034))*smoothstep(.51,.76,coarse);
       float litShelf=smoothstep(.33,1.1,d)*(1.0-smoothstep(2.4,5.2,d))*smoothstep(.50,.78,broad);
-      colour=mix(colour,uShallow2,lace*litShelf*.18);
+      colour=mix(colour,uShallow2,lace*litShelf*.29);
     }
   }
   // The close edge is still in low quality; its extra movement and broken surf are high-only.
@@ -264,8 +264,8 @@ void main(){
 
 export function createWater(scene) {
   const colours = { uDeep: '#07566e', uMid: '#087f96', uLight: '#3dbdc9', uShallow: '#38c9b5', uShallow2: '#8be2c5', uFoam: '#f4fffa', uGlint: '#e6fff5', uStroke: '#63cfd6' };
-  const homeColours = {...colours, uDeep: '#065a75', uMid: '#0a8fa0', uLight: '#42c5d0',
-    uShallow: '#36c6ab', uShallow2: '#a4e3ce', uFoam: '#f3fff6', uStroke: '#86e1ea'};
+  const homeColours = {...colours, uDeep: '#075474', uMid: '#078da6', uLight: '#3dd0d3',
+    uShallow: '#27cfb5', uShallow2: '#a1e8d4', uFoam: '#f4fff5', uStroke: '#74e2e6'};
   const uniforms = { ...seaUniforms, uHomeCoast: {value: 0} };
   for (const [key, value] of Object.entries(colours)) uniforms[key] = { value: new THREE.Color(value) };
   const material = new THREE.ShaderMaterial({ uniforms, vertexShader: worldVertex, fragmentShader: fragment,
