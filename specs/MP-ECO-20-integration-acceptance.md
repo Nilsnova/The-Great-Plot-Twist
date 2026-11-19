@@ -4,7 +4,7 @@
 >
 > **Who uses it:** implementers and reviewers validating the economy across database, API and authenticated clients.
 
-- **Status:** preparation; runtime acceptance blocked by implementation prerequisites.
+- **Status:** offline verification and integrated runtime source are available; final regression and authenticated scenario acceptance remain pending.
 - **Branch:** `test/shared-economy-acceptance`
 - **Issue:** [#505](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/505)
 
@@ -15,6 +15,13 @@ money, participation and inventory authority together. Existing fake-room browse
 checks and legacy personal-wallet tests do not establish that the new integrated
 economy works. The [common contract](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/493)
 must be checked without inventing replacement runtime interfaces.
+
+The integrated source now includes persistent authority, native sessions/journal and
+closure worker, domain transactions, capability-gated clients and reset/deletion
+composition. Their presence removes the earlier missing-implementation prerequisite;
+it does not complete the scenario matrix. Final frozen-source regressions and actual
+provider/rendered-product observations require their own source-qualified results.
+Historical runs retain their original outcomes and scope.
 
 ## What
 
