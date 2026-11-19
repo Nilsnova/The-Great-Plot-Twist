@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import {cliffProfile} from '../../art/coast-cliffs.js';
 import {artSizes} from '../art.js';
 import {groundProjectionGlsl, LEGACY_DEPTH, projectGround, unprojectGround} from '../projection.js';
+import {sandstoneFinishGlsl} from './home-relief.js';
 import {surfaces} from './surfaces.js';
 
 const COAST = surfaces.home_islet;
@@ -321,6 +322,7 @@ export function createHomeTerraces(root, coastArt, art) {
       }`,
     fragmentShader: /* glsl */`
       ${groundProjectionGlsl}
+      ${sandstoneFinishGlsl}
       uniform sampler2D uCoastArt;
       varying vec4 vTerrace;
       varying vec3 vTone;
@@ -345,23 +347,22 @@ export function createHomeTerraces(root, coastArt, art) {
         vec3 source = texture2D(uCoastArt, samplePoint).rgb;
         float grain = smoothstep(.11, .43, dot(source, vec3(.27, .62, .11)));
         float height = vTerrain.y - projectGround(vTerrace.xy).y;
-        float seam = sin(height * 11.0 + sin(vTerrain.x * 2.1) + sin(vTerrain.x * 6.4) * .72);
-        float crystal = noise2(vec2(vTerrain.x * 15.6, height * 19.3 + vTerrain.y * 3.9));
         float grainBreak = noise2(vec2(vTerrain.x * 4.8, height * 8.2));
-        // Soft strata follow the height across the face. Local grains break the bright edges
-        // into weathered sandstone rather than a single uniformly coloured panel.
-        float sediment = smoothstep(.66, .985, seam + (grainBreak - .5) * .56);
-        vec3 stone = vTone * (mix(.90, 1.10, grain) + (crystal - .5) * .12 + (grainBreak - .5) * .13);
-        stone = mix(stone, stone * vec3(.86, .83, .8), sediment * .22);
-        // Warm upper bevels and cooler recessed feet give each laid stone a distinct face.
-        float rollingEdge = smoothstep(.43, .94, vCut.y - vCut.x * .10 + (grainBreak - .5) * .16);
-        float underside = 1.0 - smoothstep(.04, .32, vCut.y);
-        float joint = 1.0 - smoothstep(.025, .18, min(vCut.x, 1.0 - vCut.x));
-        vec3 cutLight = mix(vec3(.89, .94, 1.00), vec3(1.23, 1.14, .99), rollingEdge);
-        cutLight *= 1.0 - .23 * underside - .13 * joint;
-        float patina = smoothstep(.48, .84, grainBreak) * (1.0 - smoothstep(.06, .35, vCut.y));
-        cutLight = mix(cutLight, cutLight * vec3(.84, .96, .79), patina * .61);
-        stone *= mix(vec3(1.0), cutLight, vCut.z);
+        if (vTerrace.z < .5) {
+          vec3 stone = vTone * mix(.91, 1.10, grain);
+          if (vTerrace.z > -.5) {
+            vec2 layers = vec2(vTerrace.x + vTerrace.y * .36, height + vTerrace.y * .13);
+            stone = cutSandstone(stone, layers, vCut.xy, vCut.z);
+            // Tight earth contact grounds the lower stone bevel and the uncut mortar.
+            float rootShadow = (1.0 - smoothstep(.015, .21, height)) * .25;
+            float patina = smoothstep(.50, .83, grainBreak) * (1.0 - smoothstep(.08, .37, vCut.y));
+            stone = mix(stone, stone * vec3(.82, .94, .72), .48 * patina * vCut.z);
+            stone *= 1.0 - rootShadow;
+          }
+          gl_FragColor = vec4(stone, vTerrace.w);
+          #include <colorspace_fragment>
+          return;
+        }
         // Golden leaf tips and moss pockets give the turf a softly planted edge.
         float lip = smoothstep(1.0, 2.0, vTerrace.z);
         float tufts = noise2(vec2(vTerrace.x * 29.0, vTerrace.y * 23.0));
@@ -373,7 +374,7 @@ export function createHomeTerraces(root, coastArt, art) {
         vec3 meadow = texture2D(uCoastArt, floorUv).rgb;
         float seamBlend = (1.0 - smoothstep(.12, .83, vTerrace.w)) * smoothstep(-.02, .12, meadow.g - meadow.r);
         turf = mix(turf, meadow, seamBlend * .88);
-        gl_FragColor = vec4(mix(stone, turf, clamp(vTerrace.z, 0.0, 1.0)), vTerrace.w);
+        gl_FragColor = vec4(turf, vTerrace.w);
         #include <colorspace_fragment>
       }`,
   });
