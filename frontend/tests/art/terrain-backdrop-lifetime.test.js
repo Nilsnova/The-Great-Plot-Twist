@@ -30,7 +30,7 @@ describe('temporary terrain decode ownership', () => {
   it('keeps the authored fallback terrain available when the reference plate cannot decode', async () => {
     state.acquire.mockRejectedValueOnce(new Error('reference unavailable'));
     expect(await loadBackdrop('places/home_islet.png')).toEqual({id: 'owned texture', userData: {}});
-    expect(state.paint).toHaveBeenCalledWith('home_islet', 16, {id: 'decoded terrain'});
+    expect(state.paint).toHaveBeenCalledWith('home_islet', 16, {id: 'decoded terrain'}, null, false);
     expect(state.release).toHaveBeenCalledTimes(1);
   });
   it('releases after a painter or texture failure and never invents a successful backdrop', async () => {

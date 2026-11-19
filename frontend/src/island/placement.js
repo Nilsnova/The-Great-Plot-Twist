@@ -7,7 +7,7 @@
 //   checkMove(spotId, x, z, positions)  {ok: true} or {ok: false, code, message} (the server's codes)
 //   routeOpen(positions)                a way from the heart to the beach (towers, houses block)
 //   onWallLane(x, z)                    a wall centred here stands on a pirate path (D056, wall-lanes.js)
-import {ALL_SPOTS, offeredSpots, spotById, ISLAND_PLACE} from './spots.js';
+import {ALL_SPOTS, offeredSpots, spotById, ISLAND_PLACE, LEGACY_HOME_DEFAULTS} from './spots.js';
 import {surfaceClass} from '../world/places/surfaces.js';
 import {WALL_LANE_ROWS} from './wall-lanes.js';
 import {WALL_OBSTACLES} from './wall-obstacles.js';
@@ -39,10 +39,16 @@ const land = (x, z) => surfaceClass(ISLAND_PLACE, x, z);
 // {spotId: {x, z}} for the 22 spots (and the extra tower spots the answer lists, D060): a finite x/z of the
 // answer wins (a moved spot), else the fixed spot.
 export function positionsOf(spots = []) {
-  const placed = {};
+  const placed = {}, saved = {};
   for (const spot of offeredSpots(spots)) {
     const sent = Array.isArray(spots) ? spots.find(item => item?.id === spot.id) : null;
-    placed[spot.id] = Number.isFinite(sent?.x) && Number.isFinite(sent?.z) ? {x: sent.x, z: sent.z} : {x: spot.x, z: spot.z};
+    if (Number.isFinite(sent?.x) && Number.isFinite(sent?.z)) saved[spot.id] = {x: sent.x, z: sent.z};
+    placed[spot.id] = saved[spot.id] ?? {x: spot.x, z: spot.z};
+  }
+  // A real server answer already has every anchor. The fake transport can send only moved cells.
+  const occupied = Object.entries(saved).map(([id, where]) => boxOf(id, where));
+  for (const [id, [x, z]] of Object.entries(LEGACY_HOME_DEFAULTS)) {
+    if (!saved[id] && occupied.some(box => overlaps(boxOf(id, placed[id]), box))) placed[id] = {x, z};
   }
   return placed;
 }

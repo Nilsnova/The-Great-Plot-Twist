@@ -35,7 +35,7 @@
       "where": "island_arsenal"},
     {"id": "watchtower", "covers": ["watchtower:1", "watchtower:2"], "title": "The watchtower",
       "what": "The watchtower gives every tower on the island more range.",
-      "how": "Walk up the hill at the north end of the path and build it on its spot.",
+      "how": "Follow the marker to the watchtower spot and press E or Use to build it.",
       "where": "tower_1"},
     {"id": "gunner", "covers": ["crew:gunner"], "title": "A gunner for the crew",
       "what": "A gunner mans your strongest tower: it reloads 25% faster.",

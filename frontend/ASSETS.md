@@ -74,6 +74,8 @@ Lighthouse Isle (Pirate Point), Saltreach Harbor, Smugglers’ Cove, Wreck Point
 
 The [illustrated Home shoreline](public/village/home-reference-terrain.webp) comes from Johannes Franz Lang’s Home Island mockup. OpenAI image editing removed the HUD, actors, buildings, defenses, paths, and dock from the reference. The finished 1536 × 1152 WebP registers that environment to 24 bearings of the existing coast. The game draws the real paths, structures, dock, and moving water separately. The previous procedural terrain is available if the Home texture fails to load.
 
+The four sandy entries align with the existing east, south, west and northern Smugglers approaches. Their painted sand and surf share the same coast registration. The two additional north cottages are scenery. The two south plots continue to use the existing paid house art and progression.
+
 From `frontend/`, run `python3 scripts/pixel_art/generate.py`. Pillow is an offline authoring dependency; playing, building and JS testing require no Python. Sources live in `scripts/pixel_art/`: common.py, nature.py, buildings.py, people.py, props.py, ground.py, destinations.py, nautical.py, settlements.py, case_places.py, place_ground.py, chart.py and generate.py. The Node helpers export canonical land masks from terrain.js and places/surfaces.js; visual shorelines and walkability use the same functions.
 
 The world textures use nearest sampling without mipmaps. The catalogue preserves a logical 16-pixel world grid while detailed sources use 64 pixels per world unit. PNG alpha supplies transparent edges and contact shadows. The chart and sailing scene retain their original art. UI text is separate HTML with readable font sizes, as Nils requested.

@@ -5,7 +5,7 @@ import {projectedCoastBounds} from '../world/projection.js';
 
 const shore = projectedCoastBounds(cliffProfile(surfaces.home_islet));
 // Include the raised rim and the tops of the taller landmarks above the playable shore.
-const ISLAND_HEIGHT = shore.maxY - shore.minY + 4;
+const ISLAND_HEIGHT = shore.maxY - shore.minY + 4.5;
 const MAX_PORTRAIT_DEPTH = 2.28;
 const SHORE_MARGIN = 6;
 const LANDSCAPE_BUILDING_EMPHASIS = .72;

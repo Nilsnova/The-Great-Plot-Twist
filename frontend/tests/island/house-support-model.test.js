@@ -3,7 +3,7 @@ import {previewHouseSupport} from '../../src/island/house-support-model.js';
 import {defenses} from '../../src/island/spots.js';
 import {CONFIG, createWave} from '../../src/pirates/sim.js';
 
-const house = (spec, extra = {}) => ({id: 'house_1', kind: 'house', built: true, level: 2, spec, ...extra});
+const house = (spec, extra = {}) => ({id: 'house_1', kind: 'house', built: true, level: 2, x: 7, z: -6, spec, ...extra});
 const wall = (id, x, z, extra = {}) => ({id, kind: 'wall', built: true, level: 1, x, z, ...extra});
 const model = (spots, extra = {}) => previewHouseSupport({houseId: 'house_1', spots, ...extra});
 const ids = rows => rows.map(row => row.id);

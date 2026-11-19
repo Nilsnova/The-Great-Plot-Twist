@@ -43,7 +43,9 @@ def test_the_slot_of_every_spot_matches_the_kinds_islands_json_allows():
 def test_an_old_save_with_no_stored_positions_stands_on_the_fixed_spots():
     placed = layout.positions_of(RULES, {})
     assert placed["wall_1"] == (-18.5, -1)
-    assert placed["tower_1"] == (0, -14)
+    assert placed["tower_1"] == (14, 3)
+    assert placed["house_1"] == (2.5, 12.5)
+    assert placed["house_2"] == (-5.5, 11)
     assert len(placed) == 22
 
 
@@ -63,6 +65,16 @@ def test_a_stored_position_replaces_the_fixed_spot_and_unknown_plots_are_ignored
     placed = layout.positions_of(RULES, {"cannon_1": (-10, -10), "pp_tower_1": (1, 1)})
     assert placed["cannon_1"] == (-10, -10)
     assert "pp_tower_1" not in placed
+
+
+def test_new_defaults_step_aside_for_saved_cannon_and_wall_placements():
+    stored = {"cannon_1": (2.5, 12.5), "wall_1": (14.5, 2.5), "house_2": (-10, -9)}
+    placed = layout.positions_of(RULES, stored)
+    assert {spot: placed[spot] for spot in stored} == stored
+    assert placed["tower_1"] == (0, -14)
+    assert placed["house_1"] == (7, -6)
+    assert layout.route_open(RULES, placed)
+    assert layout.positions_of(RULES, {})["tower_1"] == (14, 3)
 
 
 def test_the_layout_version_is_1_for_an_old_save_and_2_once_something_moved():
@@ -121,7 +133,7 @@ def test_two_walls_may_touch_side_by_side_to_make_a_line():
 
 def test_a_building_may_stay_where_it_stands():
     placed = layout.positions_of(RULES, {})
-    layout.check_move(RULES, placed, "house_1", 7, -6)
+    layout.check_move(RULES, placed, "house_1", *placed["house_1"])
 
 
 def test_towers_and_houses_may_not_cut_the_heart_off_from_the_beach():

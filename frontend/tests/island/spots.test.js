@@ -6,7 +6,7 @@ import {edgeTrees} from '../../src/world/places/layouts.js';
 import {places} from '../../src/world/places/registry.js';
 import {FAKE_SPOTS} from './fake.js';
 import {CONFIG} from '../../src/pirates/sim.js';
-import {onWallLane} from '../../src/island/placement.js';
+import {checkMove, footprintOf, KEEP_OUT, onWallLane, positionsOf} from '../../src/island/placement.js';
 
 describe('island spots', () => {
   it('has 22 unique ids from one mapping table, in the order and kinds of the server', () => {
@@ -44,21 +44,29 @@ describe('island spots', () => {
       expect(Math.abs(item.z)).toBeLessThan(rz);
     }
   });
-  it('walls stand on the pirate paths (D056), towers on the four corners and the sides, houses and the watchtower inland', () => {
+  it('keeps wall lanes and corner towers around the eastern watchtower and the southern cottage plots', () => {
     for (const wall of SPOTS.filter(spot => spot.slot === 'wall')) expect(onWallLane(wall.x, wall.z), wall.id).toBe(true);
     const corners = SPOTS.filter(spot => spot.edge === 'corner').map(spot => [Math.sign(spot.x), Math.sign(spot.z)].join());
     expect(new Set(corners).size).toBe(4);
     for (const spot of SPOTS.filter(spot => ['house', 'watchtower'].includes(spot.kind))) expect(surfaceClass('home_islet', spot.x, spot.z)).toBe(2);
-    expect(spotById('tower_1').z).toBeLessThan(-10); // the hill at the north end of the path
+    expect(spotById('tower_1')).toMatchObject({edge: 'side', x: 14, z: 3});
+    expect(spotById('house_1').x).toBeGreaterThan(0);
+    expect(spotById('house_2').x).toBeLessThan(0);
+    for (const house of SPOTS.filter(spot => spot.slot === 'house')) expect(house.z).toBeGreaterThan(10);
   });
   it('keeps spots apart from each other, the trees and the landing', () => {
-    const all = [...SPOTS, CABIN, BELL];
-    // D056: two walls stand side by side across each sea lane (touching, 2 apart); everything else keeps 3 apart.
-    const pair = (a, b) => a.slot === 'wall' && b.slot === 'wall' && a.edge === b.edge;
-    for (const a of all) for (const b of all) if (a !== b) expect(Math.hypot(a.x - b.x, a.z - b.z), `${a.id} ${b.id}`).toBeGreaterThanOrEqual(pair(a, b) ? 2 : 3.0001);
-    for (const item of all) for (const [x, z] of edgeTrees.home_islet) expect(Math.hypot(item.x - x, item.z - z), item.id).toBeGreaterThan(2.5);
+    const placed = positionsOf();
+    for (const {id, x, z} of SPOTS) expect(checkMove(id, x, z, placed), id).toEqual({ok: true});
+    const fixed = KEEP_OUT.filter(({id}) => id === CABIN.id || id === BELL.id);
+    const boxes = [...SPOTS.map(item => ({...item, w: footprintOf(item.id), d: footprintOf(item.id)})), ...fixed];
+    for (const box of boxes) for (const [x, z] of edgeTrees.home_islet) {
+      // This uses the building footprint and trunk radius, so two nearby corners may still be clear.
+      const dx = Math.max(0, Math.abs(box.x - x) - box.w / 2);
+      const dz = Math.max(0, Math.abs(box.z - z) - box.d / 2);
+      expect(Math.hypot(dx, dz), box.id).toBeGreaterThanOrEqual(.48);
+    }
     const [sx, sz] = places.home_islet.spawn;
-    for (const item of all) expect(Math.hypot(item.x - sx, item.z - sz), item.id).toBeGreaterThan(2);
+    for (const item of [...SPOTS, CABIN, BELL]) expect(Math.hypot(item.x - sx, item.z - sz), item.id).toBeGreaterThan(2);
   });
   it('rings the island\'s heart with wall_7…wall_12: inland, within the sim\'s ring, two across each sea lane', () => {
     const {heart} = CONFIG.boarding, ring = SPOTS.filter(spot => spot.edge === 'ring');

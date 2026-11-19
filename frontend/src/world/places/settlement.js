@@ -46,7 +46,7 @@ export async function createSettlement(ctx) {
   const cleanups = [], dispose = createLifetime(group, art, cleanups);
   let mooringStage = null;
   try {
-    const ground = backdrop(group, await (ctx.loadBackdrop ?? loadBackdrop)(`places/${id}.png`));
+    const ground = backdrop(group, await (ctx.loadBackdrop ?? loadBackdrop)(`places/${id}.png`, {referencePlan: id === 'home_islet' && !!ctx.island}));
     const homeReference = ground.material.map.userData?.homeReference;
     if (id === 'home_islet') {
       if (!homeReference) {
@@ -151,7 +151,7 @@ export async function createSettlement(ctx) {
       }, dispose,
     };
     if (mooringRope) {
-      // The southwest wave approach crosses the skiff; the beach post stays on the sand.
+      // Keep the southern wave view clear. The beach ramp and post stay on dry sand.
       place.setMooringBattle = active => { skiff.visible = mooringRope.visible = mooringStage.visible = !active; };
     }
     ctx.decorate?.(place, art, cleanups);

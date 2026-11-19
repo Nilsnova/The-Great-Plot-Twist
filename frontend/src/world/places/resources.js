@@ -10,7 +10,7 @@ const HOME_REFERENCE = {file: 'village/home-reference-terrain.webp', width: 1536
 
 // A place with a painted cartoon ground (src/art/ground.js) gets it instead of its pixel backdrop:
 // 16 to 32 texels per world unit, by the screen's density.
-export async function loadBackdrop(path, { quality = 'high' } = {}) {
+export async function loadBackdrop(path, { quality = 'high', referencePlan = false } = {}) {
   const id = /^places\/([a-z_]+)\.png$/.exec(path)?.[1];
   if (id && hasGround(id) && typeof document !== 'undefined') {
     const density = Math.max(16, Math.min(32, screenDensity(quality) * 8));
@@ -18,7 +18,7 @@ export async function loadBackdrop(path, { quality = 'high' } = {}) {
       const reference = await acquireRasterSheet(HOME_REFERENCE).catch(() => null);
       if (reference) {
         try {
-          const texture = smoothTexture(paintGround(id, density, null, reference.image));
+          const texture = smoothTexture(paintGround(id, density, null, reference.image, referencePlan));
           texture.userData.homeReference = true;
           return texture;
         } finally { reference.release(); }
@@ -26,7 +26,7 @@ export async function loadBackdrop(path, { quality = 'high' } = {}) {
     }
     const lease = await acquireRasterSheet(TERRAIN_SHEET);
     try {
-      return smoothTexture(paintGround(id, density, lease.image));
+      return smoothTexture(paintGround(id, density, lease.image, null, referencePlan));
     } finally { lease.release(); }
   }
   const texture = await loadTexture(`${import.meta.env.BASE_URL}${path}`);

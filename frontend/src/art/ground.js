@@ -8,6 +8,7 @@ import {LEGACY_DEPTH} from '../world/projection.js';
 import {canvas, ellipse, line, linear, poly, stroke} from './paint.js';
 import {cliffProfile, paintCliffFaces, paintGrassRim} from './coast-cliffs.js';
 import {meadowScale, paintMaterial, pathMaterialMask} from './village/terrain-materials.js';
+import {HOME_COTTAGES, SOUTH_BELL} from '../island/home-plan.js';
 
 const SIZE = {width: 64, height: 48};
 // Paths of each island (logical x/z, a polyline each) and small clearings [x, z, radius].
@@ -25,6 +26,21 @@ const PATHS = {
     clearings: [[0, -14, 2.33], [-8, 6.6, 2.65], [8.5, 12.4, 1.57], [7, -6, 1.53], [-8, -6, 1.53],
       [0, 2, 2.28], [8.5, -12.5, 2.02], [-5.5, -11.5, 1.89], [12.6, 7.5, 1.75]],
   },
+};
+const [westCottage, eastCottage] = HOME_COTTAGES;
+const MOCKUP_PATHS = {
+  lines: [
+    [[0, -12.2], [0, 7.4], [-.1, 12.3], [SOUTH_BELL.x, SOUTH_BELL.z], [-1.8, 19.3], [1.1, 19.3]],
+    [[westCottage.x, westCottage.z + .7], [westCottage.x, -12.2], [eastCottage.x, -12.2], [eastCottage.x, eastCottage.z + .7]],
+    [[-5.5, -11.5], [-4.7, -9.4], [0, -8.1], [6.5, -8.1], [8.5, -12.5]],
+    [[0, 4.9], [8.1, 4.9], [14, 4], [14, 3]],
+    [[-8, 6.6], [-5.3, 7.4], [0, 7.4], [7.7, 8.1], [12.6, 7.5]],
+    [[-5.5, 11], [-5.5, 13.1], [2.5, 13.1], [2.5, 12.5]],
+  ],
+  widths: [1.42, 1.01, 1.07, 1, 1.15, 1],
+  clearings: [[westCottage.x, westCottage.z, 1.38], [eastCottage.x, eastCottage.z, 1.38], [0, 2, 2.28],
+    [-8, 6.6, 2.65], [SOUTH_BELL.x, SOUTH_BELL.z, 1.48], [2.5, 12.5, 1.42], [-5.5, 11, 1.46],
+    [14, 3, 1.56], [8.5, -12.5, 2.02], [-5.5, -11.5, 1.89], [12.6, 7.5, 1.75]],
 };
 const seeded = seed => () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
 
@@ -80,8 +96,8 @@ function paintPavers(c, paths, materials, reference) {
 export const hasGround = id => Object.hasOwn(PATHS, id) && Object.hasOwn(surfaces, id);
 
 /** Paints the ground of a place at density texels per world unit; returns the canvas. */
-export function paintGround(id, density = 28, materials = null, reference = null) {
-  const s = surfaces[id], paths = PATHS[id];
+export function paintGround(id, density = 28, materials = null, reference = null, referencePlan = false) {
+  const s = surfaces[id], paths = id === 'home_islet' && referencePlan ? MOCKUP_PATHS : PATHS[id];
   const art = canvas(Math.round(SIZE.width * density), Math.round(SIZE.height * density)), c = art.getContext('2d');
   // World x/z to the canvas: x across, the drawn y = -z * 0.72 down from the top edge.
   c.setTransform(density, 0, 0, density, SIZE.width / 2 * density, SIZE.height / 2 * density);

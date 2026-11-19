@@ -38,7 +38,11 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     }
     return player;
   };
-  const spots = island => islandSpots.map(id => spotView(island, id, true));
+  const spots = island => {
+    const views = islandSpots.map(id => spotView(island, id, true));
+    const placed = positionsOf(views);
+    return views.map(spot => ({ ...spot, ...placed[spot.id] }));
+  };
   // --- the games (GAME-V3.md §2): the SQL rules of game_join and game_leave, in memory ---
   const membersOf = code => {
     if (!(world.members instanceof Map)) world.members = new Map();
