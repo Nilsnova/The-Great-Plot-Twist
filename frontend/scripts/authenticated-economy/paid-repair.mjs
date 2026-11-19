@@ -11,6 +11,15 @@ const REPAIR = '/api/island/structures/repair';
 
 async function pointerClick(page,button) {
   await button.waitFor({state:'visible',timeout:10000});
+  // A visible card can still be sliding into the modal top layer. Wait for
+  // actual pointer ownership instead of forcing a click through that transition.
+  const handle=await button.elementHandle();
+  await page.waitForFunction(element=>{
+    if(!element || !element.isConnected || element.disabled)return false;
+    const box=element.getBoundingClientRect(),x=box.x+box.width/2,y=box.y+box.height/2;
+    const hit=document.elementFromPoint(x,y);
+    return box.width>0 && box.height>0 && (hit===element || element.contains(hit));
+  },handle,{timeout:10000});
   const point=await button.evaluate(element=>{
     const box=element.getBoundingClientRect(),x=box.x+box.width/2,y=box.y+box.height/2;
     const hit=document.elementFromPoint(x,y);
