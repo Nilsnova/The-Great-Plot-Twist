@@ -73,6 +73,10 @@ node scripts/authenticated-economy/protocol-one.mjs
 `api-clients.mjs`, `observer.mjs`, `runtime.mjs` and `source.mjs` helpers. Those
 helpers are a prerequisite of this scenario and may be supplied from an existing
 prepared checkout. Tokens/private provider settings are never included in reports.
+The integrated runner resolves its default helper directory relative to its own
+checkout; the measured run used the explicitly selected prepared helpers. This
+later portability correction passed syntax checking and does not relabel the
+recorded provider execution as a rerun of the integrated runner.
 
 The separately rerun expiry command, from `backend`, was:
 

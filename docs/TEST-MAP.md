@@ -172,7 +172,7 @@ Exact package evidence is recorded under `MP-ECO-20-provider-authority`,
 `MP-ECO-20-personal-provider`, `MP-ECO-20-boss-income-provider`,
 `MP-ECO-20-zero-revival-provider`, `MP-ECO-20-provider-arsenal`,
 `MP-ECO-20-compatibility`, `MP-ECO-20-protocol-one`,
-`MP-ECO-20-provider-ship-cap`, `MP-ECO-20-http-wagers` and
+`MP-ECO-20-ship-cap`, `MP-ECO-20-http-wagers` and
 `MP-ECO-20-repair-quota` in `docs/evidence`. Their exact source hashes, fixture
 boundaries, retained failures and timestamps are authoritative. These bounded
 passes improve coverage; **#505 remains open** for the documented browser and
