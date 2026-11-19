@@ -166,20 +166,27 @@ behavior are not verified here. No route, economy admission or feature flag is a
 - **Responsible teammate:** Ianno Hollensteiner
 - **Coding agent:** Codex; the responsible teammate reviews its output.
 - **Human reviewer:** pending
-- **Last updated:** 2026-11-18
+- **Last updated:** 2026-11-19
 
 
-## Saved existing defenses with offers disabled
+## Saved existing defenses with a restricted catalogue
 
-Skill and tree intents for an existing structure may quote its known gated kind and spot
-after offer flags are disabled. The adapter uses the existing-structure catalogue helper
+Skill and tree intents for an existing structure may quote its known kind and spot when
+a trusted catalogue omits a new-purchase offer. The adapter uses the existing-structure
+catalogue helper
 for that exact expected kind and spot; PostgreSQL still proves the actual stored instance,
 kind, level and revision before spending. This grants no construction/rebuild availability
 and does not expand research or wreck offers. Removed offers continue through the existing
 unavailable-rule path so immutable authorized receipts can replay.
 
+Main `1350c2ba` retires the old defense and extra-spot flags; the runtime catalogue always
+includes their offers. The restricted-catalogue regression is an explicit fixture for
+saved-instance compatibility, not a way to restore those retired flag gates.
 
-## Final dependency and main integration checks
+
+<a id="final-dependency-and-main-integration-checks"></a>
+
+## Earlier dependency and main integration checks
 
 The branch includes actual shared construction `9191a698` with personal Captain `4005fb53`
 and treasury `feca459f`, plus main `64d59506`. Incoming main changes retain saved-defense,
@@ -227,3 +234,34 @@ All nine component paths remain isolated in the comparison against construction;
 charge-proof migration, its tests and this specification change from the published
 progression component. Prices, public signatures, free selections and admission remain
 unchanged.
+
+## Always-on catalogue integration
+
+Main `1350c2ba` and the current construction prerequisite are integrated without changing
+progression production Python or SQL. The SQL-test module still imported the removed
+`catalogue_for_flags` helper, causing collection to fail before any test ran. It now uses
+`runtime_catalogue` to obtain current always-on offer prices. The saved-instance fixture
+continues to supply a deliberately restricted base catalogue, preserving its actual
+instance/kind/level/revision refusal and immutable replay assertions.
+
+Commands from `backend/`:
+
+```bash
+uv run --no-sync pytest -q server/tests/test_economy_progression.py server/tests/test_house_roles_match_migration.py server/tests/test_respec_wave_guards_match_migration.py server/tests/test_construction_rules.py server/tests/test_construction_store.py server/tests/test_migration_versions.py
+CASE_PG_SCRATCH=1 uv run --no-sync --with pgserver --with 'psycopg[binary]' --with pglast pytest -q --tb=short server/tests/island_sql/test_economy_progression_sql.py server/tests/island_sql/test_shared_construction_sql.py server/tests/island_sql/test_shared_construction_grant_races_sql.py server/tests/island_sql/test_personal_captain_operations_sql.py server/tests/island_sql/test_islands_and_waves_sql.py
+uv run --no-sync ruff check .
+```
+
+At source `62c81fea`, with construction `78fbda57`, the Python selection passed
+**81 tests in 0.59 seconds**; the mixed PostgreSQL selection passed **169 tests in
+18.62 seconds**, with no skips and the complete migration chain
+applied twice. All **63 progression cases** collect after the import correction. Backend
+Ruff and **78 unique migration parses** passed. No retired flag gate, price, financial
+receipt rule, public signature or admission behavior was restored or changed. Full
+backend/browser acceptance, shared route integration, live migration and human approval
+remain separate.
+
+The subsequent construction prerequisite adds four current-runtime extra-slot boundary
+cases and verification text only. Progression production Python and all SQL remain
+identical to the tested cut; those additional cases retain the target island's normal
+unlock milestones.
