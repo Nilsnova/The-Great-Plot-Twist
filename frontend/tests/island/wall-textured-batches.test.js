@@ -82,13 +82,13 @@ describe('dimensional wall artwork contract', () => {
   it.each([[1,.85],[2,.95],[3,1.10],[4,1.20],[5,1.30]])(
     'draws a grounded plinth, face and beveled crown for level %i on both axes', (level, h) => {
     const cases = [
-      {end: [2, 0], order: 99.98, shade: .86, points: [
+      {end: [2, 0], order: 99.98, shade: .94, points: [
         [.094,-.282],[2.694,-.282],[2.676,-.028],[.076,-.028],
         [.076,-.028],[2.676,-.028],[2.676,h-.358],[.076,h-.358],
         [.076,h-.358],[2.676,h-.358],[2.656,h-.168],[.056,h-.168],
         [-.056,h+.168],[2.544,h+.168],[2.656,h-.168],[.056,h-.168],
       ]},
-      {end: [0, 2], order: 100.98, shade: .69, points: [
+      {end: [0, 2], order: 100.98, shade: .74, points: [
         [.611,0],[1.011,-1.2],[.894,-1],[.494,.20],
         [.494,.20],[.894,-1],[.894,h-1.33],[.494,h-.13],
         [.494,h-.13],[.894,h-1.33],[.764,h-1.2],[.364,h],
@@ -102,7 +102,12 @@ describe('dimensional wall artwork contract', () => {
       const expected = points.flatMap(([px, py]) => [px, py, 0]).map(value => expect.closeTo(value, 6));
       expect(Array.from(mesh.geometry.attributes.position.array)).toEqual(expected);
       const colors = mesh.geometry.getAttribute('color');
-      expect([0,4,8,12].map(at => colors.getX(at))).toEqual([shade*.62,shade,shade*.86,.96].map(value => expect.closeTo(value, 6)));
+      const facing = [shade * .61, shade, shade * .92, 1.09];
+      for (const [index, light] of facing.entries()) {
+        const at = index * 4;
+        const rgb = [colors.getX(at), colors.getY(at), colors.getZ(at)];
+        expect(rgb).toEqual([light, light * .982, light * .939].map(value => expect.closeTo(value, 6)));
+      }
       expect(Array.from(mesh.geometry.index.array)).toEqual([0,1,2,0,2,3,4,5,6,4,6,7,8,9,10,8,10,11,12,13,14,12,14,15]);
       expect(mesh.geometry.attributes.position.count).toBe(16);
       expect(mesh.renderOrder).toBe(order); expect(mesh.frustumCulled).toBe(false);

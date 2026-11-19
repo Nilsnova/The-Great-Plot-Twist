@@ -7,6 +7,7 @@ const UNIT = 16;
 const HEIGHTS = [.85, .95, 1.10, 1.20, 1.30];
 const BASE_HALF = .47, BODY_HALF = .38, CROWN_HALF = .28;
 const PLINTH_HEIGHT = .20, BEVEL_HEIGHT = .13;
+const CROWN_LIGHT = 1.09;
 const POST_WIDTH = .60, POST_HEIGHT = .65;
 const END = .84;
 // The pale stone sheet starts another bright course at the bottom of the existing face samples.
@@ -67,7 +68,7 @@ export function texturedWallBatches(links, posts, art, {selectedId = null, selec
     // The positive X and Z faces are camera-facing under the village projection.
     if (!vertical || showEnd) side(3, 2, 'front', .94);
     if (vertical || showEnd) side(1, 2, 'side', .74);
-    quad(layer, crown, wallSurfaceFrame(link.level, 'top'), 1.09);
+    quad(layer, crown, wallSurfaceFrame(link.level, 'top'), CROWN_LIGHT);
   }
   const byId = new Map(posts.map(post => [post.id, post]));
   for (const link of links) {
@@ -109,7 +110,7 @@ export function texturedWallBatches(links, posts, art, {selectedId = null, selec
       const height = HEIGHTS[post.level - 1];
       quad(layer, [[post.x-CROWN_HALF,post.z-CROWN_HALF],[post.x+CROWN_HALF,post.z-CROWN_HALF],
         [post.x+CROWN_HALF,post.z+CROWN_HALF],[post.x-CROWN_HALF,post.z+CROWN_HALF]]
-        .map(([x,z]) => {const point=projectPoint(x,z);return [point.x,point.y+height+.02,x,z];}), wallSurfaceFrame(post.level,'top'), 1.09);
+        .map(([x,z]) => {const point=projectPoint(x,z);return [point.x,point.y+height+.02,x,z];}), wallSurfaceFrame(post.level,'top'), CROWN_LIGHT);
       continue;
     }
     // Damage and selection never enlarge a post. Scale around its source foot,
