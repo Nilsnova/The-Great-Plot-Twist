@@ -20,14 +20,14 @@ export function moveTitle(spotId, spots = []) {
 }
 
 // The bar's copy/state plus a confirmed portrait identity for move-bar.js; no renderer or pixels here.
-export function moveModel({spotId, spots, verdict, busy, message}) {
+export function moveModel({spotId, spots, verdict, busy, message, docked}) {
   const ok = verdict.ok && !busy;
   const actual = spots?.find(item => item?.id === spotId);
   const portrait = actual?.built === true && Object.hasOwn(BUILDINGS, actual.kind) && Number.isSafeInteger(actual.level) && actual.level >= 1 && actual.level <= 5
     ? {kind: actual.kind, level: actual.level, spec: actual.spec ?? null} : null;
   const line = spotById(spotId)?.slot === 'wall' ? 'Tap a glowing square. Up to three rows per approach.' : 'Tap the island where it should stand, or use the arrows.';
   return {title: moveTitle(spotId, spots), line, portrait,
-    status: message || (verdict.ok ? 'This square is free.' : verdict.message), ok, refused: !verdict.ok || !!message,
+    status: message || (verdict.ok ? (docked ? 'Wall edges aligned.' : 'This square is free.') : verdict.message), ok, refused: !verdict.ok || !!message,
     busy, placeLabel: busy ? 'Placing…' : 'Place here'};
 }
 
@@ -41,10 +41,33 @@ export function createMoveMode({api, render = () => {}, preview = () => {}, spot
     preview({spotId: move.spotId, x: move.x, z: move.z, size: footprintOf(move.spotId), ok: move.verdict.ok});
     render(moveModel({...move, spots: spots()}));
   }
-  function goTo(x, z) {
+  function dockWall(spotId, x, z, positions, accepted) {
+    const canDock = spotById(spotId)?.slot === 'wall';
+    if (!canDock) return null;
+    let closest = GRID * 1.25, result = null;
+    const width = footprintOf(spotId);
+    for (const wall of accepted ?? []) {
+      if (wall?.built !== true || wall.kind !== 'wall' || wall.id === spotId) continue;
+      const anchor = positions[wall.id];
+      if (!anchor) continue;
+      for (const [dx, dz] of Object.values(KEYS)) {
+        const cell = {x: anchor.x + width * dx, z: anchor.z + width * dz};
+        const distance = Math.hypot(cell.x - x, cell.z - z);
+        if (distance >= closest || !checkMove(spotId, cell.x, cell.z, positions).ok) continue;
+        result = cell; closest = distance;
+      }
+    }
+    return result;
+  }
+  function goTo(x, z, pointer = false) {
     if (!move || move.busy) return;
     const cell = snap(x, z);
-    move = {...move, ...cell, verdict: checkMove(move.spotId, cell.x, cell.z, placed()), message: ''};
+    const accepted = spots(), positions = positionsOf(accepted);
+    const verdict = checkMove(move.spotId, cell.x, cell.z, positions);
+    // Pointer input can line up within a grid step. Explicit row-limit and sea refusals stay visible.
+    const canAlign = verdict.ok || verdict.code === 'off_path' || verdict.code === 'place_taken';
+    const docked = pointer && canAlign ? dockWall(move.spotId, x, z, positions, accepted) : null;
+    move = {...move, ...(docked ?? cell), docked: !!docked, verdict: docked ? {ok: true} : verdict, message: ''};
     show();
   }
   function start(spotId) {
@@ -78,7 +101,7 @@ export function createMoveMode({api, render = () => {}, preview = () => {}, spot
   }
   return {
     start, confirm, cancel: end, handleKey,
-    tap: (x, z) => goTo(x, z),
+    tap: (x, z) => goTo(x, z, true),
     nudge: (dx, dz) => move && goTo(move.x + dx * GRID, move.z + dz * GRID),
     refresh: show,
     get active() { return !!move; },
