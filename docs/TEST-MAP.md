@@ -88,18 +88,18 @@ frontend applicability requires component-specific comparison.
 | Scenario | Current or retained evidence | Remaining boundary |
 |---|---|---|
 | `treasury-concurrent-spending` | Partial: current two real members raced three quoted purchases for the last 20 coins; two committed and one returned 409; independent ledger/wallet reconciliation | Cross-domain purchase/wager/repair competition and concurrent grants/reset remain separate. The fresh 30-coin admission was explicit last-funds setup. |
-| `settlement-source-account` | Partial: existing lifecycle/source-account SQL | Current authenticated leave/change/reset, once-only old-account settlement and old personal commitments. |
+| `settlement-source-account` | Partial: current registered-session reset with real-clock settlement credited retired origin 402/0 while replacement stayed 200/0; repeated receipts and independent ledgers matched | Old personal commitments and the full leave/change-island combination remain separate. Market source facts were explicit fixtures. |
 | `wave-income-once` | Partial: retained `a8fa5de1` paired 35-coin win and `b239bdf0` defended win | Current multiple-finish/bonus/terminal-race combinations. |
 | `personal-participation` | Partial: canonical SQL and retained confirmed-combat completion | Current spectator/countdown/absent negatives and recovery after departure/reset. |
 | `engineer-generation` | Partial: current free role/respec, two 9-coin discounted buys with one pending generation, blocked role change and legacy-route evasion; unchanged wallets | Saved eligibility fixtures do not establish earned milestones or delayed completion of a superseded generation. |
 | `arsenal-holder-lifecycle` | Partial: current island unlock refusal/acceptance, exact 60-coin buy/replay, one-copy two-member take race and stale-tenure refusal | Complete current capacity/excess/frozen-loadout/departure/grace/deletion combination. Capacity 20 was displayed/read, not filled in this case. |
-| `repairs-free-revival` | Partial: retained `b239bdf0` genuine free revival/accounting and natural loss; paid-repair case separate | Retained revival had treasury 200. Current zero-coin revival and all paid-repair refusals/order/quota. |
-| `unrestricted-bets` | Partial: current real Auth/API all-in 180 loss after an actual five-minute deadline | Trusted readings were explicit fixtures. One-coin, separate same-event bets, winnings reinvestment, fees/replays/races and excluded products. |
+| `repairs-free-revival` | Partial: retained `b239bdf0` genuine free revival/accounting and natural loss; current paid owner repair and exact retry were observed in a separate incomplete follow-up | Retained revival had treasury 200. Paid-repair follow-up stopped at member reconnect/promotion; no completed row is claimed. Current zero-coin revival and full repair quota/order remain separate. |
+| `unrestricted-bets` | Partial: current one-coin and all-remaining 199-coin same-event stakes, two-coin winnings reinvestment, exact 200/changed 409 retries and zero-available refusal; separate all-in 180 loss | Actual five-minute deadlines elapsed; trusted readings were explicit fixtures and genuine fresh opener returned `prices_stale`. Fees, cross-domain races and excluded-product combinations remain separate. |
 | `ship-reward-cap` | Partial: cap/idempotency/source-account SQL | Current authenticated ten-member/parallel-record/old-origin combination. |
 | `member-owner-permissions` | Partial: current member build/demolition/bell, member reset 403, owner reset; outsider mutation 403, forged actor 422; actual canonical private channel owner/member success and outsider refusal | Full invited guest, research-change and session-succession combinations remain separate. Private SDK delivery is not automatic rendered-client lifecycle proof. |
 | `reset-deletion` | Partial: current zero-funds owner reset/replay gave one 200 grant, old account 0; retained actual Account deletion | Current authenticated open old-epoch settlement and member deletion/copy return. |
 | `legacy-class-contexts` | Partial: existing legacy/class/excluded-product regression coverage | Current authenticated context switches and prerequisite-read-failure no-fallback cases. |
-| `old-client-rejection` | Current provider transport passed missing/unsupported capability reads 409, missing-capability mutation 409, missing epoch 422, authorized first read and outsider/actor forgery refusal; SQL/route checks retained separately | No older released client binary was launched. These are actual authenticated browser HTTP boundary assertions. |
+| `old-client-rejection` | Partial: current provider passed missing/unsupported capability reads 409, missing-capability mutation 409, missing epoch 422, authorized first read and outsider/actor forgery refusal; SQL/route checks retained | No older released client binary was launched. Unsupported mutation variants retain separate route-test evidence. |
 | `wave-protocol-1` | Partial: legacy/protocol admission SQL and HTTP checks | Current authenticated shared-admission refusal and explicit no-personal-payout fallback. |
 | `wave-protocol-2` | Partial: current zero-funds rendered native bell/natural loss; current session duplicate/cross-island refusal, real grace reconnect and withdrawal; retained Auto next and expiry | Session reconnect retained healthy HP, position and an empty cooldown set. Fallen-state and nonempty-cooldown persistence are not inferred. |
 
@@ -113,9 +113,12 @@ wave 31 loss, member 403 and owner reset/replay were actual observations. Clock,
 HP and outcome were not edited during the scene. The separate session evidence is
 in `docs/evidence/MP-ECO-20-sessions/result.json`, recorded from 15:38:50Z to
 15:41:00Z with unchanged helper hashes; its source/transport partition limits are
-explicit. New core and personal/arsenal cases are authenticated browser transport,
+explicit. New [core and personal/arsenal evidence](evidence/MP-ECO-20-local-provider/README.md)
+is authenticated browser transport,
 not rendered-card passes. Earlier successful rendered zero-funds actions retain
-their own evidence. This does not complete #505.
+their own evidence. The [registered-session origin case](evidence/MP-ECO-20-origins-provider/README.md)
+adds real-clock origin settlement and reinvestment with explicit market fixtures;
+no natural fresh-provider opening is claimed. This does not complete #505.
 
 Before the final pinned backend run, provide Node and frontend dependencies matching
 `frontend/package-lock.json` (`cd frontend && npm ci`, or a verified matching local
