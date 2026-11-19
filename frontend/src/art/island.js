@@ -111,7 +111,7 @@ function grassTuft(c, {w, h}) {
   }
 }
 function bench(c, {w, h}) {
-  const g = h - 3, y = g - 12;
+  const g = h - 3, y = g - 10.3;
   shadow(c, w / 2 + 1.5, g, 20, 2.55, .18);
   const edge = {width: .64, line: '#503a2c', shade: false};
   for (const x of [9, 36]) {
@@ -122,10 +122,10 @@ function bench(c, {w, h}) {
   }
   // The backrest and seat each have a lit top edge and a darker, thicker front face.
   part(c, poly([[5, g - 20], [7.8, g - 22.2], [41.4, g - 22.2], [44, g - 20]], .62), '#e4b47d', edge);
-  part(c, poly([[5, g - 20], [44, g - 20], [43.2, g - 15.1], [5.5, g - 15.1]], .69),
-    linear(c, 0, g - 20, 0, g - 15, [[0, '#ba8452'], [.37, '#a4673e'], [1, '#765036']]), edge);
-  part(c, poly([[3.9, y], [8.6, y - 4.8], [42.2, y - 4.8], [44.8, y]], .71),
-    linear(c, 0, y - 4.8, 0, y, [[0, '#bd8b5a'], [.34, '#dda971'], [1, '#f0c58c']]), edge);
+  part(c, poly([[5, g - 20], [44, g - 20], [43.2, g - 16.5], [5.5, g - 16.5]], .69),
+    linear(c, 0, g - 20, 0, g - 16.5, [[0, '#ba8452'], [.37, '#a4673e'], [1, '#765036']]), edge);
+  part(c, poly([[3.9, y], [8.6, y - 3.5], [42.2, y - 3.5], [44.8, y]], .71),
+    linear(c, 0, y - 3.5, 0, y, [[0, '#bd8b5a'], [.34, '#dda971'], [1, '#f0c58c']]), edge);
   part(c, poly([[3.9, y], [44.8, y], [43.5, y + 3.25], [4.4, y + 3.25]], .68),
     linear(c, 0, y, 0, y + 3.25, [[0, '#d9a16a'], [.36, '#a46c42'], [1, '#6b4936']]), edge);
   stroke(c, [[7, y - 2], [21, y - 2.2], [42.2, y - 2]], '#8b623f', .49, .8);
@@ -179,8 +179,9 @@ function lantern(c, {w, h}) {
     radial(c, cx - 1.6, g - 15.7, 5, [[0, '#fff3b4'], [.43, '#ffce70'], [1, '#ad6530']]), edge);
   part(c, poly([[cx + 1.6, g - 18.3], [cx + 4.35, g - 19.7], [cx + 3.9, g - 13], [cx + 1.4, g - 11.6]], .51), '#bb753a', edge);
   stroke(c, [[cx + 1.75, g - 17.9], [cx + 1.6, g - 12.3]], '#e8af61', .65);
-  part(c, poly([[cx - 5.35, g - 19.5], [cx - .5, g - 22.05], [cx + 4.4, g - 21.05], [cx + 5.15, g - 19.7],
+  part(c, poly([[cx - 5.35, g - 19.5], [cx - .5, g - 20.8], [cx + 3.8, g - 20.65], [cx + 5.15, g - 19.7],
     [cx + 1.7, g - 18.1]], .51), '#57718a', edge);
+  stroke(c, [[cx - 3.1, g - 19.67], [cx - .4, g - 20.3], [cx + 2.9, g - 20.24]], '#9cabb1', .56);
   stroke(c, [[cx - 4.55, g - 19.6], [cx + 1.7, g - 18.65], [cx + 4.4, g - 19.9]], '#dcb273', .67);
 }
 function crate(c, {w, h}) {
