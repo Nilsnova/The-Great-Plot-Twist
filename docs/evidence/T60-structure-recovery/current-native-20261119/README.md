@@ -1,8 +1,9 @@
 # Current native repair and journal evidence
 
 This is T60/#126 verification for Ianno Hollensteiner. Application source is
-`3bdd8eda16470795fdedd68c42fffab54e5f2ced`; this contribution changes tests,
-offline tooling and evidence, not production gameplay or migrations. Historical
+`3bdd8eda16470795fdedd68c42fffab54e5f2ced` for the backend, migrations and original
+diagnostics. A demonstrated frontend reconnect race is fixed separately below.
+This contribution adds no migration or deployment. Historical
 gradual-recovery and fake-room results in the parent directory remain historical.
 
 ## Verified locally
@@ -33,8 +34,8 @@ gradual-recovery and fake-room results in the parent directory remain historical
   cannot satisfy the assertion. The sealed paid event is a synthetic fixture;
   this closes the specific deterministic egress assertion, not authenticated
   payment/realtime acceptance.
-- Scoped Ruff and whitespace checks passed. The actual-provider scenario module
-  passes `node --check`; its provider/rendered execution has not yet been run.
+- Scoped Ruff and whitespace checks passed. Both actual-provider scenario exports
+  pass `node --check`; their distinct observed boundaries are recorded below.
 
 After adding fail-closed source-provenance checks, the affected native diagnostic
 passed again (1 in 5.02 seconds), and the changed egress case passed again
@@ -125,8 +126,58 @@ original-request retry, shared quota and canonical terminal handling. Its direct
 retry/fourth-request probes are explicitly transport checks. It records failure
 before throwing and never replaces responses, HP or journal data.
 
-At this checkpoint that scenario is **not run**. Provider infrastructure,
-temporary test-owned accounts and complete rendered acceptance are reported
-separately. The local lower-layer successes above do not manufacture an
-authenticated two-client pass. No hosted data, migration, deployment or activation
-was used.
+The full three-use provider sequence was attempted and remains **partial**:
+natural closure arrived before its complete sequence finished. Retained reports
+include an original-UID replay after later natural damage on the original source
+([before-fix partial](provider/three-use-before-fix-partial.json)) and a genuine
+repair on the final source ([final partial](provider/three-use-final-partial.json)).
+Neither is a full provider-matrix pass. Initial attempts also encountered local
+entry configuration, first-game tutorials, card scrolling and driver readiness
+errors. Those failures were retained during diagnosis and are not counted as
+successful checks.
+
+The provider run exposed a real race: after an ordinary reload, a member could
+start the active-wave renderer as spectator before session attachment completed.
+The later valid controller proof did not update the same-wave renderer, so health
+checkpointing refused with `session_context_required`. The
+[active before-fix observation](provider/active-reconnect-before-fix.json) proves
+that the server wave was still current when this occurred.
+
+The fix rereads the validated server wave after guarded session hydration, and
+adopts controller fields only for the same frozen snapshot/participant and fresh
+matching proof. It preserves the existing simulation, replay, HP, clocks and
+cooldowns, and rebases the actor counter from the server. A proof lost during the
+read cannot poison the flow or block a later confirmed retry. Late/nonparticipant
+spectators retain no control.
+
+**The bounded real-provider reconnect case passed** with frontend
+`494334a13aa7285815aa951e24f12dfe490c8782`, unchanged backend/migrations `3bdd8eda`,
+and two independent Chromium processes. The real member reloaded into the same
+frozen participant with a higher connection generation, then physically repaired
+natural accepted damage. The shared treasury moved **130 → 120**, commitments
+stayed zero, and quota moved **0 → 1** with exactly one new receipt. Both independent
+replays applied the repair. Ordinary canonical closure retained damaged closed HP
+while both clients read all six structures at full current HP. See the
+[passed observation](provider/reconnected-member-repair.json),
+[rendered card](provider/reconnected-member-paid-repair.png),
+[component source fence](provider/source-fence.json) and
+[browser/helper receipt](provider/browser-and-helper-receipt.json).
+
+Setup used real GoTrue identities and restored production sessions, an explicit
+service-only admission of a fresh test-owned 200-coin treasury, six fresh-quote
+authenticated HTTP wall purchases, and ordinary intro acknowledgements through
+actual DOM controls. Card selection uses the existing development inspection;
+the bell and paid repair use physical pointer hit testing. No HP, clock, outcome,
+response or journal was fabricated. The source fence is a post-run component
+comparison plus frozen launcher/helper hashes, not continuous process attestation.
+
+For the reconnect fix, **74 affected tests in seven files passed in 6.97 seconds**,
+then **19 DOM/chain/replay tests in five files passed in 18.14 seconds**. After the
+extra delayed-attachment integration case and stale-proof guard, **23 affected
+tests in three files passed in 20.38 seconds**. This last run rechecks a subset;
+these counts must not be added as unique tests or claimed as one full-suite run.
+The committed final files match the executed guard changes, which were then
+uncommitted in the worktree. The final frontend build and spoiler guard passed
+in 3.63 seconds. The earlier 6-case DOM-only follow-up passed separately in 15.88
+seconds. Broader balance and release acceptance remain #512/#513; no hosted data,
+migration, deployment or activation was used.

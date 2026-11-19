@@ -4,6 +4,14 @@ This is the verification follow-through for issue #126. Ianno Hollensteiner owns
 the work. The source baseline is main `3bdd8eda`; no deployment, hosted migration
 or feature activation belongs to this task.
 
+An actual-provider observation demonstrated an active-wave reconnect race: a
+spectator renderer did not gain its server-confirmed frozen Captain control after
+session attachment. The narrow frontend fix refreshes that validated projection
+without restarting the simulation or changing journal/HP history. It rejects a
+stale session response and never grants control to a true nonparticipant spectator.
+The bounded real-provider follow-up proves one physical repair by the restored
+member; it does not claim the complete three-use provider matrix.
+
 The approved 18 November rule replaces historical gradual healing: all supported
 structures regain full current HP at canonical win/loss/expiry/abandonment, while
 closed combat HP and old receipts remain immutable. There are three successful
