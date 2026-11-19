@@ -16,9 +16,9 @@ const BANKS = [
   {first: 55, last: 67, foot: .951, back: .847, height: 1.47},
 ];
 const STONE = ['#bf9367', '#c69d72', '#b48762', '#cbab7e', '#c09b70'].map(hex => new THREE.Color(hex));
-const MORTAR = new THREE.Color('#806348'), RECESS = new THREE.Color('#785d43');
+const MORTAR = new THREE.Color('#8d6d4e'), RECESS = new THREE.Color('#785d43');
 const ENDS = [new THREE.Color('#9c7952'), new THREE.Color('#b08c61')];
-const TURF = new THREE.Color('#8eb140'), LIP = new THREE.Color('#a8bf50'), ROOTS = new THREE.Color('#748338');
+const TURF = new THREE.Color('#97b742'), LIP = new THREE.Color('#a8bf50'), ROOTS = new THREE.Color('#90a841');
 const SHADOW = new THREE.Color('#3e4a2d');
 const SUN = new THREE.Vector3(-.6, .71, .43).normalize();
 const STEP = .5;
@@ -31,18 +31,18 @@ const BEVEL_LIGHT = [-.22, -.19, -.08, .02, .28, .24, .09, -.07];
 // A short incline at the back of the upper tread hides where it joins the old meadow.
 const REAR_PROFILE = [
   [0, 0, -.14, RECESS], [.025, .055, -.25, STONE], [.051, .29, -.04, STONE],
-  [.079, .42, .16, STONE], [.112, .48, .23, LIP], [.15, .505, .11, TURF],
+  [.079, .42, .16, STONE], [.108, .452, .215, LIP], [.165, .535, .12, TURF],
   [.392, .513, .03, TURF], [.428, .532, -.10, RECESS], [.446, .604, -.20, STONE],
-  [.464, .812, -.035, STONE], [.482, .923, .14, STONE], [.515, .978, .23, LIP],
-  [.571, 1, .095, TURF], [.875, .99, .055, TURF], [.946, .857, -.01, TURF],
+  [.464, .812, -.035, STONE], [.482, .911, .14, STONE], [.514, .944, .24, LIP],
+  [.579, 1.013, .12, TURF], [.875, .99, .055, TURF], [.946, .857, -.01, TURF],
   [1, .62, -.11, TURF],
 ];
 const FRONT_PROFILE = [
   [0, 0, -.13, RECESS], [.055, .06, -.22, STONE], [.086, .29, -.08, STONE],
-  [.117, .46, .10, STONE], [.157, .525, .19, LIP], [.193, .564, .09, TURF],
+  [.117, .46, .10, STONE], [.154, .504, .22, LIP], [.201, .569, .12, TURF],
   [.415, .581, .025, TURF], [.461, .591, -.055, RECESS], [.49, .65, -.08, STONE],
-  [.52, .795, .01, STONE], [.544, .897, .10, STONE], [.574, .957, .155, LIP],
-  [.64, 1, .08, TURF], [.748, .978, .06, TURF], [.905, .716, .025, TURF],
+  [.52, .795, .01, STONE], [.544, .897, .10, STONE], [.574, .936, .215, LIP],
+  [.64, 1.01, .102, TURF], [.748, .978, .06, TURF], [.905, .716, .025, TURF],
   [1, .17, -.07, TURF],
 ];
 
@@ -117,7 +117,10 @@ export function createHomeTerraces(root, coastArt) {
     const rows = [];
     for (let sample = start; sample <= finish; sample += STEP) {
       const point = samplePoint(sample);
-      rows.push({sample, point, shape: profile.map(([radius, elevation]) => point(radius, elevation))});
+      // The first edge of the sod hangs slightly over the top stone below.
+      const shape = profile.map(([radius, elevation, , material]) =>
+        point(radius - (material === LIP ? .031 + .006 * Math.sin(sample * 2.3) : 0), elevation));
+      rows.push({sample, point, shape});
     }
     for (let i = 0; i < rows.length - 1; i++) {
       const a = rows[i].point, b = rows[i + 1].point;
@@ -174,7 +177,7 @@ export function createHomeTerraces(root, coastArt) {
         let column = 0;
         for (let next = start - shift; next < finish; column++) {
           const width = BLOCK_WIDTHS[(column + from + (upper ? 2 : 0)) % BLOCK_WIDTHS.length];
-          const left = Math.max(start + .014, next + .055), right = Math.min(finish - .014, next + width - .055);
+          const left = Math.max(start + .014, next + .044), right = Math.min(finish - .014, next + width - .044);
           if (right - left > .19) {
             const worn = Math.sin(column * 2.41 + start * .77 + course * 1.9 + from);
             const groutRipple = .022 * worn;
