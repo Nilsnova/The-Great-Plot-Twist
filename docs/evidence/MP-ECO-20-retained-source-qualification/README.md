@@ -91,3 +91,31 @@ pinned regression report records two tests failing before the guard, then 31
 passing tests across five affected suites and a successful build. The newly
 protected delayed-refusal branch is test evidence, not a newly observed provider
 journey. Exact source/test blob IDs and result provenance are recorded in JSON.
+
+## Membership-departure follow-up candidate
+
+Candidate `90a9a8227579c2be86cbe1d024fa75de7d61637e` adds one protected
+production delta to `9c25ec4b`: the existing `depart` helper in
+`frontend/src/island/shared-session-client.js`. Only an authenticated leave
+response with status 403 and exact code `not_member` now retires the saved
+original departure through the existing exact-record intent check. General 403,
+unknown refusal and network failure remain retryable. All backend, content,
+108 migrations, locks, Auth/SDK and other frontend files remain unchanged.
+
+The canonical membership transaction already withdraws the departing player's
+control, slots and stock and rotates the topic. The obsolete local departure
+therefore grants no remaining authority. Clearing it permits the ordinary new
+attachment attempt; the server still checks membership and global control.
+
+Financial, zero-revival and real-grace observations remain attributed to their
+actual `64ee02b3` source; the direct-own grace case does not enter the changed
+removed-membership branch. The successful Engineer traces remain actual
+`74be4855`. The separate departure fix package reports one red regression, then
+76 passing session client/API/intents tests and a fresh successful build; this
+comparison reruns none of them.
+
+The actual `64ee02b3` member-Leave waiting failure stays failed. Its replacement
+requires a separate actual-provider proof on served candidate `90a9a822`: same
+actor, ordinary rejoin/Leave, authentic old-scope `403 not_member` and product
+handoff to a fresh own session after the recorded normal UI/focus trigger. The
+comparison does not manufacture that result or waive other authority gates.
