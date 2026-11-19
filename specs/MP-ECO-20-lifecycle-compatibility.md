@@ -280,3 +280,11 @@ provided normalization call, all eleven native cases and eight committed lock/
 retry races passed **19 checks in 19.22 seconds**. The earlier-scope race now sorts
 four fixed fixture UUIDs by the actual signed hash, removing a probabilistic
 random-candidate search while preserving the strict earlier-key premise.
+
+The final supplied pacing/withdrawal implementation makes the persisted leader
+countdown authoritative. The native fixture now changes that setting through its
+actual service RPC before each bell; direct timing arguments cannot stand in for
+the selected setting. Against that implementation, the complete owned lifecycle,
+membership and committed-race subset passed **48 checks in 29.89 seconds**, with
+all 102 migration files executed twice. This verifies the newer trusted withdrawal
+journal and initial Captain map through the existing deletion/retention assertions.

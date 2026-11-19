@@ -47,6 +47,13 @@ def native_room(database, *, treasury=None, actors=None, prepared=None):
 def native_bell(database, room, *, actor=None, countdown=0, maximum=900, uid="lifecycle-bell01"):
     owner, treasury = room["owner"], room["treasury"]
     actor = actor or owner
+    as_server(database)
+    setting = rpc(
+        database, "shared_session_settings", actor, owner, keys(treasury)[1],
+        room["sessions"][actor], room["generations"][actor], uuid4().hex,
+        Jsonb({"countdownSeconds": countdown}),
+    )
+    assert setting["status"] == "done", setting
     as_owner(database)
     revision = database.execute(
         "select revision from public.island_recovery_state where island_owner=%s", (owner,)
