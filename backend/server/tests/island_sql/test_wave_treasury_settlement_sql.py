@@ -24,12 +24,20 @@ from server.tests.island_sql.test_islands_and_waves_sql import (  # noqa: E402
     as_owner,
     as_server,
     balance,
-    finish,
 )
 from server.tests.island_sql.test_personal_captain_sql import (  # noqa: E402
     initialized,
     private,
 )
+from server.tests.island_sql.test_shared_session_close_sql import finish as native_finish  # noqa: E402
+from server.tests.island_sql.test_shared_session_wave_sql import bell, live_room  # noqa: E402
+
+
+def finish(connection, player, wave_id, survived=True, sunk=7):
+    """Exercise the old storage/financial guard, not the fenced public entry."""
+    return private(connection, "legacy_wave_fence_wave_finish", player, wave_id,
+                   survived, sunk, 10, 5, 5, 20)
+
 
 TABLES = ("island_wave_accounting", "island_wave_participation_receipts",
           "island_wave_closures", "island_wave_completion_receipts")
@@ -65,8 +73,9 @@ def ready_wave(connection, *, played=5, countdown=0, houses=False, engineer=Fals
     if engineer:
         private(connection, "personal_captain_bind_engineer_locked", owner)
     as_server(connection)
-    started = rpc(connection, "wave_start", owner, "wave_start_001", "island", owner,
-                  42, countdown, 0, 900, 100, "calm", 1, 0)
+    # Raw storage fixture for private accounting hooks; never a public/native producer.
+    started = private(connection, "legacy_wave_fence_wave_start", owner, "wave_start_001",
+                      "island", owner, 42, countdown, 0, 900, 100, "calm", 1, 0)
     wave_id = UUID(started["waveId"])
     as_owner(connection)
     if not countdown:
@@ -301,8 +310,8 @@ def test_a_separately_played_repeat_attempt_pays_again_without_extra_personal_po
                      "ships_sunk=0,loot=0 where id=%s", (wave.id,))
     database.execute("update public.islands set next_wave=2 where player_id=%s", (wave.owner,))
     as_server(database)
-    started = rpc(database, "wave_start", wave.owner, "wave_start_002", "island", wave.owner,
-                  42, 0, 0, 900, 100, "calm", 1, 0)
+    started = private(database, "legacy_wave_fence_wave_start", wave.owner, "wave_start_002",
+                      "island", wave.owner, 42, 0, 0, 900, 100, "calm", 1, 0)
     second_id = UUID(started["waveId"])
     as_owner(database)
     database.execute("update public.wave_runs set starts_at=clock_timestamp()-interval '2 seconds' "
@@ -358,20 +367,38 @@ def test_an_absent_owner_gets_no_personal_milestone_from_a_members_confirmed_win
 
 
 def test_confirmed_departed_member_retains_receipt_without_a_second_payment(database):
-    wave = ready_wave(database)
-    freeze(database, wave)
-    confirm(database, wave, wave.member)
+    # Membership withdrawal normalizes real canonical slots. Produce those slots
+    # through the native bell instead of pairing it with raw accounting fixtures.
+    room = live_room(database)
+    owner, member, outsider, treasury, sessions = room
+    started = bell(database, room)
+    wave_id = UUID(started["waveId"])
+    wallets = (balance(database, owner), balance(database, member))
     as_server(database)
-    rpc(database, "game_leave", wave.member, wave.owner)
-    first = close(database, wave)
+    for actor in (owner, member):
+        assert rpc(database, "shared_session_heartbeat", actor, owner,
+                   keys(treasury)[1], sessions[actor], 1)["status"] == "done"
+    assert rpc(database, "game_leave", member, owner)["status"] == "left"
+    first = native_finish(database, room, started)
+    assert first["status"] == "done" and first["outcome"] == "won"
+    original = private(database, "island_wave_accounting_result", wave_id, False)
     as_server(database)
-    own = rpc(database, "island_wave_completion_receipt", wave.member, wave.id)
+    own = rpc(database, "island_wave_completion_receipt", member, wave_id)
     assert own["receipt"]["confirmedParticipation"] is True
-    assert own["receipt"]["playerId"] == str(wave.member)
-    assert rpc(database, "island_wave_completion_receipt", wave.outsider, wave.id) == {
+    assert own["receipt"]["playerId"] == str(member)
+    assert rpc(database, "island_wave_completion_receipt", outsider, wave_id) == {
         "status": "refused", "reason": "not_in_wave",
     }
-    assert close(database, wave)["treasuryReceiptId"] == first["treasuryReceiptId"]
+    repeated = native_finish(database, room, started)
+    assert repeated["repeat"] is True and repeated["completion"] == first["completion"]
+    again = private(database, "island_wave_accounting_result", wave_id, True)
+    assert again["treasuryReceiptId"] == original["treasuryReceiptId"]
+    assert again["economy"] == original["economy"]
+    assert (balance(database, owner), balance(database, member)) == wallets
+    assert database.execute(
+        "select count(*) from public.island_treasury_transactions "
+        "where account_id=%s and reason='pirate_loot'", (keys(treasury)[0],),
+    ).fetchone() == (1,)
 
 
 def test_a_withdrawn_personal_assignment_cannot_confirm_through_an_old_slot(database):
@@ -562,14 +589,14 @@ def test_invalid_or_unfrozen_bonus_ids_never_create_a_terminal_receipt(database,
                             (wave.id,)).fetchone() == (0,)
 
 
-def test_protocol_two_attempt_uses_same_once_only_accounting_and_blocks_private_finish(database):
+def ready_protocol_two_wave(database):
     from server.tests.island_sql.test_islands_and_waves_sql import (
         FRIEND,
         OWNER,
         add_players,
         open_island,
     )
-    from server.tests.island_sql.test_recovery_wave_end_sql import FINISH, PAGE, move_start, ring
+    from server.tests.island_sql.test_recovery_wave_end_sql import move_start, template
 
     add_players(database, OWNER, FRIEND)
     open_island(database, OWNER, "K7Q2M")
@@ -579,10 +606,13 @@ def test_protocol_two_attempt_uses_same_once_only_accounting_and_blocks_private_
     for player in (OWNER, FRIEND):
         rpc(database, "personal_captain_initialize", player, OWNER, keys(treasury)[1],
             Jsonb(configuration(load_island())))
-    started = ring(database, "sharedproto02")
+    # Private old-body fixture prepares storage for the actual accounting hooks.
+    started = private(database, "legacy_wave_fence_recovery_wave_start", OWNER,
+                      "sharedproto02", "island", OWNER, 4242, 0, 0, 900, 50,
+                      "calm", 1, 0, ["structure_recovery"], Jsonb(template(database)), True, 2)
     wave_id = UUID(started["waveId"])
     move_start(database, wave_id, 20)
-    rpc(database, "recovery_wave_join", FRIEND, wave_id, 2)
+    private(database, "legacy_wave_fence_recovery_wave_join", FRIEND, wave_id, 2)
     roster = []
     for player in (OWNER, FRIEND):
         snapshot = private(database, "personal_captain_attach_wave_locked", player, wave_id, 1)
@@ -591,14 +621,26 @@ def test_protocol_two_attempt_uses_same_once_only_accounting_and_blocks_private_
     wave = Wave(OWNER, FRIEND, uuid4(), treasury, wave_id, roster,
                 freeze_reward_basis(load_island(), played_wave=1, seed=4242,
                                     house_levels=0).envelope())
+    return wave
+
+
+def test_protocol_two_attempt_uses_same_once_only_accounting_and_blocks_private_finish(database):
+    from server.tests.island_sql.test_recovery_wave_end_sql import FINISH, PAGE
+
+    wave = ready_protocol_two_wave(database)
+    OWNER, wave_id = wave.owner, wave.id
     freeze(database, wave)
     confirm(database, wave, OWNER)
-    as_server(database)
-    page = database.execute(PAGE, (OWNER, wave_id, 0)).fetchone()[0]
+    as_owner(database)
+    page = database.execute(PAGE.replace("public.recovery_wave_events_page",
+                            "public.legacy_wave_fence_recovery_wave_events_page"),
+                            (OWNER, wave_id, 0)).fetchone()[0]
     epoch = database.execute("select reset_epoch from public.recovery_wave_states where wave_id=%s",
                              (wave_id,)).fetchone()[0]
     with pytest.raises(psycopg.Error, match="economy_context_required"), database.transaction():
-        database.execute(FINISH, (OWNER, wave_id, True, epoch, "privateproto02",
+        database.execute(FINISH.replace("public.recovery_wave_finish",
+                         "public.legacy_wave_fence_recovery_wave_finish"),
+                         (OWNER, wave_id, True, epoch, "privateproto02",
                                  page["sealedThroughTick"], page["headSeq"]))
     first = close(database, wave)
     assert close(database, wave)["treasuryReceiptId"] == first["treasuryReceiptId"]

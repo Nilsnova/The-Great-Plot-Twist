@@ -8,12 +8,14 @@ import { INPUT_LEAD_TICKS, TICK_SECONDS } from './sync.js';
 import { boarderAt, inputFor, shipAt, tapInput } from './interact.js';
 import { AIM_RADIUS, MOVE_EVERY_MS, HEARD_EVERY_MS, RECOVERY_HEARD_EVERY_MS, MOVE_STEP, NOTE_MS, captainTarget,
   bladeTarget, AUTO_BLADE, pirateById } from './controller-shared.js';
+import {createNativeRevival} from './native-revival.js';
 
 export function createCaptainActions(ctl) {
   const { world, getDefenses, playerId, now, captainColour, startNextWave, saveAuto, holdBreak, reviveCaptain, poses,
     myLevel, read, mySkills, actorId, myStats, emit, cue, here, blocked, rangeFeedback } = ctl;
   // From the other parts (controller-*.js), linked once every part exists.
   let submit, seenTick, cosmeticShot, predict, drawPredicted, finishing;
+  const nativeRevival=createNativeRevival(ctl,{sync:()=>ctl.syncCaptains(),send:(command,pending)=>ctl.sendCanonicalCommand(command,pending),complete:intent=>ctl.completeRevival(intent)});
   // The captain's gun: at a ship or boarder (a tap) or the nearest in range (F), from where the player
   // stands. A boarder within cutlass reach gets the cutlass instead (close quarters, §12). A spray
   // (blunderbuss) and a bomb (fire bombs) also carry the aim point: the target's place.
@@ -142,8 +144,10 @@ export function createCaptainActions(ctl) {
   // Your position for the sims: after a move (MOVE_STEP) once the gap passed, else at least every
   // HEARD_EVERY_MS; once `away` when the island is no longer on screen (another place) during the wave.
   function sendPosition(current, player) {
+    if(current.info.nativeShared && !ctl.controls(current))return;
     if (current.done || current.state.phase !== 'running' || finishing(current)) return; // v3 waves: no moves while the battle stands still
     if (!current.shown || !player) {
+      if(current.info.nativeShared)return;
       if (current.moveSent && !current.awaySent && submit({ type: 'captain_move', by: playerId, ...current.moveSent, away: true }, moveLead(current))) current.awaySent = true;
       return;
     }
@@ -172,6 +176,7 @@ export function createCaptainActions(ctl) {
   // refusal, let go before trying again.
   function holdRevive(current, target, player) {
     const holding = (ctl.holdE || ctl.holdPrompt) && !blocked();
+    if(current.info.nativeShared){nativeRevival.update(current,target,holding);return;}
     if (!holding) current.reviveWait = false;
     if (current.revive?.paying) return;
     if (!target || !holding || current.reviveWait) { current.revive = null; return; }
@@ -197,6 +202,7 @@ export function createCaptainActions(ctl) {
     });
   }
   function revivePrompt(current) {
+    if(current.info.nativeShared)return current.revive?.note??'Hold to help up · free';
     if (current.reviveNote && now() < current.reviveNote.until) return current.reviveNote.text;
     current.reviveNote = null;
     if (current.revive?.paying) return 'Helping up…';
@@ -204,7 +210,7 @@ export function createCaptainActions(ctl) {
   }
   // A Tavern on the island (GAME-V3.md "Houses") takes 25% off; the server checks the island's buildings as
   // they are now, so the island's latest answer decides, else the wave's own defenses.
-  const helpPrice = current => revivePrice(current.info.wave, { tavern: hasTavern(getDefenses() ?? current.defenses) });
+  const helpPrice = current => current.info.nativeShared?0:revivePrice(current.info.wave, { tavern: hasTavern(getDefenses() ?? current.defenses) });
   // The timers over fallen captains (yours where you lie, a teammate's where their sim has them).
   function fallenMarks(current, player) {
     if (!world.project || current.done || !current.shown) return [];
@@ -219,10 +225,19 @@ export function createCaptainActions(ctl) {
   }
 
   // The break after a won wave.
-  function setAuto(value) { ctl.auto = value === true; saveAuto(ctl.auto); }
-  const held = () => { try { return holdBreak?.() ?? null; } catch { return null; } };
+  function setAuto(value) {
+    const current=ctl.wave;
+    if(current?.info.nativeShared){
+      if(!ctl.controls(current) || ctl.getSessionSettings()?.canManage!==true)return;
+      void ctl.setSessionSettings({autoNext:value===true}).then(answer=>{if(ctl.wave===current && current.pause && !answer.ok)current.pause.note=answer.message??'Confirm the previous settings change.';});
+      return;
+    }
+    ctl.auto = value === true; saveAuto(ctl.auto);
+  }
+  const held = () => { if(ctl.wave?.info.nativeShared)return null;try { return holdBreak?.() ?? null; } catch { return null; } };
   function next() {
     const current = ctl.wave;
+    if(current?.info.nativeShared && (!ctl.controls(current) || ctl.getSessionSettings()?.canManage!==true))return false;
     if (current?.recoveryReplay && !current.recoveryFinishAnswered && !current.recoveryFinishFailed) return false;
     if (!current?.pause || !current.pause.ready || current.pause.requested || !startNextWave) return false;
     if (held()?.paused) return false; // the room paused the break: Resume first

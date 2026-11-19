@@ -1,6 +1,6 @@
 // Select the defended island's treasury without mixing it with the Captain wallet.
 // Used by index.js; a confirmed selection/reset may explicitly forget a retired monetary scope.
-import {createTreasuryProjection, declaresEconomy, economySnapshot, sameEconomyScope} from './economy-view.js';
+import {createTreasuryProjection, declaresEconomy, economySnapshot, readLegacyEconomy, sameEconomyScope} from './economy-view.js';
 import {islandCode} from './codes.js';
 
 export function createIslandFunding() {
@@ -22,7 +22,8 @@ export function createIslandFunding() {
     view(island, legacyCoins = null) {
       const code = islandCode(island?.code ?? '') || null;
       let entry = code ? islands.get(code) : null;
-      if (!entry && !declaresEconomy(island)) return {shared: false, coins: legacyCoins, key: code};
+      const legacy = !!readLegacyEconomy(island?.economy);
+      if (!entry && (legacy || !declaresEconomy(island))) return {shared: false, coins: legacyCoins, key: code};
       if (!entry) { entry = {projection: null, retired: new Set()}; if (code) islands.set(code, entry); }
       const next = economySnapshot(island);
       if (!entry.projection && next) entry.projection = createTreasuryProjection(next);

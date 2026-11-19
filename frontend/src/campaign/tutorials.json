@@ -7,7 +7,7 @@
       "where": "cannon_7"},
     {"id": "captain_upgrades", "covers": ["captain:2", "captain:3"], "title": "Captain upgrades",
       "what": "Your captain can grow stronger: more damage and range for your gun.",
-      "how": "Open Menu › Captain and skills and raise your level with coins.",
+      "how": "Open Menu › Captain and skills to see your upgrades.",
       "where": "hud:menu", "menu": "Captain and skills"},
     {"id": "houses", "covers": ["house:1"], "title": "Houses",
       "what": "A house adds loot after every wave you win.",

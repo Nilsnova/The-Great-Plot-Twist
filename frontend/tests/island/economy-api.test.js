@@ -1,6 +1,7 @@
 // Shared mutation capabilities are assertions, not a client-chosen payer; uncertain retries keep their origin.
 import {describe, expect, it, vi} from 'vitest';
 import {createIslandApi, isIsland, isVisit} from '../../src/island/api.js';
+import {receipt} from './shared-core-fixture.js';
 import {economyContext} from '../../src/island/economy-view.js';
 import {personalCaptain, personalReply, sharedEconomy, sharedIsland} from './economy-fixture.js';
 
@@ -15,19 +16,19 @@ describe('shared economy API adaptation', () => {
   });
 
   it('asserts owner and epoch for a visitor crew purchase without sending a payer or account', async () => {
-    const economy = sharedEconomy(), post = vi.fn(async () => ({ok: true, data: sharedIsland()}));
-    const api = createIslandApi({transport: {get() {}, post}, economy: () => economy, makeUid: () => 'click000001'});
+    const economy = sharedEconomy(), snapshot=sharedIsland({economy,code:'ISLE-FR3ND'}), post = vi.fn(async (path,body) => ({ok: true, data: receipt(snapshot,body,'hire')}));
+    const api = createIslandApi({transport: {get() {}, post}, economy: () => economy, sharedSnapshot:()=>snapshot, makeUid: () => 'click000001'});
     expect((await api.hire({crew: 'gunner', code: 'ISLE-FR3ND'})).ok).toBe(true);
-    expect(post).toHaveBeenCalledWith('/api/island/hire', {crew: 'gunner', code: 'ISLE-FR3ND', actionUid: 'click000001', economy: economyContext(economy)});
+    expect(post).toHaveBeenCalledWith('/api/island/hire', {crew: 'gunner', code: 'ISLE-FR3ND', actionUid: 'click000001', economy: economyContext(economy)}, {headers:{'X-Island-Economy-Version':'1'}});
     const body = post.mock.calls[0][1];
     expect(body).not.toHaveProperty('payer');
     expect(body.economy).not.toHaveProperty('accountId');
   });
 
   it('keeps a retry identity in one run and creates a separate identity after an epoch switch', async () => {
-    let economy = sharedEconomy(), counter = 0;
+    let economy = sharedEconomy(), counter = 0; const snapshot=sharedIsland({economy});
     const post = vi.fn(async () => ({ok: false, status: 503, code: 'database_unavailable', message: 'Read the island before retrying.'}));
-    const api = createIslandApi({transport: {get() {}, post}, economy: () => economy, makeUid: () => `click${String(++counter).padStart(6, '0')}`});
+    const api = createIslandApi({transport: {get() {}, post}, economy: () => economy, sharedSnapshot:()=>({...snapshot,economy}), makeUid: () => `click${String(++counter).padStart(6, '0')}`});
     await api.build({spot: 'wall_1', kind: 'wall'});
     await api.build({spot: 'wall_1', kind: 'wall'});
     economy = sharedEconomy({runEpoch: '44444444-4444-4444-8444-444444444444'});

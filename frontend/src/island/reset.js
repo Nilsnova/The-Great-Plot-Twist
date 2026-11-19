@@ -15,15 +15,19 @@
 import './reset.css';
 import {node, uniqueId} from '../ui/kit/dom.js';
 import {islandCode} from './codes.js';
+import {readEconomy,exactCoinText} from './economy-view.js';
 
 export const RESET_TITLE = 'Reset my island';
 const coinsText = coins => (Number.isSafeInteger(coins) && coins > 0 ? `🪙 ${coins}` : 'your starting coins');
-export const resetWhat = coins => 'Start your island again from nothing: every building but the cabin, the waves won, the research, ' +
-  `the wreck, the arsenal, your crew and your captain's level and skills go back to the start, and your coins become ${coinsText(coins)}.`;
+export const resetWhat = (coins,{preserveCaptain=false}={}) => 'Start your island again from nothing: every building but the cabin, the waves won, the research, ' +
+  `the wreck, the arsenal, ${preserveCaptain?'and your crew':"your crew and your captain's level and skills"} go back to the start, and your coins become ${coinsText(coins)}.` +
+  (preserveCaptain?' Your personal Captain level and skills are preserved.':'');
 export const RESET_STAYS = 'Your friends stay in your game. This cannot be undone.';
 export const MEMBER_LINE = 'Only the host can reset this game\'s island.';
 export const WAVE_LINE = 'A wave is under way. Reset your island between waves.';
 export const doneLine = coins => `Your island starts fresh: ${coinsText(coins)} and wave 1. Ring the bell when you are ready.`;
+export const sharedResetWhat='Start this island’s run again: clear its buildings, crew, research, arsenal, wreck and wave progress. The new treasury receives configured starting capital. Remaining cash and pending wager returns stay in the retired run and cannot fund the new run. Every player keeps their personal Captain, level, skills and progression.';
+export const sharedResetDone=result=>`Original reset confirmed. Its new treasury started with ${exactCoinText(result?.startingCoins)}. Old cash and wager returns remain in the retired run.`;
 
 // Whether what was typed is the island's own code (any case, with or without ISLE-, spaces or dashes).
 export const codeMatches = (typed, code) => !!islandCode(code ?? '') && islandCode(typed ?? '') === islandCode(code ?? '');
@@ -44,7 +48,7 @@ export function createResetSection({read = () => null, reset = async () => ({ok:
   const section = node('section', 'shell-section island-reset'), heading = node('h3', '', RESET_TITLE);
   heading.id = uniqueId('island-reset-title'); section.setAttribute('aria-labelledby', heading.id);
   section.append(heading);
-  const state = (() => { try { return read(); } catch { return null; } })();
+  let state = (() => { try { return read(); } catch { return null; } })();
   const first = resetModel(state);
   if (first.kind !== 'owner') {
     const line = node('p', 'island-reset-note', first.line);
@@ -53,7 +57,8 @@ export function createResetSection({read = () => null, reset = async () => ({ok:
     return section;
   }
   section.dataset.state = 'ready';
-  const what = node('p', 'island-reset-copy', resetWhat(state?.startingCoins)), stays = node('p', 'island-reset-stays', RESET_STAYS);
+  const what = node('p', 'island-reset-copy', state.shared?sharedResetWhat:resetWhat(state?.startingCoins,{preserveCaptain:state.preserveCaptain===true})), stays = node('p', 'island-reset-stays', RESET_STAYS);
+  const scope=node('p','island-reset-scope');
   what.id = uniqueId('island-reset-what'); stays.id = uniqueId('island-reset-stays');
   const form = node('form', 'island-reset-form'); form.noValidate = true;
   const label = node('label', 'island-reset-label'), input = node('input', 'island-reset-code'), id = uniqueId('island-reset-code');
@@ -66,17 +71,29 @@ export function createResetSection({read = () => null, reset = async () => ({ok:
   const button = node('button', 'kit-button island-reset-button', RESET_TITLE); button.type = 'submit';
   const status = node('p', 'island-reset-status'); status.setAttribute('role', 'status');
   form.append(label, button);
-  section.append(what, stays, form, status);
+  section.append(what, scope, stays, form, status);
 
-  let busy = false;
+  let busy = false,completed=false;const originalActor=state.actorId,originalCode=state.code;
   function paint() {
+    if(state.shared && !completed){
+      let current;try{current=read();}catch{/* Unreadable current selection stays disabled. */}
+      if(current?.kind!=='owner' || current.shared!==true || current.actorId!==originalActor || current.code!==originalCode){
+        what.textContent='The sign-in or island selection changed. Reopen Settings.';scope.textContent='';scope.title='';stays.textContent='';input.disabled=true;button.disabled=true;button.setAttribute('aria-disabled','true');
+        return {enabled:false,matches:false};
+      }
+      state=current;
+    }
     const model = resetModel(state, input.value, {busy});
-    button.disabled = !model.enabled;
-    button.setAttribute('aria-disabled', String(!model.enabled));
-    button.textContent = busy ? 'Starting again…' : RESET_TITLE;
+    button.disabled = completed || !model.enabled;
+    button.setAttribute('aria-disabled', String(completed || !model.enabled));
+    button.textContent = busy ? 'Starting again…' : completed?'Reset confirmed':state.pending?'Confirm original reset':RESET_TITLE;
+    input.disabled=completed;
+    const economy=state.shared?readEconomy(state.economy):null;
+    scope.textContent=economy?`${completed?'Original request for':state.pending?'Saved original':'Selected'} run ${economy.runEpoch.slice(0,8)} · ${completed || state.pending?'At request: ':''}Available ${exactCoinText(economy.treasury.availableCoins)} · Reserved ${exactCoinText(economy.treasury.committedCoins)}`:'';
+    scope.title=economy?`Account ${economy.accountId}; run ${economy.runEpoch}`:'';
     input.setAttribute('aria-invalid', String(input.value.trim() !== '' && !model.matches));
     hint.textContent = model.hint;
-    return model;
+    return {...model,enabled:!completed && model.enabled};
   }
   input.addEventListener('input', () => { if (section.dataset.state === 'done') section.dataset.state = 'ready'; status.textContent = ''; paint(); });
   form.addEventListener('submit', async event => {
@@ -87,9 +104,10 @@ export function createResetSection({read = () => null, reset = async () => ({ok:
     try { answer = await reset(input.value); } catch { answer = {ok: false}; }
     busy = false;
     if (answer?.ok) {
-      input.value = ''; section.dataset.state = 'done'; status.textContent = doneLine(answer.data?.balance ?? state?.startingCoins);
+      input.value = ''; section.dataset.state = 'done';completed=state.shared===true;
+      status.textContent=state.shared?(answer.ignored?'Original reset confirmed. Current island state was read again.':sharedResetDone(answer.data?.receipt?.result)):doneLine(answer.data?.balance ?? state?.startingCoins);
     } else {
-      status.textContent = typeof answer?.message === 'string' && answer.message ? answer.message : 'Your island could not be reset. Nothing changed. Try again.';
+      status.textContent = typeof answer?.message === 'string' && answer.message ? answer.message : 'The reset is not confirmed. Retry the original request.';
     }
     paint();
     input.focus();

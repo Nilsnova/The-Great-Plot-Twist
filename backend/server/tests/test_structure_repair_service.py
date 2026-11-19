@@ -84,9 +84,9 @@ def test_new_coop_repair_needs_no_join_token_and_uses_server_state(monkeypatch):
     admin = FakeAdmin(order=order)
     island = Island(OWNER_ID, "K7Q2M", 0, 0)
 
-    async def target_island(*args):
+    async def resolve_target(*args):
         order.append("permission")
-        return island, None
+        return island
 
     async def read_state(*args):
         order.append("state")
@@ -103,7 +103,9 @@ def test_new_coop_repair_needs_no_join_token_and_uses_server_state(monkeypatch):
             ]
         }
 
-    monkeypatch.setattr("server.island.structure_repair.service.target_island", target_island)
+    monkeypatch.setattr(
+        "server.island.structure_repair.structure_recovery.resolve_target_island", resolve_target
+    )
     result = asyncio.run(repair(admin, load_island(), PLAYER_ID, request(), read_state))
 
     assert order == ["permission", "uid_lookup", "state"]
@@ -140,15 +142,17 @@ def test_old_uid_retry_uses_immutable_receipt_without_reading_current_target(mon
     island = Island(OWNER_ID, "K7Q2M", 0, 0)
     state_calls = []
 
-    async def target_island(*args):
+    async def resolve_target(*args):
         admin.order.append("permission")
-        return island, None
+        return island
 
     async def read_state(*args):
         state_calls.append(args)
         raise AssertionError("a receipt retry must not depend on current target health")
 
-    monkeypatch.setattr("server.island.structure_repair.service.target_island", target_island)
+    monkeypatch.setattr(
+        "server.island.structure_repair.structure_recovery.resolve_target_island", resolve_target
+    )
     result = asyncio.run(
         repair(
             admin,

@@ -5,6 +5,7 @@ import {createIslandFunding} from '../../src/island/economy-funding.js';
 import {preferPersonalSnapshot, readPersonalCaptain} from '../../src/island/economy-captain.js';
 import {unlocksFor} from '../../src/island/td-rules.js';
 import {campaignOf} from '../../src/campaign/index.js';
+import {fundedFixture} from './shared-core-fixture.js';
 import {personalCaptain, sharedEconomy, sharedIsland} from './economy-fixture.js';
 
 const funds = available => sharedEconomy({treasury: {balanceCoins: String(BigInt(available) + 25n), committedCoins: '25', availableCoins: available}});
@@ -13,8 +14,8 @@ const campaign = campaignOf({waveBest: 9});
 
 describe('shared island purchase cards', () => {
   it('uses available island coins instead of a wealthy visitor wallet', () => {
-    const card = buildCardModel({spotId: 'wall_1', spot: wall, coins: 9999, economy: funds('9'), unlocks: unlocksFor(9), visitor: true});
-    expect(card).toMatchObject({disabled: true, owner: 'Paid from the island treasury', reason: 'Not enough 🪙: you need 🪙 1 more.'});
+    const card = buildCardModel({spotId: 'wall_1', spot: wall, coins: 9999, economy: funds('9'), sharedSnapshot:fundedFixture(funds('9')), unlocks: unlocksFor(9), visitor: true});
+    expect(card).toMatchObject({disabled: true, owner: 'Paid from the island treasury', reason: 'Not enough island coins.'});
     expect(card.coins).toContain('🪙 9 available');
     expect(card.coins).toContain('🪙 25 committed');
     expect(card.coins).not.toContain('9,999');
@@ -22,31 +23,31 @@ describe('shared island purchase cards', () => {
 
   it('keeps huge amounts exact and retains ordinary unlock and reservation guards', () => {
     const amount = '900719925474099312345';
-    const card = buildCardModel({spotId: 'wall_1', spot: wall, economy: funds(amount), unlocks: unlocksFor(9)});
+    const card = buildCardModel({spotId: 'wall_1', spot: wall, economy: funds(amount), sharedSnapshot:fundedFixture(funds(amount)), unlocks: unlocksFor(9)});
     expect(card.disabled).toBe(false);
     expect(card.coins).toContain('🪙 900,719,925,474,099,312,345 available');
-    expect(buildCardModel({spotId: 'wall_1', spot: wall, economy: funds(amount), battle: true, unlocks: unlocksFor(9)}))
+    expect(buildCardModel({spotId: 'wall_1', spot: wall, economy: funds(amount), sharedSnapshot:fundedFixture(funds(amount)), battle: true, unlocks: unlocksFor(9)}))
       .toMatchObject({disabled: true, reason: 'Between waves only.'});
     expect(buildCardModel({spotId: 'wall_1', spot: wall, economy: null, coins: 9999, unlocks: unlocksFor(9)}).disabled).toBe(true);
   });
 
   it('quotes crew and research against the same treasury and keeps reversal open to members', () => {
     const economy = funds('179');
-    const crew = crewModel({crew: {gunner: 1}, economy, coins: 0, unlocks: unlocksFor(9)});
+    const crew = crewModel({crew: {gunner: 1}, economy, sharedSnapshot:fundedFixture(economy), coins: 0, unlocks: unlocksFor(9)});
     expect(crew.rows.find(row => row.id === 'gunner')).toMatchObject({disabled: false});
     expect(crew.rows.find(row => row.id === 'carpenter')).toMatchObject({disabled: true, button: 'Unavailable', line: ''});
     expect(crew.lead).toBe('They help this island in every wave.');
-    const tech = techModel({campaign, economy, coins: 9999});
+    const tech = techModel({campaign, economy, sharedSnapshot:fundedFixture(economy), coins: 9999});
     const cannon = tech.branches.find(branch => branch.branch === 'cannon');
-    expect(cannon.tiers[0].nodes[0].button).toMatchObject({disabled: true, reason: 'Not enough 🪙: you need 🪙 1 more.'});
+    expect(cannon.tiers[0].nodes[0].button).toMatchObject({disabled: true, reason: 'Not enough island coins.'});
     expect(tech.coins).toBe(crew.coins);
     expect(crewModel({crew: {}, economy, unlocks: unlocksFor(9), battle: true}).rows.every(row => row.disabled)).toBe(true);
   });
 
   it.each([0, 1])('shows preserved owned crew below the current unlock without allowing another hire, recoveryVersion=%s', recoveryVersion => {
     const model = crewModel({crew: {carpenter: 2, gunner: 1}, economy: funds('999'), unlocks: unlocksFor(0), recoveryVersion});
-    expect(model.rows.find(row => row.id === 'carpenter')).toMatchObject({owned: '2 of 2', disabled: true, button: 'Unavailable', line: ''});
-    expect(model.rows.find(row => row.id === 'gunner')).toMatchObject({owned: '1 of 2', disabled: true});
+    expect(model.rows.find(row => row.id === 'carpenter')).toMatchObject({owned: '2 retained', disabled: true, button: 'Unavailable', line: ''});
+    expect(model.rows.find(row => row.id === 'gunner')).toMatchObject({owned: '1 retained', disabled: true});
   });
 
   it('shows personal Captain points rather than a treasury-funded level purchase', () => {
@@ -90,9 +91,9 @@ describe('shared island purchase cards', () => {
     expect(captainModel({captain: {progressionVersion: 0, level: 1, nextPrice: 20}, coins: 9000}).upgrade.label).toContain('🪙 20');
   });
 
-  it('uses the same available money for wreck contributions without changing ship gameplay', () => {
-    const wreck = wreckModel({campaign, economy: funds('24'), coins: 9999});
-    expect(wreck.gifts[0]).toMatchObject({disabled: true, reason: 'Not enough 🪙: you need 🪙 1 more.'});
+  it('uses the same available money for wreck contributions while ship activities remain unavailable', () => {
+    const wreck = wreckModel({campaign, economy: funds('24'), sharedSnapshot:fundedFixture(funds('24')), coins: 9999});
+    expect(wreck.gifts[0]).toMatchObject({disabled: true, reason: 'Not enough island coins.'});
     expect(wreck.coins).toContain('🪙 24 available');
     expect(wreckModel({campaign, economy: funds('100'), battle: true}).gifts.every(gift => gift.disabled)).toBe(true);
   });

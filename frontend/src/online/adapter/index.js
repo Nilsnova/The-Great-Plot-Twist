@@ -149,7 +149,8 @@ export function createRealAdapter(deps = {}) {
   panelServices = registerPanelServices(session, {api: panelWallet.api, publicApi,
     getFlags: () => ctx.state.config?.flags ?? {},
     isReady: () => !store.isClosed() && ctx.state.config !== null,
-    getIdentity: () => store.scope(), getIslet: islet.getAdapter, getWallet: panelWallet.freshWallet});
+    getIdentity: () => store.scope(), getActorId: () => ctx.state.me?.id,
+    getIslet: islet.getAdapter, getWallet: panelWallet.freshWallet});
   let restoreTask = null;
   ctx.onConfigReady = async () => {
     panelServices.refresh();

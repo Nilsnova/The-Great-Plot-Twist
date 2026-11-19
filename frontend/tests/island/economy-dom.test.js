@@ -13,7 +13,8 @@ it('keeps the visited island treasury in the HUD and crew card despite a larger 
       const {createHud} = await window.g20Import('/src/ui/hud.js');
       const {createIsland} = await window.g20Import('/src/island/index.js');
       const {createFakeIslandTransport} = await window.g20Import('/src/pirates/fake-api.js');
-      const {sharedEconomy} = await window.g20Import('/tests/island/economy-fixture.js');
+      const {sharedEconomy,sharedIsland} = await window.g20Import('/tests/island/economy-fixture.js');
+      const {fundedFixture}=await window.g20Import('/tests/island/shared-core-fixture.js');
       const {on, emit} = await window.g20Import('/src/core/events.js');
       const container = document.createElement('main'); container.id = 'game'; document.body.append(container);
       window.fixtureHud = createHud(container, {start() {}, focus() {}, menu() {}, hasIsland: () => false}, {storage: null});
@@ -22,10 +23,9 @@ it('keeps the visited island treasury in the HUD and crew card despite a larger 
       const transport = {post: (path, body) => base.post(path, body), get: async path => {
         const answer = await base.get(path);
         if (answer.ok && path.startsWith('/api/island/visit/')) {
-          const own = await base.get('/api/island');
-          return {...answer, data: {...answer.data, waveBest: 9, campaign: {...answer.data.campaign, wave: 9},
-            crew: {gunner: 1, carpenter: 0, lookout: 0, guard: 0}, prices: own.data.prices,
-            economy: sharedEconomy({treasury: {balanceCoins: '100', committedCoins: '75', availableCoins: '25'}})}};
+          const snapshot=fundedFixture(sharedEconomy({treasury:{balanceCoins:'100',committedCoins:'75',availableCoins:'25'}}));
+          snapshot.code=answer.data.code;snapshot.ownerName=answer.data.ownerName;snapshot.crew.gunner=1;
+          return {...answer,data:snapshot};
         }
         return answer;
       }};

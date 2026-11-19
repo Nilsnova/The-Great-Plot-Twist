@@ -36,6 +36,13 @@ export function readEconomy(value) {
     treasury: Object.freeze({balanceCoins: money.balanceCoins, committedCoins: money.committedCoins, availableCoins: money.availableCoins})});
 }
 
+export function readLegacyEconomy(value) {
+  if (!value || value.mode !== 'personal_legacy' || value.version !== 0) return null;
+  if (!uuid(value.islandOwner)) return null;
+  if (['accountId','runEpoch','revision','treasury'].some(key => value[key] !== null)) return null;
+  return Object.freeze({...value});
+}
+
 export function economySnapshot(data) {
   return readEconomy(data && Object.hasOwn(data, 'currentEconomy') ? data.currentEconomy : data?.economy);
 }

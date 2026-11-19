@@ -31,6 +31,7 @@ TABLES = frozenset(
 )
 FUNCTIONS = frozenset(
     "assign_captain_name reroll_captain_name save_progress delete_player grant_entry_kit "
+    "island_lifecycle_delete_player "
     "crew_create crew_find_by_code crew_take_seat crew_start "
     "exchange_open_position exchange_close_position exchange_close_used_up "
     "prediction_place_stake prediction_settle_pool duel_create duel_answer duel_void "

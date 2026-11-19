@@ -7,14 +7,14 @@ it('publishes shared commitment and scope changes even when available coins stay
   const result = await evaluate(async () => {
     const {createIsland} = await window.g20Import('/src/island/index.js');
     const {createFakeIslandTransport} = await window.g20Import('/src/pirates/fake-api.js');
-    const {sharedEconomy} = await window.g20Import('/tests/island/economy-fixture.js');
+    const {sharedEconomy, sharedIsland} = await window.g20Import('/tests/island/economy-fixture.js');
     const {on, emit} = await window.g20Import('/src/core/events.js');
     const base = createFakeIslandTransport(); base.dev.setCoins(9000); base.dev.setWaveBest(9);
     let economy = sharedEconomy();
     const transport = {get: async (...args) => {
       const answer = await base.get(...args);
       return answer.ok && args[0].startsWith('/api/island/visit/')
-        ? {...answer, data: {...answer.data, economy}} : answer;
+        ? {...answer, data: sharedIsland({code: answer.data.code, economy, waveBest: 9})} : answer;
     }, post: (...args) => base.post(...args)};
     const reports = [];
     const island = createIsland({container: document.body, emit, on, mode: 'fake', transport, storage: null, visitStorage: null,
@@ -42,19 +42,20 @@ it.each(['own', 'visit'])('adopts another member reset from the current %s GET a
   const result = await evaluate(async place => {
     const {createIsland} = await window.g20Import('/src/island/index.js');
     const {createFakeIslandTransport} = await window.g20Import('/src/pirates/fake-api.js');
-    const {sharedEconomy} = await window.g20Import('/tests/island/economy-fixture.js');
+    const {sharedEconomy,sharedIsland} = await window.g20Import('/tests/island/economy-fixture.js');
     const {on, emit} = await window.g20Import('/src/core/events.js');
     const base = createFakeIslandTransport(); base.dev.setCoins(9000); base.dev.setWaveBest(9);
     let economy = sharedEconomy(), holdRead = false, releaseRead, releaseHire;
     const readPath = place === 'visit' ? '/api/island/visit/ISLE-FR3ND' : '/api/island';
-    const old = {...(await base.get(readPath)).data, economy, waveBest: 9};
+    const old = sharedIsland({code:(await base.get(readPath)).data.code,economy,waveBest:9});
+    const {receipt}=await window.g20Import('/tests/island/shared-core-fixture.js');
     const transport = {get: async path => {
       if (path !== readPath) return base.get(path);
       const answer = {...await base.get(path), data: {...old, economy}};
       if (holdRead) { holdRead = false; return new Promise(resolve => { releaseRead = () => resolve(answer); }); }
       return answer;
     }, post: (path, body) => path === '/api/island/hire'
-      ? new Promise(resolve => { releaseHire = () => resolve({ok: true, data: old}); }) : base.post(path, body)};
+      ? new Promise(resolve => { releaseHire = () => resolve({ok: true, data: receipt(old,body,'hire')}); }) : base.post(path, body)};
     const money = [];
     const island = createIsland({container: document.body, emit, on, mode: 'fake', transport, storage: null,
       menu: () => () => {}, settings: () => () => {}, onCoins: value => money.push(value)});
@@ -74,27 +75,28 @@ it.each(['own', 'visit'])('adopts another member reset from the current %s GET a
   expect(result.economy.runEpoch).toBe('55555555-5555-4555-8555-555555555555');
   expect(result.money).toBe('60');
   expect(result.card).toContain('🪙 60 available');
-  expect(result.card).not.toContain('unavailable');
+  expect(result.card).not.toContain('Island treasury unavailable');
 });
 
 it.each(['hire', 'research'])('ignores a shared visited-island %s reply after sailing to a legacy home', async operation => {
   const result = await evaluate(async operation => {
     const {createIsland} = await window.g20Import('/src/island/index.js');
     const {createFakeIslandTransport} = await window.g20Import('/src/pirates/fake-api.js');
-    const {sharedEconomy} = await window.g20Import('/tests/island/economy-fixture.js');
+    const {sharedEconomy,sharedIsland} = await window.g20Import('/tests/island/economy-fixture.js');
     const {on, emit} = await window.g20Import('/src/core/events.js');
     const base = createFakeIslandTransport(); base.dev.setCoins(9000); base.dev.setWaveBest(9);
     const home = (await base.get('/api/island')).data;
     let visited, release;
+    const {receipt}=await window.g20Import('/tests/island/shared-core-fixture.js');
     const transport = {get: async path => {
       const answer = await base.get(path);
       if (answer.ok && path.startsWith('/api/island/visit/')) {
-        visited = {...answer.data, prices: home.prices, economy: sharedEconomy()};
+        visited = sharedIsland({code:answer.data.code,ownerName:answer.data.ownerName,economy:sharedEconomy()});
         return {...answer, data: visited};
       }
       return answer;
     }, post: (path, body) => path === `/api/island/${operation}`
-      ? new Promise(resolve => { release = () => resolve({ok: true, data: visited}); }) : base.post(path, body)};
+      ? new Promise(resolve => { release = () => resolve({ok: true, data: receipt(visited,body,operation)}); }) : base.post(path, body)};
     const island = createIsland({container: document.body, emit, on, mode: 'fake', transport, storage: null, visitStorage: null,
       menu: () => () => {}, settings: () => () => {}});
     island.visit('ISLE-FR3ND'); await island.load();
@@ -117,13 +119,14 @@ it('reconciles a late legacy own-build through a fresh read without restoring it
     const {createIsland} = await window.g20Import('/src/island/index.js');
     const {createFakeIslandTransport} = await window.g20Import('/src/pirates/fake-api.js');
     const {sharedEconomy} = await window.g20Import('/tests/island/economy-fixture.js');
+    const {sharedProjection}=await window.g20Import('/tests/island/shared-core-fixture.js');
     const {on, emit} = await window.g20Import('/src/core/events.js');
     const base = createFakeIslandTransport(); base.dev.setCoins(100); base.dev.setWaveBest(9);
     let economy = null, release;
     const transport = {get: async (path, options) => {
       const answer = await base.get(path, options);
       return answer.ok && path === '/api/island' && economy
-        ? {...answer, data: {...answer.data, economy}} : answer;
+        ? {...answer, data: {...sharedProjection(answer.data,{economy}),coins:answer.data.coins}} : answer;
     }, post: (path, body) => {
       const answer = base.post(path, body);
       return path === '/api/island/build'

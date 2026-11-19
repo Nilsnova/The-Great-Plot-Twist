@@ -20,9 +20,10 @@ export function createActions(isl) {
   const {emit, focus, resetInput, reducedMotion, now} = isl;
   function islandRequest(place = isl.visiting ? 'visit' : 'own') {
     const selected = () => place === 'point' ? isl.point : place === 'visit' ? isl.visiting : isl.own;
-    const selection = isl.selectionGeneration, reset = isl.resetGeneration;
+    const identity=isl.authGeneration(), actor=isl.getActorId(), selection = isl.selectionGeneration, reset = isl.resetGeneration;
     const code = selected()?.code, funds = isl.funding.view(selected(), isl.own?.coins ?? null);
-    return {place, shared: funds.shared, current: () => !isl.disposed && selection === isl.selectionGeneration
+    const authorized=() => !isl.disposed && Object.is(identity,isl.authGeneration()) && actor===isl.getActorId();
+    return {place, shared: funds.shared, authorized, current: () => authorized() && selection === isl.selectionGeneration
       && reset === isl.resetGeneration && code === selected()?.code && funds.key === isl.funding.view(selected(), isl.own?.coins ?? null).key};
   }
   async function reconcileStaleOwnWrite(answer, request) {
@@ -85,7 +86,7 @@ export function createActions(isl) {
     isl.busySpot = spotId; isl.busyKind = choice; isl.cardMessage = ''; refreshCard();
     const answer = place === 'point' ? await isl.api.pointBuild({spot: spotId, kind: choice})
       : await isl.api.build({spot: spotId, kind: choice, ...(place === 'visit' ? {code: isl.visiting.code} : {})});
-    if (isl.disposed) return;
+    if (!request.authorized()) return;
     isl.busySpot = null; isl.busyKind = null;
     if (!request.current()) { await reconcileStaleOwnWrite(answer, request); return; }
     if (answer.ok) {
@@ -141,7 +142,7 @@ export function createActions(isl) {
     isl.busySpot = spotId; isl.busyKind = 'upgrade'; isl.cardMessage = ''; refreshCard();
     const answer = place === 'point' ? await isl.api.pointUpgrade({spot: spotId})
       : await isl.api.upgrade({spot: spotId, ...(place === 'visit' ? {code: isl.visiting.code} : {})});
-    if (isl.disposed) return;
+    if (!request.authorized()) return;
     isl.busySpot = null; isl.busyKind = null;
     if (!request.current()) { await reconcileStaleOwnWrite(answer, request); return; }
     if (answer.ok) {
@@ -177,14 +178,26 @@ export function createActions(isl) {
     if (!spotId || !isl.demolishQuote || isl.busyDemolish) return;
     const request = islandRequest();
     isl.busyDemolish = true; isl.cardMessage = ''; refreshCard();
-    const answer = await isl.api.demolish({spot: spotId, ...placeCode()});
-    if (isl.disposed) return;
+    const answer = await isl.api.demolish({spot: spotId, ...placeCode(), quote:isl.demolishQuote});
+    if (!request.authorized()) return;
     isl.busyDemolish = false;
     if (!request.current()) { refreshCard(); return; }
     if (!answer.ok) {
-      isl.cardMessage = answer.message; refreshCard();
-      if (['not_built', 'wave_running', 'busy'].includes(answer.code)) await refreshDefended();
+      if (request.shared) await refused(answer,request.place); else isl.cardMessage = answer.message;
+      refreshCard();
+      if (!request.shared && ['not_built', 'wave_running', 'busy'].includes(answer.code)) await refreshDefended();
       return;
+    }
+    if (answer.sharedReceipt) {
+      await took(answer,request.place);
+      if(!request.current()) return;
+      const result=answer.data.receipt.result;
+      emit({type:SPOTS_CHANGED,place:request.place,spot:spotId});
+      emit({type:'island_demolished',spot:spotId,kind:result.kind,level:result.level,refunds:[]});
+      isl.demolishSpot=null;isl.demolishQuote=null;
+      if(isl.ui.open==='demolish') {isl.ui.close();isl.openSpot=null;}
+      isl.ui.toast(`The island treasury received ${coinText(result.refundedCoins)}.`, 'success');
+      refreshCard();return;
     }
     const {demolished: done, ...island} = answer.data, place = request.place;
     await took({...answer, data: island}, place);
@@ -217,7 +230,8 @@ export function createActions(isl) {
   // Each answer is the island; the room hears island_changed, so every screen reads it again.
   const placeCode = () => (isl.visiting ? {code: isl.visiting.code} : {});
   async function landed(answer, spot, request) {
-    if (request.place === 'visit') { wrote('visit'); wrote('own'); await Promise.all([reloadVisit(), reloadOwn()]); }
+    if (answer.sharedReceipt) await took(answer,request.place);
+    else if (request.place === 'visit') { wrote('visit'); wrote('own'); await Promise.all([reloadVisit(), reloadOwn()]); }
     else { wrote('own'); setOwn(answer.data); }
     if (request.current()) emit({type: SPOTS_CHANGED, place: request.place, spot});
   }
@@ -227,7 +241,7 @@ export function createActions(isl) {
     const request = islandRequest();
     isl.busySpot = spotId; isl.busyKind = `spec:${spec}`; isl.cardMessage = ''; refreshCard();
     const answer = await isl.api.specialise({spot: spotId, spec, ...placeCode()});
-    if (isl.disposed) return;
+    if (!request.authorized()) return;
     isl.busySpot = null; isl.busyKind = null;
     if (!request.current()) { refreshCard(); return; }
     if (answer.ok) {
@@ -240,7 +254,8 @@ export function createActions(isl) {
         emit({type: TOWER_SPECIALISED, spot: spotId, spec});
         isl.ui.toast(`${SPECS[spec].name}: this tower fights with it from the next wave.`, 'success');
       }
-    } else { isl.cardMessage = answer.message; if (['not_researched', 'not_built', 'wrong_kind', 'house_level', 'insufficient_funds'].includes(answer.code)) await refreshDefended(); }
+    } else if (request.shared) await refused(answer,request.place);
+    else { isl.cardMessage = answer.message; if (['not_researched', 'not_built', 'wrong_kind', 'house_level', 'insufficient_funds'].includes(answer.code)) await refreshDefended(); }
     refreshCard();
   }
   // D055: one tier of a level-5 tower's upgrade tree, paid by this player; the answer is the island and the room
@@ -250,7 +265,7 @@ export function createActions(isl) {
     const request = islandRequest();
     isl.busySpot = spotId; isl.busyKind = `tree:${path}${tier}`; isl.cardMessage = ''; refreshCard();
     const answer = await isl.api.towerTree({spot: spotId, path, tier, ...placeCode()});
-    if (isl.disposed) return;
+    if (!request.authorized()) return;
     isl.busySpot = null; isl.busyKind = null;
     if (!request.current()) { refreshCard(); return; }
     if (answer.ok) {
@@ -261,7 +276,8 @@ export function createActions(isl) {
       emit({type: TOWER_TREE_BOUGHT, spot: spotId, kind, path, tier});
       const step = TOWER_TREES[kind]?.[path];
       isl.ui.toast(`${step ? `${step.name} ${'I'.repeat(tier)}` : 'Upgrade'} · ${coinText(currentFunds().coins)}`, 'success');
-    } else { isl.cardMessage = answer.message; if (['not_built', 'needs_level', 'known', 'needs_tier', 'closed', 'locked', 'insufficient_funds'].includes(answer.code)) await refreshDefended(); }
+    } else if (request.shared) await refused(answer,request.place);
+    else { isl.cardMessage = answer.message; if (['not_built', 'needs_level', 'known', 'needs_tier', 'closed', 'locked', 'insufficient_funds'].includes(answer.code)) await refreshDefended(); }
     refreshCard();
   }
   function toggleVillage() {
@@ -311,7 +327,7 @@ export function createActions(isl) {
       && isl.coreTravelGeneration === travelGeneration && isl.reportVisitGeneration === visitGeneration};
     isl.busyResearch = `${branch}:${tier}:${choice ?? ''}`; isl.cardMessage = ''; refreshCard();
     const answer = await isl.api.research({branch, tier, choice, change, ...placeCode()});
-    if (isl.disposed) return;
+    if (!request.authorized()) return;
     isl.busyResearch = null;
     if (!request.current()) {
       if (answer.ok && !request.shared) await Promise.all([reloadOwn(), reloadVisit()]);
@@ -326,7 +342,8 @@ export function createActions(isl) {
       isl.ui.toast(tier === 1 ? `${BRANCH_BY_ID[branch].name} researched! Tap a ${kind} to pick its skill.`
         : tier === 2 ? `${optionName(choice)}: every ${kind} fights with it from the next wave.`
           : `${optionName(choice)}! Tap a ${kind} to pick it as its skill.`, 'success');
-    } else { isl.cardMessage = answer.message; if (['known', 'locked', 'insufficient_funds', 'closed', 'needs_tier', 'top_tier', 'wave_running'].includes(answer.code)) await refreshDefended(); }
+    } else if (request.shared) await refused(answer,request.place);
+    else { isl.cardMessage = answer.message; if (['known', 'locked', 'insufficient_funds', 'closed', 'needs_tier', 'top_tier', 'wave_running'].includes(answer.code)) await refreshDefended(); }
     refreshCard();
   }
   async function giveWreck(amount) {
@@ -334,16 +351,18 @@ export function createActions(isl) {
     const request = islandRequest();
     isl.busyGift = amount; isl.cardMessage = ''; refreshCard();
     const answer = await isl.api.repairWreck({amount, ...placeCode()});
-    if (isl.disposed) return;
+    if (!request.authorized()) return;
     isl.busyGift = null;
     if (!request.current()) { refreshCard(); return; }
     if (answer.ok) {
       await landed(answer, 'wreck', request);
       if (!request.current()) return;
       const now = campaign()?.wreck;
-      if (now && now.paid >= now.goal) void readBoat();
-      isl.ui.toast(now && now.paid >= now.goal ? (isOpen(campaign(), 'ship') ? 'The wreck is repaired! Your ship sails: tap her to play.' : `The wreck is repaired! She sails after wave ${waveOf('ship')}.`) : `Thanks! The wreck has ${coinText(now?.paid ?? 0)} of ${coinText(now?.goal ?? 0)}.`, 'success');
-    } else { isl.cardMessage = answer.message; if (['repaired', 'locked', 'insufficient_funds'].includes(answer.code)) await refreshDefended(); }
+      const done = now && BigInt(now.paid) >= BigInt(now.goal);
+      if (done) void readBoat();
+      isl.ui.toast(done ? (isOpen(campaign(), 'ship') ? 'The wreck is repaired! Your ship sails: tap her to play.' : `The wreck is repaired! She sails after wave ${waveOf('ship')}.`) : `Thanks! The wreck has ${coinText(now?.paid ?? 0)} of ${coinText(now?.goal ?? 0)}.`, 'success');
+    } else if (request.shared) await refused(answer,request.place);
+    else { isl.cardMessage = answer.message; if (['repaired', 'locked', 'insufficient_funds'].includes(answer.code)) await refreshDefended(); }
     refreshCard();
   }
   async function hire(id) {
@@ -351,7 +370,7 @@ export function createActions(isl) {
     isl.busyCrew = id; isl.cardMessage = ''; refreshCard();
     const request = islandRequest(), place = request.shared ? request.place : 'own';
     const answer = await isl.api.hire({crew: id, ...(request.shared ? placeCode() : {})});
-    if (isl.disposed) return;
+    if (!request.authorized()) return;
     isl.busyCrew = null;
     if (!request.current()) { refreshCard(); return; }
     if (answer.ok) {
@@ -360,56 +379,65 @@ export function createActions(isl) {
       emit({type: CREW_HIRED, crew: id});
       if (request.shared) emit({type: SPOTS_CHANGED, place, spot: 'cabin'});
       isl.ui.toast(`${CREW[id].name} hired · ${coinText(currentFunds().coins)}`, 'success');
-    } else await refused(answer, false);
+    } else await refused(answer, request.shared ? place : 'own');
     refreshCard();
   }
+  // Personal progress follows the actor across travel, but never across an auth generation.
+  const captainRequest = () => {
+    const identity = isl.authGeneration(), actor=isl.getActorId();
+    return () => !isl.disposed && Object.is(identity, isl.authGeneration()) && actor===isl.getActorId();
+  };
   async function upgradeCaptain() {
     if (isl.busyCaptain) return;
+    const current = captainRequest();
     isl.busyCaptain = true; isl.cardMessage = ''; refreshCard();
     const answer = await isl.api.upgradeCaptain();
-    if (isl.disposed) return;
+    if (!current()) return;
     isl.busyCaptain = false;
     if (answer.ok) {
       setOwn(answer.data);
       emit({type: 'captain_upgraded', level: isl.own.captain?.level});
       isl.ui.toast(`Captain level ${isl.own.captain?.level ?? '?'} · ${coinText(isl.own.coins)}`, 'success');
-    } else await refused(answer, false);
-    refreshCard();
+    } else await refused(answer, 'own');
+    if (current()) refreshCard();
   }
   // §14: learn a skill with skill points. The answer is the island with the new skill.
   async function learnSkill(id) {
     if (isl.busySkill || !SKILL_BY_ID[id]) return;
+    const current = captainRequest();
     isl.busySkill = id; isl.pickedSkill = id; isl.cardMessage = ''; refreshCard();
     const answer = await isl.api.learnSkill({skill: id});
-    if (isl.disposed) return;
+    if (!current()) return;
     isl.busySkill = null;
     if (answer.ok) {
       applyPersonal(answer.data);
       emit({type: 'captain_skill_learned', skill: id});
       isl.ui.toast(`New skill: ${SKILL_BY_ID[id].name}!`, 'success');
     } else { isl.cardMessage = answer.message; if (['locked', 'no_points', 'known', 'closed', 'wrong_role', 'captain_context_required', 'captain_revision_mismatch'].includes(answer.code)) await reloadOwn(); }
-    refreshCard();
+    if (current()) refreshCard();
   }
   // Role/respec asks twice; the personal profile version determines authorization and any legacy coin charge.
   async function takeRole(id) {
     if (isl.busyRole || !isRole(id)) return;
+    const current = captainRequest();
     isl.busyRole = true; isl.pickedRole = id; isl.cardMessage = ''; refreshCard();
     const answer = await isl.api.pickRole({role: id});
-    if (isl.disposed) return;
+    if (!current()) return;
     isl.busyRole = false;
     if (answer.ok) {
       applyPersonal(answer.data);
       emit({type: 'captain_role_picked', role: id});
       isl.ui.toast(`You are the ${ROLE_BY_ID[id].name} now!`, 'success');
     } else { isl.cardMessage = answer.message; if (['locked', 'role_known', 'captain_context_required', 'captain_revision_mismatch'].includes(answer.code)) await reloadOwn(); }
-    refreshCard();
+    if (current()) refreshCard();
   }
   async function respecCaptain() {
     if (isl.busyRespec) return;
     if (!isl.respecAsk) { isl.respecAsk = true; isl.cardMessage = ''; refreshCard(); return; }
+    const current = captainRequest();
     isl.busyRespec = true; isl.cardMessage = ''; refreshCard();
     const answer = await isl.api.respec();
-    if (isl.disposed) return;
+    if (!current()) return;
     isl.busyRespec = false; isl.respecAsk = false;
     if (answer.ok) {
       applyPersonal(answer.data); isl.pickedSkill = null; isl.pickedRole = null;
@@ -417,7 +445,7 @@ export function createActions(isl) {
       isl.ui.toast(currentFunds().shared || declaresPersonalCaptain(isl.own?.captain) ? ['Skills reset.', engineerCommitmentLine(isl.own?.captain)].filter(Boolean).join(' ')
         : `Skills reset · ${coinText(isl.own.coins)}`, 'success');
     } else { isl.cardMessage = answer.message; if (['nothing_to_reset', 'captain_context_required', 'captain_revision_mismatch'].includes(answer.code)) await reloadOwn(); }
-    refreshCard();
+    if (current()) refreshCard();
   }
   function link() { // the names of the other parts, once every part exists (index.js)
     ({currentFunds, applyPersonal, recoveryControlsOn, recoveryPolicyOn, readStructureRecovery, setOwn,

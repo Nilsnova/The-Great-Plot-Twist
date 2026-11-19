@@ -11,6 +11,7 @@ import { readRules } from './wave-rules.js';
 import { isParticipantToken, readRecoveryPolicy } from './recovery-policy.js';
 import { readRecoverySnapshot } from './recovery-snapshot.js';
 import { RECOVERY_POLL_LEAD_MS, RECOVERY_POLL_MARGIN_MS, RECOVERY_POLL_MIN_MS } from './recovery-transport.js';
+import {nativeOrigin,validInitialCaptains} from '../island/shared-wave-shapes.js';
 
 export const MAX_TICKS_PER_FRAME = 600;      // a friend joining late catches up 30 s of wave per frame
 // Recovery waves (structure_recovery) may only run ticks the server has sealed, and the seal moves on
@@ -154,8 +155,11 @@ export function readWaveInfo(info) {
   const recoveryPolicy = readRecoveryPolicy({ recoveryVersion, waveProtocol });
   if (!recoveryPolicy) return null;
   const snapshot = recoveryPolicy === 'structure-recovery-v1' ? readRecoverySnapshot(info.initialSnapshot, info.waveId) : null;
-  if (recoveryPolicy === 'structure-recovery-v1' && (!snapshot || !isParticipantToken(info.participantToken)
-    || !Number.isSafeInteger(info.lastActorCounter) || info.lastActorCounter < 0
+  const nativeShared=!!snapshot && Object.hasOwn(snapshot,'economy'),spectator=nativeShared && info.spectator===true;
+  if(nativeShared && (!nativeOrigin(snapshot.economy) || !validInitialCaptains(snapshot) || typeof info.spectator!=='boolean'
+    || !spectator && !isParticipantToken(info.controlSessionId)))return null;
+  if (recoveryPolicy === 'structure-recovery-v1' && (!snapshot || (!spectator && (!isParticipantToken(info.participantToken)
+    || !Number.isSafeInteger(info.lastActorCounter) || info.lastActorCounter < 0))
     || snapshot.seed !== Number(info.seed)
     || Date.parse(snapshot.startsAt) !== startsAtMs
     || snapshot.createWave.seed !== snapshot.seed
@@ -167,8 +171,8 @@ export function readWaveInfo(info) {
   const weather = info.weather && typeof info.weather === 'object' ? info.weather : {};
   return { waveId: info.waveId, wave, seed: Number(info.seed), startsAtMs, weather, flagship: info.flagship === true,
     boss: typeof info.boss === 'boolean' ? info.boss : undefined, walls: readWalls(info.walls), rules,
-    recoveryVersion, waveProtocol, ...(snapshot ? { initialSnapshot: snapshot, participantToken: info.participantToken,
-      lastActorCounter: info.lastActorCounter } : {}),
+    recoveryVersion, waveProtocol, ...(snapshot ? { initialSnapshot: snapshot, participantToken: info.participantToken??null,
+      lastActorCounter: info.lastActorCounter??0 } : {}),...(nativeShared?{nativeShared,spectator,controlSessionId:info.controlSessionId??null}:{}),
     serverTimeMs: Number.isFinite(parseTime(info.serverTime)) ? parseTime(info.serverTime) : null,
     // The browser's clock offset to the server, measured when the wave answer arrived (island/api.js clockOffset).
     clockOffsetMs: Number.isSafeInteger(info.clockOffsetMs) && Math.abs(info.clockOffsetMs) <= 86_400_000 ? info.clockOffsetMs : null };

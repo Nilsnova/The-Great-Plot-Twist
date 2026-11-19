@@ -50,6 +50,7 @@ export const adapterReasons = [
   'off_target',
   'offline',
   'order_not_allowed',
+  'owned_island_confirmation_required',
   'pair_cooldown',
   'payment_confirmation_required',
   'players_only',

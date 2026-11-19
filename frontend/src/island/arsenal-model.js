@@ -7,6 +7,8 @@
 import {WEAPONS, WEAPON_BY_ID, captainStats, readWeapon} from '../pirates/captain-stats.js';
 import {coinText} from './card-model.js';
 import {opensText} from '../campaign/index.js';
+import {readSharedArsenal} from './arsenal-shared-state.js';
+import {sharedArsenalModel} from './arsenal-shared-model.js';
 
 export const CAPACITY = 20;
 const MODE_LINES = Object.freeze({single: 'One ship per shot.', cone: 'A spray: up to 3 ships in front of you.',
@@ -15,8 +17,9 @@ const MODE_LINES = Object.freeze({single: 'One ship per shot.', cone: 'A spray: 
 const isCount = value => Number.isSafeInteger(value) && value >= 0;
 const isCopy = item => !!item && typeof item.id === 'string' && isCount(item.no) && !!WEAPON_BY_ID[item.weapon]
   && (item.holder === null || typeof item.holder === 'string') && typeof item.away === 'boolean' && typeof item.you === 'boolean';
-export const readArsenal = data => !!data && typeof data.code === 'string' && isCount(data.capacity) && isCount(data.stored)
-  && Array.isArray(data.copies) && data.copies.every(isCopy) && typeof data.waveRunning === 'boolean' && isCount(data.coins);
+export const readArsenal = data => data?.economy !== undefined || data?.arsenalVersion !== undefined ? readSharedArsenal(data)
+  : !!data && typeof data.code === 'string' && isCount(data.capacity) && isCount(data.stored)
+    && Array.isArray(data.copies) && data.copies.every(isCopy) && typeof data.waveRunning === 'boolean' && isCount(data.coins);
 
 /** The type's numbers for your captain level (the same numbers the wave uses: captain-stats.js). */
 export function weaponStats(id, level = 1, skills = []) {
@@ -83,6 +86,7 @@ function shopRow(type, {answer, carries, full, closed, busy, level, carried, ski
  */
 export function arsenalModel({answer = null, level = 1, skills = [], filter = 'all', busy = null, message = '', loading = false} = {}) {
   const title = 'Arsenal';
+  if (readSharedArsenal(answer)) return sharedArsenalModel({answer, level, skills, filter, busy, message}, {weaponStats, weaponComparison, rackView});
   if (!readArsenal(answer)) {
     return {title, lead: loading ? 'Opening the arsenal…' : 'The arsenal could not be opened.', stock: '', full: false,
       carry: null, back: null, rack: [], shop: [], message, coins: '',

@@ -293,7 +293,10 @@ def test_saved_reservation_settles_after_its_initiating_profile_is_deleted(datab
     held = reserve(database, member, treasury, 70)
     current = reset(database, owner, treasury)
     as_owner(database)
-    database.execute("delete from auth.users where id=%s", (member,))
+    as_server(database)
+    assert rpc(database, "island_lifecycle_delete_player", member, False) == {"status": "deleted"}
+    as_owner(database)
+    assert database.execute("select id from auth.users where id=%s", (member,)).fetchone() is None
     as_server(database)
     assert money(settle(database, held, 150)) == (180, 0, 180)
     assert money(reset(database, owner, treasury)) == money(current)
