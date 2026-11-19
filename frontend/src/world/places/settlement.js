@@ -13,6 +13,7 @@ import { backdrop, createLifetime, loadBackdrop } from './resources.js';
 import { makeSelectedCanopy } from './selected-canopy.js';
 import { makeMooringRope } from './mooring.js';
 import {projectGround} from '../projection.js';
+import {createHomeRelief} from './home-relief.js';
 
 // Compose all art, colliders and cleanup under one place root for predictable travel disposal.
 export async function createSettlement(ctx) {
@@ -41,7 +42,8 @@ export async function createSettlement(ctx) {
   const frameState = createFrameState(ctx, data.spawn);
   const cleanups = [], dispose = createLifetime(group, art, cleanups);
   try {
-    backdrop(group, await (ctx.loadBackdrop ?? loadBackdrop)(`places/${id}.png`));
+    const ground = backdrop(group, await (ctx.loadBackdrop ?? loadBackdrop)(`places/${id}.png`));
+    if (id === 'home_islet') createHomeRelief(group, ground.material.map);
     placements.forEach(item => {
       const mesh = placeArt(group, art, item.asset, item.x, item.z);
       if (item.asset === 'ferry-pier') mesh.renderOrder = 6;
