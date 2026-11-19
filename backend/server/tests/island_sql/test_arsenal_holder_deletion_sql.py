@@ -16,6 +16,7 @@ from server.tests.economy_test_authority import (  # noqa: E402
 from server.tests.island_sql.test_arsenal_runtime_sql import setup  # noqa: E402
 from server.tests.island_sql.test_island_treasury_sql import (  # noqa: E402
     as_owner,
+    as_server,
     keys,
     ready,
     rpc,
@@ -64,11 +65,22 @@ def prepare_deletion(database, member, initial, copy, *, wave=None, generation=1
     )
 
 
+def delete_prepared_actor(connection, actor):
+    """Use the actual complete deletion boundary after private holder preparation."""
+    as_server(connection)
+    assert rpc(connection, "island_lifecycle_delete_player", actor, False) == {"status": "deleted"}
+    as_owner(connection)
+    assert connection.execute("select id from auth.users where id=%s", (actor,)).fetchone() is None
+    assert connection.execute(
+        "select id from public.profiles where id=%s", (actor,)
+    ).fetchone() is None
+
+
 def test_prepared_pending_copy_survives_real_auth_profile_deletion(database):
     owner, member, initial, copy = held_copy(database)
     wave = uuid4()
     assert pending_return(database, member, initial, copy, wave)["changed"]
-    database.execute("delete from auth.users where id=%s", (member,))
+    delete_prepared_actor(database, member)
     assert database.execute(
         "select holder,holder_generation,pending_return_wave_id "
         "from public.arsenal_copies where id=%s and island_owner=%s",
@@ -111,7 +123,7 @@ def test_deleted_pending_holder_cannot_become_live_without_a_profile(database):
     _, member, initial, copy = held_copy(database)
     wave = uuid4()
     pending_return(database, member, initial, copy, wave)
-    database.execute("delete from auth.users where id=%s", (member,))
+    delete_prepared_actor(database, member)
     with pytest.raises(psycopg.errors.ForeignKeyViolation), database.transaction():
         database.execute(
             "update public.arsenal_copies set pending_return_wave_id=null where id=%s", (copy,)
@@ -140,7 +152,7 @@ def test_outside_wave_preparation_returns_copy_and_repeats_after_matching_releas
     _, member, initial, copy = held_copy(database)
     assert prepare_deletion(database, member, initial, copy)["changed"]
     assert not prepare_deletion(database, member, initial, copy)["changed"]
-    database.execute("delete from auth.users where id=%s", (member,))
+    delete_prepared_actor(database, member)
     database.execute("set constraints all immediate")
     assert database.execute(
         "select holder,holder_generation from public.arsenal_copies where id=%s", (copy,)
@@ -193,7 +205,7 @@ def test_failed_encompassing_delete_restores_profile_and_copy_tenure(database):
     _, member, initial, copy = held_copy(database)
     with pytest.raises(psycopg.errors.DivisionByZero), database.transaction():
         prepare_deletion(database, member, initial, copy)
-        database.execute("delete from auth.users where id=%s", (member,))
+        delete_prepared_actor(database, member)
         database.execute("select 1/0")
     assert database.execute("select id from auth.users where id=%s", (member,)).fetchone()
     assert database.execute(
@@ -241,7 +253,7 @@ def test_grandfathered_pending_copy_survives_committed_physical_deletion(databas
     as_owner(database)
     wave = uuid4()
     prepare_deletion(database, member, initial, copy, wave=wave)
-    database.execute("delete from auth.users where id=%s", (member,))
+    delete_prepared_actor(database, member)
     database.execute("set constraints all immediate")
     database.commit()
     assert (

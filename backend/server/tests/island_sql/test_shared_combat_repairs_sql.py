@@ -255,13 +255,16 @@ def test_retry_after_canonical_end_and_departure_returns_only_owned_receipt(data
     world = seed(database)
     first = repair(database, world)
     as_owner(database)
+    # This is a domain-fixture clock boundary, not a natural runtime expiry.
+    # Shared run, HP, accounting and personal closure belong to one canonical
+    # hook; the old private legacy HP settler deliberately does not own it.
+    plan = rpc(database, "shared_session_lock_plan", [world.owner], world.member)
+    rpc(database, "shared_session_lock_plan_rows", Jsonb(plan))
     rpc(
-        database,
-        "structure_recovery_settle_locked",
-        world.owner,
+        database, "shared_session_close_locked", world.wave, "expired", Jsonb([]),
         database.execute("select clock_timestamp()+interval '700 seconds'").fetchone()[0],
     )
-    rpc(database, "game_leave", world.member, world.owner)
+    assert rpc(database, "game_leave", world.member, world.owner)["status"] == "left"
     again = repair(database, world)
     assert again == {"status": "done", "repeat": True, "receipt": first["receipt"]}
     assert counts(database, world) == (1, 1, 2, 1, 1)

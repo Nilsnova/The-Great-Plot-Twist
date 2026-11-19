@@ -37,10 +37,6 @@ def seed(connection, *, recovery=False, shared_target=False, shared_actor=False)
     add_players(connection, OWNER, FRIEND)
     open_island(connection, OWNER, "K7Q2M")
     open_island(connection, FRIEND, "M8P3N")
-    if shared_target:
-        assert rpc(connection, "island_treasury_admit", OWNER, OWNER, "targetadmit1", 200)[
-            "status"
-        ] == "done"
     if shared_actor:
         assert rpc(connection, "island_treasury_admit", FRIEND, FRIEND, "actoradmit01", 200)[
             "status"
@@ -50,6 +46,16 @@ def seed(connection, *, recovery=False, shared_target=False, shared_actor=False)
     else:
         wave, target = running_wave(connection, FRIEND), "p-fallen"
         assert join_wave(connection, FRIEND, wave)["status"] == "joined"
+    if shared_target:
+        # A real retained legacy source predates conversion. Public old start is
+        # correctly fenced after admission; it cannot create this test history.
+        if recovery:
+            move_recovery_start(connection, wave, 1000)
+        else:
+            move_start(connection, wave, 1000)
+        assert rpc(connection, "island_treasury_admit", OWNER, OWNER, "targetadmit1", 200)[
+            "status"
+        ] == "done"
     return wave, target
 
 
