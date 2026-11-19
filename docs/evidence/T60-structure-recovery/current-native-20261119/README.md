@@ -36,6 +36,12 @@ gradual-recovery and fake-room results in the parent directory remain historical
 - Scoped Ruff and whitespace checks passed. The actual-provider scenario module
   passes `node --check`; its provider/rendered execution has not yet been run.
 
+After adding fail-closed source-provenance checks, the affected native diagnostic
+passed again (1 in 5.02 seconds), and the changed egress case passed again
+(1 in 716 ms). Those are separate follow-up runs, not repeated 13/12-case suites.
+Writing either diagnostic now requires production source identical to the pinned
+baseline, records the measurement commit and refuses untracked production files.
+
 Exact commands, from `backend/` unless stated otherwise:
 
 ```sh
@@ -68,9 +74,9 @@ all ten planner checks now pass. These diagnostics are not reported as passes.
 
 [The native sample](journal-budget.json) contains 2,000 actual accepted movement
 inputs from two controllers in 32-item batches. Its fixed head drains in eight
-pages. Measured scratch table-plus-index allocation is 1,318,912 bytes; maximum
-encoded page is 95,384 bytes. Mean batch SQL time is 24.314 ms and maximum page
-SQL time is 5.609 ms. All 2,000 journal rows and the canonical closure remain
+pages. Measured scratch table-plus-index allocation is 1,376,256 bytes; maximum
+encoded page is 95,320 bytes. Mean batch SQL time is 25.788 ms and maximum page
+SQL time is 7.161 ms. All 2,000 journal rows and the canonical closure remain
 after terminal handling. The report pins its measurement-file SHA-256.
 
 These are local sample measurements. Other commands, skill payloads, concurrent
@@ -82,8 +88,8 @@ demand, storage/event budgets and a positive safety multiplier. Both example
 plans retain **all** history; 50/100 waves are illustrative total workloads, not
 TTL values or cleanup thresholds. The illustrative 1 GiB budget is not a selected
 hosting limit. At twofold sample allocation, 50 × 14,400 events reserves
-950,400,000 bytes ([example](capacity-example.json)); 100 waves requires
-1,900,800,000 bytes and correctly exits 2
+992,160,000 bytes ([example](capacity-example.json)); 100 waves requires
+1,984,320,000 bytes and correctly exits 2
 ([refusal](capacity-refusal.json)). Source mismatch or either exceeded budget
 also refuses. Exact integer arithmetic and upward rounding preserve large counts.
 

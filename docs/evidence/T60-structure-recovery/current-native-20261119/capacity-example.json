@@ -11,8 +11,8 @@
   },
   "forecast": {
     "retainedEvents": 720000,
-    "bytesPerEventUpperEstimate": 660,
-    "reservedBytes": 950400000,
+    "bytesPerEventUpperEstimate": 689,
+    "reservedBytes": 992160000,
     "safetyFactor": 2
   },
   "retention": {

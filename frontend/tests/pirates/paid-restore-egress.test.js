@@ -1,6 +1,7 @@
 // Two production journal consumers must let a live occupant escape a restored tower.
 import {expect, it} from 'vitest';
 import {createHash} from 'node:crypto';
+import {execFileSync} from 'node:child_process';
 import {mkdirSync, readFileSync, writeFileSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import {createWave} from '../../src/pirates/sim.js';
@@ -72,9 +73,15 @@ it('two replay consumers observe actual live egress after an ordered paid restor
   expect(escaped).toEqual([true,true]);
   expect(fired).toEqual([true,true]);
   if (process.env.WRITE_T60_EGRESS_DIAGNOSTIC==='1') {
+    const source='3bdd8eda16470795fdedd68c42fffab54e5f2ced';
+    const root=fileURLToPath(new URL('../../../',import.meta.url));
+    execFileSync('git',['diff','--quiet',source,'--','frontend/src'],{cwd:root});
+    expect(execFileSync('git',['ls-files','--others','--exclude-standard','--','frontend/src'],{cwd:root,encoding:'utf8'})).toBe('');
     const folder = fileURLToPath(new URL('../../../docs/evidence/T60-structure-recovery/current-native-20261119/',import.meta.url));
     mkdirSync(folder,{recursive:true});
-    const report = {sourceCommit:'3bdd8eda16470795fdedd68c42fffab54e5f2ced',
+    const report = {sourceCommit:source,
+      measurementCommit:execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim(),
+      productionSourceMatchesBaseline:true,
       testSha256:createHash('sha256').update(readFileSync(fileURLToPath(import.meta.url))).digest('hex'),
       restoreTick,firstEscape,independentReplaysAgree:true,bothRestoredTowersFired:true,
       limit:'Production replay/simulation with a synthetic sealed paid event; no provider/browser payment claim.'};

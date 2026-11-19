@@ -1,6 +1,8 @@
 {
   "sourceCommit": "3bdd8eda16470795fdedd68c42fffab54e5f2ced",
-  "testSha256": "a19ae124856243c31a159db59524a194890f86ef69316810f2662b89a5055a0a",
+  "measurementCommit": "c16f2aaee279837ed20f0a70cbc1e704bb94db5b",
+  "productionSourceMatchesBaseline": true,
+  "testSha256": "0e4278c1e725cb17b4b436c7804f7b604861a7587dfa166d1546c2fdb6c75269",
   "restoreTick": 388,
   "firstEscape": [
     {

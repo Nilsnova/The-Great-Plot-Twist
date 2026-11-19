@@ -8,6 +8,7 @@ explicit fixtures, while controller, input and journal RPCs are the real source.
 import hashlib
 import json
 import os
+import subprocess
 import time
 from pathlib import Path
 
@@ -144,5 +145,16 @@ def test_actual_native_journal_sample_retains_closed_history_and_fixed_head(data
         ],
     }
     if os.environ.get("WRITE_T60_NATIVE_DIAGNOSTIC") == "1":
+        production = ["backend/server/island", "backend/server/routes", "supabase/migrations"]
+        subprocess.run(
+            ["git", "diff", "--quiet", BASELINE, "--", *production], cwd=ROOT, check=True
+        )
+        assert not subprocess.check_output(
+            ["git", "ls-files", "--others", "--exclude-standard", "--", *production], cwd=ROOT
+        ), "Untracked production source cannot be assigned to the baseline."
+        report["measurementCommit"] = subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True
+        ).strip()
+        report["productionSourceMatchesBaseline"] = True
         OUTPUT.parent.mkdir(parents=True, exist_ok=True)
         OUTPUT.write_text(json.dumps(report, indent=2) + "\n")
