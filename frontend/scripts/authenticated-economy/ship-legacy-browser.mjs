@@ -68,6 +68,7 @@ async function selectChart(page){
   if(await skip.isVisible().catch(()=>false))await skip.click({noWaitAfter:true});
   else if(await got.isVisible().catch(()=>false))await got.click({noWaitAfter:true});else break;}
  await page.evaluate(()=>window.__island.island.ui.close());await dismissGuides(page);
+ await page.waitForFunction(()=>window.__island?.world.busy===false);
  await page.evaluate(()=>window.__island.chart.show());
  await page.locator('.sea-chart[open]').waitFor();
 }
@@ -90,7 +91,7 @@ try{
  let verified;for(let attempt=0;attempt<30;attempt++){verified=await api(page,'/api/me');
   if(verified.status===200&&verified.data.id===actor.actorId)break;await page.waitForTimeout(100);}
  assert.equal(ok(verified).id,actor.actorId);
- await land(page);await finishEntry(page);await dismissGuides(page);
+ const games=ok(await api(page,'/api/games'));await land(page,{create:games.games.length===0});await finishEntry(page);await dismissGuides(page);
  const wallet=async()=>(await observe(`select balance::text as balance,(select count(*)::integer from public.wallet_transactions t where t.player_id=w.player_id) as entries
   from public.wallets w where player_id=$1::uuid`,[actor.actorId],{runtimePath}))[0];
  let island=ok(await api(page,'/api/island'));assert.ok(!island.economy||island.economy.mode==='personal_legacy');
@@ -184,10 +185,13 @@ try{
  for(let attempt=0;attempt<90;attempt++){
   for(const name of ['Skip','Got it','Resume']){const button=page.getByRole('button',{name,exact:true}).first();
    if(await button.isVisible().catch(()=>false))await button.click({noWaitAfter:true});}
-  if(await page.evaluate(()=>window.__island?.world.current?.id==='saltreach_harbor'&&!!window.__island.classDemo))break;
+  if(await page.evaluate(()=>window.__island?.world.current?.id==='lighthouse_isle'&&!!window.__island.classDemo))break;
   await page.waitForTimeout(150);
  }
- assert.equal(await page.evaluate(()=>window.__island.world.current.id),'saltreach_harbor');
+ assert.equal(await page.evaluate(()=>window.__island.world.current.id),'lighthouse_isle');
+ await selectChart(page);await page.locator('.sea-chart[open] .fast-travel').check();
+ await pointer(page,'.sea-chart[open] [data-place="saltreach_harbor"]');
+ await page.waitForFunction(()=>window.__island?.world.current?.id==='saltreach_harbor'&&window.__island.world.busy===false);
  const guestWho=ok(await api(page,'/api/me'));assert.equal(guestWho.id,anonymous.user.id);
  const guestBefore=(await observe('select balance::text as balance from public.wallets where player_id=$1::uuid',[anonymous.user.id],{runtimePath}))[0];
  const guestMarket=ok(await api(page,'/api/market/calls'));
