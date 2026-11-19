@@ -82,7 +82,12 @@ async function naturalRepairTarget(page,spots,previous=null){
 async function acceptedNaturalDamage(page,spot){
   await page.waitForFunction(spot=>window.__island?.waves?.island.recoveryCombatState?.structures
     .some(row=>row.spot===spot && row.hpUnits<1000000),spot,{timeout:90000});
-  const checkpoint=await page.evaluate(()=>window.__island.waves.island.checkpointBeforeRepair());
+  let checkpoint;const until=Date.now()+10000;
+  do{
+    checkpoint=await page.evaluate(()=>window.__island.waves.island.checkpointBeforeRepair());
+    if(checkpoint.ok || !['health_sync_required','input_sync_required'].includes(checkpoint.code))break;
+    await page.waitForTimeout(100);
+  }while(Date.now()<until);
   assert.equal(checkpoint.ok,true,`Actual natural checkpoint refused: ${JSON.stringify(checkpoint)}`);
   const read=await recovery(page),row=read.structures.find(item=>item.spot===spot);
   assert.ok(row && row.hpUnits<1000000);return {read,row};
