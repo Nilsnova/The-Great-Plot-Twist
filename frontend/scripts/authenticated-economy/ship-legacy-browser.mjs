@@ -53,6 +53,13 @@ async function pointer(page,selector){const locator=typeof selector==='string'?p
  assert.ok(hit?.enabled&&hit.hit,'A physical UI action must hit its current enabled control');await page.mouse.click(hit.x,hit.y);}
 const response=(page,predicate,timeout=30000)=>page.waitForResponse(predicate,{timeout}).then(reply=>({reply}),error=>({error}));
 async function settled(pending){const result=await pending;if(result.error)throw result.error;return result.reply;}
+async function selectChart(page){
+ for(let attempt=0;attempt<12;attempt++){const skip=page.getByRole('button',{name:/^Skip all/}).first(),got=page.locator('.unlock-card[open]').getByRole('button',{name:'Got it',exact:true});
+  if(await skip.isVisible().catch(()=>false))await skip.click({noWaitAfter:true});
+  else if(await got.isVisible().catch(()=>false))await got.click({noWaitAfter:true});else break;}
+ await page.evaluate(()=>{window.__island.island.ui.close();window.__island.chart.show();});
+ await page.locator('.sea-chart[open]').waitFor();
+}
 try{
  const runtime=await loadRuntime(runtimePath),saved=JSON.parse(await readFile('/tmp/mp505-ship-legacy/host-client.json','utf8'));
  const browser=await chromium.launch({executablePath:'/usr/bin/chromium',headless:true,args:['--no-sandbox','--disable-dev-shm-usage','--disable-gpu',
@@ -77,20 +84,21 @@ try{
   from public.wallets w where player_id=$1::uuid`,[actor.actorId],{runtimePath}))[0];
  let island=ok(await api(page,'/api/island'));assert.ok(!island.economy||island.economy.mode==='personal_legacy');
  const initialWallet=await wallet();
- await page.evaluate(()=>window.__island.island.pick('wall_1'));
+ const personalSpot=island.spots.find(s=>!s.built&&s.kind==='wall');assert.ok(personalSpot);
+ await page.evaluate(spot=>{window.__island.island.ui.close();window.__island.island.pick(spot);},personalSpot.id);
  const personalCard=await page.locator('.island-card[open]').innerText();assert.match(personalCard,/10/);
  const builtPromise=response(page,r=>new URL(r.url()).pathname==='/api/island/build'&&r.request().method()==='POST');
  await pointer(page,'.island-card[open] [data-focus="build"]');const build=await settled(builtPromise);assert.equal(build.status(),200);
  const afterBuild=await wallet();assert.equal(BigInt(afterBuild.balance),BigInt(initialWallet.balance)-10n);
- await note('positive personal island construction through real card',{initialWallet,afterBuild,card:personalCard,transportStatus:200});
- await page.keyboard.press('Escape');
+ await note('positive personal island construction through real card',{spot:personalSpot.id,initialWallet,afterBuild,card:personalCard,transportStatus:200});
+ await page.evaluate(()=>window.__island.island.ui.close());
  await install('update public.islands set wave_best=30,next_wave=31,wreck_paid=500 where player_id=$1::uuid',[actor.actorId],
   'Saved ship/Harbor eligibility and completed wreck only, before shared admission; no earned combat/repaired-wreck receipt claim.',{runtimePath});
  await page.evaluate(()=>window.__island.island.load());
  await page.evaluate(()=>window.__island.island.openHarbor());
  const harbor=await page.locator('.island-card[open]').innerText();assert.match(harbor,/Harbor|Harbour/);
  await note('legacy Harbor reachable with personal funding',{card:harbor,hud:await page.locator('.hud-coins').getAttribute('aria-label'),wallet:await wallet()});
- await page.keyboard.press('Escape');await page.keyboard.press('m');await page.locator('.sea-chart[open] .fast-travel').check();
+ await selectChart(page);await page.locator('.sea-chart[open] .fast-travel').check();
  await pointer(page,'.sea-chart[open] [data-place="lighthouse_isle"]');
  await page.waitForFunction(()=>window.__island?.world.current?.id==='lighthouse_isle'&&!!window.__island.island.point);
  const point=ok(await api(page,'/api/pirate-point')),spot=point.spots.find(s=>!s.built&&s.kinds.includes('wall'))??point.spots.find(s=>!s.built);
@@ -103,7 +111,7 @@ try{
  const pointBody=pointResponse.request().postDataJSON(),pointAfter=await wallet();
  const paidPoint=BigInt(pointBefore.balance)-BigInt(pointAfter.balance);assert.ok(paidPoint>0n);
  await note('positive Pirate Point card purchase retains personal funding',{spot:spot.id,kind:pointBody.kind,paidCoins:paidPoint.toString(),before:pointBefore,after:pointAfter,card:pointCard});
- await page.keyboard.press('Escape');await page.keyboard.press('m');await pointer(page,'.sea-chart[open] [data-place="home_islet"]');
+ await selectChart(page);await pointer(page,'.sea-chart[open] [data-place="home_islet"]');
  await page.waitForFunction(()=>window.__island?.world.current?.id==='home_islet');
  const legacyCurrent=ok(await api(page,'/api/waves/current?where=own&waveProtocol=1'));assert.equal(legacyCurrent,null);
  await note('supported protocol-one idle browser transport',{status:200,currentWave:null,
