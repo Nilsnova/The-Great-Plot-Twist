@@ -21,3 +21,19 @@ it('leaves other scenery out of the building palette', () => {
   for (const id of ['oak', 'island-wreck', 'pirate-ship', 'village-wall-front-l1']) applyVillagePalette(id, {getContext});
   expect(getContext).not.toHaveBeenCalled();
 });
+
+it('lights the same roof material from the upper left and preserves every alpha value', () => {
+  const width = 9, height = 9;
+  const paint = id => {
+    const data = new Uint8ClampedArray(width * height * 4);
+    for (let i = 0; i < data.length; i += 4) data.set([30, 44, 83, i === 0 ? 171 : 255], i);
+    const context = {getImageData: () => ({data}), putImageData() {}};
+    applyVillagePalette(id, {width, height, getContext: () => context});
+    return data;
+  };
+  const roof = paint('island-house'), barrel = paint('island-cannon'), ruins = paint('island_core_broken');
+  expect(roof[6]).toBeGreaterThan(roof[roof.length - 2] + 12);
+  expect(barrel[6]).toBe(barrel[barrel.length - 2]);
+  expect(ruins[6]).toBe(ruins[ruins.length - 2]);
+  expect(roof.filter((_channel, index) => index % 4 === 3)).toEqual(barrel.filter((_channel, index) => index % 4 === 3));
+});
