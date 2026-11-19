@@ -9,15 +9,76 @@ const halfWidth = i => THREE.MathUtils.lerp(1.24, .83, i / (PLANKS - 1));
 const boards = ['#b57a42', '#c69155', '#a36a3d', '#c38b4f', '#b17743', '#d19c60', '#a66a3d'];
 const endGrain = '#57382b', longGrain = '#805132', darkGrain = '#815535', lightGrain = '#ebba7c';
 
-// Build one small, vertex-coloured mesh. The walking plane stays where it is.
+const TOP = 1, SIDE = 2, PILE = 3, END = 4;
+const ACROSS = [0, 0, 255, 255], UPRIGHT = [0, 255, 255, 0];
+const TOP_FIRST = [255, 0, 0, 255], TOP_PAIR = [255, 255, 0, 0], CUT_RING = [255, 255, 0, 255];
+const FLAT = [0, 0, 0, 0];
+
+function shadeTimber(material) {
+  material.onBeforeCompile = shader => {
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', `#include <common>
+        attribute vec2 woodFinish;
+        varying vec4 vTimber;`)
+      .replace('#include <begin_vertex>', `#include <begin_vertex>
+        vTimber = vec4(position.x, position.z, woodFinish.y / 255.0, woodFinish.x);`);
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', `#include <common>
+        varying vec4 vTimber;
+
+        // Larger, uneven fibres remain visible in the overview. Fine seams fade with distance.
+        float woodFibre(float lengthwise, float across, float seed) {
+          float warp = sin(lengthwise * 2.9 + seed) * .17 + sin(lengthwise * 5.3 - seed) * .08;
+          float grain = across + warp;
+          float width = clamp(fwidth(grain), .012, .38);
+          float slit = 1.0 - smoothstep(.05, .05 + width, abs(fract(grain) - .5));
+          float shortFibre = .5 + .5 * sin(lengthwise * 4.25 + seed * 3.14 + across * .67);
+          return .104 * sin(grain * 6.283) + .085 * sin(grain * 3.7 + seed) - slit * (.06 + .08 * shortFibre);
+        }
+
+        vec3 finishWood(vec3 base) {
+          vec2 p = vTimber.xy;
+          float edge = vTimber.z;
+          float surface = vTimber.w;
+          if (surface < .5) return base;
+          if (surface < 1.5) {
+            float fibre = woodFibre(p.x, edge * 2.05, floor(p.y * 2.818) * .83);
+            float bevel = .22 * (1.0 - smoothstep(.05, .23, edge)) - .23 * smoothstep(.74, .98, edge);
+            float glaze = .11 * sin(p.x * 1.55 + p.y * .73);
+            return base * (1.003 + fibre + bevel + glaze);
+          }
+          if (surface < 2.5) {
+            float fibre = woodFibre(p.y, edge * 2.2, p.x * .83);
+            return base * (.77 + .27 * edge + fibre);
+          }
+          if (surface < 3.5) {
+            float height = edge * (255.0 / 127.0) - .4;
+            float fibre = woodFibre(height * 1.7, p.x * 9.3, p.y * .9);
+            float wet = 1.0 - smoothstep(-.20, .092, height);
+            float tide = 1.0 - smoothstep(.02, .072, abs(height - .019));
+            vec3 wood = base * (1.0 + fibre);
+            vec3 soaked = wood * vec3(.46, .64, .64);
+            return mix(mix(wood, soaked, wet), vec3(.19, .44, .39), tide * (.23 + .13 * sin(p.x * 18.0)));
+          }
+          float rings = .16 * sin(edge * 19.0 + sin(p.x * 9.3) * .89 + p.y * 1.9);
+          return base * (.90 + .21 * edge + rings);
+        }`)
+      .replace('#include <color_fragment>', `#include <color_fragment>
+        diffuseColor.rgb = finishWood(diffuseColor.rgb);`);
+  };
+}
+
+// The deck keeps its original two meshes and support bounds.
 export function createHomeLanding(group) {
-  const vertices = [], colors = [], color = new THREE.Color();
-  function quad(a, b, c, d, tint) {
+  const vertices = [], colors = [], finishes = [], color = new THREE.Color();
+  function quad(a, b, c, d, tint, surface = 0, edges = FLAT) {
     color.set(tint);
-    for (const [x, y, z] of [a, b, c, a, c, d]) {
-      const display = projectGround(x, z);
+    const corners = [a, b, c, d];
+    for (const index of [0, 1, 2, 0, 2, 3]) {
+      const [x, y, z] = corners[index], display = projectGround(x, z);
       vertices.push(display.x, display.y + y, z + y * 1.24);
       colors.push(color.r, color.g, color.b);
+      finishes.push(surface, edges[index]);
     }
   }
   function timber(left, right, from, to, bottom, top, tint, side = longGrain, at = center) {
@@ -26,11 +87,11 @@ export function createHomeLanding(group) {
       return {bl: [x + left, low, z], br: [x + right, low, z], tl: [x + left, high, z], tr: [x + right, high, z]};
     };
     const a = section(from), b = section(to);
-    quad(a.tl, a.tr, b.tr, b.tl, tint);
-    quad(a.bl, a.tl, b.tl, b.bl, side);
-    quad(a.tr, a.br, b.br, b.tr, side);
-    quad(b.tl, b.tr, b.br, b.bl, endGrain);
-    quad(a.tr, a.tl, a.bl, a.br, endGrain);
+    quad(a.tl, a.tr, b.tr, b.tl, tint, TOP, ACROSS);
+    quad(a.bl, a.tl, b.tl, b.bl, side, SIDE, UPRIGHT);
+    quad(a.tr, a.br, b.br, b.tr, side, SIDE, TOP_FIRST);
+    quad(b.tl, b.tr, b.br, b.bl, endGrain, END, TOP_PAIR);
+    quad(a.tr, a.tl, a.bl, a.br, endGrain, END, TOP_PAIR);
   }
 
   function pile(x, z, top, foot = .018) {
@@ -41,12 +102,14 @@ export function createHomeLanding(group) {
     });
     const base = ring(.174, foot), shoulder = ring(.165, top - .067), cap = ring(.136, top);
     const wrap = [top - .28, top - .209, top - .138].map(y => [ring(.18, y), ring(.181, y + .045)]);
+    const elevation = y => Math.round((y + .4) * 127);
+    const low = elevation(foot), high = elevation(top - .067), grain = [low, low, high, high];
     const faces = ['#87502f', '#ad7040', '#c89054', '#d4a264', '#c38b4d', '#ae7446', '#845337', '#67402c', '#73492e'];
     for (let index = 0; index < sides; index++) {
       const next = (index + 1) % sides;
-      quad(base[index], base[next], shoulder[next], shoulder[index], faces[index]);
+      quad(base[index], base[next], shoulder[next], shoulder[index], faces[index], PILE, grain);
       quad(shoulder[index], shoulder[next], cap[next], cap[index], index < 5 ? '#e0af78' : '#a87853');
-      quad(cap[index], cap[next], [x, top, z], cap[index], '#d5a574');
+      quad(cap[index], cap[next], [x, top, z], cap[index], '#d5a574', END, CUT_RING);
       for (const [low, high] of wrap) {
         quad(low[index], low[next], high[next], high[index], index < 5 ? '#f0cb83' : '#b88e55');
       }
@@ -103,12 +166,14 @@ export function createHomeLanding(group) {
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
     geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+    geometry.setAttribute('woodFinish', new THREE.Uint8BufferAttribute(finishes, 2));
     const material = new THREE.MeshBasicMaterial({vertexColors: true, side: THREE.DoubleSide,
       transparent: true, forceSinglePass: true, depthTest: true, depthWrite: true, toneMapped: false});
+    shadeTimber(material);
     const mesh = new THREE.Mesh(geometry, material);
     mesh.name = name; mesh.renderOrder = order; mesh.raycast = () => {};
     group.add(mesh);
-    vertices.length = colors.length = 0;
+    vertices.length = colors.length = finishes.length = 0;
     return mesh;
   }
   mount('home-timber-landing', 6);
