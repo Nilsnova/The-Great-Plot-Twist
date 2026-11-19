@@ -148,6 +148,7 @@ export function createGames(isl) {
   function visit(code) {
     const symbols = storeVisit(code, visitStorage);
     if (!symbols) return false;
+    void isl.session?.leave();
     interruptBoat();
     isl.village.leave();
     invalidateWallFeedback();
