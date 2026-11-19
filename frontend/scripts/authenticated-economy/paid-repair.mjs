@@ -70,6 +70,15 @@ async function quotedRepairTransport(page,spot,origin,api){
   return {body,data:answer.data};
 }
 
+async function naturalRepairTarget(page,spots,previous=null){
+  const found=await page.waitForFunction(({spots,previous})=>{
+    const rows=window.__island?.waves?.island.recoveryCombatState?.structures
+      .filter(row=>spots.includes(row.spot) && row.hpUnits<1000000)??[];
+    return (rows.find(row=>row.spot!==previous)??rows[0])?.spot??null;
+  },{spots,previous},{timeout:90000});
+  return found.jsonValue();
+}
+
 /** Full actual-provider quota journey. Defense/unlock/budget setup is declared by the caller. */
 export async function runFullRepairQuotaAcceptance({ownerPage,memberPage,observe,api,outputDir,
   reconnectMember,spots,sourceCommit,setup}) {
@@ -139,17 +148,19 @@ export async function runFullRepairQuotaAcceptance({ownerPage,memberPage,observe
     const afterRetry=(await recovery(ownerPage)).structures.find(row=>row.spot===spot);
     assert.equal(afterRetry.repairSeq,later.row.repairSeq);assert.ok(afterRetry.hpUnits<=later.row.hpUnits);
     await record('original UID after later natural damage returns its immutable receipt without healing or spending',{beforeHp:later.row,afterHp:afterRetry,accounting:prior,retry});
+    let previousSpot=spot;
     for(const [ordinal,page,actor] of [[2,memberPage,restored.actorId],[3,ownerPage,origin.islandOwner]]) {
-      await damagedCard(page,spot);const paid=await quotedRepairTransport(page,spot,origin,api),receipt=paid.data.receipt;
+      const target=await naturalRepairTarget(page,spots,previousSpot);
+      await damagedCard(page,target);const paid=await quotedRepairTransport(page,target,origin,api),receipt=paid.data.receipt;
       assert.equal(receipt.actorId,actor);assert.equal(receipt.origin.accountId,origin.accountId);
       assert.equal(receipt.result.useOrdinal,ordinal);assert.equal(receipt.result.chargedPrice,String(damage.row.fixedPrice));
       receipts.push(receipt);await Promise.all([repairApplied(ownerPage,receipt),repairApplied(memberPage,receipt)]);
       await record(`authenticated shared repair ${ordinal} replays on both clients`,{request:paid.body,receipt});
+      previousSpot=target;
     }
-    await ownerPage.waitForFunction(spot=>window.__island?.waves?.island.recoveryCombatState?.structures
-      .some(row=>row.spot===spot && row.hpUnits<1000000),spot,{timeout:90000});
+    const fourthSpot=await naturalRepairTarget(ownerPage,spots,previousSpot);
     assert.equal((await ownerPage.evaluate(()=>window.__island.waves.island.checkpointBeforeRepair())).ok,true);
-    const exhausted=await recovery(ownerPage),row=exhausted.structures.find(item=>item.spot===spot),finalBefore=await accounting(observe,origin.accountId,wave);
+    const exhausted=await recovery(ownerPage),row=exhausted.structures.find(item=>item.spot===fourthSpot),finalBefore=await accounting(observe,origin.accountId,wave);
     assert.equal(exhausted.remainingPaidUses,0);assert.ok(row.hpUnits<1000000);
     const fourth=await api(ownerPage,REPAIR,{method:'POST',body:repairBody(exhausted,row,origin)});
     assert.equal(fourth.status,409);assert.equal(fourth.data.error.code,'repair_limit_reached');
@@ -164,7 +175,7 @@ export async function runFullRepairQuotaAcceptance({ownerPage,memberPage,observe
     let closed=null;const until=Date.now()+180000;
     while(Date.now()<until){const rows=await observe('select closed_at,closed_hp from public.recovery_wave_states where wave_id=$1',[wave]);
       if(rows[0]?.closed_at){closed=rows[0];break;}await ownerPage.waitForTimeout(1000);}
-    assert.ok(closed,'ordinary played combat must close canonically');assert.ok(closed.closed_hp[first.body.instanceId]<1000000);
+    assert.ok(closed,'ordinary played combat must close canonically');assert.ok(closed.closed_hp[row.instanceId]<1000000);
     const terminal=[];
     for(const page of [ownerPage,memberPage]){const read=await recovery(page);assert.equal(read.displayPhase,'between_waves');
       assert.ok(read.structures.every(item=>item.hpUnits===1000000));terminal.push(read);}
