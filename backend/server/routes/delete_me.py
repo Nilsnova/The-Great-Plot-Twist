@@ -18,7 +18,7 @@ cascades, while shared endpoints reject cached deleted identities.
 Auth audit/platform logs remain subject to Supabase retention as before (D022).
 No player id or other personal information is written to the route's log. A503
 means the outcome is unknown: retry the same confirmation body. See
-specs/MP-ECO-16-lifecycle-compatibility-integration.md for composition details.
+specs/MP-ECO-20-lifecycle-compatibility.md for composition details.
 
 Used by the account settings screen and authenticated lifecycle acceptance.
 """

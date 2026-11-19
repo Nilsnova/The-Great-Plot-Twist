@@ -2058,7 +2058,7 @@ the separate true confirmation (`409 owned_island_confirmation_required`). A
 member's visited island and other players' personal progress survive. Automatic
 guest cleanup uses the same transaction and skips owners needing confirmation
 while continuing later eligible guests. Legacy-only accounts retain their purge.
-See [lifecycle composition](../specs/MP-ECO-16-lifecycle-compatibility-integration.md).
+See [lifecycle composition](../specs/MP-ECO-20-lifecycle-compatibility.md).
 
 Valid island/journal requests check the live deleted-actor guard after their
 request budget. Malformed bodies/queries and incompatible native requests reach
