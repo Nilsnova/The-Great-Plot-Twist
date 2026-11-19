@@ -24,6 +24,7 @@ const MORTAR = new THREE.Color('#96734f'), RECESS = new THREE.Color('#765840');
 const ENDS = [new THREE.Color('#aa8357'), new THREE.Color('#b99165')];
 const TURF = new THREE.Color('#8bb943'), LIP = new THREE.Color('#b0d557'), ROOTS = new THREE.Color('#739e3a');
 const GRASS_CREST = TURF.clone().lerp(LIP, .56);
+const WORN_LEDGE = 4;
 const FOLIAGE = {
   97: [['birch', .56, .70, .49], ['shrub', .19, .64, .64], ['shrub', .74, .31, .49], ['flowers', .41, .31, .52]],
   116.5: [['shrub', .21, .73, .65], ['shrub', .27, .68, .51], ['grass-tuft', .56, .74, .56], ['shrub', .81, .71, .62],
@@ -81,10 +82,13 @@ const FRONT_PROFILE = [
   [.636, 1.038, .107, TURF], [.777, 1.01, .065, TURF], [.918, .694, .025, TURF],
   [1, .02, -.08, TURF],
 ];
-// The back of each cove has a low stone course and a broad, sunlit shoulder.
+// A shallow lower ledge steps back into the sunlit cove shelf. The rear turf follows
+// the original slope so the rock garden and its plant feet meet the same ground.
 const SHORE_PROFILE = [
-  [0, 0, -.16, RECESS], [.025, .045, -.24, STONE], [.055, .273, -.07, STONE],
-  [.095, .384, .13, STONE], [.143, .416, .22, LIP], [.213, .476, .09, TURF],
+  [0, 0, -.16, RECESS], [.025, .040, -.22, STONE], [.052, .145, -.09, STONE],
+  [.081, .205, .047, STONE], [.123, .216, .103, LIP], [.172, .255, .063, TURF],
+  [.274, .239, -.023, RECESS], [.290, .260, -.17, STONE], [.314, .371, -.04, STONE],
+  [.349, .417, .12, STONE], [.390, .436, .19, LIP], [.449, .466, .097, TURF],
   [.56, .472, .045, TURF], [.78, .30, .015, TURF], [.90, .145, -.04, TURF],
   [1, .026, -.10, TURF],
 ];
@@ -258,8 +262,11 @@ export function createHomeTerraces(root, coastArt, art) {
         z: THREE.MathUtils.lerp(coast[index].z, coast[index + 1].z, blend)};
       const breadth = .009 * Math.cos(sample * .87) + .006 * Math.sin(sample * 1.92);
       const rise = height + Math.sin(sample * .92) * .09 + Math.cos(sample * 1.84) * .045;
-      return (radius, elevation) => shelfPoint(row, foot + breadth, back + breadth * .31, taper, rise, radius,
-        elevation * (1 + taper * Math.sin(sample * 1.11 + radius * 3) * .027));
+      return (radius, elevation) => {
+        const wornEnd = shore ? (1 - shoulder) * (1 - THREE.MathUtils.smoothstep(radius, .23, .56)) : 0;
+        const irregularity = 1 + taper * Math.sin(sample * 1.11 + radius * 3) * .027 - wornEnd * .21;
+        return shelfPoint(row, foot + breadth, back + breadth * .31, taper, rise, radius, elevation * irregularity);
+      };
     }
     const sodRings = profile.flatMap((entry, ring) => entry[3] === LIP ? [ring] : []);
     // Map the existing treads from the sod rim to the base of the next rise. The surface
@@ -361,7 +368,7 @@ export function createHomeTerraces(root, coastArt, art) {
         return samplePoint(sample)(THREE.MathUtils.lerp(r0, r1, (h - h0) / (h1 - h0)) - bulge, h);
       }
       // A massive lower plinth carries the finer, staggered stone courses above it.
-      const courses = upper ? [[.46, .965, .61, 1], [.035, .43, 0, 0]] : [[.036, .963, 0, 0]];
+      const courses = upper && !shore ? [[.46, .965, .61, 1], [.035, .43, 0, 0]] : [[.036, .963, upper ? .76 : 0, 0]];
       const grout = upper ? .044 : .049;
       for (const [bottom, top, shift, course] of courses) {
         let column = 0;
@@ -389,8 +396,9 @@ export function createHomeTerraces(root, coastArt, art) {
         const capInner = ring === lastSlope ? .74 : 1;
         const capOuter = ring === lastSlope ? 0 : ring === lastSlope - 1 ? .74 : 1;
         const tint = band === STONE ? MORTAR : band;
-        const turf = Number(band === TURF);
         const tread = treads.get(ring);
+        const wornLedge = shore && (ring === sodRings[0] || tread?.recessed);
+        const turf = wornLedge ? WORN_LEDGE : Number(band === TURF);
         for (let i = 0; i < rows.length - 1; i++) {
           const {shape: left, sample, sod: leftSod, endFade: fadeLeft} = rows[i];
           const {shape: right, sod: rightSod, endFade: fadeRight} = rows[i + 1];
@@ -401,7 +409,7 @@ export function createHomeTerraces(root, coastArt, art) {
               const [sodMaterial, sodTint] = SOD_MATERIAL[strip];
               const shade = SOD_PROFILE[strip][2] + variation;
               const light = SOD_PROFILE[strip + 1][2] + variation;
-              face(a[strip], b[strip], b[strip + 1], a[strip + 1], sodTint, shade, light, sodMaterial);
+              face(a[strip], b[strip], b[strip + 1], a[strip + 1], sodTint, shade, light, wornLedge ? WORN_LEDGE : sodMaterial);
             }
             continue;
           }
@@ -519,8 +527,10 @@ export function createHomeTerraces(root, coastArt, art) {
           return;
         }
         // Low grass clumps follow the tread while the sculpted lip casts a dark, rooted overhang.
-        float lip = smoothstep(1.0, 2.0, vTerrace.z);
-        float underside = smoothstep(2.28, 2.88, vTerrace.z);
+        bool wornLedge = vTerrace.z >= ${WORN_LEDGE.toFixed(1)};
+        float turfKind = wornLedge ? 1.0 : vTerrace.z;
+        float lip = smoothstep(1.0, 2.0, turfKind);
+        float underside = smoothstep(2.28, 2.88, turfKind);
         vec2 sward = vTerrace.xy * vec2(4.2, 5.3);
         float patches = noise2(sward * .43);
         float tufts = noise2(sward * 3.8 + vec2(patches));
@@ -542,6 +552,13 @@ export function createHomeTerraces(root, coastArt, art) {
         float leafLight = lip * (1.0 - underside) * smoothstep(.56, .87, tufts * .59 + tips * .41) * .16;
         float shoulderLight = shoulder * (.25 + (tufts - .5) * .13) - recess * (.22 + wallPocket * .09);
         vec3 turf = turfColor * (mix(.89, 1.12, grain) + meadowGrain + leafLight + shoulderLight);
+        if (wornLedge) {
+          // The thin tread is exposed sandstone with irregular low moss in its hollows.
+          float growth = noise2(vTerrace.xy * vec2(.79, .68)) * .79 + tufts * .21;
+          float cover = smoothstep(.41, .71, growth) * .80;
+          vec3 sediment = vec3(.47, .338, .169) * (.74 + .24 * grain + (patches - .5) * .13);
+          turf = mix(sediment, turf * .89, cover);
+        }
         vec3 meadow = texture2D(uCoastArt, floorUv).rgb;
         float seamBlend = (1.0 - smoothstep(.12, .83, vTerrace.w)) * smoothstep(-.02, .12, meadow.g - meadow.r);
         turf = mix(turf, meadow, seamBlend * .88);
