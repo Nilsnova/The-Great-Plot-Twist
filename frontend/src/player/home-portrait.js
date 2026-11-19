@@ -1,3 +1,4 @@
+import {Matrix4} from 'three';
 import {cliffProfile} from '../art/coast-cliffs.js';
 import {surfaces} from '../world/places/surfaces.js';
 import {projectedCoastBounds} from '../world/projection.js';
@@ -24,22 +25,54 @@ export function portraitSpriteSize(mesh, depth) {
   return depth > 1 ? mesh.userData.portraitSize ?? 1 : 1;
 }
 
-// A view offset changes both projection and unprojection. Upright sprites keep their authored
-// proportions at their projected feet. Key buildings can also read larger in the overview.
+function overviewFrame(camera, viewport) {
+  if (!viewport || ![viewport.width, viewport.height, viewport.top, viewport.bottom].every(Number.isFinite)
+      || viewport.width <= SHORE_MARGIN * 2 || viewport.height <= 0) return null;
+  const free = 1 - (viewport.top + viewport.bottom) / viewport.height;
+  if (free < .24) return null;
+  const portrait = portraitIslandFrame(camera, viewport);
+  const pivot = (viewport.bottom - viewport.top) / viewport.height;
+  const strength = (portrait ? .24 : .18) * Math.min(1, free / .6);
+  return {portrait, pivot, strength, limit: free * .84, widthGain: portrait ? .91 : .95};
+}
+
+// Compose the fixed ground map toward a vanishing point. The near shore grows relative to the
+// far terraces, and the inverse projects input through the same lens back onto the original map.
+function projectOverview(matrix, {pivot, strength, limit, widthGain}) {
+  return matrix.set(
+    widthGain, 0, 0, 0,
+    0, 1 + pivot * strength, 0, strength * (limit * limit - pivot * pivot),
+    0, 0, 1, 0,
+    0, strength, 0, 1 - strength * pivot,
+  );
+}
+
 export function createHomePortrait(camera) {
   let frame = null;
+  let previous = null;
+  const warp = new Matrix4();
+  const updateProjection = camera.updateProjectionMatrix.bind(camera);
+  camera.updateProjectionMatrix = () => {
+    updateProjection();
+    if (!frame) return;
+    camera.projectionMatrix.premultiply(warp);
+    camera.projectionMatrixInverse.copy(camera.projectionMatrix).invert();
+  };
   const restored = [];
   return {
     update(viewport) {
-      const next = portraitIslandFrame(camera, viewport);
-      if (next?.width === frame?.width && next?.height === frame?.height && next?.offset === frame?.offset) return;
-      if (next) camera.setViewOffset(1, 1, (1 - next.width) / 2, next.offset, next.width, next.height);
-      else camera.clearViewOffset();
+      const next = overviewFrame(camera, viewport), lens = next?.portrait;
+      const key = next ? [next.pivot, next.strength, next.limit, next.widthGain, lens?.width, lens?.height, lens?.offset].join() : null;
+      if (key === previous) return;
+      previous = key;
       frame = next;
-      camera.userData.homePortraitDepth = frame ? frame.width / frame.height : 1;
+      if (frame) projectOverview(warp, frame);
+      if (lens) camera.setViewOffset(1, 1, (1 - lens.width) / 2, lens.offset, lens.width, lens.height);
+      else camera.clearViewOffset();
+      camera.userData.homePortraitDepth = lens ? lens.width / lens.height : 1;
     },
     draw(scene, render) {
-      if (!frame) return render();
+      if (!frame?.portrait) return render();
       const depth = camera.userData.homePortraitDepth;
       try {
         scene.traverseVisible(object => {
