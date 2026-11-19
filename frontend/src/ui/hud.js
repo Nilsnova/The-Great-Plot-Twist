@@ -16,6 +16,7 @@ import {applyQuestEvent, reconcileFirstQuests, createIdleHint, firstQuestView, q
 import {showToast} from './toasts.js';
 import {coinsSpoken, formatCoins} from '../lib/coins.js';
 import {hudWaveView} from './wave-progress.js';
+import {createTreasuryProjection, exactCoinText, readEconomy, treasuryLine} from '../island/economy-view.js';
 import './hud.css';
 
 export const ARRIVAL_MS = 2000;
@@ -29,11 +30,14 @@ export function createHud(container, actions, {on = defaultOn, emit = defaultEmi
   // Where the balance comes from: the wallet (view.captain.coins) or, with the islands on, the island API
   // through setCoins(). The island's own count wins once chosen, so the wallet never overwrites it.
   let coinSource = 'wallet';
+  let sharedTreasury = null, sharedMode = false;
   let managing = false, captainLevel = null, waveView = null, waveKey = '';
   const overlay = node('div', 'hud hud-play');
   // 1. Coins.
   const purse = node('div', 'hud-coins'), purseText = node('span', 'hud-coins-value');
   purse.dataset.hudGroup = 'coins';purse.setAttribute('role', 'status');purse.append(purseText);
+  const treasuryName = node('span', 'hud-treasury-name'), treasuryHeld = node('span', 'hud-treasury-held');
+  treasuryName.hidden = true; treasuryHeld.hidden = true; purse.prepend(treasuryName); purse.append(treasuryHeld);
   const waveBadge = node('span', 'hud-wave'), waveText = node('span', 'hud-wave-value');
   const waveIcon = node('span', 'hud-wave-icon');waveIcon.setAttribute('aria-hidden', 'true');
   waveBadge.hidden = true;waveBadge.append(waveIcon, waveText);purse.append(waveBadge);
@@ -60,8 +64,10 @@ export function createHud(container, actions, {on = defaultOn, emit = defaultEmi
   // A two-row phone purse must not collide with the normal Goals panel beneath Menu.
   function measureHeader() {
     if (disposed) return;
-    const extra = Math.max(0, purse.getBoundingClientRect().bottom - menu.getBoundingClientRect().bottom);
+    const purseBottom = purse.getBoundingClientRect().bottom;
+    const extra = Math.max(0, purseBottom - menu.getBoundingClientRect().bottom);
     right.style.setProperty('--hud-quest-offset', `${extra}px`);
+    document.documentElement.style.setProperty('--hud-island-treasury-bottom', sharedMode ? `${purseBottom + 10}px` : '0px');
     // Toasts share #game but may be in the popover top layer. Reserve the actual Goals box,
     // including visibility:hidden cards; display:none/hidden Goals have no box to reserve.
     const goal = strip.element.getBoundingClientRect();
@@ -73,7 +79,8 @@ export function createHud(container, actions, {on = defaultOn, emit = defaultEmi
 
   let tickFrame = 0;
   function drawPurseLabel() {
-    const balance = Number.isFinite(coins) ? coinsSpoken(coins) : 'Coins not loaded yet';
+    const balance = sharedMode ? treasuryLine(sharedTreasury?.valid ? sharedTreasury.current : null)
+      : Number.isFinite(coins) ? coinsSpoken(coins) : 'Coins not loaded yet';
     purse.setAttribute('aria-label', waveView ? `${balance} · ${waveView.label}` : balance);
   }
   function drawWave(status) {
@@ -84,6 +91,17 @@ export function createHud(container, actions, {on = defaultOn, emit = defaultEmi
   }
   function drawCoins() {
     cancelAnimationFrame(tickFrame);
+    if (sharedMode) {
+      const state = sharedTreasury?.valid ? sharedTreasury.current : null;
+      purse.dataset.economy = 'shared'; treasuryName.hidden = false; treasuryHeld.hidden = false;
+      treasuryName.textContent = 'Island treasury';
+      purseText.textContent = state ? exactCoinText(state.treasury.availableCoins) : '🪙 …';
+      treasuryHeld.textContent = state ? `${exactCoinText(state.treasury.committedCoins)} committed · ${exactCoinText(state.treasury.balanceCoins)} total`
+        : 'Reload the island to refresh its treasury.';
+      purse.hidden = false; drawPurseLabel(); measureHeader(); return;
+    }
+    delete purse.dataset.economy; treasuryName.hidden = true; treasuryHeld.hidden = true;
+    treasuryName.textContent = ''; treasuryHeld.textContent = '';
     const known = Number.isFinite(coins);
     purseText.textContent = known ? formatCoins(coins) : '🪙 …';
     drawPurseLabel();
@@ -191,6 +209,7 @@ export function createHud(container, actions, {on = defaultOn, emit = defaultEmi
     },
     // {tick: true} (loot after a wave): an increase counts up, unless motion is reduced.
     setCoins(value, {tick = false} = {}) {
+      if (sharedMode) return;
       if (!Number.isFinite(value)) return;
       const from = coins; coins = Math.round(value);
       if (tick && Number.isFinite(from) && coins > from && !reducedMotion()) tickCoins(from); else drawCoins();
@@ -199,6 +218,18 @@ export function createHud(container, actions, {on = defaultOn, emit = defaultEmi
       captainLevel = Number.isSafeInteger(level) && level > 0 ? level : null;
     },
     setManaging,
+    setTreasury(value, {replace = false} = {}) {
+      sharedMode = true;
+      const next = readEconomy(value);
+      if (!next) {
+        if (sharedTreasury) sharedTreasury.update({economy: value});
+        drawCoins(); return false;
+      }
+      if (!sharedTreasury || replace) sharedTreasury = createTreasuryProjection(next);
+      else sharedTreasury.update({economy: next});
+      coinSource = 'island'; drawCoins(); return sharedTreasury.valid;
+    },
+    clearTreasury() { sharedTreasury = null; sharedMode = false; coins = null; drawCoins(); },
     // 'island' (the island API sends setCoins) or 'wallet' (the default).
     setCoinSource(source) { coinSource = source === 'island' ? 'island' : 'wallet'; },
     // Only the player's own island is supplied here, never the visited island's buildings or crew.
@@ -228,7 +259,7 @@ export function createHud(container, actions, {on = defaultOn, emit = defaultEmi
       showBanner(placeName(place));
       actions.focus();
     },
-    dispose() { if (disposed) return; disposed = true; cancelAnimationFrame(tickFrame); clearTimeout(bannerTimer); headerSize?.disconnect();window.removeEventListener('resize', measureHeader); document.documentElement.style.removeProperty('--hud-goals-toast-top');stops.forEach(stop => stop()); strip.dispose(); overlay.remove(); },
+    dispose() { if (disposed) return; disposed = true; cancelAnimationFrame(tickFrame); clearTimeout(bannerTimer); headerSize?.disconnect();window.removeEventListener('resize', measureHeader); document.documentElement.style.removeProperty('--hud-goals-toast-top');document.documentElement.style.removeProperty('--hud-island-treasury-bottom');stops.forEach(stop => stop()); strip.dispose(); overlay.remove(); },
     arrive,
     // The place on screen got its name late (a friend's game learned its host): the place status and a
     // banner still showing follow; no new banner.

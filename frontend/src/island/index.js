@@ -68,6 +68,7 @@ import {createLoading} from './island-load.js';
 import {createGames} from './island-game.js';
 import {createCards} from './island-cards.js';
 import {createActions} from './island-actions.js';
+import {createIslandFunding} from './economy-funding.js';
 
 export {ARRIVAL_KEY, SPOTS_CHANGED, NEWS_KEY, CAMPAIGN_UNLOCKED, TOWER_SPECIALISED, TOWER_TREE_BOUGHT,
   HOUSE_ROLE_PICKED, VISIT_NAMED, ISLAND_RESET, CHART_NAMES, ALL_REPAIRED} from './island-shared.js';
@@ -84,13 +85,14 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   const isl = {container, emit, on, mode, getTransport, transport, search, focus, resetInput, reducedMotion,
     preferences, storage, visitStorage, loadCutscenes, loadBoatScene, onCoins, onCaptain, onQuestIsland, menu,
     settings, now, setTimer, clearTimer, openHarborStall, travel, villageCamera, structureRecoveryOn};
+  isl.funding = createIslandFunding(); isl.selectionGeneration = 0;
   // The parts, each a closure over isl; they call each other through names linked once all exist. They only
   // define functions here: everything that runs at the start stays below, in its order.
   const parts = [createRecovery, createLoading, createGames, createCards, createActions].map(create => create(isl));
   for (const {link, ...part} of parts) Object.assign(isl, part);
   for (const part of parts) part.link?.();
   const {recoveryPolicyOn, recoveryModelVersion, stopRecoveryPoll, readStructureRecovery, setRecoveryCombatState,
-    setRecoveryCheckpointHandler, firstTime, tellCoins, campaign, reading, wrote, setOwnRead, coinsAsked, target,
+    setRecoveryCheckpointHandler, firstTime, tellCoins, campaign, reading, wrote, setOwnRead, coinsAsked, currentFunds, readOwn, target,
     where, applyWorld, syncCoreContext, setCoreCombatState, endVisit, placeName, joinFirst, load, loadPoint,
     tookCoins, arsenalCoins, reloadVisit, refreshDefended, currentCode, syncGame, wantSync, colourOf, captainColour,
     openLobby, setPresence, resetState, resetIsland, playArrival, visit, leaveGame, enterGame, sailHome,
@@ -129,9 +131,11 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   // Once-per-device lines (the first unlock explanation, the musket hint).
   isl.news = (() => { try { return new Set(JSON.parse(storage?.getItem(NEWS_KEY) ?? '[]')); } catch { return new Set(); } })();
   // The fake answers at once; the live transport is the signed-in session's, read at every call.
-  isl.live = {get: path => (getTransport()?.get?.(path) ?? notReady()), post: (path, body) => (getTransport()?.post?.(path, body) ?? notReady())};
+  isl.live = {get: (path, options) => (getTransport()?.get?.(path, options) ?? notReady()), post: (path, body) => (getTransport()?.post?.(path, body) ?? notReady())};
   isl.islandTransport = transport ?? isl.live;
-  isl.api = createIslandApi({transport: isl.islandTransport, waveProtocol: where => where === 'pirate_point' ? 1 : 2});
+  isl.api = createIslandApi({transport: isl.islandTransport, waveProtocol: where => where === 'pirate_point' ? 1 : 2,
+    economy: () => { const source = currentFunds(); return source.shared ? source.economy : undefined; },
+    personalCaptain: () => isl.own?.captain, personalScope: () => isl.own?.code ?? '', negotiateEconomy: true});
   isl.recoveryTransport = Object.freeze({get: path => isl.islandTransport.get(path), post: (path, body) => isl.islandTransport.post(path, body)});
   isl.ui = createIslandUi({container, focus, resetInput,
     onSelection: active => isl.villageBar.render(isl.village.active && !active && !isl.moving.active)});
@@ -188,7 +192,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     if (endedHere && Number.isSafeInteger(event.coins)) isl.ui.toast(ALL_REPAIRED, 'info');
     // A won wave may open something (GAME-V3.md §4): read the island again; setOwn (or the visit) tells what is new.
     if (event.survived === true) {
-      const current = reading('own'); void isl.api.getIsland().then(fresh => { if (!isl.disposed && fresh.ok && current()) { setOwnRead(fresh.data); refreshCard(); } });
+      const current = reading('own'); void readOwn().then(fresh => { if (!isl.disposed && fresh.ok && current()) { setOwnRead(fresh.data, fresh.personalReadState); refreshCard(); } });
       if (isl.visiting) void reloadVisit().then(() => { if (!isl.disposed) refreshCard(); });
     }
   });
@@ -211,7 +215,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     interruptBoat();
     isl.village.leave();
     invalidateWallFeedback();
-    isl.coreTravelGeneration++; syncCoreContext();
+    isl.selectionGeneration++; isl.coreTravelGeneration++; syncCoreContext();
     isl.ui.close(); isl.flow.reset(); isl.openSpot = null; isl.moving.cancel();
     if (isl.visiting && event.to !== ISLAND_PLACE) endVisit();
   });
