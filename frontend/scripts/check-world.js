@@ -32,20 +32,25 @@ async function checkPhoneChart() {
     await phone.getByRole('button', { name: 'Menu', exact: true }).tap();
     await phone.getByRole('button', { name: 'Sea chart', exact: true }).tap();
     const chart = phone.locator('.sea-chart[open]');
-    await settle(phone);
-    const fullyVisible = await chart.evaluate((dialog, count) => {
+    const destinationsFit = () => chart.evaluate((dialog, count) => {
       const choices = [...dialog.querySelectorAll('[data-place]:not([hidden])')];
       const map = dialog.querySelector('.chart-scroll');
-      return choices.length === count && map.scrollWidth === map.clientWidth && choices.every(choice => {
-        const { x, y, width, height, right, bottom } = choice.getBoundingClientRect();
-        const label = choice.querySelector('span').getBoundingClientRect();
+      const controls = [...choices, ...dialog.querySelectorAll('.chart-close, .chart-options label')];
+      return choices.length === count && map.scrollWidth === map.clientWidth && controls.every(control => {
+        const { x, y, width, height, right, bottom } = control.getBoundingClientRect();
+        const label = (control.querySelector('span') ?? control).getBoundingClientRect();
         const hit = document.elementFromPoint(x + width / 2, y + height / 2);
         return width >= 44 && height >= 44 && x >= 0 && y >= 0 && right <= innerWidth && bottom <= innerHeight
-          && label.top >= y && label.bottom <= bottom && label.left >= x && label.right <= right && choice.contains(hit);
+          && label.top >= y && label.bottom <= bottom && label.left >= x && label.right <= right && control.contains(hit);
       });
     }, placeIds.length);
-    check(fullyVisible, 'Short phone chart shows every complete destination with a 44 px touch target');
+    await settle(phone);
+    check(await destinationsFit(), 'Short portrait chart shows every complete destination with a 44 px touch target');
     await phone.screenshot({ path: `${captureRoot}/20261105_World-Sea-Chart-320.png` });
+    await phone.setViewportSize({ width: 568, height: 320 });
+    await settle(phone);
+    check(await destinationsFit(), 'Rotating the short phone keeps every destination visible and reachable');
+    await phone.screenshot({ path: `${captureRoot}/20261105_World-Sea-Chart-568x320.png` });
     await chart.getByRole('button', { name: 'Your island', exact: true }).tap();
     await phone.waitForFunction(() => window.__island.world.current?.id === 'home_islet');
     check(await chart.isHidden(), 'A phone destination starts the existing voyage and closes the chart');
