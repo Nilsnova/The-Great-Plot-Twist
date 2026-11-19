@@ -34,12 +34,15 @@ export function createHud(container, actions, {on = defaultOn, emit = defaultEmi
   // 1. Coins.
   const purse = node('div', 'hud-coins'), purseText = node('span', 'hud-coins-value');
   const coinSign = document.createTextNode(''), coinAmount = document.createTextNode('');
-  const coinMark = node('span', 'hud-coin-mark', COIN);
+  const coinMark = node('span', 'hud-coin-mark');
   coinMark.setAttribute('aria-hidden', 'true');
+  coinMark.append(node('span', 'hud-symbol-text', COIN));
   purseText.append(coinSign, coinMark, coinAmount);
   purse.dataset.hudGroup = 'coins';purse.setAttribute('role', 'status');purse.append(purseText);
   const waveBadge = node('span', 'hud-wave'), waveText = node('span', 'hud-wave-value');
-  const waveIcon = node('span', 'hud-wave-icon');waveIcon.setAttribute('aria-hidden', 'true');
+  const waveIcon = node('span', 'hud-wave-icon'), waveSymbol = node('span', 'hud-symbol-text');
+  waveIcon.setAttribute('aria-hidden', 'true');
+  waveIcon.append(waveSymbol);
   waveBadge.hidden = true;waveBadge.append(waveIcon, waveText);purse.append(waveBadge);
   // 2. Menu, and 3. the quest strip under it.
   const right = node('div', 'hud-right'), menu = node('button', 'hud-menu');
@@ -83,7 +86,7 @@ export function createHud(container, actions, {on = defaultOn, emit = defaultEmi
   function drawWave(status) {
     const next = hudWaveView(status), key = next ? `${next.text}|${next.label}` : '';
     if (key === waveKey) return;
-    waveKey = key;waveView = next;waveBadge.hidden = !next;waveIcon.textContent = next ? '⚔️' : '';waveText.textContent = next?.text ?? '';
+    waveKey = key;waveView = next;waveBadge.hidden = !next;waveSymbol.textContent = next ? '⚔️' : '';waveText.textContent = next?.text ?? '';
     drawPurseLabel();measureHeader();
   }
   function showBalance(label) {
