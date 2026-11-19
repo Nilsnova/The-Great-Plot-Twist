@@ -33,8 +33,8 @@ export async function loadBackdrop(path, {quality = settings.quality} = {}) {
       painted.userData.coastSource = original;
       texture.dispose();
       return painted;
-    } catch (error) {
-      if (error?.name !== 'SecurityError') { texture.dispose(); throw error; }
+    } catch {
+      // Keep the loaded ground if the browser cannot paint its enhanced material.
     }
   }
   texture.colorSpace = THREE.SRGBColorSpace; texture.magFilter = THREE.NearestFilter;
