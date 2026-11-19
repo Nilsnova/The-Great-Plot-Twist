@@ -16,6 +16,52 @@ const BEDS = [
   [10.66, 6.31, -1, .68, 'grass-tuft'], [10.54, 11.59, 1, .74, 'flowers'],
 ];
 const ART = ['shrub', 'flowers', 'grass-tuft'];
+const TREE_ART = ['oak', 'pine', 'birch'];
+const HOME_FOLIAGE = [...ART, ...TREE_ART];
+
+function leafTexture(canvas, sampling = {}) {
+  const context = canvas.getContext('2d');
+  if (!context) return null;
+  const {width, height} = canvas;
+  const {data: source} = context.getImageData(0, 0, width, height);
+  const data = new Uint8Array(source.length), stride = width * 4;
+  // Associate colour with the original alpha before upload. This avoids a bright fringe
+  // when the browser converts a transparent canvas to a premultiplied WebGL texture.
+  // Typed textures use bottom-up rows, matching the existing garden UVs.
+  for (let y = 0; y < height; y++) {
+    const row = y * stride, flipped = (height - y - 1) * stride;
+    for (let x = 0; x < stride; x += 4) {
+      const from = row + x, to = flipped + x, opacity = source[from + 3] / 255;
+      data[to] = Math.round(source[from] * opacity);
+      data[to + 1] = Math.round(source[from + 1] * opacity);
+      data[to + 2] = Math.round(source[from + 2] * opacity);
+      data[to + 3] = source[from + 3];
+    }
+  }
+  const texture = new THREE.DataTexture(data, width, height);
+  texture.colorSpace = sampling.colorSpace ?? THREE.SRGBColorSpace;
+  texture.magFilter = sampling.magFilter ?? THREE.LinearFilter;
+  texture.minFilter = sampling.minFilter ?? THREE.LinearMipmapLinearFilter;
+  texture.generateMipmaps = sampling.generateMipmaps ?? true;
+  texture.anisotropy = sampling.anisotropy ?? 4;
+  if (sampling.userData) texture.userData = sampling.userData;
+  texture.needsUpdate = true;
+  return texture;
+}
+
+// Only Home leaf sprites use the explicit upload. Replace the original local texture
+// before it can be rendered, after its canvas has served the garden atlas.
+export function prepareHomeFoliage(art, preserveMask) {
+  for (const id of HOME_FOLIAGE) {
+    const material = art[id], original = material?.map;
+    if (!original?.isCanvasTexture || !original.premultiplyAlpha || !original.image?.getContext) continue;
+    const texture = leafTexture(original.image, original);
+    if (!texture) continue;
+    if (TREE_ART.includes(id)) preserveMask?.(texture, original);
+    material.map = texture;
+    original.dispose();
+  }
+}
 
 // Reuse the decoded scenery sprites so all beds share one draw call.
 function packGardenArt(sources) {
@@ -66,7 +112,7 @@ export function createHomeGardens(root, art) {
   geometry.setAttribute('position', position);
   geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
   geometry.setIndex(indices);
-  const mesh = new THREE.Mesh(geometry, spriteMaterial(smoothTexture(packed.atlas)));
+  const mesh = new THREE.Mesh(geometry, spriteMaterial(leafTexture(packed.atlas) ?? smoothTexture(packed.atlas)));
   mesh.name = 'home-village-gardens';
   mesh.renderOrder = 22; // Above ground finishes, behind buildings, wall previews and actors.
   mesh.raycast = () => {};

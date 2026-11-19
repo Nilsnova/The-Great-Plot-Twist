@@ -32,12 +32,12 @@ function wallPost({mesh, firstVertex}, depth) {
   return {box, crop: [uv.getX(firstVertex), uv.getY(firstVertex), uv.getX(opposite), uv.getY(opposite)]};
 }
 
-function alphaAt(mask, texture, box, x, y) {
+function alphaAt(mask, box, x, y) {
   if (x <= box.min.x || x >= box.max.x || y <= box.min.y || y >= box.max.y) return 0;
   const u = (x - box.min.x) / (box.max.x - box.min.x);
   const v = (y - box.min.y) / (box.max.y - box.min.y);
-  const col = Math.floor(u * MASK_SIZE), row = Math.floor((texture.flipY ? 1 - v : v) * MASK_SIZE);
-  return mask[(row * MASK_SIZE + col) * 4 + 3];
+  const col = Math.floor(u * MASK_SIZE), row = Math.floor((mask.flipY ? 1 - v : v) * MASK_SIZE);
+  return mask.data[(row * MASK_SIZE + col) * 4 + 3];
 }
 
 // These flat sprites share a painter group and depth. The renderer breaks ties by mesh id.
@@ -48,7 +48,7 @@ function drawsInFront(tree, building) {
 
 // Check that a meaningful part of the building body lies behind filled canopy pixels.
 // Sampling the resting sprite keeps the result stable through the tree's small wind shear.
-function overlapsBody(tree, treeBox, treeMask, building, bodyBox, bodyMask) {
+function overlapsBody(treeBox, treeMask, bodyBox, bodyMask) {
   const stepX = (bodyBox.max.x - bodyBox.min.x) / GRID_SIZE;
   const stepY = (bodyBox.max.y - bodyBox.min.y) / GRID_SIZE;
   let overlap = 0;
@@ -56,8 +56,8 @@ function overlapsBody(tree, treeBox, treeMask, building, bodyBox, bodyMask) {
     const y = bodyBox.min.y + (row + .5) * stepY;
     for (let col = 0; col < GRID_SIZE; col++) {
       const x = bodyBox.min.x + (col + .5) * stepX;
-      if (alphaAt(treeMask, tree.material.map, treeBox, x, y) < SOLID_ALPHA ||
-        alphaAt(bodyMask, building.material.map, bodyBox, x, y) < SOLID_ALPHA) continue;
+      if (alphaAt(treeMask, treeBox, x, y) < SOLID_ALPHA ||
+        alphaAt(bodyMask, bodyBox, x, y) < SOLID_ALPHA) continue;
       if (++overlap >= MIN_OVERLAP) return true;
     }
   }
@@ -89,7 +89,7 @@ export function makeSelectedCanopy(trees) {
           context.drawImage(image, u0 * image.width, top * image.height,
             (u1 - u0) * image.width, (v1 - v0) * image.height, 0, 0, MASK_SIZE, MASK_SIZE);
         } else context.drawImage(image, 0, 0, MASK_SIZE, MASK_SIZE);
-        mask = context.getImageData(0, 0, MASK_SIZE, MASK_SIZE).data;
+        mask = {data: context.getImageData(0, 0, MASK_SIZE, MASK_SIZE).data, flipY: texture.flipY};
       }
     } catch {
       context = null;
@@ -99,6 +99,11 @@ export function makeSelectedCanopy(trees) {
   }
 
   return {
+    preserveMask(texture, source) {
+      // The mask follows the source canvas orientation when the GPU texture uses flipped rows.
+      const mask = maskFor(source);
+      if (mask) masks.set(texture.image, new Map([['', mask]]));
+    },
     has(tree) { return occluding.has(tree); },
     show(target, depth = 1) {
       // House growth multiplies every home tree's base scale by the same value.
@@ -116,7 +121,7 @@ export function makeSelectedCanopy(trees) {
         const treeBox = spriteBounds(tree, depth);
         if (!treeBox.intersectsBox(bodyBox)) continue;
         const bodyMask = maskFor(building.material.map, crop), treeMask = maskFor(tree.material.map);
-        if (bodyMask && treeMask && overlapsBody(tree, treeBox, treeMask, building, bodyBox, bodyMask)) occluding.add(tree);
+        if (bodyMask && treeMask && overlapsBody(treeBox, treeMask, bodyBox, bodyMask)) occluding.add(tree);
       }
       return true;
     },

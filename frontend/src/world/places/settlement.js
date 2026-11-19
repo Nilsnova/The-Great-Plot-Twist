@@ -18,7 +18,7 @@ import { backdrop, createLifetime, loadBackdrop } from './resources.js';
 import { makeSelectedCanopy } from './selected-canopy.js';
 import { makeMooring } from './mooring.js';
 import {projectGround} from '../projection.js';
-import {createHomeGardens} from './home-gardens.js';
+import {createHomeGardens, prepareHomeFoliage} from './home-gardens.js';
 import {createHomeRelief} from './home-relief.js';
 import {createHomeTerraces} from './home-terraces.js';
 
@@ -53,6 +53,7 @@ export async function createSettlement(ctx) {
   const group = new THREE.Group();
   group.name = `place:${id}`;
   const frameState = createFrameState(ctx, data.spawn);
+  const foliage = [], selectedCanopy = home ? makeSelectedCanopy(foliage) : null;
   const cleanups = [], dispose = createLifetime(group, art, cleanups);
   try {
     const ground = backdrop(group, await (ctx.loadBackdrop ?? loadBackdrop)(`places/${id}.png`));
@@ -60,6 +61,7 @@ export async function createSettlement(ctx) {
       createHomeRelief(group, ground.material.map);
       createHomeTerraces(group, ground.material.map, art);
       createHomeGardens(group, art);
+      prepareHomeFoliage(art, selectedCanopy.preserveMask);
       createGroundShadows(group, trees.map(([x, z], i) => ({
         x, z: z + .12, width: [.93, .85, .88][i % 3], depth: .68,
         reach: [2.04, 2.32, 1.88][i % 3], canopy: true, opacity: .87,
@@ -82,16 +84,15 @@ export async function createSettlement(ctx) {
       return mesh;
     });
     const shoreBoat = skiff ? makeMooring(group, bollard, skiff) : null;
-    const foliage = trees.map(([x, z], i) => {
+    trees.forEach(([x, z], i) => {
       const mesh = placeArt(group, art, ['oak', 'pine', 'birch'][i % 3], x, z);
       // Smaller home canopies reveal walls; house growth multiplies this visual baseline.
       // The ground foot, radius-.48 blocker and painter order remain unchanged.
       if (home) mesh.scale.setScalar(.7);
       const crown = home ? {bendFrom: .48, phase: i * 2.399} : undefined;
       mesh.material = swayMaterial(mesh.material.clone(), mesh.userData.asset, crown);
-      return mesh;
+      foliage.push(mesh);
     });
-    const selectedCanopy = home ? makeSelectedCanopy(foliage) : null;
     let player = {x: data.spawn[0], z: data.spawn[1]}, shoreTime = 0;
     function updateCanopyOpacity(mesh) {
       const p = mesh.userData.ground;
