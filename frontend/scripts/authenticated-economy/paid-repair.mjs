@@ -31,23 +31,136 @@ async function pointerClick(page,button) {
 async function dismissGuides(page) {
   let dismissed=false;
   for(let turn=0;turn<8;turn++) {
-    const guides=page.locator('dialog.cutscene[open],.goal-card[open],.tutorial-card[open]');
-    if(!await guides.count())return dismissed;
-    // Escape closes the actual top modal before a delayed underlying arrival can be skipped.
-    await page.keyboard.press('Escape'); dismissed=true;
+    const action=await page.evaluate(()=>{
+      for(const [selector,label] of [['.shell-screen[open]','Resume'],['.goal-card[open]','Got it'],
+        ['.island-card-lobby[open]','Look around first'],['dialog.cutscene[open]','Skip'],['.tutorial-card[open]','Skip']]) {
+        const dialog=document.querySelector(selector);
+        const button=dialog && [...dialog.querySelectorAll('button')].find(node=>node.textContent.trim()===label);
+        if(button){button.click();return label;}
+      }
+      return null;
+    });
+    if(!action)return dismissed;
+    dismissed=true;await page.waitForTimeout(50);
   }
   throw new Error('Ordinary guide dismissal did not finish.');
 }
 
 async function openCard(page, spot) {
-  await page.evaluate(() => window.__island?.island.ui.close());
   await dismissGuides(page);
+  await page.evaluate(() => window.__island?.island.ui.close());
   await page.evaluate(spot => {
     const island = window.__island?.island;
     if (!island || island.mode==='fake') throw new Error('A real rendered island is required.');
     island.ui.close(); island.pick(spot);
   },spot);
   await page.locator('.island-card[open]').waitFor({timeout:10000});
+}
+
+const repairBody=(read,row,origin)=>({spot:row.spot,instanceId:row.instanceId,actionUid:crypto.randomUUID(),
+  expectedEpoch:read.islandEpoch,expectedWindow:read.repairWindow,expectedWaveId:read.waveId,
+  expectedLevel:row.level,expectedRepairSeq:row.repairSeq,quotedPrice:row.fixedPrice,waveProtocol:2,
+  economy:Object.fromEntries(['mode','version','islandOwner','runEpoch'].map(key=>[key,origin[key]]))});
+
+/** Full actual-provider quota journey. Defense/unlock/budget setup is declared by the caller. */
+export async function runFullRepairQuotaAcceptance({ownerPage,memberPage,observe,api,outputDir,
+  reconnectMember,spots,sourceCommit,setup}) {
+  const report={sourceCommit,scenario:'actual-provider-three-shared-repairs',status:'running',setup,steps:[],limits:[
+    'Real local provider identities, production sessions and natural simulation; no HP, outcome, clock or journal fixture.',
+    'Intro acknowledgements activate actual DOM controls as setup; the bell and three repair purchases use physical pointers.',
+    'Intact/stale/old-UID/fourth-refusal probes use actual authenticated HTTP and independent committed SQL observations.',
+  ],scenarioSha256:createHash('sha256').update(readFileSync(new URL(import.meta.url))).digest('hex')};
+  await mkdir(outputDir,{recursive:true});
+  const save=()=>writeFile(join(outputDir,'t60-full-quota.json'),`${JSON.stringify(report,null,2)}\n`);
+  const record=async(name,detail)=>{report.steps.push({name,...detail});await save();console.log(name);};
+  try {
+    const origin=await ownerPage.evaluate(()=>window.__island.island.economy);
+    assert.equal((await memberPage.evaluate(()=>window.__island.island.economy)).accountId,origin.accountId);
+    assert.equal((await observe('select current_wave_id from public.island_recovery_state where island_owner=$1',[origin.islandOwner]))[0].current_wave_id,null);
+    await openCard(ownerPage,'island_bell');
+    await pointerClick(ownerPage,ownerPage.locator('.island-card[open] [data-focus="bell"]:not([disabled])'));
+    await ownerPage.waitForFunction(()=>!!window.__island?.waves?.island.wave,null,{timeout:20000});
+    const wave=await ownerPage.evaluate(()=>window.__island.waves.island.wave.info.waveId);
+    await memberPage.waitForFunction(wave=>window.__island?.waves?.island.wave?.info.waveId===wave,wave,{timeout:20000});
+    const preparing=await recovery(ownerPage),intactRow=preparing.structures.find(row=>row.spot===spots[0]);
+    assert.equal(preparing.displayPhase,'preparing');assert.equal(preparing.remainingPaidUses,3);assert.equal(intactRow.hpUnits,1000000);
+    const before=await accounting(observe,origin.accountId,wave);
+    const intact=await api(ownerPage,REPAIR,{method:'POST',body:repairBody(preparing,intactRow,origin)});
+    assert.equal(intact.status,409);assert.equal(intact.data.error.code,'intact');
+    assert.deepEqual(await accounting(observe,origin.accountId,wave),before);
+    await record('accepted real countdown shares three uses; intact request has no financial/quota effect',{waveId:wave,preparing,before,intact});
+    const beforeControl=await memberPage.evaluate(()=>{
+      const proof=window.__island.island.session.proof(),info=window.__island.waves.island.wave.info;
+      return {actorId:proof.actorId,sessionId:proof.sessionId,connectionGeneration:proof.connectionGeneration,participantToken:info.participantToken};
+    });
+    await reconnectMember(memberPage);
+    await memberPage.waitForFunction(wave=>{
+      const app=window.__island,info=app?.waves?.island.wave?.info,proof=app?.island.session.proof();
+      return info?.waveId===wave && info.spectator===false && !!proof && proof.sessionId===info.controlSessionId;
+    },wave,{timeout:30000});
+    const restored=await memberPage.evaluate(()=>{
+      const proof=window.__island.island.session.proof(),info=window.__island.waves.island.wave.info;
+      return {actorId:proof.actorId,sessionId:proof.sessionId,connectionGeneration:proof.connectionGeneration,participantToken:info.participantToken};
+    });
+    assert.equal(restored.actorId,beforeControl.actorId);assert.equal(restored.sessionId,beforeControl.sessionId);
+    assert.equal(restored.participantToken,beforeControl.participantToken);
+    assert.ok(BigInt(restored.connectionGeneration)>BigInt(beforeControl.connectionGeneration));
+    await record('ordinary member reconnect retains frozen participant and shared untouched allowance',{beforeControl,restored,accounting:await accounting(observe,origin.accountId,wave)});
+    const damaged=await ownerPage.waitForFunction(spots=>window.__island?.waves?.island.recoveryCombatState?.structures
+      .find(row=>spots.includes(row.spot) && row.hpUnits<1000000)?.spot??null,spots,{timeout:90000});
+    const spot=await damaged.jsonValue(),damage=await damagedCard(ownerPage,spot),staleBody=repairBody(damage.read,damage.row,origin);
+    staleBody.quotedPrice++;
+    const stale=await api(ownerPage,REPAIR,{method:'POST',body:staleBody});
+    assert.equal(stale.status,409);assert.equal(stale.data.error.code,'stale_recovery_quote');
+    assert.deepEqual(await accounting(observe,origin.accountId,wave),before);
+    await record('natural damage accepted; stale price consumes neither coins nor a shared use',{spot,damage:damage.row,stale});
+    const receipts=[];
+    const first=await paidClick(ownerPage,spot);receipts.push(first.data.receipt);
+    assert.equal(first.data.receipt.result.useOrdinal,1);
+    await Promise.all([repairApplied(ownerPage,first.data.receipt),repairApplied(memberPage,first.data.receipt)]);
+    await record('owner physically buys shared repair one',{request:first.body,receipt:first.data.receipt});
+    const later=await damagedCard(ownerPage,spot),prior=await accounting(observe,origin.accountId,wave);
+    const retry=await api(ownerPage,REPAIR,{method:'POST',body:first.body});
+    assert.equal(retry.status,200);assert.equal(retry.data.repeat,true);assert.deepEqual(retry.data.receipt,first.data.receipt);
+    assert.deepEqual(await accounting(observe,origin.accountId,wave),prior);
+    const afterRetry=(await recovery(ownerPage)).structures.find(row=>row.spot===spot);
+    assert.equal(afterRetry.repairSeq,later.row.repairSeq);assert.ok(afterRetry.hpUnits<=later.row.hpUnits);
+    await record('original UID after later natural damage returns its immutable receipt without healing or spending',{beforeHp:later.row,afterHp:afterRetry,accounting:prior,retry});
+    for(const [ordinal,page,actor] of [[2,memberPage,restored.actorId],[3,ownerPage,origin.islandOwner]]) {
+      await damagedCard(page,spot);const paid=await paidClick(page,spot),receipt=paid.data.receipt;
+      assert.equal(receipt.actorId,actor);assert.equal(receipt.origin.accountId,origin.accountId);
+      assert.equal(receipt.result.useOrdinal,ordinal);assert.equal(receipt.result.chargedPrice,String(damage.row.fixedPrice));
+      receipts.push(receipt);await Promise.all([repairApplied(ownerPage,receipt),repairApplied(memberPage,receipt)]);
+      await record(`physical shared repair ${ordinal} replays on both clients`,{request:paid.body,receipt});
+    }
+    await ownerPage.waitForFunction(spot=>window.__island?.waves?.island.recoveryCombatState?.structures
+      .some(row=>row.spot===spot && row.hpUnits<1000000),spot,{timeout:90000});
+    assert.equal((await ownerPage.evaluate(()=>window.__island.waves.island.checkpointBeforeRepair())).ok,true);
+    const exhausted=await recovery(ownerPage),row=exhausted.structures.find(item=>item.spot===spot),finalBefore=await accounting(observe,origin.accountId,wave);
+    assert.equal(exhausted.remainingPaidUses,0);assert.ok(row.hpUnits<1000000);
+    const fourth=await api(ownerPage,REPAIR,{method:'POST',body:repairBody(exhausted,row,origin)});
+    assert.equal(fourth.status,409);assert.equal(fourth.data.error.code,'repair_limit_reached');
+    assert.deepEqual(await accounting(observe,origin.accountId,wave),finalBefore);
+    assert.equal(finalBefore.used,3);assert.equal(finalBefore.receipts-before.receipts,3);
+    const total=receipts.reduce((sum,receipt)=>sum+BigInt(receipt.result.chargedPrice),0n);
+    assert.equal(BigInt(finalBefore.balance),BigInt(before.balance)-total);assert.equal(finalBefore.committed,before.committed);
+    for(const page of [ownerPage,memberPage])assert.equal((await recovery(page)).remainingPaidUses,0);
+    await record('fourth fresh request refuses; exactly three receipts and exact total debit across both actors',{before,after:finalBefore,totalCharged:total.toString(),fourth});
+    await ownerPage.screenshot({path:join(outputDir,'three-shared-repairs-quota.png')});
+    let closed=null;const until=Date.now()+180000;
+    while(Date.now()<until){const rows=await observe('select closed_at,closed_hp from public.recovery_wave_states where wave_id=$1',[wave]);
+      if(rows[0]?.closed_at){closed=rows[0];break;}await ownerPage.waitForTimeout(1000);}
+    assert.ok(closed,'ordinary played combat must close canonically');assert.ok(closed.closed_hp[first.body.instanceId]<1000000);
+    const terminal=[];
+    for(const page of [ownerPage,memberPage]){const read=await recovery(page);assert.equal(read.displayPhase,'between_waves');
+      assert.ok(read.structures.every(item=>item.hpUnits===1000000));terminal.push(read);}
+    const closedAgain=await observe('select closed_at,closed_hp from public.recovery_wave_states where wave_id=$1',[wave]);assert.deepEqual(closedAgain[0],closed);
+    const replayClosed=await api(ownerPage,REPAIR,{method:'POST',body:first.body});assert.equal(replayClosed.status,200);assert.deepEqual(replayClosed.data.receipt,first.data.receipt);
+    await record('canonical natural closure restores both current views and retains damaged closed HP and original receipt',{closed,terminal,replayClosed});
+    report.status='passed';
+  }catch(error){report.status='failed';report.error={name:error.name,message:error.message};throw error;}
+  finally{await save();}
+  return report;
 }
 
 async function recovery(page) {
