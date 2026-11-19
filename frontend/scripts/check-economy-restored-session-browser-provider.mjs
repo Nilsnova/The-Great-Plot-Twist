@@ -18,7 +18,7 @@ const {sourceEvidence, servedSourceEvidence} = await import(new URL('./source.mj
 const baseline = '64ee02b360d68836b2de9247121ab47dc6a3ecbf';
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
-const helperUrls = [helper, observer, new URL('./runtime.mjs', helper), new URL('./source.mjs', helper),
+const helperUrls = [helper, observer, new URL('./api-clients.mjs',helper), new URL('./runtime.mjs', helper), new URL('./source.mjs', helper),
   new URL('../../../backend/tools/authenticated_economy/observe.py', helper),
   new URL('../../../backend/tools/authenticated_economy/config.py', helper)];
 const helperHashes = async () => Object.fromEntries(await Promise.all(helperUrls.map(async url => [fileURLToPath(url).split('/').pop(), hash(await readFile(url))])));
@@ -92,7 +92,7 @@ const {createRequire}=await import('node:module');
 const {chromium}=createRequire(helper)('playwright-core');
 const {loadRuntime}=await import(helper.href);
 const {requestApi}=await import(new URL('./api-clients.mjs',helper).href);
-const saved=JSON.parse(await readFile(savedPath,'utf8'));const runtime=await loadRuntime(runtimePath);
+const saved=JSON.parse(await readFile(savedPath,'utf8'));const runtime=await loadRuntime(runtimePath);assert.equal(runtime.expectedCommit,baseline);
 let browser,page;const frames=[];
 const watch=page=>page.on('websocket',socket=>{
  for(const [event,direction] of [['framesent','sent'],['framereceived','received']])socket.on(event,e=>{try{
@@ -111,13 +111,15 @@ try{
  await page.goto(runtime.frontendUrl,{waitUntil:'domcontentloaded'});
  await page.evaluate(session=>sessionStorage.setItem('plot-twist-auth-v1',JSON.stringify(session)),actor.session);
  await page.reload({waitUntil:'domcontentloaded'});await page.waitForFunction(async()=>{const{session}=await import('/src/online/session.js');return session.isSignedIn();},null,{timeout:30000});
- const me=await api(page,'/api/me');assert.equal(me.status,200);assert.equal(me.data.id,actor.actorId);
+ let me;for(let attempt=0;attempt<60;attempt++){me=await api(page,'/api/me');if(me.status===200&&me.data.id===actor.actorId)break;(report.authRestoreTransientStatuses??=[]).push(me.status);await page.waitForTimeout(100);}
+ assert.equal(me.status,200);assert.equal(me.data.id,actor.actorId);
  await finishEntry(page,{join:hostCode});
  const blank=await context.newPage();await blank.bringToFront();await page.bringToFront();await blank.close();
  await page.waitForFunction(()=>!!window.__island.island.session.proof(),null,{timeout:30000});
  const before=await state(),oldTopic='realtime:live:place:'+before.metadata.session.place+':'+before.metadata.session.topicGeneration;
  for(let n=0;n<40&&!frames.some(f=>f.direction==='sent'&&f.topic===oldTopic&&f.kind==='phx_join');n++)await page.waitForTimeout(250);
  const join=frames.find(f=>f.direction==='sent'&&f.topic===oldTopic&&f.kind==='phx_join');assert.ok(join);
+ for(let n=0;n<40&&!frames.some(f=>f.direction==='received'&&f.topic===oldTopic&&f.kind==='phx_reply'&&f.ref===join.ref&&f.status==='ok');n++)await page.waitForTimeout(250);
  assert.ok(frames.some(f=>f.direction==='received'&&f.topic===oldTopic&&f.kind==='phx_reply'&&f.ref===join.ref&&f.status==='ok'));
  note('same-actual-actor-ordinary-rejoin-has-ref-correlated-product-canonical-channel',{layer:'normal UI rejoin and passive pre-navigation observer',sameActualActor:true,acceptedProductJoin:true,joinReplyRefCorrelated:true});await checkpoint();
  await closeCards(page);await page.locator('.hud-menu').click({noWaitAfter:true});const boundary=frames.length;
