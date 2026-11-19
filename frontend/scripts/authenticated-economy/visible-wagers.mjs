@@ -86,9 +86,23 @@ async function money(account){const rows=await sql(`select a.state,a.balance_coi
  from public.island_economy_accounts a left join public.island_treasury_transactions t on t.account_id=a.id where a.id=$1::uuid group by a.id`,[account]);const r=rows[0];assert.equal(r.balance,r.ledger_balance);assert.equal(r.held,r.ledger_held);assert.equal(r.revision,r.entries);return r;}
 const wallets=()=>sql(`select w.player_id,w.balance::text as balance,(select count(*)::integer from public.wallet_transactions t where t.player_id=w.player_id) as entries,
  coalesce((select sum(t.delta)::text from public.wallet_transactions t where t.player_id=w.player_id),'0') as summed from public.wallets w where player_id=any($1::uuid[]) order by player_id`,[prepared.clients.map(c=>c.actorId)]);
-async function settle(opened){const deadline=Math.max(...opened.map(o=>Date.parse(o.receipt.result.wager.settleAt)))+1500;const start=Date.now();report.waitingFor=opened.map(o=>o.receipt.result.wager.settleAt);await persist();
- while(Date.now()<deadline)await new Promise(resolve=>setTimeout(resolve,Math.min(5000,deadline-Date.now())));
- const token=(await readFile(join(directory,'cron-token'),'utf8')).trim();const response=await fetch('http://127.0.0.1:58006/api/internal/island-wagers/settle',{method:'POST',redirect:'error',headers:{Authorization:'Bearer '+token}});assert.equal(response.status,200);report.waitingFor=null;return {elapsedWaitSeconds:Math.round((Date.now()-start)/10)/100,scheduler:await response.json()};}
+async function settle(opened){
+ const ids=opened.map(o=>o.receipt.result.wager.id),maturities=opened.map(o=>o.receipt.result.wager.settleAt),start=Date.now(),attempts=[];
+ // The production board accepts cached readings for60s; fetchedAt must also follow maturity.
+ // Observe after that real cache window and respect any durable5min retry already recorded.
+ let target=Math.max(...maturities.map(v=>Date.parse(v)))+61500;
+ for(let attempt=0;attempt<3;attempt++){
+  const jobs=await sql('select next_attempt_at,attempts,last_error,completed_at from public.island_wager_jobs where wager_id=any($1::uuid[])',[ids]);
+  target=Math.max(target,...jobs.filter(j=>!j.completed_at).map(j=>Date.parse(j.next_attempt_at)+1000));report.waitingFor={maturities,nextObservationAt:new Date(target).toISOString(),jobs};await persist();
+  while(Date.now()<target)await new Promise(resolve=>setTimeout(resolve,Math.min(5000,target-Date.now())));
+  const token=(await readFile(join(directory,'cron-token'),'utf8')).trim();const response=await fetch('http://127.0.0.1:58006/api/internal/island-wagers/settle',{method:'POST',redirect:'error',headers:{Authorization:'Bearer '+token}});assert.equal(response.status,200);
+  attempts.push({at:new Date().toISOString(),scheduler:await response.json()});report.schedulerAttempts=attempts;await persist();
+  const done=await sql('select wager_id from public.island_wager_settlements where wager_id=any($1::uuid[])',[ids]);
+  if(done.length===ids.length){report.waitingFor=null;return{elapsedWaitSeconds:Math.round((Date.now()-start)/10)/100,schedulerAttempts:attempts};}
+  target=Date.now()+1000;
+ }
+ throw Error('Three normal durable settlement observations did not complete these original wagers');
+}
 try{
  report.hashesBefore=await hashes();report.sourcesBefore=await sources();if(prior){assert.equal(prior.hashesAfter[files[1]],report.hashesBefore[files[1]]);assert.equal(prior.hashesAfter[files[8]],report.hashesBefore[files[8]]);report.priorOpening={reportSha256:await digest(resolve(priorPath)),status:prior.status,failure:prior.failure,hashesUnchanged:prior.hashesUnchanged,originalSteps:prior.steps};}
  for(const saved of prepared.clients){
