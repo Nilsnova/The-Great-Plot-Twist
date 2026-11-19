@@ -35,18 +35,18 @@ const PAVERS = [
 ];
 
 /** World-anchored limestone setts with shallow bevels and narrow, subdued joints. */
-function paintPavers(c, paths, materials) {
+function paintPavers(c, paths, materials, reference) {
   const bounds = {left: -SIZE.width / 2, top: -SIZE.height / 2, right: SIZE.width / 2, bottom: SIZE.height / 2};
   const random = seeded(18281), faces = new Path2D();
   c.save();
   c.clip(pathMaterialMask(paths));
-  c.fillStyle = '#b0a288';
+  c.fillStyle = reference ? '#b09e71' : '#b0a288';
   c.fillRect(bounds.left, bounds.top, SIZE.width, SIZE.height);
   for (let row = bounds.top; row < bounds.bottom;) {
-    const depth = .43 + random() * .12;
+    const depth = reference ? .51 + random() * .06 : .43 + random() * .12;
     let left = bounds.left - random();
     while (left < bounds.right) {
-      const width = .47 + random() * .17, trim = .008 + random() * .008;
+      const width = (reference ? .78 + random() * .16 : .47 + random() * .17), trim = .008 + random() * .008;
       const chip = .02 + random() * .038, drift = (random() - .5) * .028;
       const [face, bevel, gleam] = PAVERS[Math.floor(random() * PAVERS.length)];
       const x = left + trim, y = row + trim + drift;
@@ -68,9 +68,11 @@ function paintPavers(c, paths, materials) {
     row += depth;
   }
   // Reuse the atlas's original limestone grain inside each face. The carved joints stay distinct.
-  c.clip(faces);
-  c.globalCompositeOperation = 'soft-light';
-  paintMaterial(c, materials, 'path', {alpha: .08});
+  if (materials) {
+    c.clip(faces);
+    c.globalCompositeOperation = 'soft-light';
+    paintMaterial(c, materials, 'path', {alpha: .08});
+  }
   c.restore();
 }
 
@@ -78,7 +80,7 @@ function paintPavers(c, paths, materials) {
 export const hasGround = id => Object.hasOwn(PATHS, id) && Object.hasOwn(surfaces, id);
 
 /** Paints the ground of a place at density texels per world unit; returns the canvas. */
-export function paintGround(id, density = 28, materials = null) {
+export function paintGround(id, density = 28, materials = null, reference = null) {
   const s = surfaces[id], paths = PATHS[id];
   const art = canvas(Math.round(SIZE.width * density), Math.round(SIZE.height * density)), c = art.getContext('2d');
   // World x/z to the canvas: x across, the drawn y = -z * 0.72 down from the top edge.
@@ -96,6 +98,47 @@ export function paintGround(id, density = 28, materials = null) {
     p.closePath(); return p;
   };
   const random = seeded(s.seed * 7919 + 17);
+  if (reference) {
+    // This plate has already been fit to the 64 × 48 world-art grid.
+    c.drawImage(reference, -SIZE.width / 2, -SIZE.height / 2, SIZE.width, SIZE.height);
+  } else {
+    paintLegacyTerrain(c, s, coast, random, materials);
+  }
+  // Stone village footpaths retain a thin bank of warm sand against the grass.
+  if (paths) {
+    c.save(); c.clip(coast(.99));
+    for (const [padding, colour] of [[.16, '#a88c62'], [.067, '#e5c691'], [0, '#efd7a0']]) {
+      c.fillStyle = colour;
+      c.fill(pathMaterialMask(paths, 2.04, padding));
+    }
+    if (materials || reference) paintPavers(c, paths, materials, reference);
+    c.clip(pathMaterialMask(paths));
+    c.globalAlpha = materials ? .25 : 1;
+    c.fillStyle = '#d7b273'; for (let i = 0; i < 120; i++) { const points = paths.lines[Math.floor(random() * paths.lines.length)], t = random(), j = Math.floor(t * (points.length - 1)), f = t * (points.length - 1) - j;
+      const [x0, z0] = points[j], [x1, z1] = points[Math.min(points.length - 1, j + 1)]; c.fill(ellipse(...at(x0 + (x1 - x0) * f + (random() - .5) * 1.4, z0 + (z1 - z0) * f + (random() - .5) * 1.4), .09, .06)); }
+    c.restore();
+  }
+  if (reference) return art;
+  // Grass strokes and little flowers across the meadow (never on a path).
+  c.save(); c.clip(coast(.82));
+  for (let i = 0; i < 420; i++) {
+    const x = (random() - .5) * s.rx * 1.7, z = (random() - .5) * s.rz * 1.7, [px, py] = at(x, z);
+    if (paths && nearPath(paths, x, z, 1.6)) continue;
+    if (i % 14 === 0) { const colour = ['#ffffff', '#ffd166', '#ff8fab'][i % 3];
+      for (let k = 0; k < 5; k++) { const a = k / 5 * Math.PI * 2; c.fillStyle = colour; c.fill(ellipse(px + Math.cos(a) * .09, py + Math.sin(a) * .07, .07, .06)); }
+      c.fillStyle = '#f29e38'; c.fill(ellipse(px, py, .04, .035)); continue; }
+    if (i % 3) continue;
+    // A small tuft: three curved blades in a darker green.
+    const tuft = i % 2 ? '#56a845' : '#4a983f';
+    for (const [dx, lean, tall] of [[-.1, -.1, .26], [0, .02, .34], [.1, .12, .24]]) {
+      const blade = new Path2D(); blade.moveTo(px + dx - .035, py); blade.quadraticCurveTo(px + dx + lean * .3, py - tall * .6, px + dx + lean, py - tall); blade.quadraticCurveTo(px + dx + lean * .2 + .03, py - tall * .5, px + dx + .035, py); blade.closePath();
+      c.fillStyle = tuft; c.fill(blade);
+    }
+  }
+  c.restore();
+  return art;
+}
+function paintLegacyTerrain(c, s, coast, random, materials) {
   const rim = cliffProfile(s);
   paintCliffFaces(c, rim, materials);
   // Wet sand fading into the shallows (translucent, so the sea still reads it as water).
@@ -124,38 +167,6 @@ export function paintGround(id, density = 28, materials = null) {
   c.restore();
   c.lineWidth = .16; c.strokeStyle = '#3d7f36'; c.stroke(meadow);
   if (materials) { c.save(); c.clip(beach); c.lineWidth = .055; c.strokeStyle = '#d2e58b'; c.stroke(meadow); c.restore(); }
-  // Stone village footpaths retain a thin bank of warm sand against the grass.
-  if (paths) {
-    c.save(); c.clip(coast(.99));
-    for (const [padding, colour] of [[.16, '#a88c62'], [.067, '#e5c691'], [0, '#efd7a0']]) {
-      c.fillStyle = colour;
-      c.fill(pathMaterialMask(paths, 2.04, padding));
-    }
-    if (materials) paintPavers(c, paths, materials);
-    c.clip(pathMaterialMask(paths));
-    c.globalAlpha = materials ? .25 : 1;
-    c.fillStyle = '#d7b273'; for (let i = 0; i < 120; i++) { const points = paths.lines[Math.floor(random() * paths.lines.length)], t = random(), j = Math.floor(t * (points.length - 1)), f = t * (points.length - 1) - j;
-      const [x0, z0] = points[j], [x1, z1] = points[Math.min(points.length - 1, j + 1)]; c.fill(ellipse(...at(x0 + (x1 - x0) * f + (random() - .5) * 1.4, z0 + (z1 - z0) * f + (random() - .5) * 1.4), .09, .06)); }
-    c.restore();
-  }
-  // Grass strokes and little flowers across the meadow (never on a path).
-  c.save(); c.clip(coast(.82));
-  for (let i = 0; i < 420; i++) {
-    const x = (random() - .5) * s.rx * 1.7, z = (random() - .5) * s.rz * 1.7, [px, py] = at(x, z);
-    if (paths && nearPath(paths, x, z, 1.6)) continue;
-    if (i % 14 === 0) { const colour = ['#ffffff', '#ffd166', '#ff8fab'][i % 3];
-      for (let k = 0; k < 5; k++) { const a = k / 5 * Math.PI * 2; c.fillStyle = colour; c.fill(ellipse(px + Math.cos(a) * .09, py + Math.sin(a) * .07, .07, .06)); }
-      c.fillStyle = '#f29e38'; c.fill(ellipse(px, py, .04, .035)); continue; }
-    if (i % 3) continue;
-    // A small tuft: three curved blades in a darker green.
-    const tuft = i % 2 ? '#56a845' : '#4a983f';
-    for (const [dx, lean, tall] of [[-.1, -.1, .26], [0, .02, .34], [.1, .12, .24]]) {
-      const blade = new Path2D(); blade.moveTo(px + dx - .035, py); blade.quadraticCurveTo(px + dx + lean * .3, py - tall * .6, px + dx + lean, py - tall); blade.quadraticCurveTo(px + dx + lean * .2 + .03, py - tall * .5, px + dx + .035, py); blade.closePath();
-      c.fillStyle = tuft; c.fill(blade);
-    }
-  }
-  c.restore();
-  return art;
 }
 function nearPath(paths, x, z, reach) {
   for (const points of paths.lines) for (let i = 1; i < points.length; i++) {

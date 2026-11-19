@@ -47,9 +47,12 @@ export async function createSettlement(ctx) {
   let mooringStage = null;
   try {
     const ground = backdrop(group, await (ctx.loadBackdrop ?? loadBackdrop)(`places/${id}.png`));
+    const homeReference = ground.material.map.userData?.homeReference;
     if (id === 'home_islet') {
-      createHomeRelief(group, ground.material.map);
-      createHomeRearRim(group, art);
+      if (!homeReference) {
+        createHomeRelief(group, ground.material.map);
+        createHomeRearRim(group, art);
+      }
       mooringStage = createHomeLanding(group);
       createGroundShadows(group, trees.map(([x, z]) => {
         const scale = x === -13 && z === -12 ? .64 : 1;
@@ -75,7 +78,10 @@ export async function createSettlement(ctx) {
       // Smaller home canopies reveal walls; house growth multiplies this visual baseline.
       // The ground foot, radius-.48 blocker and painter order remain unchanged.
       // A shorter northwest palm leaves the cannon behind it readable in the village camera.
-      if (id === 'home_islet') mesh.scale.setScalar(x === -13 && z === -12 ? .42 : .7);
+      if (id === 'home_islet') {
+        const palm = x === -13 && z === -12;
+        mesh.scale.setScalar(homeReference ? (palm ? .37 : .54) : (palm ? .42 : .7));
+      }
       mesh.material = swayMaterial(mesh.material.clone(), mesh.userData.asset); return mesh;
     });
     const selectedCanopy = id === 'home_islet' ? makeSelectedCanopy(foliage) : null;
