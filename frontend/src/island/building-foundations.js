@@ -35,16 +35,15 @@ function corners(x, z, width, depth) {
 }
 
 // The pad stays under the original gun. Only its masonry below the rim tucks inland.
-function retainingToe(outside, x, z) {
+function retainingToe(outside, x, z, footZ) {
   if (outside.every(([gx, gz]) => onLand(gx, gz))) return null;
-  return outside.map(([gx, gz]) => {
-    const rim = !onLand(gx, gz);
-    const dx = x - gx, dz = z - gz;
-    let inshore = .16;
-    while (!onLand(gx + dx * inshore, gz + dz * inshore) && inshore < 1) inshore = Math.min(1, inshore + .12);
-    inshore = Math.min(1, inshore + .14);
-    return {x: gx + dx * inshore, z: gz + dz * inshore, height: rim ? -.67 - .52 * inshore : -.19};
-  });
+  const length = Math.hypot(x, z), shoreX = x / length, shoreZ = z / length;
+  const base = outside.map(([gx, gz]) => [x + (gx - x) * .83, footZ + (gz - footZ) * .83]);
+  let inshore = .19;
+  // Shift the whole lower course together, so its corners never fold into the tower pin.
+  while (base.some(([gx, gz]) => !onLand(gx - shoreX * inshore, gz - shoreZ * inshore)) && inshore < 2.4) inshore += .13;
+  const height = -.9 - .35 * inshore;
+  return base.map(([gx, gz]) => ({x: gx - shoreX * inshore, z: gz - shoreZ * inshore, height}));
 }
 
 function geometryOf(foundations) {
@@ -72,7 +71,7 @@ function geometryOf(foundations) {
     // The gun carriage is painted just behind its selection anchor.
     if (!onLand(x, z)) continue;
     const outside = corners(x, footZ, width, depth);
-    const toes = retainingToe(outside, x, z);
+    const toes = retainingToe(outside, x, z, footZ);
     if (toes) {
       const course = (corner, fraction, tint) => {
         const [gx, gz] = outside[corner], toe = toes[corner];
