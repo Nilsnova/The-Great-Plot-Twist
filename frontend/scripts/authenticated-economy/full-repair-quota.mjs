@@ -13,7 +13,7 @@ const helpers=resolve(process.env.MP_ECO_HELPERS_ROOT??fileURLToPath(new URL('./
 const helperRoot=resolve(helpers,'../../..');
 const {createClients,api,land,loadRuntime}=await import(pathToFileURL(resolve(helpers,'clients.mjs')));
 const {observe,install,admit}=await import(pathToFileURL(resolve(helpers,'observer.mjs')));
-const {sourceEvidence}=await import(pathToFileURL(resolve(helpers,'source.mjs')));
+const {sourceEvidence,servedSourceEvidence}=await import(pathToFileURL(resolve(helpers,'source.mjs')));
 const runtimePath=process.env.MP_ECO_RUNTIME??'/tmp/mp505-provider/runtime.json';
 const output=process.env.MP_ECO_OUTPUT??'/tmp/mp505-full-repair-quota';
 const runtime=await loadRuntime(runtimePath);
@@ -24,18 +24,24 @@ const digest=path=>createHash('sha256').update(readFileSync(path)).digest('hex')
 const helperPaths=['clients.mjs','runtime.mjs','observer.mjs','source.mjs'];
 const hashes=()=>Object.fromEntries([
   ...helperPaths.map(path=>['frontend/scripts/authenticated-economy/'+path,digest(resolve(helpers,path))]),
-  ...['config.py','observe.py'].map(path=>['backend/tools/authenticated_economy/'+path,
+  ...['config.py','observe.py','application.py','stack.py','__init__.py','provider_roles.sql'].map(path=>['backend/tools/authenticated_economy/'+path,
     digest(resolve(helperRoot,'backend/tools/authenticated_economy',path))]),
 ]);
 const report={productionSource:BASELINE,scenario:'complete-shared-repair-quota',status:'running',
   driverSha256:digest(fileURLToPath(import.meta.url)),repairScenarioSha256:digest(resolve(root,'frontend/scripts/authenticated-economy/paid-repair.mjs')),
   helperHashesBefore:hashes(),sourceBefore:sourceEvidence(BASELINE,{checkoutRoot:helperRoot}),
+  servedSourceBefore:servedSourceEvidence(runtime),
   scenarioSourceBefore:sourceEvidence(BASELINE,{checkoutRoot:root}),setup:[],boundaries:[
     'This extends broader authenticated acceptance; it does not turn the earlier bounded T60 evidence into a failed requirement.',
     'Advanced saved unlocks, personal earned eligibility and the 2000-coin test treasury are explicit fixtures, not evidence of naturally earned progression or balance.',
     'Every wall and level upgrade is bought through an actual current authenticated HTTP quote; no direct structure/HP/journal/clock/outcome installation.',
   ]};
-const loaded={createClients,api,land,loadRuntime,observe,install,admit};
+const migrationManifestPath=resolve(runtime.directory,'migrations.json');
+const migrationManifest=JSON.parse(readFileSync(migrationManifestPath,'utf8'));
+assert.equal(migrationManifest.migrationCount,108);
+for(const file of migrationManifest.files)assert.equal(digest(resolve(root,'supabase/migrations',file.name)),file.sha256);
+report.providerMigrations={count:108,manifestSha256:digest(migrationManifestPath),files:migrationManifest.files};
+const loaded={createClients,api,land,loadRuntime,observe,install,admit,sourceEvidence,servedSourceEvidence};
 report.loadedExportFunctionSha256=Object.fromEntries(Object.entries(loaded).map(([key,fn])=>[key,createHash('sha256').update(fn.toString()).digest('hex')]));
 await mkdir(output,{recursive:true});
 const save=()=>writeFile(resolve(output,'driver-report.json'),`${JSON.stringify(report,null,2)}\n`);
@@ -43,8 +49,8 @@ let ownerEnv,memberEnv;
 async function checked(page,path,body){const result=await api(page,path,{method:'POST',body});assert.equal(result.status,200,JSON.stringify(result));return result;}
 try {
   // Each invocation launches its own Chromium process, preventing cross-player focus ownership.
-  ownerEnv=await createClients({labels:['quota-owner'],runtimePath});
-  memberEnv=await createClients({labels:['quota-member'],runtimePath});
+  ownerEnv=await createClients({labels:['quota-owner'],runtimePath,expectedCommit:BASELINE,independentBrowsers:true});
+  memberEnv=await createClients({labels:['quota-member'],runtimePath,expectedCommit:BASELINE,independentBrowsers:true});
   const owner=ownerEnv.clients[0],member=memberEnv.clients[0];
   assert.notEqual(owner.context.browser(),member.context.browser());report.distinctBrowserObjects=true;
   await checked(owner.page,'/api/games',{actionUid:uid()});
@@ -85,7 +91,8 @@ try {
 }finally{
   await ownerEnv?.close();await memberEnv?.close();
   report.helperHashesAfter=hashes();report.helpersUnchanged=JSON.stringify(report.helperHashesBefore)===JSON.stringify(report.helperHashesAfter);
-  try{report.sourceAfter=sourceEvidence(BASELINE,{checkoutRoot:helperRoot});report.scenarioSourceAfter=sourceEvidence(BASELINE,{checkoutRoot:root});}
+  try{report.sourceAfter=sourceEvidence(BASELINE,{checkoutRoot:helperRoot});report.scenarioSourceAfter=sourceEvidence(BASELINE,{checkoutRoot:root});report.servedSourceAfter=servedSourceEvidence(runtime);
+    assert.equal(digest(migrationManifestPath),report.providerMigrations.manifestSha256);}
   catch(error){report.status='failed';report.sourceFailure=error.message;process.exitCode=1;}
   if(!report.helpersUnchanged){report.status='failed';report.helperFailure='A frozen helper changed during observation';process.exitCode=1;}
   await save();

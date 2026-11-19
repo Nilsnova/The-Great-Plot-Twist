@@ -117,6 +117,8 @@ export async function runFullRepairQuotaAcceptance({ownerPage,memberPage,observe
     const receipts=[];
     const first=await paidClick(ownerPage,spot);receipts.push(first.data.receipt);
     assert.equal(first.data.receipt.result.useOrdinal,1);
+    assert.equal(first.data.receipt.actorId,origin.islandOwner);assert.equal(first.data.receipt.origin.accountId,origin.accountId);
+    assert.equal(first.data.receipt.result.chargedPrice,String(damage.row.fixedPrice));
     await Promise.all([repairApplied(ownerPage,first.data.receipt),repairApplied(memberPage,first.data.receipt)]);
     await record('owner physically buys shared repair one',{request:first.body,receipt:first.data.receipt});
     const later=await damagedCard(ownerPage,spot),prior=await accounting(observe,origin.accountId,wave);
@@ -142,6 +144,7 @@ export async function runFullRepairQuotaAcceptance({ownerPage,memberPage,observe
     assert.equal(fourth.status,409);assert.equal(fourth.data.error.code,'repair_limit_reached');
     assert.deepEqual(await accounting(observe,origin.accountId,wave),finalBefore);
     assert.equal(finalBefore.used,3);assert.equal(finalBefore.receipts-before.receipts,3);
+    assert.equal(new Set(receipts.map(receipt=>receipt.receiptId)).size,3);
     const total=receipts.reduce((sum,receipt)=>sum+BigInt(receipt.result.chargedPrice),0n);
     assert.equal(BigInt(finalBefore.balance),BigInt(before.balance)-total);assert.equal(finalBefore.committed,before.committed);
     for(const page of [ownerPage,memberPage])assert.equal((await recovery(page)).remainingPaidUses,0);
@@ -155,7 +158,7 @@ export async function runFullRepairQuotaAcceptance({ownerPage,memberPage,observe
     for(const page of [ownerPage,memberPage]){const read=await recovery(page);assert.equal(read.displayPhase,'between_waves');
       assert.ok(read.structures.every(item=>item.hpUnits===1000000));terminal.push(read);}
     const closedAgain=await observe('select closed_at,closed_hp from public.recovery_wave_states where wave_id=$1',[wave]);assert.deepEqual(closedAgain[0],closed);
-    const replayClosed=await api(ownerPage,REPAIR,{method:'POST',body:first.body});assert.equal(replayClosed.status,200);assert.deepEqual(replayClosed.data.receipt,first.data.receipt);
+    const replayClosed=await api(ownerPage,REPAIR,{method:'POST',body:first.body});assert.equal(replayClosed.status,200);assert.equal(replayClosed.data.repeat,true);assert.deepEqual(replayClosed.data.receipt,first.data.receipt);
     await record('canonical natural closure restores both current views and retains damaged closed HP and original receipt',{closed,terminal,replayClosed});
     report.status='passed';
   }catch(error){report.status='failed';report.error={name:error.name,message:error.message};throw error;}
