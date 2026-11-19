@@ -9,11 +9,11 @@ import {groundGeometry} from '../world/ground-transform.js';
 import {artSizes, loadArt, placeArt, projectPoint} from '../world/art.js';
 import {ALL_SPOTS as ISLAND_SPOTS, CABIN, BELL, CAMPAIGN_BUILDINGS, ARSENAL, ISLAND_PLACE, defenses, islandZones, placedSpot} from './spots.js';
 import {isExtraSpot} from './extra-spots.js';
-import {makeFootprint, makeWallLanes} from './move-preview.js';
+import {makeFootprint, makeWallPerimeter} from './move-preview.js';
 import {makeSelectionBracket} from './selection-bracket.js';
 import {makeDefenseRange} from './defense-range.js';
 import {makeBuildingFeedback, makeWallFeedback} from './wall-feedback.js';
-import {footprintOf} from './placement.js';
+import {footprintOf, freeWallCells, positionsOf} from './placement.js';
 import {isOpen, spotWave, waveOf} from '../campaign/index.js';
 import {LOCK_WAVES} from '../art/campaign.js';
 import {SLOT_KINDS} from './td-rules.js';
@@ -331,7 +331,7 @@ export function decorateIsland(place, ctx = {}) {
   const wallFeedback = homeWalls ? makeWallFeedback(root) : null;
   const buildingFeedback = homeWalls ? makeBuildingFeedback(root) : null;
   // D056: while a wall is moved, the cells where a wall stops pirates glow (home island only).
-  const wallLanes = homeWalls ? makeWallLanes(root) : null;
+  const wallPerimeter = homeWalls ? makeWallPerimeter(root) : null;
   // Where a spot stands now: the cell of a move under way, the answer's x/z, else its fixed spot (Pirate Point's stay).
   const whereOf = spot => {
     if (preview?.spotId === spot.id) return {x: preview.x, z: preview.z};
@@ -426,6 +426,8 @@ export function decorateIsland(place, ctx = {}) {
     if (disposed) return;
     if (battle || feedbackScope !== state.feedbackScope) clearPurchaseFeedback();
     state = {spots, visitor, battle, unlocks, crew, campaign, arsenal: arsenal === true, feedbackScope};
+    if (wallPerimeter) wallPerimeter.show(preview && !battle && SPOTS.some(spot => spot.id === preview.spotId && spot.slot === 'wall')
+      ? freeWallCells(preview.spotId, positionsOf(spots)) : []);
     if (homeWalls) displayAnchors = defenseDisplayAnchors(ISLAND_PLACE, defenses(spots));
     place.setMooringBattle?.(battle);
     if (battle || visitor) {
@@ -651,11 +653,10 @@ export function decorateIsland(place, ctx = {}) {
         clearPurchaseFeedback();
       }
       footprint.show(preview);
-      wallLanes?.show(preview && SPOTS.find(spot => spot.id === preview.spotId)?.slot === 'wall');
       apply(state);
     },
     get previewing() { return preview ? {...preview} : null; },
-    get wallLanesShown() { return !!wallLanes?.shown; },
+    get wallLanesShown() { return !!wallPerimeter?.shown; },
     showWallFeedback(spotId, level) {
       if (disposed || !wallFeedback || !state.feedbackScope || state.battle || preview) return;
       const anchor = builtWallAnchor(spotId, level);

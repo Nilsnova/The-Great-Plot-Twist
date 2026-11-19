@@ -6,7 +6,7 @@ import {shipAt, boarderAt, nearestShip, tapInput} from '../../src/pirates/intera
 import {poseOf} from '../../src/pirates/poses.js';
 import {createWaveRenderer, packAtlas} from '../../src/pirates/render.js';
 import {createBattleGuide} from '../../src/pirates/battle-guide.js';
-import {WALL_LANE_ROWS} from '../../src/island/wall-lanes.js';
+import {WALL_PERIMETER_CELLS} from '../../src/island/wall-perimeter.js';
 
 const empty = () => ({ships: [], boarders: [], walls: [], towers: [], fog: 0, sight: 28});
 const position = (mesh, i = 0) => [...mesh.geometry.getAttribute('iPos').array.slice(i * 4, i * 4 + 2)];
@@ -128,10 +128,10 @@ describe('shared combat ground projection', () => {
     expect(ground.material.uniforms.uGround.value).toBe(true); expect(air.material.uniforms.uGround.value).toBe(false);
     expect(ground.material.uniforms.uIcons.value).toBe(air.material.uniforms.uIcons.value);
     expect(ground.material.vertexShader).toContain('if(uGround)at=projectGround');
-    const [z, x0, x1] = WALL_LANE_ROWS[0], p = position(ground), size = ground.geometry.getAttribute('iSize').array;
+    const {x, z} = WALL_PERIMETER_CELLS[0], p = position(ground), size = ground.geometry.getAttribute('iSize').array;
     const corners = [[-.5, -.5], [.5, -.5], [.5, .5]].map(([u, v]) => projectLegacyGround(p[0] + u * size[0], p[1] + v * size[1]));
-    closePoint([corners[0].x, corners[0].y], projectGround(x0 - .25, z + .25));
-    closePoint([corners[2].x, corners[2].y], projectGround(x1 + .25, z - .25));
+    closePoint([corners[0].x, corners[0].y], projectGround(x - .4, z + .4));
+    closePoint([corners[2].x, corners[2].y], projectGround(x + .4, z - .4));
     expect((corners[1].x - corners[0].x) * (corners[2].y - corners[0].y) - (corners[1].y - corners[0].y) * (corners[2].x - corners[0].x)).toBeGreaterThan(0);
     const at = projectGround(heart.x, heart.z), last = air.geometry.instanceCount - 1;
     closePoint(position(air, last), {x: at.x, y: at.y + 2.4});

@@ -6,6 +6,7 @@ import {createMoveMode, moveTitle} from '../../src/island/move-mode.js';
 import {buildCardModel} from '../../src/island/card-model.js';
 import {createIslandApi} from '../../src/island/api.js';
 import {createFakeIslandTransport} from '../../src/pirates/fake-api.js';
+import {freeWallCells, onWallPerimeter, positionsOf} from '../../src/island/placement.js';
 
 async function setUp() {
   const api = createIslandApi({transport: createFakeIslandTransport({version: 2})});
@@ -49,23 +50,46 @@ describe('Move mode', () => {
     mode.start('wall_1');
     mode.tap(30, 30);
     expect(await mode.confirm()).toBe(null);
-    mode.tap(-18.5, -1);
+    const {x, z} = positionsOf((await api.getIsland()).data.spots).wall_1;
+    mode.tap(x, z);
     expect(await mode.confirm()).toBe(null);
     expect(spy).not.toHaveBeenCalled();
     mode.start('wall_1'); mode.cancel();
     expect(mode.active).toBe(false);
   });
-  it('shows a wall off every pirate path in red with the short reason, and a lane square in green (D056)', async () => {
-    const {mode, preview, render} = await setUp();
+  it('rejects the inside of the island and snaps a near tap to a free edge spot', async () => {
+    const {mode, preview, render, island} = await setUp();
+    const positions = positionsOf(island().spots), current = positions.wall_1;
+    const target = freeWallCells('wall_1', positions).find(cell => cell.x !== current.x || cell.z !== current.z);
     mode.start('wall_1');
-    expect(render.mock.calls.at(-1)[0].line).toBe('Tap a glowing square. Up to three rows per approach.');
-    mode.tap(-4, -5.5); // the old north spot of wall_11: no pirate walks there
+    expect(render.mock.calls.at(-1)[0].line).toBe('Tap a highlighted spot on the grass edge, or use the arrows.');
+    mode.tap(-4, -5.5);
     expect(preview.mock.calls.at(-1)[0]).toMatchObject({spotId: 'wall_1', ok: false});
-    expect(render.mock.calls.at(-1)[0]).toMatchObject({ok: false, refused: true, status: 'Walls go on a pirate path.'});
-    mode.tap(-12, .5); // across the west route
+    expect(render.mock.calls.at(-1)[0]).toMatchObject({ok: false, refused: true, status: 'Walls go in one row along the grass edge.'});
+    mode.tap(target.x + .39, target.z + .32);
+    expect(mode.state).toMatchObject(target);
     expect(render.mock.calls.at(-1)[0]).toMatchObject({ok: true, status: 'This square is free.'});
     const answer = await mode.confirm();
     expect(answer.ok).toBe(true);
+    expect(island().spots.find(spot => spot.id === 'wall_1')).toMatchObject(target);
+  });
+  it('uses arrow controls to skip blocked slots and stay in the edge row', async () => {
+    const {mode} = await setUp();
+    mode.start('wall_1');
+    const start = mode.state;
+    expect(mode.handleKey({key: 'ArrowRight'})).toBe(true);
+    const next = mode.state;
+    expect(next.ok).toBe(true);
+    expect(next.x).toBeGreaterThan(start.x);
+    expect(onWallPerimeter(next.x, next.z)).toBe(true);
+  });
+  it('refuses an occupied edge spot without redirecting to a different slot', async () => {
+    const {mode, island} = await setUp();
+    const {x, z} = positionsOf(island().spots).wall_2;
+    mode.start('wall_1');
+    mode.tap(x, z);
+    expect(mode.state).toMatchObject({x, z, ok: false});
+    expect(await mode.confirm()).toBe(null);
   });
   it('moves one square per arrow key and leaves other keys to the game', async () => {
     const {mode} = await setUp();
