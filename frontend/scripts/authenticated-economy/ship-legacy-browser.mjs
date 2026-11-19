@@ -53,11 +53,22 @@ async function pointer(page,selector){const locator=typeof selector==='string'?p
  assert.ok(hit?.enabled&&hit.hit,'A physical UI action must hit its current enabled control');await page.mouse.click(hit.x,hit.y);}
 const response=(page,predicate,timeout=30000)=>page.waitForResponse(predicate,{timeout}).then(reply=>({reply}),error=>({error}));
 async function settled(pending){const result=await pending;if(result.error)throw result.error;return result.reply;}
+async function dismissGuides(page){let quiet=0;
+ for(let attempt=0;attempt<60&&quiet<5;attempt++){
+  let acted=false;
+  for(const name of [/^Skip all/,'Look around first','Done','Got it','Skip','Resume']){
+   const control=page.locator('dialog[open]').getByRole('button',{name,exact:typeof name==='string'}).first();
+   if(await control.isVisible().catch(()=>false)){await control.click({noWaitAfter:true});acted=true;break;}
+  }
+  quiet=acted?0:quiet+1;await page.waitForTimeout(100);
+ }
+}
 async function selectChart(page){
  for(let attempt=0;attempt<12;attempt++){const skip=page.getByRole('button',{name:/^Skip all/}).first(),got=page.locator('.unlock-card[open]').getByRole('button',{name:'Got it',exact:true});
   if(await skip.isVisible().catch(()=>false))await skip.click({noWaitAfter:true});
   else if(await got.isVisible().catch(()=>false))await got.click({noWaitAfter:true});else break;}
- await page.evaluate(()=>{window.__island.island.ui.close();window.__island.chart.show();});
+ await page.evaluate(()=>window.__island.island.ui.close());await dismissGuides(page);
+ await page.evaluate(()=>window.__island.chart.show());
  await page.locator('.sea-chart[open]').waitFor();
 }
 try{
@@ -79,7 +90,7 @@ try{
  let verified;for(let attempt=0;attempt<30;attempt++){verified=await api(page,'/api/me');
   if(verified.status===200&&verified.data.id===actor.actorId)break;await page.waitForTimeout(100);}
  assert.equal(ok(verified).id,actor.actorId);
- await land(page);await finishEntry(page);
+ await land(page);await finishEntry(page);await dismissGuides(page);
  const wallet=async()=>(await observe(`select balance::text as balance,(select count(*)::integer from public.wallet_transactions t where t.player_id=w.player_id) as entries
   from public.wallets w where player_id=$1::uuid`,[actor.actorId],{runtimePath}))[0];
  let island=ok(await api(page,'/api/island'));assert.ok(!island.economy||island.economy.mode==='personal_legacy');
