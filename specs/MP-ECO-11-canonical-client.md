@@ -213,3 +213,15 @@ hidden. An explicit unknown presence room suppresses reporting instead of fallin
 world room. Actual simultaneous controllers with realistic latency and native gameplay falls remain
 an acceptance gate. Separate report/start/complete round trips keep the strict source freshness
 requirement; source-side atomic composition is required if that test demonstrates starvation.
+
+## Frozen weather decoding
+
+The native producer freezes numerical weather in initialSnapshot.weather and the canonical kind
+in initialSnapshot.createWave.weatherKind. Validate outer kind against that frozen kind, ships/fog
+against frozen numerical weather and label against weatherLabel. An optional snapshot weather.kind
+must agree when present; its absence is valid. Preserve strict provenance and all other DTO checks.
+The server-to-client producer roundtrip is a separate cross-language regression.
+
+The focused weather regression first rejected both calm/storm producer shapes, then passed all
+21 tests across the actual three-file shapes/transport/native-controller selection. Contradictory
+frozen kind, optional kind, ships, fog and label remain rejected. Whitespace review passed.

@@ -35,7 +35,9 @@ export function readNativeWave(value,record){
   || !Array.isArray(value.rules) || value.rules.some(rule=>typeof rule!=='string') || JSON.stringify(value.rules)!==JSON.stringify(snapshot.rules)
   || !value.weather || typeof value.weather.kind!=='string' || !value.weather.kind || typeof value.weather.label!=='string'
   || !Number.isFinite(value.weather.ships) || value.weather.ships<0 || !Number.isFinite(value.weather.fog) || value.weather.fog<0 || value.weather.fog>1
-  || snapshot.weatherLabel!==value.weather.label || !['kind','ships','fog'].every(key=>snapshot.weather[key]===value.weather[key])
+  || snapshot.weatherLabel!==value.weather.label || snapshot.createWave.weatherKind!==value.weather.kind
+  || Object.hasOwn(snapshot.weather,'kind') && snapshot.weather.kind!==value.weather.kind
+  || !['ships','fog'].every(key=>snapshot.weather[key]===value.weather[key])
   || !projection(value,record))return null;
  if(value.historical && (!value.repeat || value.economy!==null || value.session!==null || value.participantToken!==null || value.lastActorCounter!==null))return null;
  const controller=value.session?.isController===true;
