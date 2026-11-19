@@ -4,6 +4,7 @@ import {activeRole, ROLES} from '../campaign/houses.js';
 import {SPECS} from '../campaign/tech.js';
 import {createBuildingPortrait} from './building-portrait.js';
 import {houseSupportView} from './building-inspection.js';
+import {BUILDINGS} from './td-rules.js';
 import './selection-dock.css';
 
 export const canDockSelection = model => model?.built === true && !!model.kind
@@ -28,8 +29,21 @@ export function createSelectionDock({container, onClose, onDetails, loadPortrait
   const level = node('span', 'island-selection-level'), hp = node('p', 'island-selection-health');
   const spec = node('span', 'island-selection-spec');
   const identity = node('p', 'island-selection-identity'); identity.append(level, spec);
+  const stats = node('dl', 'island-selection-stats');
+  function statistic(icon) {
+    const row = node('div', 'island-selection-stat');
+    const title = node('dt'), glyph = node('span', 'island-selection-stat-icon', icon), label = node('span');
+    const value = node('dd');
+    glyph.setAttribute('aria-hidden', 'true'); title.append(glyph, label); row.append(title, value); stats.append(row);
+    return (name, number) => {
+      row.hidden = !Number.isFinite(number);
+      label.textContent = name;
+      value.textContent = row.hidden ? '' : number;
+    };
+  }
+  const showRange = statistic('⌖'), showDamage = statistic('✦');
   const meter = node('div', 'island-selection-meter'), fill = node('span'); meter.setAttribute('role', 'meter'); meter.setAttribute('aria-label', 'Building health'); meter.append(fill);
-  copy.append(title, identity, hp, meter);
+  copy.append(title, identity, stats, hp, meter);
   const actions = node('div', 'island-selection-actions'), messages = node('div', 'island-selection-messages');
   const support = node('section', 'island-house-support');
   const coverageRow = node('div', 'island-selection-coverage');
@@ -55,7 +69,11 @@ export function createSelectionDock({container, onClose, onDetails, loadPortrait
     button.addEventListener('click', callback); actions.append(button); return button;
   };
   const move = make('Move', 'move', true, () => handlers.move?.(model.spotId));
-  const upgrade = make('Upgrade', 'upgrade', false, () => handlers.upgrade?.(model.spotId));
+  const upgrade = make('Upgrade', 'upgrade', false, () => {
+    if (!model.tree) return handlers.upgrade?.(model.spotId);
+    if (model.tree.picked !== 'level') handlers.treeSelect?.(model.spotId, 'level');
+    onDetails();
+  });
   const range = make('Range', 'range', true, () => { rangeShown = !!model.coverage && !rangeShown; updateRange(); });
   range.setAttribute('aria-controls', coverageRow.id);
   const details = make('Details', 'details', true, onDetails), close = make('Close', 'close', true, onClose);
@@ -67,6 +85,16 @@ export function createSelectionDock({container, onClose, onDetails, loadPortrait
       const changed = model?.spotId !== next.spotId; model = next; handlers = on;
       if (changed || !model.coverage) rangeShown = false;
       element.classList.toggle('is-structure', model.kind !== 'wall');
+      const baseDamage = BUILDINGS[model.kind]?.stats[model.level - 1]?.damage;
+      const currentDamage = model.upgradeComparison?.before?.damage;
+      const hasCurrentDamage = Number.isFinite(currentDamage);
+      const hasStats = Number.isFinite(model.coverage?.range);
+      element.classList.toggle('is-defense', hasStats);
+      stats.hidden = !hasStats;
+      if (hasStats) {
+        showRange('Range', model.coverage.range);
+        showDamage(hasCurrentDamage ? 'Damage' : 'Base damage', hasCurrentDamage ? currentDamage : baseDamage);
+      }
       title.textContent = model.title; level.textContent = `Level ${model.level}`;
       const role = activeRole(model);
       spec.textContent = ROLES[role]?.name ?? SPECS[model.skills?.current]?.name ?? '';
@@ -87,7 +115,9 @@ export function createSelectionDock({container, onClose, onDetails, loadPortrait
         fill.style.width = `${100 * health.actualHp / health.maxHP}%`;
       }
       move.hidden = !model.move || !handlers.move; move.disabled = !!model.move?.disabled;
-      upgrade.hidden = !!model.tree || model.mode !== 'upgrade' || !handlers.upgrade; upgrade.disabled = model.disabled;
+      upgrade.hidden = model.mode !== 'upgrade' || !handlers.upgrade || Boolean(model.tree && !handlers.treeSelect);
+      upgrade.disabled = model.disabled;
+      if (model.tree) upgrade.setAttribute('aria-haspopup', 'dialog'); else upgrade.removeAttribute('aria-haspopup');
       upgrade.textContent = model.upgradePrice ? `${model.button} · ${model.upgradePrice}` : model.button;
       if (!model.coverage && (document.activeElement === range || views.contains(document.activeElement))) details.focus({preventScroll: true});
       updateRange();
