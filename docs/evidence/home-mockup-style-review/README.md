@@ -1,5 +1,7 @@
 # Home Island visual finish
 
+[Latest review with the aligned Heart entrance and live island motion](motion/README.md)
+
 The same Wave 14 save appears in both captures. The earlier draft is `1f1c62a0` and the finished renderer and art are at `5347783a`. The original coastline, camera framing, building positions, and approach routes remain in place.
 
 The reference informed the layered limestone banks, narrower stone paths, warm metal against navy roofs, and teal-and-brass panels. The Bell, Watchtower, Heart, Cabin, and Arsenal keep their original transparent silhouettes and ground anchors. The new shore lighting and sandstone depth are visible around both flanks.
