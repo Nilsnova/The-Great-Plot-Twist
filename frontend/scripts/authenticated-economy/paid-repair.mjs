@@ -55,7 +55,9 @@ async function paidClick(page, spot) {
   if(await dismissGuides(page))await openCard(page,spot);
   const response = page.waitForResponse(reply => reply.url().endsWith(REPAIR)
     && reply.request().method()==='POST',{timeout:20000});
-  await page.locator('.island-card[open] .recovery-repair:not([disabled])').click();
+  // A remounted card can outlive Playwright's click acknowledgement. The actual
+  // resulting POST/receipt, rather than another click identity, confirms effect.
+  await page.locator('.island-card[open] .recovery-repair:not([disabled])').click({timeout:5000}).catch(()=>{});
   const reply = await response, data = await reply.json();
   assert.equal(reply.status(),200,JSON.stringify(data));
   return {body:reply.request().postDataJSON(),data};
@@ -94,11 +96,11 @@ export async function runPaidRepairAcceptance({ownerPage,memberPage,observe,api,
     const ownerEconomy = await ownerPage.evaluate(() => window.__island.island.economy);
     const memberEconomy = await memberPage.evaluate(() => window.__island.island.economy);
     assert.equal(memberEconomy.accountId,ownerEconomy.accountId);
-    const initial = await recovery(ownerPage);
-    let initialRow=initial.structures.find(row=>row.spot===spot);
-    assert.equal(initial.displayPhase,'between_waves','start at the real idle boundary');
-    assert.ok(initialRow,'caller must build the target through the real product first');
-    assert.ok(BigInt(ownerEconomy.treasury.availableCoins)>=BigInt(initialRow.fixedPrice*3));
+    const idle=await observe(`select current_wave_id from public.island_recovery_state where island_owner=$1`,
+      [ownerEconomy.islandOwner]);
+    assert.equal(idle.length,1); assert.equal(idle[0].current_wave_id,null,'start at the real idle boundary');
+    // Native accepted bell owns first recovery-v1 enrollment. A new shared island
+    // may still be recovery0/protocol1 before it; do not forge that transition.
     await openCard(ownerPage,'island_bell');
     await ownerPage.locator('.island-card[open] [data-focus="bell"]:not([disabled])').click();
     await ownerPage.waitForFunction(() => !!window.__island?.waves?.island.wave,null,{timeout:20000});
@@ -109,14 +111,15 @@ export async function runPaidRepairAcceptance({ownerPage,memberPage,observe,api,
         .find(row=>spots.includes(row.id) && row.hp<row.maxHp)?.id??null;
     },spots,{timeout:90000});
     spot=await naturallyDamaged.jsonValue();
-    initialRow=initial.structures.find(row=>row.spot===spot);
     const firstDamage = await damagedCard(ownerPage,spot);
+    assert.equal(firstDamage.read.recoveryVersion,1); assert.equal(firstDamage.read.waveProtocol,2);
+    assert.ok(BigInt(ownerEconomy.treasury.availableCoins)>=BigInt(firstDamage.row.fixedPrice*3));
     const wave = firstDamage.read.waveId, account=ownerEconomy.accountId;
     assert.equal(firstDamage.read.remainingPaidUses,3);
     const before = await accounting(observe,account,wave);
     const first = await paidClick(ownerPage,spot);
     assert.equal(first.data.receipt.result.useOrdinal,1);
-    assert.equal(first.data.receipt.result.chargedPrice,String(initialRow.fixedPrice));
+    assert.equal(first.data.receipt.result.chargedPrice,String(firstDamage.row.fixedPrice));
     report.steps.push({name:'first genuine card repair',waveId:wave,receipt:first.data.receipt});
     await damagedCard(ownerPage,spot);
     const damagedBeforeRetry = await recovery(ownerPage), prior = await accounting(observe,account,wave);
