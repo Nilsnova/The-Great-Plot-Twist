@@ -80,9 +80,9 @@ function paintTurfBevel(c, coast, meadow, grassRadius) {
 }
 
 const PAVERS = [
-  ['#d5be96', '#a9906e', '#efdab3'], ['#dbc7a0', '#b9a183', '#f3dfba'],
-  ['#c7ad87', '#9b825f', '#e3c79e'], ['#d6b58b', '#a98c66', '#edcea3'],
-  ['#d8c4a3', '#afa087', '#ebd9b8'], ['#cbb899', '#9e8e73', '#e3d0ad'],
+  ['#dbc9a3', '#aa9475', '#f2e1b9'], ['#decfa9', '#b7a285', '#f6e7c6'],
+  ['#ceb98f', '#9d8a67', '#e9d3a7'], ['#d7ba91', '#ac8c65', '#f1d2a8'],
+  ['#d5c6a5', '#ac9b7e', '#efdfbf'], ['#ccbda0', '#9b8e76', '#e7d7b9'],
 ];
 
 /** Dressed limestone blocks on the original paths and building clearings. */
@@ -91,7 +91,7 @@ function paintPavers(c, paths, materials) {
   const random = seeded(18281), faces = new Path2D();
   c.save();
   c.clip(pathMaterialMask(paths, PAVING_WIDTH));
-  c.fillStyle = '#aa906c';
+  c.fillStyle = '#9e936f';
   c.fillRect(bounds.left, bounds.top, SIZE.width, SIZE.height);
   for (let row = bounds.top; row < bounds.bottom;) {
     // Canvas rows are compressed in depth, so these read as nearly square slabs in the world.
@@ -117,6 +117,8 @@ function paintPavers(c, paths, materials) {
         [[0, sun], [.29, face], [.83, face], [1, edge]]);
       c.fill(top);
       faces.addPath(top);
+      c.fillStyle = sun + '53';
+      c.fill(ellipse(x + width * .23, y + depth * .28, .024 + chip * .22, .012));
       if (chip > .104) {
         stroke(c, [[x + chip * .67, y + .046], [x + chip, y + .052], [x + chip * 1.26, y + .036]],
           '#a58a653e', .012);
@@ -128,7 +130,7 @@ function paintPavers(c, paths, materials) {
   if (materials) {
     c.clip(faces);
     c.globalCompositeOperation = 'soft-light';
-    paintMaterial(c, materials, 'path', {alpha: .14});
+    paintMaterial(c, materials, 'path', {alpha: .23});
   }
   c.restore();
 }
@@ -247,24 +249,28 @@ function paintTerrain(c, s, coast, random, materials) {
   const grassRadius = materials ? meadowEdge : () => .85;
   const meadow = coast(grassRadius, .012, 3);
   c.save(); c.clip(beach); c.translate(.08, .33); c.fillStyle = '#9b7f56'; c.fill(meadow); c.restore();
-  c.fillStyle = '#73b64d'; c.fill(meadow);
+  c.fillStyle = '#78b743'; c.fill(meadow);
   c.save(); c.clip(meadow);
   // The warm light on the terraces also passes over the paved lanes and the open meadow.
   const glow = c.createRadialGradient(-9, -9, 2, 3, 1, s.rx + 2);
-  glow.addColorStop(0, '#b8dc72');
-  glow.addColorStop(.49, '#8abb48');
-  glow.addColorStop(1, '#569646');
+  glow.addColorStop(0, '#bddc68');
+  glow.addColorStop(.52, '#8ebc46');
+  glow.addColorStop(1, '#579638');
   c.fillStyle = glow; c.fill(meadow);
-  if (materials) paintMaterial(c, materials, 'grass', {alpha: .34});
+  if (materials) {
+    c.globalCompositeOperation = 'soft-light';
+    paintMaterial(c, materials, 'grass', {alpha: .49});
+    c.globalCompositeOperation = 'source-over';
+  }
   // A broad change in light from the sunlit back ledges to the lower shore ties their caps
   // into the meadow without drawing any new path or extending the dry ground.
-  c.fillStyle = linear(c, -16, -12, 12, 13, [[0, '#f0d78429'], [.46, '#f4d36b07'], [.73, '#456b380c'], [1, '#446c393a']]);
+  c.fillStyle = linear(c, -16, -12, 12, 13, [[0, '#f3d67832'], [.46, '#f4d36b09'], [.73, '#42783b10'], [1, '#345b303c']]);
   c.fill(meadow);
   for (let i = 0; i < 26; i++) {
     const x = (random() - .5) * s.rx * 1.6, y = (random() - .5) * s.rz * 1.6 * LEGACY_DEPTH;
-    const colour = random() > .5 ? '#c2d276' : '#3a7b3f';
+    const colour = random() > .5 ? '#d5e487' : '#377b2d';
     const width = 2.2 + random() * 2.6, depth = 1.4 + random() * 2.15;
-    c.fillStyle = radial(c, x, y, width, [[0, `${colour}50`], [.43, `${colour}26`], [1, `${colour}00`]]);
+    c.fillStyle = radial(c, x, y, width, [[0, `${colour}4b`], [.43, `${colour}23`], [1, `${colour}00`]]);
     c.fill(ellipse(x, y, width, depth));
   }
   c.restore();
