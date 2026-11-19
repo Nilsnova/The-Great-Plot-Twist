@@ -35,6 +35,7 @@ const ISLAND_PLACE = 'home_islet';
 export const SPOTS_CHANGED = 'island_spots_changed'; // src/island/index.js
 export const WAVE_START_AGAIN_MS = [2000, 6000];
 const CHANGED_DELAY_MS = 400, JOIN_RETRY_MS = 1200, JOIN_TRIES = 4;
+const IDLE_JOIN_MS = 3000;
 // A room message can get lost (the room was still joining, the connection hiccuped): a build or upgrade is
 // told once more a little later, and the island on screen is read again every REREAD_SECONDS on its own,
 // so an upgrade of a friend never waits for a reload.
@@ -64,6 +65,7 @@ export function withLevels(defenses, islandAnswer) {
 
 export function wireWaves(ctx) {
   const {island = null, on, world, openRoom = () => null, notify = () => {}} = ctx;
+  const now = ctx.now ?? Date.now;
   const every = ctx.every ?? ((run, ms) => { const id = setInterval(run, ms); return () => clearInterval(id); });
   const later = ctx.later ?? ((run, ms) => { const id = setTimeout(run, ms); return () => clearTimeout(id); });
   const stops = [], sent = new Set(), timers = new Set();
@@ -147,22 +149,33 @@ export function wireWaves(ctx) {
   // otherwise ask the server again and again (wave reads have a budget of 30 a minute).
   // A retry owns the flag: when it finds its wave already joined (our own "Next wave" ring joined it while
   // the bell was busy), it lets go of the flag, or every later wave_start would be dropped for good.
-  let joining = false;
+  let joining = false, nextIdleJoinAt = 0, joinBlockedUntil = 0;
+  function respectJoinLimit(answer) {
+    if (answer?.status !== 429 && answer?.code !== 'too_many_requests') return;
+    const seconds = answer.retryAfterSeconds ?? answer.retryAfter;
+    const wait = typeof seconds === 'number' ? seconds * 1000 : NaN;
+    joinBlockedUntil = Math.max(joinBlockedUntil, now() + (Number.isFinite(wait) && wait > 0 ? wait : IDLE_JOIN_MS));
+  }
   function joinRunning(waveId = null, tries = JOIN_TRIES, retry = false) {
     if (disposed || (joining && !retry)) return;
+    if (now() < joinBlockedUntil) { if (retry) joining = false; return; }
     if (waveId && pirates.island.wave?.info.waveId === waveId) { if (retry) joining = false; return; }
     joining = true;
+    nextIdleJoinAt = now() + IDLE_JOIN_MS;
     Promise.resolve().then(() => island.joinRunningWave()).then(answer => {
+      respectJoinLimit(answer);
       if (answer?.code === 'busy' && tries > 1 && !disposed) { after(() => joinRunning(waveId, tries - 1, true), JOIN_RETRY_MS); return; }
       joining = false;
-    }, () => { joining = false; });
+    }, error => { respectJoinLimit(error); joining = false; });
   }
   // Every second: the room of the island we stand on, and once per landing a wave already running there.
   function tick() {
     if (disposed) return;
     pirates.island.stopIfOriginChanged?.(island?.economy);
     followRoom();
-    if(world.current?.id===ISLAND_PLACE && island?.economy?.mode==='island_shared' && (!pirates.island.wave || pirates.island.wave.done))joinRunning();
+    // Twenty idle reads a minute leave room in the shared 30-read budget for ordinary wave operations.
+    if (world.current?.id === ISLAND_PLACE && island?.economy?.mode === 'island_shared'
+        && (!pirates.island.wave || pirates.island.wave.done) && now() >= nextIdleJoinAt) joinRunning();
     // A wave under way keeps the island it started with (builds wait for its break): the quiet clock waits too.
     if (world.current?.id === ISLAND_PLACE && island && !waveRunning() && ++quiet >= REREAD_SECONDS && globalThis.document?.visibilityState !== 'hidden') void readIsland();
     if (!landed || world.current?.id !== ISLAND_PLACE || pirates.island.wave) return;

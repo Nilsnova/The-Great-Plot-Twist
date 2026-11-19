@@ -388,6 +388,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       if (isl.visitCode && !(await joinFirst(isl.visitCode))) return null; // a friend's wave: join the game first
       if (isl.disposed || !target()) return null;
       const looked = await isl.flow.look(where());
+      if (!looked?.ok) return looked;
       if (isl.flow.current && !isl.flow.current.joined) return isl.flow.join(where());
       // A newer read of the current wave (the landing's own, after a reload) made this answer stale before it
       // was shown: 'busy' makes the wave wiring try again in a moment instead of never joining.
