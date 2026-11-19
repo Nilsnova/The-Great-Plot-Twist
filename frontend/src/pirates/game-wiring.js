@@ -90,8 +90,6 @@ export function wireWaves(ctx) {
   // Host and visitors must feed the sim the same island, so both read the defended island's answer (a
   // visitor's comes from the visit route and needs its levels and crew too).
   const own = () => island?.island ?? null, defended = () => island?.visiting ?? own();
-  if (island) defenseReport = mountDefenseReport({on, container: ctx.container, context: () => defended()?.code ?? null,
-    defenses: () => withLevels(island.defenses() ?? [], defended()), focus: () => ctx.canvas?.focus?.({preventScroll: true}), resetInput: () => ctx.input?.reset?.()});
   // The game's room state: Start, Pause and who is online, on the island's room (game_hello, game_state).
   const game = island ? createGameRoom({room: islandRoom, emit: ctx.emit ?? (() => {}), later, every, onChange: () => island.refreshLobby?.()}) : null;
   if (game) island.attachGame?.(game);
@@ -118,6 +116,20 @@ export function wireWaves(ctx) {
     startNextWave: island ? () => island.ringBell() : null,
     // The room-wide Pause between waves: the break stays open and Auto next waits (GAME-V3.md §2).
     holdBreak: game ? () => game.hold() : null, toggleHold: game ? () => game.togglePause() : null});
+  if (island) {
+    const reportWave = event => pirates.island.wave?.info.waveId === event.waveId ? pirates.island.wave : null;
+    const available = intent => world.current?.id === ISLAND_PLACE && !pirates.island.wave && island.canFocusDefenseReport?.(intent);
+    defenseReport = mountDefenseReport({on, container: ctx.container, context: () => defended()?.code ?? null,
+      defenses: event => reportWave(event)?.defenses ?? [], focus: () => ctx.canvas?.focus?.({preventScroll: true}),
+      resetInput: () => ctx.input?.reset?.(), navigation: {
+        capture(event) {
+          const current = reportWave(event), identity = island.defenseReportIdentity;
+          return current && identity ? {identity, epoch: current.info.initialSnapshot?.islandEpoch ?? null} : null;
+        },
+        available, resolve: intent => island.resolveDefenseReport?.(intent),
+        go: (intent, destination) => available(intent) && island.focusDefenseReport?.(intent, destination),
+      }});
+  }
   island?.setRecoveryCheckpointHandler?.(() => pirates.island.checkpointBeforeRepair());
   publishCore = createCorePublisher({controller: () => pirates.island, context: () => island?.coreContext,
     publish: snapshot => island?.setCoreCombatState?.(snapshot)});

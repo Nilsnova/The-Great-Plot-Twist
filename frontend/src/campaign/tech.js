@@ -64,7 +64,7 @@ export const BONUSES = freeze({
   mason_drill: freeze({branch: 'wall', name: 'Mason drill', line: 'Repairs on every wall go 50% faster.'}),
   thick_walls: freeze({branch: 'wall', name: 'Thick walls', line: 'Every wall has 15% more strength.'}),
   lookout_drill: freeze({branch: 'watchtower', name: 'Lookout drill', line: 'Spotter gives 25% more damage, Signal fire warns 8 s early.'}),
-  high_tower: freeze({branch: 'watchtower', name: 'High tower', line: 'The watchtower lends every tower 30% more range.'}),
+  high_tower: freeze({branch: 'watchtower', name: 'High tower', line: 'The watchtower gives 30% more bonus range.'}),
 });
 export const SPEC_IDS = freeze(Object.keys(SPECS));
 export const isCapstone = spec => SPECS[spec]?.capstone === true;
