@@ -67,6 +67,7 @@ try{
  note('actual-provider-bearer-identities',{layer:'actual GoTrue registration and production HTTP verifier',actors:[owner.actorId,member.actorId]});
  const created=await api(owner,'/api/games',{method:'POST',body:{actionUid:uid()}});assert.equal(created.status,200);const code=created.data.game.code;
  await admit(owner.actorId,{coins:200,runtimePath});
+ const admittedOwner=await api(owner,'/api/island');assert.equal(admittedOwner.status,200);
  await seed('update public.islands set wave_best=30,next_wave=31 where player_id=$1::uuid',[owner.actorId],'Advanced saved-island Harbor unlock fixture; not naturally earned progress');
  const joined=await api(member,'/api/games/join',{method:'POST',body:{code,actionUid:uid()}});assert.equal(joined.status,200);
  const view=await api(member,'/api/island/visit/'+code);assert.equal(view.status,200);
