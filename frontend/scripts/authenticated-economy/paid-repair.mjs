@@ -60,6 +60,8 @@ async function recovery(page) {
 }
 
 async function damagedCard(page, spot, timeout=90000) {
+  await page.waitForFunction(spot=>window.__island?.waves?.island.recoveryCombatState?.structures
+    .some(row=>row.spot===spot && row.hpUnits<1000000),spot,{timeout});
   await openCard(page,spot);
   await page.locator('.island-card[open] .recovery-repair:not([disabled])').waitFor({timeout});
   const checkpoint = await page.evaluate(() => window.__island.waves.island.checkpointBeforeRepair());
@@ -67,6 +69,13 @@ async function damagedCard(page, spot, timeout=90000) {
   const read = await recovery(page), row = read.structures.find(item => item.spot===spot);
   assert.ok(row && row.hpUnits<1000000,'natural rendered damage must also be accepted by the server');
   return {read,row};
+}
+
+async function repairApplied(page, receipt) {
+  const result=receipt.result;
+  await page.waitForFunction(expected=>window.__island?.waves?.island.recoveryCombatState?.structures
+    .some(row=>row.instanceId===expected.instanceId && row.repairSeq>=expected.repairSeq),
+  result,{timeout:10000});
 }
 
 async function paidClick(page, spot) {
@@ -142,6 +151,7 @@ export async function runPaidRepairAcceptance({ownerPage,memberPage,observe,api,
     assert.equal(first.data.receipt.result.useOrdinal,1);
     assert.equal(first.data.receipt.result.chargedPrice,String(firstDamage.row.fixedPrice));
     report.steps.push({name:'first genuine card repair',waveId:wave,receipt:first.data.receipt});
+    await repairApplied(ownerPage,first.data.receipt);
     await damagedCard(ownerPage,spot);
     const damagedBeforeRetry = await recovery(ownerPage), prior = await accounting(observe,account,wave);
     const retry = await api(ownerPage,REPAIR,{method:'POST',body:first.body,
@@ -161,6 +171,7 @@ export async function runPaidRepairAcceptance({ownerPage,memberPage,observe,api,
       const paid = await paidClick(page,spot);
       assert.equal(paid.data.receipt.result.useOrdinal,ordinal);
       report.steps.push({name:`genuine shared repair ${ordinal}`,receipt:paid.data.receipt});
+      await repairApplied(page,paid.data.receipt);
     }
     // With quota exhausted the UI correctly disables its button. Submit a fresh invalid intent only to the API.
     await ownerPage.waitForFunction(spot => {
