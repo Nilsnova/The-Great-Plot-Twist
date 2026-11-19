@@ -63,6 +63,8 @@ export function commandForJournal(input) {
   if (!isObject(input) || typeof input.type !== 'string') return null;
   const { type } = input;
   if (type === 'repair' || type === 'rebuild') return null;
+  if(type==='captain_revive_hold_cancel')return {type};
+  if(type==='captain_revive_hold_start' && isParticipantToken(input.targetId) && isParticipantToken(input.fallId))return {type,targetId:input.targetId,fallId:input.fallId};
   if (type === 'fire' && isWireId(input.cannonId) && isWireId(input.targetId)) {
     return { type, cannonId: input.cannonId, targetId: input.targetId };
   }
@@ -98,6 +100,12 @@ export function simulationInputFromJournal(event) {
     || !Number.isInteger(event.effectiveTick) || event.effectiveTick < 0 || event.effectiveTick > MAX_TICK
     || !isObject(event.payload)) return null;
   if (event.type === 'structure_repaired') return { type: 'structure_repaired', event };
+  if(event.type==='captain_withdrawn'){
+    const token=event.participantToken,payload=event.payload;
+    return isParticipantToken(token) && payload.participantToken===token && Object.keys(payload).length===2
+      && ['leave','disconnect_expired','membership_lost','account_deleted','reset'].includes(payload.reason)
+      ? {type:'captain_withdrawn',by:token}:null;
+  }
   if (event.type === 'participant_joined') return null;
   const command = event.payload.command;
   const token = event.participantToken;
@@ -170,7 +178,7 @@ function validRecoveryFinishBody(body) {
   return true;
 }
 
-function validCheckpoint(checkpoint) {
+export function validCheckpoint(checkpoint) {
   if (!isObject(checkpoint) || typeof checkpoint.islandEpoch !== 'string' || !checkpoint.islandEpoch
     || typeof checkpoint.checkpointUid !== 'string' || checkpoint.checkpointUid.length < 8
     || !Number.isInteger(checkpoint.throughTick) || checkpoint.throughTick < 0 || checkpoint.throughTick > MAX_TICK

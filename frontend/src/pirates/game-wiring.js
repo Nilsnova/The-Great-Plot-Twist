@@ -101,6 +101,7 @@ export function wireWaves(ctx) {
     inspectDefenses: !!island,
     onIslandEvents: events => { noteReport(() => defenseReport?.events(events)); noteReport(publishCore); },
     recoveryTransport,
+    getSessionProof:()=>island?.session?.proof()??null,
     practiceIdentity: () => ({player: practicePlayer(ctx.getPracticeToken?.()) ?? ctx.practicePlayer ?? null, island: island?.gameCode ?? roomTopic}),
     islandRoom, islandPlace: ISLAND_PLACE,
     getCrew: () => defended()?.crew ?? null,
@@ -153,6 +154,7 @@ export function wireWaves(ctx) {
   function tick() {
     if (disposed) return;
     followRoom();
+    if(world.current?.id===ISLAND_PLACE && island?.economy?.mode==='island_shared' && (!pirates.island.wave || pirates.island.wave.done))joinRunning();
     // A wave under way keeps the island it started with (builds wait for its break): the quiet clock waits too.
     if (world.current?.id === ISLAND_PLACE && island && !waveRunning() && ++quiet >= REREAD_SECONDS && globalThis.document?.visibilityState !== 'hidden') void readIsland();
     if (!landed || world.current?.id !== ISLAND_PLACE || pirates.island.wave) return;
@@ -237,7 +239,7 @@ export function wireWaves(ctx) {
     stops.push(on('wave_finish_answered', event => {
       if (!event?.recovery || typeof event.waveId !== 'string') return;
       noteReport(() => defenseReport?.confirmed(event.waveId, event.loot, event.survived));
-      try { island.recoveryWaveEnded?.(event.waveId, {survived: event.survived === true, loot: event.loot ?? 0, coins: event.coins,
+      try { island.recoveryWaveEnded?.(event.waveId, event.nativeShared?{nativeShared:true,survived:event.survived,outcome:event.outcome,origin:event.origin,completion:event.completion}:{survived: event.survived === true, loot: event.loot ?? 0, coins: event.coins,
         waveBest: event.waveBest, flags: event.flags, ...(event.away === true ? {away: true} : {})}); } catch (error) { console.error(error); }
     }), on('wave_controller_stopped', event => {
       if (event?.recovery !== true || typeof event.waveId !== 'string') return;

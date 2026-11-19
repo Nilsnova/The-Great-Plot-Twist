@@ -142,8 +142,10 @@ export function createCaptainActions(ctl) {
   // Your position for the sims: after a move (MOVE_STEP) once the gap passed, else at least every
   // HEARD_EVERY_MS; once `away` when the island is no longer on screen (another place) during the wave.
   function sendPosition(current, player) {
+    if(current.info.nativeShared && !ctl.controls(current))return;
     if (current.done || current.state.phase !== 'running' || finishing(current)) return; // v3 waves: no moves while the battle stands still
     if (!current.shown || !player) {
+      if(current.info.nativeShared)return;
       if (current.moveSent && !current.awaySent && submit({ type: 'captain_move', by: playerId, ...current.moveSent, away: true }, moveLead(current))) current.awaySent = true;
       return;
     }

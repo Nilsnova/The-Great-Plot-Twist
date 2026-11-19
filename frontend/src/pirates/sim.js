@@ -145,7 +145,7 @@ export function createWave(options = {}) {
         // Captain health (GAME-V3.md §3), by id: present is false for a captain who is away or not heard lately.
         party: [...party.values()].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)).map(hero => ({ id: hero.id,
           x: round2(hero.x), z: round2(hero.z), hp: hero.hp, maxHp: hero.maxHp, down: hero.down, downAt: hero.downAt,
-          colour: hero.colour, present: presentAt(hero, t) })),
+          colour: hero.colour, present: presentAt(hero, t),...(sim.canonicalCaptains?{withdrawn:hero.withdrawn,reviveBasisSeq:hero.reviveBasisSeq}:{}) })),
         // The house roles (GAME-V3.md "Houses"): the Barracks' militia in the wave, and the houses that act.
         militia: militia.map(unit => ({ id: unit.id, houseId: unit.houseId, ...(unit.guard ? { guard: true } : {}), x: unit.x, z: unit.z, hp: unit.hp, maxHp: unit.maxHp,
           state: unit.state, foe: unit.foe, facing: unit.facing, level: unit.level })),

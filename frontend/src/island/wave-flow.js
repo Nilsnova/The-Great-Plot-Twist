@@ -62,6 +62,8 @@ export function createWaveFlow({api, emit, notify = () => {}, banner = () => {},
       ...(Number.isInteger(wave.recoveryVersion) ? {recoveryVersion: wave.recoveryVersion} : {}),
       ...(Number.isInteger(wave.waveProtocol) ? {waveProtocol: wave.waveProtocol} : {}),
       ...(wave.initialSnapshot && typeof wave.initialSnapshot === 'object' ? {initialSnapshot: wave.initialSnapshot} : {}),
+      ...(wave.initialSnapshot?.economy?.mode==='island_shared' ? {nativeShared:true,spectator:wave.session?.isController!==true,
+        controlSessionId:wave.session?.isController?wave.session.sessionId:null} : {}),
       ...(typeof wave.participantToken === 'string' ? {participantToken: wave.participantToken} : {}),
       ...(Number.isSafeInteger(wave.lastActorCounter) ? {lastActorCounter: wave.lastActorCounter} : {}),
       ...(Number.isSafeInteger(wave.clockOffsetMs) ? {clockOffsetMs: wave.clockOffsetMs} : {}), // api.js clockOffset
@@ -88,6 +90,7 @@ export function createWaveFlow({api, emit, notify = () => {}, banner = () => {},
     const answer = await api.startWave({where});
     if (disposed || generation !== contextGeneration) return {...answer, ignored: true};
     if (answer.ok) {
+      if(answer.data.historical || answer.ignored){await look(where);return {...answer,ignored:true};}
       await ready();
       // A fresh same-target read may confirm another wave while start/prepare is pending.
       if (!disposed && generation === contextGeneration
@@ -107,7 +110,8 @@ export function createWaveFlow({api, emit, notify = () => {}, banner = () => {},
     if (!waveId || current.where !== where) return {ok: false, status: 404, code: 'no_such_wave', message: 'There is no wave to join.'};
     lookupGeneration++;
     const stillCurrent = () => !disposed && generation === contextGeneration && current?.where === where && current?.wave.waveId === waveId;
-    const answer = await api.joinWave({waveId});
+    const spectator=current.wave.initialSnapshot?.economy?.mode==='island_shared' && current.wave.session?.isController!==true;
+    const answer = spectator?{ok:true,data:current.wave}:await api.joinWave({waveId});
     if (!stillCurrent()) return {...answer, ignored: true};
     if (answer.ok) {
       await ready();
@@ -159,6 +163,7 @@ export function createWaveFlow({api, emit, notify = () => {}, banner = () => {},
     if (number !== undefined) { lookupGeneration++; current.finished = true; stopTimers(); banner(null); current = null; }
     if (data) {
       if (data.away) notify('This wave ended while you were away. The bell is free again.', 'info');
+      else if (data.nativeShared) notify(data.survived?'Wave won. The island treasury was updated.':'The wave ended. Rebuild and ring the bell again.',data.survived?'success':'info');
       else if (data.survived) notify(lootText(data), 'success');
       else if (Number.isSafeInteger(data.coins)) notify(`The pirates broke through. You have ${coinText(data.coins)}.`, 'error');
       emit({type: WAVE_FINISHED, survived: data.survived === true, waveId, ...(number ? {wave: number} : {}), ...data});

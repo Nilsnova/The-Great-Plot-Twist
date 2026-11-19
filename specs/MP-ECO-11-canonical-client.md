@@ -156,3 +156,30 @@ screen. Use the fresh server nonce place verbatim for room/presence selection. U
 context yields no legacy room. Travel, selection and identity changes revoke local control and
 withdraw known proof; blur/hidden documents disconnect into the server's fixed grace. Focus may
 resume only through the persisted attachment and fresh read. No browser deadline withdraws a Captain.
+
+## Native wave transport and operation retention
+
+Shared start/current/join use only the dedicated version-2 proof contract and negotiated header.
+Strictly validate frozen origin, complete initial Captain map, presentation metadata and nullable
+live controller projection. Historical start confirms the original intent without activating a
+fighter. A late arrival may replay the frozen battle as a spectator but cannot submit commands.
+Persist bell requests by actor/selected code across epoch changes, and finish requests by actor/wave.
+Unknown/401 retries preserve the entire original body, including proof/checkpoint. Definitive
+health-sync refusal may replace a finish checkpoint; it cannot replace wave/actor/source identity.
+Only validated current same-origin envelopes may reach the existing funding setter. Completion
+receipts are the actor's immutable progression facts, never a personal coin balance.
+
+Native replay seeds every frozen Captain from captainInitialState. Idle Captains do not use the
+legacy eight-second presence expiry; only the trusted captain_withdrawn journal event withdraws
+one at its effective tick. A permanent wave-local withdrawn state rejects later queued movement
+and attacks. Native spectators cannot queue inputs, checkpoint HP or initiate closure. Own loadout
+comes from the frozen participant row. Native auto-next waits for server current-wave polling and
+does not fabricate a browser bell click.
+
+The first native transport/replay increment passed 88 tests across eleven focused files, including
+legacy recovery retries/closures, native malformed provenance, exact bell/finish retention and a
+real Chromium island session binding. A strengthened three-file selection passed 14 tests and
+proves the native simulation is running before testing command revocation. Build, spoiler guard
+(257 text files, 12 protected lines) and whitespace review passed. Captain reporting, free revival,
+shared settings/reset UI and concurrent-controller latency acceptance remain separate increments;
+this increment does not enable server capabilities or claim live acceptance.

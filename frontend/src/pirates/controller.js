@@ -72,6 +72,8 @@ import { createPrediction } from './controller-predict.js';
 import { createCaptainActions } from './controller-captain.js';
 import { createFrame } from './controller-frame.js';
 import { createFinish } from './controller-finish.js';
+import {sameEconomyScope} from '../island/economy-view.js';
+import {validSessionProof} from '../island/shared-session-shapes.js';
 
 export { RECOVERY_PLAYOUT_MS, RECOVERY_PLAYOUT_MIN_MS, recoveryPlayoutTarget, COSMETIC_PER_SECOND, MOVE_EVERY_MS,
   HEARD_EVERY_MS, RECOVERY_HEARD_EVERY_MS, LOST_FALLEN, bossText, BREAK_SECONDS, AUTO_KEY, HINT_KEY, HINT_SECONDS,
@@ -89,7 +91,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   startNextWave = null, breakSeconds = BREAK_SECONDS, recoveryPlayoutMs = RECOVERY_PLAYOUT_MS,
   loadAuto = readAuto, saveAuto = writeAuto, holdBreak = null, toggleHold = null, reviveCaptain = null,
   createEventArt = defaultEventArt, createFinisherScene = defaultFinisherScene, easyFinishers = readEasy, practiceIdentity = () => null,
-  guide: guideOn = false, createGuide = defaultGuide, recoveryTransport = null, inspectDefenses = false } = {}) {
+  guide: guideOn = false, createGuide = defaultGuide, recoveryTransport = null, inspectDefenses = false, getSessionProof = () => null } = {}) {
   // The captains' poses (src/pirates/poses.js): your character and the teammates' figures fire in their own body.
   const poses = createPoses({ now: () => now() / 1000 });
   const rangeFeedback = createRangeFeedback(), dangerFeedback = createDangerFeedback();
@@ -101,10 +103,17 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     runLoot: 0, auto: !!loadAuto(), level: null, skills: null, weapon: null,
     guide: null, guideLoading: false, lastWave: 0, lastTowerObstacles: false,
     autoBlade: true, rangePreview: false }; // the browser checks turn it off to let a captain fall on purpose (controller.autoBlade)
-  const myLevel = () => { const value = Number(ctl.level ?? captainLevel()); return Number.isInteger(value) ? Math.min(5, Math.max(1, value)) : 1; };
+  const frozenCaptain=()=>ctl.wave?.info.nativeShared?ctl.wave.info.initialSnapshot.participants.find(row=>row.participantToken===ctl.wave.info.participantToken)?.captain:null;
+  const myLevel = () => { const value = Number(frozenCaptain()?.level ?? ctl.level ?? captainLevel()); return Number.isInteger(value) ? Math.min(5, Math.max(1, value)) : 1; };
   const read = (get, fallback) => { try { return get(); } catch { return fallback; } };
-  const mySkills = () => readSkills(ctl.skills ?? read(captainSkills, []));
-  const myWeapon = () => readWeapon(ctl.weapon ?? read(captainWeapon, 'musket'));
+  const mySkills = () => readSkills(frozenCaptain()?.skills ?? ctl.skills ?? read(captainSkills, []));
+  const myWeapon = () => readWeapon(frozenCaptain()?.weapon ?? ctl.weapon ?? read(captainWeapon, 'musket'));
+  const controls=current=>{
+    if(!current?.info.nativeShared)return true;
+    if(current.info.spectator)return false;
+    try{const proof=getSessionProof();return validSessionProof(proof) && proof.sessionId===current.info.controlSessionId
+      && sameEconomyScope(proof.origin,current.info.initialSnapshot.economy);}catch{return false;}
+  };
   // "Me" in the sim: a recovery wave names its captains by participant token, every other wave by playerId.
   const actorId = current => current?.info?.recoveryVersion === 1 ? current.info.participantToken : playerId;
   // Your gun's numbers now: level, skills and the equipped weapon (captain-stats.js).
@@ -163,7 +172,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     createRenderer, createHud, setTimer, clearTimer, onEvents, getCrew, captainLevel, captainSkills, captainWeapon,
     captainColour, startNextWave, breakSeconds, recoveryPlayoutMs, loadAuto, saveAuto, holdBreak, toggleHold,
     reviveCaptain, createEventArt, createFinisherScene, easyFinishers, practiceIdentity, guideOn, createGuide,
-    recoveryTransport, inspectDefenses, poses, myLevel, read, mySkills, myWeapon, actorId, myStats, timers, stops,
+    recoveryTransport, inspectDefenses, poses, myLevel, read, mySkills, myWeapon, actorId, myStats, controls, timers, stops,
     later, emit, cue, here, blocked, rangeFeedback, dangerFeedback, canInspect, focusCanvas, closeDefenseInspection,
     openDefenseInspection, updateDefenseInspection, clearLiveFeedback, noteLiveInput });
   // The parts, each a closure over ctl; they call each other through names linked once all exist.
@@ -202,7 +211,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     if (!info) return null;
     const recoveryPolicy = readRecoveryPolicy(info);
     if (!recoveryPolicy) return null;
-    if (recoveryPolicy === 'structure-recovery-v1' && !isParticipantToken(info.participantToken)) return null;
+    if (recoveryPolicy === 'structure-recovery-v1' && !info.spectator && !isParticipantToken(info.participantToken)) return null;
     if (recoveryPolicy === 'structure-recovery-v1' && (!recoveryTransport
       || typeof recoveryTransport.sendInputs !== 'function' || typeof recoveryTransport.readEvents !== 'function'
       || typeof recoveryTransport.checkpoint !== 'function' || typeof recoveryTransport.finishWave !== 'function')) return null;
@@ -232,7 +241,8 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
       ...(snapshot.createWave.boss !== undefined ? {} : (info.boss !== undefined ? { boss: info.boss } : {})),
       event: snapshot.createWave.event ?? event, finishers: true, finisherPreparation: true, gapMs: waveGapMs,
       ...info.rules, recoveryStructures: snapshot.structures, towerHealth: true,
-      recoveryVersion: info.recoveryVersion, waveProtocol: info.waveProtocol }
+      recoveryVersion: info.recoveryVersion, waveProtocol: info.waveProtocol,
+      ...(info.nativeShared?{canonicalCaptains:snapshot.captainInitialState}:{}) }
       : { seed: info.seed, wave: info.wave, weather: info.weather, flagship: info.flagship, defenses, countdown: 0,
         crew: getCrew() ?? undefined, ...(info.boss !== undefined ? { boss: info.boss } : {}), event, finishers: true,
         finisherPreparation: true, gapMs: waveGapMs, ...(info.rules ?? {}), ...simOptions };
@@ -242,6 +252,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     const initialRecoveryHealth = recoveryReplay ? sim.recoveryHealthVector() : null;
     const initialRecoverySignature = initialRecoveryHealth ? canonicalJson(initialRecoveryHealth) : null;
     const current = ctl.wave = { info, sim, defenses, offset, ticks: 0, seq: 0, schedule: createInputSchedule(), done: false, finished: false,
+      nativeActorId:info.nativeShared?getSessionProof()?.actorId??null:null,
       liveFeedback:createLiveAttackFeedback(),feedbackReady:false,
       pause: null, boss: first.boss ? bossText(first.warships) : '', captainAt: -Infinity, bladeAt: -Infinity, handAt: -Infinity,
       result: null, renderer: null, hud: null, shown: false, lampsSent: false, lampsRelit: false, flagshipSunk: false,
