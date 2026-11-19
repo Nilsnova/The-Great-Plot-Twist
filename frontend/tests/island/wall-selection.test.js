@@ -200,6 +200,35 @@ describe('selected walls retain ordinary painter depth', () => {
   });
 });
 
+it('keeps captain collision at the saved building until Move is accepted and follows actual tower health', () => {
+  const staticRock = {x: 3, z: 4, radius: .5};
+  const place = {group: new THREE.Group(), colliders: [staticRock], zones: []};
+  const colliders = place.colliders;
+  let towers = null;
+  const drawing = decorateIsland(place, {loadArt: () => new Promise(() => {}), battleTowers: () => towers});
+  const tower = {id: 'cannon_1', kind: 'cannon', built: true, level: 1, x: 8, z: -4};
+  const installed = id => colliders.find(collider => collider.spotId === id);
+  try {
+    drawing.apply({spots: [tower, {id: 'house_1', kind: 'house', built: false}]});
+    expect(place.colliders).toBe(colliders);
+    expect(installed(tower.id)).toMatchObject({x: 8, z: -4, disabled: false});
+    expect(installed('house_1')).toBeUndefined();
+    drawing.preview({spotId: tower.id, x: 10, z: -7, size: 2, ok: true});
+    expect(installed(tower.id)).toMatchObject({x: 8, z: -4});
+    drawing.preview(null);
+    const moved = {...tower, x: 10, z: -7};
+    drawing.apply({spots: [moved], battle: true});
+    expect(installed(tower.id)).toMatchObject({x: 10, z: -7, disabled: false});
+    towers = [{id: tower.id, hp: 0}]; drawing.update(0);
+    expect(installed(tower.id).disabled).toBe(true);
+    towers = [{id: tower.id, hp: 60}]; drawing.update(0);
+    expect(installed(tower.id).disabled).toBe(false);
+    drawing.apply({spots: [], battle: false});
+    expect(installed(tower.id)).toBeUndefined();
+  } finally { drawing.dispose(); }
+  expect(colliders).toEqual([staticRock]);
+});
+
 it('the actual world reuses its one tile bracket through selection, Move, Close, visitor and battle lifecycle', async () => {
   const place = {group:new THREE.Group(),colliders:[],zones:[]}; let anchor = {spotId:'wall_13',x:-4,z:-17.5};
   const drawing = decorateIsland(place,{reducedMotion:true,loadArt:()=>new Promise(()=>{}),loadWallAtlas:async()=>atlas(),selection:()=>anchor});

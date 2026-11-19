@@ -84,4 +84,14 @@ describe('movement safety', () => {
     expect(Math.hypot(result.x, result.z)).toBeLessThan(30);
   });
 
+  it('lets a captain move out of a newly installed building without walking further inside', () => {
+    const building = {x: 0, z: 0, width: 2, depth: 2, islandBuilding: true};
+    const edge = {x: .75, z: 0};
+    expect(canStand(0, 0, [building])).toBe(false);
+    expect(moveWithCollisions(edge, -3, 0, [building]).x).toBe(edge.x);
+    expect(moveWithCollisions(edge, 3, 0, [building]).x).toBeGreaterThan(1.34);
+    expect(moveWithCollisions({x: 3, z: 0}, -6, 0, [building]).x).toBeGreaterThan(1.34);
+    expect(canStand(0, 0, [{...building, disabled: true}])).toBe(true);
+  });
+
 });

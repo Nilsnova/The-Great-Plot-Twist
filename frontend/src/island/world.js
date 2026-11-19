@@ -13,7 +13,7 @@ import {makeFootprint, makeWallLanes} from './move-preview.js';
 import {makeSelectionBracket} from './selection-bracket.js';
 import {makeDefenseRange} from './defense-range.js';
 import {makeBuildingFeedback, makeWallFeedback} from './wall-feedback.js';
-import {footprintOf} from './placement.js';
+import {FOOTPRINTS, KEEP_OUT, footprintOf} from './placement.js';
 import {isOpen, spotWave, waveOf} from '../campaign/index.js';
 import {LOCK_WAVES} from '../art/campaign.js';
 import {SLOT_KINDS} from './td-rules.js';
@@ -307,6 +307,38 @@ export function decorateIsland(place, ctx = {}) {
   const wallConnections = makeWallConnections(root, {purchaseLight});
   let joinedWalls = new Set();
   const baseColliders = [...place.colliders];
+  let towerColliders = [], lastLiveTowers = null;
+  function refreshTowerColliders() {
+    const towers = state.battle ? ctx.battleTowers?.() ?? null : null;
+    if (towers === lastLiveTowers) return;
+    lastLiveTowers = towers;
+    for (const collider of towerColliders) {
+      const live = towers?.find(tower => tower.id === collider.spotId);
+      collider.disabled = towers ? !live || live.hp === 0 : collider.savedRuin;
+    }
+  }
+  function applyColliders(spots, known, campaign) {
+    const fixtures = homeWalls ? KEEP_OUT.filter(({id}) => id === CABIN.id
+      || (known && (id === ARSENAL.id ? state.arsenal
+        : CAMPAIGN_BUILDINGS.some(item => item.id === id && campaign && isOpen(campaign, item.item))))) : [];
+    const installed = [];
+    towerColliders = []; lastLiveTowers = null;
+    for (const spot of SPOTS) {
+      const slot = slotOf(spot), size = FOOTPRINTS[slot], answer = spots.find(item => item.id === spot.id);
+      if (!size || slot === 'wall' || !answer?.built) continue;
+      const {x, z} = homeWalls ? placedSpot(spot.id, spots) : spot;
+      const collider = {x, z, width: size, depth: size, islandBuilding: true, spotId: spot.id};
+      if (slot === 'tower') {
+        const recovery = structureRecoveryAppearance(answer, recoveryState?.structures.find(row => row.spot === spot.id), recoveryState);
+        collider.disabled = collider.savedRuin = recovery?.look === 'broken';
+        towerColliders.push(collider);
+      }
+      installed.push(collider);
+    }
+    place.colliders.splice(0, place.colliders.length, ...baseColliders,
+      ...fixtures.map(({id, x, z, w: width, d: depth}) => ({x, z, width, depth, islandBuilding: true, spotId: id})), ...installed);
+    refreshTowerColliders();
+  }
   let preview = null;
   const footprint = makeFootprint(root), selectionBracket = makeSelectionBracket(root);
   const wallFeedback = homeWalls ? makeWallFeedback(root) : null;
@@ -461,9 +493,8 @@ export function decorateIsland(place, ctx = {}) {
     if (art) showCrew(spots, crew, battle);
     if (layout.zones === islandZones) {
       place.zones = islandZones({visitor, spots, arsenal: state.arsenal});
-      place.colliders.splice(0, place.colliders.length, ...baseColliders,
-        {x: CABIN.x, z: CABIN.z - 1.8, width: 4.8, depth: 3.6, island: true});
     } else place.zones = [...baseZones, ...(known ? layout.zones() : [])];
+    applyColliders(spots, known, campaign);
   }
   apply(state);
 
@@ -629,6 +660,7 @@ export function decorateIsland(place, ctx = {}) {
     ring() { ringing = 1.2; },
     update(dt, time = 0, paused = false) {
       if (disposed) return;
+      refreshTowerColliders();
       notice.update();
       const selection = preview ? null : ctx.selection?.();
       selectionBracket.show(selection);
@@ -676,6 +708,7 @@ export function decorateIsland(place, ctx = {}) {
     retryWallArt,
     dispose() {
       if (disposed) return; disposed = true; cleanups.splice(0).forEach(stop => stop());
+      place.colliders.splice(0, place.colliders.length, ...baseColliders);
       tasks.dispose(); notice.dispose(); staticArt.dispose();
       progress?.dispose(); recoveryIndicators.dispose();
       wallConnections.dispose(); selectionBracket.dispose();
