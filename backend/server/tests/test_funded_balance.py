@@ -14,8 +14,11 @@ from tools.economy.funded_play import (
     Combat,
     buy_adaptive,
     buy_queue,
+    campaign,
     play_attempt,
     profiles_for,
+    protocol_timing,
+    source_inventory,
     wave_options,
 )
 from tools.economy.island_balance_plans import Purchase, building_plan
@@ -161,3 +164,17 @@ def test_scripted_movement_cannot_cross_water_or_a_wall_or_exceed_tick_speed():
     result = subprocess.run(["node", "--input-type=module", "--eval", program],
                             cwd=ROOT, capture_output=True, text=True, timeout=30)
     assert result.returncode == 0, result.stderr
+
+
+def test_pacing_projection_uses_native_shared_default_instead_of_catalogue(catalogue):
+    assert catalogue.waves.countdown_seconds == 5
+    assert protocol_timing(catalogue) == {
+        "countdownSeconds": 10, "minimumSeconds": 10, "wonBreakSeconds": 8}
+    row = campaign(DefeatedCombat(), catalogue, count=1, policy="novice", priority="defense",
+                   seed=7919, attempts=1, target=40, weather_kind="calm")
+    assert row["simSeconds"] == 17.5
+    assert row["calculatedProtocolFloorSeconds"] == 27.5
+
+
+def test_source_manifest_includes_the_imported_purchase_planner():
+    assert "backend/tools/economy/island_balance_plans.py" in source_inventory()

@@ -33,6 +33,7 @@ from tools.economy.funded_play import (
     Combat,
     buy_queue,
     profiles_for,
+    protocol_timing,
     source_inventory,
 )
 from tools.economy.island_balance_plans import building_plan
@@ -272,8 +273,7 @@ def main() -> None:
     import psycopg
 
     catalogue = runtime_catalogue(load_island())
-    current_timing = {"countdownSeconds": catalogue.waves.countdown_seconds,
-                      "minimumSeconds": catalogue.waves.minimum_seconds}
+    current_timing = protocol_timing(catalogue)
     catalogue = replace(catalogue, waves=replace(catalogue.waves,
                         minimum_seconds=0, countdown_seconds=0))
     sources = source_inventory()
@@ -298,6 +298,7 @@ def main() -> None:
         print(json.dumps({"evidenceLayer": "production_simulation_plus_disposable_domain_sql",
             "migrations": len(migrations), "countdownSeconds": 0, "minimumFinishSeconds": 0,
             "productionTimingBeforeExplicitHeadlessOverride": current_timing,
+            "sourceManifestVersion": 2, "sourceBoundary": "before_and_after",
             "sources": sources,
             "limits": ["Local Auth/Realtime schema stand-ins; no provider/browser authentication",
                        "Actual persistent authority, quote/CAS, bell, earned profiles, finish RPCs",

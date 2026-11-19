@@ -178,6 +178,20 @@ def play_attempt(combat: Combat, catalogue: IslandCatalogue, game: Campaign,
             "nextWave": game.next_wave, "result": result}
 
 
+def protocol_timing(catalogue: IslandCatalogue) -> dict:
+    """Project default shared pacing; native SQL overrides the catalogue countdown."""
+    source = ROOT / "supabase/migrations/20261118223055_canonical_wave_sessions.sql"
+    countdown = re.search(r"countdown_seconds integer not null default (\d+)", source.read_text())
+    if countdown is None:
+        raise ValueError("The shared countdown default needs a renewed source review.")
+    pacing = ROOT / "supabase/migrations/20261119002149_shared_session_pacing.sql"
+    pause = re.search(r"p_now\+interval '(\d+) seconds'", pacing.read_text())
+    if pause is None:
+        raise ValueError("The shared won-wave break needs a renewed source review.")
+    return {"countdownSeconds": int(countdown[1]),
+            "minimumSeconds": catalogue.waves.minimum_seconds, "wonBreakSeconds": int(pause[1])}
+
+
 def campaign(combat: Combat, catalogue: IslandCatalogue, *, count: int, policy: str, priority: str,
              seed: int, attempts: int, target: int, weather_kind: str,
              earned_personal_bests: list[int] | None = None) -> dict:
@@ -195,9 +209,11 @@ def campaign(combat: Combat, catalogue: IslandCatalogue, *, count: int, policy: 
         if game.best >= target or stalled >= 6:
             break
     assert game.coins == catalogue.starting_coins + sum(row["deltaCoins"] for row in game.ledger)
-    protocol_floor = sum(max(row["result"]["time"], catalogue.waves.minimum_seconds)
-                         + catalogue.waves.countdown_seconds for row in rows)
-    protocol_floor += 8 * sum(row["result"]["survived"] for row in rows[:-1])
+    timing = protocol_timing(catalogue)
+    protocol_floor = sum(max(row["result"]["time"], timing["minimumSeconds"])
+                         + timing["countdownSeconds"] for row in rows)
+    protocol_floor += timing["wonBreakSeconds"] * sum(
+        row["result"]["survived"] for row in rows[:-1])
     return {"captains": count, "policy": policy, "priority": priority, "seed": seed,
             "openingPersonalBests": earned_personal_bests or [0] * count,
             "closingPersonalBests": game.personal_bests or [0] * count,
@@ -228,7 +244,8 @@ def source_inventory() -> dict:
     paths += list((ROOT / "backend/tools/economy").glob("funded_*.py"))
     paths += list((ROOT / "supabase/migrations").glob("*.sql"))
     paths += [ROOT / "backend/uv.lock", ROOT / "frontend/package-lock.json",
-              ROOT / "backend/server/tests/case_sql/stub.sql"]
+              ROOT / "backend/server/tests/case_sql/stub.sql",
+              ROOT / "backend/tools/economy/island_balance_plans.py"]
     return {str(path.relative_to(ROOT)): hashlib.sha256(path.read_bytes()).hexdigest()
             for path in sorted(paths)}
 
@@ -246,6 +263,7 @@ def main() -> None:
                         help="Reset successful runs; preserve earned veterans or admit new novices")
     args = parser.parse_args()
     catalogue = runtime_catalogue(load_island())
+    sources = source_inventory()
     combat = Combat()
     try:
         rows = [campaign(combat, catalogue, count=count, policy=policy, priority=priority,
@@ -277,19 +295,21 @@ def main() -> None:
                     restarts.append(restarted)
     finally:
         combat.close()
+    assert sources == source_inventory(), "Source files changed during the measured run."
     print(json.dumps({"evidenceLayer": "headless_production_simulation",
+        "sourceManifestVersion": 2, "sourceBoundary": "before_and_after",
         "moneyLayer": "catalogue_funded_arithmetic_not_database_receipts",
         "profileMeaning": "scripted control policies; all progression earned in each fresh run",
         "protocolProjection": {"observed": False,
-            "countdownSeconds": catalogue.waves.countdown_seconds,
-            "minimumSeconds": catalogue.waves.minimum_seconds, "wonBreakSeconds": 8,
+            **protocol_timing(catalogue),
+            "basis": "default shared settings, not catalogue countdown or observed wall time",
             "formula": "sum(max(simSeconds,minimum)+countdown)+8 per nonfinal won attempt",
             "excludes": "buying/reading/thinking, player availability, network and rendering"},
         "limitations": ["No authenticated rendered clients, network delay or human observations",
                         "Production collision/land checks; conservative static building blockers",
                         "No paid repair, revival, crew, research, weapon or wager execution",
                         "Unreached bands stay unmeasured; no free high-wave state"],
-        "sources": source_inventory(), "campaigns": rows,
+        "sources": sources, "campaigns": rows,
         "earnedProfileRestarts": restarts}, indent=2, sort_keys=True))
 
 
