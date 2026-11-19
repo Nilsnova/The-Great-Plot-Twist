@@ -300,7 +300,7 @@ completed database, authenticated-client and physical-device observations.
 
 ### Shared economy integration — 19 November 2026
 
-At `5f1cfa7c34b7610234ffaef7b76ac66c143516e2`, a persisted shared island has
+At `6584610a6a37b63ffc5df4beb951de0f115f5d16`, a persisted shared island has
 an account and run epoch. Its treasury is separate from personal wallets. The API
 requires the version capability and current origin; one coherent
 [snapshot](../backend/server/island/shared_snapshot.py) supplies scoped prices and
@@ -327,11 +327,11 @@ shared topics include server-issued nonce metadata. Tests must separately prove
 that the rendered product follows topic changes; a manually redirected SDK channel
 does not establish that behavior.
 
-At this inventory source, the shared snapshot still marks session, arsenal, move,
-repair, reset, market and match capabilities unavailable. The island client respects
-those gates. Direct authenticated SDK calls therefore do not establish that the
-corresponding game controls are ready; coordinated capability/client integration
-is an open gate.
+The integrated snapshot advertises session, arsenal, repair, reset, market and
+match capabilities; move remains unavailable. The island client respects these
+gates while current membership, origin, phase and domain checks still authorize
+each action. The coordinated paths are present in source. Final rendered-product
+acceptance remains open; direct authenticated SDK calls do not establish it.
 
 The [test map checkpoint](TEST-MAP.md#shared-economy-integration-checkpoint--19-november-2026)
 records the failed historical broad run, 219 passing affected compatibility cases
