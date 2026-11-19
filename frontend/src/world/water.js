@@ -6,6 +6,7 @@ import * as THREE from 'three';
 import { QUALITY } from '../config.js';
 import {coastUvMatrix} from './ground-transform.js';
 import { pixelGlsl, worldVertex, toScreen } from './pixel-glsl.js';
+import { groundProjectionGlsl } from './projection.js';
 
 const FIELD_W = 256, FIELD_H = 192, FIELD_PX = 4; // one texel = 4 native pixels of a 64 x 48 backdrop
 const BACKDROP = { width: 64, height: 48 };
@@ -125,7 +126,7 @@ function findBackdrop(group) {
 // runs along the actual coast, soft sun flecks, rain rings and whitecaps. Every edge is
 // antialiased with fwidth, so the sea stays clean at any resolution and zoom.
 const fragment = /* glsl */`
-${pixelGlsl}${seaGlsl}
+${pixelGlsl}${seaGlsl}${groundProjectionGlsl}
 uniform vec3 uDeep,uMid,uLight,uShallow,uShallow2,uFoam,uGlint,uStroke;
 uniform float uHomeCoast;
 varying vec2 vWorld;
@@ -154,12 +155,18 @@ void main(){
   float shoreLight=mix(1.0,mix(.65,.92,1.0-smoothstep(-13.0,-6.0,p.y)),uHomeCoast);
   colour=mix(colour,uShallow,shallow*.85*shoreLight);
   colour=mix(colour,uShallow2,(1.0-smoothstep(.0,1.3,d))*.9*shoreLight);
-  if(uHomeCoast>.5){
-    // The sand shelf is broad and translucent at the beach, with deeper pockets along the rock.
-    float shelf=(1.0-smoothstep(.4,5.7,d))*smoothstep(.24,.75,far);
-    colour=mix(colour,uShallow,shelf*.38);
+  if(uHomeCoast>.5&&d<6.0){
+    // Light reaches the sand in the coves. The projecting rock shoulders cut a short, softer
+    // shadow into that band. Both use the same coast distance and the actual projected top.
+    vec2 shore=abs(unprojectGround(p)/vec2(20.0,22.0));
+    float shoulder=min(shore.x,shore.y)/max(.001,max(shore.x,shore.y));
+    float rock=smoothstep(.31,.58,shoulder);
+    float shelf=(1.0-smoothstep(.4,5.7,d))*smoothstep(.24,.75,far)*(1.0-.62*rock);
+    colour=mix(colour,uShallow,shelf*.46);
+    float rockShadow=(1.0-smoothstep(.25,2.45,d))*rock;
     float contact=(1.0-smoothstep(.05,.62,d))*(1.0-shoreLight)*.58;
-    colour=mix(colour,uDeep,contact);
+    colour=mix(colour,uDeep,max(contact,rockShadow*.43));
+    shoreLight*=1.0-(1.0-smoothstep(.45,1.6,d))*rock*.19;
   }
   // Curled noise contours break up highlights without two crossing families of periodic lines.
   // The entire extra material branch is disabled by the existing low-quality uniform.

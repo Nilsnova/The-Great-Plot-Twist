@@ -51,7 +51,8 @@ export function meadowScale(angle) {
     const offset = angle - bearing * Math.PI / 180;
     return Math.abs(Math.atan2(Math.sin(offset), Math.cos(offset)));
   }));
-  const t = Math.max(0, Math.min(1, (distance - Math.PI / 12) / (Math.PI / 12)));
+  // Grass wraps the rocky shoulders more tightly, leaving the middle of each beach open.
+  const t = Math.max(0, Math.min(1, (distance - Math.PI / 15) / (Math.PI * 7 / 90)));
   return .86 + .125 * t * t * (3 - 2 * t);
 }
 
