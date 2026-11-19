@@ -120,6 +120,64 @@ their own evidence. The [registered-session origin case](evidence/MP-ECO-20-orig
 adds real-clock origin settlement and reinvestment with explicit market fixtures;
 no natural fresh-provider opening is claimed. This does not complete #505.
 
+### Explicit candidate and current authority follow-up
+
+The [current authority evidence](evidence/MP-ECO-20-provider-authority/README.md)
+pins full candidate `64ee02b360d68836b2de9247121ab47dc6a3ecbf`, with 108 migrations.
+The harness now requires `runtime.expectedCommit` and records/checks the actual
+running API/frontend source. Historical `3bdd8eda` results above keep their source.
+
+| Current check | Actual result and layer | Limit |
+|---|---|---|
+| Explicit provider configuration and source guards | Nine focused Python tests, two Node guard tests, scoped Ruff and script syntax passed; real GoTrue-to-production verification and independent Chromium session restoration passed | Local provider only; no hosted deployment or broad regression rerun. |
+| Registered research/demolition/succession/owner lifecycle | Six authenticated HTTP groups passed, with independent shared-ledger/private-wallet checks | Saved unlock/capital setup is explicit; initialized Captain preservation is separate from earned receipts. |
+| Concurrent game creation and reset grants | Three authenticated groups passed: shared starting capital did not multiply, identical reset UID had one effect, different UIDs against one epoch had one winner | This does not perform real save conversion. |
+| Genuine anonymous invited member | Real official-provider anonymous identity, normal invite/class admission, guest build/demolition/research change and owner-only reset refusal passed | Separate anonymous-enabled Auth and demo-flag API; the frozen primary context remained unchanged. API-only, not anonymous browser UX. |
+
+Successful wager opening, actual personal participation/Engineer generations,
+boss/house reward accounting, full arsenal lifecycle, cross-domain contention and
+paid-repair quota retain their own scenario reports and precise boundaries.
+Passing this authority slice alone does not close the complete matrix.
+
+### Fifteen-row accounting for candidate `64ee02b3`
+
+The complete declared SHA is `64ee02b360d68836b2de9247121ab47dc6a3ecbf`.
+The acceptance procedure requires targeted SQL and authenticated-browser evidence
+for each row. A real Node HTTP client or sealed production simulation establishes
+its stated Auth/API layer, not a browser observation. The separate combat gate
+also explicitly requires a rendered zero-coin revival. Historical browser runs
+keep their original source until a relevant source comparison establishes their
+applicability. This does not require every counterexample at every layer, a
+natural external feed, a physical device or a historical client executable.
+
+| Required scenario | Actual current proof and SQL boundary | Remaining browser/combined boundary |
+|---|---|---|
+| `treasury-concurrent-spending` | Actual Auth construction/wager and naturally damaged repair/wager races, observed scope-lock overlap, no personal fallback; four current disposable-SQL cases. Concurrent create/same-UID and distinct-UID reset grants passed with one replacement account/grant. | New contention/grant drivers are API-only. Current quota supplies browser repair evidence for its own slice; it does not render these contention races. |
+| `settlement-source-account` | Actual HTTP one-coin/all-funds/reinvestment with both real 300-second deadlines, owner reset and old-account-only settlement; original personal duel recipient is independently tested. Retained lifecycle SQL keeps its source. | New complete origin combinations are API-only. Targeted browser applicability and leave/change-island combinations retain their separate status. |
+| `wave-income-once` | Current API/sealed-simulation wave-two win credited 45 once; late victory could not reverse a saved loss. Natural boss-five/house case credited `(75+50+0)×3=375` once across three participants/six acknowledgments. Current quota has a genuine two-browser 35-coin victory. | Expanded duplicate/bonus combinations are API-only. Retained reward SQL and the targeted current browser slice must keep their exact scope. |
+| `personal-participation` | Actual provider combat/disconnect/reconnect, spectator/countdown/absent negatives, departure/reset receipt recovery and duplicate claims passed; participation SQL retains its documented trust boundaries. | New participation matrix uses API/sealed simulation; a complete current authenticated-browser row is not inferred. |
+| `engineer-generation` | Real Auth generation C1/C2, discounted purchases, captured/delayed completion, role/respec fences and matching-generation clearing passed. Existing generation SQL is retained, not reported rerun. | The new generation matrix is API-only; historical browser/source applicability remains separate. |
+| `arsenal-holder-lifecycle` | Twenty actual purchases included four carried copies; converted-overflow fixture 24 remained intact. Exclusive full swap, stale tenure, frozen loadouts, member leave/deletion and an independent worker's real-grace return all passed, including post-deletion copy competition. SQL races retain their sources. | The comprehensive new lifecycle case explicitly does not render. It does not claim real conversion or a simultaneous deletion/take browser race. |
+| `repairs-free-revival` | Current staged two-independent-browser quota observed three 40-coin repairs, fourth `repair_limit_reached`, exact old UID/later damage, member reconnect, natural victory and full current HP with damaged closed HP retained. A separate actual Auth/sealed-simulation zero-bank timed revival passed with one event and no debit/quota. | The interrupted quota driver remains failed; the completed staged observation is separate. The new zero-bank case is API/simulation only; the explicit rendered zero-bank target/hold gate remains pending a separate observation. |
+| `unrestricted-bets` | Unchanged production HTTP handlers with explicitly trusted external quote transport accepted 1+1+198 same-event stakes, exact/changed retries, real deadlines, all-proceeds reinvestment and original-account settlement. A genuine admitted anonymous guest's one-coin opening/retry passed. Current RPC/SQL contention is separate. | New full wager cases are API-only; trusted quote fixtures are not natural feeds. No successful browser betting journey is inferred. |
+| `ship-reward-cap` | Eleven real registered identities exercised ten-member caps for both games, parallel improvements, 60 exact retries, lower/repeated rounds, foreign-record fences, reset and immutable old receipts. SQL cap coverage remains source-qualified. | API-only with declared saved unlock/wreck and trusted result inputs; no rendered minigame/claim journey is claimed. |
+| `member-owner-permissions` | Real registered and genuine anonymous invited members built, demolished and changed research; nonmembers/forged origins failed; session leadership allowed settings but not reset. Current quota supplies actual member-repair browser evidence. | Broad rights/anonymous coverage is API-only. Required UI agreement and applicable historical browser evidence retain separate boundaries. |
+| `reset-deletion` | Registered owner reset/retries, concurrent grants, old research receipt replay, real member deletion with pending copies, confirmed owner account/island deletion and continuing personal preservation passed; wager origin isolation passed through HTTP. Retained lifecycle SQL remains separate. | Broad new combinations are API-only. Historical deletion UI/topic-transition evidence is not silently relabeled to this candidate. |
+| `legacy-class-contexts` | Actual Auth personal duel recipient, legacy Point purchase/replay, private island context, genuine guest invitation/class admission and excluded-product fences passed. Focused prerequisite-failure tests retain their fake-transport layer. | New context drivers are API-only. No current full browser context or actual backend outage is inferred from injected failure tests. |
+| `old-client-rejection` | Actual Auth missing/unsupported capabilities, strict epoch/actor/account proofs, old shared protocol/no native proof and excluded payload refusals passed; route/SQL tests remain distinct. | New probes are API-only. A historical binary is not an additional requirement; applicable targeted browser evidence is still required by the existing procedure. |
+| `wave-protocol-1` | Separately configured current production API exercised same/different UID bells, natural production-controller win, exact 35-coin payment/retry, idle-null and shared admission refusal. Current SQL covers expiry with explicit timestamp fixtures. | This compatibility case is API/headless with recovery disabled only in its local settings. No browser or actual 900-second expiry wait is claimed. |
+| `wave-protocol-2` | Current quota supplies native browser countdown/reconnect/repair/order/natural closure. Current personal, arsenal/worker and zero-revival cases add real Auth authority/state evidence. Retained session SQL/browser observations keep their sources. | Broader new duplicate/cross-island/fallen/cooldown/grace/withdrawal/pacing combinations remain at their recorded layers; they do not automatically complete the browser row. |
+
+Exact package evidence is recorded under `MP-ECO-20-provider-authority`,
+`MP-ECO-20-personal-provider`, `MP-ECO-20-boss-income-provider`,
+`MP-ECO-20-zero-revival-provider`, `MP-ECO-20-provider-arsenal`,
+`MP-ECO-20-compatibility`, `MP-ECO-20-protocol-one`,
+`MP-ECO-20-provider-ship-cap`, `MP-ECO-20-http-wagers` and
+`MP-ECO-20-repair-quota` in `docs/evidence`. Their exact source hashes, fixture
+boundaries, retained failures and timestamps are authoritative. These bounded
+passes improve coverage; **#505 remains open** for the documented browser and
+combined-layer completion requirements. No hosted activation is implied.
+
 Before the final pinned backend run, provide Node and frontend dependencies matching
 `frontend/package-lock.json` (`cd frontend && npm ci`, or a verified matching local
 installation). A source worktree without those packages must report registry skips.

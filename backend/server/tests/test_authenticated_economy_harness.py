@@ -2,12 +2,35 @@
 
 import base64
 import copy
+import hashlib
 import json
 import stat
 
 import pytest
 
 from tools.authenticated_economy import config
+from tools.authenticated_economy.guest_stack import guest_compose
+
+
+def test_separate_anonymous_auth_does_not_mutate_the_primary_provider(tmp_path):
+    runtime = config.create(tmp_path / "provider", "0" * 40)
+    primary = config.compose(runtime)
+    before = hashlib.sha256(json.dumps(primary, sort_keys=True).encode()).hexdigest()
+    guest = guest_compose(runtime)
+    after = hashlib.sha256(json.dumps(primary, sort_keys=True).encode()).hexdigest()
+    assert before == after
+    assert (
+        primary["services"]["auth"]["environment"]["GOTRUE_EXTERNAL_ANONYMOUS_USERS_ENABLED"]
+        == "false"
+    )
+    assert (
+        guest["services"]["guest-auth"]["environment"]["GOTRUE_EXTERNAL_ANONYMOUS_USERS_ENABLED"]
+        == "true"
+    )
+    assert guest["services"]["guest-auth"]["ports"] == ["127.0.0.1:54426:9999"]
+    assert guest["services"]["guest-auth"]["environment"]["API_EXTERNAL_URL"] == (
+        runtime["providerUrl"] + "/auth/v1"
+    )
 
 
 def test_candidate_is_explicit_and_an_existing_runtime_cannot_be_relabelled(tmp_path):
