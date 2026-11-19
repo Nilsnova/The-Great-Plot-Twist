@@ -127,7 +127,7 @@ function findBackdrop(group) {
 const fragment = /* glsl */`
 ${pixelGlsl}${seaGlsl}
 uniform vec3 uDeep,uMid,uLight,uShallow,uShallow2,uFoam,uGlint,uStroke;
-uniform float uHomeCoast,uHomeReference;
+uniform float uHomeCoast;
 varying vec2 vWorld;
 float band(float v,float edge){float w=fwidth(v)*.75+1e-4;return smoothstep(edge-w,edge+w,v);}
 float waterDistance(vec2 p){
@@ -150,9 +150,8 @@ void main(){
   vec3 colour=mix(uMid,uDeep,clamp(depth*.58+smoothstep(.25,.85,far)*.4,0.0,1.0));
   colour=mix(colour,uLight,smoothstep(.3,.9,swell)*(.09+(1.0-depth)*.11));
   float shallow=1.0-smoothstep(.0,4.2,d+sin(p.x*.8+p.y*.5+t*.6)*.25);
-  // The painted rock faces already have contact highlights. Keep the live breakers strongest
-  // along the southern beach so the sea does not light the terrace foliage from behind.
-  float shoreLight=mix(1.0,mix(.36,.78,1.0-smoothstep(-13.0,-6.0,p.y)),uHomeReference);
+  // Sunlit foam traces the facing beach. Softer backlight keeps the northern limestone readable.
+  float shoreLight=mix(1.0,mix(.65,.92,1.0-smoothstep(-13.0,-6.0,p.y)),uHomeCoast);
   colour=mix(colour,uShallow,shallow*.85*shoreLight);
   colour=mix(colour,uShallow2,(1.0-smoothstep(.0,1.3,d))*.9*shoreLight);
   // Curled noise contours break up highlights without two crossing families of periodic lines.
@@ -175,16 +174,16 @@ void main(){
     float cells=pxNoise(q+drift)+pxNoise(q*1.95-drift)*.2;
     float caustic=(1.0-band(abs(cells-.6),.02))*smoothstep(.6,1.2,d)*(1.0-smoothstep(1.5,3.0,d));
     colour=mix(colour,uShallow2,caustic*.12);
-    if(uHomeReference>.5){
+    if(uHomeCoast>.5){
       // Broad troughs and short turquoise crests give the open sea a visible rolling surface.
       vec2 q=p*vec2(.38,.70);
       float roll=sin(q.y+q.x*.46+sin(q.x*.54-t*.16)*1.15-t*.64);
-      float broken=pxNoise(q*vec2(.39,.8)+vec2(t*.045,-t*.027));
-      float wave=smoothstep(.45,.94,roll)*smoothstep(.23,.77,broken);
+      float chop=pxNoise(q*vec2(.39,.8)+vec2(t*.045,-t*.027));
+      float wave=smoothstep(.45,.94,roll)*smoothstep(.23,.77,chop);
       colour=mix(colour,uDeep,smoothstep(.14,.89,-roll)*.12*offshore);
-      colour=mix(colour,uLight,wave*.27*offshore);
+      colour=mix(colour,uLight,wave*.16*offshore);
       float streak=1.0-band(abs(roll-.87),.05);
-      colour=mix(colour,uStroke,streak*smoothstep(.49,.89,broken)*.22*offshore);
+      colour=mix(colour,uStroke,streak*smoothstep(.49,.89,chop)*.15*offshore);
     }
   }
   // The close edge is still in low quality; its extra movement and broken surf are high-only.
@@ -226,7 +225,7 @@ void main(){
 export function createWater(scene) {
   const colours = { uDeep: '#07566e', uMid: '#087f96', uLight: '#3dbdc9', uShallow: '#38c9b5', uShallow2: '#8be2c5', uFoam: '#f4fffa', uGlint: '#e6fff5', uStroke: '#63cfd6' };
   const homeColours = {...colours, uDeep: '#07667e', uMid: '#0b94a5', uLight: '#45c8cf', uShallow: '#3dcbb8', uShallow2: '#8cebd1'};
-  const uniforms = { ...seaUniforms, uHomeCoast: {value: 0}, uHomeReference: {value: 0} };
+  const uniforms = { ...seaUniforms, uHomeCoast: {value: 0} };
   for (const [key, value] of Object.entries(colours)) uniforms[key] = { value: new THREE.Color(value) };
   const material = new THREE.ShaderMaterial({ uniforms, vertexShader: worldVertex, fragmentShader: fragment,
     depthTest: false, depthWrite: false, toneMapped: false, side: THREE.DoubleSide }); // the outline follows the ground's own (maybe mirrored) frame
@@ -244,7 +243,6 @@ export function createWater(scene) {
       uniforms.uHomeCoast.value = home ? 1 : 0;
       for (const [key, value] of Object.entries(palette)) uniforms[key].value.set(value);
       const backdrop = findBackdrop(group);
-      uniforms.uHomeReference.value = home && backdrop?.material.map.userData?.homeReference ? 1 : 0;
       try {
         if (!backdrop) throw new Error('no backdrop');
         const field = readField(backdrop.material.map.image);
