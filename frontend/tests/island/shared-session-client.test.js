@@ -7,15 +7,55 @@ const storage=()=>{const rows=new Map();return {getItem:key=>rows.get(key)??null
 function locks(){const held=new Set();return {async request(name,_options,run){if(held.has(name))return run(null);held.add(name);try{return await run({name});}finally{held.delete(name);}}};}
 const clients=[];afterEach(async()=>{await Promise.all(clients.splice(0).map(client=>client.dispose()));});
 function setup(extra={}){
- const fixture=++fixtureNumber;let actor=actorId,selected=economy(),uids=0;const states=[],timers=[],saved=extra.storage??storage(),provider=extra.locks??locks();
+ const fixture=++fixtureNumber;let actor=actorId,selected=economy(),uids=0,identity=0;const states=[],timers=[],saved=extra.storage??storage(),provider=extra.locks??locks();
  const api={attach:vi.fn(async record=>{const data=metadata();if(record.body.expectedGeneration!=='0')data.session.connectionGeneration=String(BigInt(record.body.expectedGeneration)+1n);return {ok:true,data};}),
   read:vi.fn(async proof=>{const data=metadata(!!proof);if(proof)data.session.connectionGeneration=proof.connectionGeneration;return {ok:true,data};}),
   heartbeat:vi.fn(async proof=>{const data=metadata();data.session.connectionGeneration=proof.connectionGeneration;return {ok:true,data};}),disconnect:vi.fn(async()=>({ok:true,data:metadata(false)})),
   leave:vi.fn(async record=>({ok:true,data:controlReceipt('session_leave',record)})),settings:vi.fn(async record=>({ok:true,data:controlReceipt('session_settings',record)}))};
- const client=createSharedSessionClient({api,getActorId:()=>actor,getEconomy:()=>selected,storage:saved,locks:provider,
+ const client=createSharedSessionClient({api,getActorId:()=>actor,getAuthGeneration:()=>identity,getEconomy:()=>selected,storage:saved,locks:provider,
   makeUid:()=>`session_uid_${fixture}_${++uids}`,makeSessionId:extra.makeSessionId??(()=>sessionId),setTimer:run=>{timers.push(run);return timers.length;},clearTimer(){},onState:value=>states.push(value),onAttached:extra.onAttached});
- clients.push(client);return {client,api,saved,states,timers,provider,setActor:value=>{actor=value;},setEconomy:value=>{selected=value;},allocated:()=>uids};
+ clients.push(client);return {client,api,saved,states,timers,provider,setActor:value=>{actor=value;},setIdentity:value=>{identity=value;},setEconomy:value=>{selected=value;},allocated:()=>uids};
 }
+
+const replacementOrigin=()=>({...economy(),accountId:'77777777-7777-4777-8777-777777777777',runEpoch:'88888888-8888-4888-8888-888888888888'});
+function scopedMetadata(origin){const data=metadata();data.economy={...economy(),...origin};data.session.place='isle_k7q2m_'+(origin.runEpoch===economy().runEpoch?'0':'1').repeat(24);return data;}
+function useScopedProvider(f){
+ f.api.attach.mockImplementation(async record=>({ok:true,data:scopedMetadata(record.origin)}));
+ f.api.read.mockImplementation(async record=>({ok:true,data:scopedMetadata(record.origin)}));
+}
+it.each(['attach','read','hydration'])('rearms the current source after an obsolete %s flight settles',async stage=>{
+ let release;let firstHydration=true;
+ const f=setup({onAttached:async()=>{if(stage==='hydration'&&firstHydration){firstHydration=false;await new Promise(resolve=>{release=resolve;});}}});
+ useScopedProvider(f);
+ if(stage==='attach')f.api.attach.mockImplementationOnce(()=>new Promise(resolve=>{release=()=>resolve({ok:true,data:metadata()});}));
+ if(stage==='read')f.api.read.mockImplementationOnce(()=>new Promise(resolve=>{release=()=>resolve({ok:true,data:metadata()});}));
+ const opening=f.client.open();await vi.waitFor(()=>expect(release).toBeTypeOf('function'));
+ const next=replacementOrigin();f.setEconomy(next);const replacing=f.client.open();release();
+ await Promise.all([opening,replacing]);
+ expect(f.api.attach).toHaveBeenCalledTimes(2);expect(f.client.proof()?.origin.runEpoch).toBe(next.runEpoch);
+ expect(f.client.roomPlace()).toBe('isle_k7q2m_'+'1'.repeat(24));
+});
+it.each(['actor','origin','auth'])('does not attach a queued intermediate source after %s changes again',async boundary=>{
+ const f=setup();useScopedProvider(f);let release;
+ f.api.attach.mockImplementationOnce(()=>new Promise(resolve=>{release=()=>resolve({ok:true,data:metadata()});}));
+ const opening=f.client.open();await vi.waitFor(()=>expect(release).toBeTypeOf('function'));
+ f.setEconomy(replacementOrigin());const replacing=f.client.open();
+ if(boundary==='actor')f.setActor('99999999-9999-4999-8999-999999999999');
+ else if(boundary==='origin')f.setEconomy({...replacementOrigin(),runEpoch:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'});
+ else f.setIdentity(1);
+ release();await Promise.all([opening,replacing]);expect(f.api.attach).toHaveBeenCalledOnce();expect(f.client.proof()).toBeNull();
+});
+it.each([0,401])('parks the exact obsolete unknown attachment after status %s while admitting the new source',async status=>{
+ const f=setup();useScopedProvider(f);let release;
+ f.api.attach.mockImplementationOnce(()=>new Promise(resolve=>{release=()=>resolve({ok:false,status});}));
+ const opening=f.client.open();await vi.waitFor(()=>expect(release).toBeTypeOf('function'));
+ const old=[...f.saved.rows.values()][0];f.setEconomy(replacementOrigin());const replacing=f.client.open();
+ release();await Promise.all([opening,replacing]);
+ const inert=[...f.saved.rows].find(([key])=>key.includes(':inert:'));
+ expect(inert?.[1]).toBe(old);expect(f.api.attach).toHaveBeenCalledTimes(2);
+ expect(f.api.attach.mock.calls[0][0].body.actionUid).toBe(JSON.parse(old).actionUid);
+ expect(f.client.proof()?.origin.runEpoch).toBe(replacementOrigin().runEpoch);
+});
 it('withholds controller proof until a fresh GET follows the attach response',async()=>{
  const f=setup();let release;f.api.read.mockImplementation(()=>new Promise(resolve=>{release=resolve;}));
  const opening=f.client.open();await vi.waitFor(()=>expect(f.api.read).toHaveBeenCalledOnce());
