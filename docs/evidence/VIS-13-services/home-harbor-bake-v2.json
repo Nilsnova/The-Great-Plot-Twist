@@ -1,0 +1,605 @@
+{
+  "scope": "offline normalized PNG source compilation; runtime activation/build exclusion and actual-game acceptance remain separate",
+  "sourceCommit": "c5feb4d5c1afe8c51dde1ced4f5268cd3bceb8d1",
+  "compilerDirtyPaths": "M src/art/village/baked.js\n?? public/village/compiled/services-4x-1-7a3d2f9b5d5b.png",
+  "browser": "157.0.8103.79",
+  "families": [
+    "services"
+  ],
+  "proofDensities": [
+    4,
+    2.5,
+    2,
+    1.5
+  ],
+  "proofOrigins": {
+    "services": "c5feb4d5c1afe8c51dde1ced4f5268cd3bceb8d1"
+  },
+  "reusedReportSha256": null,
+  "normalizerHashes": {
+    "src/art/village-raster.js": "4db5ffa86253a7ece821804586518e2fabea33b33d0c59c4f3223df80d969e3f",
+    "src/art/village-decode.js": "1d55341b2c947e3bcfc019c0e8bb8722591f0a2312cd7a8a0585a873cd8fa537"
+  },
+  "transportHistory": [],
+  "original": {
+    "files": [
+      {
+        "file": "village/services-v1.png",
+        "bytes": 2193948,
+        "sha256": "d9091a95d8a3267f2c0790a06343d42d21232bc1c521bbcd1afc410914c991ff",
+        "width": 1536,
+        "height": 1024
+      },
+      {
+        "file": "village/home-fixed-v2.png",
+        "bytes": 1585086,
+        "sha256": "ec6349ad26db4beefe3d539b6195c3609b749348da0c2cc16831b56386ee646a",
+        "width": 1774,
+        "height": 887
+      },
+      {
+        "file": "village/home-harbor-v2.png",
+        "bytes": 1064637,
+        "sha256": "a21c44f3a329abe2fa80b292e20d9c1baa7fc33bf1fc1cd67c7325dd488e9221",
+        "width": 1254,
+        "height": 1254
+      }
+    ],
+    "encodedBytes": 4843671,
+    "summedDecodedBytes": 18875672
+  },
+  "compiled": {
+    "files": [
+      {
+        "file": "village/compiled/services-4x-1-7a3d2f9b5d5b.png",
+        "bytes": 703223,
+        "sha256": "7a3d2f9b5d5bd264cf1b35a8481d6700b5a442b416f91817d31817b2b0cb4162",
+        "width": 720,
+        "height": 920
+      }
+    ],
+    "encodedBytes": 703223,
+    "summedDecodedBytes": 2649600,
+    "peakSingleDecodedBytes": 2649600
+  },
+  "initialTransfer": {
+    "unchangedTerrainBytes": 2683357,
+    "rawPlusTerrainBytes": 7527028,
+    "compiledPlusTerrainBytes": 3386580,
+    "targetBytes": 8388608,
+    "targetMet": true
+  },
+  "budgets": {
+    "decodedPoolBytes": 12582912,
+    "combatAtlasHighBytes": 41943040,
+    "combatAtlasLowBytes": 12582912,
+    "note": "unchanged final logical frame/density means no renderer-pass or final GPU-texture saving is claimed"
+  },
+  "inputs": [
+    {
+      "name": "services",
+      "module": "src/art/village/services.js",
+      "sha256": "909ec708022fa5d2d835aa200cdc6781dd3abf7ba3a4eb87a4165018225c282d",
+      "frames": {
+        "island-techhub": {
+          "sheet": {
+            "file": "village/services-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            20,
+            125,
+            698,
+            776
+          ],
+          "logical": [
+            80,
+            88,
+            8
+          ],
+          "sourceFoot": [
+            345,
+            761
+          ],
+          "fitBounds": [
+            345,
+            761,
+            353,
+            15
+          ]
+        },
+        "island-arsenal": {
+          "sheet": {
+            "file": "village/home-fixed-v2.png",
+            "width": 1774,
+            "height": 887
+          },
+          "rect": [
+            928,
+            191,
+            808,
+            640
+          ],
+          "logical": [
+            80,
+            80,
+            8
+          ],
+          "sourceFoot": [
+            404,
+            624
+          ],
+          "fitBounds": [
+            404,
+            624,
+            404,
+            16
+          ]
+        },
+        "island-harbor": {
+          "sheet": {
+            "file": "village/home-harbor-v2.png",
+            "width": 1254,
+            "height": 1254
+          },
+          "rect": [
+            43,
+            55,
+            563,
+            494
+          ],
+          "logical": [
+            80,
+            72,
+            8
+          ],
+          "sourceFoot": [
+            281,
+            478
+          ],
+          "fitBounds": [
+            281,
+            478,
+            282,
+            16
+          ]
+        },
+        "island-wreck": {
+          "sheet": {
+            "file": "village/home-harbor-v2.png",
+            "width": 1254,
+            "height": 1254
+          },
+          "rect": [
+            670,
+            150,
+            509,
+            380
+          ],
+          "logical": [
+            96,
+            56,
+            6
+          ],
+          "sourceFoot": [
+            254,
+            364
+          ],
+          "fitBounds": [
+            353,
+            364,
+            353,
+            16
+          ]
+        },
+        "island-wreck-mended": {
+          "sheet": {
+            "file": "village/home-harbor-v2.png",
+            "width": 1254,
+            "height": 1254
+          },
+          "rect": [
+            40,
+            659,
+            554,
+            530
+          ],
+          "logical": [
+            96,
+            80,
+            6
+          ],
+          "sourceFoot": [
+            277,
+            514
+          ],
+          "fitBounds": [
+            385,
+            514,
+            385,
+            16
+          ]
+        }
+      }
+    }
+  ],
+  "plans": [
+    {
+      "name": "services",
+      "pages": [
+        {
+          "file": "village/compiled/services-4x-1-7a3d2f9b5d5b.png",
+          "width": 720,
+          "height": 920,
+          "items": [
+            {
+              "id": "island-techhub",
+              "rect": [
+                4,
+                4,
+                320,
+                352
+              ]
+            },
+            {
+              "id": "island-arsenal",
+              "rect": [
+                332,
+                4,
+                320,
+                320
+              ]
+            },
+            {
+              "id": "island-wreck-mended",
+              "rect": [
+                4,
+                364,
+                384,
+                320
+              ]
+            },
+            {
+              "id": "island-harbor",
+              "rect": [
+                396,
+                364,
+                320,
+                288
+              ]
+            },
+            {
+              "id": "island-wreck",
+              "rect": [
+                4,
+                692,
+                384,
+                224
+              ]
+            }
+          ]
+        }
+      ],
+      "sheets": {
+        "servicesBaked1": {
+          "file": "village/compiled/services-4x-1-7a3d2f9b5d5b.png",
+          "width": 720,
+          "height": 920
+        }
+      },
+      "frames": {
+        "island-techhub": {
+          "sheet": "servicesBaked1",
+          "rect": [
+            4,
+            4,
+            320,
+            352
+          ],
+          "logical": [
+            80,
+            88,
+            8
+          ],
+          "sourceFoot": [
+            160,
+            320
+          ]
+        },
+        "island-arsenal": {
+          "sheet": "servicesBaked1",
+          "rect": [
+            332,
+            4,
+            320,
+            320
+          ],
+          "logical": [
+            80,
+            80,
+            8
+          ],
+          "sourceFoot": [
+            160,
+            288
+          ]
+        },
+        "island-harbor": {
+          "sheet": "servicesBaked1",
+          "rect": [
+            396,
+            364,
+            320,
+            288
+          ],
+          "logical": [
+            80,
+            72,
+            8
+          ],
+          "sourceFoot": [
+            160,
+            256
+          ]
+        },
+        "island-wreck": {
+          "sheet": "servicesBaked1",
+          "rect": [
+            4,
+            692,
+            384,
+            224
+          ],
+          "logical": [
+            96,
+            56,
+            6
+          ],
+          "sourceFoot": [
+            192,
+            200
+          ]
+        },
+        "island-wreck-mended": {
+          "sheet": "servicesBaked1",
+          "rect": [
+            4,
+            364,
+            384,
+            320
+          ],
+          "logical": [
+            96,
+            80,
+            6
+          ],
+          "sourceFoot": [
+            192,
+            296
+          ]
+        }
+      }
+    }
+  ],
+  "compilerMemory": [
+    {
+      "family": "services",
+      "peakSourceBytes": 6294152,
+      "retainedDecodedAfterRelease": 0,
+      "canvasBytes": 2649600,
+      "largestTemporaryCanvasBytes": 491520
+    }
+  ],
+  "verification": [
+    {
+      "family": "services",
+      "results": [
+        {
+          "id": "island-techhub",
+          "density": 4,
+          "pixels": 112640,
+          "visiblePixels": 61992,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-techhub",
+          "density": 2.5,
+          "pixels": 44000,
+          "visiblePixels": 24623,
+          "differingPixels": 22765,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 53,
+          "alphaWeightedMeanRgbDelta": 2.2826850981445688
+        },
+        {
+          "id": "island-techhub",
+          "density": 2,
+          "pixels": 28160,
+          "visiblePixels": 15647,
+          "differingPixels": 14480,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 56,
+          "alphaWeightedMeanRgbDelta": 3.2781936567508123
+        },
+        {
+          "id": "island-techhub",
+          "density": 1.5,
+          "pixels": 15840,
+          "visiblePixels": 9019,
+          "differingPixels": 8614,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 44,
+          "alphaWeightedMeanRgbDelta": 3.435476133384974
+        },
+        {
+          "id": "island-arsenal",
+          "density": 4,
+          "pixels": 102400,
+          "visiblePixels": 56893,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-arsenal",
+          "density": 2.5,
+          "pixels": 40000,
+          "visiblePixels": 22402,
+          "differingPixels": 21456,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 59,
+          "alphaWeightedMeanRgbDelta": 3.386740840009201
+        },
+        {
+          "id": "island-arsenal",
+          "density": 2,
+          "pixels": 25600,
+          "visiblePixels": 14144,
+          "differingPixels": 13296,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 46,
+          "alphaWeightedMeanRgbDelta": 3.1663327245760784
+        },
+        {
+          "id": "island-arsenal",
+          "density": 1.5,
+          "pixels": 14400,
+          "visiblePixels": 8097,
+          "differingPixels": 7718,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 47,
+          "alphaWeightedMeanRgbDelta": 3.2743635958150765
+        },
+        {
+          "id": "island-harbor",
+          "density": 4,
+          "pixels": 92160,
+          "visiblePixels": 56316,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-harbor",
+          "density": 2.5,
+          "pixels": 36000,
+          "visiblePixels": 22196,
+          "differingPixels": 21100,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 31,
+          "alphaWeightedMeanRgbDelta": 2.3748499880318454
+        },
+        {
+          "id": "island-harbor",
+          "density": 2,
+          "pixels": 23040,
+          "visiblePixels": 14203,
+          "differingPixels": 13547,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 43,
+          "alphaWeightedMeanRgbDelta": 3.0663322507953135
+        },
+        {
+          "id": "island-harbor",
+          "density": 1.5,
+          "pixels": 12960,
+          "visiblePixels": 7991,
+          "differingPixels": 7757,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 61,
+          "alphaWeightedMeanRgbDelta": 4.3171940718142
+        },
+        {
+          "id": "island-wreck",
+          "density": 4,
+          "pixels": 86016,
+          "visiblePixels": 28760,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-wreck",
+          "density": 2.5,
+          "pixels": 33600,
+          "visiblePixels": 11392,
+          "differingPixels": 10784,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 31,
+          "alphaWeightedMeanRgbDelta": 2.6289292953279118
+        },
+        {
+          "id": "island-wreck",
+          "density": 2,
+          "pixels": 21504,
+          "visiblePixels": 7303,
+          "differingPixels": 6957,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 31,
+          "alphaWeightedMeanRgbDelta": 2.95015568082147
+        },
+        {
+          "id": "island-wreck",
+          "density": 1.5,
+          "pixels": 12096,
+          "visiblePixels": 4131,
+          "differingPixels": 4016,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 52,
+          "alphaWeightedMeanRgbDelta": 4.763000919889377
+        },
+        {
+          "id": "island-wreck-mended",
+          "density": 4,
+          "pixels": 122880,
+          "visiblePixels": 35703,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-wreck-mended",
+          "density": 2.5,
+          "pixels": 48000,
+          "visiblePixels": 14315,
+          "differingPixels": 13410,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 43,
+          "alphaWeightedMeanRgbDelta": 2.940931110938303
+        },
+        {
+          "id": "island-wreck-mended",
+          "density": 2,
+          "pixels": 30720,
+          "visiblePixels": 9145,
+          "differingPixels": 8958,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 75,
+          "alphaWeightedMeanRgbDelta": 6.418355254128727
+        },
+        {
+          "id": "island-wreck-mended",
+          "density": 1.5,
+          "pixels": 17280,
+          "visiblePixels": 5193,
+          "differingPixels": 5075,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 59,
+          "alphaWeightedMeanRgbDelta": 5.840771355698284
+        }
+      ],
+      "peakSourceBytes": 6294152,
+      "retainedDecodedAfterRelease": 0
+    }
+  ],
+  "errors": [],
+  "externalRequests": []
+}

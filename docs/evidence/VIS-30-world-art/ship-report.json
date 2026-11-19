@@ -2,7 +2,7 @@
   "scope": "lossy WebP shipping transport of the proved masters; frame metadata, masters and authored originals unchanged",
   "sourceCommit": "840549a58623caa94db4774a408e53953c58db10",
   "compilerDirtyPaths": "M ../docs/evidence/VIS-30-world-art/README.md\n M scripts/capture-home-island-waves.mjs\n M scripts/unshipped-art.js\n M src/art/village-decode.js\n M src/art/village-families.js\n M src/art/village-raster.js\n M src/art/village/terrain-materials.js\n M tests/art/registered-raster-contract.test.js\n M tests/art/terrain-materials.test.js\n M tests/art/village-activation.test.js\n M tests/art/village-decode.test.js\n M tests/art/village-level-matrix.test.js\n M tests/art/village-shipping.test.js\n?? ../docs/evidence/VIS-30-world-art/ship-report.json\n?? ../docs/evidence/franz-1118/size/\n?? public/village/shipped/\n?? scripts/ship-village-art.mjs\n?? scripts/village-ship-browser.js\n?? src/art/village/shipped.js\n?? tests/art/village-shipped-output.test.js",
-  "bakeReportSha256": "a3bfc70ef5b7f783bf2e24065092e75a1d96ff99068ce0a398127f6f9ff81a1b",
+  "bakeReportSha256": "f4f2c2079577cd1e5f6c7eabbfc749ebc8bc50427ad8a243afd448d804d34a0e",
   "browser": "153.0.8010.12",
   "encoder": "Chrome canvas toDataURL image/webp",
   "quality": 0.9,
@@ -13,71 +13,71 @@
   "sprites": {
     "files": [
       {
-        "source": "village/compiled/buildings-4x-1-4cac98be2a82.png",
-        "sourceSha256": "4cac98be2a8227dbc9e4bcccc5408e12c21ff8f858fc0fdc23ca91f4d0e7bf68",
-        "file": "village/shipped/buildings-4x-1-2739a47df6d0.webp",
-        "bytes": 43226,
-        "sha256": "2739a47df6d0b80512a3545113398058ff54eb9a6375d313a29ff002cc1fb892",
+        "source": "village/compiled/buildings-4x-1-4d1d3b5b74a0.png",
+        "sourceSha256": "4d1d3b5b74a02e1b5157dc1812f984ae3a8ec1fcf2a605bbc1767fee0b194ced",
+        "file": "village/shipped/buildings-4x-1-9753c67ef113.webp",
+        "bytes": 38940,
+        "sha256": "9753c67ef11310a77900c19096a7e6daabd19650bf38197d515de12eb775a5ae",
         "width": 392,
         "height": 392,
         "proof": {
           "pixels": 153664,
-          "visiblePixels": 75207,
-          "differingPixels": 73916,
+          "visiblePixels": 70161,
+          "differingPixels": 66170,
           "maxVisibleDelta": 255,
           "maxAlphaDelta": 0,
-          "alphaWeightedMeanRgbDelta": 4.3373012608443595
+          "alphaWeightedMeanRgbDelta": 3.6237924112621873
         }
       },
       {
-        "source": "village/compiled/houses-4x-1-715fc4e23c25.png",
-        "sourceSha256": "715fc4e23c252124d41b58b1d40c9437c6b7cab10019ed087b8ec6d0eaf6446e",
-        "file": "village/shipped/houses-4x-1-98bca75b4c81.webp",
-        "bytes": 350126,
-        "sha256": "98bca75b4c8117928e0625b4d264edd0eea3397b4376e10f90ffdac187987db2",
+        "source": "village/compiled/houses-4x-1-edc6d4aa9c8c.png",
+        "sourceSha256": "edc6d4aa9c8cee61e6a49cb1d422e74d823c1044fec1d7469e8662d41fcdc46c",
+        "file": "village/shipped/houses-4x-1-6f674dc5d848.webp",
+        "bytes": 264992,
+        "sha256": "6f674dc5d8484d9034f9a2e9fa09b891aec0d562c8ec3a8706c99fbf9d3a453f",
         "width": 984,
         "height": 1408,
         "proof": {
           "pixels": 1385472,
-          "visiblePixels": 582810,
-          "differingPixels": 522327,
+          "visiblePixels": 513420,
+          "differingPixels": 487333,
           "maxVisibleDelta": 255,
           "maxAlphaDelta": 0,
-          "alphaWeightedMeanRgbDelta": 3.581299762753054
+          "alphaWeightedMeanRgbDelta": 2.977326939732716
         }
       },
       {
-        "source": "village/compiled/landmarks-4x-1-110c2841118f.png",
-        "sourceSha256": "110c2841118fb00c0d41b68b4d7aa290211c7d0abd868fb5b39197e3c0f93150",
-        "file": "village/shipped/landmarks-4x-1-2e4a97eac689.webp",
-        "bytes": 152658,
-        "sha256": "2e4a97eac689a976450b2e012c1ecb5b21c1e398880eb131ab82dc6b1cdde36e",
+        "source": "village/compiled/landmarks-4x-1-724da3f9da87.png",
+        "sourceSha256": "724da3f9da87f46b5ef85bfcc27648c7022aaa886c60080b168c538e19193aaf",
+        "file": "village/shipped/landmarks-4x-1-0dadfa96f3c1.webp",
+        "bytes": 152950,
+        "sha256": "0dadfa96f3c1c8c3d4bb31dc71cc76b48556e8fb739dfbe156d18fcb39832f6b",
         "width": 1024,
         "height": 520,
         "proof": {
           "pixels": 532480,
-          "visiblePixels": 240695,
-          "differingPixels": 216748,
+          "visiblePixels": 234529,
+          "differingPixels": 210554,
           "maxVisibleDelta": 255,
           "maxAlphaDelta": 0,
-          "alphaWeightedMeanRgbDelta": 3.511867664983759
+          "alphaWeightedMeanRgbDelta": 3.4507360238819973
         }
       },
       {
-        "source": "village/compiled/services-4x-1-6b01dd508dca.png",
-        "sourceSha256": "6b01dd508dca1e32ab35b684a67d545dd999f8a0fcc1e3b3c93843edf5f032a2",
-        "file": "village/shipped/services-4x-1-1f072aed5570.webp",
-        "bytes": 72008,
-        "sha256": "1f072aed55705aa1beb21aeb1a0b87c39ae637d55d5a3b2c08a6602ff02ff392",
-        "width": 656,
-        "height": 360,
+        "source": "village/compiled/services-4x-1-7a3d2f9b5d5b.png",
+        "sourceSha256": "7a3d2f9b5d5bd264cf1b35a8481d6700b5a442b416f91817d31817b2b0cb4162",
+        "file": "village/shipped/services-4x-1-5c96f97c1c68.webp",
+        "bytes": 144742,
+        "sha256": "5c96f97c1c685e70f69271ccf8ce59ee6a914333590957f15fb2e8e27c084aa8",
+        "width": 720,
+        "height": 920,
         "proof": {
-          "pixels": 236160,
-          "visiblePixels": 126112,
-          "differingPixels": 122994,
+          "pixels": 662400,
+          "visiblePixels": 239664,
+          "differingPixels": 228803,
           "maxVisibleDelta": 255,
           "maxAlphaDelta": 0,
-          "alphaWeightedMeanRgbDelta": 4.195342945944599
+          "alphaWeightedMeanRgbDelta": 3.8911641359066462
         }
       },
       {
@@ -132,20 +132,20 @@
         }
       },
       {
-        "source": "village/compiled/core-4x-1-5729b2fcc8b4.png",
-        "sourceSha256": "5729b2fcc8b448b029ef810b465c3aeffc1070d2b1e18f9958ba3b08647678db",
-        "file": "village/shipped/core-4x-1-9b19b3a3249f.webp",
-        "bytes": 168614,
-        "sha256": "9b19b3a3249fa448516ab6e554a16e629bca15275e2ea4754a8fad86c69a8225",
+        "source": "village/compiled/core-4x-1-f44cae0d9e52.png",
+        "sourceSha256": "f44cae0d9e5227ac71d6d6a1ef59d90dd775ed88ae81a34b282227baa86da58a",
+        "file": "village/shipped/core-4x-1-0c6bf0898624.webp",
+        "bytes": 151694,
+        "sha256": "0c6bf0898624b829501c150751555fee2d6e8f51730b27471a18ce807eacf7d1",
         "width": 520,
         "height": 1560,
         "proof": {
           "pixels": 811200,
-          "visiblePixels": 323832,
-          "differingPixels": 303602,
+          "visiblePixels": 279492,
+          "differingPixels": 258479,
           "maxVisibleDelta": 255,
           "maxAlphaDelta": 0,
-          "alphaWeightedMeanRgbDelta": 3.2758109248081926
+          "alphaWeightedMeanRgbDelta": 3.3817011572303124
         }
       },
       {
@@ -234,8 +234,8 @@
         }
       }
     ],
-    "masterBytes": 10267413,
-    "shippedBytes": 2756586
+    "masterBytes": 10617203,
+    "shippedBytes": 2723272
   },
   "terrain": {
     "source": "village/terrain-materials-v1.png",
@@ -309,11 +309,77 @@
     "maxGroundTexelsPerUnit": 32
   },
   "initialTransfer": {
-    "masterPlusTerrainBytes": 12950770,
-    "shippedBytes": 2868430,
+    "masterPlusTerrainBytes": 13300560,
+    "shippedBytes": 2835116,
     "targetBytes": 4000000,
     "targetMet": true
   },
   "errors": [],
-  "externalRequests": []
+  "externalRequests": [],
+  "replacementHistory": [
+    {
+      "family": "houses",
+      "browser": "157.0.8103.79",
+      "sourceCommit": "71d11560a56e813067003fda18f6e8ed99301c29",
+      "previousReportSha256": "1d1bb8c28d5d55c6f1e586ba12a1c4be93d32ce7cca7774ab1caa0afcbe20992",
+      "previousSheet": "village/shipped/houses-4x-1-98bca75b4c81.webp",
+      "verifiedReplacement": "village/shipped/houses-4x-1-1e17e4c24a61.webp"
+    },
+    {
+      "family": "buildings",
+      "browser": "157.0.8103.79",
+      "sourceCommit": "92594b174dfe55d9edffe4104cc73eb82e528783",
+      "previousReportSha256": "3b7ba566b57cae07893a6bd13b3ec18d719074a729d4ddc488ffc49081d18f1a",
+      "previousSheet": "village/shipped/buildings-4x-1-2739a47df6d0.webp",
+      "verifiedReplacement": "village/shipped/buildings-4x-1-9753c67ef113.webp"
+    },
+    {
+      "family": "services",
+      "browser": "157.0.8103.79",
+      "sourceCommit": "92594b174dfe55d9edffe4104cc73eb82e528783",
+      "previousReportSha256": "3b7ba566b57cae07893a6bd13b3ec18d719074a729d4ddc488ffc49081d18f1a",
+      "previousSheet": "village/shipped/services-4x-1-1f072aed5570.webp",
+      "verifiedReplacement": "village/shipped/services-4x-1-b4008dc0c1ca.webp"
+    },
+    {
+      "family": "core",
+      "browser": "157.0.8103.79",
+      "sourceCommit": "5aca7df3c35000721bcd080159cea764becf6fcb",
+      "previousReportSha256": "86381a636a210342a7c509ae32d95b4e07adbb51b6ac4f32ab3ae61a601492c3",
+      "previousSheet": "village/shipped/core-4x-1-9b19b3a3249f.webp",
+      "verifiedReplacement": "village/shipped/core-4x-1-749e1803c2b4.webp"
+    },
+    {
+      "family": "landmarks",
+      "browser": "157.0.8103.79",
+      "sourceCommit": "5aca7df3c35000721bcd080159cea764becf6fcb",
+      "previousReportSha256": "86381a636a210342a7c509ae32d95b4e07adbb51b6ac4f32ab3ae61a601492c3",
+      "previousSheet": "village/shipped/landmarks-4x-1-2e4a97eac689.webp",
+      "verifiedReplacement": "village/shipped/landmarks-4x-1-0dadfa96f3c1.webp"
+    },
+    {
+      "family": "services",
+      "browser": "157.0.8103.79",
+      "sourceCommit": "c5feb4d5c1afe8c51dde1ced4f5268cd3bceb8d1",
+      "previousReportSha256": "205ccb889431699ae89c421c4708d783481f8e6c9a04e4b3e436aedabed995c2",
+      "previousSheet": "village/shipped/services-4x-1-b4008dc0c1ca.webp",
+      "verifiedReplacement": "village/shipped/services-4x-1-5c96f97c1c68.webp"
+    },
+    {
+      "family": "core",
+      "browser": "157.0.8103.79",
+      "sourceCommit": "77d0f508dab059697370f225b3db45dfc35062a3",
+      "previousReportSha256": "b56273f3df8824430f20384b8592059bb78072ba7bbd4712ab9560a4e869af58",
+      "previousSheet": "village/shipped/core-4x-1-749e1803c2b4.webp",
+      "verifiedReplacement": "village/shipped/core-4x-1-0c6bf0898624.webp"
+    },
+    {
+      "family": "houses",
+      "browser": "157.0.8103.79",
+      "sourceCommit": "19802ad26c2a6edc44caadb31302e3d4176f65d4",
+      "previousReportSha256": "b24c0ac1fda7c9a71e8e1785a1ccdb899722a793deedf277037b7ec5889963b6",
+      "previousSheet": "village/shipped/houses-4x-1-1e17e4c24a61.webp",
+      "verifiedReplacement": "village/shipped/houses-4x-1-6f674dc5d848.webp"
+    }
+  ]
 }
