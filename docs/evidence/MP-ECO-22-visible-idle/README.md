@@ -20,6 +20,14 @@ After explicit fresh admission of the legacy game, ordinary Menu › Return to t
 
 The invited member then visibly buys Gunner for40 and Guard for60. Immutable receipts and the independently read ledger match the 4900-coin bank. [The unaltered crew card](member-crew.png) shows both acquired counts, their normal prices and new Carpenter hires unavailable. The invocation subsequently fails because its test asks for an Arsenal Menu button; Arsenal is a world inspection target. No arsenal, departure or grace-restoration pass is inferred from that failed later step.
 
+## Shared arsenal: completed visible copy lifecycle
+
+[`partial-arsenal.json`](partial-arsenal.json) retains the separately measured `a31337b9` invocation. An actual registered browser visitor inspects `island_arsenal` through the existing game inspection entry, then physically clicks Buy, Return, Take and Return in the real card. The exact original copy remains the only copy throughout; its holder changes between that Captain and stored stock. The final independent account/ledger check records140 available, zero committed and one60-coin weapon purchase from the explicitly supplied200. The [unaltered stored-copy card](member-arsenal.png) shows one weapon, one stored, and the shared island payer.
+
+Its six imported helper hashes and protected application sources match before and after. The additional API-only registration helper is separately compared with its frozen common commit after execution; that supplemental qualification is not relabeled as a seventh captured start/end hash.
+
+The later normal Menu Leave request succeeds and the browser shows its existing own island bank200, but the document remains in `Confirming departure from your previous session. Retry shortly.` That observed pending-departure blocker and its correction are separate from the completed arsenal row. The failed invocation does not supply a grace or automatic replacement-controller pass.
+
 ## Setup and boundaries
 
 The fresh service admission supplies 5000 disposable test coins. Saved island unlock50 and a pre-existing level5/personal-best20/earned10 profile fixture make the controls reachable. They do not establish naturally earned progression, conversion or economy balance. All actual role/build/research mutations use the real UI and API. No journal, HP, outcome or clock is replaced.
