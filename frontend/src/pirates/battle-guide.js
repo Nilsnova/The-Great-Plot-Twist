@@ -34,7 +34,7 @@ export const GUIDE = Object.freeze({
   heartReach: CONFIG.boarding.heartRadius,
   dotEvery: 1,         // one dot per grid cell (1 unit)
   previewAlpha: .38,   // between waves: the routes and landings are a faint preview (dots only, no chevrons)
-  laneAlpha: .16,      // between waves: the wall lanes (D056) under the routes
+  laneAlpha: .26,      // between waves: low-contrast studs mark the wall lanes (D056)
   chevronEvery: 6,     // in a wave: one chevron every this many cells (more on a phone), small dots between
   barShow: 1,          // a wall bar shows below this share of hp (or while the wall is hacked)
 });
@@ -199,16 +199,16 @@ const round2 = value => Math.round(value * 100) / 100;
 // ---------------------------------------------------------------- drawing
 
 const SHAPE = { disc: 0, ring: 1, chevron: 2, icon: 3, box: 4, dashed: 5,
-  gap: 6, conditional: 7, unknown: 8 };
+  gap: 6, conditional: 7, unknown: 8, lane: 9 };
 const ICONS = ['skull', 'heart', 'rubble'];
 const ICON_PX = 64;
 const vertex = /* glsl */`
 ${groundProjectionGlsl}
 uniform bool uGround;
 attribute vec4 iPos;attribute vec2 iSize;attribute vec4 iColor;attribute vec4 iUv;
-varying vec2 vLocal;varying vec4 vColor;varying vec2 vUv;varying float vShape;
+varying vec2 vLocal;varying vec4 vColor;varying vec2 vUv;varying float vShape,vSpan;
 void main(){
-  vec2 corner=position.xy;vLocal=corner*2.0-1.0;vShape=iPos.w;vColor=iColor;vUv=mix(iUv.xy,iUv.zw,corner);
+  vec2 corner=position.xy;vLocal=corner*2.0-1.0;vShape=iPos.w;vSpan=iSize.x;vColor=iColor;vUv=mix(iUv.xy,iUv.zw,corner);
   vec2 local=(corner-.5)*iSize;float c=cos(iPos.z),s=sin(iPos.z);
   local=vec2(local.x*c-local.y*s,local.x*s+local.y*c);
   vec2 at=iPos.xy+local;
@@ -216,7 +216,7 @@ void main(){
   gl_Position=projectionMatrix*viewMatrix*vec4(at,0.0,1.0);
 }`;
 const fragment = /* glsl */`
-uniform sampler2D uIcons;varying vec2 vLocal;varying vec4 vColor;varying vec2 vUv;varying float vShape;
+uniform sampler2D uIcons;varying vec2 vLocal;varying vec4 vColor;varying vec2 vUv;varying float vShape,vSpan;
 void main(){
   float r=length(vLocal),a=vColor.a;vec3 rgb=vColor.rgb;
   if(vShape<.5){a*=1.0-smoothstep(.82,1.0,r);}
@@ -227,6 +227,10 @@ void main(){
   else if(vShape<3.5){vec4 t=texture2D(uIcons,vUv);a*=t.a;rgb=t.rgb*vColor.rgb;}
   else if(vShape>4.5&&vShape<5.5){// T50: a landing ring, cut into 14 dashes.
     a*=smoothstep(.66,.74,r)*(1.0-smoothstep(.9,1.0,r))*step(0.0,sin(atan(vLocal.y,vLocal.x)*14.0));}
+  else if(vShape>8.5){
+    float cells=abs(fract((vLocal.x+1.0)*vSpan)-.5)*2.0;
+    a*=1.0-smoothstep(.24,.54,length(vec2(cells,vLocal.y)));
+  }
   else if(vShape>5.5){
     vec2 p=abs(vLocal);
     float d=vShape>6.5&&vShape<7.5?p.x+p.y:max(p.x,p.y);
@@ -436,7 +440,7 @@ export function createBattleGuide({ scene, reducedMotion = () => false, characte
     laneBoxes = 0;
     for (const [z, ...runs] of WALL_LANE_ROWS) for (let i = 0; i < runs.length; i += 2) {
       const w = runs[i + 1] - runs[i] + .5;
-      ground.push(SHAPE.box, (runs[i] + runs[i + 1]) / 2, drawnY(z), w, .5 * Y, { ...LANE, a: GUIDE.laneAlpha });
+      ground.push(SHAPE.lane, (runs[i] + runs[i + 1]) / 2, drawnY(z), w, .5 * Y, { ...LANE, a: GUIDE.laneAlpha });
       laneBoxes++;
     }
   }
