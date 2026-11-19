@@ -36,6 +36,13 @@ it('fits the real southwest mooring artwork without changing walking, targeting 
         return mesh.position.x === projected.x && mesh.position.y === projected.y;
       });
       const positionsBeforeWave = parts.map(mesh => mesh.position.toArray());
+      const ropePositions = rope.children.map(mesh => mesh.geometry.getAttribute('position'));
+      const originalRope = ropePositions.map(position => Array.from(position.array));
+      rope.children.forEach(mesh => mesh.onBeforeRender(null, null, {userData: {homePortraitDepth: 1.9}}));
+      const ropeChangesOnlyHeight = ropePositions.every((position, i) => Array.from(position.array).some((value, j) => j % 3 === 1 && value !== originalRope[i][j])
+        && Array.from(position.array).every((value, j) => j % 3 === 1 || value === originalRope[i][j]));
+      rope.children.forEach(mesh => mesh.onBeforeRender(null, null, {userData: {homePortraitDepth: 1}}));
+      const ropeReturns = ropePositions.every((position, i) => Array.from(position.array).every((value, j) => value === originalRope[i][j]));
       skiff.geometry.computeBoundingBox();
       const {min, max} = skiff.geometry.boundingBox;
       const {image} = skiff.material.map;
@@ -69,14 +76,14 @@ it('fits the real southwest mooring artwork without changing walking, targeting 
       place.dispose();
       return {home, battle, returned, eyes, positionsMatchGround, maxOrder, stable, released, actualHits, target,
         width: max.x - min.x, waterline: skiff.position.y, visibleHullBottom, standsAshore, standsOnSkiff, sharesCollider,
-        zoneIdsStable, shoreStable, retainsTravel, wallStable};
+        zoneIdsStable, shoreStable, retainsTravel, wallStable, ropeChangesOnlyHeight, ropeReturns};
     } finally { place.dispose(); }
   });
   expect(result).toMatchObject({
     home: [true, true, true], battle: [true, false, false], returned: [true, true, true],
     eyes: [{x: -9.5, z: 19.5}, {x: -8, z: 24.5}], positionsMatchGround: true, stable: true, released: [1, 1, 1, 1],
     actualHits: 0, target: null, standsAshore: true, standsOnSkiff: false, sharesCollider: false,
-    zoneIdsStable: true, shoreStable: true, retainsTravel: true, wallStable: true,
+    zoneIdsStable: true, shoreStable: true, retainsTravel: true, wallStable: true, ropeChangesOnlyHeight: true, ropeReturns: true,
   });
   expect(result.maxOrder).toBeLessThan(20);
   expect(result.width).toBeLessThanOrEqual(3);
