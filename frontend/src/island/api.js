@@ -651,7 +651,7 @@ export function createIslandApi({transport, makeUid = makeActionUid, waveProtoco
       return askIslandRead(PATHS.visit(displayIslandCode(symbols)), undefined, isVisit);
     },
     startWave({where: place = 'own', waveProtocol: askedProtocol = null} = {}) {
-      if (selectedEconomy() !== undefined) return sharedWaves()?.startWave({where:place})??refuse(409, 'economy_path_unavailable', 'This action is unavailable on shared islands.');
+      if (selectedEconomy() !== undefined) return (sharedWaves()?.startWave({where:place})??refuse(409, 'economy_path_unavailable', 'This action is unavailable on shared islands.')).then(timed);
       const target = where(place);
       if (!target) return refuse(422, 'validation_error', MESSAGES.badCode);
       const version = askedProtocol === 2 ? 2 : protocolFor(target);
@@ -659,13 +659,13 @@ export function createIslandApi({transport, makeUid = makeActionUid, waveProtoco
         {where: target, actionUid, ...(version === 2 ? {waveProtocol: 2} : {})}), isWave).then(timed);
     },
     joinWave({waveId, waveProtocol: askedProtocol = null} = {}) {
-      if (selectedEconomy() !== undefined) return sharedWaves()?.joinWave({waveId})??refuse(409, 'economy_path_unavailable', 'This action is unavailable on shared islands.');
+      if (selectedEconomy() !== undefined) return (sharedWaves()?.joinWave({waveId})??refuse(409, 'economy_path_unavailable', 'This action is unavailable on shared islands.')).then(timed);
       if (!isText(waveId)) return refuse(404, 'no_such_wave', MESSAGES.badWave);
       const version = askedProtocol === 2 ? 2 : protocolFor();
       return ask(() => transport.post(PATHS.join, {waveId, ...(version === 2 ? {waveProtocol: 2} : {})}), isWave).then(timed);
     },
     currentWave({where: place = 'own', waveProtocol: askedProtocol = null} = {}) {
-      if (selectedEconomy() !== undefined) return sharedWaves()?.currentWave({where:place})??refuse(409, 'economy_path_unavailable', 'This action is unavailable on shared islands.');
+      if (selectedEconomy() !== undefined) return (sharedWaves()?.currentWave({where:place})??refuse(409, 'economy_path_unavailable', 'This action is unavailable on shared islands.')).then(timed);
       const target = where(place);
       if (!target) return refuse(422, 'validation_error', MESSAGES.badCode);
       const version = askedProtocol === 2 ? 2 : protocolFor(target);
