@@ -43,6 +43,10 @@ def bell(database, room, *, countdown=0, uid="native_bell_001"):
     snapshot = template()
     snapshot["expectedRevision"] = revision
     snapshot["weatherLabel"] = "Calm"
+    snapshot["finishPolicy"] = {
+        "restartBack": 2,
+        "rescue": {"enabled": True, "fromWave": 4, "lastWave": 100, "restartBack": 1},
+    }
     snapshot["expectedSource"] = rpc(database, "shared_session_source_locked", owner)
     snapshot["weather"] = {"kind": "calm", "ships": 1, "fog": 0}
     snapshot["createWave"]["seed"] = 42
