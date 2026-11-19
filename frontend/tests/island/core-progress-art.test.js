@@ -6,7 +6,7 @@ import * as progress from '../../src/art/village/progress.js';
 import {collectRasterFrames, normalizeRasterFrame} from '../../src/art/village-raster.js';
 
 const frames = collectRasterFrames([core, progress]);
-const source = JSON.parse(readFileSync(new URL('../../../docs/evidence/VIS-05-hero/heart-v4.json', import.meta.url)));
+const source = JSON.parse(readFileSync(new URL('../../../docs/evidence/VIS-05-hero/heart-v5.json', import.meta.url)));
 describe('core and progress native source contract', () => {
   it.each([
     [core.sheets.core.file.split('/').at(-1), ...source.nativeSize, source.bytes, source.sha256],

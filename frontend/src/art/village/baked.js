@@ -7,7 +7,7 @@ export const sheets = {
   "natureBaked1": {"file":"village/compiled/nature-4x-1-237071b5ed40.png","width":984,"height":880},
   "cannonsBaked1": {"file":"village/compiled/cannons-4x-1-f0a74bf14d40.png","width":928,"height":1000},
   "wallsBaked1": {"file":"village/compiled/walls-4x-1-4905aac4841a.png","width":1000,"height":1008},
-  "coreBaked1": {"file":"village/compiled/core-4x-1-318b51169cfa.png","width":520,"height":1560},
+  "coreBaked1": {"file":"village/compiled/core-4x-1-082d8285efb4.png","width":520,"height":1560},
   "progressBaked1": {"file":"village/compiled/progress-4x-1-ee57813737ea.png","width":840,"height":232},
   "mortarsBaked1": {"file":"village/compiled/mortars-4x-1-5be0794d7341.png","width":928,"height":1000},
   "harpoonsBaked1": {"file":"village/compiled/harpoons-4x-1-54d919207a2e.png","width":928,"height":1000},

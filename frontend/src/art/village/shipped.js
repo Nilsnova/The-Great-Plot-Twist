@@ -7,7 +7,7 @@ export const shippedSheets = {
   "village/compiled/nature-4x-1-237071b5ed40.png": {"file":"village/shipped/nature-4x-1-6826391b7154.webp","width":984,"height":880},
   "village/compiled/cannons-4x-1-f0a74bf14d40.png": {"file":"village/shipped/cannons-4x-1-3d73a5433fd9.webp","width":928,"height":1000},
   "village/compiled/walls-4x-1-4905aac4841a.png": {"file":"village/shipped/walls-4x-1-412ae50cc0b9.webp","width":1000,"height":1008},
-  "village/compiled/core-4x-1-318b51169cfa.png": {"file":"village/shipped/core-4x-1-548ce0fbfb28.webp","width":520,"height":1560},
+  "village/compiled/core-4x-1-082d8285efb4.png": {"file":"village/shipped/core-4x-1-1a191ddadbb2.webp","width":520,"height":1560},
   "village/compiled/progress-4x-1-ee57813737ea.png": {"file":"village/shipped/progress-4x-1-66cb01fae408.webp","width":840,"height":232},
   "village/compiled/mortars-4x-1-5be0794d7341.png": {"file":"village/shipped/mortars-4x-1-5a4a73dc8f34.webp","width":928,"height":1000},
   "village/compiled/harpoons-4x-1-54d919207a2e.png": {"file":"village/shipped/harpoons-4x-1-61b001b9e090.webp","width":928,"height":1000},
