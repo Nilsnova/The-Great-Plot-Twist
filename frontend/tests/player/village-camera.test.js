@@ -4,7 +4,7 @@ import {createCamera, villageFrame} from '../../src/player/camera.js';
 import {worldViewport} from '../../src/pixel/display.js';
 import {projectPoint} from '../../src/world/art.js';
 import {surfaceClass, surfaces} from '../../src/world/places/surfaces.js';
-import {projectedCoastBounds,projectLegacyGround} from '../../src/world/projection.js';
+import {projectedCoastBounds,projectLegacyGround,unprojectGround} from '../../src/world/projection.js';
 import {cliffProfile} from '../../src/art/coast-cliffs.js';
 
 const player = {x: 12, z: -8};
@@ -122,6 +122,37 @@ describe('village camera overview', () => {
 });
 
 describe('working village zoom and pan', () => {
+  it.each([[375,812],[320,568]])('frames the central village on %s×%s with upright, pickable art', (width,height) => {
+    const {view, input} = viewAt(width,height), top = 96, bottom = 156;
+    view.setVillageView(true, {height, top, bottom}); view.update(.05, player);
+    const work = view.camera.zoom;
+    expect(view.villageFit).toBe(false);
+    expect(work).toBeGreaterThan(villageFrame(view.camera, 'home_islet', {height, top, bottom}).zoom * 2);
+
+    for (const [x,z,lift] of [[-8,6,4],[-8,-6,2.8],[0,2,4],[0,-14,6]]) {
+      const foot = onScreen(view.camera, x, z), roof = onScreen(view.camera, x, z, lift);
+      expect(Math.abs(foot.x)).toBeLessThan(.9);
+      expect(roof.x).toBeCloseTo(foot.x, 8);
+      expect((1-roof.y)*height/2).toBeGreaterThan(top);
+      expect((1-foot.y)*height/2).toBeLessThan(height-bottom);
+      const restored = foot.clone().unproject(view.camera);
+      const logical = unprojectGround(restored.x, restored.y);
+      expect(logical.x).toBeCloseTo(x, 8);
+      expect(logical.z).toBeCloseTo(z, 8);
+    }
+    const center = onScreen(view.camera,0,0), right = onScreen(view.camera,1/1.3,0);
+    const up = onScreen(view.camera,0,0,1);
+    expect((right.x-center.x)*width).toBeCloseTo((up.y-center.y)*height, 8);
+    expect(onScreen(view.camera,0,2).x).toBeLessThan(.63); // Keep the Heart away from the right edge.
+
+    input.held = new Set(['Tab']); view.update(.05, player);
+    expect(view.camera.zoom).toBeLessThan(work);
+    input.held.clear(); view.update(.05, player); expect(view.camera.zoom).toBeCloseTo(work);
+    view.villageControl('fit'); view.update(.05, player); expect(view.villageFit).toBe(true);
+    view.villageControl('work'); view.update(.05, player);
+    expect(view.villageFit).toBe(false); expect(view.camera.zoom).toBeCloseTo(work);
+  });
+
   it.each([[1280,720],[375,812]])('zooms, pans within land bounds and returns to exact Fit at %s×%s', (width,height) => {
     const {view} = viewAt(width,height); view.setVillageView(true,{height,top:150,bottom:220}); view.villageControl('fit'); view.update(.05,player);
     const fit = {zoom: view.camera.zoom, position: view.camera.position.clone()};
