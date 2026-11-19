@@ -97,6 +97,7 @@ export function createHud(container, actions, {on = defaultOn, emit = defaultEmi
   function drawCoins() {
     cancelAnimationFrame(tickFrame);
     const known = Number.isFinite(coins);
+    overlay.classList.toggle('hud-wide-balance', known && Math.abs(coins) >= 1_000_000);
     showBalance(known ? formatCoins(coins) : `${COIN} …`);
     drawPurseLabel();
     // Signed out there is no purse to load, so no endless "🪙 …": the chip waits until there are coins.

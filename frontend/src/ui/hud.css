@@ -87,18 +87,18 @@
 }
 /* The Home portrait header keeps its three pieces on one row above the village. */
 @media(min-width:355px) and (max-width:600px) and (orientation:portrait){
-  .hud-play.hud-home .hud-coins {
+  .hud-play.hud-home:not(.hud-wide-balance) .hud-coins {
     display:flex; max-width:calc((100vw - 132px) / 2 - 17px); padding:7px 9px;
     font-size:17px; gap:4px;
   }
-  .hud-play.hud-home .hud-wave:not([hidden]) {
+  .hud-play.hud-home:not(.hud-wide-balance) .hud-wave:not([hidden]) {
     position:absolute; top:0; left:calc(50vw - 12px); transform:translateX(-50%);
     box-sizing:border-box; min-height:44px; max-width:126px; padding:6px 10px; gap:5px;
     border:0; border-radius:var(--u-radius-sm); box-shadow:var(--u-frame);
     background:var(--u-sea); font-size:14px; pointer-events:none;
   }
-  .hud-play.hud-home .hud-wave-value { min-width:0; overflow:hidden; text-overflow:ellipsis; }
-  .hud-play.hud-home .hud-menu { padding-inline:10px; gap:7px; }
+  .hud-play.hud-home:not(.hud-wide-balance) .hud-wave-value { min-width:0; overflow:hidden; text-overflow:ellipsis; }
+  .hud-play.hud-home:not(.hud-wide-balance) .hud-menu { padding-inline:10px; gap:7px; }
 }
 /* On portrait exploration landings, keep the map and its first paths clear. */
 @media(max-width:600px) and (orientation:portrait){
