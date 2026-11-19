@@ -66,7 +66,11 @@ def main() -> None:
     token_file.write_text(token)
     token_file.chmod(0o600)
     os.environ["SSL_CERT_FILE"] = runtime["caFile"]
-    settings = replace(local_settings(runtime), cron_secret=SecretStr(token))
+    base_settings = local_settings(runtime)
+    settings = replace(base_settings, flags={**base_settings.flags, "demo": True},
+                       cron_secret=SecretStr(token))
+    if settings.demo_mode:
+        raise RuntimeError("The quote fixture requires demo_mode false, not replay prices")
     market = market_from_settings(settings, transport=IncreasingQuoteTransport(),
                                   relit_check=relit_check)
     app = create_app(settings=settings, market_service=market)
@@ -75,6 +79,7 @@ def main() -> None:
                                                               cwd=root, text=True).strip(),
               "factorySha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
               "processId": os.getpid(), "port": 58006,
+              "demoFeatureFlag": settings.flags["demo"], "demoMode": settings.demo_mode,
               "fixture": "Only external quote transport; increasing prices; actual UTC clocks"}
     (args.directory / "side-api-source.json").write_text(json.dumps(source, indent=2) + "\n")
     uvicorn.run(app, host="127.0.0.1", port=58006, access_log=False)
