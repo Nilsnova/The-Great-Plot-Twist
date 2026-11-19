@@ -2,20 +2,20 @@
   position: absolute; z-index: 35; bottom: calc(max(18px, env(safe-area-inset-bottom)) + var(--narrator-card-height, 0px) + 12px); left: 50%; transform: translateX(-50%);
   box-sizing: border-box; width: min(940px, calc(100% - 24px)); display: flex; align-items: center; gap: 12px;
   padding: 12px 16px; border: 2px solid var(--u-brass); border-radius: 16px;
-  background: linear-gradient(152deg, #194750, #0c2e37 74%); color: var(--u-ink);
-  box-shadow: inset 0 0 0 1px #ffefbf24, 0 2px 0 #071a22, 0 8px 22px #041b26a6;
+  background: var(--u-panel-surface) var(--u-sea); color: var(--u-ink);
+  box-shadow: inset 0 0 0 2px #0a242f, inset 0 1px 0 3px #f8dfa85e, 0 3px 0 #5b4022, 0 8px 22px #102f36bb;
 }
 .island-village-mode[hidden], .island-village-mode button[hidden] { display: none; }
 .island-village-copy { flex: 1; min-width: 0; }
 .island-village-copy strong { font: 700 20px/1.2 var(--u-serif); }
 .island-village-copy p { margin: 4px 0 0; color: var(--u-mute); font-size: 13px; line-height: 1.35; }
 .island-village-mode button { min-height: 44px; flex: none; padding: 8px 12px; border: 1px solid #6b9293; border-radius: 10px; box-shadow: inset 0 1px #ffffff26, 0 2px 0 #061d25; }
-.island-village-mode .kit-quiet { background: linear-gradient(#306269, #19424d); color: var(--u-ink); }
+.island-village-mode .kit-quiet { background: var(--u-quiet-surface) var(--u-card); color: var(--u-ink); }
 .island-village-mode .kit-quiet:hover { background: #315f67; }
 .island-village-mode :is(button, select):focus-visible { outline: 2px solid #ffe3a4; outline-offset: 2px; }
 .island-village-buildings, .island-village-coverage {
   box-sizing: border-box; height: 44px; min-width: 0; width: 142px; max-width: 100%; padding: 6px;
-  color-scheme: dark; border: 1px solid #789b96; border-radius: 10px; background: #163c47; color: var(--u-ink);
+  color-scheme: dark; border: 1px solid #789b96; border-radius: 10px; background: var(--u-chip-surface) var(--u-card); color: var(--u-ink);
   font: 700 14px/1.2 var(--u-font);
 }
 .island-village-mode.has-coverage { flex-wrap: wrap; }

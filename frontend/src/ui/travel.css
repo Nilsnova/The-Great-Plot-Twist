@@ -8,7 +8,7 @@ dialog::backdrop{background:#152d27ba}.sea-chart header,.sea-chart footer{displa
 /* Match the island's menus while retaining the chart's illustrated routes and native scrolling. */
 .sea-chart {
   color: var(--u-ink);
-  background: linear-gradient(150deg, var(--u-card), var(--u-sea));
+  background: var(--u-panel-surface) var(--u-sea);
   border: 2px solid var(--u-brass);
   border-radius: var(--u-radius);
   box-shadow: var(--u-frame);
@@ -16,7 +16,11 @@ dialog::backdrop{background:#152d27ba}.sea-chart header,.sea-chart footer{displa
 .sea-chart::backdrop { background: #081f25bd; }
 .sea-chart h2 { color: var(--u-gold); font-family: var(--u-serif); letter-spacing: 0; }
 .sea-chart small, .sea-chart .chart-help { color: var(--u-mute); }
-.sea-chart .chart-scroll { border: 1px solid var(--u-line); border-radius: var(--u-radius-xs); }
+.sea-chart .chart-scroll {
+  border: 1px solid var(--u-line); border-radius: var(--u-radius-xs);
+  background: var(--u-deep);
+  box-shadow: 0 0 0 2px var(--u-deep), 0 3px 10px #061b2491;
+}
 .sea-chart .chart-close {
   display: grid;
   place-items: center;
@@ -25,20 +29,31 @@ dialog::backdrop{background:#152d27ba}.sea-chart header,.sea-chart footer{displa
   height: 44px;
   flex: none;
   color: var(--u-ink);
-  background: var(--u-card);
+  background: var(--u-quiet-surface) var(--u-card);
   border: 2px solid var(--u-brass);
   border-radius: var(--u-radius-xs);
 }
 .sea-chart .chart-map button { border-radius: var(--u-radius-xs); }
+.sea-chart .chart-map button i {
+  border-radius: 50%;
+  background: var(--u-action-surface) var(--u-gold);
+  border-color: var(--u-deep);
+  box-shadow: 0 0 0 2px var(--u-brass), 0 3px 5px #071c25a3;
+}
+.sea-chart .chart-map button[aria-current='true'] i {
+  background: var(--u-action-hover) var(--u-gold);
+  box-shadow: 0 0 0 3px #fff0b2, 0 3px 6px #071c25b3;
+}
+.sea-chart .chart-map button.locked:not([aria-current='true']) i { background: var(--u-line); box-shadow: none; }
 .sea-chart .chart-map button span {
   color: var(--u-ink);
-  background: var(--u-deep);
+  background: var(--u-chip-surface) var(--u-deep);
   border-color: var(--u-brass);
   border-radius: 6px;
 }
 .sea-chart .chart-map button[aria-current='true'] span {
   color: var(--u-pink);
-  background: var(--u-parch);
+  background: var(--u-paper-surface) var(--u-parch);
   border-color: var(--u-brown);
 }
 .sea-chart .chart-map button.locked:not([aria-current='true']) span {
@@ -78,7 +93,7 @@ dialog::backdrop{background:#152d27ba}.sea-chart header,.sea-chart footer{displa
     min-height: 44px;
     padding: 6px 8px;
     border: 1px solid var(--u-line);
-    background: var(--u-card);
+    background: var(--u-chip-surface) var(--u-card);
     color: var(--u-ink);
     text-align: left;
     transform: none;
@@ -94,7 +109,7 @@ dialog::backdrop{background:#152d27ba}.sea-chart header,.sea-chart footer{displa
     white-space: normal;
   }
   .sea-chart .chart-destinations button[aria-current='true'] {
-    background: var(--u-parch);
+    background: var(--u-paper-surface) var(--u-parch);
     border-color: var(--u-brown);
     color: var(--u-pink);
   }
