@@ -17,14 +17,14 @@ export async function runShipCap({clients,observe,install,admit,sourceEvidence,h
   runnerSha256:runnerBefore,helperBefore,sourceBefore,assertions:[],limits:[
    'API-only actual GoTrue/production verifier; no rendered controls, Realtime or natural ship-game play claim.',
    'Initial saved wave30/wave35 and completed wreck are explicit pre-admission eligibility fixtures, not earned wins or repair payments.',
-   'Submitted0–3stars use the existing trusted-score product contract; no score-history, clock, outcome, receipt or authority edits.',
+   'Submitted 0–3 stars use the existing trusted-score product contract; no score-history, clock, outcome, receipt or authority edits.',
    'Fresh local admission is installer setup, not legacy conversion or rollout.']};
  const check=(name,facts)=>{report.assertions.push({name,...facts});console.log(name);};
  async function prepare(owner,members,wave){
   checked(await owner.request('/api/games',{method:'POST',body:{actionUid:uid()}}));
   const legacy=checked(await owner.request('/api/island'));
   const seeded=await install('update public.islands set wave_best=$2,next_wave=$2+1,wreck_paid=500 where player_id=$1::uuid returning wave_best,wreck_paid',
-   [owner.actorId,wave],`Initial saved-unlock fixture: record${wave}, repaired wreck500, before admission; no victory/repair receipt is fabricated`);
+   [owner.actorId,wave],`Initial saved-unlock fixture: record ${wave}, repaired wreck 500, before admission; no victory/repair receipt is fabricated`);
   assert.equal(seeded.length,1);assert.equal(seeded[0].wave_best,wave);assert.equal(seeded[0].wreck_paid,500);
   await admit(owner.actorId,{coins:200});
   for(const member of members)checked(await member.request('/api/games/join',{method:'POST',body:{code:legacy.code,actionUid:uid()}}));
@@ -116,10 +116,25 @@ export async function runShipCap({clients,observe,install,admit,sourceEvidence,h
   assert.notEqual(replacement.accountId,primary.economy.accountId);assert.notEqual(replacement.runEpoch,primary.economy.runEpoch);
   assert.equal(replacement.treasury.availableCoins,'200');
   const replacementBefore=await money(replacement.accountId);
-  for(const context of [primary.context,intent(replacement)]){
-   const refused=checked(await clients[1].request(gamePath+'/claim',{method:'POST',body:{economy:context,roundId:pending.round.id,stars:3,actionUid:uid()}}),409);
-   assert.equal(refused.error.code,'economy_epoch_mismatch');
+  const retired=await observe('select state from public.island_economy_accounts where id=$1::uuid',[primary.economy.accountId]);
+  assert.equal(retired[0].state,'retired');
+  const oldRefusals=[];
+  // The common operation helper refuses a new retired-account intent before the
+  // ship function's later epoch check; a mismatched new epoch is refused earlier by HTTP.
+  for(const [context,expectedCode] of [[primary.context,'economy_path_unavailable'],[intent(replacement),'economy_epoch_mismatch']]){
+   const actionUid=uid();
+   const refused=checked(await clients[1].request(gamePath+'/claim',{method:'POST',body:{economy:context,roundId:pending.round.id,stars:3,actionUid}}),409);
+   assert.equal(refused.error.code,expectedCode);
+   const roots=await observe('select count(*)::integer as count from public.island_economy_operations where actor_id=$1::uuid and action_uid=$2',[clients[1].actorId,actionUid]);
+   assert.equal(roots[0].count,0);
+   assert.deepEqual(await money(primary.economy.accountId),beforeRetry);
+   assert.deepEqual(await money(replacement.accountId),replacementBefore);
+   oldRefusals.push({status:409,code:refused.error.code,noOperationRoot:true});
   }
+  const freshStatus=checked(await primary.owner.request(gamePath+'?code='+encodeURIComponent(primary.code)));
+  assert.equal(freshStatus.economy.accountId,replacement.accountId);assert.equal(freshStatus.open,false);
+  const healthyForeign=checked(await foreign.owner.request(gamePath+'?code='+encodeURIComponent(foreign.code)));
+  assert.equal(healthyForeign.open,true);
   const prior=historical[0];
   const afterReset=checked(await prior.client.request(gamePath+'/claim',{method:'POST',body:prior.body}));
   assert.equal(afterReset.repeat,true);assert.deepEqual(afterReset.receipt,prior.reply.receipt);assert.equal(afterReset.currentEconomy,null);
@@ -127,7 +142,7 @@ export async function runShipCap({clients,observe,install,admit,sourceEvidence,h
   const resetReplay=checked(await primary.owner.request('/api/island/fresh-start',{method:'POST',body:resetBody}));
   assert.equal(resetReplay.repeat,true);assert.deepEqual(resetReplay.receipt,reset.receipt);
   assert.deepEqual(await money(replacement.accountId),replacementBefore);
-  check('actual owner reset preserves origin fences and immutable receipt replay',{oldBalance:'272',newBalance:'200',uncompletedOldRoundRefused:true,newEpochCannotRebindRound:true,historicalReceiptReplay:true,oneReplacementGrant:true});
+  check('actual owner reset preserves origin fences and immutable receipt replay',{oldBalance:'272',newBalance:'200',retiredState:retired[0].state,oldRefusals,currentStatusHealthy:true,uncompletedOldRoundRefused:true,newEpochCannotRebindRound:true,historicalReceiptReplay:true,oneReplacementGrant:true});
   assert.deepEqual(await walletFacts(),walletsBefore);
   check('all origin ledgers reconcile and eleven private wallet histories stay unchanged',{privateWallets:walletsBefore.length,primary:beforeRetry,foreign:await money(foreign.economy.accountId),replacement:replacementBefore});
   report.status='passed';
