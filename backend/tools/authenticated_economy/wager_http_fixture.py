@@ -70,7 +70,9 @@ def main() -> None:
         "APP_ENV": "local", "SUPABASE_URL": runtime["providerUrl"],
         "SUPABASE_PUBLISHABLE_KEY": runtime["anonKey"],
         "SUPABASE_SECRET_KEY": runtime["serviceKey"], "AUTH_PROVIDERS": "email",
-        "FEATURE_FLAGS": "islands,live_presence,sign_in,structure_recovery,arsenal,market,sports,arena,demo",
+        "FEATURE_FLAGS": (
+            "islands,live_presence,sign_in,structure_recovery,arsenal,market,sports,arena,demo"
+        ),
         "DEMO_MODE": "false",
     })
     settings = replace(base_settings, flags={**base_settings.flags, "demo": True},

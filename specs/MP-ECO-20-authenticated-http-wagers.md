@@ -29,3 +29,13 @@ scenario, pinned common helpers and both served API instances before/after.
 This demonstrates authenticated product transport with a trusted quote fixture,
 not rendered UI, naturally earned progression, natural returns or deployment.
 No production/common source or migration changes; local commits only.
+
+## Recorded verification
+
+The [actual HTTP evidence](../docs/evidence/MP-ECO-20-http-wagers/README.md)
+records both real five-minute maturities, actual full-budget reinvestment/reset
+and old-origin-only settlement, plus one actual anonymous guest opening.
+Only trusted quote inputs and saved Harbor eligibility are fixtures. Full backend
+Ruff, compilation, Node syntax, quote-boundary and documentation/diff checks pass.
+The measured source is pinned before a separately qualified AST-identical line
+wrapping cleanup; it is not reported as a long case rerun.
