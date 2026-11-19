@@ -4,7 +4,7 @@
 
 The whole-island view on desktop and phone now places the far terraces and the near beach at different apparent scales. Three sandstone shelves rise around the existing north inlet and meet the meadow with deeper shadows. Key buildings have more weight in the overview. The Heart uses a deeper navy roof, a shaded side room, and limestone steps around the existing open passage.
 
-The matched captures compare `4321ef01` and `af99b934` on a Wave 40 save with ten structures, the same positions, 15,500 coins and the same daylight setup. Chrome and WebKit rendered 1280 × 720 desktop, 375 × 812 touch and 320 × 568 touch. The revised overview uses 110 draw calls and 6,119 triangles in the matched fixture. The previous view used 109 calls and 5,408 triangles.
+The matched captures compare `4321ef01` and `75df4a29` on a Wave 40 save with ten structures, the same positions, 15,500 coins and the same daylight setup. Chrome and WebKit rendered 1280 × 720 desktop, 375 × 812 touch and 320 × 568 touch. Chrome also checked a 1512 × 982 laptop viewport and 390 × 844 touch. The revised overview uses 110 draw calls and 6,119 triangles in the matched fixture. The previous view used 109 calls and 5,408 triangles.
 
 ## Verified in the playable build
 
@@ -13,6 +13,6 @@ The matched captures compare `4321ef01` and `af99b934` on a Wave 40 save with te
 - The Smugglers longboat stayed visible over water. Its anchor at 13.9 seconds and first landing at 14.5 seconds match the prior build.
 - The Heart remains walkable with keyboard and touch. The healthy, damaged and rubble sprites retain the same ground anchor and art bounds.
 
-The production build and all seven packaged browser checks passed. The combined review runtime `6263aeab` passed 54 focused regression tests on camera, selection, wall placement, mooring and asset verification.
+The production build and all seven packaged browser checks passed. The final ridge retains its footprint outside walkable land. The existing vertex and centroid checks and 152,425 independent samples confirmed the boundary.
 
 The game keeps its existing footprint, two cottage slots, route network and wall placement rules. The concept shows additional cottages and a different shore and building arrangement. Physical phone and VoiceOver checks remain open in [#236](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/236).
