@@ -1,6 +1,6 @@
 # Home Island visual finish
 
-[Latest terrain and cannon screenshots](relief/README.md) · [Whole-island object details](objects/README.md) · [Aligned Heart and live island motion](motion/README.md)
+[Latest cliff, terrace, and cannon comparisons](depth/README.md) · [Earlier coastal foundation pass](relief/README.md) · [Whole-island object details](objects/README.md) · [Aligned Heart and live island motion](motion/README.md)
 
 The same Wave 14 save appears in both captures. The earlier draft is `1f1c62a0` and the finished renderer and art are at `5347783a`. The original coastline, camera framing, building positions, and approach routes remain in place.
 
