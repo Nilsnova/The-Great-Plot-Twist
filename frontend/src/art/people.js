@@ -24,64 +24,82 @@ let poseColour = 0;
 export function setPoseColour(index) { poseColour = Number.isInteger(index) && index >= 0 && index < CAPTAIN_COUNT ? index : 0; }
 const posePalette = () => CAPTAIN_PALETTES[poseColour];
 const VIEWS = ['', '-back', '-side'], STEPS = ['', '-walk-1', '-walk-2'];
-const OUTLINE_LIGHT = [[0, '#6c5140'], [.48, '#4a342e'], [1, '#302526']];
+const OUTLINE_LIGHT = [[0, '#6b5343'], [.48, '#4a3731'], [1, '#30262b']];
+const EYE = '#352727', EYE_LIGHT = '#fff1d3';
 
 // Match the warm upper-left daylight on the village and the cooler shadows under roof edges.
 function cloth(c, x0, y0, x1, y1, colour) {
   return linear(c, x0, y0, x1, y1, [
-    [0, mix(colour, '#ffdaad', .45)], [.23, mix(colour, '#f9dca2', .17)],
-    [.53, colour], [.80, mix(colour, '#324461', .24)], [1, mix(colour, '#273041', .57)],
+    [0, mix(colour, '#ffe3bb', .48)], [.22, mix(colour, '#f7dcab', .23)],
+    [.47, colour], [.75, mix(colour, '#344964', .23)], [1, mix(colour, '#242739', .58)],
   ]);
 }
+const materialEdge = colour => mix(INK, mix(colour, '#615064', .27), .28);
 function skin(c, x, y, size) {
-  return radial(c, x, y, size * 1.36, [[0, '#ffe3bd'], [.34, SKIN], [.73, '#eab291'], [1, '#b97d67']],
-    x - size * .32, y - size * .44);
+  return radial(c, x, y, size * 1.36, [[0, '#ffe9c7'], [.31, '#fbd4ad'], [.61, SKIN], [.86, '#e0a385'], [1, '#ad6d65']],
+    x - size * .35, y - size * .36);
 }
 function brass(c, x0, y0, x1, y1) {
-  return linear(c, x0, y0, x1, y1, [[0, '#fff0aa'], [.36, '#f5d273'], [.61, '#d79a45'], [1, '#8c572f']]);
+  return linear(c, x0, y0, x1, y1, [[0, '#fff0bd'], [.36, '#f3cf80'], [.61, '#cf9551'], [1, '#875a3c']]);
+}
+// A broad brow shadow and a rounded near cheek give the eyes readable planes at game size.
+function facePlanes(c, x, y, size) {
+  const browY = y - size * .40;
+  c.fillStyle = linear(c, x, browY - .5, x, browY + size * .24,
+    [[0, '#74483e47'], [.47, '#9b574043'], [1, '#a7634200']]);
+  c.fill(ellipse(x + size * .02, browY, size * .68, size * .24));
+  const cheekX = x - size * .35, cheekY = y + size * .22;
+  c.fillStyle = radial(c, cheekX, cheekY, size * .38,
+    [[0, '#ffedca97'], [.56, '#ffcba253'], [1, '#ed9f7500']]);
+  c.fill(ellipse(cheekX, cheekY, size * .36, size * .26, .18));
 }
 function boots(c, legs, sunlight) {
   for (const [x, y, h] of legs) {
-    part(c, rect(x, y, 3.6, h, 1.4), sunlight ? cloth(c, x, y, x + 3.6, y + h, PANTS) : PANTS, {depth: .9});
+    const edge = sunlight ? materialEdge('#625068') : undefined;
+    part(c, rect(x, y, 3.6, h, 1.4), sunlight ? cloth(c, x, y, x + 3.6, y + h, PANTS) : PANTS, {depth: .9, line: edge});
     const leather = sunlight ? linear(c, x, y + h - 2.6, x + 3.5, y + h + .4,
       [[0, '#977043'], [.43, BOOT], [.66, '#633f2a'], [1, '#2b251f']]) : BOOT;
     part(c, rect(x - .4, y + h - 2.6, 4.4, 3, 1.4), leather,
-      {depth: .8, gloss: rect(x, y + h - 2.3, 1.4, .8, .4), light: sunlight ? '#d19752a8' : undefined});
+      {depth: .8, gloss: rect(x, y + h - 2.3, 1.4, .8, .4), light: sunlight ? '#dfb888a8' : undefined, line: edge});
   }
 }
-function face(c, x, y, {side = false} = {}) {
+function face(c, x, y, {side = false, sunlight = false} = {}) {
+  const dark = sunlight ? EYE : INK, glint = sunlight ? EYE_LIGHT : '#fff';
   if (side) {
-    part(c, ellipse(x + 1.6, y + .6, .8, 1.1), INK, {line: false, shade: false});
-    c.fillStyle = '#fff'; c.fill(ellipse(x + 1.85, y + .2, .3, .35));
+    part(c, ellipse(x + 1.6, y + .6, .8, 1.1), dark, {line: false, shade: false});
+    c.fillStyle = glint; c.fill(ellipse(x + 1.85, y + .2, .3, .35));
     part(c, ellipse(x + 3.6, y + 2.6, .9, .7), '#ef9f86', {line: false, shade: false, alpha: .7});
     return;
   }
   for (const dx of [-2.1, 2.1]) {
-    part(c, ellipse(x + dx, y + .5, .82, 1.15), INK, {line: false, shade: false});
-    c.fillStyle = '#fff'; c.fill(ellipse(x + dx + .25, y + .05, .3, .36));
+    part(c, ellipse(x + dx, y + .5, .82, 1.15), dark, {line: false, shade: false});
+    c.fillStyle = glint; c.fill(ellipse(x + dx + .25, y + .05, .3, .36));
     part(c, ellipse(x + dx * 1.45, y + 2.4, 1, .65), '#ef9f86', {line: false, shade: false, alpha: .6});
   }
-  stroke(c, line([[x - 1, y + 2.9], [x, y + 3.4], [x + 1, y + 2.9]]), INK, .7);
+  stroke(c, line([[x - 1, y + 2.9], [x, y + 3.4], [x + 1, y + 2.9]]), dark, .7);
 }
 // A near cheek and ear sit opposite a short far cheek. The visible nose turns with the face plane.
 function quarterHead(c, x, y, scale = 1) {
   c.save(); c.translate(x, y); c.scale(scale, scale);
-  part(c, ellipse(-4.45, .9, 1.17, 1.33), '#eab28b', {depth: .65, width: .77});
+  const edge = materialEdge('#c89675');
+  part(c, ellipse(-4.45, .9, 1.17, 1.33), '#eab28b', {depth: .65, width: .77, line: edge});
   const head = poly([
     [-4.7, -2.42], [-1.4, -4.5], [2.65, -3.98], [4.42, -1.88], [4.48, .2], [5.12, 1.24],
     [4.21, 1.82], [3.55, 3.55], [1.16, 4.77], [-2.9, 4.03], [-4.66, 1.97],
   ], [1.18, 2.3, 2.15, 1.4, .5, .55, .45, 1.13, 1.5, 1.4, 1.1]);
-  part(c, head, skin(c, -.2, .05, 5.25), {depth: 1.3, shade: SKIN_DARK});
+  part(c, head, skin(c, -.2, .05, 5.25), {depth: 1.3, shade: SKIN_DARK, line: edge});
+  facePlanes(c, .03, .08, 4.35);
   part(c, poly([[-4.6, -2], [-2.23, -2.6], [-2.42, -.55], [-3.52, 1.5], [-4.65, .52]], .76),
-    '#7a4a2e', {depth: .6, width: .7});
+    '#7a4a2e', {depth: .6, width: .7, line: edge});
   part(c, ellipse(-1.62, 2.14, 1.08, .66), '#ef9f86', {line: false, shade: false, alpha: .7});
-  part(c, ellipse(-.79, .36, .82, 1.1), INK, {line: false, shade: false});
-  part(c, ellipse(2.88, .46, .55, .94), INK, {line: false, shade: false});
-  c.fillStyle = '#fff';
+  part(c, ellipse(-.79, .36, .82, 1.1), EYE, {line: false, shade: false});
+  part(c, ellipse(2.88, .46, .55, .94), EYE, {line: false, shade: false});
+  c.fillStyle = EYE_LIGHT;
   c.fill(ellipse(-.59, -.03, .3, .3));
   c.fill(ellipse(3.02, .13, .22, .27));
+  stroke(c, [[1.94, .97], [2.66, 1.17], [3.16, 1.45]], '#ffe1b9', .46, .8);
   stroke(c, [[2.59, 1.17], [3.56, 1.52], [2.91, 1.93]], '#b77561', .5, .82);
-  stroke(c, [[.23, 2.72], [1.29, 3.05], [2.63, 2.64]], INK, .65);
+  stroke(c, [[.23, 2.72], [1.29, 3.05], [2.63, 2.64]], EYE, .65);
   c.restore();
 }
 // The tricorn: a wide upturned brim, a rounded crown and a coloured band.
@@ -93,25 +111,28 @@ function hat(c, pal, x, y, view, sunlight, quarter = false) {
   const brim = poly(edge, [1.4, 2, 2, 1.4, 2, 2]);
   const crownOffset = quarter ? -.8 : 0;
   const crown = sunlight ? cloth(c, x - 3.8, y - 1, x + 3.4, y + 5, pal.hat) : pal.hat;
-  part(c, rect(x - 4.2 + crownOffset, y - 1.8, 8.4, 6.6, 3.4), crown, {depth: 1.4, gloss: ellipse(x - 1.8 + crownOffset, y + .3, 1.6, .9)});
-  part(c, rect(x - 4 + crownOffset, y + 1.6, 8, 1.7, .6), pal.band, {depth: .6, width: .8});
+  const rim = sunlight ? materialEdge(pal.hat) : undefined;
+  part(c, rect(x - 4.2 + crownOffset, y - 1.8, 8.4, 6.6, 3.4), crown,
+    {depth: 1.4, gloss: ellipse(x - 1.8 + crownOffset, y + .3, 1.6, .9), line: rim});
+  part(c, rect(x - 4 + crownOffset, y + 1.6, 8, 1.7, .6), pal.band, {depth: .6, width: .8, line: rim});
   const brimColour = mix(pal.hat, INK, .12);
   part(c, brim, sunlight ? cloth(c, x - 6.1, y + 1.5, x + 5, y + 6.2, brimColour) : brimColour,
-    {depth: 1.1, gloss: rect(x - 5, y + 3.4, 4, .8, .4), light: sunlight ? mix(brimColour, '#f7d6a3', .34) : undefined});
+    {depth: 1.1, gloss: rect(x - 5, y + 3.4, 4, .8, .4),
+      light: sunlight ? mix(brimColour, '#eacda7', .28) : undefined, line: rim});
   if (sunlight) {
     c.save(); c.clip(brim);
     const leftTip = view === '-side' ? .88 : -.28;
     const fold = quarter ? [[x - 8.2, y + leftTip], [x - 4.25, y + 3.26], [x + .5, y + 4.11], [x + 3.9, y + 3.56], [x + 8.15, y + .89]]
       : [[x - 8, y + leftTip], [x - 4.2, y + 3.4], [x, y + 3.9], [x + 4.4, y + 3.3], [x + 7.8, y + .36]];
     stroke(c, fold,
-      mix(pal.band, '#e0ac58', .62), .94);
-    stroke(c, [[x - 7.8, y + leftTip], [x - 4.1, y + 3.18], [x - .9, y + 3.58]], '#fff0b7', .42, .78);
+      mix(pal.band, '#d3a15d', .56), .94);
+    stroke(c, [[x - 7.8, y + leftTip], [x - 4.1, y + 3.18], [x - .9, y + 3.58]], '#ffe9ba', .42, .78);
     stroke(c, [[x - 5.7, y + 5.05], [x - 2, y + 5.56], [x + .2, y + 5.53], [x + 4.5, y + 5.15]],
       mix(brimColour, '#b5c6c5', .34), .35, .74);
     c.restore();
   }
   const badge = ellipse(x + (quarter ? 1.6 : 0), y + 4.4, 1.2, 1);
-  part(c, badge, sunlight ? cloth(c, x - 1, y + 3.3, x + 1, y + 5.4, pal.band) : pal.band, {width: .6, shade: false});
+  part(c, badge, sunlight ? cloth(c, x - 1, y + 3.3, x + 1, y + 5.4, pal.band) : pal.band, {width: .6, shade: false, line: rim});
 }
 function captainBody(c, pal, view, step, {armed = false, originalMaterial = false, quarter = false} = {}) {
   const cx = 12, back = view.startsWith('-back'), side = view === '-side', diagonal = view.endsWith('-diagonal');
@@ -129,9 +150,11 @@ function captainBody(c, pal, view, step, {armed = false, originalMaterial = fals
     c.save(); c.translate(x, y); c.rotate(angle);
     if (size !== 1) c.scale(size, size);
     const sleeve = cloth(c, -1.7, 1, 1.6, 6, pal.coat);
-    part(c, rect(-1.6, -.6, 3.2, 6.6, 1.6), sleeve);
+    const edge = materialEdge(pal.coat);
+    part(c, rect(-1.6, -.6, 3.2, 6.6, 1.6), sleeve, {line: edge});
     stroke(c, [[-1.16, 5.32], [1.14, 5.50]], '#ce9753', .57);
-    part(c, ellipse(0, 6.4, 1.6), skin(c, 0, 6.4, 1.6), {depth: .7, gloss: ellipse(-.4, 6, .59, .44), light: '#ffe1b9'});
+    part(c, ellipse(0, 6.4, 1.6), skin(c, 0, 6.4, 1.6),
+      {depth: .7, gloss: ellipse(-.4, 6, .59, .44), light: '#ffe6c4', line: edge});
     c.restore();
   };
   const swing = step === '-walk-1' ? .35 : step === '-walk-2' ? -.35 : 0;
@@ -144,28 +167,36 @@ function captainBody(c, pal, view, step, {armed = false, originalMaterial = fals
     : side ? poly([[cx - 3.6, 15], [cx + 3.4, 15], [cx + 4.4, 24.4], [cx - 5.6, 25]], [3, 3, 1.6, 1.6])
       : poly([[cx - 4.8, 15], [cx + 4.8, 15], [cx + 6.4, 25], [cx - 6.4, 25]], [3.2, 3.2, 1.8, 1.8]);
   const coatPaint = sunlight ? cloth(c, cx - 5, 15, cx + 5, 25, pal.coat) : pal.coat;
+  const coatEdge = sunlight ? materialEdge(pal.coat) : undefined;
   part(c, coat, coatPaint, {depth: 2.2, gloss: ellipse(cx - 2.6, 17.4, 1.3, 2.2),
-    light: sunlight ? mix(pal.coat, '#f8df9b', .42) : undefined});
+    light: sunlight ? mix(pal.coat, '#f4deb3', .34) : undefined, line: coatEdge});
   if (!back && !side) {
     const collar = quarter ? [[cx - .54, 15.29], [cx + 2.64, 15.23], [cx + 1.92, 19.65]]
       : [[cx - 2, 15.2], [cx + 2, 15.2], [cx, 19.6]];
-    part(c, poly(collar, .6), '#f6efe0', {depth: .5, width: .8});
+    part(c, poly(collar, .6), '#f6efe0', {depth: .5, width: .8, line: coatEdge});
     const button = cx + (quarter ? 3.2 : 2.4);
     for (const y of [19.8, 22.4]) part(c, ellipse(button, y, .62),
-      sunlight ? brass(c, cx + (quarter ? 2.7 : 1.9), y - .5, cx + (quarter ? 3.6 : 2.8), y + .6) : GOLD, {width: .6, shade: false});
+      sunlight ? brass(c, cx + (quarter ? 2.7 : 1.9), y - .5, cx + (quarter ? 3.6 : 2.8), y + .6) : GOLD,
+      {width: .6, shade: false, line: coatEdge});
   }
   if (back) stroke(c, line([[cx, 20.5], [cx, 25]]), mix(pal.coat, INK, .45), .8);
   const belt = quarter ? poly([[cx - 5.25, 20.1], [cx + 4.53, 20.47], [cx + 4.85, 21.72], [cx + 1.62, 22.26], [cx - 5.55, 21.8]], .65)
     : rect(side ? cx - 4 : cx - 5.4, 20.6, side ? 8 : 10.8, 1.9, .7);
-  part(c, belt, '#3a2a24', {depth: .5, width: .8});
+  part(c, belt, '#3a2a24', {depth: .5, width: .8, line: coatEdge});
   if (!back) {
     const buckleX = quarter ? cx + .4 : side ? cx + 1.2 : cx - 1.2;
     part(c, rect(buckleX, 20.3, 2.4, 2.5, .6), sunlight ? brass(c, buckleX, 20.3, buckleX + 2.4, 22.8) : GOLD,
-      {width: .6, shade: false});
+      {width: .6, shade: false, line: coatEdge});
     if (sunlight) part(c, rect(buckleX + .79, 21.18, .82, .55, .17), '#855530', {line: false, shade: false});
   }
   if (sunlight) {
     c.save(); c.clip(coat);
+    const fold = linear(c, cx + 1.2, 18.1, cx + 5.3, 23.7, [
+      [0, '#26344600'], [.58, '#27384d42'], [1, '#29263c8e'],
+    ]);
+    c.fillStyle = fold;
+    c.fill(poly([[cx + 2.15, 17.55], [cx + 3.86, 20.11], [cx + 4.68, 23.52],
+      [cx + 1.16, 24.25], [cx + 1.87, 22.56]], 1.1));
     stroke(c, side ? [[cx - 3.6, 23.6], [cx - 3.9, 25], [cx + .4, 24.9]]
       : [[cx - 5, 23.9], [cx - 3, 24.8], [cx + 3.7, 24.8]], mix(pal.band, '#c89452', .52), .62, .82);
     if (!back) stroke(c, [[cx - (side ? 1.2 : 2.6), 15.8], [cx - (side ? .2 : 1.3), 18.3]], '#ecbe70', .51, .88);
@@ -186,11 +217,15 @@ function captainBody(c, pal, view, step, {armed = false, originalMaterial = fals
   }
   const head = back ? (sunlight ? cloth(c, hx - 4.8, hy - 3.4, hx + 5.3, hy + 5.3, '#7a4a2e') : '#7a4a2e')
     : sunlight ? skin(c, hx, hy + .4, 5.5) : SKIN;
-  part(c, ellipse(hx, hy + .4, 5.5, 5.1), head, {depth: 1.6, shade: back ? undefined : SKIN_DARK});
+  const faceEdge = sunlight ? materialEdge('#bb8e74') : undefined;
+  part(c, ellipse(hx, hy + .4, 5.5, 5.1), head, {depth: 1.6, shade: back ? undefined : SKIN_DARK, line: faceEdge});
   if (!back) {
-    if (side) part(c, poly([[hx - 5.4, hy - 1.6], [hx - 1, hy - 2.6], [hx - 2.4, hy + 2.2], [hx - 5.2, hy + 3.4]], 1.4), '#7a4a2e', {depth: .8});
-    else for (const s of [-1, 1]) part(c, poly([[hx + s * 5.6, hy - 1.4], [hx + s * 3, hy - 2.4], [hx + s * 3.6, hy + 1.4], [hx + s * 5.4, hy + 2.6]], 1.2), '#7a4a2e', {depth: .6});
-    face(c, hx + (side || diagonal ? 1 : 0), hy + .4, {side});
+    if (sunlight) facePlanes(c, hx + (side ? 1 : .1), hy + .5, 4.4);
+    if (side) part(c, poly([[hx - 5.4, hy - 1.6], [hx - 1, hy - 2.6], [hx - 2.4, hy + 2.2], [hx - 5.2, hy + 3.4]], 1.4),
+      '#7a4a2e', {depth: .8, line: faceEdge});
+    else for (const s of [-1, 1]) part(c, poly([[hx + s * 5.6, hy - 1.4], [hx + s * 3, hy - 2.4], [hx + s * 3.6, hy + 1.4], [hx + s * 5.4, hy + 2.6]], 1.2),
+      '#7a4a2e', {depth: .6, line: faceEdge});
+    face(c, hx + (side || diagonal ? 1 : 0), hy + .4, {side, sunlight});
   }
   hat(c, pal, hx, hy - 7, view, sunlight);
 }
@@ -287,7 +322,9 @@ export function weaponPose(pal, weapon, firing, angle = null) {
       c.translate(-24 - (firing && weapon !== 'fire_bombs' ? .6 : 0), -18); draw(); c.restore();
     };
     const sleeve = ({shoulder, elbow, wrist}) => {
-      stroke(c, [shoulder, elbow, wrist], INK, 4.6); stroke(c, [shoulder, elbow, wrist], pal.coat, 3.1);
+      const [x, y] = shoulder, [endX, endY] = wrist;
+      stroke(c, [shoulder, elbow, wrist], materialEdge(pal.coat), 4.6);
+      stroke(c, [shoulder, elbow, wrist], cloth(c, x, y, endX, endY, pal.coat), 3.1);
     };
     const hand = point => part(c, ellipse(point[0], point[1], weapon === 'pistols' ? 1.1 : 1.35, 1.3), SKIN, {depth: .6});
     const pistol = hand => {
@@ -383,13 +420,14 @@ function crewFigure(kind) {
   return c => {
     c.outlineStops = OUTLINE_LIGHT;
     const cx = 8; shadow(c, cx, 29.3, 4.8, 1.4);
+    const shirtEdge = materialEdge(look.shirt);
     boots(c, [[cx - 3.4, 24, 5.4], [cx + .2, 24, 5.4]], true);
-    part(c, ellipse(cx + 3.75, 21.72, 1.0), skin(c, cx + 3.75, 21.72, 1), {depth: .45, width: .7});
+    part(c, ellipse(cx + 3.75, 21.72, 1.0), skin(c, cx + 3.75, 21.72, 1), {depth: .45, width: .7, line: shirtEdge});
     const shirt = poly([
       [cx - 3.83, 18.26], [cx - 2.36, 16.72], [cx + 2.89, 17.29], [cx + 3.37, 20.1],
       [cx + 3.83, 24.45], [cx + 1.5, 25.1], [cx - 4.06, 24.56],
     ], [1.2, 1.7, 1.5, 1.2, 1.1, .8, 1]);
-    part(c, shirt, cloth(c, cx - 3.2, 17, cx + 3.5, 25, look.shirt));
+    part(c, shirt, cloth(c, cx - 3.2, 17, cx + 3.5, 25, look.shirt), {line: shirtEdge});
     if (look.stripe) {
       const stripe = cloth(c, cx - 3.9, 19.2, cx + 3.9, 22.3, look.stripe);
       c.save(); c.clip(shirt); c.fillStyle = stripe;
@@ -401,7 +439,7 @@ function crewFigure(kind) {
     }
     if (kind === 'carpenter') {
       part(c, poly([[cx - 2.58, 19.8], [cx + 2.77, 20.18], [cx + 2.94, 24.84], [cx + .8, 25.4], [cx - 2.87, 24.9]], .85),
-        cloth(c, cx - 2.7, 20, cx + 2.5, 25.4, '#7a5236'), {depth: .8});
+        cloth(c, cx - 2.7, 20, cx + 2.5, 25.4, '#7a5236'), {depth: .8, line: shirtEdge});
       stroke(c, [[cx - 2.3, 21.5], [cx - 2.2, 24.4], [cx + 1.9, 24.4]], '#d39e68', .35, .78);
       part(c, rect(cx + 3.4, 18.6, 1.2, 6, .4), '#8a5a36', {width: .7});
       part(c, rect(cx + 2.2, 17.6, 3.6, 1.8, .5), linear(c, cx + 3, 17.6, cx + 3, 19.4,
@@ -409,20 +447,22 @@ function crewFigure(kind) {
     }
     if (kind === 'gunner') { part(c, rect(cx - 6.4, 13, 1.1, 13, .5), '#8a5a36', {width: .7}); part(c, ellipse(cx - 5.85, 12.6, 1.1, 1.3), '#3a2a24', {width: .7}); }
     part(c, rect(cx - 4.63, 17.57, 2.57, 4.65, 1.15),
-      cloth(c, cx - 4.63, 17.4, cx - 2.04, 22.3, look.shirt), {depth: .7, width: .75});
-    part(c, ellipse(cx - 3.83, 22.54, 1.35), skin(c, cx - 3.83, 22.54, 1.35), {depth: .5, width: .8});
+      cloth(c, cx - 4.63, 17.4, cx - 2.04, 22.3, look.shirt), {depth: .7, width: .75, line: shirtEdge});
+    part(c, ellipse(cx - 3.83, 22.54, 1.35), skin(c, cx - 3.83, 22.54, 1.35), {depth: .5, width: .8, line: shirtEdge});
     quarterHead(c, cx + .23, 12.56, .77);
     // Headwear: the gunner's bandana, the carpenter's cap, the lookout's cap with a spyglass.
     const cap = poly([
       [cx - 4.38, 11.57], [cx - 3.06, 8.2], [cx + 2.52, 7.92], [cx + 3.66, 10.35],
       [cx + 4.36, 11.02], [cx + 2.1, 11.61], [cx - 1.6, 11.48],
     ], [1.1, 2.05, 2.4, 1.3, .57, .9, 1.22]);
-    part(c, cap, cloth(c, cx - 3.5, 8, cx + 3.5, 11.4, look.cap), {depth: .9});
+    const capEdge = materialEdge(look.cap);
+    part(c, cap, cloth(c, cx - 3.5, 8, cx + 3.5, 11.4, look.cap), {depth: .9, line: capEdge});
     c.save(); c.clip(cap);
     stroke(c, [[cx - 3.2, 10.3], [cx - 1.9, 9.11], [cx + .4, 8.9]], mix(look.cap, '#fff1c1', .52), .4, .85);
     c.restore();
     if (kind === 'gunner') {
-      part(c, poly([[cx + 3.6, 10.4], [cx + 6.4, 11.6], [cx + 5, 13]], .6), look.cap, {depth: .4, width: .8});
+      part(c, poly([[cx + 3.6, 10.4], [cx + 6.4, 11.6], [cx + 5, 13]], .6),
+        look.cap, {depth: .4, width: .8, line: capEdge});
       part(c, rect(cx - 1.22, 9.72, 3.4, .84, .3), GOLD, {line: false, shade: false});
     }
     if (kind === 'lookout') {
@@ -439,20 +479,22 @@ function boarder(step = '', hit = false) {
     c.save();
     if (hit) { c.translate(cx, 29); c.rotate(-.18); c.translate(-cx, -29); }
     const lift = step === '-walk-1' ? 1 : step === '-walk-2' ? 2 : 0;
+    const shirtEdge = materialEdge('#a47e65');
+    const leatherEdge = materialEdge(BOOT);
     for (const [x, up] of [[cx - 4.2, lift === 1], [cx + .6, lift === 2]]) {
-      part(c, rect(x, 23.2 - (up ? 1.2 : 0), 3.6, 5.8, 1.2), '#2f2a3a', {depth: .8});
-      part(c, rect(x - .3, 26.6 - (up ? 1.2 : 0), 4.2, 2.6, 1.2), '#3a241c', {depth: .6});
+      part(c, rect(x, 23.2 - (up ? 1.2 : 0), 3.6, 5.8, 1.2), '#2f2a3a', {depth: .8, line: leatherEdge});
+      part(c, rect(x - .3, 26.6 - (up ? 1.2 : 0), 4.2, 2.6, 1.2), '#4a3025', {depth: .6, line: leatherEdge});
     }
     const shirt = poly([[cx - 5, 15.4], [cx + 5, 15.4], [cx + 5.8, 24.4], [cx - 5.8, 24.4]], [3, 3, 1.6, 1.6]);
     const canvasShirt = cloth(c, cx - 5, 15.4, cx + 5, 24.4, '#f4ece0');
-    part(c, shirt, canvasShirt, {depth: 1.8});
+    part(c, shirt, canvasShirt, {depth: 1.8, line: shirtEdge});
     c.save(); c.clip(shirt);
     const stripe = cloth(c, cx - 4.9, 17, cx + 5.5, 24, '#bb403a');
     for (const y of [17, 19.6, 22.2]) { c.fillStyle = stripe; c.fillRect(cx - 7, y, 14, 1.25); }
     stroke(c, [[cx - 4.1, 16.9], [cx - 3.7, 19.4], [cx - 3.1, 20.5]], '#fff3d1', .42, .7);
     c.restore();
-    stroke(c, shirt, INK, 1);
-    part(c, rect(cx - 5.6, 21.6, 11.2, 1.8, .6), '#2f2a3a', {depth: .4, width: .8});
+    stroke(c, shirt, shirtEdge, 1);
+    part(c, rect(cx - 5.6, 21.6, 11.2, 1.8, .6), '#392d39', {depth: .4, width: .8, line: shirtEdge});
     part(c, rect(cx - 1.05, 21.46, 2.1, 1.88, .55), brass(c, cx - .9, 21.4, cx + .9, 23.3), {line: false, shade: false});
     part(c, rect(cx - .45, 21.95, .9, .65, .19), '#79452f', {line: false, shade: false});
     // The cutlass arm up (walking and standing), dropped when hit, brought down forward on a hack.
@@ -460,29 +502,36 @@ function boarder(step = '', hit = false) {
     c.save(); c.translate(cx + 4.6, 16.6); c.rotate(raise);
     part(c, blade(), '#dfe6ea', {depth: .5, width: .8, gloss: rect(-.1, 7.4, .5, 5, .2)});
     part(c, rect(-1.9, 6.1, 3.8, 1.1, .5), GOLD, {width: .7, shade: false});
-    part(c, rect(-1.5, -.4, 3, 5.8, 1.5), cloth(c, -1.3, 0, 1.4, 5.4, '#f4ece0'), {depth: .8});
-    part(c, ellipse(0, 5.6, 1.5), skin(c, 0, 5.6, 1.5), {depth: .6});
+    const sleeveEdge = materialEdge('#a47e65');
+    part(c, rect(-1.5, -.4, 3, 5.8, 1.5), cloth(c, -1.3, 0, 1.4, 5.4, '#f4ece0'), {depth: .8, line: sleeveEdge});
+    part(c, ellipse(0, 5.6, 1.5), skin(c, 0, 5.6, 1.5), {depth: .6, line: sleeveEdge});
     c.restore();
     c.save(); c.translate(cx - 5, 16.6); c.rotate(.2);
-    part(c, rect(-1.5, -.4, 3, 5.8, 1.5), cloth(c, -1.3, 0, 1.4, 5.4, '#f4ece0'), {depth: .8});
-    part(c, ellipse(0, 5.6, 1.5), skin(c, 0, 5.6, 1.5), {depth: .6}); c.restore();
-    part(c, ellipse(cx, 11, 5.2, 4.9), skin(c, cx, 11, 5.2), {depth: 1.5, shade: SKIN_DARK});
+    part(c, rect(-1.5, -.4, 3, 5.8, 1.5), cloth(c, -1.3, 0, 1.4, 5.4, '#f4ece0'), {depth: .8, line: sleeveEdge});
+    part(c, ellipse(0, 5.6, 1.5), skin(c, 0, 5.6, 1.5), {depth: .6, line: sleeveEdge}); c.restore();
+    const faceEdge = materialEdge('#bd8b6e');
+    part(c, ellipse(cx, 11, 5.2, 4.9), skin(c, cx, 11, 5.2), {depth: 1.5, shade: SKIN_DARK, line: faceEdge});
+    facePlanes(c, cx, 11.2, 4.6);
     part(c, ellipse(cx, 14.2, 3.4, 1.6), '#6a4a3a', {line: false, shade: false, alpha: .35});
     if (hit) { stroke(c, line([[cx - 3, 10.4], [cx - 1.2, 11.6]]), INK, .8); stroke(c, line([[cx - 3, 11.6], [cx - 1.2, 10.4]]), INK, .8); }
-    else { part(c, ellipse(cx - 2, 11.2, .8, 1.1), INK, {line: false, shade: false}); c.fillStyle = '#fff'; c.fill(ellipse(cx - 1.75, 10.8, .28, .32)); }
-    part(c, ellipse(cx + 2.2, 11.2, 1.5, 1.3), INK, {line: false, shade: false});
-    stroke(c, line([[cx - 4.6, 8.8], [cx + 4.8, 12.6]]), INK, .55);
-    stroke(c, hit ? ellipse(cx, 14, 1, .8) : line([[cx - 1.4, 13.8], [cx + 1.2, 13.4]]), INK, .7);
+    else { part(c, ellipse(cx - 2, 11.2, .8, 1.1), EYE, {line: false, shade: false}); c.fillStyle = EYE_LIGHT; c.fill(ellipse(cx - 1.75, 10.8, .28, .32)); }
+    const patch = linear(c, cx + 1.3, 10.1, cx + 3.3, 12.3, [[0, '#5d4a43'], [.39, '#3f3430'], [1, '#271f22']]);
+    part(c, ellipse(cx + 2.2, 11.2, 1.5, 1.3), patch, {line: false, shade: false});
+    stroke(c, line([[cx - 4.6, 8.8], [cx + 4.8, 12.6]]), EYE, .55);
+    stroke(c, hit ? ellipse(cx, 14, 1, .8) : line([[cx - 1.4, 13.8], [cx + 1.2, 13.4]]), EYE, .7);
     // The bandana with white spots and its knot.
     const scarf = poly([[cx - 5.6, 9.6], [cx - 4.6, 5.6], [cx, 4.4], [cx + 4.6, 5.6], [cx + 5.6, 9.6]], [1, 2, 3, 2, 1]);
-    part(c, scarf, linear(c, cx - 5, 5, cx + 4, 9.9, [[0, '#ef8861'], [.37, '#d9513b'], [1, '#8d2b2c']]), {width: .9});
+    const scarfEdge = materialEdge('#c45d4a');
+    part(c, scarf, linear(c, cx - 5, 5, cx + 4, 9.9, [[0, '#f8a474'], [.39, '#d85841'], [1, '#872e38']]),
+      {width: .9, line: scarfEdge});
     c.save(); c.clip(scarf);
     stroke(c, [[cx - 4.6, 7.4], [cx - 2.8, 5.85], [cx + .1, 5.35]], '#ffc698', .52, .8);
     stroke(c, [[cx - 4.35, 9.15], [cx + .7, 8.98], [cx + 4.6, 9.34]], '#773030', .45, .7);
     c.fillStyle = '#fff4d9dc';
     for (const [x, y] of [[-2.6, 7.4], [.6, 6.2], [3, 8], [-.6, 8.6]]) c.fill(ellipse(cx + x, y, .6));
     c.restore();
-    part(c, poly([[cx - 5.2, 8.6], [cx - 8.4, 8], [cx - 7.8, 11], [cx - 5.4, 10]], .7), '#d33a35', {depth: .5, width: .8});
+    part(c, poly([[cx - 5.2, 8.6], [cx - 8.4, 8], [cx - 7.8, 11], [cx - 5.4, 10]], .7), '#c9443b',
+      {depth: .5, width: .8, line: scarfEdge});
     c.restore();
     if (hit) for (const [x, y] of [[cx - 7, 5], [cx + 7.5, 6.5]]) part(c, poly([[x, y - 1.6], [x + .5, y - .4], [x + 1.6, y], [x + .5, y + .4], [x, y + 1.6], [x - .5, y + .4], [x - 1.6, y], [x - .5, y - .4]], .2), '#fff3b0', {width: .6, shade: false});
   };
