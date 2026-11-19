@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import {expect, it} from 'vitest';
+import {defenseDisplayAnchors} from '../../src/island/defense-display.js';
 import {footprintOf} from '../../src/island/placement.js';
 import {ALL_SPOTS} from '../../src/island/spots.js';
 import {WALL_LANE_ROWS} from '../../src/island/wall-lanes.js';
@@ -38,7 +39,12 @@ it('raises rear and front terraces without entering the shore or existing defens
   }
   expect(highestRear).toBeGreaterThan(2.45);
   expect(highestFront).toBeGreaterThan(1.42);
-  for (const {id, x, z} of ALL_SPOTS) {
+  const coastalGuns = ALL_SPOTS.filter(spot => ['cannon_1', 'cannon_2', 'cannon_3', 'cannon_4'].includes(spot.id))
+    .map(spot => ({...spot, kind: 'cannon'}));
+  const inshore = defenseDisplayAnchors('home_islet', coastalGuns);
+  expect(inshore.size).toBe(4);
+  const paintedGuns = Array.from(inshore, ([id, point]) => ({id, ...point}));
+  for (const {id, x, z} of [...ALL_SPOTS, ...paintedGuns]) {
     const quarter = footprintOf(id) / 8;
     for (let column = -4; column <= 4; column++) for (let row = -4; row <= 4; row++) {
       const point = projectGround(x + column * quarter, z + row * quarter);
