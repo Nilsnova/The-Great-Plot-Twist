@@ -17,6 +17,7 @@ from pydantic import SecretStr
 from server.app import create_app
 from server.clock import utc_now
 from server.game.world_state import relit_check
+from server.market.binance import BINANCE_URL
 from server.market.exchange import market_from_settings
 from tools.authenticated_economy.application import local_settings
 from tools.authenticated_economy.config import load
@@ -29,7 +30,8 @@ class IncreasingQuoteTransport(httpx.AsyncBaseTransport):
         self.started = utc_now()
 
     async def handle_async_request(self, request: httpx.Request) -> httpx.Response:
-        if request.url.host != "api.binance.com" or not request.url.path.endswith("/ticker/price"):
+        if (request.url.host != httpx.URL(BINANCE_URL).host
+                or not request.url.path.endswith("/ticker/price")):
             raise RuntimeError("Only the declared external Binance quote boundary is replaced")
         symbols = json.loads(request.url.params.get("symbols", "[]"))
         elapsed = Decimal(str((utc_now() - self.started).total_seconds()))
