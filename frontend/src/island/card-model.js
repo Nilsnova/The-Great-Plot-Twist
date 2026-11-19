@@ -14,9 +14,11 @@ import {towerTreeModel} from './tree-model.js';
 import {nextWaveNumber} from './preparation-model.js';
 import {buildStructureRecoveryView} from './structure-recovery-model.js';
 import {isRetiredCaptainSkill, recoveryTechLine} from '../campaign/captain-repair-policy.js';
+import {cardFunds, canAffordCoins, exactCoinText, missingCoins} from './economy-view.js';
+import {declaresPersonalCaptain, engineerCommitmentLine, personalRespecReason, readPersonalCaptain} from './economy-captain.js';
 
 // Coins always read "🪙 120" through formatCoins (BUILD-PLAN 3.2); an unknown amount reads "🪙 ?".
-export const coinText = n => (Number.isSafeInteger(n) ? formatCoins(n) : '🪙 ?');
+export const coinText = n => (Number.isSafeInteger(n) ? formatCoins(n) : exactCoinText(n));
 const RECOVERY_HEALTH_KINDS = new Set(['wall', 'cannon', 'mortar', 'harpoon', 'culverin', 'swivel']);
 
 // The build card of one spot (docs/TOWER-DEFENSE.md §2, §5, §9). spot: the server's {id, kind, built,
@@ -43,20 +45,23 @@ const RECOVERY_HEALTH_KINDS = new Set(['wall', 'cannon', 'mortar', 'harpoon', 'c
 export function buildCardModel({spotId, kind, slot = null, spot = null, coins = null, visitor = false, ownerName = '',
   busy = false, message = '', unlocks = null, prices = null, point = false, campaign = null, battle = false, movable = false,
   treePicked = null, recoveryState = null, recoveryStatus = 'disabled', recoveryError = null, recoveryPending = false,
-  recoveryVersion = 0} = {}) {
+  recoveryVersion = 0, economy = undefined} = {}) {
+  const funds = cardFunds(economy, coins); coins = funds.coins;
+  const reserved = funds.shared && battle;
+  const loading = funds.shared ? 'Island treasury unavailable. Reload the island.' : 'Your coins are still loading.';
   const place = slot ?? (kind === 'cannon' || kind === 'mortar' || kind === 'harpoon' || kind === 'culverin' || kind === 'swivel' ? 'tower' : kind ?? 'wall');
   const built = spot?.built === true, standing = built ? spot.kind : null;
   const level = built ? (Number.isSafeInteger(spot.level) && spot.level > 0 ? spot.level : 1) : 0;
   const shown = standing ?? (place === 'tower' ? null : SLOT_KINDS[place]?.[0] ?? kind);
   const info = BUILDINGS[shown] ?? null;
   const allowed = k => (unlocks ? unlocks.levels[k] ?? 0 : maxLevel(k));
-  const enough = price => coins !== null && Number.isSafeInteger(price) && coins >= price;
-  const short = price => `Not enough 🪙: you need ${coinText(price - coins)} more.`;
+  const enough = price => !reserved && canAffordCoins(coins, price);
+  const short = price => reserved ? 'Between waves only.' : `Not enough 🪙: you need ${coinText(missingCoins(coins, price))} more.`;
   const model = {spotId, slot: place, title: info?.name ?? 'Tower spot', purpose: info?.line ?? (point ? 'Build a cannon or a mortar here.' : 'Build a cannon, a mortar or a harpoon tower here.'),
     mode: 'info', built, kind: shown, level, spec: built ? spot.spec ?? null : null, maxLevel: shown ? maxLevel(shown) : 0, pips: [], stats: '', choices: [], cost: '',
     button: '', disabled: true, reason: '', upgrade: null, soon: '', message, busy, skills: null, locked: false,
-    coins: coins === null ? '' : `You have ${coinText(coins)}`,
-    owner: point ? 'Paid by you · belongs to Pirate Point' : visitor ? `You pay · it stays on ${ownerName ? `${ownerName}'s` : 'this'} island` : '', hire: false,
+    coins: funds.line,
+    owner: funds.shared ? 'Paid from the island treasury' : point ? 'Paid by you · belongs to Pirate Point' : visitor ? `You pay · it stays on ${ownerName ? `${ownerName}'s` : 'this'} island` : '', hire: false,
     demolish: null, move: null, tree: null};
   if (shown && level > 0) {
     model.pips = Array.from({length: model.maxLevel}, (_, index) => index < level);
@@ -93,7 +98,7 @@ export function buildCardModel({spotId, kind, slot = null, spot = null, coins = 
         continue;
       }
       model.choices.push({kind: choice, name: BUILDINGS[choice].name, line: BUILDINGS[choice].line, price: coinText(price),
-        disabled: busy || !enough(price), reason: coins === null ? 'Your coins are still loading.' : enough(price) ? '' : short(price),
+        disabled: busy || !enough(price), reason: coins === null ? loading : enough(price) ? '' : short(price),
         busy: busy === choice});
     }
     return model;
@@ -104,7 +109,7 @@ export function buildCardModel({spotId, kind, slot = null, spot = null, coins = 
     model.button = busy ? 'Building…' : `Build · ${coinText(price)}`;
     if (allowed(shown) < 1) { model.mode = 'info'; model.button = ''; model.locked = true; model.soon = `${opensText(lockedWave(unlocks, {kind: shown}) ?? '?')}.`; return model; }
     if (busy) return model;
-    if (coins === null) model.reason = 'Your coins are still loading.';
+    if (coins === null) model.reason = loading;
     else if (!enough(price)) model.reason = short(price);
     else model.disabled = false;
     return model;
@@ -113,6 +118,7 @@ export function buildCardModel({spotId, kind, slot = null, spot = null, coins = 
   if (!point && campaign && BRANCH_BY_ID[shown]) model.skills = skillsOf(shown, spot, campaign, busy, coins, prices, recoveryVersion);
   // GAME-V3.md "Houses": a house keeps its loot and, from level 2, picks a role (free, changeable between waves).
   if (!point && shown === 'house') model.skills = rolesOf(spot, level, busy, recoveryVersion);
+  if (reserved && model.skills?.choices) model.skills.choices = model.skills.choices.map(choice => ({...choice, disabled: true, reason: 'Between waves only.'}));
   if (!point) model.demolish = {label: busy === 'demolish' ? 'Checking…' : 'Tear down', disabled: battle || !!busy,
     reason: battle ? 'You can tear it down between waves.' : ''};
   const recoveryRow = recoveryState?.recoveryVersion === 1
@@ -122,7 +128,7 @@ export function buildCardModel({spotId, kind, slot = null, spot = null, coins = 
     && (recoveryStatus === 'loading' || recoveryStatus === 'error'
       || (!!recoveryRow && recoveryRow.level !== level)
       || (recoveryVersion === 1 && (recoveryStatus !== 'ready' || !recoveryRow)));
-  const upgradeBlockedReason = recoveryUnavailable ? 'Wait until building health has loaded.'
+  const upgradeBlockedReason = reserved ? 'Between waves only.' : recoveryUnavailable ? 'Wait until building health has loaded.'
     : recoveryRow && recoveryState.recoveryVersion === 1
     ? recoveryState.repairWindow === 'reserved_wave' ? 'Upgrades are available between waves.'
       : recoveryRow.hpUnits < 1_000_000 ? 'Repair to full before an upgrade.' : ''
@@ -140,7 +146,7 @@ export function buildCardModel({spotId, kind, slot = null, spot = null, coins = 
   model.button = busy ? 'Upgrading…' : 'Upgrade';
   if (busy) return model;
   if (upgradeBlockedReason) model.reason = upgradeBlockedReason;
-  else if (coins === null) model.reason = 'Your coins are still loading.';
+  else if (coins === null) model.reason = loading;
   else if (!enough(price)) model.reason = short(price);
   else model.disabled = false;
   return model;
@@ -169,7 +175,7 @@ function skillChoice(kind, id, current, busy, coins, prices, recoveryVersion = 0
   const active = id === current, price = skillPrice(kind, id, prices), busyHere = busy === `spec:${id}`;
   let reason = '';
   if (!active && coins === null) reason = 'Coins loading';
-  else if (!active && coins < price) reason = `Need ${coinText(price - coins)}`; // what is still missing
+  else if (!active && !canAffordCoins(coins, price)) reason = `Need ${coinText(missingCoins(coins, price))}`;
   return {id, name: SPECS[id].name, line: recoveryTechLine(id, SPECS[id].line, recoveryVersion), active, capstone: isCapstone(id), price: active ? '' : coinText(price), cost: active ? 0 : price,
     reason, disabled: active || busyHere || reason !== '', busy: busyHere,
     label: `${SPECS[id].name}, ${active ? 'your skill' : `${coinText(price)}${reason ? `, ${reason}` : ''}`}`};
@@ -194,36 +200,48 @@ function rolesOf(spot, level, busy, recoveryVersion = 0) {
 }
 
 // The crew panel (§3): one row per crew member that is unlocked; the locked ones in `soon`.
-export function crewModel({crew = {}, coins = null, unlocks = null, busy = null, message = '', prices = null, recoveryVersion = 0} = {}) {
+export function crewModel({crew = {}, coins = null, unlocks = null, busy = null, message = '', prices = null, battle = false, economy = undefined, recoveryVersion = 0} = {}) {
+  const funds = cardFunds(economy, coins); coins = funds.coins;
   const rows = [], soon = [];
   for (const id of CREW_IDS) {
-    if (recoveryVersion === 1 && id === 'carpenter') continue;
+    if (recoveryVersion === 1 && id === 'carpenter' && !funds.shared) continue;
     const sent = prices?.crew?.[id], owned = Number.isSafeInteger(crew?.[id]) ? crew[id] : 0;
     const info = {...CREW[id], ...(Number.isSafeInteger(sent?.max) ? {max: sent.max} : {})};
     const price = Number.isSafeInteger(sent?.price) ? sent.price : info.price;
-    if (unlocks && !unlocks.crew[id]) { soon.push(`${info.name}: ${opensText(lockedWave(unlocks, {crew: id}) ?? '?')}`); continue; }
+    const locked = unlocks && !unlocks.crew[id];
+    if (locked && owned === 0) { soon.push(`${info.name}: ${opensText(lockedWave(unlocks, {crew: id}) ?? '?')}`); continue; }
     const full = owned >= info.max;
     const row = {id, name: info.name, line: info.line, price: coinText(price), owned: info.icon ? `${owned}/${info.max}` : `${owned} of ${info.max}`,
       button: busy === id ? 'Hiring…' : full ? 'Full' : 'Hire', disabled: true, reason: '', ...(info.icon ? {icon: info.icon} : {})};
-    if (info.icon) row.disabled = full || !!busy || coins === null || coins < price; // a compact tile (D052): no sentences
+    if (info.icon) row.disabled = full || !!busy || (funds.shared && battle) || !canAffordCoins(coins, price); // a compact tile (D052): no sentences
     else if (full) row.reason = info.max === 1 ? 'You have one.' : `You have ${info.max}, the most you can hire.`;
     else if (busy) row.reason = '';
-    else if (coins === null) row.reason = 'Your coins are still loading.';
-    else if (coins < price) row.reason = `Not enough 🪙: you need ${coinText(price - coins)} more.`;
+    else if (funds.shared && battle) row.reason = 'Between waves only.';
+    else if (coins === null) row.reason = funds.shared ? 'Island treasury unavailable. Reload the island.' : 'Your coins are still loading.';
+    else if (!canAffordCoins(coins, price)) row.reason = `Not enough 🪙: you need ${coinText(missingCoins(coins, price))} more.`;
     else row.disabled = false;
+    if (locked) { row.disabled = true; row.reason = opensText(lockedWave(unlocks, {crew: id}) ?? '?'); }
+    // Shared islands do not sell Carpenters; existing counts remain visible for save conversion.
+    if (funds.shared && id === 'carpenter') { row.disabled = true; row.button = 'Unavailable'; row.line = ''; row.reason = ''; }
     rows.push(row);
   }
-  return {title: 'Crew', lead: rows.length ? 'They help in every wave and stay with you.'
+  return {title: 'Crew', lead: rows.length ? funds.shared ? 'They help this island in every wave.' : 'They help in every wave and stay with you.'
     : `Crew members join after you win wave ${lockedWave(unlocks, {crew: 'gunner'})}.`,
-  rows, soon: soon.length ? soon.join(' · ') : '', message, coins: coins === null ? '' : `You have ${coinText(coins)}`};
+  rows, soon: soon.length ? soon.join(' · ') : '', message, coins: funds.line};
 }
 
 // The captain panel (§10): the musket's level and the next one.
-export function captainModel({captain = null, coins = null, unlocks = null, busy = false, message = ''} = {}) {
+export function captainModel({captain = null, coins = null, unlocks = null, busy = false, message = '', economy = undefined, points = null} = {}) {
   const level = Number.isSafeInteger(captain?.level) && captain.level > 0 ? captain.level : 1, next = level + 1;
   const model = {title: 'Your captain', level, badge: `⚔️ ${level}`, pips: Array.from({length: CAPTAIN_MAX}, (_, index) => index < level),
     stats: captainLine(level), hint: 'Tap a ship to fire your musket (F).', upgrade: null, button: '', disabled: true, reason: '', soon: '', message,
     coins: coins === null ? '' : `You have ${coinText(coins)}`};
+  if (economy !== undefined || declaresPersonalCaptain(captain)) {
+    model.coins = skillPointsText(points);
+    model.reason = readPersonalCaptain(captain) ? engineerCommitmentLine(captain) || 'Personal progress: win waves to develop your captain.'
+      : 'Captain progress unavailable. Reload the island.';
+    return model;
+  }
   if (level >= CAPTAIN_MAX) { model.reason = 'Highest level reached.'; return model; }
   if (unlocks && unlocks.captain < next) { model.soon = `Level ${next}: ${opensText(lockedWave(unlocks, {captain: next}) ?? '?')}.`; return model; }
   const price = Number.isSafeInteger(captain?.nextPrice) ? captain.nextPrice : CAPTAIN.price[level];
@@ -244,8 +262,10 @@ export function captainModel({captain = null, coins = null, unlocks = null, busy
 //               | 'closed' (its fork twin was chosen; greyed until a respec); node.reason says which.
 export const skillPointsText = points => `Skill points: ${Number.isSafeInteger(points) ? points : '?'}`;
 export function skillsModel({skills = null, wonWave = 0, picked = null, busy = null, message = '', coins = null, captainLevel = 1,
-  pickedRole = null, busyRole = null, respecAsk = false, busyRespec = false, battle = false, recoveryVersion = 0} = {}) {
-  const role = isRole(skills?.role) ? skills.role : null;
+  pickedRole = null, busyRole = null, respecAsk = false, busyRespec = false, battle = false, recoveryVersion = 0,
+  economy = undefined, respecBlockedReason = '', personalCaptain = null} = {}) {
+  const personal = economy !== undefined || declaresPersonalCaptain(personalCaptain), profile = personal ? readPersonalCaptain(personalCaptain) : null;
+  const role = personal ? profile?.role ?? null : isRole(skills?.role) ? skills.role : null;
   const known = readSkills(skills?.known ?? []).filter(id => SKILL_BY_ID[id]);
   const points = Number.isSafeInteger(skills?.points) ? skills.points : Math.max(0, pointsEarned(wonWave) - pointsSpent(known));
   const has = new Set(known), nameOf = id => SKILL_BY_ID[id].name;
@@ -264,7 +284,7 @@ export function skillsModel({skills = null, wonWave = 0, picked = null, busy = n
       label: `${skill.name}, tier ${skill.tier}${skill.excludes ? `, choose this or ${nameOf(skill.excludes)}` : ''}${skill.role ? `, ${ROLE_BY_ID[skill.role].name} only` : ''}, ${cost}, ${word}`};
   };
   const branches = BRANCHES.map(branch => {
-    const nodes = SKILLS.filter(skill => skill.branch === branch.id && !isRetiredCaptainSkill(skill.id, recoveryVersion)).map(nodeOf);
+    const nodes = SKILLS.filter(skill => skill.branch === branch.id && !isRetiredCaptainSkill(skill.id, personal ? 1 : recoveryVersion)).map(nodeOf);
     const tiers = [1, 2, 3, 4, 5].map(tier => ({tier, fork: nodes.filter(node => node.tier === tier).length > 1, nodes: nodes.filter(node => node.tier === tier)}));
     const owner = ROLES.find(item => item.branch === branch.id);
     // The tile the branch opens on (the phone shows one branch at a time): one you can learn, else a locked one, else its root.
@@ -276,31 +296,44 @@ export function skillsModel({skills = null, wonWave = 0, picked = null, busy = n
   const chosen = nodes.find(item => item.id === picked) ?? nodes.find(item => item.state === 'ready') ?? nodes.find(item => item.state === 'locked') ?? nodes[0];
   const detail = {...chosen, button: busy === chosen.id ? 'Learning…' : chosen.state === 'learned' ? 'Learned' : chosen.state === 'closed' ? 'Closed' : 'Learn',
     disabled: chosen.state !== 'ready' || busy !== null};
+  if (personal && (!profile || profile.assignmentWaveId !== null)) detail.disabled = true;
   // The role choice (once, from captain level 3).
   const roleLevel = Number.isSafeInteger(skills?.roleLevel) ? skills.roleLevel : ROLE_LEVEL;
   const level = Number.isSafeInteger(captainLevel) ? captainLevel : 1, locked = level < roleLevel;
   const choices = ROLES.map(item => ({id: item.id, name: item.name, icon: item.icon,
-    line: recoveryVersion === 1 && item.id === 'engineer' ? 'Buildings and upgrades cost you 10% less.' : item.line,
+    line: personal && item.id === 'engineer' ? 'Construction and building upgrades cost 10% less.'
+      : recoveryVersion === 1 && item.id === 'engineer' ? 'Buildings and upgrades cost you 10% less.' : item.line,
     branchName: BRANCHES.find(b => b.id === item.branch).name,
-    capstone: recoveryVersion === 1 && item.id === 'engineer' ? '' : SKILLS.find(skill => skill.role === item.id)?.name ?? '',
+    capstone: (personal || recoveryVersion === 1) && item.id === 'engineer' ? '' : SKILLS.find(skill => skill.role === item.id)?.name ?? '',
     state: role === item.id ? 'picked' : role ? 'closed' : locked ? 'locked' : 'ready',
-    label: `${item.name}, ${role === item.id ? 'your role' : role ? 'closed, respec to change' : locked ? `opens at captain level ${roleLevel}` : 'can pick'}`}));
+    label: `${item.name}, ${role === item.id ? 'your role' : personal && profile?.roleLockedReason === 'engineer_bound' ? 'locked until your next completed wave'
+      : role ? 'closed, respec to change' : locked ? `opens at captain level ${roleLevel}` : 'can pick'}`}));
   const shownRole = ROLE_BY_ID[pickedRole] ? pickedRole : role ?? 'medic', pickedChoice = choices.find(item => item.id === shownRole);
   const roleCard = {title: role ? `Your role: ${ROLE_BY_ID[role].name}` : 'Choose your role', current: role, icon: role ? ROLE_BY_ID[role].icon : '',
     lead: role ? 'Your role is set. A respec lets you choose again.' : locked ? `Reach captain level ${roleLevel} to choose a role.` : 'Pick one role. It decides which capstone you can reach, and your crew sees it.',
     choices, picked: shownRole, detail: {...pickedChoice, button: busyRole ? 'Choosing…' : role === shownRole ? 'Your role' : `Become ${/^[aeiou]/i.test(pickedChoice.name) ? 'an' : 'a'} ${pickedChoice.name}`,
       disabled: true},
     locked, level: roleLevel};
+  const commitmentLine = personal ? engineerCommitmentLine(profile) : '';
+  if (commitmentLine) roleCard.lead = commitmentLine;
   roleCard.detail.disabled = !!role || locked || !!busyRole;
-  // The respec: expensive, scaled with the captain level, server-checked.
-  const price = Number.isSafeInteger(skills?.respecPrice) && skills.respecPrice > 0 ? skills.respecPrice : respecPrice(level), nothing = !known.length && !role;
+  if (personal && (!profile || profile.roleLockedReason !== null)) {
+    roleCard.detail.disabled = true;
+    roleCard.locked = true;
+    roleCard.lead = commitmentLine || personalRespecReason(profile);
+  }
+  // Personal v1 respec is free; legacy prices remain scaled with Captain level. The server authorizes either.
+  const price = personal ? 0 : Number.isSafeInteger(skills?.respecPrice) && skills.respecPrice > 0 ? skills.respecPrice : respecPrice(level), nothing = !known.length && !role;
   const respec = {price, priceText: coinText(price), line: 'Forget every skill and your role, get your points back and choose again.',
-    button: busyRespec ? 'Resetting…' : respecAsk ? `Yes, reset for ${coinText(price)}` : `Respec · ${coinText(price)}`, ask: respecAsk && !nothing, disabled: busyRespec, reason: ''};
+    button: busyRespec ? 'Resetting…' : personal ? respecAsk ? 'Yes, reset skills' : 'Respec' : respecAsk ? `Yes, reset for ${coinText(price)}` : `Respec · ${coinText(price)}`,
+    ask: respecAsk && !nothing, disabled: busyRespec, reason: ''};
+  if (commitmentLine) respec.line = 'Reset skill choices and keep Engineer for your next wave.';
   if (nothing) { respec.disabled = true; respec.reason = 'Nothing to reset yet.'; }
-  else if (battle) { respec.disabled = true; respec.reason = 'Between waves only.'; } // the server refuses wave_running too
-  else if (coins === null) respec.reason = 'Your coins are still loading.';
-  else if (coins < price) { respec.disabled = true; respec.reason = `Not enough 🪙: you need ${coinText(price - coins)} more.`; }
-  return {title: 'Skills', recoveryVersion, points, pointsText: skillPointsText(points), line: 'Win new waves to earn skill points: one for every two waves.',
+  else if (!personal && battle) { respec.disabled = true; respec.reason = 'Between waves only.'; }
+  else if (personal && (respecBlockedReason || personalRespecReason(profile))) { respec.disabled = true; respec.reason = respecBlockedReason || personalRespecReason(profile); }
+  else if (!personal && coins === null) respec.reason = 'Your coins are still loading.';
+  else if (!personal && coins < price) { respec.disabled = true; respec.reason = `Not enough 🪙: you need ${coinText(price - coins)} more.`; }
+  return {title: 'Skills', recoveryVersion, points, pointsText: skillPointsText(points), line: personal ? 'Win personal wave milestones to earn skill points.' : 'Win new waves to earn skill points: one for every two waves.',
     branches, picked: chosen.id, detail, message, learned: known.length, role: roleCard, respec};
 }
 
@@ -378,7 +411,8 @@ export function harborModel({campaign = null} = {}) {
 //   branches: [{branch, name, tier, summary, folded, tiers: [{tier, state, fork, reason, nodes: [{id, name,
 //     line, state, note, button: {label, aria, disabled, reason, action: {branch, tier, choice, change}} | null}]}]}]
 //   tier state: done · next · locked;  node state: done · chosen · closed · open · locked
-export function techModel({campaign = null, coins = null, busy = null, message = '', battle = false, recoveryVersion = 0} = {}) {
+export function techModel({campaign = null, coins = null, busy = null, message = '', battle = false, recoveryVersion = 0, economy = undefined} = {}) {
+  const funds = cardFunds(economy, coins); coins = funds.coins;
   const open = isOpen(campaign, 'tech_hub');
   const sent = new Map((campaign?.research?.branches ?? []).map(item => [item?.branch, item]));
   const busyKey = action => `${action.branch}:${action.tier}:${action.choice ?? ''}`;
@@ -395,8 +429,8 @@ export function techModel({campaign = null, coins = null, busy = null, message =
       if (state.tier < tier - 1) return `Research tier ${tier - 1} first.`;
       if (battle) return 'Between waves only.'; // a tier-3 change would strip a capstone mid-wave; the server refuses too
       if (busy) return '';
-      if (coins === null) return 'Your coins are still loading.';
-      if (coins < price) return `Not enough 🪙: you need ${coinText(price - coins)} more.`;
+      if (coins === null) return funds.shared ? 'Island treasury unavailable. Reload the island.' : 'Your coins are still loading.';
+      if (!canAffordCoins(coins, price)) return `Not enough 🪙: you need ${coinText(missingCoins(coins, price))} more.`;
       return '';
     };
     const act = (action, label, aria) => {
@@ -440,12 +474,13 @@ export function techModel({campaign = null, coins = null, busy = null, message =
       prices: prices.map(coinText), tiers, next: !!step};
   });
   return {title: 'Tech hub', recoveryVersion, open, next, line: open ? 'Research a tower kind for the whole island. Tiers 2 and 3 are a choice: decide together.'
-    : lockedLine('tech_hub'), branches, message, coins: coins === null ? '' : `You have ${coinText(coins)}`};
+    : lockedLine('tech_hub'), branches, message, coins: funds.line};
 }
 
 // The wreck (after wave 6): members pay coins into her repair. D057: from wave 30 the repaired wreck is the
 // island's own boat: her card lists the boat's games (boat: GET /api/island/boat, null while it loads).
-export function wreckModel({campaign = null, coins = null, busy = null, message = '', boat = null, battle = false} = {}) {
+export function wreckModel({campaign = null, coins = null, busy = null, message = '', boat = null, battle = false, economy = undefined} = {}) {
+  const funds = cardFunds(economy, coins); coins = funds.coins;
   const open = isOpen(campaign, 'wreck'), wreck = campaign?.wreck ?? {paid: 0, goal: 500, gifts: [25, 100]};
   const paid = Math.min(wreck.goal, wreck.paid), left = wreck.goal - paid, done = left <= 0;
   const percent = Math.floor(paid / wreck.goal * 100);
@@ -453,14 +488,15 @@ export function wreckModel({campaign = null, coins = null, busy = null, message 
   const model = {title: sail.open ? 'Your ship' : 'The wreck', open, done, paid, goal: wreck.goal, percent, progress: `${coinText(paid)} of ${coinText(wreck.goal)}`,
     line: !open ? lockedLine('wreck') : sail.open ? 'Attempts are free. Each game pays only for your first round with at least 1 star after a won wave. Later rounds pay no extra coins for a higher score. Win another wave to earn again.'
       : done ? 'Her hull is whole again, thanks to the whole crew.' : 'Pay a few coins into her repair after every wave. Anyone in the game can help.',
-    gifts: [], message, coins: coins === null ? '' : `You have ${coinText(coins)}`, sail};
+    gifts: [], message, coins: funds.line, sail};
   if (!open || done) return model;
   model.gifts = wreck.gifts.map(amount => {
     const pay = Math.min(amount, left);
     const gift = {amount, label: busy === amount ? 'Paying…' : `Give ${coinText(pay)}`, disabled: true, reason: ''};
     if (busy) return gift;
-    if (coins === null) gift.reason = 'Your coins are still loading.';
-    else if (coins < pay) gift.reason = `Not enough 🪙: you need ${coinText(pay - coins)} more.`;
+    if (funds.shared && battle) gift.reason = 'Between waves only.';
+    else if (coins === null) gift.reason = funds.shared ? 'Island treasury unavailable. Reload the island.' : 'Your coins are still loading.';
+    else if (!canAffordCoins(coins, pay)) gift.reason = `Not enough 🪙: you need ${coinText(missingCoins(coins, pay))} more.`;
     else gift.disabled = false;
     return gift;
   });
