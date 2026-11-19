@@ -88,6 +88,8 @@ try{
  await seed('update public.islands set wave_best=1,next_wave=2,crew_gunner=4 where player_id=$1::uuid',[owner.actorId],
   'Explicit island wave-two/crew setup; personal won-wave progress is not changed');
  for(const actor of [engineer,offline,spectator,countdown])await ok(actor,'/api/games/join',{method:'POST',body:{code,actionUid:uid()}});
+ await ok(engineer,'/api/games',{method:'POST',body:{actionUid:uid()}});
+ const admittedB=await admit(engineer.actorId,{coins:200,runtimePath}),economyB=context(admittedB.currentEconomy);
  const proofs=new Map();for(const actor of env.clients)proofs.set(actor,await attach(actor,economy));
  await seed('update public.personal_captain_profiles set level=5 where player_id=$1::uuid',[engineer.actorId],
   'Acquired Captain-level eligibility fixture only; no personal win or skill point is granted');
@@ -103,8 +105,6 @@ try{
  const respec=await ok(engineer,'/api/captain/respec',{method:'POST',body:{progressionVersion:1,expectedRevision:current.captain.revision,actionUid:uid()}});
  assert.equal(respec.captain.role,'engineer');assert.equal(respec.captain.engineerCommitment.id,c1);
  const legacy=await api(engineer,'/api/island/role',{method:'POST',body:{role:'medic'}});assert.equal(legacy.status,409);
- const ownB=await ok(engineer,'/api/games',{method:'POST',body:{actionUid:uid()}});
- const admittedB=await admit(engineer.actorId,{coins:200,runtimePath}),economyB=context(admittedB.currentEconomy);
  for(const actor of [offline,spectator])await leave(actor,proofs.get(actor));
  for(const actor of [owner,engineer,countdown])await heartbeat(actor,proofs.get(actor));
  await ok(owner,'/api/island/session/settings',{method:'POST',body:{...proofs.get(owner),actionUid:uid(),countdownSeconds:10,autoNext:false}});
