@@ -195,18 +195,20 @@ void main(){
     if(uHomeCoast>.5){
       // Oblique swells have a broad lit face and a short, brighter rim on the sunward side.
       // A second wave distorts their lengths so they break into irregular strokes offshore.
-      vec2 current=vec2(.37*p.x-.18*p.y, .92*p.y+.22*p.x);
-      float phase=current.y+curl*2.5+sin(current.x-t*.24)*.78-t*.67;
+      vec2 current=vec2(.32*p.x-.16*p.y, 1.37*p.y+.25*p.x);
+      float phase=current.y+curl*1.85+sin(current.x-t*.24)*.92-t*.67;
       float front=sin(phase), slope=cos(phase);
       float field=smoothstep(.28,.72,coarse+curl*.17);
-      float face=smoothstep(.09,.92,front)*field;
+      float face=smoothstep(.40,.98,front)*field;
       float trough=smoothstep(.14,.99,-front)*field;
-      colour=mix(colour,uDeep,trough*.27*offshore);
-      colour=mix(colour,uLight,face*.34*offshore);
-      float rim=(1.0-band(abs(front-.76),.07))*smoothstep(.20,.76,slope);
-      float spray=smoothstep(.43,.75,ripple+curl*.15);
-      float nearLight=mix(.53,.20,smoothstep(2.2,13.0,d));
-      colour=mix(colour,mix(uStroke,uFoam,.39),rim*field*spray*nearLight*offshore);
+      colour=mix(colour,uDeep,trough*.14*offshore);
+      colour=mix(colour,uLight,face*.15*offshore);
+      float rim=(1.0-band(abs(front-.79),.075))*smoothstep(.08,.69,slope);
+      float spray=smoothstep(.31,.73,ripple+curl*.16);
+      float nearLight=mix(.53,.23,smoothstep(2.2,13.0,d));
+      colour=mix(colour,mix(uStroke,uFoam,.43),rim*field*spray*nearLight*offshore);
+      float reflection=(1.0-band(abs(front-.37),.048))*smoothstep(.24,.77,slope);
+      colour=mix(colour,uStroke,reflection*field*spray*.14*offshore);
       // Soft aqua lace under the near water, visible through the shelf rather than on the grass.
       float lace=(1.0-band(abs(cells-.66),.034))*smoothstep(.51,.76,coarse);
       float litShelf=smoothstep(.33,1.1,d)*(1.0-smoothstep(2.4,5.2,d))*smoothstep(.50,.78,broad);
