@@ -8,6 +8,7 @@ const shore = projectedCoastBounds(cliffProfile(surfaces.home_islet));
 const ISLAND_HEIGHT = shore.maxY - shore.minY + 4;
 const MAX_PORTRAIT_DEPTH = 2.28;
 const SHORE_MARGIN = 6;
+const LANDSCAPE_BUILDING_EMPHASIS = .72;
 
 export function portraitIslandFrame(camera, viewport) {
   if (!viewport || !Number.isFinite(viewport.width) || !Number.isFinite(viewport.height)
@@ -32,8 +33,8 @@ function overviewFrame(camera, viewport) {
   if (free < .24) return null;
   const portrait = portraitIslandFrame(camera, viewport);
   const pivot = (viewport.bottom - viewport.top) / viewport.height;
-  const strength = (portrait ? .24 : .18) * Math.min(1, free / .6);
-  return {portrait, pivot, strength, limit: free * .84, widthGain: portrait ? .94 : .95};
+  const strength = (portrait ? .24 : .23) * Math.min(1, free / .6);
+  return {portrait, pivot, strength, limit: free * .84, widthGain: portrait ? .94 : .91};
 }
 
 // Compose the fixed ground map toward a vanishing point. The near shore grows relative to the
@@ -70,7 +71,7 @@ export function createHomePortrait(camera) {
       if (lens) camera.setViewOffset(1, 1, (1 - lens.width) / 2, lens.offset, lens.width, lens.height);
       else camera.clearViewOffset();
       camera.userData.homePortraitDepth = lens ? lens.width / lens.height : 1;
-      camera.userData.homeOverviewEmphasis = lens ? 1 : frame ? .39 : 0;
+      camera.userData.homeOverviewEmphasis = lens ? 1 : frame ? LANDSCAPE_BUILDING_EMPHASIS : 0;
     },
     draw(scene, render) {
       if (!frame) return render();

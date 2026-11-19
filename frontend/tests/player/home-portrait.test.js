@@ -60,16 +60,17 @@ it('keeps upright proportions and restores the world transforms after drawing', 
   expect(tree.matrix.elements[5]).toBe(.7);
 });
 
-it('enlarges the authored building and keeps its attached details aligned without moving the foot', () => {
+it.each([375, 1280])('emphasizes the authored building and its details at width %s', width => {
   const camera = makeCamera(), portrait = createHomePortrait(camera), scene = new THREE.Scene();
   const house = new THREE.Mesh(), pip = new THREE.Mesh();
   house.userData = {ground: {x: 1, z: -4}, portraitSize: 1.46};
   house.position.set(2, 4, 0);
   pip.userData = {ground: {x: 1.5, z: -4}, portraitFollows: house};
   pip.position.set(2.5, 8, 0); scene.add(house, pip);
-  portrait.update(phone);
-  const depth = camera.userData.homePortraitDepth;
-  const size = portraitSpriteSize(house, depth);
+  portrait.update({...phone, width});
+  const {homePortraitDepth: depth, homeOverviewEmphasis: emphasis} = camera.userData;
+  const size = portraitSpriteSize(house, depth, emphasis);
+  expect(size).toBeGreaterThan(1.32);
   portrait.draw(scene, () => {
     expect(house.scale.x).toBeCloseTo(size);
     expect(house.scale.y * depth).toBeCloseTo(size);
