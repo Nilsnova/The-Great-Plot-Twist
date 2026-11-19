@@ -95,18 +95,54 @@ const PAVERS = [
   ['#ceb98f', '#9d8a67', '#e9d3a7'], ['#d7ba91', '#ac8c65', '#f1d2a8'],
   ['#d5c6a5', '#ac9b7e', '#efdfbf'], ['#ccbda0', '#9b8e76', '#e7d7b9'],
 ];
+const WEATHERED_PAVERS = [
+  ['#cebe94', '#a99b76', '#e1d3a9'], ['#d0c59e', '#ac9f7b', '#e6d9b3'],
+  ['#bdb087', '#9a8e6b', '#d8c79d'], ['#cab68b', '#a39773', '#decea5'],
+  ['#c5bda0', '#a49a7c', '#ddd3ae'], ['#c3b79b', '#a29475', '#dbd0ab'],
+];
 // Individual stone faces cut from the sandstone sheet. Its grouted seams never cross a drawn slab.
 const PAVER_FACES = [[.026, .024, .107, .047], [.193, .025, .112, .046], [.364, .029, .106, .047],
   [.563, .021, .106, .047], [.725, .025, .106, .047], [.875, .026, .094, .047]];
+
+// Measure distance inside the existing capsule strokes and octagonal aprons for edge wear.
+// This only colours the stone. The exact path mask still clips every pass.
+function pavingClearance(paths) {
+  const segments = [];
+  for (const [lane, points] of paths.lines.entries()) {
+    const radius = (paths.widths?.[lane] ?? PAVING_WIDTH) / 2;
+    for (let i = 1; i < points.length; i++) {
+      const [x, z] = points[i - 1], [endX, endZ] = points[i];
+      const y = z * LEGACY_DEPTH, dx = endX - x, dy = endZ * LEGACY_DEPTH - y;
+      segments.push({x, y, dx, dy, radius, lengthSquared: dx * dx + dy * dy || 1});
+    }
+  }
+  const aprons = paths.clearings.map(([x, z, radius]) => ({x, y: z * LEGACY_DEPTH, inset: radius * Math.cos(Math.PI / 8)}));
+  return (x, y) => {
+    let inside = -Infinity;
+    for (const lane of segments) {
+      const sx = x - lane.x, sy = y - lane.y;
+      const along = Math.max(0, Math.min(1, (sx * lane.dx + sy * lane.dy) / lane.lengthSquared));
+      inside = Math.max(inside, lane.radius - Math.hypot(sx - along * lane.dx, sy - along * lane.dy));
+    }
+    for (const apron of aprons) {
+      const dx = Math.abs(x - apron.x), dy = Math.abs(y - apron.y) / LEGACY_DEPTH;
+      const reach = Math.max(dx, dy, (dx + dy) * Math.SQRT1_2);
+      inside = Math.max(inside, (apron.inset - reach) * LEGACY_DEPTH);
+    }
+    return inside;
+  };
+}
 
 /** Dressed limestone blocks on the original paths and building clearings. */
 function paintPavers(c, paths, materials) {
   const bounds = {left: -SIZE.width / 2, top: -SIZE.height / 2, right: SIZE.width / 2, bottom: SIZE.height / 2};
   const random = seeded(18281);
   const sheet = materials && materialRect(materials, 'path');
+  const colours = sheet ? WEATHERED_PAVERS : PAVERS;
+  const clearance = sheet ? pavingClearance(paths) : null;
   c.save();
   c.clip(pathMaterialMask(paths, PAVING_WIDTH));
-  c.fillStyle = '#9e936f';
+  c.fillStyle = sheet ? '#91825568' : '#9e936f';
   c.fillRect(bounds.left, bounds.top, SIZE.width, SIZE.height);
   for (let row = bounds.top; row < bounds.bottom;) {
     // Canvas rows are compressed in depth, so these read as nearly square slabs in the world.
@@ -114,17 +150,26 @@ function paintPavers(c, paths, materials) {
     let left = bounds.left - random();
     while (left < bounds.right) {
       const width = .72 + random() * .19, joint = .012 + random() * .013;
-      const chip = .046 + random() * .076, drift = (random() - .5) * .037;
-      const pigment = Math.floor(random() * PAVERS.length);
-      const [face, edge, sun] = PAVERS[pigment];
+      const chip = .046 + random() * .076, drift = (random() - .5) * (sheet ? .08 : .037);
+      const pigment = Math.floor(random() * colours.length);
+      const [face, edge, sun] = colours[pigment];
       const x = left + joint, y = row + joint + drift;
       const right = left + width - joint, bottom = row + depth - joint + drift;
       const bevel = .053 + chip * .44;
       left += width;
-      if (!nearPath(paths, (x + right) / 2, (y + bottom) / (2 * LEGACY_DEPTH), 2.55)) continue;
+      const centreX = (x + right) / 2, centreY = (y + bottom) / 2;
+      if (clearance) {
+        const inside = clearance(centreX, centreY);
+        if (inside < -.58) continue;
+        // Alternating chipped and worn stones let the earth show through along the edges and ends.
+        const wear = .13 * Math.sin(centreX * 4.6 + centreY * 2.1) + .075 * Math.cos(centreY * 6 - centreX * 4);
+        const intact = Math.max(0, Math.min(1, (inside + wear + .18) / .64));
+        c.globalAlpha = .065 + .925 * intact * intact * (3 - 2 * intact);
+      } else if (!nearPath(paths, centreX, centreY / LEGACY_DEPTH, 2.55)) continue;
+      const opacity = c.globalAlpha;
 
       c.fillStyle = linear(c, x + .08, y + .05, right, bottom,
-        [[0, face], [.59, edge], [.86, edge], [1, '#79684f']]);
+        [[0, face], [.59, edge], [.86, edge], [1, sheet ? '#938261' : '#79684f']]);
       c.fill(poly([[x + chip, y], [right - .062, y + .009], [right, y + .056],
         [right - .018, bottom - .042], [right - .065, bottom], [x + .062, bottom - .005],
         [x, bottom - .061], [x + .012, y + .057]], .019));
@@ -136,13 +181,13 @@ function paintPavers(c, paths, materials) {
       c.fill(top);
       if (sheet) {
         const [sx, sy, sw, sh] = sheet, [u, v, w, h] = PAVER_FACES[pigment];
-        c.save(); c.clip(top); c.globalAlpha = .55; c.globalCompositeOperation = 'luminosity';
+        c.save(); c.clip(top); c.globalAlpha *= .36; c.globalCompositeOperation = 'luminosity';
         c.drawImage(materials, sx + u * sw, sy + v * sh, w * sw, h * sh, x, y, right - x, bottom - y);
         c.restore();
       }
       c.save(); c.clip(top);
       stroke(c, [[x + chip + .021, y + .019], [x + width * .53, y + .018], [right - .097, y + .027]],
-        '#fff0c996', .035);
+        sheet ? '#fff0c968' : '#fff0c996', sheet ? .025 : .035, opacity);
       c.fillStyle = '#78634a21';
       c.fill(poly([[x + width * .77, y + depth * .28], [right, y + depth * .37], [right, bottom - bevel],
         [x + width * .59, bottom - bevel]], .022));
@@ -151,7 +196,7 @@ function paintPavers(c, paths, materials) {
       c.fill(ellipse(x + width * .23, y + depth * .28, .024 + chip * .22, .012));
       if (chip > .104) {
         stroke(c, [[x + chip * .67, y + .046], [x + chip, y + .052], [x + chip * 1.26, y + .036]],
-          '#a58a653e', .012);
+          '#a58a653e', .012, opacity);
       }
     }
     row += depth;
@@ -180,9 +225,10 @@ function paintPlantedEdges(c, id, paths) {
   }
 }
 
-function paintWeatheredPathEdges(c, id, paths) {
+function paintWeatheredPathEdges(c, id, paths, materials) {
   const random = seeded(19357);
-  c.save(); c.clip(pathMaterialMask(paths, PAVING_WIDTH, .12));
+  const [moss, shade, light] = materials ? ['#7485479c', '#586e397a', '#b7bf745b'] : ['#748b44b5', '#51673885', '#c3c87e87'];
+  c.save(); c.clip(pathMaterialMask(paths, PAVING_WIDTH, materials ? 0 : .12));
   for (const [lane, points] of paths.lines.entries()) for (let i = 1; i < points.length; i++) {
     const [ax, az] = points[i - 1], [bx, bz] = points[i];
     const ay = az * LEGACY_DEPTH, by = bz * LEGACY_DEPTH;
@@ -190,15 +236,15 @@ function paintWeatheredPathEdges(c, id, paths) {
     if (length < .8) continue;
     const angle = Math.atan2(dy, dx);
     const sideX = -dy / length, sideY = dx / length;
-    const radius = (paths.widths[lane] ?? PAVING_WIDTH) / 2;
+    const radius = (paths.widths?.[lane] ?? PAVING_WIDTH) / 2;
     for (const side of [-1, 1]) for (let at = .35 + random() * 1.1; at < length - .36; at += .62 + random() * 1.36) {
-      const inset = radius - .04 - .085 * random();
+      const inset = radius - (materials ? .095 : .04) - .085 * random();
       const x = ax + dx * at / length + side * sideX * inset;
       const y = ay + dy * at / length + side * sideY * inset;
       if (surfaceClass(id, x, y / LEGACY_DEPTH) !== 2) continue;
-      c.fillStyle = random() > .35 ? '#748b44b5' : '#51673885';
+      c.fillStyle = random() > .35 ? moss : shade;
       c.fill(ellipse(x, y, .08 + .14 * random(), .04 + .067 * random(), angle));
-      c.fillStyle = '#c3c87e87';
+      c.fillStyle = light;
       c.fill(ellipse(x - .024, y - .035, .048 + .08 * random(), .035, angle));
     }
   }
@@ -245,15 +291,15 @@ export function paintGround(id, density = 28, materials = null) {
     c.save();
     c.clip(pathMaterialMask(paving, PAVING_WIDTH, .38));
     c.translate(.046, .085);
-    c.fillStyle = '#69583f20';
+    c.fillStyle = materials ? '#6f633918' : '#69583f20';
     c.fill(pathMaterialMask(paving, PAVING_WIDTH, .115));
     c.translate(-.027, -.035);
-    c.fillStyle = '#5c513e43';
+    c.fillStyle = materials ? '#66584231' : '#5c513e43';
     c.fill(pathMaterialMask(paving, PAVING_WIDTH, .057));
     c.restore();
     paintPlantedEdges(c, id, paths);
     paintPavers(c, paving, materials);
-    paintWeatheredPathEdges(c, id, paving);
+    paintWeatheredPathEdges(c, id, paving, materials);
     c.clip(pathMaterialMask(paths, PATH_WIDTH));
     c.globalAlpha = materials ? .25 : 1;
     c.fillStyle = '#d7b273'; for (let i = 0; i < 120; i++) { const points = paths.lines[Math.floor(random() * paths.lines.length)], t = random(), j = Math.floor(t * (points.length - 1)), f = t * (points.length - 1) - j;
