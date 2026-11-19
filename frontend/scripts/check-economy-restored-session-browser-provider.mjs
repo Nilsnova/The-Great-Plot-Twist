@@ -113,6 +113,23 @@ try{
  await page.reload({waitUntil:'domcontentloaded'});await page.waitForFunction(async()=>{const{session}=await import('/src/online/session.js');return session.isSignedIn();},null,{timeout:30000});
  let me;for(let attempt=0;attempt<60;attempt++){me=await api(page,'/api/me');if(me.status===200&&me.data.id===actor.actorId)break;(report.authRestoreTransientStatuses??=[]).push(me.status);await page.waitForTimeout(100);}
  assert.equal(me.status,200);assert.equal(me.data.id,actor.actorId);
+ let home;
+ if(process.argv.includes('--own-grace-only')){
+  const ownRead=await api(page,'/api/island');assert.equal(ownRead.status,200);const ownCode=ownRead.data.code;
+  await page.locator('#play').click({noWaitAfter:true});
+  let chosen=false;
+  for(let n=0;n<80&&!chosen;n++){
+   for(const name of ['Skip','Got it','Skip tutorial']){const b=page.getByRole('button',{name,exact:true}).first();if(await b.isVisible().catch(()=>false))await b.click({noWaitAfter:true,timeout:3000}).catch(e=>{if(e.name!=='TimeoutError')throw e;});}
+   const choices=await page.locator('.games-card[open] .games-pick').evaluateAll(nodes=>nodes.map(node=>node.dataset.code));
+   const index=choices.findIndex(code=>clean(code)===clean(ownCode));
+   if(index>=0){await page.locator('.games-card[open] .games-pick').nth(index).click({noWaitAfter:true});chosen=true;}
+   if(!chosen)await page.waitForTimeout(150);
+  }
+  assert.equal(chosen,true);await finishEntry(page);
+  await page.waitForFunction(id=>window.__island.island.session.proof()?.origin.islandOwner===id,actor.actorId,{timeout:30000});
+  home=await state();assert.equal(home.visiting,false);
+  note('same-actual-actor-direct-own-island-ordinary-continue',{layer:'fresh browser context with retained real Auth identity and physical own-island Continue choice',sameActualActor:true,noNewGrantOrSignup:true,freshOwnController:true,boundary:'Does not replay or claim to repair the prior document pending-departure queue'});await checkpoint();
+ }else{
  await finishEntry(page,{join:hostCode});
  const blank=await context.newPage();await blank.bringToFront();await page.bringToFront();await blank.close();
  await page.waitForFunction(()=>!!window.__island.island.session.proof(),null,{timeout:30000});
@@ -131,8 +148,9 @@ try{
  await page.waitForFunction(id=>window.__island.island.session.proof()?.origin.islandOwner===id,actor.actorId,{timeout:30000});
  for(let n=0;n<40&&!frames.slice(boundary).some(f=>f.direction==='sent'&&f.topic===oldTopic&&f.kind==='phx_leave');n++)await page.waitForTimeout(250);
  assert.ok(frames.slice(boundary).some(f=>f.direction==='sent'&&f.topic===oldTopic&&f.kind==='phx_leave'));
- const home=await state();assert.notEqual(home.place,before.place);assert.equal(home.proof.origin.islandOwner,actor.actorId);
+ home=await state();assert.notEqual(home.place,before.place);assert.equal(home.proof.origin.islandOwner,actor.actorId);
  note('normal-member-leave-clears-old-topic-and-ordinary-focus-adopts-own-session',{layer:'actual Menu Leave, production sail-home, normal guide dismissal/tab focus and post-click passive leave',oldTopicLeft:true,oldScopeCleared:true,freshOwnController:true,trigger:'normal Skip tutorial where shown, then actual tab focus; no SDK topic/session.ensure/island.load call'});await checkpoint();
+ }
  const own=await api(page,'/api/island');assert.equal(own.status,200);assert.equal(own.data.economy.treasury.availableCoins,'200');
  const proof={economy:economyAssertion(own.data.economy),sessionId:home.proof.sessionId,connectionGeneration:home.proof.connectionGeneration};
  const started=await api(page,'/api/waves/start',{method:'POST',body:{...proof,where:own.data.code,waveProtocol:2,actionUid:uid()}});assert.equal(started.status,200);const waveId=started.data.waveId;
