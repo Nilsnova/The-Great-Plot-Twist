@@ -71,8 +71,12 @@ it.each([
     await page.evaluate(() => window.__island.island.setBattle(false));
     await action.focus();
     await page.evaluate(() => window.__island.island.refreshDefended());
-    expect(await action.evaluate(button => document.activeElement === button)).toBe(true);
-    expect((await action.boundingBox()).height).toBeGreaterThanOrEqual(44);
+    const actionState = await action.evaluate(button => ({
+      focused: document.activeElement === button,
+      height: button.getBoundingClientRect().height,
+    }));
+    expect(actionState.focused).toBe(true);
+    expect(actionState.height).toBeGreaterThanOrEqual(44);
     await screenshot('overview');
     await press(action);
 
