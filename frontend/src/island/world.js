@@ -696,7 +696,8 @@ export function decorateIsland(place, ctx = {}) {
       refreshTowerColliders();
       notice.update();
       const selection = preview ? null : ctx.selection?.();
-      selectionBracket.show(selection, (ctx.camera?.userData.homePortraitDepth ?? 1) > 1);
+      const portraitDepth = ctx.camera?.userData.homePortraitDepth ?? 1;
+      selectionBracket.show(selection, portraitDepth > 1);
       wallConnections.select(state.battle || state.visitor ? null : selection?.spotId);
       let canopyTarget = null;
       if (selection?.kind && !state.battle && !state.visitor) {
@@ -704,7 +705,7 @@ export function decorateIsland(place, ctx = {}) {
           ? wallConnections.selectedCanopyTarget
           : shown.get(selection.spotId)?.meshes[0] ?? null;
       }
-      place.setSelectedCanopy?.(canopyTarget);
+      place.setSelectedCanopy?.(canopyTarget, portraitDepth);
       recoveryIndicators.update();
       const still = reduced();
       const coverage = selection && !state.battle && !state.visitor ? ctx.defenseRange?.() : null;

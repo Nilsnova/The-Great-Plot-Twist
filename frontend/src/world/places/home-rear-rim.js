@@ -193,14 +193,18 @@ export function createHomeRearRim(group, art) {
   rim.renderOrder = 3;
   rim.raycast = () => {};
   group.add(rim);
-  for (const {section, along, depth, asset, size} of TERRACE_PLANTS) {
-    if (!art?.[asset]) continue;
-    const a = sections[section], b = sections[section + 1];
-    const [x, y, z] = mixPoint(mixPoint(a.upperCap, b.upperCap, along), mixPoint(a.crest, b.crest, along), depth);
-    const plant = placeArt(group, art, asset, x, z, size);
-    plant.position.y += y;
-    plant.renderOrder = 4;
-    plant.raycast = () => {};
+  if (art) {
+    const planting = new THREE.Group();
+    planting.name = 'home-terrace-planting';
+    group.add(planting);
+    for (const {section, along, depth, asset, size} of TERRACE_PLANTS) {
+      const a = sections[section], b = sections[section + 1];
+      const [x, y, z] = mixPoint(mixPoint(a.upperCap, b.upperCap, along), mixPoint(a.crest, b.crest, along), depth);
+      const plant = placeArt(planting, art, asset, x, z, size);
+      plant.position.y += y;
+      plant.renderOrder = 4;
+      plant.raycast = () => {};
+    }
   }
   return rim;
 }
