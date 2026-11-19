@@ -19,7 +19,7 @@ from server.clock import utc_now
 from server.game.world_state import relit_check
 from server.market.binance import BINANCE_URL
 from server.market.exchange import market_from_settings
-from tools.authenticated_economy.application import local_settings
+from server.settings import load_settings
 from tools.authenticated_economy.config import load
 
 
@@ -66,7 +66,13 @@ def main() -> None:
     token_file.write_text(token)
     token_file.chmod(0o600)
     os.environ["SSL_CERT_FILE"] = runtime["caFile"]
-    base_settings = local_settings(runtime)
+    base_settings = load_settings({
+        "APP_ENV": "local", "SUPABASE_URL": runtime["providerUrl"],
+        "SUPABASE_PUBLISHABLE_KEY": runtime["anonKey"],
+        "SUPABASE_SECRET_KEY": runtime["serviceKey"], "AUTH_PROVIDERS": "email",
+        "FEATURE_FLAGS": "islands,live_presence,sign_in,structure_recovery,arsenal,market,sports,arena,demo",
+        "DEMO_MODE": "false",
+    })
     settings = replace(base_settings, flags={**base_settings.flags, "demo": True},
                        cron_secret=SecretStr(token))
     if settings.demo_mode:
