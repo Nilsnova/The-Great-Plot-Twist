@@ -4,9 +4,9 @@ import {APPROACH_DEPTH, CLIFF_DEPTH, cliffProfile} from '../../art/coast-cliffs.
 import {groundProjectionGlsl, LEGACY_DEPTH, projectGround} from '../projection.js';
 import {surfaces} from './surfaces.js';
 
-const STONES = ['#c9a176', '#dbb784', '#c1a07b', '#b59067', '#cea87b', '#b2a084'].map(color => new THREE.Color(color));
-const BEDROCK = new THREE.Color('#6c5642');
-const OUTCROP = new THREE.Color('#b9ad94');
+const STONES = ['#c9a479', '#d6b483', '#c0a180', '#b58f67', '#cda979', '#b2a087'].map(color => new THREE.Color(color));
+const BEDROCK = new THREE.Color('#725a43');
+const OUTCROP = new THREE.Color('#b8a78b');
 const SUBMERGED_STONE = new THREE.Color('#66887c');
 const TURF = new THREE.Color('#91b949');
 const BLOCK_WIDTHS = [3.30, 4.60, 3.85, 2.95, 4.95, 3.57, 4.17];
@@ -100,19 +100,25 @@ export const weatheredSandstoneGlsl = /* glsl */`
   vec3 weatheredSandstone(vec3 base, vec2 point, vec2 cut, float face) {
     vec3 bed = sandstoneGrain(point * vec2(.85, 1.60));
     vec3 dust = sandstoneGrain(point * vec2(5.6, 8.8) + vec2(.73, .62));
-    float weathering = (bed.x - .5) * .21 + (dust.x - .5) * .11;
+    float weathering = (bed.x - .5) * .29 + (dust.x - .5) * .14;
     float pore = dot(dust.yz, vec2(-.031, .045));
     vec2 bevel = (cut - .5) * 2.0 + (vec2(bed.x, dust.x) - .5) * .11;
     vec2 curve = bevel * (.28 + .72 * bevel * bevel);
     float sun = dot(curve, vec2(-.21, .24));
     float shadow = smoothstep(.55, 1.01, -bevel.y);
     // Rounded faces catch a wide highlight. Weathered beds leave a shallow broken line.
-    float level = point.y * 1.24 + point.x * .075 + bed.x * .27;
-    float seam = abs(fract(level) - .43);
+    float level = point.y * 1.37 + point.x * .087 + bed.x * .29;
+    float stratum = fract(level);
+    float seam = abs(stratum - .43);
     float edge = min(.24, fwidth(level));
-    float layer = (1.0 - smoothstep(.018, .105 + edge, seam)) * smoothstep(.28, .68, bed.x);
-    vec3 finish = base * (1.02 + weathering + pore - .095 * layer + face * (sun - .16 * shadow));
-    return mix(finish, finish * vec3(1.15, 1.041, .94), face * max(0.0, sun) * 1.65);
+    float fractured = smoothstep(.27, .69, bed.x * .78 + dust.x * .22);
+    float layer = (1.0 - smoothstep(.017, .093 + edge, seam)) * fractured;
+    float bedRim = smoothstep(.44, .52, stratum) * (1.0 - smoothstep(.56, .735, stratum)) * fractured;
+    float iron = smoothstep(.27, .67, bed.x + .16 * bedRim);
+    vec3 pigment = base * mix(vec3(.942, .979, 1.017), vec3(1.09, 1.02, .901), iron);
+    vec3 finish = pigment * (1.024 + weathering + pore + .12 * bedRim - .13 * layer
+      + face * (sun - .16 * shadow));
+    return mix(finish, finish * vec3(1.13, 1.04, .947), face * max(0.0, sun) * 1.54);
   }
 `;
 
@@ -156,8 +162,8 @@ function homeCliffGeometry(rows = cliffProfile(surface)) {
       cuts.push(cut?.[i][0] ?? 0, cut?.[i][1] ?? 0, cut ? 1 : 0);
     }
   }
-  function panel(a, b, c, d, tint, upper, lower, from, to, bias = 0, region = 0, cut) {
-    const sun = (sunlight(a, b, c) + sunlight(a, c, d)) / 2;
+  function panel(a, b, c, d, tint, upper, lower, from, to, bias = 0, region = 0, cut, bedLight) {
+    const sun = bedLight ?? (sunlight(a, b, c) + sunlight(a, c, d)) / 2;
     const [left, right] = cut ?? [];
     triangle(a, b, c, tint, [upper, upper, lower], bias, [from, from, to], region, sun,
       cut && [[left, 1 - from], [right, 1 - from], [right, 1 - to]]);
@@ -256,15 +262,17 @@ function homeCliffGeometry(rows = cliffProfile(surface)) {
       const middle = (start + end) / 2;
       const rockDepth = THREE.MathUtils.lerp(rows[Math.floor(middle)].depth, rows[Math.ceil(middle)].depth, middle % 1);
       const sculpted = rockDepth > 1.45 && end - start > 2.15;
-      const seam = sculpted ? pigment.clone().lerp(BEDROCK, .28 + .30 * THREE.MathUtils.smoothstep(rockDepth, 1.45, 2.74)) : pigment;
+      const seam = sculpted ? pigment.clone().lerp(BEDROCK, .21 + .20 * THREE.MathUtils.smoothstep(rockDepth, 1.45, 2.74)) : pigment;
       const grid = face.map((_, level) => across.map((_, side) => point(level, side)));
+      // The recess is continuous behind the sculpted faces. Share light across its narrow seams.
+      const bedLight = sculpted ? sunlight(grid[1][1], grid[1][2], grid[2][2]) * .72 : undefined;
       for (let level = 0; level < face.length - 1; level++) {
         const [from, , upper] = face[level], [to, , lower] = face[level + 1];
         for (let side = 0; side < across.length - 1; side++) {
-          const tone = [.04, .018, -.21][side];
+          const tone = [.04, .018, -.105][side];
           panel(grid[level][side], grid[level][side + 1], grid[level + 1][side + 1], grid[level + 1][side],
             seam, upper + tone, lower + tone, from, to, sculpted ? -.53 : 0, 0,
-            sculpted ? undefined : [across[side], across[side + 1]]);
+            sculpted ? undefined : [across[side], across[side + 1]], bedLight);
         }
       }
       if (sculpted) carveColumn(grid, across, face.map(([drop]) => drop), {rockDepth, block, span: end - start, turn, bevel});
@@ -349,19 +357,27 @@ function homeCliffGeometry(rows = cliffProfile(surface)) {
     const rim = rings.map(({scale, level, lean}) => outline.map(([arc, reach]) =>
       stoneVertex(rows, sample + (arc * scale + lean) * radius,
         foot - height * (level + level * .079 * reach) / coastDepth, Math.max(.035, inset + reach * scale))));
-    for (let ring = 0; ring < rim.length - 1; ring++) {
-      const {highlight: upper} = rings[ring], {highlight: lower} = rings[ring + 1];
+    const levels = rim.map((rock, i) => rock.map(point => ({point,
+      depth: foot * (1 - rings[i].level * .62), grade: rings[i].highlight})));
+    const facets = [];
+    for (let ring = 0; ring < levels.length - 1; ring++) {
+      const upper = levels[ring], lower = levels[ring + 1];
       for (let edge = 0; edge < outline.length; edge++) {
         const next = (edge + 1) % outline.length;
-        panel(rim[ring][edge], rim[ring][next], rim[ring + 1][next], rim[ring + 1][edge],
-          pigment, upper, lower, foot * (1 - rings[ring].level * .62), foot * (1 - rings[ring + 1].level * .62), bias, region);
+        facets.push([upper[edge], upper[next], lower[next]], [upper[edge], lower[next], lower[edge]]);
       }
     }
-    const peak = stoneVertex(rows, sample - .13 * radius, foot - height / coastDepth, inset + .11);
-    const crown = rim[rim.length - 1];
+    const peak = {point: stoneVertex(rows, sample - .13 * radius, foot - height / coastDepth, inset + .11),
+      depth: crownDepth, grade: .245};
+    const crown = levels.at(-1);
     for (let edge = 0; edge < outline.length; edge++) {
-      triangle(crown[edge], crown[(edge + 1) % outline.length], peak, pigment, [.18, .19, .25], bias,
-        [crownDepth, crownDepth, crownDepth], region);
+      facets.push([crown[edge], crown[(edge + 1) % outline.length], peak]);
+    }
+    const daylight = averageStoneLight(facets, corner => corner.point, sunlight);
+    for (const facet of facets) {
+      const [a, b, c] = facet.map(corner => corner.point);
+      const tones = facet.map(corner => corner.grade * .89 + daylight.get(corner) * .72);
+      triangle(a, b, c, pigment, tones, bias, facet.map(corner => corner.depth), region, 0);
     }
   }
 
