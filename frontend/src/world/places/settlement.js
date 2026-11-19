@@ -16,6 +16,7 @@ import { makeMooringRope } from './mooring.js';
 import {projectGround} from '../projection.js';
 import {createHomeRelief} from './home-relief.js';
 import {createHomeRearRim} from './home-rear-rim.js';
+import {createHomeLanding} from './home-landing.js';
 
 // Compose all art, colliders and cleanup under one place root for predictable travel disposal.
 export async function createSettlement(ctx) {
@@ -48,6 +49,7 @@ export async function createSettlement(ctx) {
     if (id === 'home_islet') {
       createHomeRelief(group, ground.material.map);
       createHomeRearRim(group, art);
+      createHomeLanding(group);
       createGroundShadows(group, trees.map(([x, z]) => {
         const scale = x === -13 && z === -12 ? .64 : 1;
         return {x: x + .55 * scale, z: z + .7 * scale, width: 1.6 * scale, depth: 1.4 * scale,
