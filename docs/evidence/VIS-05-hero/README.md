@@ -81,3 +81,7 @@ explain-back questions.
 ## 19 November Cabin and Arsenal revision
 
 The active [Cabin and Arsenal source](../../../frontend/public/village/home-fixed-v2.png) uses the 19 November Home Island concept for perspective, materials and lighting. The [source report](fixed-buildings-v2.json) records the exact OpenAI image generation prompt, checked alpha, measured crops and ground feet. The [compiler receipt](fixed-bake-v2.json) covers the unchanged Cabin, Arsenal and Tech Hub frame dimensions at 4×, 2× and 1.5×. The Tech Hub keeps its original authored source. The Home art ships through the two existing normalized WebP sheets.
+
+## 19 November Heart and Bell revision
+
+The [Heart and Harbor Bell source](../../../frontend/public/village/home-heart-v2.png) includes the intact pavilion, cracked pavilion, low rubble and open bell arch. The [source report](heart-bell-v2.json) preserves the OpenAI image generation prompt and measures the same alpha-clear rectangular opening under the intact and damaged pavilion. Both have a fully transparent witness region. The [native compiler receipt](heart-bell-bake-v2.json) records normalized artwork at the existing frame sizes and scale. The watchtower artwork uses its original source and frame definitions.
