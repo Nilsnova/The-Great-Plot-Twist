@@ -31,7 +31,7 @@ it('keeps the projected terraces behind the land boundary and outside the existi
       highest = Math.max(highest, y - at.y);
       return {x, y};
     });
-    if (terraceMaterial.getW(i) === 1) triangles.push(points);
+    if (terraceMaterial.getZ(i) >= 0) triangles.push(points);
   }
   expect(highest).toBeGreaterThan(1.25);
   for (const {id, x, z} of ALL_SPOTS) {

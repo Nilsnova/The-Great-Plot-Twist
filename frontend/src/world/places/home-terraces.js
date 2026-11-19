@@ -12,7 +12,7 @@ const BANKS = [
   [145, 154, .805, 1.60], [159, 171, .804, 1.49],
 ];
 const STONE = ['#b39774', '#c3a47d', '#ad8968', '#c8a17a'].map(hex => new THREE.Color(hex));
-const SOIL = new THREE.Color('#655541'), TURF = new THREE.Color('#8aae46');
+const SOIL = new THREE.Color('#847058'), TURF = new THREE.Color('#8aae46');
 const SHADOW = new THREE.Color('#37462c');
 const SUN = new THREE.Vector3(-.56, .76, -.34).normalize();
 const STEP = .5;
@@ -20,8 +20,8 @@ const STEP = .5;
 // tops are broad while the two stepped sandstone courses are steep and visibly beveled.
 const PROFILE = [
   [0, 0, -.12], [.02, .06, -.26], [.055, .22, -.08], [.07, .44, .07],
-  [.11, .52, .19], [.16, .56, -.05], [.40, .56, .17], [.435, .57, -.05],
-  [.47, .76, -.06], [.49, .93, .15], [.55, 1, .16], [.94, .94, .02], [1, .78, -.12],
+  [.11, .52, .19], [.16, .56, -.05], [.40, .56, .12], [.435, .60, .02],
+  [.47, .76, .06], [.49, .93, .15], [.55, 1, .16], [.94, .94, .02], [1, .78, -.12],
 ];
 
 function onTop(x, y) {
@@ -43,21 +43,22 @@ function shelfPoint(row, front, taper, rise, radius, elevation) {
 export function createHomeTerraces(root, coastArt) {
   const coast = cliffProfile(COAST), positions = [], colors = [], materials = [];
   const normal = new THREE.Vector3(), edge = new THREE.Vector3();
-  function face(a, b, c, d, tint, lightA, lightB, grass = 0, opacity = [1, 1]) {
+  function face(a, b, c, d, tint, lightA, lightB, grass = 0, opacity = [1, 1, 1, 1]) {
     normal.subVectors(b, a).cross(edge.subVectors(d, a)).normalize();
     // Cross-sections progress clockwise and are authored from the inland foot to the far edge.
     if (normal.y < 0) normal.negate();
     const sun = .83 + .29 * Math.max(-.46, normal.dot(SUN));
-    for (const [p, row] of [[a, 0], [b, 0], [c, 1], [a, 0], [c, 1], [d, 1]]) {
-      const ground = projectGround(p.x, p.z), light = sun + (row ? lightB : lightA);
+    for (const [p, corner] of [[a, 0], [b, 1], [c, 2], [a, 0], [c, 2], [d, 3]]) {
+      const ground = projectGround(p.x, p.z), light = sun + (corner < 2 ? lightA : lightB);
       positions.push(ground.x, ground.y + p.y, p.z * .03 + p.y * .09);
       colors.push(tint.r * light, tint.g * light, tint.b * light);
-      materials.push(p.x, p.z, grass, opacity[row]);
+      materials.push(p.x, p.z, grass, opacity[corner]);
     }
   }
 
   for (const [first, last, front, height] of BANKS) {
     const width = last - first;
+    const edgeOpacity = sample => THREE.MathUtils.smoothstep(Math.min(sample - first, last - sample), 0, 1.65);
     const shape = (sample, radius, elevation) => {
       const t = (sample - first) / width, shoulder = Math.min(1, t * 4.1, (1 - t) * 4.7);
       const taper = shoulder * shoulder * (3 - 2 * shoulder);
@@ -72,21 +73,27 @@ export function createHomeTerraces(root, coastArt) {
     };
     for (let i = first; i < last; i += STEP) {
       face(shape(i, -.17, 0), shape(i + STEP, -.17, 0), shape(i + STEP, .15, 0), shape(i, .15, 0),
-        SHADOW, 0, 0, 0, [0, .29]);
+        SHADOW, 0, 0, -1, [0, 0, edgeOpacity(i + STEP) * .29, edgeOpacity(i) * .29]);
     }
     for (let layer = PROFILE.length - 2; layer >= 0; layer--) {
       const [inner, high, innerTone] = PROFILE[layer];
       const [outer, back, outerTone] = PROFILE[layer + 1];
-      const grassy = [4, 5, 6, 9, 10, 11].includes(layer), ledge = layer === 1 || layer === 7;
+      const grassy = [4, 5, 6, 9, 10, 11].includes(layer), ledge = layer === 1;
+      // Feather the back of the grass cap into the existing terrain. The lower retaining
+      // faces remain opaque through their broad middle sections.
+      const capInner = layer === 11 ? .58 : 1;
+      const capOuter = layer === 11 ? 0 : layer === 10 ? .58 : 1;
       for (let i = first; i < last; i += STEP) {
         const a = shape(i, inner, high), b = shape(i + STEP, inner, high);
         const c = shape(i + STEP, outer, back), d = shape(i, outer, back);
         const tint = grassy ? TURF : ledge ? SOIL : STONE[Math.floor(i / 2) % STONE.length];
         const stagger = grassy ? .028 * Math.sin(i * .67) : .071 * Math.cos(i * 1.63 + layer * .32);
-        face(a, b, c, d, tint, innerTone + stagger, outerTone + stagger, grassy ? 1 : 0);
+        const left = edgeOpacity(i), right = edgeOpacity(i + STEP);
+        face(a, b, c, d, tint, innerTone + stagger, outerTone + stagger, grassy ? 1 : 0,
+          [left * capInner, right * capInner, right * capOuter, left * capOuter]);
         // Broken seams terminate at the next ledge and vary in width instead of repeating.
         if ([2, 3, 8].includes(layer) && Number.isInteger(i) && i > first && i < last - 1 && (i + layer) % 2) {
-          face(a, a.clone().lerp(b, .096), d.clone().lerp(c, .054), d, SOIL, .03, -.09);
+          face(a, a.clone().lerp(b, .096), d.clone().lerp(c, .054), d, SOIL, .03, -.09, 0, [left, left, left, left]);
         }
       }
     }
@@ -126,7 +133,7 @@ export function createHomeTerraces(root, coastArt) {
         float veins = sin(vTerrace.x * 15.0 + vTerrain.y * 39.0 + sin(vTerrace.y * 3.0));
         vec3 stone = vTone * (mix(.84, 1.12, grain) + veins * .023);
         vec3 turf = mix(vTone, source, .37) * mix(.88, 1.14, grain);
-        gl_FragColor = vec4(mix(stone, turf, vTerrace.z), vTerrace.w);
+        gl_FragColor = vec4(mix(stone, turf, max(0.0, vTerrace.z)), vTerrace.w);
         #include <colorspace_fragment>
       }`,
   });
