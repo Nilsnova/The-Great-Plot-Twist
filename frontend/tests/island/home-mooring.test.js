@@ -103,26 +103,30 @@ it('moves the skiff, rope and rooted vegetation together and restores their rest
       const plants = place.group.children.filter(mesh => mesh.material?.userData.sway);
       const planted = plants.map(mesh => mesh.position.toArray());
       const [x, z] = place.spawn;
-      const wave = time => place.update(1 / 60, {time, player: {x, z}, night: 0, weather: {wind: .5}});
+      const wave = (time, paused = false) => place.update(1 / 60, {time, paused, player: {x, z}, night: 0, weather: {wind: .5}});
       const pose = () => [...skiff.position.toArray(), skiff.rotation.z];
       const end = i => new THREE.Vector3().fromBufferAttribute(cord, i)
         .add(new THREE.Vector3().fromBufferAttribute(cord, i + 1)).multiplyScalar(.5);
       const rest = pose(), ashore = end(0), afloat = end(cord.count - 2);
-      wave(.84);
+      for (let step = 1; step <= 50; step++) wave(step / 60);
       const changed = pose(), moved = end(cord.count - 2);
       const asset = skiff.userData.asset, [w, h, foot] = artSizes[asset], [eyeX, eyeY] = MOORING_EYES[asset];
       const cleat = skiff.localToWorld(new THREE.Vector3(eyeX / 16 - w / 2, (1 - foot) * h - eyeY / 16, 0));
       const plantsMove = plants.every(mesh => Math.abs(mesh.material.userData.sway.uniform.value) > 0);
+      const sway = plants.map(mesh => mesh.material.userData.sway.uniform.value);
       const grounded = plants.every((mesh, index) => mesh.position.toArray().every((v, i) => v === planted[index][i]));
       const stakeStable = ashore.distanceTo(end(0));
+      wave(.9, true);
+      const frozen = pose().every((v, i) => v === changed[i]) && moved.distanceTo(end(cord.count - 2)) === 0
+        && plants.every((mesh, i) => mesh.material.userData.sway.uniform.value === sway[i]);
       place.setMooringBattle(true);
       wave(2);
       const hiddenDuringWave = !skiff.visible && !rope.visible && pose().every((v, i) => v === changed[i]);
       place.setMooringBattle(false);
       still = true;
-      wave(3);
+      wave(3, true);
       return {
-        count: plants.length, grounded, plantsMove, hiddenDuringWave, stakeStable,
+        count: plants.length, grounded, plantsMove, frozen, hiddenDuringWave, stakeStable,
         boatLift: changed[1] - rest[1], boatTilt: changed[3], ropeTravel: moved.distanceTo(afloat),
         cleatGap: moved.distanceTo(cleat), ropeReset: end(cord.count - 2).distanceTo(afloat),
         reset: pose().every((v, i) => v === rest[i]),
@@ -131,7 +135,7 @@ it('moves the skiff, rope and rooted vegetation together and restores their rest
     } finally { place.dispose(); }
   });
   expect(result).toMatchObject({
-    count: 23, grounded: true, plantsMove: true, hiddenDuringWave: true, reset: true, plantsReset: true,
+    count: 23, grounded: true, plantsMove: true, frozen: true, hiddenDuringWave: true, reset: true, plantsReset: true,
   });
   expect(result.stakeStable).toBeLessThan(.000002);
   expect(result.cleatGap).toBeLessThan(.000002);
