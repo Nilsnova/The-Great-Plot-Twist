@@ -299,7 +299,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       const core = decorateCore(place);
       const deco = decorateIsland(place, {container, art, reducedMotion, quality: () => preferences().quality, canvas: adapters.canvas, camera: adapters.camera,
         isActive: adapters.isActive, onPick: pick, houseSupport: activeHouseSupport, selection: selectedAnchor, defenseRange: () => isl.ui.selectionRange,
-        player: adapters.player, onFar: adapters.onFar,
+        player: adapters.player, battleTowers: adapters.battleTowers, onFar: adapters.onFar,
         placing: () => isl.moving.active, onGround: (x, z) => isl.moving.tap(x, z),
         canPickRemote: id => isl.village.active && !!spotById(id),
         retryAdditionalArt: () => deco.runArtTask('core', () => core.retryArt())});
@@ -313,6 +313,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     decoratePoint(place, adapters = {}) {
       isl.pointWorld?.dispose();
       const deco = decorateIsland(place, {container, reducedMotion, quality: () => preferences().quality, canvas: adapters.canvas, camera: adapters.camera, isActive: adapters.isActive, onPick: pick, selection: selectedAnchor, player: adapters.player, onFar: adapters.onFar,
+        battleTowers: adapters.battleTowers,
         layout: {spots: PP_SPOTS, zones: pointZones, bell: false, cabin: false, name: 'pirate-point-spots'}});
       isl.pointWorld = deco; applyWorld();
       const original = place.update, dispose = place.dispose;

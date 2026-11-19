@@ -121,6 +121,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   const currentWaveAction=()=>waves?.island.wave?.action??waves?.point?.controller.wave?.action??null;
   const world = createWorld({ emit, isBlocked:worldBlocked, disposeVisuals(){harbor?.dispose();mapTouch?.dispose();perf?.dispose();experience?.dispose();marketUi?.dispose();sportsUi.dispose();shortcuts.dispose();tutorial.dispose();isletState.dispose();stopIslet?.();stopActualIslet?.();}, transition: (id, options) => sailing.start(id, options),
     cancelTransition: sailing.end, finishTransition() { sailing.end(); graphics.renderer.domElement.focus(); }, createPlace: id => createPlace({ id, isletState, island, reducedMotion, canvas: graphics.renderer.domElement, camera: view.camera,
+      battleTowers: () => (id === 'home_islet' ? waves?.island : waves?.point?.controller)?.state?.towers,
       isActive: () => active && !outsideBlocked() && !isCaptainDown() && !currentWaveAction(), player: () => controller.player.position, onFar: id => { farHint = { id, until: performance.now() + HINT_MS }; } }), attach(place) { scene.add(place.group); water.setCoast(place.group); lightPools.setPlace(place.group); controller.setPlace(place); view.setPlace(place.id, controller.player.position); } });
   async function travel(id, options) {
     mapTouch?.cancel();
