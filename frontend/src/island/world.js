@@ -24,6 +24,7 @@ import {frameCanvas, smoothTexture, spriteMaterial} from '../art/textures.js';
 import {clickVerdict, WALK_CLOSER} from '../world/reach.js';
 import {decorateProgress} from './decorations.js';
 import {makeWallConnections} from './wall-connections.js';
+import {makeBuildingFoundations} from './building-foundations.js';
 import {makeWallPurchaseLight} from './wall-purchase-light.js';
 import {createStructureRecoveryIndicators} from './structure-recovery-indicators.js';
 import {towerStateFrame} from '../art/tower-states.js';
@@ -305,6 +306,7 @@ export function decorateIsland(place, ctx = {}) {
   const homeWalls = layout.zones === islandZones;
   const purchaseLight = homeWalls ? makeWallPurchaseLight() : null;
   const wallConnections = makeWallConnections(root, {purchaseLight});
+  const foundations = homeWalls ? makeBuildingFoundations(root) : null;
   let joinedWalls = new Set();
   const baseColliders = [...place.colliders];
   let towerColliders = [], lastLiveTowers = null;
@@ -462,6 +464,7 @@ export function decorateIsland(place, ctx = {}) {
       const frame = known ? campaignArt(CAMPAIGN_BUILDINGS.find(item => item.id === id), campaign) : null;
       for (const [name, mesh] of Object.entries(meshes)) mesh.visible = name === frame;
     }
+    const standing = [];
     for (const spot of SPOTS) {
       const answer = spots.find(item => item.id === spot.id), built = answer?.built === true, where = whereOf(spot);
       const marker = markers.get(spot.id);
@@ -476,6 +479,11 @@ export function decorateIsland(place, ctx = {}) {
       // open yet, shows a lock badge instead of the glowing ring.
       const open = (!unlocks || kindsOf(spot).some(kind => (unlocks.levels?.[kind] ?? 0) >= 1)) && !spotLocked(spot, campaign);
       const hidden = battle && BATTLE_KINDS.includes(answer?.kind ?? spot.kind);
+      if (foundations && built && !hidden && slotOf(spot) !== 'wall') {
+        const recovery = recoveryState?.structures?.find(item => item.spot === spot.id);
+        const ruin = structureRecoveryAppearance(answer, recovery, recoveryState)?.look === 'broken';
+        standing.push({slot: slotOf(spot), x: where.x, z: where.z, ruin});
+      }
       for (const kind of kindsOf(spot)) {
         buildings.get(`${spot.id}:${kind}`).visible = !art && built && (answer.kind === kind || (kindsOf(spot).length === 1))
           && !(battle && BATTLE_KINDS.includes(kind)) && !(kind === 'wall' && wallConnections.hasPost(spot.id));
@@ -489,6 +497,7 @@ export function decorateIsland(place, ctx = {}) {
       const wave = open ? null : spotLocked(spot, campaign) ? spotWave(spot.id) : lockWave(kindsOf(spot), unlocks);
       if (marker.wave !== wave) { marker.wave = wave; marker.lock.material.map = lockTexture(wave).texture; marker.lock.material.needsUpdate = true; }
     }
+    foundations?.show(standing);
     // The wave's renderer draws the crew during a battle; outside one they stand by their posts.
     if (art) showCrew(spots, crew, battle);
     if (layout.zones === islandZones) {
@@ -715,7 +724,7 @@ export function decorateIsland(place, ctx = {}) {
       place.colliders.splice(0, place.colliders.length, ...baseColliders);
       tasks.dispose(); notice.dispose(); staticArt.dispose();
       progress?.dispose(); recoveryIndicators.dispose();
-      wallConnections.dispose(); selectionBracket.dispose();
+      wallConnections.dispose(); selectionBracket.dispose(); foundations?.dispose();
       defenseRange?.dispose();
       houseSupport?.dispose(); rangeRing?.dispose();
       place.setSelectedCanopy?.(null);
