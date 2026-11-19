@@ -14,7 +14,7 @@ const BANKS = [
   {first: 116.5, last: 124.5, foot: .770, back: .955, height: 2.75},
   {first: 148, last: 156, foot: .840, back: .955, height: 3.25},
   {first: 166, last: 171, foot: .790, back: .925, height: 3.10},
-  {first: 30, last: 38.5, foot: .745, back: .655, height: 1.70},
+  {first: 30, last: 37, foot: .980, back: .900, height: 1.80},
   {first: 55, last: 67, foot: .951, back: .847, height: 1.47},
 ];
 const STONE = ['#bf9367', '#c69d72', '#b48762', '#cbab7e', '#c09b70'].map(hex => new THREE.Color(hex));
