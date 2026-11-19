@@ -1,0 +1,296 @@
+{
+  "result": "passed",
+  "source": "d198cc11b6a3fe4c92b69b5002cb3616b20dc125",
+  "expectedCommit": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+  "ownHashes": {
+    "check-economy-boss-income-provider.mjs": "e8c6a4f912dc8bda7d030e9bfc0a14fc5d757d27f500238857fd0b381bc07b3b",
+    "economy-personal-playout.mjs": "f3f661f1dfc58c0671a871f601f595d9cb98f69932f68b177c4932fd4a05adcf",
+    "economy-personal-loader.mjs": "ff638a8ba34d9f3972733c500a2203d813b1403b59dad656113522110c5a8ee8"
+  },
+  "helperHashes": {
+    "api-clients.mjs": "a9369da75350b882ac6a312c20903965a362409978e86e108c256f9cc450a9f7",
+    "observer.mjs": "40cb288da9f9a80e337fba5a39a12b1b23501ad1ff48a2a4614975492997f140",
+    "source.mjs": "56d138914dc5b4e15159162bb21db68c985b2c9083c2e5bac4b34a90502ea8d9",
+    "runtime.mjs": "d1387a35fd7243df58e8d9589586034b3a098489bb20e43bece9b6b45040865f"
+  },
+  "sourceBefore": [
+    {
+      "service": "api",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "02905c8386323814bfef05462854bded278b6859",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    },
+    {
+      "service": "frontend",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "02905c8386323814bfef05462854bded278b6859",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    }
+  ],
+  "sourceAfter": [
+    {
+      "service": "api",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "02905c8386323814bfef05462854bded278b6859",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    },
+    {
+      "service": "frontend",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "02905c8386323814bfef05462854bded278b6859",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    }
+  ],
+  "startedAt": "2026-11-19T17:29:49.148Z",
+  "finishedAt": "2026-11-19T17:31:50.088Z",
+  "facts": [
+    {
+      "event": "normal-authenticated-boss-bell",
+      "at": "2026-11-19T17:30:01.141Z",
+      "playedWave": 5,
+      "participants": 3,
+      "savedHouseLevels": 5
+    },
+    {
+      "event": "natural-boss-win-house-income-once",
+      "at": "2026-11-19T17:31:49.949Z",
+      "waveId": "0ce0ddd0-a130-4ff6-9421-399051b935b4",
+      "simulatedSeconds": 30.7,
+      "sealedThroughTick": 2115,
+      "simulatedThroughTick": 2108,
+      "shipsSunk": 12,
+      "acknowledgements": 6,
+      "income": {
+        "account_id": "7631991e-8432-4a70-9aca-88a33fe8b0ee",
+        "run_epoch": "fb30d986-5772-4fb9-be01-4a260e4c9326",
+        "played_wave": 5,
+        "reward_basis": {
+          "bonuses": {
+            "finisher": "30"
+          },
+          "baseCoins": "25",
+          "playedWave": 5,
+          "houseLevels": "5",
+          "perWaveCoins": "10",
+          "perHouseCoins": "10",
+          "bossMultiplier": "3"
+        },
+        "earned_bonuses": [],
+        "loot": "375",
+        "credits": 1,
+        "credited": "375",
+        "confirmed": 3,
+        "completions": 3
+      },
+      "calculated": {
+        "base": "75",
+        "houses": "50",
+        "earnedBonuses": "0",
+        "bossMultiplier": "3",
+        "expected": "375"
+      },
+      "account": {
+        "balance": "575",
+        "held": "0",
+        "ledger_balance": "575",
+        "ledger_held": "0"
+      },
+      "personalWalletsUnchanged": true
+    }
+  ],
+  "limitations": [
+    "API-only actual provider sessions; no rendered browser interaction is claimed.",
+    "Fortress, houses, wave unlock and crew are explicit saved-state fixtures, not naturally earned assets or conversion.",
+    "The terminal win and HP checkpoint came from unchanged production simulation over complete real sealed journals; no outcome, HP, clock, input journal or immutable row was changed.",
+    "Only actually earned bonuses are included; unobserved special-bonus cases and other acceptance rows remain separate.",
+    "No hosted service, migration, deployment, conversion or activation."
+  ],
+  "requestCount": 195,
+  "requestSummary": [
+    {
+      "actor": "boss-owner",
+      "path": "/api/games",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 1
+    },
+    {
+      "actor": "boss-member-a",
+      "path": "/api/games/join",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 1
+    },
+    {
+      "actor": "boss-member-b",
+      "path": "/api/games/join",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 1
+    },
+    {
+      "actor": "boss-owner",
+      "path": "/api/island/session/attach",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 1
+    },
+    {
+      "actor": "boss-member-a",
+      "path": "/api/island/session/attach",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 1
+    },
+    {
+      "actor": "boss-member-b",
+      "path": "/api/island/session/attach",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 1
+    },
+    {
+      "actor": "boss-owner",
+      "path": "/api/island/session/settings",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 1
+    },
+    {
+      "actor": "boss-owner",
+      "path": "/api/waves/start",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 1
+    },
+    {
+      "actor": "boss-owner",
+      "path": "/api/island/session/heartbeat",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 23
+    },
+    {
+      "actor": "boss-member-a",
+      "path": "/api/island/session/heartbeat",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 23
+    },
+    {
+      "actor": "boss-member-b",
+      "path": "/api/island/session/heartbeat",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 23
+    },
+    {
+      "actor": "boss-owner",
+      "path": "/api/waves/0ce0ddd0-a130-4ff6-9421-399051b935b4/events",
+      "method": "GET",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [
+        "islandOwner",
+        "runEpoch",
+        "sessionId",
+        "connectionGeneration",
+        "after"
+      ],
+      "count": 112
+    },
+    {
+      "actor": "boss-owner",
+      "path": "/api/waves/finish",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 2
+    },
+    {
+      "actor": "boss-member-a",
+      "path": "/api/waves/finish",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 2
+    },
+    {
+      "actor": "boss-member-b",
+      "path": "/api/waves/finish",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 2
+    }
+  ]
+}

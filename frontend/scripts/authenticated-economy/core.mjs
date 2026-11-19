@@ -5,14 +5,14 @@ import {randomUUID,createHash} from 'node:crypto';
 import {readFileSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import {resolve} from 'node:path';
-import {createClients,api,land,capture} from './clients.mjs';
+import {createClients,api,land,capture,loadRuntime} from './clients.mjs';
 import {observe,admit} from './observer.mjs';
 import {checkPrivateRealtime} from './private-realtime.mjs';
 import {sourceEvidence} from './source.mjs';
 
 const output=process.env.MP_ECO_OUTPUT??'/tmp/mp505-core';
 const rendered=process.env.MP_ECO_RENDERED==='1';
-const source='3bdd8eda16470795fdedd68c42fffab54e5f2ced';
+const source=(await loadRuntime(process.env.MP_ECO_RUNTIME)).expectedCommit;
 const uid=()=>randomUUID().replaceAll('-','');
 const context=economy=>Object.fromEntries(['mode','version','islandOwner','runEpoch'].map(key=>[key,economy[key]]));
 const root=fileURLToPath(new URL('../../../',import.meta.url));
