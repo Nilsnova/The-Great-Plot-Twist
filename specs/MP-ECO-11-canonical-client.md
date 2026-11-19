@@ -311,3 +311,24 @@ selection passed all 33 cases in 5.19 seconds. The three affected real-DOM cases
 selection passed all fifteen cases after strengthening the valid shared-context refusal check.
 Whitespace review passed. A new complete regression run remains required after these corrections
 and restored disk capacity; the earlier failed/skipped cases remain recorded as such.
+
+## Idle lookup stability
+
+An accepted current-wave lookup returning null while the flow already has no current wave changes
+no flow state. Continue the actual request, DTO/origin checks and transport-side economy/session
+updates, but do not notify the card renderer for that empty-to-empty result. A real new wave,
+nonempty result, clearing an existing wave, admission and closure retain their existing notifications.
+This prevents idle polling from replacing a focused construction button between pointer down/up.
+Verify exact DOM identity and focus across repeated accepted null reads, actual continued request
+count and one ordinary pointer action through the client construction transport. The component
+transport is synthetic and does not establish a real provider/SQL construction transaction.
+
+The idle-poll regression first failed in the real DOM component: the focused original node became
+disconnected and an accepted null reply between ordinary pointer down/up produced zero client
+construction submissions. Two flow checks also failed on redundant notifications. After the bounded
+empty/current-null guard, all 40 cases in five focused flow/lobby/component files passed in
+8.76 seconds. The final component check passed again with exact request-count, retained focus,
+single construction submission and refreshed treasury revision/balance assertions. Normal build
+passed in 1.06 seconds, spoiler guard passed (257 text files, 12 protected lines), and whitespace
+review was clean. This is transport-stub component evidence; real provider pointer acceptance is
+still a separate check.

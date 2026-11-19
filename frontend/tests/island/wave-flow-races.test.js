@@ -176,3 +176,18 @@ describe('current-wave lookup and admission ordering', () => {
     expect(h.flow.current).toBeNull();
   });
 });
+
+it('keeps accepted empty lookups inert without skipping the actual API or its side effects',async()=>{
+ const effects=vi.fn(),h=harness({api:{currentWave:vi.fn(async()=>{effects();return ok(null);})}});
+ for(let i=0;i<4;i++)expect((await h.flow.look()).ok).toBe(true);
+ expect(h.flow.current).toBeNull();expect(h.changed).not.toHaveBeenCalled();
+ expect(h.api.currentWave).toHaveBeenCalledTimes(4);expect(effects).toHaveBeenCalledTimes(4);
+});
+it('continues notifying for real new, same-wave closed and existing-wave clearing replies',async()=>{
+ const h=harness();
+ const shown=h.flow.look();h.reads[0].resolve(ok(wave('new-wave')));await shown;expect(h.changed).toHaveBeenCalledOnce();
+ h.changed.mockClear();const closed=h.flow.look();h.reads[1].resolve(ok({...wave('new-wave'),closed:true}));await closed;
+ expect(h.changed).toHaveBeenCalledOnce();h.changed.mockClear();
+ const cleared=h.flow.look();h.reads[2].resolve(ok(null));await cleared;expect(h.flow.current).toBeNull();expect(h.changed).toHaveBeenCalledOnce();
+ h.changed.mockClear();const empty=h.flow.look();h.reads[3].resolve(ok(null));await empty;expect(h.changed).not.toHaveBeenCalled();
+});
