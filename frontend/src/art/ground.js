@@ -156,6 +156,31 @@ function paintPlantedEdges(c, id, paths) {
   }
 }
 
+function paintWeatheredPathEdges(c, id, paths) {
+  const random = seeded(19357);
+  c.save(); c.clip(pathMaterialMask(paths, PAVING_WIDTH, .12));
+  for (const [lane, points] of paths.lines.entries()) for (let i = 1; i < points.length; i++) {
+    const [ax, az] = points[i - 1], [bx, bz] = points[i];
+    const ay = az * LEGACY_DEPTH, by = bz * LEGACY_DEPTH;
+    const dx = bx - ax, dy = by - ay, length = Math.hypot(dx, dy);
+    if (length < .8) continue;
+    const angle = Math.atan2(dy, dx);
+    const sideX = -dy / length, sideY = dx / length;
+    const radius = (paths.widths[lane] ?? PAVING_WIDTH) / 2;
+    for (const side of [-1, 1]) for (let at = .35 + random() * 1.1; at < length - .36; at += .62 + random() * 1.36) {
+      const inset = radius - .04 - .085 * random();
+      const x = ax + dx * at / length + side * sideX * inset;
+      const y = ay + dy * at / length + side * sideY * inset;
+      if (surfaceClass(id, x, y / LEGACY_DEPTH) !== 2) continue;
+      c.fillStyle = random() > .35 ? '#748b44b5' : '#51673885';
+      c.fill(ellipse(x, y, .08 + .14 * random(), .04 + .067 * random(), angle));
+      c.fillStyle = '#c3c87e87';
+      c.fill(ellipse(x - .024, y - .035, .048 + .08 * random(), .035, angle));
+    }
+  }
+  c.restore();
+}
+
 /** True when the place has a painted ground. */
 export const hasGround = id => Object.hasOwn(PATHS, id) && Object.hasOwn(surfaces, id);
 
@@ -204,6 +229,7 @@ export function paintGround(id, density = 28, materials = null) {
     c.restore();
     paintPlantedEdges(c, id, paths);
     paintPavers(c, paving, materials);
+    paintWeatheredPathEdges(c, id, paving);
     c.clip(pathMaterialMask(paths, PATH_WIDTH));
     c.globalAlpha = materials ? .25 : 1;
     c.fillStyle = '#d7b273'; for (let i = 0; i < 120; i++) { const points = paths.lines[Math.floor(random() * paths.lines.length)], t = random(), j = Math.floor(t * (points.length - 1)), f = t * (points.length - 1) - j;
