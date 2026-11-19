@@ -15,8 +15,8 @@ async function pointerClick(page,button) {
   // the locator after each render, then require actual pointer ownership.
   let point=null;
   for(let attempt=0;attempt<40 && !point;attempt++) {
-    await button.scrollIntoViewIfNeeded();
     point=await button.evaluate(element=>{
+      element.scrollIntoView({block:'center',inline:'nearest'});
       const box=element.getBoundingClientRect(),x=box.x+box.width/2,y=box.y+box.height/2;
       const hit=document.elementFromPoint(x,y);
       return !element.disabled && box.width>0 && box.height>0
@@ -73,9 +73,12 @@ async function paidClick(page, spot) {
   await openCard(page,spot);
   if(await dismissGuides(page))await openCard(page,spot);
   const response = page.waitForResponse(reply => reply.url().endsWith(REPAIR)
-    && reply.request().method()==='POST',{timeout:20000});
+    && reply.request().method()==='POST',{timeout:20000})
+    .then(reply=>({reply}),error=>({error}));
   await pointerClick(page,page.locator('.island-card[open] .recovery-repair:not([disabled])'));
-  const reply = await response, data = await reply.json();
+  const settled=await response;
+  if(settled.error)throw settled.error;
+  const reply = settled.reply, data = await reply.json();
   assert.equal(reply.status(),200,JSON.stringify(data));
   return {body:reply.request().postDataJSON(),data};
 }
