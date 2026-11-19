@@ -300,7 +300,7 @@ completed database, authenticated-client and physical-device observations.
 
 ### Shared economy integration — 19 November 2026
 
-At `6584610a6a37b63ffc5df4beb951de0f115f5d16`, a persisted shared island has
+At application source `b239bdf094d132fc57969fb31f652f106db8abc5`, a persisted shared island has
 an account and run epoch. Its treasury is separate from personal wallets. The API
 requires the version capability and current origin; one coherent
 [snapshot](../backend/server/island/shared_snapshot.py) supplies scoped prices and
@@ -334,13 +334,17 @@ each action. The coordinated paths are present in source. Final rendered-product
 acceptance remains open; direct authenticated SDK calls do not establish it.
 
 The [test map checkpoint](TEST-MAP.md#shared-economy-integration-checkpoint--19-november-2026)
-records the failed historical broad run, 219 passing affected compatibility cases
-and the limited actual Auth/HTTP/WSS probe. The latter uses fresh-island
-service-only admission as explicit test setup and does not establish public legacy
-conversion. Full rendered combat/domain/lifecycle acceptance and final frozen-source
-regressions remain pending. Combat reports retain their documented trust boundary;
-these checks do not make the server a verifier of every simulated hit. No release,
-hosted migration, conversion or activation follows from a local result.
+preserves failed and interrupted historical runs, the separately bounded 219
+compatibility cases, and the successful **15,284-case backend run at `37570bf9`**.
+The complete backend, 107 migrations and native decoder closure match candidate
+`b239bdf0` exactly; its sole repository change is a tutorial sentence. That
+comparison does not constitute a frontend or rendered-product pass. Full current
+frontend/build and the completed actual two-player/accounting journey remain
+pending. Earlier SDK probes retain their own sources and setup limits; natural
+feeds, physical devices and public legacy conversion keep separate explicit
+statuses. Combat reports retain their documented trust boundary; these checks do
+not make the server a verifier of every simulated hit. No hosted migration,
+rollout or activation follows from a local result.
 
 ### What it does
 Each player owns an island with a code (`ISLE-` + 5 symbols) and 16 build spots. With coins they build and upgrade walls, cannons or mortars, a watchtower and houses, hire crew (gunner, carpenter, lookout) and level up their own captain. They ring a bell to start a wave (up to wave 100, a boss warship every 5th wave) and get loot for surviving. Friends on the island build there with their own coins (co-op). Pirate Point has ten shared spots that anyone can build. The rules are in [TOWER-DEFENSE.md](TOWER-DEFENSE.md); decisions [D032](DECISIONS.md) and [D036](DECISIONS.md).

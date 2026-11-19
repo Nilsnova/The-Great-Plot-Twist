@@ -4,9 +4,10 @@
 >
 > **Who uses it:** teammates validating the shared economy before release.
 
-**Status:** canonical backend and coordinated client source are integrated;
-final frozen-source regressions and authenticated scenario acceptance remain pending.
-This source inventory is `6584610a6a37b63ffc5df4beb951de0f115f5d16`.
+**Status:** canonical backend and coordinated client source are integrated. The
+complete documented backend regression passed; current frontend/build checks and
+authenticated scenario acceptance remain pending.
+The application source inventory is `b239bdf094d132fc57969fb31f652f106db8abc5`.
 Published dependencies
 provide the [contract #515](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/515),
 [permission policy #516](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/516) and
@@ -29,8 +30,11 @@ actual production hooks, with their template/report/clock boundaries labeled.
 
 The current source contains 107 migrations, including the private
 [accepted-prefix freshness boundary](../../supabase/migrations/20261119014418_shared_revival_checkpoint_freshness.sql).
-The client includes the [native clock and incomplete-hold correction](../../specs/MP-ECO-11-canonical-client.md#native-clock-correction-and-incomplete-holds).
-These are implementation facts, not new acceptance results.
+The client includes the [native clock and incomplete-hold correction](../../specs/MP-ECO-11-canonical-client.md#native-clock-correction-and-incomplete-holds),
+[bounded idle polling](../../specs/MP-ECO-native-idle-wave-polling.md),
+[session reacquisition after an accepted epoch change](../../specs/MP-ECO-11-session-epoch-reconciliation.md)
+and [coherent quotes after unchanged arsenal reads](../../specs/MP-ECO-10-arsenal-read-projection.md).
+These are implementation facts; each runtime observation retains its own source.
 
 A fresh local stack installed all 106 migrations in canonical timestamp order from
 `a6de304bbeb5f45983e18d043c848c71a4566609`. A limited probe used three real
@@ -52,9 +56,47 @@ broad run remains **15,185 passed, 28 failed, 5 skipped**, exit 1. The later **2
 passing affected cases include those 28 node IDs on their separately recorded
 source. They do not establish a final full-backend pass.
 
+The documented backend regression completed on
+`37570bf9e5e3c67ebd2eb1a735c9df3c709f3b80`: **15,284 passed in 958.28s**, exit 0,
+with no failures, errors or skips. Disposable PostgreSQL was enabled. The sole
+exclusion was the unchanged exhaustive
+`server/tests/correctness/test_settings_contract.py` matrix. Matching frontend
+dependencies were available: all five registry cases and both calm/storm native
+SQL → Python → production Node decoder cases executed and passed. Full backend
+Ruff and parsing/unique-version checks for all **107 migrations** also passed;
+source and migration hashes were unchanged before and after the run. These are
+backend/static results, not authenticated rendered-game acceptance.
+
+Candidate `b239bdf094d132fc57969fb31f652f106db8abc5` has the same complete backend
+tree, all **825 backend file blobs/modes**, **107 migration hashes**, **13 files in
+the native decoder import closure**, and both dependency locks. The entire
+repository diff from that tested source is one tutorial-text change in
+`frontend/src/campaign/tutorials.json`. Backend results retain their original
+`37570bf9` source; no new backend run is claimed for `b239bdf0`.
+
+Later authenticated observations used the same local provider with one strictly
+later additive migration, bringing the installed chain to 107. The original
+106-migration installation and the additive installation retain separate source
+and content records. Two rendered clients at `a8fa5de1` produced genuine accepted
+WON receipts and personal completions for one wave. Independent committed-state
+inspection found one 35-coin original-account credit, treasury 100 → 135,
+confirmed participation, released assignments/reservation and unchanged personal
+wallets. This establishes that observed wave-income case, not free revival or
+automatic pacing.
+
+A real idle owner reset at `5a111e05` changed the account/epoch and the owner's
+accepted private topic, but the member did not automatically acquire its new
+session/topic. That run remains failed; the later session-reconciliation change
+requires its own rendered verification. At `b239bdf0`, both rendered clients
+completed ordinary tutorial dismissal and pre-bell movement. After an enemy-caused
+fall, the helper's ordered hold-start input POST received HTTP 200, but the helper
+also fell before a complete two-second hold was observed. Both native loss
+receipts settled. This remains a failed free-revival scenario, not a zero-cost
+accounting pass.
+
 | Pending acceptance gate | Required next observation |
 |---|---|
-| Final common source | Freeze the reviewed API/frontend/migrations together; rerun backend regressions with disposable SQL and matching frontend Node dependencies, affected client suites/build and migration checks. Retain exact failures/skips and source hashes. |
+| Final common source | Preserve the successful backend source and exact candidate comparison above. Complete full frontend tests/build on the chosen candidate, retain subsequent source differences explicitly and finish rendered acceptance. Retain exact failures/skips and source hashes. |
 | Coordinated client behavior | The integrated snapshot advertises arsenal/session/repair/reset/market/match; move remains unavailable. Verify their reachable controls and current source/authority fences through the rendered game. An available capability does not grant membership, ownership or action permission, and direct SDK success alone does not establish product behavior. |
 | Rendered two-player journey | Actual provider sessions use ordinary game UI, coherent shared quotes, session attachment, native journal/input/checkpoints and terminal handling. Capture visible scoped funds, accepted actions and committed database effects; no fake adapters or response replacement. |
 | Product Realtime transitions | Honest rendered clients automatically follow new topic metadata across admission, membership leave, reset and deletion. Retained malicious sockets cannot receive new protected data or inject accepted gameplay. Manual SDK topic changes alone do not close this gate. |
