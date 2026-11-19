@@ -110,7 +110,13 @@ def test_snapshot_quotes_use_actual_shared_basis_personal_discount_and_stored_la
     wall = next(spot for spot in result["spots"] if spot["id"] == "wall_1")
     assert (wall["x"], wall["z"], wall["instanceId"]) == (-18, -1, INSTANCE)
     assert result["layout"] == {"version": 2, "grid": 0.5, "movable": False}
-    assert all(not value["available"] for value in result["capabilities"].values())
+    assert {
+        name for name, value in result["capabilities"].items() if value["available"]
+    } == {"arsenal", "session", "repair", "market", "match"}
+    assert all(
+        value["reason"] is None if value["available"] else value["reason"]
+        for value in result["capabilities"].values()
+    )
 
 
 def test_missing_personal_profile_or_shared_payment_basis_never_invents_a_price():

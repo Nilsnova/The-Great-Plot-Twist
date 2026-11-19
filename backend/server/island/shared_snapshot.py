@@ -18,6 +18,10 @@ from server.island.treasury import identifier
 from server.island.treasury_models import decimal_string
 from server.supabase_admin import SupabaseAdmin, SupabaseRejected
 
+# Implemented versioned paths; each route still checks its flags and permissions.
+# Move and reset remain unavailable until their coordinated client paths are ready.
+SUPPORTED_CAPABILITIES = frozenset({"arsenal", "session", "repair", "market", "match"})
+
 
 def unreadable() -> SupabaseRejected:
     return SupabaseRejected("The database sent an unreadable shared island snapshot.")
@@ -153,7 +157,12 @@ def snapshot_from_row(
             "waveProtocol": facts.waveProtocol,
             "serverNow": facts.serverNow.isoformat(),
             "capabilities": {
-                name: {"available": False, "reason": "economy_path_unavailable"}
+                name: {
+                    "available": name in SUPPORTED_CAPABILITIES,
+                    "reason": None
+                    if name in SUPPORTED_CAPABILITIES
+                    else "economy_path_unavailable",
+                }
                 for name in ("arsenal", "session", "move", "repair", "reset", "market", "match")
             },
         }

@@ -1991,8 +1991,10 @@ The application registers the existing global GET `/api/captain` and POST
 `/api/captain/{role,skill,respec}` router with the atomic legacy-guard migration dependency.
 Its strict personal version/revision/root contract is independent of the viewed island's money
 mode, and missing adoption is explicitly `409 captain_not_initialized` on GET. Read failures
-never mean an unadopted profile. Shared arsenal/session/move/repair/reset/market/match capabilities
-remain explicitly unavailable; no canonical lifecycle authority or public conversion is added.
+never mean an unadopted profile. Shared snapshots advertise the implemented versioned
+arsenal/session/repair/market/match paths. Move and reset remain unavailable pending their
+coordinated client paths. A capability is protocol support, not permission: existing route
+flags, membership, origin and controller checks still apply. This adds no public conversion.
 
 ## Shared wave accounting foundation (MP-ECO-03)
 
