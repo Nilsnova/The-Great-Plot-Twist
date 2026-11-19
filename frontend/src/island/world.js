@@ -594,7 +594,7 @@ export function decorateIsland(place, ctx = {}) {
   // The nearest pickable thing to a ground point (a tap), or null.
   // Built sprites can overlap legally. In village mode, give the opaque foreground art priority over
   // the old nearest-foot box. The box still serves markers, service buildings and loading stand-ins.
-  function frontBuildingAt(tap) {
+  function frontBuildingAt(tap, portraitDepth) {
     let front = null;
     for (const [id, item] of shown) {
       if (!ctx.canPickRemote?.(id) && !displayAnchors.has(id)) continue;
@@ -603,7 +603,7 @@ export function decorateIsland(place, ctx = {}) {
         || (front && mesh.renderOrder < front.order)) continue;
       const [width, height, anchor] = artSizes[mesh.userData.art], image = mesh.material.map?.image;
       const u = .5 + (tap.x - mesh.position.x) / width;
-      const v = 1 - anchor - (tap.y - mesh.position.y) / height;
+      const v = 1 - anchor - (tap.y - mesh.position.y) * portraitDepth / height;
       if (u < 0 || u >= 1 || v < 0 || v >= 1 || !image?.getContext) continue;
       try {
         const alpha = image.getContext('2d')?.getImageData(Math.floor(u * image.width), Math.floor(v * image.height), 1, 1).data[3];
@@ -616,7 +616,8 @@ export function decorateIsland(place, ctx = {}) {
     return front?.id ?? null;
   }
   function pickAt(x, z) {
-    const tap = projectPoint(x, z), front = frontBuildingAt(tap);
+    const portraitDepth = ctx.camera?.userData.homePortraitDepth ?? 1;
+    const tap = projectPoint(x, z), front = frontBuildingAt(tap, portraitDepth);
     if (front) return front;
     const candidates = [...SPOTS.filter(spot => !isExtraSpot(spot.id) || state.spots.some(item => item.id === spot.id))
         .flatMap(spot => {
@@ -631,8 +632,9 @@ export function decorateIsland(place, ctx = {}) {
     let best = null, bestScore = Infinity;
     for (const item of candidates) {
       const foot = projectPoint(item.x, item.z);
-      if (Math.abs(foot.x - tap.x) > item.w || tap.y > foot.y + item.h || tap.y < foot.y - .54) continue;
-      const score = Math.hypot(foot.x - tap.x, foot.y - tap.y);
+      const dy = (tap.y - foot.y) * portraitDepth;
+      if (Math.abs(foot.x - tap.x) > item.w || dy > item.h || dy < -.54) continue;
+      const score = Math.hypot(foot.x - tap.x, dy);
       if (score < bestScore) { best = item.id; bestScore = score; }
     }
     return best;
@@ -733,7 +735,7 @@ export function decorateIsland(place, ctx = {}) {
           ? wallConnections.selectedCanopyTarget
           : shown.get(selection.spotId)?.meshes[0] ?? null;
       }
-      place.setSelectedCanopy?.(canopyTarget);
+      place.setSelectedCanopy?.(canopyTarget, ctx.camera?.userData.homePortraitDepth);
       recoveryIndicators.update();
       const still = reduced();
       const coverage = selection && !state.battle && !state.visitor ? ctx.defenseRange?.() : null;
