@@ -1,0 +1,140 @@
+{
+  "result": "Earlier attempts failed; none is counted as a rendered revival pass.",
+  "attempts": [
+    {
+      "source": "b46cb0a59657cbd4d3031a32b16fb82d96006d0f",
+      "scenarioSha256": "ec2ca14eec53cadb92822e1ede83fd0a97ce9fe67227d013472056c355e88d48",
+      "startedAt": "2026-11-19T17:54:20.587Z",
+      "finishedAt": "2026-11-19T17:54:57.651Z",
+      "error": "TimeoutError: locator.fill: Timeout 5000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.games-card[open] .games-code')\u001b[22m\n",
+      "attemptFamily": "bare",
+      "attempt": 1,
+      "lastFact": null
+    },
+    {
+      "source": "465f887eda31a371db6f73a29474412d97359de7",
+      "scenarioSha256": "9d06456336115346960b28c9de5e6ed441267fed05beff3208980db8b658a214",
+      "startedAt": "2026-11-19T17:55:39.974Z",
+      "finishedAt": "2026-11-19T17:58:39.468Z",
+      "error": "Error: Natural attempt ended before a rendered teammate hold",
+      "attemptFamily": "bare",
+      "attempt": 2,
+      "lastFact": {
+        "event": "ordinary-rendered-zero-budget-bell",
+        "at": "2026-11-19T17:57:26.502Z",
+        "wave": 6,
+        "participants": 2,
+        "treasury": "0"
+      }
+    },
+    {
+      "source": "bf1ac0d660e8c22b13a9337ebcec6496b9042272",
+      "scenarioSha256": "c2715050fd22e39b3911b0734717bd75824f1c5c7ad41add051de32193d48cec",
+      "startedAt": "2026-11-19T18:01:37.400Z",
+      "finishedAt": "2026-11-19T18:02:16.702Z",
+      "error": "AssertionError [ERR_ASSERTION]: Ordinary WASD did not move the rendered player",
+      "attemptFamily": "bare",
+      "attempt": 3,
+      "lastFact": null
+    },
+    {
+      "source": "733bc892d4f54016788c6356414602424dde103a",
+      "scenarioSha256": "55f02b1638d08a6b39706d1cd22e4e4c60b4cadf18c23988c5288538e695809f",
+      "startedAt": "2026-11-19T18:04:15.751Z",
+      "finishedAt": "2026-11-19T18:06:14.708Z",
+      "error": "Error: Natural attempt ended before a rendered teammate hold",
+      "attemptFamily": "bare",
+      "attempt": 4,
+      "lastFact": {
+        "event": "ordinary-rendered-zero-budget-bell",
+        "at": "2026-11-19T18:05:06.941Z",
+        "wave": 6,
+        "participants": 2,
+        "treasury": "0"
+      }
+    },
+    {
+      "source": "2c5ff172de7d11c15351ab054461f1327e056d61",
+      "scenarioSha256": "977aa94c4c3c7b736cd011331830c5263f0ac4e7a2d343fc0fb5d932a12c0583",
+      "startedAt": "2026-11-19T18:11:23.788Z",
+      "finishedAt": "2026-11-19T18:13:47.463Z",
+      "error": "Error: Natural attempt ended before a rendered teammate hold",
+      "attemptFamily": "fortress",
+      "attempt": 1,
+      "lastFact": {
+        "event": "read-only-rendered-encounter",
+        "at": "2026-11-19T18:13:35.553Z",
+        "party": [
+          {
+            "x": 13.19,
+            "z": 1.8,
+            "hp": 88,
+            "down": false
+          },
+          {
+            "x": 13.2,
+            "z": 2.1,
+            "hp": 96,
+            "down": false
+          }
+        ],
+        "boarder": {
+          "x": 14.02,
+          "z": 2.32
+        }
+      }
+    },
+    {
+      "source": "575a530933826b4324e9014cc8150bb6d7c915af",
+      "scenarioSha256": "a97b41bbf91020909100907a3b82c37e28f82b66115815025f3753c3a12ab02b",
+      "startedAt": "2026-11-19T18:19:43.902Z",
+      "finishedAt": "2026-11-19T18:20:06.368Z",
+      "error": "TimeoutError: locator.click: Timeout 5000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.games-card[open]').getByRole('button', { name: 'Create a game', exact: true })\u001b[22m\n",
+      "attemptFamily": "fortress",
+      "attempt": 2,
+      "lastFact": null
+    },
+    {
+      "source": "69169a3134e672137b3fc04724b7dff7fad02b16",
+      "scenarioSha256": "b729d0eae6c3e5f7c86905b06364d93ab11c33f4ee98f8145f2fcc7606830773",
+      "startedAt": "2026-11-19T18:20:49.223Z",
+      "finishedAt": "2026-11-19T18:23:25.455Z",
+      "error": "Error: Natural attempt ended before a rendered teammate hold",
+      "attemptFamily": "fortress",
+      "attempt": 3,
+      "lastFact": {
+        "event": "read-only-rendered-encounter",
+        "at": "2026-11-19T18:23:14.334Z",
+        "party": [
+          {
+            "x": 0,
+            "z": 17.7,
+            "hp": 0,
+            "down": true
+          },
+          {
+            "x": 1.2,
+            "z": 17.85,
+            "hp": 0,
+            "down": true
+          }
+        ],
+        "boarder": {
+          "x": -0.25,
+          "z": 18.17,
+          "hp": 22.8,
+          "state": "walking"
+        },
+        "frontier": {
+          "renderedPosition": {
+            "x": 0.0009000000000194963,
+            "z": 17.7006
+          },
+          "ticks": 1516,
+          "simTime": 48.2,
+          "blockedDialogs": []
+        }
+      }
+    }
+  ]
+}
