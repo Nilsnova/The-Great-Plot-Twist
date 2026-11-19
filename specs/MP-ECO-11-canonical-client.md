@@ -104,3 +104,12 @@ build and spoiler guard passed (256 text files, 12 protected lines), as did whit
 This first increment does not wire the session into the running game, activate any capability,
 implement durable leave/settings UI, accept native wave/HP/hold input, or complete shared reset.
 The existing runtime remains guarded while the next integration increment is implemented.
+
+A read-only peer review found an obsolete lock could survive an actor/origin change while an
+attach, fresh read or heartbeat was pending. Three new regressions reproduced the blockage of
+a second document. Late exits now release their captured obsolete lock; they clear local state
+only when the matching request ticket is still current. An old completion cannot release a newer
+actor's lock. A scheduled heartbeat also releases ownership when identity is no longer current.
+The final five-file session selection, including scheduled identity loss and the real-popup
+journey, passed 46 tests. The timer test waits for asynchronous Web Lock release before checking
+that another document can acquire it.
