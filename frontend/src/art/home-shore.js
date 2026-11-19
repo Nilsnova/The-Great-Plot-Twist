@@ -9,10 +9,10 @@ export const MOORING_EYES = Object.freeze({
 });
 
 function bollard(c) {
-  shadow(c, 16, 23, 12.5, 2.4, .21);
+  shadow(c, 16, 23, 12.5, 2.4, .27);
   const post = svg('M10 22 L11.3 8 Q12 5.3 16.7 5.3 Q21 5.4 21 8.2 L22.2 21.7 Q18 24.4 10 22 Z');
   const endGrain = svg('M10.9 7.9 Q11.1 5.2 16.3 4.8 Q21 4.7 21.4 7.5 Q20.8 9.5 16.4 10 Q12.2 10 10.9 7.9 Z');
-  part(c, post, linear(c, 10, 12, 23, 18, [[0, '#cf9762'], [.48, WOOD], [1, '#704330']]), {line: INK, width: .9});
+  part(c, post, linear(c, 10, 12, 23, 18, [[0, '#e2ae76'], [.42, WOOD], [1, '#66422e']]), {line: INK, width: .9});
   stroke(c, svg('M13.4 11.4 Q12.9 17 13.4 21 M19.4 16 Q20.1 18 19.6 21.1'), '#613c2b', .6, .56);
   part(c, endGrain, '#c7925d', {line: INK, width: .9, depth: .8, gloss: ellipse(15.8, 6.4, 2.8, .65)});
   stroke(c, svg('M14.1 7.8 Q15.5 6.9 18.5 7.4'), '#8a5639', .55, .72);
@@ -27,15 +27,20 @@ function bollard(c) {
 }
 
 function skiff(c) {
-  shadow(c, 25, 24.6, 15.1, 1.5, .19);
+  shadow(c, 25, 24.6, 15.1, 1.5, .29);
+  stroke(c, svg('M11 22.7 C18 26.8 31 26.9 39.8 23.8'), '#b6f3da', .61, .68);
   const hull = svg('M3.4 8.3 C11 11.4 28.1 12.3 44.8 12.2 Q46.1 15.2 44.5 18.7 Q42.1 23.1 33.6 24.5 C20.5 26.3 8.2 22.2 3.4 8.3 Z');
-  const plankShade = linear(c, 19, 9, 22, 25, [[0, '#698899'], [.48, '#4c6780'], [.77, '#304760'], [1, '#243950']]);
+  const plankShade = linear(c, 19, 9, 22, 25, [[0, '#719da7'], [.34, '#3e7893'], [.68, '#234f71'], [1, '#16354f']]);
   part(c, hull, plankShade, {line: '#283641', width: 1, shade: false});
+  c.save(); c.clip(hull);
+  stroke(c, svg('M4.5 11.6 Q15.7 20.6 32.8 19.6 Q41 18.9 45.5 16.5'), '#a67b49', 1.8, .96);
+  stroke(c, svg('M6.4 13.1 Q16 19.9 31.7 19.1 Q39.5 18.8 43.4 17.0'), '#efc37f', .58, .86);
+  c.restore();
   stroke(c, svg('M8.5 16.8 Q18.4 22.1 30.4 22.7 Q38.4 22.9 42.1 20.4'), '#263b50', .72);
-  stroke(c, svg('M10.6 18.3 Q19.3 22.6 28.6 23.1'), '#688292', .48, .64);
+  stroke(c, svg('M10.6 18.3 Q19.3 22.6 28.6 23.1'), '#72aec5', .49, .68);
 
   const rail = svg('M3.4 8.3 Q10.9 3.8 23 4.5 Q37.9 5 44.8 12.2 Q41.9 16.9 31.6 17.8 Q14 18.2 3.4 8.3 Z');
-  part(c, rail, linear(c, 16, 5, 20, 18, [[0, '#d1a06c'], [.52, '#ba824f'], [1, '#89553a']]), {line: INK, width: .89});
+  part(c, rail, linear(c, 16, 5, 20, 18, [[0, '#eec58b'], [.43, '#bc814c'], [1, '#7a4a33']]), {line: INK, width: .89});
   const interior = svg('M7.1 8.7 Q13.8 5.5 23.6 6.4 Q36.2 6.9 42.1 12.2 Q36.2 16.8 25.9 15.9 Q13.7 15.5 7.1 8.7 Z');
   part(c, interior, '#714c38', {line: '#553c32', width: .61, shade: '#503734', depth: 1.5});
   c.save();
