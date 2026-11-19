@@ -23,10 +23,21 @@ describe('composition and motion contracts', () => {
     expect(fallback.sprite.material).toBe(art.explorer);
   });
   it('omits cosmetic bounce and breathing with reduced motion', () => {
-    const art = materials(), character = createCharacter(art, { reducedMotion: true });
+    const art = materials(), character = createCharacter(art, { reducedMotion: true, idleMotion: () => true });
     character.group.position.set(2, 19, 5); character.face(1, 0); character.animate(.5, 3.2);
     expect(Math.abs(character.sprite.position.y - projectPoint(2, 5).y)).toBeLessThanOrEqual(1 / 32);
     expect(character.sprite.scale.y).toBe(1);
     expect(character.sprite.material).toBe(art['explorer-side']);
+    character.animate(1, 0);
+    expect(character.sprite.scale.y).toBe(1);
+  });
+  it('breathes around the captain ground pin and returns to the standard walk scale', () => {
+    const character = createCharacter(materials(), {idleMotion: () => true});
+    character.group.position.set(2, 19, 5);
+    character.animate(1.8, 0);
+    expect(character.sprite.scale.y).toBeCloseTo(1.016);
+    expect(character.sprite.position.y).toBe(projectPoint(2, 5).y);
+    character.animate(.1, 3);
+    expect(character.sprite.scale.y).toBe(1);
   });
 });

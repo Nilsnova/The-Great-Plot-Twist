@@ -91,7 +91,9 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   const pixelFx = createPixelFx(scene); scene.userData.lightPools = lightPools; scene.userData.pixelFx = pixelFx;
   // The clock follows the player's local time (automated checks keep the old fixed morning).
   const followLocalTime = !navigator.webdriver; if (followLocalTime) { const now = new Date(); settings.hour = now.getHours() + now.getMinutes() / 60; }
-  const character = createCharacter(art, { reducedMotion }); scene.add(character.sprite);
+  const character = createCharacter(art, { reducedMotion,
+    idleMotion: () => world.current?.id === 'home_islet' && active && !inBattle && !shell.blocked && !isAppBlocked?.(),
+  }); scene.add(character.sprite);
   const controller = createController(character, input, []), view = createCamera(input);
   const isletState=createIsletState({on});
   // The narrator (src/narrator/: voiced lines and captions for every new thing, keyed by island code)
