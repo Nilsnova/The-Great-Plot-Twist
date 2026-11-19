@@ -197,7 +197,7 @@ export function createHomeLanding(group) {
       longGrain, endGrain, stageCenter);
   }
   // A deeper headstock ties the two seaward piles together beneath the landing.
-  timber(-1.68, 1.01, stageEnd - .094, stageEnd + .002, () => -.065, () => .147,
+  timber(-1.68, .88, stageEnd - .42, stageEnd - .25, () => -.078, () => .147,
     '#b4794e', '#724b34', stageCenter);
   for (let i = 0; i < stageSteps; i++) {
     const from = stageStart + STEP * i, to = from + STEP - .028;
