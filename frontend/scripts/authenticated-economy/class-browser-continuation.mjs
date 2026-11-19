@@ -49,10 +49,15 @@ try{
   let clicked=false;for(const name of [/^Skip all/,'Got it','Skip','Resume']){
    const button=page.locator('dialog[open]').getByRole('button',{name,exact:typeof name==='string'}).first();
    if(await button.isVisible().catch(()=>false)){await button.click({noWaitAfter:true});clicked=true;break;}}
-  if(!clicked&&await page.evaluate(()=>window.__island?.world.current?.id==='saltreach_harbor'&&!!window.__island.classDemo))break;
+  if(!clicked&&await page.evaluate(()=>window.__island?.world.current?.id==='lighthouse_isle'&&!!window.__island.classDemo))break;
   await page.waitForTimeout(100);
  }
- assert.equal(await page.evaluate(()=>window.__island.world.current.id),'saltreach_harbor');
+ const entryPlace=await page.evaluate(()=>window.__island.world.current.id);assert.equal(entryPlace,'lighthouse_isle');
+ await page.waitForFunction(()=>window.__island.world.busy===false);
+ await page.evaluate(()=>window.__island.chart.show());
+ await page.locator('.sea-chart[open] .fast-travel').check();
+ await page.locator('.sea-chart[open] [data-place="saltreach_harbor"]').click();
+ await page.waitForFunction(()=>window.__island.world.current.id==='saltreach_harbor'&&window.__island.world.busy===false);
  let who;for(let i=0;i<30;i++){who=await api(page,'/api/me');if(who.status===200&&who.data.id===anonymous.user.id)break;await page.waitForTimeout(100);}
  assert.equal(who.status,200);assert.equal(who.data.id,anonymous.user.id);
  const beforeGuest=(await read('select balance::text as balance from public.wallets where player_id=$1::uuid',[anonymous.user.id]))[0];
@@ -64,7 +69,7 @@ try{
  report.after=await money();assert.deepEqual(report.after,report.before);
  const afterGuest=(await read('select balance::text as balance from public.wallets where player_id=$1::uuid',[anonymous.user.id]))[0];assert.deepEqual(afterGuest,beforeGuest);
  await page.locator('.market-modal[open]').screenshot({path:output+'/class-personal-market.png'});
- report.observation={actualAnonymousSDKVerified:true,visibleClassJoinStatus:200,place:'saltreach_harbor',classLayerLoaded:true,
+ report.observation={actualAnonymousSDKVerified:true,visibleClassJoinStatus:200,entryPlace,place:'saltreach_harbor',ordinaryChartTravel:true,classLayerLoaded:true,
   visiblePersonalMarket:marketText,personalBalance:beforeGuest.balance,sharedBankAndOriginalOwnerWalletUnchanged:true,guestWalletUnchanged:true};report.status='passed';
 }catch(error){report.status='failed';report.error={name:error.name,message:error.message};await page?.screenshot({path:output+'/failure-private.png'}).catch(()=>{});process.exitCode=1;}
 finally{await browser?.close();report.finishedAt=new Date().toISOString();report.hashesAfter=await hashes();
