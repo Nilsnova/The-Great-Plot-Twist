@@ -13,7 +13,7 @@ export function swayMaterial(material, asset, {bendFrom = .3, phase = (trees++ *
   material.onBeforeCompile = shader => {
     if (cartoon) premultiply(shader);
     shader.uniforms.uSway = sway;
-    shader.fragmentShader = 'uniform float uSway;\n' + shader.fragmentShader.replace('#include <map_fragment>', `#ifdef USE_MAP
+    shader.fragmentShader = 'uniform float uSway;\n' + shader.fragmentShader.replace('#include <map_fragment>', /* glsl */`#ifdef USE_MAP
   vec2 swayUv = vMapUv;
   swayUv.x -= uSway * smoothstep(${bendFrom.toFixed(2)}, 1.0, vMapUv.y) / ${widthPx.toFixed(1)};
   diffuseColor *= texture2D( map, swayUv );

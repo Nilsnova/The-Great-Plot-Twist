@@ -118,6 +118,7 @@ export function htmlStrings(source) {
 
 export function displayJavascriptStrings(source) {
   return javascriptStrings(source).flatMap(record=>{
+    if (/\/\*\s*glsl\s*\*\/\s*$/.test(record.context)) return [];
     if (/<[a-z][^>]*>/i.test(record.text) && record.text.trim() !== '<name>') {
       return htmlStrings(record.text).map(copy=>({...record,...copy,line:record.line+copy.line-1}));
     }
