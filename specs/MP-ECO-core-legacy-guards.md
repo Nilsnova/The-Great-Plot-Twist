@@ -10,7 +10,7 @@
 - **Responsible teammate:** Ianno Hollensteiner (`Iannomh123456`)
 - **Coding assistance:** Codex; the responsible teammate remains accountable.
 - **Reviewer:** a different human teammate, pending
-- **Updated:** 2026-11-18
+- **Updated:** 2026-11-19
 
 ## Problem and scope
 
@@ -96,7 +96,9 @@ The original static failures were reproduced as **2 failed, 5 passed** before up
 
 This is a test-only compatibility follow-up; production code and migration contents are unchanged. The broad 261-case database run and 450-case Python run above remain the earlier baseline, not a claim that an exhaustive suite was rerun for this test update.
 
-## Current dependency verification
+<a id="current-dependency-verification"></a>
+
+## Earlier dependency verification
 
 Main `f606412f` and reviewed construction `58a66646` are integrated. The guard SQL and
 tests remain unchanged from the published component; construction now independently
@@ -143,3 +145,42 @@ files** parsed with unique versions. The complete comparison against the progres
 prerequisite contains only the five core component paths. Full backend/browser acceptance,
 registered shared HTTP/canonical lifecycle integration, live migration and human approval
 remain separate.
+
+## Always-on catalogue integration
+
+Main `1350c2ba` and the current progression/construction prerequisites are integrated.
+The nine retired feature flags stay always on, and main's fake-server/render splits are
+preserved. No production core-guard SQL or core test source changed. Both exact latest
+wrapper contracts remain enforced: research `50501`, respec `50701`, with all historical
+pricing, private-alias, capture and delegation assertions retained.
+
+The progression prerequisite replaces its obsolete `catalogue_for_flags` test import
+with `runtime_catalogue`; deliberately restricted catalogue fixtures still exercise
+saved-instance ownership and stale-quote protection rather than reviving retired flags.
+
+Commands from `backend/`:
+
+```bash
+uv run --no-sync pytest -q server/tests/test_respec_wave_guards_match_migration.py server/tests/test_economy_progression.py server/tests/test_house_roles_match_migration.py server/tests/test_migration_versions.py server/tests/test_islet_routes.py server/tests/test_islet_store.py server/tests/test_entry_kits.py server/tests/test_entry_profiles_match_migration.py
+CASE_PG_SCRATCH=1 uv run --no-sync --with pgserver --with 'psycopg[binary]' --with pglast pytest -q --tb=short server/tests/island_sql/test_economy_core_legacy_guards_sql.py server/tests/island_sql/test_economy_core_legacy_guard_races_sql.py server/tests/island_sql/test_economy_progression_sql.py server/tests/island_sql/test_shared_construction_sql.py server/tests/island_sql/test_shared_construction_grant_races_sql.py server/tests/island_sql/test_respec_and_wave_guards_sql.py server/tests/island_sql/test_captain_tree_sql.py server/tests/island_sql/test_island_fresh_start_sql.py
+uv run --no-sync ruff check .
+```
+
+At source `d4e75c39`, the Python selection passed **265 tests in 4.16 seconds**. The mixed
+PostgreSQL selection passed **196 tests in 24.28 seconds**, with no skips and the complete migration chain
+applied twice. Backend Ruff and **79 unique migration parses** passed. No assertion was
+weakened or skipped. Full backend/browser acceptance, registered shared authority,
+live migration and human approval remain separate.
+
+The final prerequisite-only update adds four current-runtime extra-slot boundary cases.
+Those cases were also run with progression and all core guards installed at source
+`6528ba75`:
+
+```bash
+CASE_PG_SCRATCH=1 uv run --no-sync --with pgserver --with 'psycopg[binary]' pytest -q server/tests/island_sql/test_shared_construction_sql.py::test_current_runtime_extra_spots_keep_their_target_island_unlock
+```
+
+All **four cases passed in 2.74 seconds**. Their target-island unlock, refusal rollback and
+actual discounted charge checks retain the intended milestones for cannon spots 8–11.
+Production Python and SQL trees remain identical to the earlier mixed verification cut;
+the later updates change test coverage and verification text only.

@@ -1018,7 +1018,11 @@ def test_current_direct_spot_unlock_blocks_new_charge_but_keeps_original_replay(
 
 
 def through_progression_adapter(connection, actor, initial, uid, intent):
-    """Use real current catalogue selection and the same private database transaction."""
+    """Use a deliberately restricted catalogue and the real private transaction.
+
+    Runtime offers now always include the new defenses. The unexpanded base here
+    independently checks saved-instance compatibility when a trusted catalogue narrows.
+    """
 
     class Admin:
         async def call_function(self, name, arguments):
