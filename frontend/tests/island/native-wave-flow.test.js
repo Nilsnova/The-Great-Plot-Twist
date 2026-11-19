@@ -25,12 +25,18 @@ it('refreshes an already rendered spectator only from a fresh same-frozen-wave c
  expect(flow.current.wave.initialSnapshot).toEqual(spectator.initialSnapshot);
  await flow.refreshControl('own');expect(events).toHaveLength(2);expect(api.currentWave).toHaveBeenCalledTimes(2);expect(api.joinWave).not.toHaveBeenCalled();flow.dispose();
 });
-it.each(['late-spectator','changed-snapshot','reset-during-read'])('does not promote %s from a session refresh',async boundary=>{
+it.each(['late-spectator','changed-snapshot','reset-during-read','control-lost-during-read'])('does not promote %s from a session refresh',async boundary=>{
  const spectator=nativeWave();spectator.session={...spectator.session,isController:false,isSpectator:true,sessionId:null,connectionGeneration:null};spectator.participantToken=null;spectator.lastActorCounter=null;
  let release;const events=[],api={currentWave:vi.fn().mockResolvedValueOnce({ok:true,data:spectator}).mockImplementation(()=>new Promise(resolve=>{release=resolve;}))};
  const flow=createWaveFlow({api,emit:event=>events.push(event),setTimer:()=>1,clearTimer(){}});await flow.look('own');await flow.join('own');
- const pending=flow.refreshControl('own'),next=boundary==='late-spectator'?spectator:nativeWave();
+ let attached=true;const pending=flow.refreshControl('own',{guard:()=>attached}),next=boundary==='late-spectator'?spectator:nativeWave();
  if(boundary==='changed-snapshot')next.initialSnapshot.seed++;
+ if(boundary==='control-lost-during-read')attached=false;
  if(boundary==='reset-during-read')flow.reset();release({ok:true,data:next});await pending;
- expect(events).toHaveLength(1);flow.dispose();
+ expect(events).toHaveLength(1);
+ if(boundary==='control-lost-during-read'){
+  attached=true;api.currentWave.mockResolvedValueOnce({ok:true,data:nativeWave()});
+  await flow.refreshControl('own',{guard:()=>attached});expect(events).toHaveLength(2);expect(events[1].spectator).toBe(false);
+ }
+ flow.dispose();
 });

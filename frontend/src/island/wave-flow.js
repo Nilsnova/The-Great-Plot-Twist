@@ -125,12 +125,13 @@ export function createWaveFlow({api, emit, notify = () => {}, banner = () => {},
   const join = (where = 'own') => run(() => joinNow(where));
   // A restored document may have opened the replay before its controlling session
   // attached. Only a fresh validated server projection can promote that replay.
-  async function refreshControl(where = 'own') {
-    const before=current,generation=contextFor(where),lookup=++lookupGeneration;
-    if(!before || before.where!==where || before.wave.session?.isController===true
+  async function refreshControl(where = 'own',{guard=()=>true}={}) {
+    const before=current;
+    if(!guard() || !before || before.where!==where || before.wave.session?.isController===true
       || !before.wave.initialSnapshot?.economy)return null;
+    const generation=contextFor(where),lookup=++lookupGeneration;
     const answer=await api.currentWave({where});
-    if(disposed || generation!==contextGeneration || lookup!==lookupGeneration || current!==before)return {...answer,ignored:true};
+    if(!guard() || disposed || generation!==contextGeneration || lookup!==lookupGeneration || current!==before)return {...answer,ignored:true};
     if(answer.ok && answer.data?.session?.isController===true && sameFrozenNativeWave(before.wave,answer.data)) {
       begin(answer.data,where,{controlRefresh:true});
     }

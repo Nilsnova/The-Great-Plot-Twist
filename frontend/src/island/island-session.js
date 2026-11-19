@@ -21,7 +21,7 @@ export function createIslandSession(isl,{client=null,windowTarget=globalThis,doc
    await Promise.all([isl.reloadOwn({guard}),...(isl.visiting?[isl.reloadVisit({guard})]:[])]);
    if(guard()){
     isl.applyWorld();isl.refreshCard();
-    await isl.flow?.refreshControl?.(isl.where());
+    await isl.flow?.refreshControl?.(isl.where(),{guard});
    }
   },
   onState:state=>{isl.refreshCard?.();if(['controller','spectator'].includes(state.phase)){
