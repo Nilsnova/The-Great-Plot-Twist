@@ -7,7 +7,7 @@ import { SKILLS, skillNeeds, ROLES, readSkills, isRole, pointsSpent, pointsEarne
   readWeapon } from './captain-ids.js';
 import { spotWave } from '../campaign/index.js';
 import { createFakeArsenal } from '../island/arsenal-fake.js';
-import { footprintOf, wallSceneryConflict } from '../island/placement.js';
+import { checkMove, footprintOf, positionsOf } from '../island/placement.js';
 import { placedSpot } from '../island/spots.js';
 import { WALL_PERIMETER_CELLS, WALL_PERIMETER_DEFAULTS } from '../island/wall-perimeter.js';
 import { createFakeWorld, ISLAND_RULES, readIslandCode, CODE_ALPHABET, spotView, refuse, MAX_MEMBERS, GAME_FULL,
@@ -165,10 +165,10 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     if ((unlocking || isExtraSpot(spot)) && place.waveBest !== undefined && spotWave(spot) > place.waveBest) refuse(409, 'locked', lockedMessage(spotWave(spot)));
     if (player.coins < price) refuse(409, 'insufficient_funds', `A ${name.toLowerCase()} costs ${price} coins. You need more coins.`);
     if (kind === 'wall' && ids === islandSpots) {
-      const {x, z} = spots(place).find(row => row.id === spot);
+      const rows = spots(place), {x, z} = rows.find(row => row.id === spot);
       if (!Number.isFinite(x) || !Number.isFinite(z)) refuse(409, 'place_taken', 'The grass edge has no free wall space.');
-      const scenery = wallSceneryConflict(spot, x, z);
-      if (scenery) refuse(409, 'place_taken', `That is too close to ${scenery.name}.`);
+      const verdict = checkMove(spot, x, z, positionsOf(rows));
+      if (!verdict.ok) refuse(409, verdict.code, verdict.message);
       const saved = place.positions?.get(spot);
       if (saved?.x !== x || saved?.z !== z) {
         waveGuard(place, 'A wave is under way. Build walls between waves.');
