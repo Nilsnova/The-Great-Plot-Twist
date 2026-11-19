@@ -150,6 +150,16 @@ export function paintGround(id, density = 28, materials = null) {
       c.fill(pathMaterialMask(paths, PATH_WIDTH, padding));
     }
     const paving = {...paths, clearings: paths.clearings.map(([x, z, radius]) => [x, z, radius * .76])};
+    // The low paver edge casts a short contact shadow into the existing worn shoulder.
+    c.save();
+    c.clip(pathMaterialMask(paths, PATH_WIDTH));
+    c.translate(.046, .085);
+    c.fillStyle = '#69583f20';
+    c.fill(pathMaterialMask(paving, PAVING_WIDTH, .115));
+    c.translate(-.027, -.035);
+    c.fillStyle = '#5c513e43';
+    c.fill(pathMaterialMask(paving, PAVING_WIDTH, .057));
+    c.restore();
     paintPavers(c, paving, materials);
     c.clip(pathMaterialMask(paths, PATH_WIDTH));
     c.globalAlpha = materials ? .25 : 1;

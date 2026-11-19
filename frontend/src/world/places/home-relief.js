@@ -134,9 +134,22 @@ export function createHomeRelief(group, coastArt) {
         float grain = dot(rock.rgb, vec3(.30, .59, .11));
         float rockGrain = smoothstep(.06, .46, grain);
         float wet = smoothstep(.75, .98, vShoreRelief.y) * smoothstep(.45, 1.7, vShoreRelief.x);
-        vec3 stone = vStone * mix(.70, 1.29, rockGrain);
+        float course = vShoreRelief.y;
+        float grainBreak = sin(logical.x * .88 + logical.y * .34) * .017
+          + cos(logical.x * 2.13 - logical.y * .82) * .008;
+        float recess = smoothstep(.30, .44, course + grainBreak) * (1.0 - smoothstep(.50, .63, course));
+        float ledge = smoothstep(.49, .62, course + grainBreak) * (1.0 - smoothstep(.68, .79, course));
+        vec3 stone = vStone * mix(.69, 1.26, rockGrain);
+        stone = mix(stone, stone * vec3(.73, .69, .65), recess * .51);
+        stone = mix(stone, stone * vec3(1.15, 1.08, .99), ledge * .70);
+        // A broken trace of moss under the turf links the upper stone to the meadow. Shallow
+        // beach approaches start too low for this transition and keep their warm sand.
+        float tallFace = smoothstep(.20, .38, vShoreRelief.x);
+        float mossCoverage = smoothstep(.51, .87, rockGrain + 4.0 * grainBreak);
+        float moss = smoothstep(.06, .14, course) * (1.0 - smoothstep(.19, .28, course)) * tallFace * mossCoverage;
+        stone = mix(stone, stone * vec3(.73, .94, .62), moss * .51);
         stone = mix(stone, stone * vec3(.61, .72, .78) + vec3(.004, .018, .023), wet * .75);
-        gl_FragColor = vec4(mix(stone, rock.rgb, .20), 1.0);
+        gl_FragColor = vec4(mix(stone, rock.rgb, .17), 1.0);
         #include <colorspace_fragment>
       }`,
   });
