@@ -20,7 +20,7 @@ from psycopg.types.json import Jsonb  # noqa: E402
 
 from server.errors import ApiError  # noqa: E402
 from server.island import construction_store, layout  # noqa: E402
-from server.island.catalogue import CAMPAIGN_FILE, CONTENT_FILE, catalogue_for_flags, load_island  # noqa: E402
+from server.island.catalogue import CAMPAIGN_FILE, CONTENT_FILE, load_island, runtime_catalogue  # noqa: E402
 from server.island.construction_rules import ConstructionIntent, catalogue_manifest  # noqa: E402
 from server.island.economy_operations import system_uid  # noqa: E402
 from server.island.treasury import EconomyContext  # noqa: E402
@@ -1027,7 +1027,7 @@ def test_saved_v1_gated_structure_can_upgrade_and_demolish_without_opening_new_o
         "fixture:gated",
         2000,
     )
-    enabled = catalogue_for_flags(load_island(), {"defenses_v2": True, "more_tower_spots": True})
+    enabled = runtime_catalogue(load_island())
     entry = next(entry for entry in enabled.kinds if entry.kind == kind)
     paid = [max(1, (price * 90 + 50) // 100) for price in entry.prices[:2]]
     built = construct(

@@ -21,7 +21,7 @@ import {declaresPersonalCaptain} from './economy-captain.js';
 
 export function createCards(isl) {
   const {emit, on, focus, resetInput, reducedMotion, preferences, loadBoatScene, openHarborStall, villageCamera,
-    wallRecovery, defensesV2On} = isl;
+    } = isl;
   // From the other parts (island-*.js), linked once every part exists.
   let currentFunds, sharedCard, clearRecoveryError, recoveryPolicyOn, recoveryControlsOn, recoveryModelVersion, readStructureRecovery,
     repairStructure, tellCoins, unlocks, islandUnlocks, campaign, target, where, applyWorld, freshOwn, reloadOwn,
@@ -59,7 +59,7 @@ export function createCards(isl) {
       visitor: !!isl.visiting, ownerName: isl.visiting?.ownerName, busy: isl.busySpot === spotId ? isl.busyKind : false, message: isl.cardMessage || (!island ? isl.ownMessage : ''),
       unlocks: isl.own ? islandUnlocks() : null, prices: currentFunds().shared ? island?.prices ?? null : isl.own?.prices ?? null,
       campaign: campaign(), battle: isl.battle && !isl.waveOver || currentFunds().shared && (isl.flow.busy || !!isl.flow.current && !isl.waveOver),
-      movable: island?.layout?.movable === true, flags: {defenses_v2: defensesV2On() === true}, treePicked: isl.treePicked.get(spotId) ?? null,
+      movable: island?.layout?.movable === true, treePicked: isl.treePicked.get(spotId) ?? null,
       recoveryState: recoveryView, recoveryStatus: recoveryEnabled ? (recoveryReady ? 'ready' : isl.recoveryStatus) : 'disabled',
       recoveryError: isl.recoveryError, recoveryPending: isl.recoveryPendingSpot === spotId, recoveryVersion: recoveryModelVersion()});
     if (recoveryEnabled && isl.recoveryState?.displayPhase === 'combat' && !live) {
@@ -215,7 +215,7 @@ export function createCards(isl) {
     const wave = isl.flow.current, island = target();
     const model=bellModel({wave: wave?.wave ?? null, joined: wave?.joined === true, countdown: isl.flow.secondsLeft(), busy: isl.flow.busy,
       visitor: !!isl.visiting, ownerName: isl.visiting?.ownerName, waveBest: island?.waveBest ?? 0, nextWave: island?.nextWave,
-      preparation: preparationModel({island, wallRecovery: wallRecovery() && !recoveryControlsOn(),
+      preparation: preparationModel({island, wallRecovery: !recoveryControlsOn(),
         wallState: {code: isl.wallsFor, rows: [...isl.walls.values()]}}), message: isl.cardMessage});
     return currentFunds().shared && !isl.domainAvailable('session')
       ? {...model,disabled:true,action:'none',line:'Island defense is unavailable. Reload the island.'} : model;
@@ -259,8 +259,7 @@ export function createCards(isl) {
     const destroyed = model.recovery?.actualHp === 0 && model.recoveryLevel === model.level;
     if (dock && model.slot === 'tower' && !destroyed) {
       const installed = defenses(target()?.spots ?? [], campaign()?.research?.tiers);
-      // Keep coverage for an installed recovery-v1 Culverin when new purchases are disabled.
-      model.coverage = previewDefenseCoverage(installed, spotId, {defensesV2: defensesV2On() === true || recoveryPolicyOn()});
+      model.coverage = previewDefenseCoverage(installed, spotId, {defensesV2: true});
     }
     isl.ui.buildCard(model, handlers, {dock});
   }

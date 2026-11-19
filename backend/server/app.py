@@ -11,7 +11,6 @@ Used by: main.py (Vercel) and the tests (they call create_app with their own set
 """
 
 import logging
-from dataclasses import replace
 
 from fastapi import FastAPI
 
@@ -26,14 +25,13 @@ from server.demo.guests import AutoCleanup
 from server.duels.service import DuelService
 from server.errors import register_error_handlers
 from server.festival.cache import FestivalCacheControl
-from server.flags import is_enabled
 from server.game.building_catalogue import BuildingCatalogue, catalogue_or_none
 from server.game.case_cache import CaseCacheControl
 from server.game.case_service import CaseService, case_or_none
 from server.game.station_lookup import IsletStations, NoStations
 from server.game.world_state import DatabaseWorldStage, relit_check
 from server.host_console_cache import HostConsoleHeaders
-from server.island.catalogue import IslandCatalogue, catalogue_for_flags, island_or_none
+from server.island.catalogue import IslandCatalogue, island_or_none, runtime_catalogue
 from server.lock.limits import PlayerBudget
 from server.lock.places import PlaceSearch
 from server.lock.recovery_budget import TokenBucket
@@ -200,11 +198,8 @@ def create_app(
     if island_catalogue is None:
         island_catalogue = island_or_none()  # None if islands.json is broken
     if island_catalogue is not None:
-        # T36: the catalogue carries the "placement" flag to every island answer.
-        placement_on = is_enabled("placement", settings.flags)
-        island_catalogue = replace(island_catalogue, placement=placement_on)
-        # T43 (D048 proposed): the flag defenses_v2 adds the culverin; off, nothing changes.
-        island_catalogue = catalogue_for_flags(island_catalogue, settings.flags)
+        # T43 (D048) the culverin and D060 the extra tower spots (both flags retired, always on).
+        island_catalogue = runtime_catalogue(island_catalogue)
 
     if case_service is None:
         stations = IsletStations(islet_catalogue) if islet_catalogue is not None else NoStations()

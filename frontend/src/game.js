@@ -102,14 +102,12 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     narrator=module.createNarrator({container,on,audio,getGame:()=>{const visit=island?.visiting,own=island?.island;return visit?{code:visit.code,waveBest:0,recoveryVersion:visit.recoveryVersion??0}:own?{code:own.code,waveBest:own.waveBest??0,recoveryVersion:own.recoveryVersion??0}:null;}});
     tutorials=module.createTutorials({container,on,reducedMotion,probe:tutorialHooks.probe,locate:tutorialHooks.locate,spotTarget:tutorialHooks.spotTarget,anchor:tutorialHooks.anchor,tour:tutorialHooks.tour,
       say:trigger=>narrator.say(trigger),setGuide:view=>hud.setGuide(view),hudParent:()=>container.querySelector('.hud-play .hud-right'),
-      focusGame:()=>graphics.renderer.domElement.focus({preventScroll:true}),flags:{defenses_v2:()=>islandFlags.defenses_v2?.()===true,
-        // D060: the server offers the extra tower spots (its flag more_tower_spots) when the island answer lists them.
-        more_tower_spots:()=>(island?.island?.spots??[]).some(item=>item?.id==='cannon_8')},
+      focusGame:()=>graphics.renderer.domElement.focus({preventScroll:true}),
       recoveryVersion:()=>island?.recoveryVersion??0});
     return true;
   },dispose:()=>{tutorials?.dispose();narrator?.dispose();}});
   let mapTouch=null;
-  let tutorialHooks=null,islandFlags={},introUntil=0;
+  let tutorialHooks=null,introUntil=0;
   let classDemo=null,classDemoLoad=null,island=null,islandLoad=null,islandsMode=null,islandsDecision=null,pirates=null,waves=null,wavesLoad=null;
   let harbor=null, sharedHarbor=null, farHint=null, active = false, disposed=false, hud, chart, perf, marketUi=null, marketLoad=null, experience,beginRequest=0, fpsFrames = 0, fpsStart = performance.now(), fps = 0,weatherAnswer=null;
   const externalOverlay=()=>!!(harbor?.active||sharedHarbor?.active||island?.active||waves?.reportActive||classDemo?.active||shortcuts.active||tutorial.active||!!tutorials?.active||shell?.blocked||isAppBlocked?.()||marketUi?.active||sportsUi.active||chart?.open||sailing.active||stopPlots?.active);
@@ -294,16 +292,9 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
           view.villageControl(action);
           if(anchor&&action==='work')view.focusVillage(anchor);
         },
-        // D039 (proposed): lasting wall damage and the paid Repair/Rebuild, only while the server's flag is on.
-        // In fake mode (?islands=fake) the fake server's own flags decide (?fakeflags=wall_recovery, fake-api.js).
-        wallRecovery:()=>{if(fakeTransport)return fakeTransport.flags.wall_recovery===true;
-          const services=findPanelServices(session);return services?.isReady()?services.getFlags()?.wall_recovery===true:false;},
         // T55/T59: only show persistent structure recovery once the server enables its versioned rules.
         structureRecoveryOn:()=>{if(fakeTransport)return fakeTransport.flags.structure_recovery===true;
-          const services=findPanelServices(session);return services?.isReady()?services.getFlags()?.structure_recovery===true:false;},
-        // T43 (D048 proposed): the culverin on the tower spots, only while the server's flag defenses_v2 is on
-        // (in the dev fake ?fakeflags=defenses_v2).
-        defensesV2On:islandFlags.defenses_v2=()=>fakeTransport?fakeTransport.flags.defenses_v2===true:findPanelServices(session)?.getFlags?.()?.defenses_v2===true});
+          const services=findPanelServices(session);return services?.isReady()?services.getFlags()?.structure_recovery===true:false;}});
       if(adapter)island.setPresence(adapter.read()?.presence);
       void ensureWaves();
       return island;

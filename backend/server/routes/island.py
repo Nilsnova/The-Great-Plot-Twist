@@ -846,9 +846,8 @@ async def post_upgrade(
     shared = await economy_http.shared_write(admin, player.id, "upgrade", body, catalogue)
     if shared is not None:
         return shared
-    if is_enabled("wall_recovery", settings.flags):
-        # T47 (D039): a damaged or destroyed wall is repaired first; an upgrade never heals it.
-        await wall_repair.check_upgrade(admin, catalogue, player.id, body.spot, now(), body.code)
+    # T47 (D039): a damaged or destroyed wall is repaired first; an upgrade never heals it.
+    await wall_repair.check_upgrade(admin, catalogue, player.id, body.spot, now(), body.code)
     view = await service.upgrade(admin, catalogue, player.id, body.spot, body.actionUid, body.code)
     return island_out(view, catalogue)
 

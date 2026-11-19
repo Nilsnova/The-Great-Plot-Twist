@@ -14,7 +14,7 @@ psycopg = pytest.importorskip("psycopg")
 from psycopg.types.json import Jsonb  # noqa: E402
 
 from server.island import economy_progression  # noqa: E402
-from server.island.catalogue import catalogue_for_flags, load_island  # noqa: E402
+from server.island.catalogue import load_island, runtime_catalogue  # noqa: E402
 from server.island.economy_progression import catalogue_rule, parse_intent, read_result  # noqa: E402
 from server.island.economy_progression_models import ProgressionSnapshot  # noqa: E402
 from server.island.treasury import EconomyContext  # noqa: E402
@@ -1059,7 +1059,7 @@ def test_saved_v1_gated_structure_progresses_with_offers_off_and_replays(
         )
         as_server(database)
     set_v1_policy(database, owner, more=True)
-    enabled = catalogue_for_flags(CATALOGUE, {"defenses_v2": True, "more_tower_spots": True})
+    enabled = runtime_catalogue(CATALOGUE)
     request = {"action": action, "spot": spot, "expected": expected, "quotedCoins": "0"}
     request.update({"spec": "rapid"} if action == "specialise" else {"path": "a", "tier": 1})
     price = catalogue_rule(enabled, parse_intent(request))["price"]
@@ -1097,7 +1097,7 @@ def test_saved_catalogue_expansion_never_proves_ownership_or_changes_failed_quot
         "action": "tower_tree", "spot": "cannon_8", "path": "a", "tier": 1,
         "expected": expected, "quotedCoins": "0",
     }
-    enabled = catalogue_for_flags(CATALOGUE, {"defenses_v2": True, "more_tower_spots": True})
+    enabled = runtime_catalogue(CATALOGUE)
     request["quotedCoins"] = catalogue_rule(enabled, parse_intent(request))["price"]
     before = rpc(database, "island_economy_progression_state", member, *keys(initial))
     personal_before = balance(database, member)

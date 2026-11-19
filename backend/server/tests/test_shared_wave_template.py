@@ -6,11 +6,12 @@ from dataclasses import replace
 import pytest
 
 from server.errors import ApiError
-from server.island import rescue
+from server.island import rescue, wave_rules
 from server.island.catalogue import load_island
 from server.island.rules import weather_for
 from server.island.shared_snapshot_models import SnapshotFacts
 from server.island.shared_wave_template import expected_source, prepare_shared_wave
+from server.settings import Settings
 from server.supabase_admin import SupabaseRejected
 from server.tests.test_shared_snapshot import ACTOR, OWNER, raw_snapshot
 
@@ -112,3 +113,20 @@ async def test_finish_policy_freezes_server_restart_and_kept_rescue_eligibility(
     }
     without, _basis = await prepare(Snapshots())
     assert without["finishPolicy"]["rescue"]["enabled"] is False
+
+
+@pytest.mark.anyio
+async def test_new_shared_preparation_uses_always_on_rules_without_rewriting_saved_policy():
+    catalogue = load_island()
+    current_rules = wave_rules.wanted_rules(Settings())
+    assert set(wave_rules.ALWAYS_ON) <= set(current_rules)
+    current, _ = await prepare_shared_wave(
+        Snapshots(), catalogue, ACTOR, OWNER, weather_for(catalogue, "calm"), 4242, current_rules,
+    )
+    assert all(current["createWave"][key] for key in (
+        "towerHealth", "pathing", "towerObstacles", "rescue", "defensesV2", "shipFire",
+    ))
+    assert current["finishPolicy"]["rescue"]["enabled"] is True
+    historical, _ = await prepare(Snapshots())
+    assert historical["createWave"]["rescue"] is False
+    assert historical["finishPolicy"]["rescue"]["enabled"] is False
