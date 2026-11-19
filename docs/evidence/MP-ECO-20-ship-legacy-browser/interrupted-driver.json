@@ -1,0 +1,204 @@
+{
+  "scenario": "rendered-ship-and-legacy-browser",
+  "status": "failed",
+  "startedAt": "2026-11-19T18:55:25.760Z",
+  "expectedTestSource": "92e7c3b6d68a8636a638606a605efa534ea3fb83",
+  "servedProductionCandidate": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+  "sourceBefore": {
+    "expectedProductionBaseline": "92e7c3b6d68a8636a638606a605efa534ea3fb83",
+    "actualCheckoutHead": "ec7a049f6b1085fa56e19eb43846c037ba354a1a",
+    "productionDiffFromBaseline": "empty",
+    "paths": [
+      "backend/server",
+      "backend/content",
+      "frontend/src",
+      "supabase/migrations",
+      "backend/uv.lock",
+      "backend/pyproject.toml",
+      "frontend/package-lock.json",
+      "frontend/package.json",
+      ":(exclude)backend/server/tests"
+    ]
+  },
+  "equivalenceBefore": {
+    "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+    "actualCheckoutHead": "ec7a049f6b1085fa56e19eb43846c037ba354a1a",
+    "productionDiffFromBaseline": "empty",
+    "paths": [
+      "backend/server",
+      "backend/content",
+      "frontend/src",
+      "supabase/migrations",
+      "backend/uv.lock",
+      "backend/pyproject.toml",
+      "frontend/package-lock.json",
+      "frontend/package.json",
+      ":(exclude)backend/server/tests"
+    ]
+  },
+  "hashesBefore": {
+    "frontend/scripts/authenticated-economy/ship-legacy-browser.mjs": "dac024d16c880bb982c96af39012e303b562d721bc9ac1c9182473c69da2bdfa",
+    "frontend/scripts/authenticated-economy/ship-legacy-front.mjs": "cece9e15a65706d076ea6abaec97be05c900e39295b5b778c72d141648137c39",
+    "backend/tools/authenticated_economy/ship_legacy_side.py": "c241f4c8df470c5a0c9af5308e4cbd099937eadeef4847b096ecd34dc29f91a8",
+    "frontend/scripts/authenticated-economy/clients.mjs": "dfa176b33a56bc0f6c5a19a219d5c01ddb2c071fe66331d6d15cb181cf7ac6c0",
+    "frontend/scripts/authenticated-economy/observer.mjs": "40cb288da9f9a80e337fba5a39a12b1b23501ad1ff48a2a4614975492997f140",
+    "frontend/scripts/authenticated-economy/runtime.mjs": "d1387a35fd7243df58e8d9589586034b3a098489bb20e43bece9b6b45040865f",
+    "frontend/scripts/authenticated-economy/source.mjs": "56d138914dc5b4e15159162bb21db68c985b2c9083c2e5bac4b34a90502ea8d9"
+  },
+  "steps": [
+    {
+      "name": "positive personal island construction through real card",
+      "spot": "wall_3",
+      "initialWallet": {
+        "balance": "180",
+        "entries": 3
+      },
+      "afterBuild": {
+        "balance": "170",
+        "entries": 4
+      },
+      "card": "Wall\n\n×\n\nStops boarders until they break it; ships shell it.\n\nBuild · 🪙 10\n\nYou have 🪙 180\n\nMove",
+      "transportStatus": 200
+    },
+    {
+      "name": "legacy Harbor reachable with personal funding",
+      "card": "The Harbor\n×\n📈\nMarket stall\n\nUp or down in 5 minutes? Put a few coins on it.\n\nOpen\n⚽\nMatch board\n\nPick who wins a real match.\n\nOpen\n⛅\nWeather board\n\nLive weather, and what it does to the pirates.\n\nOpen",
+      "hud": "170 coins · Best won wave 30",
+      "wallet": {
+        "balance": "170",
+        "entries": 4
+      }
+    },
+    {
+      "name": "positive Pirate Point card purchase retains personal funding",
+      "spot": "pp_wall_4",
+      "kind": "wall",
+      "paidCoins": "10",
+      "before": {
+        "balance": "170",
+        "entries": 4
+      },
+      "after": {
+        "balance": "160",
+        "entries": 5
+      },
+      "card": "Wall\n\n×\n\nStops boarders until they break it; ships shell it.\n\nPaid by you · belongs to Pirate Point\n\nBuild · 🪙 10\n\nYou have 🪙 170"
+    },
+    {
+      "name": "supported protocol-one idle browser transport",
+      "status": 200,
+      "currentWave": null,
+      "boundary": "Idle transport proof only; no legacy animation/finish is inferred by this row."
+    },
+    {
+      "name": "old-client browser requests fail closed after admission",
+      "fences": [
+        {
+          "label": "missing capability",
+          "status": 409,
+          "code": "economy_context_required"
+        },
+        {
+          "label": "unsupported capability",
+          "status": 409,
+          "code": "economy_version_mismatch"
+        },
+        {
+          "label": "old protocol on admitted shared island",
+          "status": 409,
+          "code": "client_update_required"
+        }
+      ],
+      "unchangedMoney": true
+    }
+  ],
+  "limits": [
+    "One real SDK/restored production-browser actor; no ten-browser cap rerun or human-play claim.",
+    "Saved best30/completed wreck and fresh shared admission are explicit local eligibility fixtures, not earned wins/repair payments/conversion.",
+    "The ship round uses ordinary physical Fire inputs, real requestAnimationFrame time and unchanged scoring; no stars/result/clock injection.",
+    "The side API explicitly enables the demo feature and disables recovery admission, with demo_mode false; actual product services remain unchanged.",
+    "The existing oneisland=0 travel opt-out exposes the normal sea-chart controls for this legacy compatibility observation."
+  ],
+  "servedPrimaryBefore": [
+    {
+      "service": "api",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "2de87a1c7a95423f93e83f7f254bff624f8b9eba",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    },
+    {
+      "service": "frontend",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "2de87a1c7a95423f93e83f7f254bff624f8b9eba",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    }
+  ],
+  "error": {
+    "name": "AssertionError",
+    "message": "Physically played round must earn at least one star for positive accounting proof"
+  },
+  "finishedAt": "2026-11-19T18:58:04.464Z",
+  "hashesAfter": {
+    "frontend/scripts/authenticated-economy/ship-legacy-browser.mjs": "dac024d16c880bb982c96af39012e303b562d721bc9ac1c9182473c69da2bdfa",
+    "frontend/scripts/authenticated-economy/ship-legacy-front.mjs": "cece9e15a65706d076ea6abaec97be05c900e39295b5b778c72d141648137c39",
+    "backend/tools/authenticated_economy/ship_legacy_side.py": "c241f4c8df470c5a0c9af5308e4cbd099937eadeef4847b096ecd34dc29f91a8",
+    "frontend/scripts/authenticated-economy/clients.mjs": "dfa176b33a56bc0f6c5a19a219d5c01ddb2c071fe66331d6d15cb181cf7ac6c0",
+    "frontend/scripts/authenticated-economy/observer.mjs": "40cb288da9f9a80e337fba5a39a12b1b23501ad1ff48a2a4614975492997f140",
+    "frontend/scripts/authenticated-economy/runtime.mjs": "d1387a35fd7243df58e8d9589586034b3a098489bb20e43bece9b6b45040865f",
+    "frontend/scripts/authenticated-economy/source.mjs": "56d138914dc5b4e15159162bb21db68c985b2c9083c2e5bac4b34a90502ea8d9"
+  },
+  "sourceAfter": {
+    "expectedProductionBaseline": "92e7c3b6d68a8636a638606a605efa534ea3fb83",
+    "actualCheckoutHead": "ec7a049f6b1085fa56e19eb43846c037ba354a1a",
+    "productionDiffFromBaseline": "empty",
+    "paths": [
+      "backend/server",
+      "backend/content",
+      "frontend/src",
+      "supabase/migrations",
+      "backend/uv.lock",
+      "backend/pyproject.toml",
+      "frontend/package-lock.json",
+      "frontend/package.json",
+      ":(exclude)backend/server/tests"
+    ]
+  },
+  "equivalenceAfter": {
+    "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+    "actualCheckoutHead": "ec7a049f6b1085fa56e19eb43846c037ba354a1a",
+    "productionDiffFromBaseline": "empty",
+    "paths": [
+      "backend/server",
+      "backend/content",
+      "frontend/src",
+      "supabase/migrations",
+      "backend/uv.lock",
+      "backend/pyproject.toml",
+      "frontend/package-lock.json",
+      "frontend/package.json",
+      ":(exclude)backend/server/tests"
+    ]
+  }
+}

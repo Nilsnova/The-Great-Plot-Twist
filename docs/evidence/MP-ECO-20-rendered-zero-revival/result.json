@@ -1,0 +1,311 @@
+{
+  "result": "passed",
+  "source": "96bae20e499c23bc06f87d1c88b98a6747d6f520",
+  "expectedCommit": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+  "scenarioSha256": "4190bd1a70870394933df69ade6a8bd799d0816b6687c37c5c11fa74184ea41e",
+  "helperHashes": {
+    "clients.mjs": "dfa176b33a56bc0f6c5a19a219d5c01ddb2c071fe66331d6d15cb181cf7ac6c0",
+    "observer.mjs": "40cb288da9f9a80e337fba5a39a12b1b23501ad1ff48a2a4614975492997f140",
+    "runtime.mjs": "d1387a35fd7243df58e8d9589586034b3a098489bb20e43bece9b6b45040865f",
+    "source.mjs": "56d138914dc5b4e15159162bb21db68c985b2c9083c2e5bac4b34a90502ea8d9"
+  },
+  "sourceBefore": [
+    {
+      "service": "api",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "2de87a1c7a95423f93e83f7f254bff624f8b9eba",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    },
+    {
+      "service": "frontend",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "2de87a1c7a95423f93e83f7f254bff624f8b9eba",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    }
+  ],
+  "sourceAfter": [
+    {
+      "service": "api",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "2de87a1c7a95423f93e83f7f254bff624f8b9eba",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    },
+    {
+      "service": "frontend",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "2de87a1c7a95423f93e83f7f254bff624f8b9eba",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    }
+  ],
+  "startedAt": "2026-11-19T18:24:16.338Z",
+  "finishedAt": "2026-11-19T18:26:23.369Z",
+  "facts": [
+    {
+      "event": "ordinary-rendered-zero-budget-bell",
+      "at": "2026-11-19T18:25:18.201Z",
+      "wave": 6,
+      "participants": 2,
+      "treasury": "0",
+      "savedWalls": 12
+    },
+    {
+      "event": "read-only-rendered-encounter",
+      "at": "2026-11-19T18:25:18.804Z",
+      "party": [
+        {
+          "x": 0,
+          "z": 0,
+          "hp": 100,
+          "down": false
+        },
+        {
+          "x": 0,
+          "z": 0,
+          "hp": 100,
+          "down": false
+        }
+      ],
+      "boarder": null,
+      "frontier": {
+        "renderedPosition": {
+          "x": -0.15030000000000687,
+          "z": 11.401500000000024
+        },
+        "ticks": 0,
+        "simTime": 0,
+        "blockedDialogs": []
+      }
+    },
+    {
+      "event": "read-only-rendered-encounter",
+      "at": "2026-11-19T18:25:29.051Z",
+      "party": [
+        {
+          "x": 0,
+          "z": 0,
+          "hp": 100,
+          "down": false
+        },
+        {
+          "x": 0,
+          "z": 0,
+          "hp": 100,
+          "down": false
+        }
+      ],
+      "boarder": null,
+      "frontier": {
+        "renderedPosition": {
+          "x": -0.15030000000000687,
+          "z": 11.401500000000024
+        },
+        "ticks": 50,
+        "simTime": 2.5,
+        "blockedDialogs": []
+      }
+    },
+    {
+      "event": "read-only-rendered-encounter",
+      "at": "2026-11-19T18:25:39.748Z",
+      "party": [
+        {
+          "x": -0.3,
+          "z": 11.55,
+          "hp": 100,
+          "down": false
+        },
+        {
+          "x": -0.15,
+          "z": 12.3,
+          "hp": 100,
+          "down": false
+        }
+      ],
+      "boarder": {
+        "x": 2.3,
+        "z": 18.23,
+        "hp": 22.8,
+        "state": "hacking"
+      },
+      "frontier": {
+        "renderedPosition": {
+          "x": -0.15030000000000687,
+          "z": 13.201500000000028
+        },
+        "ticks": 245,
+        "simTime": 12.25,
+        "blockedDialogs": []
+      }
+    },
+    {
+      "event": "read-only-rendered-encounter",
+      "at": "2026-11-19T18:25:50.295Z",
+      "party": [
+        {
+          "x": 1.5,
+          "z": 14.1,
+          "hp": 100,
+          "down": false
+        },
+        {
+          "x": 1.65,
+          "z": 18.45,
+          "hp": 82.5,
+          "down": false
+        }
+      ],
+      "boarder": {
+        "x": 2.3,
+        "z": 18.23,
+        "hp": 22.8,
+        "state": "fighting"
+      },
+      "frontier": {
+        "renderedPosition": {
+          "x": 1.6496999999999928,
+          "z": 19.351199999999906
+        },
+        "ticks": 457,
+        "simTime": 22.85,
+        "blockedDialogs": []
+      }
+    },
+    {
+      "event": "read-only-rendered-encounter",
+      "at": "2026-11-19T18:26:00.755Z",
+      "party": [
+        {
+          "x": 1.5,
+          "z": 14.1,
+          "hp": 100,
+          "down": false
+        },
+        {
+          "x": 1.65,
+          "z": 18.45,
+          "hp": 17,
+          "down": false
+        }
+      ],
+      "boarder": {
+        "x": 2.3,
+        "z": 18.23,
+        "hp": 22.8,
+        "state": "fighting"
+      },
+      "frontier": {
+        "renderedPosition": {
+          "x": 1.6496999999999928,
+          "z": 18.451199999999915
+        },
+        "ticks": 666,
+        "simTime": 33.3,
+        "blockedDialogs": []
+      }
+    },
+    {
+      "event": "ordinary-rendered-e-hold-restored-paired-captains-at-zero",
+      "at": "2026-11-19T18:26:23.271Z",
+      "helper": "render-zero-member",
+      "target": "render-zero-owner",
+      "acceptedRevival": {
+        "actor": "render-zero-member",
+        "status": 200,
+        "repeat": false,
+        "eventSeq": 52,
+        "restoredHPUnits": 500000
+      },
+      "journalEvents": 1,
+      "pairedStanding": true,
+      "treasury": "0",
+      "moneyAndQuotaUnchanged": true
+    }
+  ],
+  "revivals": [
+    {
+      "actor": "render-zero-member",
+      "status": 200,
+      "repeat": false,
+      "eventSeq": 52,
+      "restoredHPUnits": 500000
+    }
+  ],
+  "accounting": {
+    "account": [
+      {
+        "balance": "0",
+        "held": "0",
+        "revision": "1",
+        "transactions": 1
+      }
+    ],
+    "wallets": [
+      {
+        "balance": "200",
+        "transactions": 1
+      },
+      {
+        "balance": "200",
+        "transactions": 1
+      }
+    ],
+    "quota": [
+      {
+        "paid_used": 0
+      }
+    ]
+  },
+  "limitations": [
+    "Twelve saved level-five walls and wave-six progression are explicit pre-admission fixtures, followed by fresh zero-capital admission.",
+    "The helper follows about 4.2 world units toward the island center until a real fall, avoiding the normal 1.5-unit ship splash radius; it approaches by WASD afterward.",
+    "All movement, bell and E hold use actual rendered keyboard/pointer paths. No HP, fall, journal, outcome, clock, position teleport, response interception. The supported controller.autoBlade=false test control suppresses automatic cutlass input; enemy damage and fall remain normal simulation events.",
+    "No shared grant or history edit occurs after admission; both Captains use normal saved progression.",
+    "Development inspection selects the ordinary bell card; the accepted bell uses its real pointer button.",
+    "No hosted migration, deployment, conversion or activation."
+  ],
+  "publicEvidenceNote": "Disposable actor identifiers are removed; all asserted financial values, counts, source identities and event sequence are retained."
+}

@@ -1,0 +1,276 @@
+{
+  "sourceCommit": "90a9a8227579c2be86cbe1d024fa75de7d61637e",
+  "qualification": "The application candidate is qualified by dependency/blob comparisons; actual original source commits and staged execution boundaries are retained in the hashed review index. The offline checker validates metadata only.",
+  "results": [
+    {
+      "scenario": "treasury-concurrent-spending",
+      "layer": "sql",
+      "sourceCommit": "90a9a8227579c2be86cbe1d024fa75de7d61637e",
+      "status": "passed",
+      "command": "cd backend && CASE_PG_SCRATCH=1 uv run --offline --no-sync --with pgserver --with 'psycopg[binary]' --with pglast python -m pytest -q --tb=short server/tests/island_sql/test_island_treasury_sql.py server/tests/island_sql/test_shared_domain_acceptance_sql.py server/tests/island_sql/test_current_cross_domain_compatibility_sql.py server/tests/island_sql/test_wave_treasury_settlement_sql.py server/tests/island_sql/test_personal_captain_sql.py server/tests/island_sql/test_personal_captain_operations_sql.py server/tests/island_sql/test_shared_arsenal_sql.py server/tests/island_sql/test_arsenal_holder_deletion_sql.py server/tests/island_sql/test_t60_shared_repair_acceptance_sql.py server/tests/island_sql/test_shared_free_revival_sql.py server/tests/island_sql/test_shared_ship_rewards_sql.py server/tests/island_sql/test_canonical_membership_lifecycle_sql.py server/tests/island_sql/test_shared_lifecycle_transactions_sql.py server/tests/island_sql/test_shared_lifecycle_races_sql.py server/tests/island_sql/test_shared_lifecycle_native_sql.py server/tests/island_sql/test_main_rules_compatibility_sql.py server/tests/island_sql/test_islands_and_waves_sql.py server/tests/island_sql/test_shared_session_wave_sql.py server/tests/island_sql/test_shared_session_control_sql.py server/tests/island_sql/test_shared_session_pacing_sql.py server/tests/island_sql/test_shared_session_close_sql.py server/tests/island_sql/test_shared_session_worker_sql.py server/tests/shared_wagers_sql/test_shared_wager_transactions_sql.py server/tests/shared_wagers_runtime_sql/test_wager_jobs_sql.py",
+      "artifact": "MP-ECO-20-browser-completion/scenario-review.json",
+      "sha256": "1cef6f77b207960df150b9cb1d9939abc48fce6ad40607e8e90e195a8785ec57"
+    },
+    {
+      "scenario": "treasury-concurrent-spending",
+      "layer": "authenticated_browser",
+      "sourceCommit": "90a9a8227579c2be86cbe1d024fa75de7d61637e",
+      "status": "passed",
+      "command": "cd frontend && NODE_EXTRA_CA_CERTS=\"$PROVIDER_CA\" node scripts/authenticated-economy/core.mjs",
+      "artifact": "MP-ECO-20-browser-completion/scenario-review.json",
+      "sha256": "1cef6f77b207960df150b9cb1d9939abc48fce6ad40607e8e90e195a8785ec57"
+    },
+    {
+      "scenario": "settlement-source-account",
+      "layer": "sql",
+      "sourceCommit": "90a9a8227579c2be86cbe1d024fa75de7d61637e",
+      "status": "passed",
+      "command": "cd backend && CASE_PG_SCRATCH=1 uv run --offline --no-sync --with pgserver --with 'psycopg[binary]' --with pglast python -m pytest -q --tb=short server/tests/island_sql/test_island_treasury_sql.py server/tests/island_sql/test_shared_domain_acceptance_sql.py server/tests/island_sql/test_current_cross_domain_compatibility_sql.py server/tests/island_sql/test_wave_treasury_settlement_sql.py server/tests/island_sql/test_personal_captain_sql.py server/tests/island_sql/test_personal_captain_operations_sql.py server/tests/island_sql/test_shared_arsenal_sql.py server/tests/island_sql/test_arsenal_holder_deletion_sql.py server/tests/island_sql/test_t60_shared_repair_acceptance_sql.py server/tests/island_sql/test_shared_free_revival_sql.py server/tests/island_sql/test_shared_ship_rewards_sql.py server/tests/island_sql/test_canonical_membership_lifecycle_sql.py server/tests/island_sql/test_shared_lifecycle_transactions_sql.py server/tests/island_sql/test_shared_lifecycle_races_sql.py server/tests/island_sql/test_shared_lifecycle_native_sql.py server/tests/island_sql/test_main_rules_compatibility_sql.py server/tests/island_sql/test_islands_and_waves_sql.py server/tests/island_sql/test_shared_session_wave_sql.py server/tests/island_sql/test_shared_session_control_sql.py server/tests/island_sql/test_shared_session_pacing_sql.py server/tests/island_sql/test_shared_session_close_sql.py server/tests/island_sql/test_shared_session_worker_sql.py server/tests/shared_wagers_sql/test_shared_wager_transactions_sql.py server/tests/shared_wagers_runtime_sql/test_wager_jobs_sql.py",
+      "artifact": "MP-ECO-20-browser-completion/scenario-review.json",
+      "sha256": "1cef6f77b207960df150b9cb1d9939abc48fce6ad40607e8e90e195a8785ec57"
+    },
+    {
+      "scenario": "settlement-source-account",
+      "layer": "authenticated_browser",
+      "sourceCommit": "90a9a8227579c2be86cbe1d024fa75de7d61637e",
+      "status": "passed",
+      "command": "NODE_EXTRA_CA_CERTS=\"$PROVIDER_CA\" node frontend/scripts/authenticated-economy/visible-wagers.mjs \"$PRIVATE_SETUP_DIRECTORY\" \"$NEW_PRIVATE_OUTPUT\" \"$RECORDED_OPENING_REPORT\"",
+      "artifact": "MP-ECO-20-browser-completion/scenario-review.json",
+      "sha256": "1cef6f77b207960df150b9cb1d9939abc48fce6ad40607e8e90e195a8785ec57"
+    },
+    {
+      "scenario": "wave-income-once",
+      "layer": "sql",
+      "sourceCommit": "90a9a8227579c2be86cbe1d024fa75de7d61637e",
+      "status": "passed",
+      "command": "cd backend && CASE_PG_SCRATCH=1 uv run --offline --no-sync --with pgserver --with 'psycopg[binary]' --with pglast python -m pytest -q --tb=short server/tests/island_sql/test_island_treasury_sql.py server/tests/island_sql/test_shared_domain_acceptance_sql.py server/tests/island_sql/test_current_cross_domain_compatibility_sql.py server/tests/island_sql/test_wave_treasury_settlement_sql.py server/tests/island_sql/test_personal_captain_sql.py server/tests/island_sql/test_personal_captain_operations_sql.py server/tests/island_sql/test_shared_arsenal_sql.py server/tests/island_sql/test_arsenal_holder_deletion_sql.py server/tests/island_sql/test_t60_shared_repair_acceptance_sql.py server/tests/island_sql/test_shared_free_revival_sql.py server/tests/island_sql/test_shared_ship_rewards_sql.py server/tests/island_sql/test_canonical_membership_lifecycle_sql.py server/tests/island_sql/test_shared_lifecycle_transactions_sql.py server/tests/island_sql/test_shared_lifecycle_races_sql.py server/tests/island_sql/test_shared_lifecycle_native_sql.py server/tests/island_sql/test_main_rules_compatibility_sql.py server/tests/island_sql/test_islands_and_waves_sql.py server/tests/island_sql/test_shared_session_wave_sql.py server/tests/island_sql/test_shared_session_control_sql.py server/tests/island_sql/test_shared_session_pacing_sql.py server/tests/island_sql/test_shared_session_close_sql.py server/tests/island_sql/test_shared_session_worker_sql.py server/tests/shared_wagers_sql/test_shared_wager_transactions_sql.py server/tests/shared_wagers_runtime_sql/test_wager_jobs_sql.py",
+      "artifact": "MP-ECO-20-browser-completion/scenario-review.json",
+      "sha256": "1cef6f77b207960df150b9cb1d9939abc48fce6ad40607e8e90e195a8785ec57"
+    },
+    {
+      "scenario": "wave-income-once",
+      "layer": "authenticated_browser",
+      "sourceCommit": "90a9a8227579c2be86cbe1d024fa75de7d61637e",
+      "status": "passed",
+      "command": "node --experimental-repl-await",
+      "artifact": "MP-ECO-20-browser-completion/scenario-review.json",
+      "sha256": "1cef6f77b207960df150b9cb1d9939abc48fce6ad40607e8e90e195a8785ec57"
+    },
+    {
+      "scenario": "personal-participation",
+      "layer": "sql",
+      "sourceCommit": "90a9a8227579c2be86cbe1d024fa75de7d61637e",
+      "status": "passed",
+      "command": "cd backend && CASE_PG_SCRATCH=1 uv run --offline --no-sync --with pgserver --with 'psycopg[binary]' --with pglast python -m pytest -q --tb=short server/tests/island_sql/test_island_treasury_sql.py server/tests/island_sql/test_shared_domain_acceptance_sql.py server/tests/island_sql/test_current_cross_domain_compatibility_sql.py server/tests/island_sql/test_wave_treasury_settlement_sql.py server/tests/island_sql/test_personal_captain_sql.py server/tests/island_sql/test_personal_captain_operations_sql.py server/tests/island_sql/test_shared_arsenal_sql.py server/tests/island_sql/test_arsenal_holder_deletion_sql.py server/tests/island_sql/test_t60_shared_repair_acceptance_sql.py server/tests/island_sql/test_shared_free_revival_sql.py server/tests/island_sql/test_shared_ship_rewards_sql.py server/tests/island_sql/test_canonical_membership_lifecycle_sql.py server/tests/island_sql/test_shared_lifecycle_transactions_sql.py server/tests/island_sql/test_shared_lifecycle_races_sql.py server/tests/island_sql/test_shared_lifecycle_native_sql.py server/tests/island_sql/test_main_rules_compatibility_sql.py server/tests/island_sql/test_islands_and_waves_sql.py server/tests/island_sql/test_shared_session_wave_sql.py server/tests/island_sql/test_shared_session_control_sql.py server/tests/island_sql/test_shared_session_pacing_sql.py server/tests/island_sql/test_shared_session_close_sql.py server/tests/island_sql/test_shared_session_worker_sql.py server/tests/shared_wagers_sql/test_shared_wager_transactions_sql.py server/tests/shared_wagers_runtime_sql/test_wager_jobs_sql.py",
+      "artifact": "MP-ECO-20-browser-completion/scenario-review.json",
+      "sha256": "1cef6f77b207960df150b9cb1d9939abc48fce6ad40607e8e90e195a8785ec57"
+    },
+    {
+      "scenario": "personal-participation",
+      "layer": "authenticated_browser",
+      "sourceCommit": "90a9a8227579c2be86cbe1d024fa75de7d61637e",
+      "status": "passed",
+      "command": "NODE_EXTRA_CA_CERTS=\"$PROVIDER_CA\" node frontend/scripts/check-economy-rendered-zero-revival.mjs --runtime \"$LOCAL_RUNTIME\" --output \"$NEW_PRIVATE_OUTPUT\" --expected-commit 64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "artifact": "MP-ECO-20-browser-completion/scenario-review.json",
+      "sha256": "1cef6f77b207960df150b9cb1d9939abc48fce6ad40607e8e90e195a8785ec57"
+    },
+    {
+      "scenario": "engineer-generation",
+      "layer": "sql",
+      "sourceCommit": "90a9a8227579c2be86cbe1d024fa75de7d61637e",
+      "status": "passed",
+      "command": "cd backend && CASE_PG_SCRATCH=1 uv run --offline --no-sync --with pgserver --with 'psycopg[binary]' --with pglast python -m pytest -q --tb=short server/tests/island_sql/test_island_treasury_sql.py server/tests/island_sql/test_shared_domain_acceptance_sql.py server/tests/island_sql/test_current_cross_domain_compatibility_sql.py server/tests/island_sql/test_wave_treasury_settlement_sql.py server/tests/island_sql/test_personal_captain_sql.py server/tests/island_sql/test_personal_captain_operations_sql.py server/tests/island_sql/test_shared_arsenal_sql.py server/tests/island_sql/test_arsenal_holder_deletion_sql.py server/tests/island_sql/test_t60_shared_repair_acceptance_sql.py server/tests/island_sql/test_shared_free_revival_sql.py server/tests/island_sql/test_shared_ship_rewards_sql.py server/tests/island_sql/test_canonical_membership_lifecycle_sql.py server/tests/island_sql/test_shared_lifecycle_transactions_sql.py server/tests/island_sql/test_shared_lifecycle_races_sql.py server/tests/island_sql/test_shared_lifecycle_native_sql.py server/tests/island_sql/test_main_rules_compatibility_sql.py server/tests/island_sql/test_islands_and_waves_sql.py server/tests/island_sql/test_shared_session_wave_sql.py server/tests/island_sql/test_shared_session_control_sql.py server/tests/island_sql/test_shared_session_pacing_sql.py server/tests/island_sql/test_shared_session_close_sql.py server/tests/island_sql/test_shared_session_worker_sql.py server/tests/shared_wagers_sql/test_shared_wager_transactions_sql.py server/tests/shared_wagers_runtime_sql/test_wager_jobs_sql.py",
+      "artifact": "MP-ECO-20-browser-completion/scenario-review.json",
+      "sha256": "1cef6f77b207960df150b9cb1d9939abc48fce6ad40607e8e90e195a8785ec57"
+    },
+    {
+      "scenario": "engineer-generation",
+      "layer": "authenticated_browser",
+      "sourceCommit": "90a9a8227579c2be86cbe1d024fa75de7d61637e",
+      "status": "passed",
+      "command": "NODE_EXTRA_CA_CERTS=\"$PROVIDER_CA\" node frontend/scripts/authenticated-economy/engineer-first-buy.mjs \"$LOCAL_RUNTIME\" \"$NEW_PRIVATE_OUTPUT\"",
+      "artifact": "MP-ECO-20-browser-completion/scenario-review.json",
+      "sha256": "1cef6f77b207960df150b9cb1d9939abc48fce6ad40607e8e90e195a8785ec57"
+    },
+    {
+      "scenario": "arsenal-holder-lifecycle",
+      "layer": "sql",
+      "sourceCommit": "90a9a8227579c2be86cbe1d024fa75de7d61637e",
+      "status": "passed",
+      "command": "cd backend && CASE_PG_SCRATCH=1 uv run --offline --no-sync --with pgserver --with 'psycopg[binary]' --with pglast python -m pytest -q --tb=short server/tests/island_sql/test_island_treasury_sql.py server/tests/island_sql/test_shared_domain_acceptance_sql.py server/tests/island_sql/test_current_cross_domain_compatibility_sql.py server/tests/island_sql/test_wave_treasury_settlement_sql.py server/tests/island_sql/test_personal_captain_sql.py server/tests/island_sql/test_personal_captain_operations_sql.py server/tests/island_sql/test_shared_arsenal_sql.py server/tests/island_sql/test_arsenal_holder_deletion_sql.py server/tests/island_sql/test_t60_shared_repair_acceptance_sql.py server/tests/island_sql/test_shared_free_revival_sql.py server/tests/island_sql/test_shared_ship_rewards_sql.py server/tests/island_sql/test_canonical_membership_lifecycle_sql.py server/tests/island_sql/test_shared_lifecycle_transactions_sql.py server/tests/island_sql/test_shared_lifecycle_races_sql.py server/tests/island_sql/test_shared_lifecycle_native_sql.py server/tests/island_sql/test_main_rules_compatibility_sql.py server/tests/island_sql/test_islands_and_waves_sql.py server/tests/island_sql/test_shared_session_wave_sql.py server/tests/island_sql/test_shared_session_control_sql.py server/tests/island_sql/test_shared_session_pacing_sql.py server/tests/island_sql/test_shared_session_close_sql.py server/tests/island_sql/test_shared_session_worker_sql.py server/tests/shared_wagers_sql/test_shared_wager_transactions_sql.py server/tests/shared_wagers_runtime_sql/test_wager_jobs_sql.py",
+      "artifact": "MP-ECO-20-browser-completion/scenario-review.json",
+      "sha256": "1cef6f77b207960df150b9cb1d9939abc48fce6ad40607e8e90e195a8785ec57"
+    },
+    {
+      "scenario": "arsenal-holder-lifecycle",
+      "layer": "authenticated_browser",
+      "sourceCommit": "90a9a8227579c2be86cbe1d024fa75de7d61637e",
+      "status": "passed",
+      "command": "NODE_EXTRA_CA_CERTS=\"$PROVIDER_CA\" node frontend/scripts/check-economy-lifecycle-browser-provider.mjs --runtime \"$LOCAL_RUNTIME\" --output \"$NEW_PRIVATE_OUTPUT\"",
+      "artifact": "MP-ECO-20-browser-completion/scenario-review.json",
+      "sha256": "1cef6f77b207960df150b9cb1d9939abc48fce6ad40607e8e90e195a8785ec57"
+    },
+    {
+      "scenario": "repairs-free-revival",
+      "layer": "sql",
+      "sourceCommit": "90a9a8227579c2be86cbe1d024fa75de7d61637e",
+      "status": "passed",
+      "command": "cd backend && CASE_PG_SCRATCH=1 uv run --offline --no-sync --with pgserver --with 'psycopg[binary]' --with pglast python -m pytest -q --tb=short server/tests/island_sql/test_island_treasury_sql.py server/tests/island_sql/test_shared_domain_acceptance_sql.py server/tests/island_sql/test_current_cross_domain_compatibility_sql.py server/tests/island_sql/test_wave_treasury_settlement_sql.py server/tests/island_sql/test_personal_captain_sql.py server/tests/island_sql/test_personal_captain_operations_sql.py server/tests/island_sql/test_shared_arsenal_sql.py server/tests/island_sql/test_arsenal_holder_deletion_sql.py server/tests/island_sql/test_t60_shared_repair_acceptance_sql.py server/tests/island_sql/test_shared_free_revival_sql.py server/tests/island_sql/test_shared_ship_rewards_sql.py server/tests/island_sql/test_canonical_membership_lifecycle_sql.py server/tests/island_sql/test_shared_lifecycle_transactions_sql.py server/tests/island_sql/test_shared_lifecycle_races_sql.py server/tests/island_sql/test_shared_lifecycle_native_sql.py server/tests/island_sql/test_main_rules_compatibility_sql.py server/tests/island_sql/test_islands_and_waves_sql.py server/tests/island_sql/test_shared_session_wave_sql.py server/tests/island_sql/test_shared_session_control_sql.py server/tests/island_sql/test_shared_session_pacing_sql.py server/tests/island_sql/test_shared_session_close_sql.py server/tests/island_sql/test_shared_session_worker_sql.py server/tests/shared_wagers_sql/test_shared_wager_transactions_sql.py server/tests/shared_wagers_runtime_sql/test_wager_jobs_sql.py",
+      "artifact": "MP-ECO-20-browser-completion/scenario-review.json",
+      "sha256": "1cef6f77b207960df150b9cb1d9939abc48fce6ad40607e8e90e195a8785ec57"
+    },
+    {
+      "scenario": "repairs-free-revival",
+      "layer": "authenticated_browser",
+      "sourceCommit": "90a9a8227579c2be86cbe1d024fa75de7d61637e",
+      "status": "passed",
+      "command": "NODE_EXTRA_CA_CERTS=\"$PROVIDER_CA\" node frontend/scripts/check-economy-rendered-zero-revival.mjs --runtime \"$LOCAL_RUNTIME\" --output \"$NEW_PRIVATE_OUTPUT\" --expected-commit 64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "artifact": "MP-ECO-20-browser-completion/scenario-review.json",
+      "sha256": "1cef6f77b207960df150b9cb1d9939abc48fce6ad40607e8e90e195a8785ec57"
+    },
+    {
+      "scenario": "unrestricted-bets",
+      "layer": "sql",
+      "sourceCommit": "90a9a8227579c2be86cbe1d024fa75de7d61637e",
+      "status": "passed",
+      "command": "cd backend && CASE_PG_SCRATCH=1 uv run --offline --no-sync --with pgserver --with 'psycopg[binary]' --with pglast python -m pytest -q --tb=short server/tests/island_sql/test_island_treasury_sql.py server/tests/island_sql/test_shared_domain_acceptance_sql.py server/tests/island_sql/test_current_cross_domain_compatibility_sql.py server/tests/island_sql/test_wave_treasury_settlement_sql.py server/tests/island_sql/test_personal_captain_sql.py server/tests/island_sql/test_personal_captain_operations_sql.py server/tests/island_sql/test_shared_arsenal_sql.py server/tests/island_sql/test_arsenal_holder_deletion_sql.py server/tests/island_sql/test_t60_shared_repair_acceptance_sql.py server/tests/island_sql/test_shared_free_revival_sql.py server/tests/island_sql/test_shared_ship_rewards_sql.py server/tests/island_sql/test_canonical_membership_lifecycle_sql.py server/tests/island_sql/test_shared_lifecycle_transactions_sql.py server/tests/island_sql/test_shared_lifecycle_races_sql.py server/tests/island_sql/test_shared_lifecycle_native_sql.py server/tests/island_sql/test_main_rules_compatibility_sql.py server/tests/island_sql/test_islands_and_waves_sql.py server/tests/island_sql/test_shared_session_wave_sql.py server/tests/island_sql/test_shared_session_control_sql.py server/tests/island_sql/test_shared_session_pacing_sql.py server/tests/island_sql/test_shared_session_close_sql.py server/tests/island_sql/test_shared_session_worker_sql.py server/tests/shared_wagers_sql/test_shared_wager_transactions_sql.py server/tests/shared_wagers_runtime_sql/test_wager_jobs_sql.py",
+      "artifact": "MP-ECO-20-browser-completion/scenario-review.json",
+      "sha256": "1cef6f77b207960df150b9cb1d9939abc48fce6ad40607e8e90e195a8785ec57"
+    },
+    {
+      "scenario": "unrestricted-bets",
+      "layer": "authenticated_browser",
+      "sourceCommit": "90a9a8227579c2be86cbe1d024fa75de7d61637e",
+      "status": "passed",
+      "command": "NODE_EXTRA_CA_CERTS=\"$PROVIDER_CA\" node frontend/scripts/authenticated-economy/visible-wagers.mjs \"$PRIVATE_SETUP_DIRECTORY\" \"$NEW_PRIVATE_OUTPUT\" \"$RECORDED_OPENING_REPORT\"",
+      "artifact": "MP-ECO-20-browser-completion/scenario-review.json",
+      "sha256": "1cef6f77b207960df150b9cb1d9939abc48fce6ad40607e8e90e195a8785ec57"
+    },
+    {
+      "scenario": "ship-reward-cap",
+      "layer": "sql",
+      "sourceCommit": "90a9a8227579c2be86cbe1d024fa75de7d61637e",
+      "status": "passed",
+      "command": "cd backend && CASE_PG_SCRATCH=1 uv run --offline --no-sync --with pgserver --with 'psycopg[binary]' --with pglast python -m pytest -q --tb=short server/tests/island_sql/test_island_treasury_sql.py server/tests/island_sql/test_shared_domain_acceptance_sql.py server/tests/island_sql/test_current_cross_domain_compatibility_sql.py server/tests/island_sql/test_wave_treasury_settlement_sql.py server/tests/island_sql/test_personal_captain_sql.py server/tests/island_sql/test_personal_captain_operations_sql.py server/tests/island_sql/test_shared_arsenal_sql.py server/tests/island_sql/test_arsenal_holder_deletion_sql.py server/tests/island_sql/test_t60_shared_repair_acceptance_sql.py server/tests/island_sql/test_shared_free_revival_sql.py server/tests/island_sql/test_shared_ship_rewards_sql.py server/tests/island_sql/test_canonical_membership_lifecycle_sql.py server/tests/island_sql/test_shared_lifecycle_transactions_sql.py server/tests/island_sql/test_shared_lifecycle_races_sql.py server/tests/island_sql/test_shared_lifecycle_native_sql.py server/tests/island_sql/test_main_rules_compatibility_sql.py server/tests/island_sql/test_islands_and_waves_sql.py server/tests/island_sql/test_shared_session_wave_sql.py server/tests/island_sql/test_shared_session_control_sql.py server/tests/island_sql/test_shared_session_pacing_sql.py server/tests/island_sql/test_shared_session_close_sql.py server/tests/island_sql/test_shared_session_worker_sql.py server/tests/shared_wagers_sql/test_shared_wager_transactions_sql.py server/tests/shared_wagers_runtime_sql/test_wager_jobs_sql.py",
+      "artifact": "MP-ECO-20-browser-completion/scenario-review.json",
+      "sha256": "1cef6f77b207960df150b9cb1d9939abc48fce6ad40607e8e90e195a8785ec57"
+    },
+    {
+      "scenario": "ship-reward-cap",
+      "layer": "authenticated_browser",
+      "sourceCommit": "90a9a8227579c2be86cbe1d024fa75de7d61637e",
+      "status": "passed",
+      "command": "NODE_EXTRA_CA_CERTS=\"$PROVIDER_CA\" node frontend/scripts/authenticated-economy/ship-legacy-browser.mjs",
+      "artifact": "MP-ECO-20-browser-completion/scenario-review.json",
+      "sha256": "1cef6f77b207960df150b9cb1d9939abc48fce6ad40607e8e90e195a8785ec57"
+    },
+    {
+      "scenario": "member-owner-permissions",
+      "layer": "sql",
+      "sourceCommit": "90a9a8227579c2be86cbe1d024fa75de7d61637e",
+      "status": "passed",
+      "command": "cd backend && CASE_PG_SCRATCH=1 uv run --offline --no-sync --with pgserver --with 'psycopg[binary]' --with pglast python -m pytest -q --tb=short server/tests/island_sql/test_island_treasury_sql.py server/tests/island_sql/test_shared_domain_acceptance_sql.py server/tests/island_sql/test_current_cross_domain_compatibility_sql.py server/tests/island_sql/test_wave_treasury_settlement_sql.py server/tests/island_sql/test_personal_captain_sql.py server/tests/island_sql/test_personal_captain_operations_sql.py server/tests/island_sql/test_shared_arsenal_sql.py server/tests/island_sql/test_arsenal_holder_deletion_sql.py server/tests/island_sql/test_t60_shared_repair_acceptance_sql.py server/tests/island_sql/test_shared_free_revival_sql.py server/tests/island_sql/test_shared_ship_rewards_sql.py server/tests/island_sql/test_canonical_membership_lifecycle_sql.py server/tests/island_sql/test_shared_lifecycle_transactions_sql.py server/tests/island_sql/test_shared_lifecycle_races_sql.py server/tests/island_sql/test_shared_lifecycle_native_sql.py server/tests/island_sql/test_main_rules_compatibility_sql.py server/tests/island_sql/test_islands_and_waves_sql.py server/tests/island_sql/test_shared_session_wave_sql.py server/tests/island_sql/test_shared_session_control_sql.py server/tests/island_sql/test_shared_session_pacing_sql.py server/tests/island_sql/test_shared_session_close_sql.py server/tests/island_sql/test_shared_session_worker_sql.py server/tests/shared_wagers_sql/test_shared_wager_transactions_sql.py server/tests/shared_wagers_runtime_sql/test_wager_jobs_sql.py",
+      "artifact": "MP-ECO-20-browser-completion/scenario-review.json",
+      "sha256": "1cef6f77b207960df150b9cb1d9939abc48fce6ad40607e8e90e195a8785ec57"
+    },
+    {
+      "scenario": "member-owner-permissions",
+      "layer": "authenticated_browser",
+      "sourceCommit": "90a9a8227579c2be86cbe1d024fa75de7d61637e",
+      "status": "passed",
+      "command": "NODE_EXTRA_CA_CERTS=\"$PROVIDER_CA\" node frontend/scripts/check-economy-transition-browser-provider.mjs --runtime \"$LOCAL_RUNTIME\" --output \"$NEW_PRIVATE_OUTPUT\"",
+      "artifact": "MP-ECO-20-browser-completion/scenario-review.json",
+      "sha256": "1cef6f77b207960df150b9cb1d9939abc48fce6ad40607e8e90e195a8785ec57"
+    },
+    {
+      "scenario": "reset-deletion",
+      "layer": "sql",
+      "sourceCommit": "90a9a8227579c2be86cbe1d024fa75de7d61637e",
+      "status": "passed",
+      "command": "cd backend && CASE_PG_SCRATCH=1 uv run --offline --no-sync --with pgserver --with 'psycopg[binary]' --with pglast python -m pytest -q --tb=short server/tests/island_sql/test_island_treasury_sql.py server/tests/island_sql/test_shared_domain_acceptance_sql.py server/tests/island_sql/test_current_cross_domain_compatibility_sql.py server/tests/island_sql/test_wave_treasury_settlement_sql.py server/tests/island_sql/test_personal_captain_sql.py server/tests/island_sql/test_personal_captain_operations_sql.py server/tests/island_sql/test_shared_arsenal_sql.py server/tests/island_sql/test_arsenal_holder_deletion_sql.py server/tests/island_sql/test_t60_shared_repair_acceptance_sql.py server/tests/island_sql/test_shared_free_revival_sql.py server/tests/island_sql/test_shared_ship_rewards_sql.py server/tests/island_sql/test_canonical_membership_lifecycle_sql.py server/tests/island_sql/test_shared_lifecycle_transactions_sql.py server/tests/island_sql/test_shared_lifecycle_races_sql.py server/tests/island_sql/test_shared_lifecycle_native_sql.py server/tests/island_sql/test_main_rules_compatibility_sql.py server/tests/island_sql/test_islands_and_waves_sql.py server/tests/island_sql/test_shared_session_wave_sql.py server/tests/island_sql/test_shared_session_control_sql.py server/tests/island_sql/test_shared_session_pacing_sql.py server/tests/island_sql/test_shared_session_close_sql.py server/tests/island_sql/test_shared_session_worker_sql.py server/tests/shared_wagers_sql/test_shared_wager_transactions_sql.py server/tests/shared_wagers_runtime_sql/test_wager_jobs_sql.py",
+      "artifact": "MP-ECO-20-browser-completion/scenario-review.json",
+      "sha256": "1cef6f77b207960df150b9cb1d9939abc48fce6ad40607e8e90e195a8785ec57"
+    },
+    {
+      "scenario": "reset-deletion",
+      "layer": "authenticated_browser",
+      "sourceCommit": "90a9a8227579c2be86cbe1d024fa75de7d61637e",
+      "status": "passed",
+      "command": "NODE_EXTRA_CA_CERTS=\"$PROVIDER_CA\" node frontend/scripts/authenticated-economy/visible-wagers.mjs \"$PRIVATE_SETUP_DIRECTORY\" \"$NEW_PRIVATE_OUTPUT\" \"$RECORDED_OPENING_REPORT\"",
+      "artifact": "MP-ECO-20-browser-completion/scenario-review.json",
+      "sha256": "1cef6f77b207960df150b9cb1d9939abc48fce6ad40607e8e90e195a8785ec57"
+    },
+    {
+      "scenario": "legacy-class-contexts",
+      "layer": "sql",
+      "sourceCommit": "90a9a8227579c2be86cbe1d024fa75de7d61637e",
+      "status": "passed",
+      "command": "cd backend && CASE_PG_SCRATCH=1 uv run --offline --no-sync --with pgserver --with 'psycopg[binary]' --with pglast python -m pytest -q --tb=short server/tests/island_sql/test_island_treasury_sql.py server/tests/island_sql/test_shared_domain_acceptance_sql.py server/tests/island_sql/test_current_cross_domain_compatibility_sql.py server/tests/island_sql/test_wave_treasury_settlement_sql.py server/tests/island_sql/test_personal_captain_sql.py server/tests/island_sql/test_personal_captain_operations_sql.py server/tests/island_sql/test_shared_arsenal_sql.py server/tests/island_sql/test_arsenal_holder_deletion_sql.py server/tests/island_sql/test_t60_shared_repair_acceptance_sql.py server/tests/island_sql/test_shared_free_revival_sql.py server/tests/island_sql/test_shared_ship_rewards_sql.py server/tests/island_sql/test_canonical_membership_lifecycle_sql.py server/tests/island_sql/test_shared_lifecycle_transactions_sql.py server/tests/island_sql/test_shared_lifecycle_races_sql.py server/tests/island_sql/test_shared_lifecycle_native_sql.py server/tests/island_sql/test_main_rules_compatibility_sql.py server/tests/island_sql/test_islands_and_waves_sql.py server/tests/island_sql/test_shared_session_wave_sql.py server/tests/island_sql/test_shared_session_control_sql.py server/tests/island_sql/test_shared_session_pacing_sql.py server/tests/island_sql/test_shared_session_close_sql.py server/tests/island_sql/test_shared_session_worker_sql.py server/tests/shared_wagers_sql/test_shared_wager_transactions_sql.py server/tests/shared_wagers_runtime_sql/test_wager_jobs_sql.py",
+      "artifact": "MP-ECO-20-browser-completion/scenario-review.json",
+      "sha256": "1cef6f77b207960df150b9cb1d9939abc48fce6ad40607e8e90e195a8785ec57"
+    },
+    {
+      "scenario": "legacy-class-contexts",
+      "layer": "authenticated_browser",
+      "sourceCommit": "90a9a8227579c2be86cbe1d024fa75de7d61637e",
+      "status": "passed",
+      "command": "NODE_EXTRA_CA_CERTS=\"$PROVIDER_CA\" node frontend/scripts/authenticated-economy/class-browser-continuation.mjs",
+      "artifact": "MP-ECO-20-browser-completion/scenario-review.json",
+      "sha256": "1cef6f77b207960df150b9cb1d9939abc48fce6ad40607e8e90e195a8785ec57"
+    },
+    {
+      "scenario": "old-client-rejection",
+      "layer": "sql",
+      "sourceCommit": "90a9a8227579c2be86cbe1d024fa75de7d61637e",
+      "status": "passed",
+      "command": "cd backend && CASE_PG_SCRATCH=1 uv run --offline --no-sync --with pgserver --with 'psycopg[binary]' --with pglast python -m pytest -q --tb=short server/tests/island_sql/test_island_treasury_sql.py server/tests/island_sql/test_shared_domain_acceptance_sql.py server/tests/island_sql/test_current_cross_domain_compatibility_sql.py server/tests/island_sql/test_wave_treasury_settlement_sql.py server/tests/island_sql/test_personal_captain_sql.py server/tests/island_sql/test_personal_captain_operations_sql.py server/tests/island_sql/test_shared_arsenal_sql.py server/tests/island_sql/test_arsenal_holder_deletion_sql.py server/tests/island_sql/test_t60_shared_repair_acceptance_sql.py server/tests/island_sql/test_shared_free_revival_sql.py server/tests/island_sql/test_shared_ship_rewards_sql.py server/tests/island_sql/test_canonical_membership_lifecycle_sql.py server/tests/island_sql/test_shared_lifecycle_transactions_sql.py server/tests/island_sql/test_shared_lifecycle_races_sql.py server/tests/island_sql/test_shared_lifecycle_native_sql.py server/tests/island_sql/test_main_rules_compatibility_sql.py server/tests/island_sql/test_islands_and_waves_sql.py server/tests/island_sql/test_shared_session_wave_sql.py server/tests/island_sql/test_shared_session_control_sql.py server/tests/island_sql/test_shared_session_pacing_sql.py server/tests/island_sql/test_shared_session_close_sql.py server/tests/island_sql/test_shared_session_worker_sql.py server/tests/shared_wagers_sql/test_shared_wager_transactions_sql.py server/tests/shared_wagers_runtime_sql/test_wager_jobs_sql.py",
+      "artifact": "MP-ECO-20-browser-completion/scenario-review.json",
+      "sha256": "1cef6f77b207960df150b9cb1d9939abc48fce6ad40607e8e90e195a8785ec57"
+    },
+    {
+      "scenario": "old-client-rejection",
+      "layer": "authenticated_browser",
+      "sourceCommit": "90a9a8227579c2be86cbe1d024fa75de7d61637e",
+      "status": "passed",
+      "command": "cd frontend && NODE_EXTRA_CA_CERTS=\"$PROVIDER_CA\" node scripts/authenticated-economy/core.mjs",
+      "artifact": "MP-ECO-20-browser-completion/scenario-review.json",
+      "sha256": "1cef6f77b207960df150b9cb1d9939abc48fce6ad40607e8e90e195a8785ec57"
+    },
+    {
+      "scenario": "wave-protocol-1",
+      "layer": "sql",
+      "sourceCommit": "90a9a8227579c2be86cbe1d024fa75de7d61637e",
+      "status": "passed",
+      "command": "cd backend && CASE_PG_SCRATCH=1 uv run --offline --no-sync --with pgserver --with 'psycopg[binary]' --with pglast python -m pytest -q --tb=short server/tests/island_sql/test_island_treasury_sql.py server/tests/island_sql/test_shared_domain_acceptance_sql.py server/tests/island_sql/test_current_cross_domain_compatibility_sql.py server/tests/island_sql/test_wave_treasury_settlement_sql.py server/tests/island_sql/test_personal_captain_sql.py server/tests/island_sql/test_personal_captain_operations_sql.py server/tests/island_sql/test_shared_arsenal_sql.py server/tests/island_sql/test_arsenal_holder_deletion_sql.py server/tests/island_sql/test_t60_shared_repair_acceptance_sql.py server/tests/island_sql/test_shared_free_revival_sql.py server/tests/island_sql/test_shared_ship_rewards_sql.py server/tests/island_sql/test_canonical_membership_lifecycle_sql.py server/tests/island_sql/test_shared_lifecycle_transactions_sql.py server/tests/island_sql/test_shared_lifecycle_races_sql.py server/tests/island_sql/test_shared_lifecycle_native_sql.py server/tests/island_sql/test_main_rules_compatibility_sql.py server/tests/island_sql/test_islands_and_waves_sql.py server/tests/island_sql/test_shared_session_wave_sql.py server/tests/island_sql/test_shared_session_control_sql.py server/tests/island_sql/test_shared_session_pacing_sql.py server/tests/island_sql/test_shared_session_close_sql.py server/tests/island_sql/test_shared_session_worker_sql.py server/tests/shared_wagers_sql/test_shared_wager_transactions_sql.py server/tests/shared_wagers_runtime_sql/test_wager_jobs_sql.py",
+      "artifact": "MP-ECO-20-browser-completion/scenario-review.json",
+      "sha256": "1cef6f77b207960df150b9cb1d9939abc48fce6ad40607e8e90e195a8785ec57"
+    },
+    {
+      "scenario": "wave-protocol-1",
+      "layer": "authenticated_browser",
+      "sourceCommit": "90a9a8227579c2be86cbe1d024fa75de7d61637e",
+      "status": "passed",
+      "command": "NODE_EXTRA_CA_CERTS=\"$PROVIDER_CA\" node frontend/scripts/authenticated-economy/ship-legacy-browser.mjs",
+      "artifact": "MP-ECO-20-browser-completion/scenario-review.json",
+      "sha256": "1cef6f77b207960df150b9cb1d9939abc48fce6ad40607e8e90e195a8785ec57"
+    },
+    {
+      "scenario": "wave-protocol-2",
+      "layer": "sql",
+      "sourceCommit": "90a9a8227579c2be86cbe1d024fa75de7d61637e",
+      "status": "passed",
+      "command": "cd backend && CASE_PG_SCRATCH=1 uv run --offline --no-sync --with pgserver --with 'psycopg[binary]' --with pglast python -m pytest -q --tb=short server/tests/island_sql/test_island_treasury_sql.py server/tests/island_sql/test_shared_domain_acceptance_sql.py server/tests/island_sql/test_current_cross_domain_compatibility_sql.py server/tests/island_sql/test_wave_treasury_settlement_sql.py server/tests/island_sql/test_personal_captain_sql.py server/tests/island_sql/test_personal_captain_operations_sql.py server/tests/island_sql/test_shared_arsenal_sql.py server/tests/island_sql/test_arsenal_holder_deletion_sql.py server/tests/island_sql/test_t60_shared_repair_acceptance_sql.py server/tests/island_sql/test_shared_free_revival_sql.py server/tests/island_sql/test_shared_ship_rewards_sql.py server/tests/island_sql/test_canonical_membership_lifecycle_sql.py server/tests/island_sql/test_shared_lifecycle_transactions_sql.py server/tests/island_sql/test_shared_lifecycle_races_sql.py server/tests/island_sql/test_shared_lifecycle_native_sql.py server/tests/island_sql/test_main_rules_compatibility_sql.py server/tests/island_sql/test_islands_and_waves_sql.py server/tests/island_sql/test_shared_session_wave_sql.py server/tests/island_sql/test_shared_session_control_sql.py server/tests/island_sql/test_shared_session_pacing_sql.py server/tests/island_sql/test_shared_session_close_sql.py server/tests/island_sql/test_shared_session_worker_sql.py server/tests/shared_wagers_sql/test_shared_wager_transactions_sql.py server/tests/shared_wagers_runtime_sql/test_wager_jobs_sql.py",
+      "artifact": "MP-ECO-20-browser-completion/scenario-review.json",
+      "sha256": "1cef6f77b207960df150b9cb1d9939abc48fce6ad40607e8e90e195a8785ec57"
+    },
+    {
+      "scenario": "wave-protocol-2",
+      "layer": "authenticated_browser",
+      "sourceCommit": "90a9a8227579c2be86cbe1d024fa75de7d61637e",
+      "status": "passed",
+      "command": "NODE_EXTRA_CA_CERTS=\"$PROVIDER_CA\" node frontend/scripts/check-economy-restored-session-browser-provider.mjs --runtime \"$LOCAL_RUNTIME\" --output \"$NEW_PRIVATE_OUTPUT\" --sessions \"$PRIVATE_ACTUAL_SESSIONS\" --own-grace-only",
+      "artifact": "MP-ECO-20-browser-completion/scenario-review.json",
+      "sha256": "1cef6f77b207960df150b9cb1d9939abc48fce6ad40607e8e90e195a8785ec57"
+    }
+  ]
+}

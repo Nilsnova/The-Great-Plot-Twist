@@ -1380,6 +1380,15 @@ are not inferred from any of these layers.
 
 ### Current local provider acceptance
 
+The [final local completion index](evidence/MP-ECO-20-browser-completion/README.md)
+now maps all 15 required scenarios to targeted SQL and actual-browser witnesses.
+It preserves fixture boundaries, original sources and staged failures. The final
+checks also found and fixed two client errors: personal role changes must refresh
+the shared construction offer, and a confirmed former member must not retry an
+old departure forever after the server has already revoked that control. Actual
+owner/visitor first purchases and the same-actor island handoff verify the fixes.
+The earlier checkpoint descriptions below keep their historical scope.
+
 The [reproducible harness](../specs/MP-ECO-20-authenticated-provider-harness.md)
 starts official local Auth, PostgREST and private Realtime with a disposable
 PostgreSQL database. It runs the production API, SDK and browser source, uses real

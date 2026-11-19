@@ -1,0 +1,992 @@
+{
+  "startedAt": "2026-11-19T19:16:31.672Z",
+  "baseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+  "scenarioSha256": "d5e7aa30c02b7724a668aa13e4b4ab6630f6af713c12b7932db011ec35b8fc9a",
+  "sourceBefore": {
+    "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+    "actualCheckoutHead": "f13587aea4e777dab24e53e55d4017263835b792",
+    "productionDiffFromBaseline": "empty",
+    "paths": [
+      "backend/server",
+      "backend/content",
+      "frontend/src",
+      "supabase/migrations",
+      "backend/uv.lock",
+      "backend/pyproject.toml",
+      "frontend/package-lock.json",
+      "frontend/package.json",
+      ":(exclude)backend/server/tests"
+    ]
+  },
+  "helpersBefore": {
+    "clients.mjs": "dfa176b33a56bc0f6c5a19a219d5c01ddb2c071fe66331d6d15cb181cf7ac6c0",
+    "observer.mjs": "40cb288da9f9a80e337fba5a39a12b1b23501ad1ff48a2a4614975492997f140",
+    "api-clients.mjs": "a9369da75350b882ac6a312c20903965a362409978e86e108c256f9cc450a9f7",
+    "runtime.mjs": "d1387a35fd7243df58e8d9589586034b3a098489bb20e43bece9b6b45040865f",
+    "source.mjs": "56d138914dc5b4e15159162bb21db68c985b2c9083c2e5bac4b34a90502ea8d9",
+    "observe.py": "18707a8ed12d18c69a4c04de1a416089ccbe89619f5f6f6e9a270840df551839",
+    "config.py": "9c1ab2bc84f0e5da14748624064a8a68357a52a44d3d79473251302a46082b47"
+  },
+  "facts": [
+    {
+      "event": "same-actual-actor-direct-own-island-ordinary-continue",
+      "at": "2026-11-19T19:16:53.589Z",
+      "layer": "fresh browser context with retained real Auth identity and physical own-island Continue choice",
+      "sameActualActor": true,
+      "noNewGrantOrSignup": true,
+      "freshOwnController": true,
+      "boundary": "Does not replay or claim to repair the prior document pending-departure queue"
+    },
+    {
+      "event": "real-retained-browser-disconnect-and67-second-grace",
+      "at": "2026-11-19T19:16:54.301Z",
+      "layer": "normal production disconnect API and actual browser offline",
+      "waitMilliseconds": 67000
+    },
+    {
+      "event": "after-real-grace-normal-browser-restoration-does-not-resurrect-old-attempt",
+      "at": "2026-11-19T19:18:18.043Z",
+      "layer": "real67s, independent worker closure, ordinary document restore and fresh actual proof/flow/assignment",
+      "oldAttemptRemainsClosed": true,
+      "oldFlowAbsent": true,
+      "oldAssignmentAbsent": true,
+      "freshIdleController": true,
+      "outcome": "abandoned",
+      "loot": "0"
+    }
+  ],
+  "setup": "Staged continuation with the exact privately retained actual Auth sessions and existing two islands from the preceding arsenal witness. No new registration, grant, unlock or financial fixture. Normal UI join, leave, tab focus, bell transport, real grace and document restore.",
+  "boundaries": [
+    "Visible product mutations are distinguished from browser-authenticated fetch probes and read-only PostgreSQL observations.",
+    "Local actual-provider candidate only; no hosted application, full multiplayer matrix or combat acceptance claim.",
+    "Direct-own fresh browser context uses the exact retained real Auth actor and existing island200. It does not replay, bypass or claim to repair the prior document pending-departure queue.",
+    "No player API is invoked by the driver during its actual67-second offline wait. Canonical production worker closes the original attempt before ordinary document restoration."
+  ],
+  "servedBefore": [
+    {
+      "service": "api",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "2de87a1c7a95423f93e83f7f254bff624f8b9eba",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    },
+    {
+      "service": "frontend",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "2de87a1c7a95423f93e83f7f254bff624f8b9eba",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    }
+  ],
+  "authRestoreTransientStatuses": [
+    401,
+    401,
+    401
+  ],
+  "wave": {
+    "waveId": "fixture-identity-1",
+    "startedAt": "2026-11-19T19:16:54.164Z",
+    "initialSnapshot": {
+      "seed": 801941272,
+      "wave": 1,
+      "rules": [
+        "tower_health",
+        "pathing",
+        "tower_obstacles",
+        "rescue",
+        "defenses_v2",
+        "ship_fire",
+        "structure_recovery"
+      ],
+      "waveId": "fixture-identity-1",
+      "economy": {
+        "mode": "island_shared",
+        "version": 1,
+        "runEpoch": "fixture-identity-2",
+        "accountId": "fixture-identity-3",
+        "islandOwner": "fixture-identity-4"
+      },
+      "weather": {
+        "fog": 0,
+        "ships": 1
+      },
+      "startsAt": "2026-11-19T19:17:04.003155+00:00",
+      "expiresAt": "2026-11-19T19:32:04.003155+00:00",
+      "bossByWave": {
+        "1": false,
+        "2": false,
+        "3": false,
+        "4": false,
+        "5": true,
+        "6": false,
+        "7": false,
+        "8": false,
+        "9": false,
+        "10": true,
+        "11": false,
+        "12": false,
+        "13": false,
+        "14": false,
+        "15": true,
+        "16": false,
+        "17": false,
+        "18": false,
+        "19": false,
+        "20": true,
+        "21": false,
+        "22": false,
+        "23": false,
+        "24": false,
+        "25": true,
+        "26": false,
+        "27": false,
+        "28": false,
+        "29": false,
+        "30": true,
+        "31": false,
+        "32": false,
+        "33": false,
+        "34": false,
+        "35": true,
+        "36": false,
+        "37": false,
+        "38": false,
+        "39": false,
+        "40": true,
+        "41": false,
+        "42": false,
+        "43": false,
+        "44": false,
+        "45": true,
+        "46": false,
+        "47": false,
+        "48": false,
+        "49": false,
+        "50": true,
+        "51": false,
+        "52": false,
+        "53": false,
+        "54": false,
+        "55": true,
+        "56": false,
+        "57": false,
+        "58": false,
+        "59": false,
+        "60": true,
+        "61": false,
+        "62": false,
+        "63": false,
+        "64": false,
+        "65": true,
+        "66": false,
+        "67": false,
+        "68": false,
+        "69": false,
+        "70": true,
+        "71": false,
+        "72": false,
+        "73": false,
+        "74": false,
+        "75": true,
+        "76": false,
+        "77": false,
+        "78": false,
+        "79": false,
+        "80": true,
+        "81": false,
+        "82": false,
+        "83": false,
+        "84": false,
+        "85": true,
+        "86": false,
+        "87": false,
+        "88": false,
+        "89": false,
+        "90": true,
+        "91": false,
+        "92": false,
+        "93": false,
+        "94": false,
+        "95": true,
+        "96": false,
+        "97": false,
+        "98": false,
+        "99": false,
+        "100": true
+      },
+      "createWave": {
+        "fog": 0,
+        "boss": false,
+        "crew": {
+          "guard": 0,
+          "gunner": 0,
+          "lookout": 0,
+          "carpenter": 0
+        },
+        "seed": 801941272,
+        "wave": 1,
+        "coast": {
+          "rx": 20,
+          "rz": 22,
+          "seed": 3
+        },
+        "event": null,
+        "heart": {
+          "x": 0,
+          "z": 2,
+          "ring": 12
+        },
+        "lanes": [
+          {
+            "id": "east",
+            "bearing": 0
+          },
+          {
+            "id": "south",
+            "bearing": 90
+          },
+          {
+            "id": "west",
+            "bearing": 180
+          }
+        ],
+        "rules": [
+          "tower_health",
+          "pathing",
+          "tower_obstacles",
+          "rescue",
+          "defenses_v2",
+          "ship_fire",
+          "structure_recovery"
+        ],
+        "ships": 1,
+        "island": {
+          "hp": 100
+        },
+        "rescue": true,
+        "pathing": true,
+        "weather": {
+          "fog": 0,
+          "ships": 1
+        },
+        "defenses": [],
+        "flagship": false,
+        "shipFire": true,
+        "startsAt": "2026-11-19T19:17:04.003155+00:00",
+        "countdown": 0,
+        "finishers": true,
+        "defensesV2": true,
+        "towerHealth": true,
+        "weatherKind": "calm",
+        "towerObstacles": true,
+        "finisherPreparation": true
+      },
+      "rosterSize": 1,
+      "structures": [],
+      "eventByWave": {
+        "1": null,
+        "2": null,
+        "3": "storm",
+        "4": "fog_bank",
+        "5": "pincer",
+        "6": "fire_ships",
+        "7": "storm",
+        "8": "armada",
+        "9": "treasure_galleon",
+        "10": "fire_ships",
+        "11": "night_raid",
+        "12": "fog_bank",
+        "13": "storm",
+        "14": "pincer",
+        "15": "armada",
+        "16": "fire_ships",
+        "17": "treasure_galleon",
+        "18": "fire_ships",
+        "19": "fog_bank",
+        "20": "night_raid",
+        "21": "storm",
+        "22": "kraken",
+        "23": "fire_ships",
+        "24": "storm",
+        "25": "treasure_galleon",
+        "26": "smugglers",
+        "27": "storm",
+        "28": "armada",
+        "29": "fog_bank",
+        "30": "armada",
+        "31": "fog_bank",
+        "32": "siege_barge",
+        "33": "fog_bank",
+        "34": "siege_barge",
+        "35": "storm",
+        "36": "storm",
+        "37": "fire_ships",
+        "38": "night_raid",
+        "39": "storm",
+        "40": "smugglers",
+        "41": "night_raid",
+        "42": "storm",
+        "43": "siege_barge",
+        "44": "pincer",
+        "45": "pincer",
+        "46": "fog_bank",
+        "47": "pincer",
+        "48": "treasure_galleon",
+        "49": "siege_barge",
+        "50": "armada",
+        "51": "fire_ships",
+        "52": "pincer",
+        "53": "night_raid",
+        "54": "storm",
+        "55": "pincer",
+        "56": "fog_bank",
+        "57": "kraken",
+        "58": "fog_bank",
+        "59": "kraken",
+        "60": "fire_ships",
+        "61": "storm",
+        "62": "treasure_galleon",
+        "63": "fire_ships",
+        "64": "armada",
+        "65": "fog_bank",
+        "66": "armada",
+        "67": "pincer",
+        "68": "treasure_galleon",
+        "69": "armada",
+        "70": "fire_ships",
+        "71": "storm",
+        "72": "night_raid",
+        "73": "armada",
+        "74": "fire_ships",
+        "75": "siege_barge",
+        "76": "kraken",
+        "77": "fog_bank",
+        "78": "fog_bank",
+        "79": "siege_barge",
+        "80": "storm",
+        "81": "siege_barge",
+        "82": "kraken",
+        "83": "fog_bank",
+        "84": "armada",
+        "85": "night_raid",
+        "86": "storm",
+        "87": "armada",
+        "88": "siege_barge",
+        "89": "fog_bank",
+        "90": "smugglers",
+        "91": "fire_ships",
+        "92": "armada",
+        "93": "pincer",
+        "94": "storm",
+        "95": "fire_ships",
+        "96": "fog_bank",
+        "97": "storm",
+        "98": "night_raid",
+        "99": "storm",
+        "100": "fog_bank"
+      },
+      "islandEpoch": "fixture-identity-5",
+      "finishPolicy": {
+        "rescue": {
+          "enabled": true,
+          "fromWave": 4,
+          "lastWave": 100,
+          "restartBack": 1
+        },
+        "restartBack": 2
+      },
+      "participants": [
+        {
+          "captain": {
+            "level": 1,
+            "skills": [],
+            "weapon": "musket"
+          },
+          "participantToken": "fixture-identity-6"
+        }
+      ],
+      "waveProtocol": 2,
+      "weatherLabel": "Calm sea",
+      "configVersion": 1,
+      "priceSchedule": {
+        "wall": [
+          10,
+          20,
+          40,
+          80,
+          160
+        ],
+        "house": [
+          50,
+          100,
+          200
+        ],
+        "cannon": [
+          30,
+          60,
+          120,
+          240,
+          480
+        ],
+        "mortar": [
+          60,
+          120,
+          240,
+          480,
+          960
+        ],
+        "swivel": [
+          50,
+          100,
+          200,
+          400,
+          800
+        ],
+        "harpoon": [
+          40,
+          80,
+          160,
+          320,
+          640
+        ],
+        "culverin": [
+          80,
+          160,
+          320,
+          640,
+          1280
+        ],
+        "watchtower": [
+          40,
+          80,
+          160,
+          320,
+          640
+        ]
+      },
+      "expectedSource": {
+        "crew": {
+          "guard": 0,
+          "gunner": 0,
+          "lookout": 0,
+          "carpenter": 0
+        },
+        "flags": 0,
+        "layout": [],
+        "nextWave": null,
+        "research": [],
+        "waveBest": 0,
+        "buildings": [],
+        "waveProtocol": 1,
+        "recoveryVersion": 0
+      },
+      "maximumSeconds": 900,
+      "recoveryConfig": {
+        "about": "Versioned base health and maximum-health modifiers for structure recovery v1. Keep in parity with frontend/src/pirates/structure-recovery-config.js.",
+        "fullHpUnits": 1000000,
+        "waveProtocol": 2,
+        "structureMaxHp": {
+          "wall": [
+            60,
+            120,
+            200,
+            300,
+            420
+          ],
+          "cannon": [
+            80,
+            130,
+            200,
+            290,
+            400
+          ],
+          "mortar": [
+            70,
+            115,
+            180,
+            260,
+            360
+          ],
+          "swivel": [
+            72,
+            117,
+            180,
+            261,
+            360
+          ],
+          "harpoon": [
+            60,
+            100,
+            155,
+            230,
+            320
+          ],
+          "culverin": [
+            56,
+            91,
+            140,
+            203,
+            280
+          ]
+        },
+        "recoveryVersion": 1,
+        "recoveryRateFactors": {
+          "workshopRadius": 10,
+          "workshopPercentCap": 0,
+          "wallSpecRateFactors": {
+            "bastion": [
+              1,
+              1
+            ],
+            "quick_mend": [
+              1,
+              1
+            ]
+          },
+          "carpenterMaximumWorkers": 2,
+          "wallResearchRateFactors": {
+            "mason_drill": [
+              1,
+              1
+            ]
+          },
+          "workshopPercentPerHouse": 0,
+          "carpenterMultiplierPerWorker": 0
+        },
+        "wallSkillMaxHpFactors": {
+          "stone": [
+            2,
+            1
+          ],
+          "bastion": [
+            3,
+            2
+          ]
+        },
+        "baseRateUnitsPerSecond": [
+          5000,
+          3
+        ],
+        "baseRecoveryMilliseconds": 600000,
+        "wallResearchMaxHpFactors": {
+          "thick_walls": [
+            23,
+            20
+          ]
+        }
+      },
+      "recoveryVersion": 1,
+      "countdownSeconds": 10,
+      "defaultPositions": {
+        "wall_1": {
+          "x": -18.5,
+          "z": -1
+        },
+        "wall_2": {
+          "x": 19,
+          "z": 1
+        },
+        "wall_3": {
+          "x": 19,
+          "z": -1
+        },
+        "wall_4": {
+          "x": -1,
+          "z": 17
+        },
+        "wall_5": {
+          "x": 1,
+          "z": 17
+        },
+        "wall_6": {
+          "x": -18.5,
+          "z": -3
+        },
+        "wall_7": {
+          "x": 8.5,
+          "z": 2
+        },
+        "wall_8": {
+          "x": 0.5,
+          "z": 9.5
+        },
+        "wall_9": {
+          "x": -1.5,
+          "z": 9.5
+        },
+        "house_1": {
+          "x": 7,
+          "z": -6
+        },
+        "house_2": {
+          "x": -8,
+          "z": -6
+        },
+        "tower_1": {
+          "x": 0,
+          "z": -14
+        },
+        "wall_10": {
+          "x": -9.5,
+          "z": -1
+        },
+        "wall_11": {
+          "x": -9.5,
+          "z": 1
+        },
+        "wall_12": {
+          "x": 8.5,
+          "z": 0
+        },
+        "cannon_1": {
+          "x": -12.5,
+          "z": -14.5
+        },
+        "cannon_2": {
+          "x": 13,
+          "z": -15
+        },
+        "cannon_3": {
+          "x": 15.5,
+          "z": 14
+        },
+        "cannon_4": {
+          "x": -15.5,
+          "z": 14.5
+        },
+        "cannon_5": {
+          "x": -15,
+          "z": -6
+        },
+        "cannon_6": {
+          "x": 14.5,
+          "z": -3
+        },
+        "cannon_7": {
+          "x": 4.5,
+          "z": 16.5
+        },
+        "cannon_8": {
+          "x": -8.5,
+          "z": 12
+        },
+        "cannon_9": {
+          "x": 11.5,
+          "z": -8.5
+        },
+        "cannon_10": {
+          "x": 5,
+          "z": 10
+        },
+        "cannon_11": {
+          "x": -3.5,
+          "z": -7.5
+        }
+      },
+      "expectedRevision": 0,
+      "captainInitialState": {
+        "fixture-identity-6": {
+          "x": 0,
+          "z": 0,
+          "fallId": null,
+          "hpUnits": 1000000,
+          "downAtTick": null,
+          "reviveBasisSeq": 0
+        }
+      },
+      "structureConfigBySpot": {},
+      "supportedStructureKinds": [
+        "wall",
+        "cannon",
+        "mortar",
+        "harpoon",
+        "culverin",
+        "swivel"
+      ],
+      "legacyWallRecoverSeconds": 600
+    }
+  },
+  "closureBeforeRestore": [
+    {
+      "outcome": "abandoned",
+      "loot_coins": "0"
+    }
+  ],
+  "restored": {
+    "proof": {
+      "actorId": "fixture-identity-4",
+      "origin": {
+        "mode": "island_shared",
+        "version": 1,
+        "islandOwner": "fixture-identity-4",
+        "accountId": "fixture-identity-3",
+        "runEpoch": "fixture-identity-2"
+      },
+      "sessionId": "fixture-identity-7",
+      "connectionGeneration": "5"
+    },
+    "sessionState": {
+      "phase": "controller",
+      "message": ""
+    },
+    "metadata": {
+      "status": "done",
+      "economy": {
+        "mode": "island_shared",
+        "version": 1,
+        "islandOwner": "fixture-identity-4",
+        "accountId": "fixture-identity-3",
+        "runEpoch": "fixture-identity-2",
+        "revision": "1",
+        "treasury": {
+          "balanceCoins": "200",
+          "committedCoins": "0",
+          "availableCoins": "200"
+        }
+      },
+      "session": {
+        "sessionId": "fixture-identity-7",
+        "connectionGeneration": "5",
+        "isController": true,
+        "isSpectator": false,
+        "leaderId": "fixture-identity-4",
+        "graceUntil": null,
+        "place": "isle_fixture_place_1",
+        "topicGeneration": "1",
+        "breakPaused": false,
+        "autoNext": false,
+        "countdownSeconds": 10
+      }
+    },
+    "place": "isle_fixture_place_1",
+    "activeWaveId": null,
+    "hidden": false,
+    "visiting": false
+  },
+  "status": "passed",
+  "frames": [
+    {
+      "actor": "retained-browser",
+      "direction": "sent",
+      "topic": "realtime:live:place:saltreach_harbor:1",
+      "kind": "phx_join",
+      "ref": "9",
+      "joinRef": "9",
+      "status": null,
+      "at": "2026-11-19T19:16:35.843Z"
+    },
+    {
+      "actor": "retained-browser",
+      "direction": "received",
+      "topic": "realtime:live:place:saltreach_harbor:1",
+      "kind": "phx_reply",
+      "ref": "9",
+      "joinRef": "9",
+      "status": "ok",
+      "at": "2026-11-19T19:16:35.920Z"
+    },
+    {
+      "actor": "retained-browser",
+      "direction": "sent",
+      "topic": "realtime:live:place:saltreach_harbor:1",
+      "kind": "phx_leave",
+      "ref": "10",
+      "joinRef": "9",
+      "status": null,
+      "at": "2026-11-19T19:16:41.158Z"
+    },
+    {
+      "actor": "retained-browser",
+      "direction": "received",
+      "topic": "realtime:live:place:saltreach_harbor:1",
+      "kind": "phx_reply",
+      "ref": "10",
+      "joinRef": "9",
+      "status": "ok",
+      "at": "2026-11-19T19:16:41.165Z"
+    },
+    {
+      "actor": "retained-browser",
+      "direction": "sent",
+      "topic": "realtime:live:place:isle_fixture_place_1:1",
+      "kind": "phx_join",
+      "ref": "14",
+      "joinRef": "14",
+      "status": null,
+      "at": "2026-11-19T19:16:42.266Z"
+    },
+    {
+      "actor": "retained-browser",
+      "direction": "received",
+      "topic": "realtime:live:place:isle_fixture_place_1:1",
+      "kind": "phx_reply",
+      "ref": "14",
+      "joinRef": "14",
+      "status": "ok",
+      "at": "2026-11-19T19:16:42.283Z"
+    },
+    {
+      "actor": "retained-browser",
+      "direction": "sent",
+      "topic": "realtime:live:place:isle_fixture_place_1:1",
+      "kind": "phx_leave",
+      "ref": "21",
+      "joinRef": "14",
+      "status": null,
+      "at": "2026-11-19T19:16:54.240Z"
+    },
+    {
+      "actor": "retained-browser",
+      "direction": "received",
+      "topic": "realtime:live:place:isle_fixture_place_1:1",
+      "kind": "phx_reply",
+      "ref": "21",
+      "joinRef": "14",
+      "status": "ok",
+      "at": "2026-11-19T19:16:54.240Z"
+    },
+    {
+      "actor": "retained-browser",
+      "direction": "sent",
+      "topic": "realtime:live:place:saltreach_harbor:1",
+      "kind": "phx_join",
+      "ref": "9",
+      "joinRef": "9",
+      "status": null,
+      "at": "2026-11-19T19:18:05.043Z"
+    },
+    {
+      "actor": "retained-browser",
+      "direction": "received",
+      "topic": "realtime:live:place:saltreach_harbor:1",
+      "kind": "phx_reply",
+      "ref": "9",
+      "joinRef": "9",
+      "status": "ok",
+      "at": "2026-11-19T19:18:05.116Z"
+    },
+    {
+      "actor": "retained-browser",
+      "direction": "sent",
+      "topic": "realtime:live:place:saltreach_harbor:1",
+      "kind": "phx_leave",
+      "ref": "10",
+      "joinRef": "9",
+      "status": null,
+      "at": "2026-11-19T19:18:08.262Z"
+    },
+    {
+      "actor": "retained-browser",
+      "direction": "received",
+      "topic": "realtime:live:place:saltreach_harbor:1",
+      "kind": "phx_reply",
+      "ref": "10",
+      "joinRef": "9",
+      "status": "ok",
+      "at": "2026-11-19T19:18:08.271Z"
+    },
+    {
+      "actor": "retained-browser",
+      "direction": "sent",
+      "topic": "realtime:live:place:isle_fixture_place_1:1",
+      "kind": "phx_join",
+      "ref": "14",
+      "joinRef": "14",
+      "status": null,
+      "at": "2026-11-19T19:18:09.414Z"
+    },
+    {
+      "actor": "retained-browser",
+      "direction": "received",
+      "topic": "realtime:live:place:isle_fixture_place_1:1",
+      "kind": "phx_reply",
+      "ref": "14",
+      "joinRef": "14",
+      "status": "ok",
+      "at": "2026-11-19T19:18:09.420Z"
+    }
+  ],
+  "servedAfter": [
+    {
+      "service": "api",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "2de87a1c7a95423f93e83f7f254bff624f8b9eba",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    },
+    {
+      "service": "frontend",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "2de87a1c7a95423f93e83f7f254bff624f8b9eba",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    }
+  ],
+  "helpersAfter": {
+    "clients.mjs": "dfa176b33a56bc0f6c5a19a219d5c01ddb2c071fe66331d6d15cb181cf7ac6c0",
+    "observer.mjs": "40cb288da9f9a80e337fba5a39a12b1b23501ad1ff48a2a4614975492997f140",
+    "api-clients.mjs": "a9369da75350b882ac6a312c20903965a362409978e86e108c256f9cc450a9f7",
+    "runtime.mjs": "d1387a35fd7243df58e8d9589586034b3a098489bb20e43bece9b6b45040865f",
+    "source.mjs": "56d138914dc5b4e15159162bb21db68c985b2c9083c2e5bac4b34a90502ea8d9",
+    "observe.py": "18707a8ed12d18c69a4c04de1a416089ccbe89619f5f6f6e9a270840df551839",
+    "config.py": "9c1ab2bc84f0e5da14748624064a8a68357a52a44d3d79473251302a46082b47"
+  },
+  "sourceAfter": {
+    "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+    "actualCheckoutHead": "f13587aea4e777dab24e53e55d4017263835b792",
+    "productionDiffFromBaseline": "empty",
+    "paths": [
+      "backend/server",
+      "backend/content",
+      "frontend/src",
+      "supabase/migrations",
+      "backend/uv.lock",
+      "backend/pyproject.toml",
+      "frontend/package-lock.json",
+      "frontend/package.json",
+      ":(exclude)backend/server/tests"
+    ]
+  },
+  "finishedAt": "2026-11-19T19:18:18.318Z",
+  "measuredDriverCommit": "f13587aea4e777dab24e53e55d4017263835b792"
+}

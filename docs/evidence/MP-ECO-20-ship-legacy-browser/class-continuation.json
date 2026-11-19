@@ -1,0 +1,158 @@
+{
+  "scenario": "class-browser-continuation",
+  "status": "passed",
+  "startedAt": "2026-11-19T19:07:52.524Z",
+  "sourceBefore": {
+    "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+    "actualCheckoutHead": "ce2aed5be4802095167a8945348da0a58f3c03a4",
+    "productionDiffFromBaseline": "empty",
+    "paths": [
+      "backend/server",
+      "backend/content",
+      "frontend/src",
+      "supabase/migrations",
+      "backend/uv.lock",
+      "backend/pyproject.toml",
+      "frontend/package-lock.json",
+      "frontend/package.json",
+      ":(exclude)backend/server/tests"
+    ]
+  },
+  "hashesBefore": {
+    "frontend/scripts/authenticated-economy/class-browser-continuation.mjs": "e7260a1db7495f13b87e51fb8ec9eecb808a641371e5d267d744a7738cdf6426",
+    "frontend/scripts/authenticated-economy/ship-legacy-front.mjs": "cece9e15a65706d076ea6abaec97be05c900e39295b5b778c72d141648137c39",
+    "backend/tools/authenticated_economy/ship_legacy_side.py": "c241f4c8df470c5a0c9af5308e4cbd099937eadeef4847b096ecd34dc29f91a8",
+    "frontend/scripts/authenticated-economy/clients.mjs": "dfa176b33a56bc0f6c5a19a219d5c01ddb2c071fe66331d6d15cb181cf7ac6c0",
+    "frontend/scripts/authenticated-economy/observer.mjs": "40cb288da9f9a80e337fba5a39a12b1b23501ad1ff48a2a4614975492997f140",
+    "frontend/scripts/authenticated-economy/runtime.mjs": "d1387a35fd7243df58e8d9589586034b3a098489bb20e43bece9b6b45040865f",
+    "frontend/scripts/authenticated-economy/source.mjs": "56d138914dc5b4e15159162bb21db68c985b2c9083c2e5bac4b34a90502ea8d9"
+  },
+  "priorFailedDriverSha256": "ffd0fb9d93aa60ba07bb24a2bd875fad785f7f2e70f69f71828bc29607db1741",
+  "limits": [
+    "Tiny continuation only; the earlier optional-positive-score assertion remains failed. Its actual0-star HTTP claim is a separate valid zero-reward UI observation.",
+    "The same already-created actual anonymous and registered host actors are reused; no reset, new signup, new grant or fabricated Auth response.",
+    "One local configured host allowlist and real host code endpoint are explicit class setup. Product provider configuration remains original HTTPS; initial SDK uses a transparent same-provider proxy."
+  ],
+  "before": {
+    "balance": "200",
+    "held": "0",
+    "ledger": "200",
+    "owner_private": "160"
+  },
+  "primaryBefore": [
+    {
+      "service": "api",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "2de87a1c7a95423f93e83f7f254bff624f8b9eba",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    },
+    {
+      "service": "frontend",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "2de87a1c7a95423f93e83f7f254bff624f8b9eba",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    }
+  ],
+  "after": {
+    "balance": "200",
+    "held": "0",
+    "ledger": "200",
+    "owner_private": "160"
+  },
+  "observation": {
+    "actualAnonymousSDKVerified": true,
+    "visibleClassJoinStatus": 200,
+    "entryPlace": "lighthouse_isle",
+    "place": "saltreach_harbor",
+    "ordinaryChartTravel": true,
+    "classLayerLoaded": true,
+    "visiblePersonalMarket": "Market stall\n×\n\nYou have 🪙 200\n\nBitcoin\n\nNo price yet\n\nPrices unavailable right now\n\nEther\n\nNo price yet\n\nPrices unavailable right now\n\nGold\n\nNo price yet\n\nPrices unavailable right now\n\nApple\n\nNo price yet\n\nPrices unavailable right now\n\nNVIDIA\n\nNo price yet\n\nPrices unavailable right now\n\nPlay coins only. They cannot be bought or cashed out.",
+    "personalBalance": "200",
+    "sharedBankAndOriginalOwnerWalletUnchanged": true,
+    "guestWalletUnchanged": true
+  },
+  "finishedAt": "2026-11-19T19:08:10.626Z",
+  "hashesAfter": {
+    "frontend/scripts/authenticated-economy/class-browser-continuation.mjs": "e7260a1db7495f13b87e51fb8ec9eecb808a641371e5d267d744a7738cdf6426",
+    "frontend/scripts/authenticated-economy/ship-legacy-front.mjs": "cece9e15a65706d076ea6abaec97be05c900e39295b5b778c72d141648137c39",
+    "backend/tools/authenticated_economy/ship_legacy_side.py": "c241f4c8df470c5a0c9af5308e4cbd099937eadeef4847b096ecd34dc29f91a8",
+    "frontend/scripts/authenticated-economy/clients.mjs": "dfa176b33a56bc0f6c5a19a219d5c01ddb2c071fe66331d6d15cb181cf7ac6c0",
+    "frontend/scripts/authenticated-economy/observer.mjs": "40cb288da9f9a80e337fba5a39a12b1b23501ad1ff48a2a4614975492997f140",
+    "frontend/scripts/authenticated-economy/runtime.mjs": "d1387a35fd7243df58e8d9589586034b3a098489bb20e43bece9b6b45040865f",
+    "frontend/scripts/authenticated-economy/source.mjs": "56d138914dc5b4e15159162bb21db68c985b2c9083c2e5bac4b34a90502ea8d9"
+  },
+  "sourceAfter": {
+    "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+    "actualCheckoutHead": "ce2aed5be4802095167a8945348da0a58f3c03a4",
+    "productionDiffFromBaseline": "empty",
+    "paths": [
+      "backend/server",
+      "backend/content",
+      "frontend/src",
+      "supabase/migrations",
+      "backend/uv.lock",
+      "backend/pyproject.toml",
+      "frontend/package-lock.json",
+      "frontend/package.json",
+      ":(exclude)backend/server/tests"
+    ]
+  },
+  "primaryAfter": [
+    {
+      "service": "api",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "2de87a1c7a95423f93e83f7f254bff624f8b9eba",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    },
+    {
+      "service": "frontend",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "2de87a1c7a95423f93e83f7f254bff624f8b9eba",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    }
+  ]
+}
