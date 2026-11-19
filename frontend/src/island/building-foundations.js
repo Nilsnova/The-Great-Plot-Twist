@@ -8,12 +8,12 @@ import {ISLAND_PLACE} from './spots.js';
 const FORMS = {
   house: {width: 1.36, depth: .86, rear: .46},
   watchtower: {width: 1.17, depth: .90, rear: .52},
-  tower: {width: .93, depth: .60, rear: .40},
+  tower: {width: .98, depth: .64, rear: .31},
 };
-const PALETTE = [0x273121, 0x654e35, 0x92704a, 0xb99664, 0xc6a476, 0x594631].map(
+const PALETTE = [0x283021, 0x666960, 0x96917a, 0xc4b185, 0xcbb68c, 0x655f51, 0xdec99f, 0xa7a38b].map(
   hex => new THREE.Color(hex),
 );
-const [SHADOW, EAST, FRONT, BEVEL, CAP, MORTAR] = PALETTE;
+const [SHADOW, EAST, FRONT, BEVEL, CAP, MORTAR, SUNLIT, LEE] = PALETTE;
 
 function corners(x, z, width, depth) {
   const clip = .24;
@@ -45,12 +45,12 @@ function geometryOf(foundations) {
   for (const {x, z, slot} of foundations) {
     // Houses and watchtowers have finished stonework in their own art.
     if (slot !== 'tower') continue;
-    const {width, depth, rear} = FORMS.tower, footZ = z - rear, height = .10;
+    const {width, depth, rear} = FORMS.tower, footZ = z - rear, height = .145;
     // The gun carriage is painted just behind its selection anchor.
     const outside = corners(x, footZ, width, depth);
     if (outside.some(([gx, gz]) => surfaceClass(ISLAND_PLACE, gx, gz) === 0)) continue;
     const inset = corners(x, footZ, width - .10, depth - .10);
-    const top = inset.map(([gx, gz]) => vertex(gx, gz, height, CAP));
+    const top = inset.map(([gx, gz], i) => vertex(gx, gz, height, i < 3 ? LEE : SUNLIT));
     // From this fixed ground projection the front and right cut faces carry the height.
     for (const [edge, tint] of [[2, EAST], [3, EAST], [4, FRONT], [5, FRONT], [6, FRONT]]) {
       const next = edge + 1, [ax, az] = outside[edge], [bx, bz] = outside[next];
@@ -70,7 +70,18 @@ function geometryOf(foundations) {
         }
       }
     }
-    for (let i = 1; i < top.length - 1; i++) indices.push(top[0], top[i], top[i + 1]);
+    // Cut the cap into readable limestone blocks around the carriage. All corners and joints
+    // stay inside the tower's existing 2 × 2 footprint, including beside joined walls.
+    const inner = corners(x, footZ, width - .28, depth - .25);
+    const cut = inner.map(([gx, gz]) => vertex(gx, gz, height, CAP));
+    for (let edge = 0; edge < top.length; edge++) {
+      const next = (edge + 1) % top.length;
+      quad(top[edge], top[next], cut[next], cut[edge]);
+      const [ax, az] = inset[edge], [bx, bz] = inner[edge];
+      quad(vertex(ax, az, height, MORTAR, .72), vertex(ax + .022, az, height, MORTAR, .72),
+        vertex(bx + .018, bz, height, MORTAR, .60), vertex(bx, bz, height, MORTAR, .60));
+    }
+    for (let i = 1; i < cut.length - 1; i++) indices.push(cut[0], cut[i], cut[i + 1]);
   }
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(points, 3));
