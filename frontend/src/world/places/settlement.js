@@ -72,7 +72,7 @@ export async function createSettlement(ctx) {
       return mesh;
     });
     const selectedCanopy = home ? makeSelectedCanopy(foliage) : null;
-    let player = {x: data.spawn[0], z: data.spawn[1]};
+    let player = {x: data.spawn[0], z: data.spawn[1]}, shoreTime = 0;
     function updateCanopyOpacity(mesh) {
       const p = mesh.userData.ground;
       const playerBehind = player.z < p.z && Math.abs(player.x - p.x) < 2.2 && p.z - player.z < 6;
@@ -124,12 +124,14 @@ export async function createSettlement(ctx) {
         player = state.player;
         const still = home && (typeof ctx.reducedMotion === 'function' ? ctx.reducedMotion() : !!ctx.reducedMotion);
         const wind = state.weather?.wind ?? 0, breeze = Math.max(.14, wind);
-        foliage.forEach(mesh => {
-          updateCanopyOpacity(mesh);
-          updateSway(mesh.material, state.time, home ? breeze : wind, still ? 0 : home ? 1.36 : 1);
-        });
-        undergrowth.forEach(mesh => updateSway(mesh.material, state.time * 1.21, breeze, still ? 0 : .84));
-        shoreBoat?.update(state.time, wind, still);
+        foliage.forEach(updateCanopyOpacity);
+        if (!home || !state.paused || still) {
+          if (home && !still && Number.isFinite(dt)) shoreTime += Math.min(.1, Math.max(0, dt));
+          const time = home ? shoreTime : state.time;
+          foliage.forEach(mesh => updateSway(mesh.material, time, home ? breeze : wind, still ? 0 : home ? 1.36 : 1));
+          undergrowth.forEach(mesh => updateSway(mesh.material, time * 1.21, breeze, still ? 0 : .84));
+          shoreBoat?.update(time, wind, still);
+        }
         if (windowGlow) windowGlow.material.opacity = state.night * .95;
         const brightness = state.night;
         lights.forEach(light => {

@@ -311,7 +311,11 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       isl.world = deco; isl.coreWorld = core; applyWorld(); core.setHealth(isl.coreState.current);
       deco.runArtTask('core', () => core.retryArt());
       const original = place.update;
-      place.update = (dt, frame) => { original(dt, frame); deco.update(dt, frame?.time ?? 0, frame?.paused); };
+      place.update = (dt, frame) => {
+        original(dt, frame);
+        deco.update(dt, frame?.time ?? 0, frame?.paused, frame);
+        core.update(dt, frame, reducedMotion());
+      };
       cleanups.push(() => { deco.dispose(); core.dispose(); if (isl.world === deco) { isl.world = null; isl.housePlayer = null; } if (isl.coreWorld === core) isl.coreWorld = null; place.update = original; });
     },
     // Pirate Point's shared build spots on lighthouse_isle (factory.js); its bell and lamps stay lane P's.

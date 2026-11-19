@@ -2,10 +2,16 @@
 import * as THREE from 'three';
 import {HEART} from './placement.js';
 import {makeBuildingFoundations} from './building-foundations.js';
+import {animateLandmarkMaterial} from './landmark-motion.js';
 import {projectPoint} from '../world/art.js';
 import {paintIds, screenDensity, smoothTexture, spriteMaterial} from '../art/textures.js';
 
 const IDS = ['island_core', 'island_core_damaged', 'island_core_broken'];
+// UVs are top-left normalized in the 128-square Heart frame.
+const CORE_MOTION = {
+  pennant: [.493, .016, .685, .164],
+  lights: [[.306, .705, .332, .749], [.671, .705, .698, .749], [.229, .589, .248, .654]],
+};
 export function decorateCore(place, {prepare = paintIds, density = screenDensity()} = {}) {
   const geometry = new THREE.PlaneGeometry(8, 8); geometry.translate(0, (64 - 12) / 16, 0);
   const blank = spriteMaterial(null), mesh = new THREE.Mesh(geometry, blank);
@@ -14,7 +20,8 @@ export function decorateCore(place, {prepare = paintIds, density = screenDensity
   mesh.renderOrder = 100 + HEART.z; mesh.frustumCulled = false; mesh.visible = false;
   mesh.userData.ground = {...HEART}; place.group.add(mesh);
   const foundation = makeBuildingFoundations(place.group, 'island-heart-shadow');
-  let state = null, disposed = false, pending = null, materials = null;
+  let state = null, disposed = false, pending = null, materials = null, motionTime = 0;
+  const detailMotion = new Map();
   const release = pool => { for (const material of Object.values(pool ?? {})) { material.map?.dispose(); material.dispose(); } };
   function show() {
     const id = state?.frame ?? IDS[0]; mesh.visible = !disposed && !!materials;
@@ -33,10 +40,16 @@ export function decorateCore(place, {prepare = paintIds, density = screenDensity
     })).then(() => {
       if (IDS.some(id => !pool[id])) throw new Error('Core artwork is not registered.');
       if (disposed) { release(pool); return; }
+      for (const id of IDS.slice(0, 2)) detailMotion.set(pool[id], animateLandmarkMaterial(pool[id], CORE_MOTION));
       materials = pool; show();
     }).catch(error => { release(pool); if (!disposed) throw error; }).finally(() => { pending = null; });
     return pending;
   }
   return {mesh, retryArt, setHealth(value) { if (!disposed) { state = value; show(); } }, reset() { if (!disposed) { state = null; show(); } },
-    dispose() { if (disposed) return; disposed = true; mesh.removeFromParent(); foundation.dispose(); release(materials); materials = null; blank.dispose(); geometry.dispose(); }};
+    update(dt, frame, still = false) {
+      if (!mesh.visible || (frame?.paused && !still)) return;
+      if (!still && Number.isFinite(dt)) motionTime += Math.min(.1, Math.max(0, dt));
+      detailMotion.get(mesh.material)?.update({time: motionTime, wind: frame?.weather?.wind, night: frame?.night, still});
+    },
+    dispose() { if (disposed) return; disposed = true; mesh.removeFromParent(); foundation.dispose(); release(materials); materials = null; detailMotion.clear(); blank.dispose(); geometry.dispose(); }};
 }
