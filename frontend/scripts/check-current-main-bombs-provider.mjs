@@ -140,18 +140,12 @@ try {
   const code = own.code;
   await setup('select public.apply_wallet_transaction($1::uuid,5000,\'starting_coins\',$2)',
     [owner.actorId, uid()], 'Explicit extra disposable wallet budget for buying the test weapon; not natural income');
-  await setup('update public.islands set wave_best=50,next_wave=1 where player_id=$1::uuid',
-    [owner.actorId], 'Explicit saved wave-50 unlock and ordinary repeat-attempt fixture; no earned-progress claim');
+  await setup('update public.islands set wave_best=10,next_wave=1 where player_id=$1::uuid',
+    [owner.actorId], 'Explicit saved wave-10 unlock and ordinary repeat-attempt fixture; no earned-progress claim');
   const purchased = ok(await api(owner.page, '/api/island/arsenal/buy', {method: 'POST',
     body: {weapon: 'fire_bombs', actionUid: uid(), code}}), 'Legacy fire-bomb purchase');
   assert.equal(purchased.carried, 'fire_bombs');
   note('real-legacy-purchase', {carried: purchased.carried, browserProcesses: 2});
-  for (const spot of ['wall_1', 'wall_2', 'wall_3', 'wall_4']) {
-    ok(await api(owner.page, '/api/island/build', {method: 'POST', body: {spot, kind: 'wall', code, actionUid: uid()}}), 'Ordinary wall purchase');
-    for (let level = 2; level <= 5; level++) ok(await api(owner.page, '/api/island/upgrade', {method: 'POST',
-      body: {spot, code, actionUid: uid()}}), 'Ordinary wall upgrade');
-  }
-  note('ordinary-defenses-bought-for-reconnect-window', {walls: 4, levelEach: 5, purpose: 'Keep the real attempt alive during reload; no HP/outcome/time edit'});
   await owner.page.evaluate(async () => { await window.__island.island.load(); await window.__island.island.arsenal.refresh(); });
   await enter(mate.page, {join: code});
   const started = ok(await api(owner.page, '/api/waves/start', {method: 'POST', body: {
@@ -189,16 +183,33 @@ try {
     blasts: one.blasts.length, damageEvents: one.damage.length,
     damageAmounts: one.damage.map(row => row.damage), identicalReplay: true});
   await owner.page.screenshot({path: output + '/legacy-after-area-blast.png'});
-  await mate.page.reload({waitUntil: 'domcontentloaded'}); await enter(mate.page);
-  await mate.page.evaluate(() => window.__island.island.joinRunningWave());
-  await watch(mate.page);
+  await mate.context.setOffline(true);
+  await mate.page.waitForTimeout(1000);
+  const resumedPoll = mate.page.waitForResponse(response => new URL(response.url()).pathname ===
+    '/api/waves/' + ownWave.waveId + '/events' && response.status() === 200, {timeout: 15000});
+  await mate.context.setOffline(false);
+  await resumedPoll;
+  const liveAfterReconnect = await mate.page.evaluate(({waveId, token}) => {
+    const wave = window.__island.waves.island.wave;
+    return {sameWave: wave.info.waveId === waveId, sameParticipant: wave.info.participantToken === token,
+      fired: window.bombObserved.filter(row => row.type === 'captain_fired' && row.weapon === 'fire_bombs').length,
+      blasts: window.bombObserved.filter(row => row.type === 'captain_blast').length,
+      damage: window.bombObserved.filter(row => ['ship_hit', 'boarder_hit'].includes(row.type)
+        && String(row.by).startsWith('captain:')).map(row => row.damage)};
+  }, {waveId: ownWave.waveId, token: mateWave.token});
+  assert.equal(liveAfterReconnect.sameWave, true);
+  assert.equal(liveAfterReconnect.sameParticipant, true);
+  assert.equal(liveAfterReconnect.fired, 1);
+  assert.equal(liveAfterReconnect.blasts, 1);
+  assert.deepEqual(liveAfterReconnect.damage, one.damage.map(row => row.damage));
   const replayed = await replay(mate.page, ownWave.snapshot, accepted.events, accepted.seal, ownWave.token);
   checkBomb(replayed); assert.deepEqual(replayed, one);
   note('original-four-argument-recovery-producer', {recoveryVersion: 1, protocol: 2, nativeShared: false,
     weaponFromActualPurchase: purchased.carried, journalShots: shots.length,
     journalWeapon: shots[0].payload.captain.weapon, fired: one.fired.length, blasts: one.blasts.length,
     damageEvents: one.damage.length, damageAmounts: one.damage.map(row => row.damage),
-    teammateEqual: true, reconnectedReplayEqual: true, duplicatePageAddsNoDamage: true});
+    teammateEqual: true, reconnectedReplayEqual: true, duplicatePageAddsNoDamage: true,
+    liveAfterReconnect, reconnectKind: 'Actual browser transport outage, not document reload'});
 
   const helpersAfter = await hashes(); assert.deepEqual(helpersAfter, helpersBefore);
   const report = {result: 'passed', productionSource: baseline, sourceBefore,
@@ -208,7 +219,7 @@ try {
       'Wallet/shared budgets and saved unlock/repeat state are explicit setup; not natural progress.',
       'Normal move/shot intents use production authenticated transports. No journal, damage, HP, clock or outcome is fabricated.',
       'This covers the original four-argument legacy recovery producer; the different native shared-session producer is not claimed.',
-      'SIM step observation only copies returned events; reconnect comparison reconstructs the same actual accepted prefix with the production replay driver.']};
+      'SIM step observation only copies returned events. A real transport reconnect preserves the actual wave/token and event counts, alongside identical production replay of the accepted prefix; full document reload is not claimed.']};
   await writeFile(output + '/result.json', JSON.stringify(report, null, 2) + '\n', {mode: 0o600});
 } catch (error) {
   for (const actor of rendered?.clients ?? []) {
