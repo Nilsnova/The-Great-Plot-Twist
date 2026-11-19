@@ -131,6 +131,31 @@ it('provides a bounded light cue and clears it on pause and disposal', () => {
   expect(effect.current).toBeNull();
 });
 
+it('spreads from the foot while grit settles before the last brass glint', () => {
+  const root = new Group(), effect = makeWallFeedback(root);
+  effect.show('wall_2', 2, {x: 3, z: 4}, false);
+  const dust = root.getObjectByName('island-wall-feedback');
+  const motes = root.getObjectByName('island-wall-feedback-motes');
+  const positions = motes.geometry.getAttribute('position');
+  const alphas = motes.geometry.getAttribute('color');
+  const stone = 5, brass = 15; // Particle centers, after the first instant glint.
+  const startingHeight = positions.getY(stone);
+  const startingWidth = dust.scale.x;
+  const foot = dust.position.clone();
+
+  effect.update(.16, false, false);
+  expect(positions.getY(stone)).toBeGreaterThan(startingHeight);
+  expect(alphas.getW(stone)).toBeGreaterThan(0);
+  expect(dust.scale.x).toBeGreaterThan(startingWidth);
+  expect(dust.position.equals(foot)).toBe(true);
+
+  effect.update(.21, false, false);
+  expect(positions.getY(stone)).toBeCloseTo(startingHeight);
+  expect(alphas.getW(stone)).toBe(0);
+  expect(alphas.getW(brass)).toBeGreaterThan(0);
+  effect.dispose();
+});
+
 it('does not play for a refusal, reconciled receipt, passive snapshot, or answer for the previous island', async () => {
   const result = await evaluate(async () => {
     const THREE = await window.g20Import('/node_modules/three/build/three.module.js');
