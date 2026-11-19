@@ -12,7 +12,7 @@ export function createSharedSessionClient({api,getEconomy,getActorId,getAuthGene
  makeUid=makeActionUid,makeSessionId=()=>globalThis.crypto.randomUUID(),onState=()=>{},onAttached=async()=>{},
  setTimer=(run,ms)=>setTimeout(run,ms),clearTimer=id=>clearTimeout(id)}={}){
  const tab=createSessionTabLock({locks}),intents=createSessionIntents({storage,makeUid,makeSessionId});
- let disposed=false,ticket=0,flight=null,pingFlight=null,settingsFlight=null,settingsScope=null,timer=null,held=null,active=null,scope=null,snapshot=null;
+ let disposed=false,ticket=0,flight=null,flightScope=null,pingFlight=null,settingsFlight=null,settingsScope=null,timer=null,held=null,active=null,scope=null,snapshot=null;
  let state=Object.freeze({phase:'idle',message:''});
  const context=()=>{try{return {actorId:getActorId(),origin:sessionOrigin(readEconomy(getEconomy())),identity:getAuthGeneration()};}catch{return null;}};
  const current=captured=>{const now=context();return !disposed && !!captured?.origin && !!now && captured.actorId===now.actorId
@@ -80,12 +80,15 @@ export function createSharedSessionClient({api,getEconomy,getActorId,getAuthGene
   return fresh;
  }
  function open(){
-  if(flight)return flight;
   const captured=context();if(!current(captured) || !uuid(captured.actorId))return Promise.resolve(failed('economy_context_required','Read the selected island.'));
+  if(flight){
+   if(flightScope?.actorId===captured.actorId&&Object.is(flightScope.identity,captured.identity)&&sameEconomyScope(flightScope.origin,captured.origin))return flight;
+   return flight.then(()=>current(captured)?open():failed('session_context_changed','The session selection changed.',0));
+  }
   if(proof())return heartbeat();
-  const mine=++ticket;cancelTimer();pingFlight=null;scope=captured;
+  const mine=++ticket;cancelTimer();pingFlight=null;scope=captured;flightScope=captured;
   const pending=start(captured,mine).catch(()=>{if(mine===ticket)demote('unavailable','The session request did not finish.');return failed('network_error','The session request did not finish.',0);});
-  flight=pending.finally(()=>{if(flight===finished)flight=null;});const finished=flight;return flight;
+  flight=pending.finally(()=>{if(flight===finished){flight=null;flightScope=null;}});const finished=flight;return flight;
  }
  async function sendHeartbeat(){
   const record=proof(),captured=scope,mine=ticket,lock=held;

@@ -2,9 +2,11 @@
 import {readEconomy,sameEconomyScope} from './economy-view.js';
 import {createSharedSessionApi} from './shared-session-api.js';
 import {createSharedSessionClient} from './shared-session-client.js';
+import {uuid} from './shared-quotes.js';
+import {sessionOrigin} from './shared-session-shapes.js';
 
 export function createIslandSession(isl,{client=null,windowTarget=globalThis,documentTarget=globalThis.document}={}){
- let disposed=false,suspended=false;
+ let disposed=false,suspended=false,accepted=null,reconcileQueued=false;
  const selected=()=>!disposed && !suspended && documentTarget?.hidden!==true && !isl.disposed && isl.mode!=='fake' && isl.isOnIsland()
   && !!readEconomy(isl.getEconomy()) && isl.domainAvailable('session');
  const control=client??createSharedSessionClient({
@@ -27,6 +29,18 @@ export function createIslandSession(isl,{client=null,windowTarget=globalThis,doc
   if(!selected()){await control.leave();return {ok:false,status:409,code:'session_context_required',message:'Read the selected island before controlling its Captain.'};}
   return control.open();
  }
+ const capture=()=>{
+  try{const actorId=isl.getActorId?.();return selected()&&uuid(actorId)?{actorId,identity:isl.authGeneration?.(),origin:sessionOrigin(readEconomy(isl.getEconomy()))}:null;}catch{return null;}
+ };
+ const same=(a,b)=>a&&b&&a.actorId===b.actorId&&Object.is(a.identity,b.identity)&&sameEconomyScope(a.origin,b.origin);
+ function reconcile(){
+  const next=capture();if(!next){accepted=null;return;}if(same(accepted,next))return;
+  accepted=next;if(reconcileQueued)return;reconcileQueued=true;
+  // Reads may be attachment hydration: never await a session flight from them.
+  void Promise.resolve().then(()=>{
+   reconcileQueued=false;if(!same(accepted,capture())){accepted=null;return;}void ensure().catch(()=>{});
+  });
+ }
  const blur=()=>{suspended=true;void control.disconnect();};
  const focus=()=>{suspended=false;if(selected())void ensure();};
  const visibility=()=>{if(documentTarget.hidden)blur();else focus();};
@@ -35,7 +49,7 @@ export function createIslandSession(isl,{client=null,windowTarget=globalThis,doc
  windowTarget?.addEventListener?.('pagehide',blur);
  documentTarget?.addEventListener?.('visibilitychange',visibility);
  return {
-  ensure,leave:()=>control.leave(),disconnect:blur,settings:changes=>control.settings(changes),retireOrigin:origin=>control.retireOrigin(origin),
+  ensure,reconcile,leave:()=>control.leave(),disconnect:blur,settings:changes=>control.settings(changes),retireOrigin:origin=>control.retireOrigin(origin),
   proof:()=>selected()?control.proof():null,
   roomPlace:()=>selected()?control.roomPlace():null,
   get state(){return control.state;},get metadata(){return selected()?control.metadata:null;},

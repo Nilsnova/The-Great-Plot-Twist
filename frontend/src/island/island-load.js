@@ -132,6 +132,7 @@ export function createLoading(isl) {
     // Consuming the highest covered read fences every smaller ID; earlier reads must keep the guard.
     if (isl.pendingWallet && turns.own.used >= isl.pendingWallet.through) isl.pendingWallet = null;
     setOwn(next, personalReadState, {fromRead: true});
+    isl.session?.reconcile?.();
   };
   // Coins that another answer carries (the arsenal's): stale once an island read asked later was shown or a
   // write answered. Unlike reading('own') it does not use the turn, so a load's island read still lands.
@@ -231,7 +232,7 @@ export function createLoading(isl) {
       const answer = await isl.api.visit(isl.visitCode);
       if (!currentLoad()) return answer;
       if (answer.ok) {
-        if (current() && isl.funding.acceptRead(answer.data)) { isl.visiting = {...answer.data, code: islandCode(answer.data.code)}; loadedTarget = shownIsland(); noteCampaign(isl.visiting); }
+        if (current() && isl.funding.acceptRead(answer.data)) { isl.visiting = {...answer.data, code: islandCode(answer.data.code)}; loadedTarget = shownIsland(); noteCampaign(isl.visiting); isl.session?.reconcile?.(); }
 
         showVisit();
       } else {
@@ -310,7 +311,7 @@ export function createLoading(isl) {
   async function reloadVisit({guard=()=>true}={}) {
     if (!isl.visiting) return;
     const code = isl.visiting.code, current = reading('visit'), fresh = await isl.api.visit(code);
-    if (!isl.disposed && guard() && fresh.ok && isl.visiting?.code === code && current() && isl.funding.acceptRead(fresh.data)) { isl.visiting = {...isl.visiting, ...fresh.data, code: islandCode(fresh.data.code)}; noteCampaign(isl.visiting); }
+    if (!isl.disposed && guard() && fresh.ok && isl.visiting?.code === code && current() && isl.funding.acceptRead(fresh.data)) { isl.visiting = {...isl.visiting, ...fresh.data, code: islandCode(fresh.data.code)}; noteCampaign(isl.visiting); isl.session?.reconcile?.(); }
   }
   async function reloadOwn({guard=()=>true}={}) {
     const current = reading('own'), mine = await readOwn();
