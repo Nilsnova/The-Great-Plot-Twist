@@ -7,9 +7,9 @@ MP-ECO-03 explicitly requires this implementation. This package completes that
 boundary against the actual imported Captain and wave accounting hooks.
 
 Status: the canonical controller/provider, native accepted bell, frozen-roster
-journal and Captain/structure checkpoint producer are implemented. Canonical
-closure, autonomous processing, settings and full client acceptance follow in
-dependent increments. No release or activation is implied.
+journal, checkpoints, terminal settlement and autonomous deadline processing are
+implemented. Session settings, auto-next pacing, runnable worker and full client
+acceptance follow in dependent increments. No release or activation is implied.
 
 ## Existing sources and ownership
 
@@ -124,6 +124,15 @@ It closes existing wave/recovery state and structure HP, settles accounting once
 applies real personal completion effects and returns matching pending Arsenal
 copies atomically. Active normal holders retain their copies. A late victory
 cannot overwrite abandonment, defeat or expiry.
+
+The native finish wrapper reads the actor's immutable completion first, before
+current membership, epoch or control checks. Its response contains the five-field
+original origin and that actor's completion only. Fresh economy/session fields
+are nullable and appear only when the actor still belongs to that same current
+account and epoch. The private close hook is also the single terminal path used
+by reset/deletion and the autonomous worker. Worker discovery captures owners
+before locking and rechecks every deadline under the common lock plan; it cannot
+extend a silent-loss deadline or close a different wave discovered later.
 
 Private actor-owner discovery includes an actor's lease and every open frozen
 slot, including withdrawn slots awaiting eventual completion. Deletion marks a
