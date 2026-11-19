@@ -33,7 +33,7 @@ const RECOVERY_HEALTH_KINDS = new Set(['wall', 'cannon', 'mortar', 'harpoon', 'c
 //   mode 'upgrade'  a building that can go up a level: upgrade {label "Level 2 · 🪙 60", stats}
 //   mode 'info'     nothing to do here (at the highest level, or the next level is locked)
 // Locked things stay on the card, marked "Opens after wave N" (GAME-V3.md §4): a locked tower choice is a
-// disabled choice with that reason, a locked spot (the inner wall ring) or level says it in `soon`.
+// A disabled choice, locked wall spot or locked level reports its reason in `soon`.
 // campaign: campaignOf(island) of the island on screen (src/campaign/); with it a built tower shows its
 // skills (GAME-V3.md §5): `skills` {line, choices: [{id, name, line, active, price, reason, disabled}]} or null (D051:
 // `price` "🪙 150" on every skill but the active one, `reason` when the player cannot pay it).
@@ -91,11 +91,11 @@ export function buildCardModel({spotId, kind, slot = null, spot = null, coins = 
       coins,
     });
   }
-  // A spot of a later campaign step (the inner wall ring after wave 5): shown, marked, not buildable yet.
+  // Additional wall pieces become available after wave 5.
   const spotNeeds = point ? 0 : spotWave(spotId), campaignWave = campaign?.wave ?? unlocks?.wonWave ?? 0;
   if (!built && spotNeeds > campaignWave) {
     model.locked = true; model.soon = `${opensText(spotNeeds)}.`;
-    model.purpose = spotNeeds === waveOf('ring_walls') ? 'The inner ring of walls around the heart.'
+    model.purpose = spotNeeds === waveOf('ring_walls') ? 'Extend the wall row along the grass edge.'
       : isExtraSpot(spotId) ? 'A new tower spot: any tower can stand here once it opens.' : model.purpose;
     return model;
   }

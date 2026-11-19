@@ -7,13 +7,49 @@ import { SKILLS, skillNeeds, ROLES, readSkills, isRole, pointsSpent, pointsEarne
   readWeapon } from './captain-ids.js';
 import { spotWave } from '../campaign/index.js';
 import { createFakeArsenal } from '../island/arsenal-fake.js';
-import { positionsOf, wallSceneryConflict } from '../island/placement.js';
+import { footprintOf, wallSceneryConflict } from '../island/placement.js';
+import { placedSpot } from '../island/spots.js';
+import { WALL_PERIMETER_CELLS, WALL_PERIMETER_DEFAULTS } from '../island/wall-perimeter.js';
 import { createFakeWorld, ISLAND_RULES, readIslandCode, CODE_ALPHABET, spotView, refuse, MAX_MEMBERS, GAME_FULL,
   unlocksAt, PRICES_V2, campaignAt, layoutOf, invalid, slotOfSpot, kindsOfSpot, kindOfSpot, lockedMessage,
   WALL_RECOVERY_MS, iso, restorePrice, rebuildPrice, SIM_RULES, isBoss, FakeApiError } from './fake-rules.js';
 import { createIslandRoutes } from './fake-island.js';
 import { createResearchRoutes } from './fake-research.js';
 import { createWaveRoutes } from './fake-waves.js';
+
+// Mirror the server's empty marker assignment. Paid walls retain their own positions.
+function perimeterSpots(rows) {
+  const emptyWall = row => !row.built && Object.hasOwn(WALL_PERIMETER_DEFAULTS, row.id);
+  const occupied = rows.filter(row => !emptyWall(row)).map(row => {
+    const {x, z} = placedSpot(row.id, [row]);
+    return {x, z, size: footprintOf(row.id)};
+  });
+  const free = WALL_PERIMETER_CELLS.filter(cell => occupied.every(({x, z, size}) => {
+    const separation = 1 + size / 2;
+    return Math.abs(cell.x - x) >= separation || Math.abs(cell.z - z) >= separation;
+  }));
+  const vacant = rows.filter(emptyWall), assigned = new Map();
+  function assign(id, index) {
+    const [cell] = free.splice(index, 1);
+    assigned.set(id, cell);
+  }
+  for (const row of vacant) {
+    const index = free.findIndex(cell => cell.x === row.x && cell.z === row.z);
+    if (index >= 0) assign(row.id, index);
+  }
+  for (const row of vacant) {
+    if (assigned.has(row.id) || !free.length) continue;
+    const origin = WALL_PERIMETER_DEFAULTS[row.id];
+    const distance = cell => (cell.x - origin.x) ** 2 + (cell.z - origin.z) ** 2;
+    const index = free.reduce((best, cell, i) => distance(cell) < distance(free[best]) ? i : best, 0);
+    assign(row.id, index);
+  }
+  return rows.map(row => {
+    if (!emptyWall(row)) return row;
+    const cell = assigned.get(row.id);
+    return {...row, x: cell?.x, z: cell?.z};
+  });
+}
 
 export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me', ownerName = 'You',
   now = () => Date.now(), weather = 'calm', code: wantedCode = null, version = 1, unlocking = version === 2, flags = {} } = {}) {
@@ -38,7 +74,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     }
     return player;
   };
-  const spots = island => islandSpots.map(id => spotView(island, id, true));
+  const spots = island => perimeterSpots(islandSpots.map(id => spotView(island, id, true)));
   // --- the games (GAME-V3.md §2): the SQL rules of game_join and game_leave, in memory ---
   const membersOf = code => {
     if (!(world.members instanceof Map)) world.members = new Map();
@@ -125,14 +161,21 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     const [name, price] = ISLAND_RULES.kinds[kind];
     if (place.built.has(spot)) refuse(409, 'spot_taken', `${ISLAND_RULES.kinds[place.kinds.get(spot) ?? kindOfSpot(spot)][0]} already stands on this spot.`);
     if (unlocks && (unlocks.levels[kind] ?? 0) < 1) refuse(409, 'locked', lockedMessage(unlockWave({ kind, level: 1 })));
-    // A spot of a later campaign step (the inner wall ring after wave 5), on an island only.
+    // A spot of a later campaign step, on an island only.
     if ((unlocking || isExtraSpot(spot)) && place.waveBest !== undefined && spotWave(spot) > place.waveBest) refuse(409, 'locked', lockedMessage(spotWave(spot)));
+    if (player.coins < price) refuse(409, 'insufficient_funds', `A ${name.toLowerCase()} costs ${price} coins. You need more coins.`);
     if (kind === 'wall' && ids === islandSpots) {
-      const {x, z} = positionsOf(spots(place))[spot];
+      const {x, z} = spots(place).find(row => row.id === spot);
+      if (!Number.isFinite(x) || !Number.isFinite(z)) refuse(409, 'place_taken', 'The grass edge has no free wall space.');
       const scenery = wallSceneryConflict(spot, x, z);
       if (scenery) refuse(409, 'place_taken', `That is too close to ${scenery.name}.`);
+      const saved = place.positions?.get(spot);
+      if (saved?.x !== x || saved?.z !== z) {
+        waveGuard(place, 'A wave is under way. Build walls between waves.');
+        place.positions ??= new Map();
+        place.positions.set(spot, {x, z});
+      }
     }
-    if (player.coins < price) refuse(409, 'insufficient_funds', `A ${name.toLowerCase()} costs ${price} coins. You need more coins.`);
     player.coins -= price; place.built.add(spot); place.levels.set(spot, 1); place.kinds.set(spot, kind); once(player, `build:${actionUid}`);
     paidFor(place, spot, 1, price);
   }

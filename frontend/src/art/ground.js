@@ -4,6 +4,7 @@
 // 64 x 48 world units as the backdrop. Alpha is the decorative cliff-base/foam silhouette; walking
 // and placement retain the separate analytic top in surfaces.js (D062).
 import {surfaceClass, surfaces} from '../world/places/surfaces.js';
+import {WALL_PERIMETER_CELLS} from '../island/wall-perimeter.js';
 import {LEGACY_DEPTH} from '../world/projection.js';
 import {canvas, ellipse, linear, poly, radial, stroke} from './paint.js';
 import {cliffProfile, paintCliffFaces, paintGrassRim} from './coast-cliffs.js';
@@ -30,6 +31,32 @@ function meadowEdge(angle) {
   const north = Math.abs(angle - Math.PI * 1.5);
   const inward = Math.max(0, Math.min(1, (north - Math.PI / 9) / (Math.PI / 12)));
   return Math.min(meadowScale(angle), .865 + .12 * inward * inward * (3 - 2 * inward));
+}
+
+const coastRadius = (angle, seed) => 1 + .055 * Math.sin(angle * 5 + seed) + .035 * Math.cos(angle * 7);
+const angleDistance = (a, b) => Math.abs(Math.atan2(Math.sin(a - b), Math.cos(a - b)));
+
+function wallGrassEdge(surface, meadow) {
+  const shoulders = WALL_PERIMETER_CELLS.map(({x, z}) => {
+    const angle = Math.atan2(z / surface.rz, x / surface.rx);
+    let radius = 0, width = 0;
+    for (const dx of [-1.04, 1.04]) for (const dz of [-1.04, 1.04]) {
+      const nx = (x + dx) / surface.rx, nz = (z + dz) / surface.rz;
+      const corner = Math.atan2(nz, nx);
+      radius = Math.max(radius, Math.hypot(nx, nz) / coastRadius(corner, surface.seed));
+      width = Math.max(width, angleDistance(angle, corner));
+    }
+    return {angle, width, radius: Math.min(.994, radius + .011)};
+  });
+  return angle => {
+    const edge = meadow(angle);
+    let radius = edge;
+    for (const shoulder of shoulders) {
+      const fade = Math.max(0, Math.min(1, 1 - (angleDistance(angle, shoulder.angle) - shoulder.width) / .10));
+      radius = Math.max(radius, edge + (shoulder.radius - edge) * fade * fade * (3 - 2 * fade));
+    }
+    return radius;
+  };
 }
 
 function paintBeachDetails(c, beach, rim, materials) {
@@ -270,7 +297,7 @@ export function paintGround(id, density = 28, materials = null) {
   const coast = (k, wobble = 0, seed = 0) => {
     const p = new Path2D();
     for (let i = 0; i <= 180; i++) {
-      const a = i / 180 * Math.PI * 2, edge = 1 + .055 * Math.sin(a * 5 + s.seed) + .035 * Math.cos(a * 7);
+      const a = i / 180 * Math.PI * 2, edge = coastRadius(a, s.seed);
       const extra = 1 + wobble * (Math.sin(a * 13 + seed) * .6 + Math.sin(a * 23 + seed * 2) * .4);
       const scale = typeof k === 'function' ? k(a) : k;
       const [x, y] = at(Math.cos(a) * s.rx * scale * edge * extra, Math.sin(a) * s.rz * scale * edge * extra);
@@ -386,8 +413,10 @@ function paintTerrain(c, s, coast, random, materials) {
   c.restore();
   paintBeachDetails(c, beach, rim, materials);
   if (!materials) paintGrassRim(c, rim, beach);
-  const grassRadius = materials ? meadowEdge : () => .85;
+  // Keep each wall's full footing on the existing dry shelf, using the same turf as the meadow.
+  const grassRadius = wallGrassEdge(s, materials ? meadowEdge : () => .85);
   const meadow = coast(grassRadius, .012, 3);
+  c.save(); c.clip(beach); c.globalCompositeOperation = 'source-atop';
   c.save(); c.clip(beach); c.translate(.08, .33); c.fillStyle = '#9b7f56'; c.fill(meadow); c.restore();
   c.fillStyle = '#78b743'; c.fill(meadow);
   c.save(); c.clip(meadow);
@@ -422,6 +451,7 @@ function paintTerrain(c, s, coast, random, materials) {
   paintTurfBevel(c, coast, meadow, grassRadius);
   stroke(c, meadow, '#486e39', .145, .9);
   paintTerraceFeet(c, beach, rim, materials);
+  c.restore();
 }
 function nearPath(paths, x, z, reach) {
   for (const points of paths.lines) for (let i = 1; i < points.length; i++) {
