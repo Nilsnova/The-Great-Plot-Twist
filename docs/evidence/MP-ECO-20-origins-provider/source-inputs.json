@@ -1,0 +1,13 @@
+{
+  "harnessSource": "7301550acf51e70feffe7f9fb21f8d8ad7db298b",
+  "helperSha256": {
+    "frontend/scripts/authenticated-economy/clients.mjs": "641ae6018386213ac78efcab217167c44c80d91ac63d301922f66575892127f8",
+    "frontend/scripts/authenticated-economy/observer.mjs": "40cb288da9f9a80e337fba5a39a12b1b23501ad1ff48a2a4614975492997f140",
+    "frontend/scripts/authenticated-economy/runtime.mjs": "489a4d89302c6eda6618a20fe9beb4165942b108c01a42f265b18d0c9e558e37",
+    "backend/tools/authenticated_economy/observe.py": "18707a8ed12d18c69a4c04de1a416089ccbe89619f5f6f6e9a270840df551839",
+    "backend/tools/authenticated_economy/config.py": "f066a3e3e1d1a0643ce3ba6da9d28a42f23dbe4f5b3358319aa13345e2aabb92"
+  },
+  "harnessSha256": "5bddd0d40ea90d5ba086181e9b7a9d421e09322da3ba1cbd8a4377c2f60d648b",
+  "localOnly": true,
+  "hashCaptureQualification": "Captured during the first real-clock wait; identical at completion. No startup-capture claim."
+}

@@ -1,0 +1,355 @@
+{
+  "result": "passed",
+  "source": "7301550acf51e70feffe7f9fb21f8d8ad7db298b",
+  "productionSource": "3bdd8eda16470795fdedd68c42fffab54e5f2ced",
+  "harnessSha256": "5bddd0d40ea90d5ba086181e9b7a9d421e09322da3ba1cbd8a4377c2f60d648b",
+  "startedAt": "2026-11-19T15:38:02.001Z",
+  "finishedAt": "2026-11-19T15:48:12.254Z",
+  "facts": [
+    {
+      "event": "actual-provider-bearer-identities",
+      "at": "2026-11-19T15:38:03.744Z",
+      "layer": "actual GoTrue registration and production HTTP verifier",
+      "actors": [
+        "d36f0c33-2b89-4bac-832c-c01512762a4a",
+        "98a4cc91-16d8-4b5c-a38d-9ab47a7d0fec"
+      ]
+    },
+    {
+      "event": "actual-http-market-opener",
+      "at": "2026-11-19T15:38:07.524Z",
+      "layer": "authenticated production HTTP; no source override",
+      "status": 409,
+      "errorCode": "prices_stale"
+    },
+    {
+      "event": "one-coin-all-available-separate-event-retries",
+      "at": "2026-11-19T15:38:10.871Z",
+      "layer": "fixture-backed real SQL opening plus actual authenticated HTTP retry",
+      "oneCoin": "1",
+      "allAvailable": "199",
+      "account": {
+        "id": "a088a5e4-6a56-4a4b-8cf1-441ae830d1b2",
+        "state": "active",
+        "balance": "200",
+        "held": "200",
+        "ledgerBalance": "200",
+        "ledgerHeld": "200"
+      }
+    },
+    {
+      "event": "waiting-actual-market-clock",
+      "at": "2026-11-19T15:38:10.872Z",
+      "remainingSeconds": 298
+    },
+    {
+      "event": "waiting-actual-market-clock",
+      "at": "2026-11-19T15:38:40.886Z",
+      "remainingSeconds": 268
+    },
+    {
+      "event": "waiting-actual-market-clock",
+      "at": "2026-11-19T15:39:10.892Z",
+      "remainingSeconds": 238
+    },
+    {
+      "event": "waiting-actual-market-clock",
+      "at": "2026-11-19T15:39:40.928Z",
+      "remainingSeconds": 208
+    },
+    {
+      "event": "waiting-actual-market-clock",
+      "at": "2026-11-19T15:40:10.941Z",
+      "remainingSeconds": 178
+    },
+    {
+      "event": "waiting-actual-market-clock",
+      "at": "2026-11-19T15:40:40.953Z",
+      "remainingSeconds": 148
+    },
+    {
+      "event": "waiting-actual-market-clock",
+      "at": "2026-11-19T15:41:10.980Z",
+      "remainingSeconds": 118
+    },
+    {
+      "event": "waiting-actual-market-clock",
+      "at": "2026-11-19T15:41:40.991Z",
+      "remainingSeconds": 88
+    },
+    {
+      "event": "waiting-actual-market-clock",
+      "at": "2026-11-19T15:42:11.027Z",
+      "remainingSeconds": 58
+    },
+    {
+      "event": "waiting-actual-market-clock",
+      "at": "2026-11-19T15:42:41.060Z",
+      "remainingSeconds": 28
+    },
+    {
+      "event": "actual-due-payout-reinvested",
+      "at": "2026-11-19T15:43:10.897Z",
+      "layer": "fixture-backed SQL after unmodified five-minute clock",
+      "payout": "2",
+      "reinvested": "2",
+      "account": {
+        "id": "a088a5e4-6a56-4a4b-8cf1-441ae830d1b2",
+        "state": "active",
+        "balance": "201",
+        "held": "201",
+        "ledgerBalance": "201",
+        "ledgerHeld": "201"
+      }
+    },
+    {
+      "event": "owner-reset-with-open-commitments-and-old-account-settlement",
+      "at": "2026-11-19T15:43:14.261Z",
+      "layer": "actual owner HTTP reset/retry and fixture-backed settlement",
+      "memberResetStatus": 403,
+      "replacement": {
+        "account": "c090662d-ce8e-4708-a7e6-279792bc6fdf",
+        "epoch": "9aee3a32-2901-492a-8967-fbba1f52eca5",
+        "balance": "200",
+        "held": "0",
+        "available": "200"
+      },
+      "retiredAfterSettlement": {
+        "id": "a088a5e4-6a56-4a4b-8cf1-441ae830d1b2",
+        "state": "retired",
+        "balance": "400",
+        "held": "2",
+        "ledgerBalance": "400",
+        "ledgerHeld": "2"
+      }
+    },
+    {
+      "event": "waiting-actual-market-clock",
+      "at": "2026-11-19T15:43:14.262Z",
+      "remainingSeconds": 296
+    },
+    {
+      "event": "waiting-actual-market-clock",
+      "at": "2026-11-19T15:43:44.293Z",
+      "remainingSeconds": 266
+    },
+    {
+      "event": "waiting-actual-market-clock",
+      "at": "2026-11-19T15:44:14.326Z",
+      "remainingSeconds": 236
+    },
+    {
+      "event": "waiting-actual-market-clock",
+      "at": "2026-11-19T15:44:44.360Z",
+      "remainingSeconds": 206
+    },
+    {
+      "event": "waiting-actual-market-clock",
+      "at": "2026-11-19T15:45:14.407Z",
+      "remainingSeconds": 176
+    },
+    {
+      "event": "waiting-actual-market-clock",
+      "at": "2026-11-19T15:45:44.445Z",
+      "remainingSeconds": 146
+    },
+    {
+      "event": "waiting-actual-market-clock",
+      "at": "2026-11-19T15:46:14.478Z",
+      "remainingSeconds": 116
+    },
+    {
+      "event": "waiting-actual-market-clock",
+      "at": "2026-11-19T15:46:44.511Z",
+      "remainingSeconds": 86
+    },
+    {
+      "event": "waiting-actual-market-clock",
+      "at": "2026-11-19T15:47:14.545Z",
+      "remainingSeconds": 56
+    },
+    {
+      "event": "waiting-actual-market-clock",
+      "at": "2026-11-19T15:47:44.577Z",
+      "remainingSeconds": 26
+    },
+    {
+      "event": "retired-origin-completion-isolated-from-current-run",
+      "at": "2026-11-19T15:48:12.254Z",
+      "layer": "committed SQL observer and authenticated current-run page",
+      "oldAccount": {
+        "id": "a088a5e4-6a56-4a4b-8cf1-441ae830d1b2",
+        "state": "retired",
+        "balance": "402",
+        "held": "0",
+        "ledgerBalance": "402",
+        "ledgerHeld": "0"
+      },
+      "currentAccount": {
+        "id": "c090662d-ce8e-4708-a7e6-279792bc6fdf",
+        "state": "active",
+        "balance": "200",
+        "held": "0",
+        "ledgerBalance": "200",
+        "ledgerHeld": "0"
+      },
+      "startingGrantCount": 1,
+      "personalWalletsUnchanged": true,
+      "personalCaptainUnchanged": true
+    }
+  ],
+  "requests": [
+    {
+      "actor": "origin-owner",
+      "path": "/api/me",
+      "method": "GET",
+      "status": 200,
+      "errorCode": null
+    },
+    {
+      "actor": "origin-member",
+      "path": "/api/me",
+      "method": "GET",
+      "status": 200,
+      "errorCode": null
+    },
+    {
+      "actor": "origin-owner",
+      "path": "/api/games",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null
+    },
+    {
+      "actor": "origin-owner",
+      "path": "/api/island",
+      "method": "GET",
+      "status": 200,
+      "errorCode": null
+    },
+    {
+      "actor": "origin-member",
+      "path": "/api/games/join",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null
+    },
+    {
+      "actor": "origin-member",
+      "path": "/api/island/visit/ISLE-DDCNX",
+      "method": "GET",
+      "status": 200,
+      "errorCode": null
+    },
+    {
+      "actor": "origin-owner",
+      "path": "/api/island/session/attach",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null
+    },
+    {
+      "actor": "origin-member",
+      "path": "/api/island/session/attach",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null
+    },
+    {
+      "actor": "origin-owner",
+      "path": "/api/captain",
+      "method": "GET",
+      "status": 200,
+      "errorCode": null
+    },
+    {
+      "actor": "origin-member",
+      "path": "/api/island/wagers/market",
+      "method": "POST",
+      "status": 409,
+      "errorCode": "prices_stale"
+    },
+    {
+      "actor": "origin-member",
+      "path": "/api/island/wagers/market",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null
+    },
+    {
+      "actor": "origin-member",
+      "path": "/api/island/wagers/market",
+      "method": "POST",
+      "status": 409,
+      "errorCode": "idempotency_conflict"
+    },
+    {
+      "actor": "origin-member",
+      "path": "/api/island/wagers/market",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null
+    },
+    {
+      "actor": "origin-member",
+      "path": "/api/island/wagers/market",
+      "method": "POST",
+      "status": 409,
+      "errorCode": "idempotency_conflict"
+    },
+    {
+      "actor": "origin-member",
+      "path": "/api/island/fresh-start",
+      "method": "POST",
+      "status": 403,
+      "errorCode": "not_owner"
+    },
+    {
+      "actor": "origin-owner",
+      "path": "/api/island/fresh-start",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null
+    },
+    {
+      "actor": "origin-owner",
+      "path": "/api/island/fresh-start",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null
+    },
+    {
+      "actor": "origin-member",
+      "path": "/api/island/wagers/market",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null
+    },
+    {
+      "actor": "origin-owner",
+      "path": "/api/captain",
+      "method": "GET",
+      "status": 200,
+      "errorCode": null
+    },
+    {
+      "actor": "origin-member",
+      "path": "/api/island/wagers?islandOwner=d36f0c33-2b89-4bac-832c-c01512762a4a&product=market_call",
+      "method": "GET",
+      "status": 200,
+      "errorCode": null
+    }
+  ],
+  "limitations": [
+    "No browser rendering or natural market-feed outcome is claimed.",
+    "Admission, advanced unlock and trusted price readings are explicit disposable fixtures.",
+    "Financial mutations use existing real SQL product functions; resets/retries/readbacks use real registered-session production HTTP.",
+    "Only one-coin/all-available/reinvestment/original-account-reset observations are covered; other acceptance rows remain independent.",
+    "No immutable financial row, product clock, HP or outcome column was edited; no hosted service, migration or activation."
+  ],
+  "verificationQualification": {
+    "captainComparison": "Owner Captain only; both personal wallets compared.",
+    "helperBytes": "First captured during the real-clock wait and identical at completion; relevant helper files remained unchanged for the run.",
+    "productSource": "Actual provider-owning tracked product working-tree bytes and absence of new product files checked against productionSource during wait and at completion."
+  }
+}
