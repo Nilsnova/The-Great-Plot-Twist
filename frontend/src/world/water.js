@@ -155,18 +155,22 @@ void main(){
   float shoreLight=mix(1.0,mix(.65,.92,1.0-smoothstep(-13.0,-6.0,p.y)),uHomeCoast);
   colour=mix(colour,uShallow,shallow*.85*shoreLight);
   colour=mix(colour,uShallow2,(1.0-smoothstep(.0,1.3,d))*.9*shoreLight);
+  float rockShore=0.0;
   if(uHomeCoast>.5&&d<6.0){
-    // Light reaches the sand in the coves. The projecting rock shoulders cut a short, softer
-    // shadow into that band. Both use the same coast distance and the actual projected top.
-    vec2 shore=abs(unprojectGround(p)/vec2(20.0,22.0));
-    float shoulder=min(shore.x,shore.y)/max(.001,max(shore.x,shore.y));
-    float rock=smoothstep(.31,.58,shoulder);
-    float shelf=(1.0-smoothstep(.4,5.7,d))*smoothstep(.24,.75,far)*(1.0-.62*rock);
-    colour=mix(colour,uShallow,shelf*.46);
-    float rockShadow=(1.0-smoothstep(.25,2.45,d))*rock;
-    float contact=(1.0-smoothstep(.05,.62,d))*(1.0-shoreLight)*.58;
-    colour=mix(colour,uDeep,max(contact,rockShadow*.43));
-    shoreLight*=1.0-(1.0-smoothstep(.45,1.6,d))*rock*.19;
+    // Open coves show the light sand through the water. The stone lobes fall straight into
+    // darker water, with more shade on the right and front, away from the upper-left sun.
+    vec2 shore=unprojectGround(p)/vec2(20.0,22.0);
+    vec2 reach=abs(shore);
+    float shoulder=min(reach.x,reach.y)/max(.001,max(reach.x,reach.y));
+    rockShore=smoothstep(.26,.60,shoulder);
+    float beach=(1.0-rockShore)*(1.0-smoothstep(.37,5.9,d));
+    float sandVeins=mix(.50,.92,smoothstep(.29,.74,far));
+    colour=mix(colour,mix(uShallow,uShallow2,.36),beach*sandVeins*.60);
+    float lee=smoothstep(-.54,.57,dot(normalize(shore),vec2(.71,.71)));
+    float contact=1.0-smoothstep(.08,.71,d);
+    float stoneShelf=1.0-smoothstep(.42,mix(1.7,3.5,lee),d);
+    colour=mix(colour,uDeep,max(contact*.24,rockShore*stoneShelf*mix(.25,.51,lee)));
+    shoreLight=mix(shoreLight,mix(.49,.85,1.0-lee),rockShore*.52);
   }
   // Curled noise contours break up highlights without two crossing families of periodic lines.
   // The entire extra material branch is disabled by the existing low-quality uniform.
@@ -220,9 +224,10 @@ void main(){
     float width=mix(.06,.088,uHomeCoast);
     colour=mix(colour,uFoam,(1.0-band(abs(d-surf),width))*.8*broken*smoothstep(.0,.25,run)*shoreLight);
     if(uHomeCoast>.5){
-      // A thin interrupted wash runs ahead of the breaker. Leave dark gaps between sections.
-      float wash=(1.0-band(abs(d-surf-.23-grain*.35),.051))*smoothstep(.46,.76,grain);
-      colour=mix(colour,uShallow2,wash*.29*shoreLight);
+      // Wash runs far up the sand and breaks more tightly where rock reaches the water.
+      float washAdvance=mix(.49,.16,rockShore);
+      float wash=(1.0-band(abs(d-surf-washAdvance-grain*.31),.061))*smoothstep(.41,.76,grain);
+      colour=mix(colour,uShallow2,wash*mix(.35,.25,rockShore)*shoreLight);
     }
   }
   colour=mix(colour,uFoam,(1.0-band(d,edge))*shoreLight);
