@@ -13,6 +13,10 @@ setup; no financial endpoint, response, account state or DOM bank is fabricated.
 The only external fixture is the previously reviewed increasing Binance quote
 transport on a separate side API 58006. A separately source-qualified Vite server
 on 55106 proxies the unchanged frontend's real API traffic to that instance.
+A same-origin `/provider` prefix forwards to the genuine existing provider with
+trusted TLS, exact prefix rewrite and WebSocket forwarding. This local transport
+fixture accommodates the isolated gateway’s fixed primary-origin CORS header;
+issuer, JWTs, Auth responses and API verification remain real and unchanged.
 Primary services are untouched. Initial saved Harbor record 4 and one normal 200
 admission grant are labeled eligibility/setup fixtures, not earned progression.
 

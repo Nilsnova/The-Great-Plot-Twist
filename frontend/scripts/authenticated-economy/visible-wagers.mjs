@@ -22,7 +22,7 @@ async function sources(){
  const frontend=JSON.parse(await readFile(join(directory,'side-frontend-source.json'),'utf8'));
  process.kill(side.processId,0);process.kill(frontend.processId,0);
  assert.equal(side.productionCandidate,runtime.expectedCommit);assert.equal(side.factorySha256,await digest(join(root,files[8])));
- assert.equal(frontend.privateViteCache,true);assert.equal(frontend.expectedProductionBaseline,runtime.expectedCommit);assert.equal(frontend.frontendUrl,'http://127.0.0.1:55106');assert.equal(frontend.apiProxy,'http://127.0.0.1:58006');
+ assert.equal(frontend.privateViteCache,true);assert.equal(frontend.providerProxy,'http://127.0.0.1:55106/provider');assert.equal(frontend.providerTarget,runtime.providerUrl);assert.equal(frontend.providerTlsValidation,true);assert.equal(frontend.expectedProductionBaseline,runtime.expectedCommit);assert.equal(frontend.frontendUrl,'http://127.0.0.1:55106');assert.equal(frontend.apiProxy,'http://127.0.0.1:58006');
  assert.equal(frontend.wrapperSha256,await digest(join(root,files[1])));assert.equal(frontend.viteConfigSha256,await digest(join(root,'frontend/vite.config.js')));
  assert.equal(frontend.packageLockSha256,await digest(join(root,'frontend/package-lock.json')));
  return {side,frontend,protectedSource:sourceEvidence(runtime.expectedCommit),primary:servedSourceEvidence(runtime)};
@@ -30,6 +30,7 @@ async function sources(){
 const report={scenario:'visible-unrestricted-wagers',status:'running',startedAt:new Date().toISOString(),steps:[],limits:[
  'Two independent rendered browsers with actual provider SDK session restoration; normal development inspection selects existing cards only.',
  'All stakes/All in/confirmation/reset actions use native visible controls and physical pointer buttons, not direct financial requests.',
+ 'Own same-origin /provider proxy forwards genuine Auth/REST/Realtime with trusted TLS; no identity or payload fabrication.',
  'Saved Harbor record4 and one200grant are explicit initial setup; only external quote transport is a fixture.',
  'Default real UTC clocks and actual five-minute deadlines; ordinary scheduler HTTP is a service action, not a visible user control.',
  'No natural-price, football, anonymous-browser or complete fifteen-row acceptance claim.']};
@@ -88,7 +89,7 @@ try{
   const page=await browser.newPage({viewport:{width:1280,height:900}});page.setDefaultTimeout(15000);await page.goto('http://127.0.0.1:55106',{waitUntil:'domcontentloaded'});
   await page.evaluate(async({url,key,session,actorId})=>{const {createAuthClient}=await import('/src/online/supabase-sdk.js');const client=createAuthClient(url,key,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
    const result=await client.auth.setSession({access_token:session.access_token,refresh_token:session.refresh_token});if(result.error||!result.data.session||result.data.user?.id!==actorId)throw Error('Actual provider SDK session restoration failed: '+(result.error?.status??'identity'));sessionStorage.setItem('plot-twist-auth-v1',JSON.stringify(result.data.session));client.auth.stopAutoRefresh();
-  },{url:runtime.providerUrl,key:runtime.anonKey,session:saved.session,actorId:saved.actorId});
+  },{url:'http://127.0.0.1:55106/provider',key:runtime.anonKey,session:saved.session,actorId:saved.actorId});
   await page.reload({waitUntil:'domcontentloaded'});await page.waitForFunction(async()=>{const {session}=await import('/src/online/session.js');return session.isSignedIn();},null,{timeout:30000});
   const me=await api(page,'/api/me');assert.equal(me.status,200);assert.equal(me.data.id,saved.actorId);
   clients.push({label:saved.label,actorId:saved.actorId,page});
