@@ -2,7 +2,7 @@
 // the build markers and every building a crew puts up (walls, cannons, mortars by level, the
 // watchtower, houses). Seen from the game's three-quarter camera: a front face and a lighter top.
 // Original designs. Boxes and anchors are the old atlas's, so every renderer keeps its numbers.
-import {INK, ellipse, line, mix, part, poly, radial, rect, shadow, stroke} from './paint.js';
+import {INK, ellipse, line, linear, mix, part, poly, radial, rect, shadow, stroke} from './paint.js';
 import {TOWER_KINDS, drawBroken, drawDamaged, towerState} from './tower-states.js';
 import {paintReferenceCannon} from './reference-cannon.js';
 
@@ -112,23 +112,52 @@ function grassTuft(c, {w, h}) {
 }
 function bench(c, {w, h}) {
   const g = h - 3; shadow(c, w / 2, g, 20, 3);
-  for (const x of [8, 36]) part(c, rect(x, g - 11, 4, 11, 1), WOOD_DARK, {depth: .8});
-  part(c, rect(4, g - 22, 40, 5, 2), WOOD, {depth: 1.4, gloss: rect(7, g - 21.4, 30, 1, .5), light: WOOD_LIGHT});
-  part(c, rect(3, g - 14, 42, 5, 2), WOOD_LIGHT, {depth: 1.6, gloss: rect(6, g - 13.4, 30, 1, .5)});
+  const bracket = linear(c, 0, g - 20, 0, g, [[0, '#678199'], [.44, '#405a73'], [1, '#293b4f']]);
+  for (const x of [8, 36]) {
+    part(c, rect(x + .55, g - 18, 2.9, 7, .7), bracket, {width: .75, line: '#342d26'});
+    part(c, rect(x, g - 11, 4, 11, 1), bracket, {line: '#342d26'});
+  }
+  // Sun on the front edge of the top board, deeper varnish below it.
+  part(c, rect(4, g - 22, 40, 5, 2),
+    linear(c, 0, g - 22, 0, g - 17, [[0, '#dea36b'], [.5, '#b0794c'], [1, '#764d37']]),
+    {gloss: rect(7, g - 21.4, 29, .8, .4), light: '#efbd83'});
+  part(c, rect(3, g - 14, 42, 5, 2),
+    linear(c, 0, g - 14, 0, g - 9, [[0, '#e7ad6d'], [.43, '#ba7e49'], [.55, '#8e5939'], [1, '#714732']]),
+    {gloss: rect(6, g - 13.5, 32, .8, .4), light: '#f0c58a'});
+  for (const x of [9.8, 37.8]) part(c, ellipse(x, g - 19.5, .9), '#cfa064', {width: .4, shade: false});
 }
 function barrel(c, {w, h}) {
   const g = h - 3, cx = w / 2; shadow(c, cx, g, 9, 2.6);
   const body = new Path2D(); body.moveTo(cx - 7, g - 25); body.quadraticCurveTo(cx - 10.5, g - 13, cx - 7, g - 1); body.lineTo(cx + 7, g - 1);
   body.quadraticCurveTo(cx + 10.5, g - 13, cx + 7, g - 25); body.closePath();
-  part(c, body, WOOD, {depth: 2.4, gloss: rect(cx - 5, g - 22, 2, 18, 1), light: WOOD_LIGHT});
-  for (const y of [g - 20, g - 6]) part(c, rect(cx - 8.6, y, 17.2, 2.2, 1), IRON, {depth: .6, width: .8});
-  part(c, ellipse(cx, g - 25, 7, 2.4), WOOD_LIGHT, {depth: .6, width: 1});
+  const oak = linear(c, cx - 8, 0, cx + 9, 0,
+    [[0, '#806348'], [.26, '#c68d54'], [.44, '#d7a064'], [.73, '#99623c'], [1, '#674333']]);
+  part(c, body, oak);
+  for (const x of [-4, 1, 5]) {
+    const seam = new Path2D();
+    seam.moveTo(cx + x * .85, g - 23); seam.quadraticCurveTo(cx + x * 1.18, g - 13, cx + x * .85, g - 2);
+    stroke(c, seam, '#775034', .6);
+  }
+  for (const y of [g - 20, g - 6]) {
+    const hoop = linear(c, 0, y, 0, y + 2.2, [[0, '#74879a'], [.42, '#4e6985'], [1, '#303c4d']]);
+    part(c, rect(cx - 8.6, y, 17.2, 2.2, 1), hoop, {width: .8});
+    part(c, ellipse(cx - 3.7, y + 1.15, .61), '#d6a76a', {line: false, shade: false});
+  }
+  part(c, ellipse(cx, g - 25, 7, 2.4),
+    linear(c, 0, g - 27.4, 0, g - 22.6, [[0, '#a4724b'], [.6, '#e9b679'], [1, '#a36840']]));
+  stroke(c, [[cx - 4.2, g - 25.35], [cx + 3.4, g - 24.6]], '#8f6141', .65);
 }
 function lantern(c, {w, h}) {
   const g = h - 2, cx = w / 2;
-  part(c, rect(cx - 1, g - 22, 2, 22, .8), IRON, {width: .8});
-  part(c, rect(cx - 4.5, g - 21, 9, 9, 2), '#ffd166', {depth: 1, gloss: ellipse(cx - 1.4, g - 18.5, 1.4, 2), light: '#fff3c4', width: 1.1});
-  part(c, poly([[cx - 5.5, g - 21], [cx, g - 24.5], [cx + 5.5, g - 21]], .8), IRON, {width: .9});
+  part(c, rect(cx - 1, g - 22, 2, 22, .8), '#536c84', {width: .8, shade: '#283547'});
+  part(c, rect(cx - 4.5, g - 21, 9, 9, 2),
+    radial(c, cx - 1, g - 17, 5.5, [[0, '#fff2b4'], [.54, '#efbc67'], [1, '#b97837']]),
+    {width: 1.1, line: '#463629'});
+  stroke(c, [[cx + 1.6, g - 20], [cx + 1.6, g - 13.1]], '#94602f', .67);
+  stroke(c, [[cx - 3.2, g - 13], [cx + 3.1, g - 13]], '#d39b50', .75);
+  part(c, poly([[cx - 5.5, g - 21], [cx, g - 24.5], [cx + 5.5, g - 21]], .8), '#5b7898',
+    {width: .9, shade: '#304258'});
+  stroke(c, [[cx - 3.5, g - 21.1], [cx + 3.5, g - 21.1]], '#d6a660', .72);
 }
 function crate(c, {w, h}) {
   const g = h - 3; shadow(c, w / 2, g, 10, 2.6);
