@@ -1,0 +1,264 @@
+{
+  "status": "demonstrated_product_blocker",
+  "measuredDriverCommit": "e378ddd3b99065b5e18a1bfbc7363bdc388fc5ef",
+  "scenarioSha256": "dccd2d5304b13087fe49fa93fa22bdd7147f96f9f1d0b18be4ac7970d97a34a6",
+  "startedAt": "2026-11-19T19:12:34.233Z",
+  "finishedAt": "2026-11-19T19:13:36.562Z",
+  "sourceBefore": {
+    "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+    "actualCheckoutHead": "e378ddd3b99065b5e18a1bfbc7363bdc388fc5ef",
+    "productionDiffFromBaseline": "empty",
+    "paths": [
+      "backend/server",
+      "backend/content",
+      "frontend/src",
+      "supabase/migrations",
+      "backend/uv.lock",
+      "backend/pyproject.toml",
+      "frontend/package-lock.json",
+      "frontend/package.json",
+      ":(exclude)backend/server/tests"
+    ]
+  },
+  "sourceAfter": {
+    "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+    "actualCheckoutHead": "e378ddd3b99065b5e18a1bfbc7363bdc388fc5ef",
+    "productionDiffFromBaseline": "empty",
+    "paths": [
+      "backend/server",
+      "backend/content",
+      "frontend/src",
+      "supabase/migrations",
+      "backend/uv.lock",
+      "backend/pyproject.toml",
+      "frontend/package-lock.json",
+      "frontend/package.json",
+      ":(exclude)backend/server/tests"
+    ]
+  },
+  "servedBefore": [
+    {
+      "service": "api",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "2de87a1c7a95423f93e83f7f254bff624f8b9eba",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    },
+    {
+      "service": "frontend",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "2de87a1c7a95423f93e83f7f254bff624f8b9eba",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    }
+  ],
+  "servedAfter": [
+    {
+      "service": "api",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "2de87a1c7a95423f93e83f7f254bff624f8b9eba",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    },
+    {
+      "service": "frontend",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "2de87a1c7a95423f93e83f7f254bff624f8b9eba",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    }
+  ],
+  "helpersBefore": {
+    "clients.mjs": "dfa176b33a56bc0f6c5a19a219d5c01ddb2c071fe66331d6d15cb181cf7ac6c0",
+    "observer.mjs": "40cb288da9f9a80e337fba5a39a12b1b23501ad1ff48a2a4614975492997f140",
+    "api-clients.mjs": "a9369da75350b882ac6a312c20903965a362409978e86e108c256f9cc450a9f7",
+    "runtime.mjs": "d1387a35fd7243df58e8d9589586034b3a098489bb20e43bece9b6b45040865f",
+    "source.mjs": "56d138914dc5b4e15159162bb21db68c985b2c9083c2e5bac4b34a90502ea8d9",
+    "observe.py": "18707a8ed12d18c69a4c04de1a416089ccbe89619f5f6f6e9a270840df551839",
+    "config.py": "9c1ab2bc84f0e5da14748624064a8a68357a52a44d3d79473251302a46082b47"
+  },
+  "helpersAfter": {
+    "clients.mjs": "dfa176b33a56bc0f6c5a19a219d5c01ddb2c071fe66331d6d15cb181cf7ac6c0",
+    "observer.mjs": "40cb288da9f9a80e337fba5a39a12b1b23501ad1ff48a2a4614975492997f140",
+    "api-clients.mjs": "a9369da75350b882ac6a312c20903965a362409978e86e108c256f9cc450a9f7",
+    "runtime.mjs": "d1387a35fd7243df58e8d9589586034b3a098489bb20e43bece9b6b45040865f",
+    "source.mjs": "56d138914dc5b4e15159162bb21db68c985b2c9083c2e5bac4b34a90502ea8d9",
+    "observe.py": "18707a8ed12d18c69a4c04de1a416089ccbe89619f5f6f6e9a270840df551839",
+    "config.py": "9c1ab2bc84f0e5da14748624064a8a68357a52a44d3d79473251302a46082b47"
+  },
+  "facts": [
+    {
+      "event": "same-actual-actor-ordinary-rejoin-has-ref-correlated-product-canonical-channel",
+      "at": "2026-11-19T19:12:55.430Z",
+      "layer": "normal UI rejoin and passive pre-navigation observer",
+      "sameActualActor": true,
+      "acceptedProductJoin": true,
+      "joinReplyRefCorrelated": true
+    }
+  ],
+  "afterLeave": {
+    "proof": null,
+    "sessionState": {
+      "phase": "waiting",
+      "message": "Confirming departure from your previous session. Retry shortly."
+    },
+    "metadata": null,
+    "place": null,
+    "activeWaveId": null,
+    "hidden": false,
+    "visiting": false
+  },
+  "failureState": {
+    "proof": null,
+    "sessionState": {
+      "phase": "waiting",
+      "message": "Confirming departure from your previous session. Retry shortly."
+    },
+    "metadata": null,
+    "place": null,
+    "activeWaveId": null,
+    "hidden": false,
+    "visiting": false
+  },
+  "failure": {
+    "name": "TimeoutError",
+    "message": "page.waitForFunction: Timeout 30000ms exceeded.",
+    "stack": "page.waitForFunction: Timeout 30000ms exceeded.\n    at /workspace/mp-economy/next-505-idle-browser/frontend/scripts/check-economy-restored-session-browser-provider.mjs:131:13"
+  },
+  "frames": [
+    {
+      "actor": "retained-browser",
+      "direction": "sent",
+      "topic": "realtime:live:place:saltreach_harbor:1",
+      "kind": "phx_join",
+      "ref": "9",
+      "joinRef": "9",
+      "status": null,
+      "at": "2026-11-19T19:12:38.508Z"
+    },
+    {
+      "actor": "retained-browser",
+      "direction": "received",
+      "topic": "realtime:live:place:saltreach_harbor:1",
+      "kind": "phx_reply",
+      "ref": "9",
+      "joinRef": "9",
+      "status": "ok",
+      "at": "2026-11-19T19:12:38.584Z"
+    },
+    {
+      "actor": "retained-browser",
+      "direction": "sent",
+      "topic": "realtime:live:place:saltreach_harbor:1",
+      "kind": "phx_leave",
+      "ref": "11",
+      "joinRef": "9",
+      "status": null,
+      "at": "2026-11-19T19:12:42.450Z"
+    },
+    {
+      "actor": "retained-browser",
+      "direction": "received",
+      "topic": "realtime:live:place:saltreach_harbor:1",
+      "kind": "phx_reply",
+      "ref": "11",
+      "joinRef": "9",
+      "status": "ok",
+      "at": "2026-11-19T19:12:42.458Z"
+    },
+    {
+      "actor": "retained-browser",
+      "direction": "sent",
+      "topic": "realtime:live:place:isle_fixture_place_1:1",
+      "kind": "phx_join",
+      "ref": "15",
+      "joinRef": "15",
+      "status": null,
+      "at": "2026-11-19T19:12:43.494Z"
+    },
+    {
+      "actor": "retained-browser",
+      "direction": "received",
+      "topic": "realtime:live:place:isle_fixture_place_1:1",
+      "kind": "phx_reply",
+      "ref": "15",
+      "joinRef": "15",
+      "status": "ok",
+      "at": "2026-11-19T19:12:43.495Z"
+    },
+    {
+      "actor": "retained-browser",
+      "direction": "sent",
+      "topic": "realtime:live:place:isle_fixture_place_1:1",
+      "kind": "phx_leave",
+      "ref": "22",
+      "joinRef": "15",
+      "status": null,
+      "at": "2026-11-19T19:12:57.967Z"
+    },
+    {
+      "actor": "retained-browser",
+      "direction": "received",
+      "topic": "realtime:live:place:isle_fixture_place_1:1",
+      "kind": "phx_reply",
+      "ref": "22",
+      "joinRef": "15",
+      "status": "ok",
+      "at": "2026-11-19T19:12:57.971Z"
+    }
+  ],
+  "observedBoundary": "Normal Menu gameLeave200 is asserted before the later failure. Old canonical topic leaves after the completed rejoin observation; own visible treasury200/visitingfalse remain, but pending departure prevents own controller for30s. No replacement-controller or grace pass is attributed to this invocation.",
+  "newUidDiagnostic": {
+    "at": "2026-11-19T19:19:48.152Z",
+    "status": 403,
+    "errorCode": "not_member",
+    "requestBodySha256": "eec5e2377f9f4a1d25e75bd2da27907d6524d603ec4aa49665b4e09455089d01",
+    "responseBodySha256": "e38de123a405fe0fda9227ed57ce9d6fb6c02a12faec7f57bbd69ab96c10f982",
+    "boundary": "New authenticated diagnostic using the same actual actor and an older retained server-issued original-scope proof. This is not the lost browser pending UID, nor a captured dispatch of that original request.",
+    "rawRequestBodyPublished": false
+  },
+  "limits": [
+    "The direct diagnostic is a new UID with an older retained original-scope server proof; it is not the lost original pending request or that request dispatch.",
+    "A later owning fix/candidate proof is required. This package does not claim that fix passed."
+  ]
+}

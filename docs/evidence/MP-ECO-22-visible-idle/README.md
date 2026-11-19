@@ -28,6 +28,16 @@ Its six imported helper hashes and protected application sources match before an
 
 The later normal Menu Leave request succeeds and the browser shows its existing own island bank200, but the document remains in `Confirming departure from your previous session. Retry shortly.` That observed pending-departure blocker and its correction are separate from the completed arsenal row. The failed invocation does not supply a grace or automatic replacement-controller pass.
 
+## Actual departure blocker and independent real-grace restoration
+
+[`departure-blocker.json`](departure-blocker.json) preserves the same retained actual actor's later normal rejoin, ref-correlated accepted product channel, subsequent topic departure, `visiting:false` and persistent pending-departure state. The normal game-leave request succeeds before the later30-second controller wait fails. A separately issued authenticated diagnostic against the retained original scope receives403 `not_member`. That diagnostic uses a **new** UID and an older retained server proof; it is not the lost original pending request. Only status/code and request/response body hashes are published. Its owning fix and new-candidate validation remain separate; no correction pass is claimed here.
+
+[`grace-restoration.json`](grace-restoration.json) is a complete, separate3-fact pass, executed19:16:31–19:18:18 UTC. Measured driver `f13587aea4e777dab24e53e55d4017263835b792` has SHA256 `d5e7aa30c02b7724a668aa13e4b4ab6630f6af713c12b7932db011ec35b8fc9a`. All seven imported helper hashes and protected checkout/actual serving sources match before and after.
+
+This continuation restores the exact retained real Auth actor in a fresh browser context, physically selects its existing own island under Continue and confirms a fresh controller with its unchanged200-coin treasury. It accepts a real wave start and production disconnect, keeps the browser offline for67 real seconds with no driver player-API requests, and observes the independently running production worker close the original attempt as abandoned with zero loot. Ordinary document restoration produces a fresh real idle controller, no old flow, no personal assignment and an unchanged immutable closure. No clock, HP, journal or outcome is replaced. This fresh-context case does not replay or repair the earlier document's pending-departure queue.
+
+Same-actor continuation preparation failures are retained privately: missing local Playwright module resolution before launch, an initial lazy-restore401, and an incorrect test assumption that metadata topic generation was the wire suffix. The actual documented game room uses the server-selected nonce/place and protocol suffix `:1`; successful replies are correlated with their sent join references. No failed invocation is relabeled as this passing grace run.
+
 ## Setup and boundaries
 
 The fresh service admission supplies 5000 disposable test coins. Saved island unlock50 and a pre-existing level5/personal-best20/earned10 profile fixture make the controls reachable. They do not establish naturally earned progression, conversion or economy balance. All actual role/build/research mutations use the real UI and API. No journal, HP, outcome or clock is replaced.
