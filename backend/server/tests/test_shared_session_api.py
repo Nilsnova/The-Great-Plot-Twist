@@ -512,3 +512,71 @@ def test_native_away_command_is_not_a_disconnect_authority():
     with pytest.raises(ApiError):
         asyncio.run(api.append_inputs(admin, ACTOR, WAVE, OWNER, EPOCH, SESSION, "1", [item]))
     assert admin.calls == []
+
+
+def withdrawal_event():
+    return dict(
+        serverSeq=1,
+        effectiveTick=10,
+        type="captain_withdrawn",
+        participantToken=TOKEN,
+        payload=dict(participantToken=TOKEN, reason="disconnect_expired"),
+    )
+
+
+def test_native_journal_accepts_only_server_bound_withdrawal_identity():
+    event = withdrawal_event()
+    result = asyncio.run(
+        api.read_events(
+            Admin([dict(headSeq=1, sealedThroughTick=9, through=1, events=[event], closed=False)]),
+            ACTOR,
+            WAVE,
+            OWNER,
+            EPOCH,
+            None,
+            None,
+        )
+    )
+    assert result["events"] == [event]
+
+
+@pytest.mark.parametrize("change", ["token", "missing_outer", "client_counter", "reason", "actor"])
+def test_native_journal_rejects_malformed_withdrawal_authority(change):
+    event = withdrawal_event()
+    if change == "token":
+        event["payload"]["participantToken"] = OWNER
+    elif change == "missing_outer":
+        event["participantToken"] = None
+    elif change == "client_counter":
+        event["payload"]["actorCounter"] = 1
+    elif change == "reason":
+        event["payload"]["reason"] = "presence_timeout"
+    else:
+        event["payload"]["actorId"] = ACTOR
+    with pytest.raises(SupabaseRejected):
+        asyncio.run(
+            api.read_events(
+                Admin(
+                    [dict(headSeq=1, sealedThroughTick=9, through=1, events=[event], closed=False)]
+                ),
+                ACTOR,
+                WAVE,
+                OWNER,
+                EPOCH,
+                None,
+                None,
+            )
+        )
+
+
+def test_browser_cannot_submit_a_canonical_withdrawal_event_as_an_input():
+    item = RecoveryInput(
+        inputUid="input_001",
+        actorCounter=1,
+        tick=0,
+        command=dict(type="captain_withdrawn", participantToken=TOKEN, reason="leave"),
+    )
+    admin = Admin([])
+    with pytest.raises(ApiError):
+        asyncio.run(api.append_inputs(admin, ACTOR, WAVE, OWNER, EPOCH, SESSION, "1", [item]))
+    assert admin.calls == []
