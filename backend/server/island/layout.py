@@ -300,6 +300,25 @@ def overlaps(a: Box, b: Box | WallObstacle) -> bool:
     return abs(a.x - b.x) < (a.w + b.w) / 2 and abs(a.z - b.z) < (a.d + b.d) / 2
 
 
+def check_wall_scenery(rules: LayoutRules, spot_id: str, where: Position) -> None:
+    """Reject a prospective wall footprint intersecting fixed scenery."""
+    x, z = where
+    size = footprint_of(rules, spot_id)
+    moved = Box(spot_id, "another building", x, z, size, size)
+    for other in rules.wall_obstacles:
+        hit = (
+            math.hypot(
+                max(abs(x - other.x) - moved.w / 2, 0),
+                max(abs(z - other.z) - moved.d / 2, 0),
+            )
+            < other.radius
+            if other.radius
+            else overlaps(moved, other)
+        )
+        if hit:
+            raise MoveRefused(409, "place_taken", f"That is too close to {other.name}.")
+
+
 def check_move(
     rules: LayoutRules, positions: dict[str, Position], spot_id: str, x: float, z: float
 ) -> None:
@@ -319,18 +338,7 @@ def check_move(
         if overlaps(moved, other):
             raise MoveRefused(409, "place_taken", f"That is too close to {other.name}.")
     if spot_named(rules, spot_id).slot == WALL_SLOT:
-        for other in rules.wall_obstacles:
-            hit = (
-                math.hypot(
-                    max(abs(x - other.x) - moved.w / 2, 0),
-                    max(abs(z - other.z) - moved.d / 2, 0),
-                )
-                < other.radius
-                if other.radius
-                else overlaps(moved, other)
-            )
-            if hit:
-                raise MoveRefused(409, "place_taken", f"That is too close to {other.name}.")
+        check_wall_scenery(rules, spot_id, (x, z))
     for other_id, where in positions.items():
         if other_id != spot_id and overlaps(moved, box_of(rules, other_id, where)):
             raise MoveRefused(409, "place_taken", "Another building stands there.")

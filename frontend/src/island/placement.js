@@ -61,6 +61,14 @@ export function onWallLane(x, z) {
 }
 export const OFF_PATH = 'Walls go on a pirate path.';
 
+/** A new wall may not cross the fixed scenery reserved on the island. */
+export function wallSceneryConflict(spotId, x, z) {
+  const moved = boxOf(spotId, {x, z});
+  return WALL_OBSTACLES.find(item => item.radius
+    ? Math.hypot(Math.max(Math.abs(x - item.x) - moved.w / 2, 0), Math.max(Math.abs(z - item.z) - moved.d / 2, 0)) < item.radius
+    : overlaps(moved, item));
+}
+
 export function checkMove(spotId, x, z, positions = positionsOf()) {
   if (!spotById(spotId)) return refuse('no_such_spot', 'There is no such build spot.');
   if (!onGrid(x) || !onGrid(z)) return refuse('off_grid', 'Pick a square of the build grid.');
@@ -70,9 +78,7 @@ export function checkMove(spotId, x, z, positions = positionsOf()) {
   const fixed = KEEP_OUT.find(item => overlaps(moved, item));
   if (fixed) return refuse('place_taken', `That is too close to ${fixed.name}.`);
   if (spotById(spotId).slot === 'wall') {
-    const scenery = WALL_OBSTACLES.find(item => item.radius
-      ? Math.hypot(Math.max(Math.abs(x - item.x) - moved.w / 2, 0), Math.max(Math.abs(z - item.z) - moved.d / 2, 0)) < item.radius
-      : overlaps(moved, item));
+    const scenery = wallSceneryConflict(spotId, x, z);
     if (scenery) return refuse('place_taken', `That is too close to ${scenery.name}.`);
   }
   const other = Object.entries(positions).find(([id, where]) => id !== spotId && overlaps(moved, boxOf(id, where)));
