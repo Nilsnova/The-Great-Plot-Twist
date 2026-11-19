@@ -70,10 +70,11 @@ describe('Move mode', () => {
   it('moves one square per arrow key and leaves other keys to the game', async () => {
     const {mode} = await setUp();
     mode.start('house_1');
+    const {x, z} = mode.state;
     const event = key => ({key, preventDefault: vi.fn(), stopPropagation: vi.fn()});
     expect(mode.handleKey(event('ArrowRight'))).toBe(true);
     expect(mode.handleKey(event('ArrowUp'))).toBe(true);
-    expect(mode.state).toMatchObject({x: 7.5, z: -6.5});
+    expect(mode.state).toMatchObject({x: x + .5, z: z - .5});
     expect(mode.handleKey(event('e'))).toBe(false);
   });
   it('docks a touch near a built wall onto a legal shared edge and keeps a fourth row refused', async () => {

@@ -32,8 +32,8 @@ export const KINDS = Object.freeze({
 //           two across each lane (east wall_7 + wall_12, south wall_8 + wall_9, west wall_10 + wall_11). Before
 //           16 Nov wall_2, wall_4, wall_5, wall_6, wall_8, wall_9, wall_11 and wall_12 stood where no pirate walked.
 //   towers  cannon_1…cannon_7 (a cannon, a mortar or a harpoon tower): the four corners, west, east and the south beach
-//   tower   the watchtower on the hill at the north end of the main path
-//   houses  inland, at the ends of the north cross path
+//   tower   the watchtower on the east side overlooking the approach
+//   houses  the two southern cottage plots
 export const SPOT_TABLE = Object.freeze([
   ['wall_1', 'wall', -18.5, -1, 'shore'], ['wall_2', 'wall', 19, 1, 'shore'],
   ['wall_3', 'wall', 19, -1, 'shore'], ['wall_4', 'wall', -1, 17, 'shore'],
@@ -41,11 +41,15 @@ export const SPOT_TABLE = Object.freeze([
   ['cannon_1', 'tower', -12.5, -14.5, 'corner'], ['cannon_2', 'tower', 13, -15, 'corner'],
   ['cannon_3', 'tower', 15.5, 14, 'corner'], ['cannon_4', 'tower', -15.5, 14.5, 'corner'],
   ['cannon_5', 'tower', -15, -6, 'side'], ['cannon_6', 'tower', 14.5, -3, 'side'], ['cannon_7', 'tower', 4.5, 16.5, 'side'],
-  ['tower_1', 'watchtower', 0, -14, 'hill'],
-  ['house_1', 'house', 7, -6, 'inland'], ['house_2', 'house', -8, -6, 'inland'],
+  ['tower_1', 'watchtower', 14, 3, 'side'],
+  ['house_1', 'house', 2.5, 12.5, 'inland'], ['house_2', 'house', -5.5, 11, 'inland'],
   ['wall_7', 'wall', 8.5, 2, 'ring'], ['wall_8', 'wall', 0.5, 9.5, 'ring'], ['wall_9', 'wall', -1.5, 9.5, 'ring'],
   ['wall_10', 'wall', -9.5, -1, 'ring'], ['wall_11', 'wall', -9.5, 1, 'ring'], ['wall_12', 'wall', 8.5, 0, 'ring'],
 ].map(row => Object.freeze(row)));
+// An older save may have a moved spot on one of the new defaults. Its saved coordinates win.
+export const LEGACY_HOME_DEFAULTS = Object.freeze({
+  tower_1: Object.freeze([0, -14]), house_1: Object.freeze([7, -6]), house_2: Object.freeze([-8, -6]),
+});
 // Other names an answer may use for the same spots (old drafts of §2). The backend's ids need none.
 export const SPOT_ALIASES = Object.freeze(Object.fromEntries([1, 2, 3, 4, 5, 6, 7].map(n => [`tower_s${n}`, `cannon_${n}`])));
 export const localSpotId = id => SPOT_ALIASES[id] ?? id;

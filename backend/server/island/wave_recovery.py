@@ -492,6 +492,11 @@ async def build_snapshot_template(
         "wallResearchRateFactors": {"mason_drill": [1, 1]},
     }
     default_positions = {spot.spot: {"x": spot.x, "z": spot.z} for spot in complete_geometry.spots}
+    # The SQL admission overlays saved placement rows on these fallbacks. Use the island view's
+    # resolved anchors for relocated defaults so legacy placement conflicts stay fixed in combat.
+    for spot in view.spots:
+        if spot.id in geometry.legacy_defaults and spot.x is not None and spot.z is not None:
+            default_positions[spot.id] = {"x": spot.x, "z": spot.z}
     return {
         "expectedRevision": expected_revision,
         "weather": dict(create_wave["weather"]),

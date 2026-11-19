@@ -63,6 +63,18 @@ describe('fake island API', () => {
     expect((await api.island()).coins).toBe(20);
   });
 
+  it('returns Home defaults or compatible anchors while keeping saved moves and prices', async () => {
+    const world = createFakeWorld(), api = createFakeIslandApi({world});
+    const tower = answer => answer.spots.find(spot => spot.id === 'tower_1');
+    expect(tower(await api.island())).toMatchObject({x: 14, z: 3, cost: 40});
+    const owner = world.islands.get(world.players.get('me').code);
+    owner.positions = new Map([['wall_1', {x: 14.5, z: 2.5}]]);
+    const answer = await api.island();
+    expect(answer.spots.find(spot => spot.id === 'wall_1')).toMatchObject({x: 14.5, z: 2.5, cost: 10});
+    expect(tower(answer)).toMatchObject({x: 0, z: -14, cost: 40});
+    expect([...owner.positions]).toEqual([['wall_1', {x: 14.5, z: 2.5}]]);
+  });
+
   it('visits an island by code in any spelling and refuses unknown codes', async () => {
     const api = createFakeIslandApi();
     for (const code of ['ISLE-K7Q2M', 'isle k7q2m', 'k7q-2m', 'K7Q2M']) {

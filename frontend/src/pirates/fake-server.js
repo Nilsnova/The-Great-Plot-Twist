@@ -7,6 +7,7 @@ import { SKILLS, skillNeeds, ROLES, readSkills, isRole, pointsSpent, pointsEarne
   readWeapon } from './captain-ids.js';
 import { spotWave } from '../campaign/index.js';
 import { createFakeArsenal } from '../island/arsenal-fake.js';
+import { positionsOf } from '../island/placement.js';
 import { createFakeWorld, ISLAND_RULES, readIslandCode, CODE_ALPHABET, spotView, refuse, MAX_MEMBERS, GAME_FULL,
   unlocksAt, PRICES_V2, campaignAt, layoutOf, invalid, slotOfSpot, kindsOfSpot, kindOfSpot, lockedMessage,
   WALL_RECOVERY_MS, iso, restorePrice, rebuildPrice, SIM_RULES, isBoss, FakeApiError } from './fake-rules.js';
@@ -37,7 +38,11 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     }
     return player;
   };
-  const spots = island => islandSpots.map(id => spotView(island, id, true));
+  const spots = island => {
+    const views = islandSpots.map(id => spotView(island, id, true));
+    const placed = positionsOf(views);
+    return views.map(spot => ({ ...spot, ...placed[spot.id] }));
+  };
   // --- the games (GAME-V3.md §2): the SQL rules of game_join and game_leave, in memory ---
   const membersOf = code => {
     if (!(world.members instanceof Map)) world.members = new Map();
