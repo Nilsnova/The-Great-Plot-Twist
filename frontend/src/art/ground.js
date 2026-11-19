@@ -40,13 +40,14 @@ function wallGrassEdge(surface, meadow) {
   const shoulders = WALL_PERIMETER_CELLS.map(({x, z}) => {
     const angle = Math.atan2(z / surface.rz, x / surface.rx);
     let radius = 0, width = 0;
-    for (const dx of [-1.04, 1.04]) for (const dz of [-1.04, 1.04]) {
+    // The artwork's plinth is narrower than the protected 2-by-2 placement clearance.
+    for (const dx of [-.58, .58]) for (const dz of [-.58, .58]) {
       const nx = (x + dx) / surface.rx, nz = (z + dz) / surface.rz;
       const corner = Math.atan2(nz, nx);
       radius = Math.max(radius, Math.hypot(nx, nz) / coastRadius(corner, surface.seed));
       width = Math.max(width, angleDistance(angle, corner));
     }
-    return {angle, width, radius: Math.min(.994, radius + .011)};
+    return {angle, width, radius: Math.min(.96, radius + .009)};
   });
   function neededRadius(angle) {
     const edge = meadow(angle);
@@ -429,7 +430,7 @@ function paintTerrain(c, s, coast, random, materials) {
   c.restore();
   paintBeachDetails(c, beach, rim, materials);
   if (!materials) paintGrassRim(c, rim, beach);
-  // Keep each wall's full footing on the existing dry shelf, using the same turf as the meadow.
+  // Continue the meadow under the visible wall foot while leaving the sand wash facing the sea.
   const grassRadius = wallGrassEdge(s, materials ? meadowEdge : () => .85);
   const meadow = coast(grassRadius, .012, 3);
   c.save(); c.clip(beach); c.globalCompositeOperation = 'source-atop';
