@@ -1,7 +1,7 @@
 // Original bell/lookout sources. Bell's larger presentation box is the explicit VIS-04 decision.
 export const sheets = {
-  villageLandmarks: {file: 'village/landmarks-v1.png', width: 1254, height: 1254},
-  villageBell: {file: 'village/home-heart-v2.png', width: 1312, height: 1199},
+  villageLandmarks: {file: 'village/landmarks-v2.png', width: 1254, height: 1254},
+  villageBell: {file: 'village/home-bell-v3.png', width: 1312, height: 1199},
 };
 
 export const frames = {

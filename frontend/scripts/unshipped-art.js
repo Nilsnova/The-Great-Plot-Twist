@@ -11,11 +11,12 @@ export const UNSHIPPED = Object.freeze([
   'places/title.webp', // the painted title backdrop
   'places/title.png', // its fallback
   // Original world authoring sheets stay in the repository; runtime uses the proved compiled sources.
-  'village/buildings-hero-v1.png', 'village/houses-v1.png', 'village/houses-v2.png', 'village/landmarks-v1.png',
+  'village/buildings-hero-v1.png', 'village/houses-v1.png', 'village/houses-v2.png',
+  'village/landmarks-v1.png', 'village/landmarks-v2.png',
   'village/services-v1.png', 'village/home-fixed-v2.png', 'village/home-fixed-v3.png', 'village/home-harbor-v2.png',
   'village/nature-v1.png', 'village/cannons-v1.png',
   'village/walls-posts-v1.png', 'village/walls-surfaces-v1.png',
-  'village/core-v1.png', 'village/home-heart-v2.png', 'village/home-heart-v3.png', 'village/home-heart-v4.png',
+  'village/core-v1.png', 'village/home-heart-v2.png', 'village/home-heart-v3.png', 'village/home-heart-v4.png', 'village/home-bell-v3.png',
   'village/progress-v1.png', 'village/mortars-v1.png',
   'village/harpoons-v1.png', 'village/culverins-v1.png', 'village/swivels-v1.png',
   // The proved 4x PNG masters (the pre-VIS64 wall sheet among them, kept for the transport proof) and the
