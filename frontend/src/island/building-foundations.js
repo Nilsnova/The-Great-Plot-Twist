@@ -139,7 +139,7 @@ function geometryOf(foundations) {
         }
       }
     }
-    const capWidth = width - .055, capDepth = depth - .055;
+    const capWidth = width - .065, capDepth = depth - .065;
     const inset = clippedCorners(x, footZ, capWidth, capDepth, cornerInset);
     const lipAlpha = apron ? .60 : 1, footAlpha = apron ? .26 : 1;
     const top = inset.map(([gx, gz]) => vertex(gx, gz, height, LIP, lipAlpha, 1, [.5, 1, FOOTING.riser]));
