@@ -40,7 +40,10 @@ async function finishEntry(page, options = {}) {
     if (await skipAll.isVisible().catch(() => false)) await skipAll.click({noWaitAfter: true});
     for (const name of ['Skip', 'Got it']) {
       const button = page.getByRole('button', {name, exact: true}).first();
-      if (await button.isVisible().catch(() => false)) await button.click({noWaitAfter: true, timeout: 3000});
+      if (await button.isVisible().catch(() => false)) {
+        try { await button.click({noWaitAfter: true, timeout: 5000}); }
+        catch (error) { if (error.name !== 'TimeoutError') throw error; (report.entryClickTimeouts ??= []).push({name, message: error.message}); }
+      }
     }
     const lobby = page.locator('.island-card-lobby[open] .island-lobby-start');
     if (await lobby.isVisible().catch(() => false)) await page.keyboard.press('Escape');
@@ -252,6 +255,16 @@ try {
   }
   process.exitCode = 1;
 } finally {
+  if (environment && report.status === 'failed' && process.env.MP_ECO_RETAIN_FAILURE === '1') {
+    await writeFile(output + '/failed-invocation.json', JSON.stringify(report, null, 2) + '\n');
+    console.log('Failed invocation retained; ordinary staged continuation available. This does not become a single CLI pass.');
+    const {start} = await import('node:repl');
+    await new Promise(resolve => {
+      const terminal = start({prompt: 'idle-stage> ', useGlobal: false});
+      Object.assign(terminal.context, {environment, report, api, capture, refresh, closeCards, mutation, settings, read, note, context, uid, output, assert, writeFile});
+      terminal.once('exit', resolve);
+    });
+  }
   if (environment) { report.servedAfter = servedSourceEvidence(environment.runtime); await environment.close(); }
   report.helpersAfter = await helperHashes(); assert.deepEqual(report.helpersAfter, report.helpersBefore);
   report.sourceAfter = sourceEvidence(baseline, {checkoutRoot: root});
