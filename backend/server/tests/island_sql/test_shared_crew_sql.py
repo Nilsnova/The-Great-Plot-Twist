@@ -5,7 +5,9 @@ The fixture applies every migration twice and never reads live credentials.
 
 from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
-from threading import Barrier
+from queue import Queue
+from threading import Barrier, Event
+from time import monotonic
 from uuid import uuid4
 
 import pytest
@@ -39,7 +41,7 @@ CATALOGUE = manifest(load_island())
 
 def setup(connection, coins=200):
     owner, member, outsider, treasury = ready(connection, coins)
-    alphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
+    alphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"  # pragma: allowlist secret
     code = "".join(alphabet[(member.int >> (5 * index)) % len(alphabet)] for index in range(5))
     open_island(connection, member, code)
     as_owner(connection)
@@ -244,28 +246,39 @@ def test_membership_departure_commits_before_a_waiting_hire_is_checked(database,
     owner, member, _, treasury = setup(database)
     database.commit()
     barrier = Barrier(2)
+    worker_pid = Queue()
 
     def waiting_hire():
         with psycopg.connect(scratch_server.get_uri()) as connection:
+            worker_pid.put(connection.info.backend_pid)
             barrier.wait(timeout=10)
             result = hire(connection, member, treasury, uid="leave001")
             connection.commit()
             return result
 
     with psycopg.connect(scratch_server.get_uri()) as departing:
-        as_owner(departing)
-        departing.execute(
-            "select player_id from public.islands where player_id=%s for update", (owner,)
-        )
+        # The actual membership transaction acquires common guards before island
+        # rows. Prelocking only its island would invert that documented order.
+        as_server(departing)
+        assert rpc(departing, "game_leave", member, owner)["status"] == "left"
         with ThreadPoolExecutor(1) as pool:
             purchase = pool.submit(waiting_hire)
             barrier.wait(timeout=10)
-            as_server(departing)
-            assert rpc(departing, "game_leave", member, owner)["status"] == "left"
+            pid = worker_pid.get(timeout=5)
+            with psycopg.connect(scratch_server.get_uri(), autocommit=True) as observer:
+                deadline, pause = monotonic() + 5, Event()
+                while not observer.execute(
+                    "select %s=any(pg_blocking_pids(%s))",
+                    (departing.info.backend_pid, pid),
+                ).fetchone()[0]:
+                    assert monotonic() < deadline, "Hire must wait for actual departure locks."
+                    pause.wait(0.01)
             departing.commit()
             assert purchase.result(timeout=10)["reason"] == "not_member"
     assert counts(database, owner)[0] == 0
     assert operation_count(database, member, "leave001") == 0
+    assert money(snapshot(database, owner, treasury)) == (200, 0, 200)
+    reconciles(database, keys(treasury)[0])
 
 
 def test_old_epoch_cannot_purchase_or_expose_a_retired_origins_current_island(database):

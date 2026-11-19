@@ -3284,79 +3284,6 @@ A saved v1 island may retain already-built `cannon_8`–`cannon_11` plots and cu
 
 The recovery feature flag remains off by default and governs admission of new v1 waves on legacy islands. It does not make the migrations optional for a deployed server or protocol-2 client that can read or mutate a saved v1 island. If a release must stop admitting new v1 waves, turn the flag off and preserve saved v1 state. Admission off does not downgrade saved v1 policy, which persists between waves; no safe policy downgrade is implemented. Keep a v1-capable backend and protocol-2 client while any saved v1 island remains, even when no wave is active. Do not reverse the migrations or delete receipts to roll back. Fix forward with reviewed code and migrations; any future saved-policy data transition needs separate review. See the [release checklist](../docs/RELEASE-CHECKLIST.md#t55t60-structure-recovery-release-gate). No live migration, deployment or flag activation was performed by T60.
 
-## Shared island treasury foundation (MP-ECO-02)
-
-`20261118050050_island_treasury.sql` and `20261118050100_island_treasury_functions.sql` add exact
-island/run accounts and atomic financial primitives. They create no admission rows or automatic
-balance conversion. Existing personal wallets, ledger and HTTP routes remain unchanged. See
-[the interface contract](../docs/INTERFACES.md#shared-island-treasury-foundation-mp-eco-02)
-and [the package spec](../specs/MP-ECO-02-island-treasury.md).
-
-### Treasury rights and invariants
-
-| Object | `anon` / `authenticated` | `service_role` |
-|---|---|---|
-| `island_economy_state` | No reads/writes | Select only; persisted mode/current account/epoch and active/paused offers. |
-| `island_economy_accounts` | No reads/writes | Select only; exact finite integral numeric balance, committed principal and revision. |
-| `island_treasury_transactions` | No reads/writes | Select only; append-only immutable cash and commitment receipts. |
-| `island_economy_context`, `island_treasury_admit`, `island_treasury_spend`, `island_treasury_reserve`, `island_treasury_credit`, `island_treasury_settle` | No execute | Execute the checked public primitives. |
-| Treasury scope, validation, envelope, replay, result and record helpers | No execute | No direct execute; only enclosing function-owner SQL can call them. |
-
-All three tables enable RLS without browser policies. Security-definer financial RPCs use an
-empty search path and fully qualified tables. A separate checked API must authorize member reads.
-Balance includes held principal and cannot fall below committed principal. A ledger reserve has
-one uniquely linked settlement on the same account/epoch. Cash/commitment sums reconcile to account
-balances; actor/action UID and account/reason/reference keys prevent repeated payments. A trigger
-rejects update/delete even from an accidental privileged statement.
-
-Scope advisory locks precede account rows and prevent first-admission/reset races. New spending
-checks active membership and current active account/epoch under locks. Canonical credit/settlement
-uses its saved origin and does not require the original actor to remain a member. Pausing offers
-does not downgrade mode or stop valid settlement. Monetary helpers must share the asset mutation's
-SQL transaction; a preceding separate HTTP money call is insufficient.
-
-Accounts/state reference their original island with deletion restricted. Owner-account deletion,
-reset, old obligations and existing-save conversion need an explicit integrated policy before any
-runtime admission path is enabled. No live application/admission is recorded by this foundation.
-
-### Treasury verification
-
-On disposable PostgreSQL, run the existing full-chain fixture:
-
-```bash
-cd backend
-CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q server/tests/island_sql/test_island_treasury_sql.py
-uv run pytest -q server/tests/test_island_treasury.py server/tests/test_island_treasury_store.py
-```
-
-The SQL suite applies every migration twice and checks grants/RLS, immutable receipts, one-time
-bootstrap, no partial admission on UID conflict, exact large funds, same-event independent bets,
-spend/reserve races, duplicate settlements, retired-origin payouts and ledger/escrow reconciliation.
-The Python checks cover strict decimal-string/context parsing and fresh state versus immutable
-receipt values. These are local integration checks, not proof of deployed shared-mode gameplay.
-
-### Global operation registry
-
-`20261118050150_island_economy_operations.sql` adds immutable free/personal/paid intent identities
-and the treasury insertion guard. `island_economy_operations` has RLS, no anonymous/authenticated
-access and service-role select only. Claim/effect/system/parser/trigger helpers have no direct
-service-role execute grant; owner-defined domain functions call them inside the asset transaction.
-No public claim-only endpoint is introduced. Historical raw financial UIDs are opaque tombstones;
-checked children must match the original root actor, account and epoch.
-
-Apply this migration transactionally at `READ COMMITTED`. Before any DDL, it collects account,
-existing-operation and ledger relation barriers atomically using `NOWAIT`/savepoint retry. It releases
-partial locks before waiting and fails before changes after 30 seconds of contention. Unsupported
-isolation fails at entry. Do not replace this barrier with an account-scope inventory or account-only
-lock: concurrent new admissions and personal null-scope foreign keys are covered explicitly.
-The [registry spec](../specs/MP-ECO-02-operation-identities.md) documents exact lock modes and errors.
-
-Focused verification also runs `server/tests/test_economy_operations.py`,
-`server/tests/island_sql/test_economy_operations_sql.py` and
-`server/tests/island_sql/test_economy_operations_cutover_sql.py` with the disposable PostgreSQL tools
-above. Source settlement after departure/retirement keeps its original account; this extension does
-not grant current membership, convert saves, register routes or authorize a live migration.
-
 ### Saved reward recovery after returning
 
 `migrations/20261118060000_reward_recovery.sql` adds the partial
@@ -3432,6 +3359,178 @@ no migration was applied live and no refund was performed by this implementation
 `CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q
 server/tests/island_sql/test_revive_reconciliation_sql.py` from `backend/`.
 
+## Shared island treasury foundation (MP-ECO-02)
+
+`20261118050050_island_treasury.sql` and `20261118050100_island_treasury_functions.sql` add exact
+island/run accounts and atomic financial primitives. They create no admission rows or automatic
+balance conversion. Existing personal wallets, ledger and HTTP routes remain unchanged. See
+[the interface contract](../docs/INTERFACES.md#shared-island-treasury-foundation-mp-eco-02)
+and [the package spec](../specs/MP-ECO-02-island-treasury.md).
+
+### Treasury rights and invariants
+
+| Object | `anon` / `authenticated` | `service_role` |
+|---|---|---|
+| `island_economy_state` | No reads/writes | Select only; persisted mode/current account/epoch and active/paused offers. |
+| `island_economy_accounts` | No reads/writes | Select only; exact finite integral numeric balance, committed principal and revision. |
+| `island_treasury_transactions` | No reads/writes | Select only; append-only immutable cash and commitment receipts. |
+| `island_economy_context`, `island_treasury_admit`, `island_treasury_spend`, `island_treasury_reserve`, `island_treasury_credit`, `island_treasury_settle` | No execute | Execute the checked public primitives. |
+| Treasury scope, validation, envelope, replay, result and record helpers | No execute | No direct execute; only enclosing function-owner SQL can call them. |
+
+All three tables enable RLS without browser policies. Security-definer financial RPCs use an
+empty search path and fully qualified tables. A separate checked API must authorize member reads.
+Balance includes held principal and cannot fall below committed principal. A ledger reserve has
+one uniquely linked settlement on the same account/epoch. Cash/commitment sums reconcile to account
+balances; actor/action UID and account/reason/reference keys prevent repeated payments. A trigger
+rejects update/delete even from an accidental privileged statement.
+
+Scope advisory locks precede account rows and prevent first-admission/reset races. New spending
+checks active membership and current active account/epoch under locks. Canonical credit/settlement
+uses its saved origin and does not require the original actor to remain a member. Pausing offers
+does not downgrade mode or stop valid settlement. Monetary helpers must share the asset mutation's
+SQL transaction; a preceding separate HTTP money call is insufficient.
+
+Accounts/state reference their original island with deletion restricted. Owner-account deletion,
+reset, old obligations and existing-save conversion need an explicit integrated policy before any
+runtime admission path is enabled. No live application/admission is recorded by this foundation.
+
+### Treasury verification
+
+On disposable PostgreSQL, run the existing full-chain fixture:
+
+```bash
+cd backend
+CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q server/tests/island_sql/test_island_treasury_sql.py
+uv run pytest -q server/tests/test_island_treasury.py server/tests/test_island_treasury_store.py
+```
+
+The SQL suite applies every migration twice and checks grants/RLS, immutable receipts, one-time
+bootstrap, no partial admission on UID conflict, exact large funds, same-event independent bets,
+spend/reserve races, duplicate settlements, retired-origin payouts and ledger/escrow reconciliation.
+The Python checks cover strict decimal-string/context parsing and fresh state versus immutable
+receipt values. These are local integration checks, not proof of deployed shared-mode gameplay.
+
+### Global operation registry
+
+`20261118050150_island_economy_operations.sql` adds immutable free/personal/paid intent identities
+and the treasury insertion guard. `island_economy_operations` has RLS, no anonymous/authenticated
+access and service-role select only. Claim/effect/system/parser/trigger helpers have no direct
+service-role execute grant; owner-defined domain functions call them inside the asset transaction.
+No public claim-only endpoint is introduced. Historical raw financial UIDs are opaque tombstones;
+checked children must match the original root actor, account and epoch.
+
+Apply this migration transactionally at `READ COMMITTED`. Before any DDL, it collects account,
+existing-operation and ledger relation barriers atomically using `NOWAIT`/savepoint retry. It releases
+partial locks before waiting and fails before changes after 30 seconds of contention. Unsupported
+isolation fails at entry. Do not replace this barrier with an account-scope inventory or account-only
+lock: concurrent new admissions and personal null-scope foreign keys are covered explicitly.
+The [registry spec](../specs/MP-ECO-02-operation-identities.md) documents exact lock modes and errors.
+
+Focused verification also runs `server/tests/test_economy_operations.py`,
+`server/tests/island_sql/test_economy_operations_sql.py` and
+`server/tests/island_sql/test_economy_operations_cutover_sql.py` with the disposable PostgreSQL tools
+above. Source settlement after departure/retirement keeps its original account; this extension does
+not grant current membership, convert saves, register routes or authorize a live migration.
+
+## Guarded shared economy domain migrations
+
+The new service-only domain contracts are in
+[Guarded shared economy transactions](../docs/economy/DOMAIN-TRANSACTIONS.md).
+Apply no live migration or admission from this documentation. The treasury and
+operation migrations precede `20261118050900_shared_arsenal.sql`,
+`20261118051200_shared_combat_repairs.sql`,
+`20261118051400_shared_island_wagers.sql` and
+`20261118051500_shared_ship_rewards.sql`.
+
+| Data | Browser rights | Service rights and immutable history |
+| --- | --- | --- |
+| `shared_arsenal_receipts` | No direct rights; RLS enabled | Select only; definer transaction inserts an immutable domain receipt. |
+| `island_shared_repair_receipts` | No direct rights; RLS enabled | Select only; guarded transaction inserts the root/financial repair proof. |
+| `island_wagers`, `island_wager_settlements` | No direct rights; RLS enabled | Select only; definer functions insert immutable product/source/terminal evidence. |
+| `island_boat_rounds`, `island_boat_results` | No direct rights; RLS enabled | Select only; definer functions insert immutable original round and result rows. |
+| `island_boat_reward_buckets` | No direct rights; RLS enabled | Select only; the claim transaction updates cumulative paid reward under locks. |
+
+Only the documented domain entry points grant `service_role` execution. Private
+arsenal holder/loadout/closure helpers and other internal projections grant no
+execution to `anon`, `authenticated` or `service_role`. Existing arsenal rows and
+their legacy grants are not a new client write path. The arsenal capacity trigger
+preserves legacy storage limits, permits bound grandfathered returns, and retains
+the total-copy check on new shared purchases.
+
+Use a disposable database for the following manual checks; the automated suites
+in the linked document exercise the same boundaries with explicit fixture authority:
+
+1. Apply the full migration chain twice. `anon` and `authenticated` cannot call
+   new entry points or read/write the new domain tables. Direct service mutations
+   of immutable receipts/results are refused; only documented entry points execute.
+2. With the reserved authority RPC absent, a fresh action refuses without a new
+   operation, product, ledger row, HP change or quota use. Test malformed and
+   mismatched authority separately. A TEST-ONLY provider is not runtime acceptance.
+3. Race a real wager against arsenal purchase and reserved repair for the last
+   available coins. Inspect both cash and commitment ledger reconciliation, root
+   claims and persisted asset/journal effects; only the affordable action succeeds.
+4. Return bound historical excess arsenal stock, then force deferred constraints
+   or commit. Preserve every copy; reject another purchase at 20 total. Confirm the
+   original legacy stored-copy limit still rejects an over-capacity legacy commit.
+5. Replay successful operations after later damage, departure and source-account
+   retirement. Return original effects without another charge/heal/reward and
+   without exposing unauthorized fresh treasury state. Changed immutable intent
+   conflicts; an injected post-effect failure rolls the entire transaction back.
+6. Run simultaneous ship scores from ten members and repeated same-round claims.
+   Each game/account/epoch/record bucket stays within the existing three-star cap.
+   Direct account-retirement fixtures verify fencing, not the actual reset RPC.
+
+### Runtime adapters and additional migration rights
+
+The [domain runtime contracts](../docs/economy/DOMAIN-TRANSACTIONS.md#runtime-adapters-and-browser-controls)
+describe the registered HTTP routes and browser integration. Additional migrations
+remain additive and do not admit islands or activate a release:
+
+| Migration | Additional data and rights |
+| --- | --- |
+| `20261118180900_arsenal_runtime.sql` | `shared_arsenal_versions` has RLS and service SELECT only; definer functions advance the independent free-asset revision. Shared read/request entry points grant service execution. Legacy wrappers acquire scope guards; renamed internal legacy bodies have no direct role execution. |
+| `20261118181200_legacy_repair_mode_guard.sql` | Replaces the existing service-only legacy repair function with the same legacy behavior plus sorted scope guards before wallet locks and a shared-target refusal. No new table or browser right. |
+| `20261118181400_shared_wager_jobs.sql` | `island_wager_jobs` has RLS and service SELECT only. Triggers enqueue/complete work atomically with product changes. Service-only due/retry/page entry points do not grant direct queue writes. |
+| `20261118181500_shared_boat_runtime.sql` | Service-only status and legacy reward wrappers bind persisted accounting mode. No browser RPC execution or direct table rights. |
+| `20261118192007_legacy_revival_shared_mode_guard.sql` | Both existing paid-revival functions acquire sorted scope guards and refuse a shared defended island before wallet locks or debit. A shared actor's explicitly legacy defended island retains legacy behavior. No new tables or browser rights. |
+| `20261118192119_shared_island_realtime_membership.sql` | Replaces both existing place Broadcast policies. The non-exposed `island_realtime_private` schema grants authenticated callers only USAGE and execution of `may_access_place_topic(text)`, which derives its caller from `auth.uid()`. No direct membership, island or economy table rights are granted. |
+
+The Realtime predicate protects fresh authorization for active and paused shared
+islands. Supabase caches authorization for already connected subscribers; this
+migration does not evict them. Admission/departure revocation or topic rotation
+must be integrated and tested separately.
+
+The [canonical integration below](#canonical-control-and-lifecycle-integration)
+now supplies authority/session/assignment production, immutable wave binding,
+hold/fall context, lifecycle workers, holder deletion and reset/deletion composition.
+Final authenticated product acceptance and physical-device observations retain
+their separate status in the [acceptance matrix](../docs/economy/ACCEPTANCE.md).
+
+### Coherent shared member snapshots
+
+`20261118050700_island_economy_snapshot.sql` adds two service-only, security-definer functions
+with empty search paths. It creates no tables, admission path or money grant:
+
+| Function | Server purpose | Browser rights |
+|---|---|---|
+| `island_economy_snapshot(actor, owner)` | One locked current member snapshot, including paused reads and explicitly absent personal state | No execute |
+| `island_economy_operation_origin(actor, owner, epoch, uid, domain)` | Actor-owned immutable original account identity before current preflight; domain still validates the exact intent | No execute |
+
+The snapshot locks scope/account, sorted actor/owner profile anchors, existing personal state,
+target island/admission and ordered domain rows. It rechecks current account/epoch and active
+membership, captures one server time and returns actual shared refund lineage. Missing lineage
+remains explicit; private historical payments and catalogue prices cannot mint shared refunds.
+Reads do not initialize Captains, expire reservations or synthesize current session authority.
+Unfinished/reserved waves keep projected health unavailable rather than pretending the journal
+is an idle recovery clock. `20261118050701_island_economy_legacy_guards.sql` separately fences legacy
+entry points needed for global personal router integration.
+
+The [HTTP contract and verification](../specs/MP-ECO-CORE-API.md) keeps domain receipts separate
+from independently coherent refreshes. Existing treasury, construction, progression, crew and
+personal transactions remain the mutation boundaries. This read migration does not supply
+`island_economy_authority`; new HTTP writes remain unavailable without its actual persisted
+provider. It does not authorize shared admission, deployment or a live database migration.
+
 ## Shared wave accounting foundation (MP-ECO-03)
 
 Migration [20261118050200_wave_treasury_settlement.sql](migrations/20261118050200_wave_treasury_settlement.sql)
@@ -3476,3 +3575,100 @@ The SQL fixture applies the entire migration chain twice. Checks cover both wave
 descriptors, actual personal/Engineer hooks, same-attempt and legacy-finish races, exact large
 rewards, immutable receipts, reserved principal, departed participants and old-origin replay.
 These tests do not establish live combat-result authority or authenticated browser integration.
+
+## Canonical control and lifecycle integration
+
+These additive migrations compose the retained foundations; they do not admit
+islands, configure a hosted worker or activate a release.
+
+| Migration | Data and execution boundary |
+| --- | --- |
+| `20261118223055_canonical_wave_sessions.sql` | Real six-field economy authority, one global controller lease, frozen wave slots, session settings/receipts and nonce topics. New tables have RLS, no browser rights and service SELECT only; service execution is granted only to named public boundary functions. Private lock/withdraw/retire/revival helpers are unavailable directly. |
+| `20261118223655_shared_arsenal_holder_lifecycle.sql` | Replaces accidental holder-profile cascades with checked profile existence/deletion guards and private exact-tenure holder disposition, frozen loadout and owner asset-reset hooks. Historical copy/move identity is preserved; no browser execution is added. |
+| `20261118223730_shared_player_deletion_guard.sql` | Minimal immutable UUID/time deletion dispositions, RLS and service SELECT only; the service-only active/deleted read grants no initialization or other authority. |
+| `20261118224038_shared_free_revival_runtime.sql` | RLS-protected timed hold/immutable receipt records, private canonical context/hold helpers and service-only replay/completion entry points. No browser table access or money function is granted. |
+| `20261118225937_shared_legacy_wave_fences.sql` | Preserves sixteen public old signatures/defaults behind sorted scope/profile guards. Captured original bodies have no browser or service execution. Genuine retained closed personal settlement remains possible; shared-accounting sources cannot enter legacy reward recovery. |
+| `20261118230046_shared_lifecycle_transactions.sql` | One atomic owner reset or account deletion, original-origin replay and grants, sorted actor/island/wallet/profile fencing, holder disposition and Auth deletion. Historical shared UUID origins are deliberately detached from five destructive foreign keys; live-origin checks and explicit legacy purging preserve their separate semantics. Only named service boundary functions execute directly. |
+| [20261118231226_shared_wave_journal_lifecycle.sql](migrations/20261118231226_shared_wave_journal_lifecycle.sql) | Native accepted bell freezes existing wave/recovery/accounting, personal assignments, loadouts and coherent source facts. Service-only replay/start, heartbeat, join/current, input/event and Captain/structure checkpoint entry points use current controller/original-origin proof. Private snapshot/source/confirmation/revival helpers and captured bodies have no direct role execution. This composes the existing authority, not a second provider or wave store. |
+| `20261119000309_canonical_membership_lifecycle.sql` | Existing service-only room entry points compose actual membership, target control/stock withdrawal and topic rotation; captured old bodies remain private. Details follow below. |
+| [20261119001458_shared_wave_closure_worker.sql](migrations/20261119001458_shared_wave_closure_worker.sql) | Service-only `shared_session_wave_finish` and bounded `shared_session_process_due` use the canonical lock plan. Private closure normalizes grace/expiry before a proposed outcome, closes HP/run/accounting once, restores structures and settles matching returns. Actor-owned retained completion replays precede mutable controller/membership facts; current projections still require current authorization. Private closure/view/normalization aliases have no service/browser execute. |
+| [20261119002149_shared_session_pacing.sql](migrations/20261119002149_shared_session_pacing.sql) | Adds durable won-break timing to existing session settings. Service-only leave/settings, attach/start and auto-candidate/auto-start boundaries recheck current origin/control under locks. Original leave/settings receipts replay with null current projections. Explicit withdrawal invalidates journal/hold state and returns eligible idle stock; pause changes break pacing, not combat time. Captured close/retire/withdraw/snapshot bodies and the accepted-bell helper remain private. |
+| [20261119002317_shared_repair_canonical_lock_order.sql](migrations/20261119002317_shared_repair_canonical_lock_order.sql) | Keeps the shared repair signature and service-only grant. Sorted actor/owner scopes, matching account/root and existing personal anchors precede island/recovery/wave/structure locks. Frozen price/quota, financial child, HP, event and receipt remain one transaction; original receipt lookup precedes mutable authority. No new provider, table or browser grant. |
+| [20261119005642_shared_captain_fall_basis.sql](migrations/20261119005642_shared_captain_fall_basis.sql) | Replaces the same service-only Captain checkpoint boundary: a new fall cannot precede its committed current revival event tick. Sealed-prefix/basis checks and immutable report replay remain; no new authority or direct hold/fall write path is introduced. |
+| [20261119014418_shared_revival_checkpoint_freshness.sql](migrations/20261119014418_shared_revival_checkpoint_freshness.sql) | Adds a private trusted-clock predicate and replaces the private revival context helper. Accepted complete helper/target facts must cover their genuine input/revival bases, be covered by the stored seal, and be no more than 2000 ms old; future prefixes fail. Reader-only seal movement does not invalidate recent facts, and a new UID cannot renew an old prefix. Existing membership/controller/fall/pose checks and immutable completion replay remain. No table or role grant is added; the predicate and context helper have no direct role execution. See the [freshness contract](../specs/MP-ECO-11-revival-checkpoint-freshness.md). |
+
+The four session tables are not a second wave or assignment system: operational
+waves/recovery journals and `personal_captain_profiles.assignment_wave_id` remain
+canonical. Controller loss has one fixed sixty-second return deadline; unrelated
+spectator reads cannot renew it. Nonce topics follow
+`isle_<five-character-lowercase-code>_<24-hex-nonce>` and reuse the existing private
+Realtime predicate without exposing its schema through PostgREST. Current-data
+revocation and the autonomous worker still need final multi-client acceptance.
+
+Public reset replies intentionally omit a replacement treasury projection;
+original account references remain usable for legitimate old wager settlement.
+Account deletion requires explicit confirmation when it deletes an admitted
+owned island. Guest cleanup cannot silently supply that owner confirmation.
+
+`20261119000309_canonical_membership_lifecycle.sql` preserves the existing public
+`game_join`/`game_leave` signatures behind canonical scope/actor/account/profile
+locks. Captured original bodies have no direct role execution. Only public
+service entry points remain executable; no table/browser right is added. The
+same transaction changes membership, withdraws target control and stock, handles
+pending returns, and rotates the private topic. Inactive actors cannot join or
+leave through a cached token. Existing legacy room semantics remain intact.
+
+Apply the complete reviewed candidate chain in timestamp order. Earlier imported
+migrations can capture/wrap existing function bodies, so applying only missing
+retroactive files after later aliases does not establish the same semantics as a
+fresh chain. Verify installed versions/content against the pinned source before
+starting compatible code. The commands below do not install migrations.
+
+### Canonical rights and retained results
+
+`anon` and `authenticated` receive no execution on these native mutation/worker
+boundaries and no new table-write rights. `service_role` may execute only the
+documented public entry points; internal lock/source/snapshot/close/withdraw,
+revival-consume and captured pre-wrapper aliases explicitly revoke execution from
+`PUBLIC`, `anon`, `authenticated` and `service_role`. Their enclosing definer
+transactions invoke them. Preserve those revocations when checking the complete
+chain; broad grants to make a probe succeed change the security boundary.
+
+Retained canonical start/finish and common action receipts describe the original
+actor/account/epoch. Replaying them cannot grant current control, rewrite a terminal
+result or reveal unauthorized fresh treasury/session state. Genuine closed personal
+obligations keep their legacy settlement path; shared-accounting attempts stay
+excluded from it. Read/history access and current mutation authorization remain
+separate checks.
+
+### Local canonical worker command
+
+The [worker CLI](../backend/tools/shared_session_worker.py) uses normal server
+settings: `APP_ENV`, `SUPABASE_URL`, server-only `SUPABASE_SECRET_KEY` and the usual
+weather settings. Load credentials privately into the process environment and bind
+the URL explicitly to the owned disposable local stack. The CLI follows that
+configuration; it has no automatic loopback restriction. These examples are for
+that local environment, not a hosted worker installation or rollout:
+
+```bash
+cd backend
+uv run python -m tools.shared_session_worker --help
+uv run python -m tools.shared_session_worker --once --limit 20
+uv run python -m tools.shared_session_worker --interval 1 --limit 20
+```
+
+`--once` runs one bounded cycle. Otherwise the foreground loop defaults to one
+second; `--interval` accepts 0.25–30 seconds and `--limit` accepts 1–100 islands per
+stage (default 20). Each cycle processes due canonical leases/closures and prepares
+eligible auto-next candidates through the existing trusted template/weather path;
+SQL rechecks the durable break, source and controller before acceptance. The worker
+prints counts only. Starting this process against a deployed database is activation
+and is outside these local checks; no scheduler is configured here.
+
+The [current acceptance record](../docs/economy/ACCEPTANCE.md#current-integration-and-open-gates)
+distinguishes the completed local real-Auth/native HTTP/WSS primitive probe from
+remaining product acceptance. Manually following nonce metadata with SDK channels
+verifies policy/topic isolation, not automatic rendered-game broadcaster changes,
+full combat/domain/lifecycle flows or physical devices. Preserve the original
+76-migration cached-channel failure evidence alongside the later source-qualified
+probe; neither migration presence nor a manual channel switch proves the full game.

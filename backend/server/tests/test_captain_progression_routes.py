@@ -2,7 +2,6 @@
 
 import pytest
 
-from server.routes.captain_progression import router
 from server.tests.account_helpers import (
     PLAYER_ID,
     RIGHT_HEADER,
@@ -16,7 +15,6 @@ from server.tests.test_personal_captain import reply
 
 def client_for(functions):
     client, seen = make_client(scripted_database(functions))
-    client.app.include_router(router, prefix="/api")
     return client, seen
 
 
@@ -140,9 +138,10 @@ def test_stale_revision_and_missing_profile_keep_standard_fail_closed_errors():
                                  json=body()), 409, code)
 
 
-def test_an_unregistered_application_has_no_new_route():
-    client, _ = make_client(scripted_database())
-    assert client.get("/api/captain", headers=RIGHT_HEADER).status_code == 404
+def test_registered_application_fails_closed_when_personal_provider_is_missing():
+    client, seen = make_client(scripted_database())
+    assert_error(client.get("/api/captain", headers=RIGHT_HEADER), 502, "database_error")
+    assert len(seen) == 1 and seen[0].url.path.endswith("/personal_captain_context")
 
 
 @pytest.mark.parametrize("uid", ["fx_reserved_charge", "sys_reserved_loot"])

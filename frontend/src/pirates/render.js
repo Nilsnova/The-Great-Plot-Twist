@@ -47,7 +47,7 @@ import { createEvents } from './render-events.js';
 
 // The public API, unchanged: the sprite tables and helpers live in render-sprites.js.
 export { ATLAS_IDS, GUNBOAT_FRAMES, JAM_FRAMES, GUNBOAT_IDS, BOARDER_BANDS, bandOf, MUSKET, GUN_LOOKS, damageTint,
-  packAtlas, DOWN_IDS, MILITIA_IDS, CARTOON_EXTRA_IDS, PIXEL_ONLY_IDS, TIER_IDS, FIRE_LEVEL_IDS, HARPOON_IDS,
+  packAtlas, DOWN_IDS, STANDING_IDS, MILITIA_IDS, CARTOON_EXTRA_IDS, PIXEL_ONLY_IDS, TIER_IDS, FIRE_LEVEL_IDS, HARPOON_IDS,
   TOWER_STATE_IDS, CULVERIN_IDS, CULVERIN_STATE_IDS, SWIVEL_IDS, MARK_ATLAS_IDS, SWIVEL_STATE_IDS, towerFrame,
   loadAtlas, SHIP_VARIANTS, BRUTE_LOOK } from './render-sprites.js';
 
@@ -69,7 +69,7 @@ export function wallShare(post, wall) {
 }
 
 export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion = () => false, quality = () => 'high',
-  beamFrom = null, recoveryV1 = false, fx = () => scene.userData?.pixelFx ?? null }) {
+  beamFrom = null, recoveryV1 = false, nativeCaptains = false, fx = () => scene.userData?.pixelFx ?? null }) {
   const owned = [], root = new THREE.Group(); root.name = 'pirate-wave'; scene.add(root);
   const combatOverlay = createCombatOverlay(root);
   const rect = {};
@@ -164,7 +164,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   const spark = (x, y, options) => { const f = effects(); if (!f || still()) return; f.burst(x, y, low() ? { ...options, count: Math.ceil(options.count / 3) } : options); };
 
   const parts = createDraw(rect, layers, bands, posts, ships, crew, guards, splashes, wallFlash, K, still, low,
-    drawnX, drawnY, effects, spark);
+    drawnX, drawnY, effects, spark, nativeCaptains);
   const events = createEvents(parts, posts, ships, crew, guards, fire, wallFlash, balls, sinkers, wrecks, splashes,
     shells, bursts, tracers, jamShots, warnings, fallen, strikes, K, still, low, effects, spark), onEvent = events.onEvent;
   const { drawShip, shipMeta, drawBoarder, drawMilitia, drawFallen, drawBall, drawShell, drawBurst, drawBurning,

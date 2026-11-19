@@ -43,6 +43,18 @@ const move = (index = 2, facing = 'down') => ({type: 'live_peer_moved', id: play
   x: index, z: index + 1, facing, moving: true, everyMs: 500});
 
 describe('online presence controller', () => {
+  it.each([false,true])('clears an unresolved island sample before delayed transport; newer context=%s',async newer=>{
+    const wait=deferred(),ctx=setup({loadRealtime:()=>wait.promise});
+    try{
+      const pending=ctx.presence.refresh();await Promise.resolve();await Promise.resolve();
+      ctx.presence.reportPosition({place:'isle_k7q2m_0123456789abcdef01234567',x:1,y:2,facing:'front',moving:false});
+      expect(ctx.presence.reportPosition({place:null}).accepted).toBe(true);
+      if(newer)ctx.presence.reportPosition({place:'isle_k7q2m_abcdef0123456789abcdef01',x:3,y:4,facing:'right',moving:true});
+      wait.resolve({startRealtime:ctx.startRealtime});await pending;
+      if(newer){expect(ctx.live.setPlace).toHaveBeenCalledExactlyOnceWith('isle_k7q2m_abcdef0123456789abcdef01');expect(ctx.live.update).toHaveBeenCalledExactlyOnceWith({x:3,z:4,facing:'right',moving:true});}
+      else{expect(ctx.live.setPlace).not.toHaveBeenCalled();expect(ctx.live.update).not.toHaveBeenCalled();expect(ctx.state.presence.place).toBeNull();}
+    }finally{ctx.presence.dispose();}
+  });
   it.each(['signed_out', 'flag_off', 'unnamed', 'invalid_identity'])('loads nothing for %s', async condition => {
     const ctx = setup();
     if (condition === 'signed_out') ctx.session.clearToken();

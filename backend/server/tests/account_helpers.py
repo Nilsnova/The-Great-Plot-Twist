@@ -142,6 +142,9 @@ class AccountsDatabase:
             "reroll_captain_name": self.reroll_captain_name,
             "save_progress": self.save_progress,
             "delete_player": self.delete_player,
+            "island_lifecycle_delete_player": lambda arguments: self.delete_player(
+                {"p_player_id": arguments["p_actor_id"]}
+            ),
         }
         return answer_request(request, tables, functions)
 

@@ -153,9 +153,26 @@ from pydantic import (
 from server.auth import PlayerDep
 from server.errors import ApiError
 from server.flags import is_enabled
-from server.island import service, wall_repair, wave_rewards, wave_rules, waves
+from server.island import (
+    service,
+    shared_lifecycle,
+    shared_session_api,
+    wall_repair,
+    wave_rewards,
+    wave_rules,
+    waves,
+)
 from server.island import wave_recovery as recovery
+from server.island.economy_http import target_owner
+from server.island.economy_operations import root_action_uid
 from server.island.service import IslandCatalogueDep
+from server.island.shared_wave_http import (
+    SharedWaveProof,
+    read_target_context,
+    require_legacy_controller,
+    require_shared_wave_client,
+)
+from server.island.treasury import resolve_economy_context
 from server.island.wave_weather import wave_weather
 from server.island.waves import WaveStart
 from server.lock.place import place_from_headers
@@ -194,6 +211,7 @@ async def post_recover_rewards(
 ) -> wave_rewards.RewardRecoveryResponse:
     # An existing obligation stays recoverable when new island play is disabled.
     request.app.state.wave_budget.spend(player.id)
+    await shared_lifecycle.ensure_not_deleted(admin, player.id)
     response.headers["Cache-Control"] = "private, no-store"
     return await wave_rewards.recover_rewards(admin, player.id)
 
@@ -213,6 +231,14 @@ class JoinRequest(BaseModel):
     waveProtocol: StrictInt = Field(default=1, ge=1, le=2)
 
 
+class SharedStartRequest(SharedWaveProof, StartRequest):
+    """The captured origin and current controller accompany the original bell intent."""
+
+
+class SharedJoinRequest(SharedWaveProof, JoinRequest):
+    """Joining a native wave never chooses a personal-wallet path."""
+
+
 class FinishRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -227,6 +253,10 @@ class FinishRequest(BaseModel):
     rescued: StrictBool = False
     # D039: the health of every wall when this player's simulation ended the wave (percent).
     walls: dict[WALL_SPOT, WALL_HEALTH] | None = Field(default=None, max_length=MAX_WALLS)
+
+
+class SharedFinishRequest(SharedWaveProof, FinishRequest):
+    checkpoint: recovery.RecoveryCheckpoint
 
 
 class ReviveRequest(BaseModel):
@@ -358,9 +388,9 @@ def require_protocol2(wave: WaveStart, protocol: int) -> None:
         )
 
 
-@router.post("/waves/start", response_model_exclude_none=True)
+@router.post("/waves/start", response_model=None, response_model_exclude_none=True)
 async def post_start(
-    body: StartRequest,
+    body: SharedStartRequest | StartRequest,
     player: IslandPlayerDep,
     catalogue: IslandCatalogueDep,
     admin: AdminDep,
@@ -368,13 +398,44 @@ async def post_start(
     source: WeatherSourceDep,
     state_rules: WeatherRulesDep,
     request: Request,
-) -> WaveResponse:
+) -> WaveResponse | dict:
     request.app.state.wave_budget.spend(player.id)
+    if isinstance(body, SharedStartRequest):
+        require_shared_wave_client(request, body.waveProtocol)
+        root_action_uid(body.actionUid)
+    await shared_lifecycle.ensure_not_deleted(admin, player.id)
+    if isinstance(body, SharedStartRequest):
+        replay = await shared_session_api.replay_wave_start(
+            admin, player.id, str(body.economy.islandOwner), str(body.economy.runEpoch),
+            body.actionUid,
+        )
+        if replay is not None:
+            return replay
+        if body.where == waves.PIRATE_POINT or (
+            body.where == waves.OWN and str(body.economy.islandOwner) != player.id
+        ):
+            raise ApiError(409, "economy_context_required", "Choose this shared island.")
+        if body.where != waves.OWN and (
+            await target_owner(admin, player.id, body.where) != str(body.economy.islandOwner)
+        ):
+            raise ApiError(409, "economy_context_required", "The code names another island.")
+    else:
+        context = await read_target_context(admin, player.id, body.where)
+        if context is not None and context.mode == "island_shared":
+            require_shared_wave_client(request, body.waveProtocol)
+            raise ApiError(409, "economy_context_required", "Use this island's session proof.")
+        await require_legacy_controller(admin, player.id)
     # The ringer's area from Vercel's geo headers, for this request only: never stored or logged.
     area = place_from_headers(request.headers)
     weather = await wave_weather(
         catalogue, source, state_rules, request.app.state.lock_weather, area
     )
+    if isinstance(body, SharedStartRequest):
+        return await shared_session_api.start_wave(
+            admin, catalogue, weather, player.id, str(body.economy.islandOwner),
+            str(body.economy.runEpoch), str(body.sessionId), body.connectionGeneration,
+            body.actionUid, rules=wave_rules.wanted_rules(settings), snapshot_template=None,
+        )
     place, owner = await waves.find_place(
         admin, catalogue, player.id, body.where, members_only=True
     )
@@ -409,28 +470,48 @@ async def post_start(
         make_seed=lambda _limit: seed,
     )
     walls = await start_walls(admin, started)
-    return wave_out(started, walls, await wave_rules.rules_for_wave(admin, settings, started))
+    return wave_out(
+        started, walls, await wave_rules.rules_for_wave(admin, settings, started)
+    ).model_dump(mode="json", exclude_none=True)
 
 
-@router.post("/waves/join", response_model_exclude_none=True)
+@router.post("/waves/join", response_model=None, response_model_exclude_none=True)
 async def post_join(
-    body: JoinRequest,
+    body: SharedJoinRequest | JoinRequest,
     player: IslandPlayerDep,
     catalogue: IslandCatalogueDep,
     admin: AdminDep,
     settings: SettingsDep,
     request: Request,
-) -> WaveResponse:
+) -> WaveResponse | dict:
     request.app.state.wave_budget.spend(player.id)
+    if isinstance(body, SharedJoinRequest):
+        require_shared_wave_client(request, body.waveProtocol)
+    await shared_lifecycle.ensure_not_deleted(admin, player.id)
+    if isinstance(body, SharedJoinRequest):
+        return await shared_session_api.join_wave(
+            admin, player.id, body.waveId, str(body.economy.islandOwner),
+            str(body.economy.runEpoch), str(body.sessionId), body.connectionGeneration,
+        )
+    target = await waves.store.read_wave_place(admin, str(body.waveId))
+    if target is None:
+        raise waves.no_such_wave()
+    if target.place == "island" and target.island_owner is not None:
+        context = await resolve_economy_context(admin, player.id, target.island_owner)
+        if context.mode == "island_shared":
+            raise ApiError(409, "economy_context_required", "Use this island's session proof.")
+    await require_legacy_controller(admin, player.id)
     joined = await waves.join_protocol2(
         admin, catalogue, player.id, body.waveId, protocol=body.waveProtocol
     )
     require_protocol2(joined, body.waveProtocol)
     walls = await start_walls(admin, joined)
-    return wave_out(joined, walls, await wave_rules.rules_for_wave(admin, settings, joined))
+    return wave_out(
+        joined, walls, await wave_rules.rules_for_wave(admin, settings, joined)
+    ).model_dump(mode="json", exclude_none=True)
 
 
-@router.get("/waves/current", response_model_exclude_none=True)
+@router.get("/waves/current", response_model=None, response_model_exclude_none=True)
 async def get_current(
     where: Annotated[str, Query(pattern=WHERE_PATTERN)],
     player: IslandPlayerDep,
@@ -439,8 +520,24 @@ async def get_current(
     settings: SettingsDep,
     request: Request,
     wave_protocol: Annotated[int, Query(alias="waveProtocol", ge=1, le=2)] = 1,
-) -> WaveResponse | None:
+    session_id: Annotated[UUID | None, Query(alias="sessionId")] = None,
+    connection_generation: Annotated[
+        str | None, Query(alias="connectionGeneration", pattern=r"^[1-9][0-9]*$")
+    ] = None,
+) -> WaveResponse | dict | None:
+    if (session_id is None) != (connection_generation is None):
+        raise ApiError(422, "validation_error", "Provide the complete controller proof.")
     request.app.state.wave_read_budget.spend(player.id)
+    await shared_lifecycle.ensure_not_deleted(admin, player.id)
+    context = await read_target_context(admin, player.id, where)
+    if context is not None and context.mode == "island_shared":
+        require_shared_wave_client(request, wave_protocol)
+        return await shared_session_api.current_wave(
+            admin, player.id, context.island_owner,
+            session_id=str(session_id) if session_id is not None else None,
+            connection_generation=connection_generation,
+        )
+    await require_legacy_controller(admin, player.id)
     running = await waves.current_protocol2(
         admin, catalogue, player.id, where, protocol=wave_protocol
     )
@@ -448,19 +545,32 @@ async def get_current(
         return None
     require_protocol2(running, wave_protocol)
     walls = await start_walls(admin, running)
-    return wave_out(running, walls, await wave_rules.rules_for_wave(admin, settings, running))
+    return wave_out(
+        running, walls, await wave_rules.rules_for_wave(admin, settings, running)
+    ).model_dump(mode="json", exclude_none=True)
 
 
-@router.post("/waves/finish", response_model_exclude_none=True)
+@router.post("/waves/finish", response_model=None, response_model_exclude_none=True)
 async def post_finish(
-    body: FinishRequest,
+    body: SharedFinishRequest | FinishRequest,
     player: IslandPlayerDep,
     catalogue: IslandCatalogueDep,
     admin: AdminDep,
     settings: SettingsDep,
     request: Request,
-) -> FinishResponse:
+) -> FinishResponse | dict:
     request.app.state.wave_budget.spend(player.id)
+    if isinstance(body, SharedFinishRequest):
+        require_shared_wave_client(request, body.waveProtocol)
+    await shared_lifecycle.ensure_not_deleted(admin, player.id)
+    if isinstance(body, SharedFinishRequest):
+        return await shared_session_api.finish_wave(
+            admin, catalogue, player.id, body.waveId, str(body.economy.islandOwner),
+            str(body.economy.runEpoch), str(body.sessionId), body.connectionGeneration,
+            body.model_dump(mode="json", exclude={
+                "economy", "sessionId", "connectionGeneration", "waveId", "waveProtocol",
+            }),
+        )
     if body.checkpoint is not None:
         if body.waveProtocol != 2:
             raise ApiError(
@@ -490,7 +600,7 @@ async def post_finish(
             boss=reply["boss"],
             survived=reply["survived"],
             recovery=recovery_state,
-        )
+        ).model_dump(mode="json", exclude_none=True)
     finished = await waves.finish(
         admin,
         catalogue,
@@ -512,7 +622,7 @@ async def post_finish(
         waveBest=finished.wave_best,
         flags=finished.flags,
         boss=finished.boss,
-    )
+    ).model_dump(mode="json", exclude_none=True)
 
 
 @router.post("/waves/revive", response_model_exclude_none=True)
@@ -524,6 +634,7 @@ async def post_revive(
     request: Request,
 ) -> ReviveResponse:
     request.app.state.wave_budget.spend(player.id)
+    await shared_lifecycle.ensure_not_deleted(admin, player.id)
     revived = await waves.revive(
         admin,
         catalogue,

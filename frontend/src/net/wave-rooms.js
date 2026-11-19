@@ -8,7 +8,7 @@ import {on as busOn} from '../core/events.js';
 import {sendWave} from './live-extras.js';
 import {WAVE_EVENTS} from './live-rules.js';
 
-export const WAVE_TOPIC = /^live:place:(?:pirate_point|isle_[abcdefghjkmnpqrstuvwxyz23456789]{5}):1$/;
+export const WAVE_TOPIC = /^live:place:(?:pirate_point|isle_[abcdefghjkmnpqrstuvwxyz23456789]{5}(?:_[0-9a-f]{24})?):1$/;
 
 export function openRoom(topic, {on = busOn, send = sendWave} = {}) {
   if (typeof topic !== 'string' || !WAVE_TOPIC.test(topic)) return null;

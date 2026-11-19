@@ -4,6 +4,10 @@ For players of The Great Plot Twist and the course team. **Student project, not 
 
 Reviewed on 9 November 2026 against the current repository, including browser sign-in, guest play, the class demo (class harbor and Keeper's Lock), cloud saves, crews, the case, Exchange, festival, host console and sports packages. This is not a check of live provider retention settings. The [data inventory](DATA-INVENTORY.md) gives the technical record.
 
+The source review was updated on 19 November 2026 for islands explicitly admitted
+to the shared economy, their personal Captains, sessions and account deletion.
+These rules do not admit existing islands or describe a production rollout.
+
 ## What we keep and why
 
 You can look around the title and the rehearsal without signing in. The connected game uses GitHub sign-in, a sign-in code sent by email when that is switched on, or a guest sign-in with the current class code, for your island, your coins and playing together. (The 2-hour mystery left the game on 10 November 2026.) A local rehearsal does not create a live account, crew, cloud save or reward.
@@ -18,7 +22,15 @@ The database can keep your profile, save, kit, play-coin balance and ledger, Exc
 
 Harbor market calls (up or down in 5 minutes) are stored too (`market_calls`): the asset, up or down, the stake, the price when you made the call and when it was decided, the outcome and the coins paid. They stay until you delete your account.
 
-**Your island.** When you open your island, the database stores an island code for you (5 letters and digits, shown as `ISLE-…`), your best wave and your pirate flags, and the buildings you place. Anyone signed in who knows your code can visit: they see your captain name, best wave and buildings, never your player ID or coins. Every pirate wave you start is stored too (`wave_runs`): where it was fought, the wave number, its random seed, the start time, the weather kind where the bell was rung (worked out from your network's city-level location for that one request, never stored), and the result your game reported (survived or not, ships sunk) with the loot paid. When you join a friend's wave or a Pirate Point battle, the database records that you took part, when you joined, and your own result and loot (`wave_participants`). These records stay until you delete your account; the fresh start of the redesign resets the best waves, flags, buildings and wave records but keeps your code. Your island also stores the levels of your buildings, the crew you hired, your captain's level, the wave your next bell rings and the best wave you won in any battle you fought in (on any island or Pirate Point). Buildings a friend pays for on your island belong to your island. When you build on Pirate Point, the shared island, the database records your player ID as the first builder of that spot (`pirate_point_buildings`, never shown to anyone, emptied when you delete your account); the levels and kinds there are visible to every player.
+An admitted shared island keeps its own treasury, stakes, payments and retry
+receipts. Wagers remain attached to the island account and run that funded them.
+The server also keeps personal Captain progression, controlling-session leases,
+frozen participant/loadout records, ordered combat inputs and accepted health
+checkpoints. These records make reconnects, returns, rewards and repeated
+requests consistent. They do not add an email address or login credential to
+shared game history.
+
+**Your island.** When you open your island, the database stores an island code for you (5 letters and digits, shown as `ISLE-…`), your best wave and your pirate flags, and the buildings you place. The host and active invited members can visit its game: they see captain names, wave progress and buildings. Members of an admitted shared island also see its common treasury; another player's private wallet is not shown. Every pirate wave you start is stored too (`wave_runs`): where it was fought, the wave number, its random seed, the start time, the weather kind where the bell was rung (worked out from your network's city-level location for that one request, never stored), and the result your game reported (survived or not, ships sunk) with the loot paid. When you join a friend's wave or a Pirate Point battle, the database records that you took part, when you joined, and your own result and loot (`wave_participants`). Legacy account-linked wave records follow the original deletion/reset rules. Shared canonical records and originating-account receipts can survive reset or deletion as described below. Your island also stores the levels of your buildings, the crew you hired, the wave your next bell rings and its best wave. Adopted personal Captain progress is independent of an island reset. Buildings a friend pays for on your island belong to your island. When you build on Pirate Point, the shared island, the database records your player ID as the first builder of that spot (`pirate_point_buildings`, never shown to anyone, emptied when you delete your account); the levels and kinds there are visible to every player.
 
 ## Who can see it
 
@@ -34,6 +46,13 @@ Visitors who are not signed in cannot read application tables directly. The priv
 
 Most account-linked records remain until account deletion. Saves replace their previous version. Closed Exchange positions and their event history remain until deletion; closing a position does not erase it. Shared crew/case/world history can outlive one player's account. Festival claims stop appearing after the 48-hour event, but event expiry does not purge its database history.
 
+Shared economy history has no automatic purge schedule in the application.
+Minimal original player/account/run UUIDs, transaction and retry identities,
+wave/participation/completion facts and a deletion UUID/time record are retained
+where needed to preserve continuing games and settle original obligations once.
+These IDs still link historical activity and are not anonymous data. Reset does
+not erase this history or move old wager returns into the new run.
+
 Old failed-lookup counters are removed on that player's next lookup, so the ten-minute counting window is not a retention guarantee. Server memory briefly caches verified logins and rate limits; cleanup is lazy or happens when the process ends. There is no automatic account expiry or agreed course-end deletion date in code. A guest account stays until the host runs the guest clean-up (accounts older than 24 hours, at most 100 per run) or the guest deletes it. Your Keeper's Lock answers stay until account deletion.
 
 Application failures can log request paths and tracebacks. Supabase/Vercel logs and backups follow provider settings. We have not established a numeric retention or backup-erasure time in this notice.
@@ -42,9 +61,25 @@ Application failures can log request paths and tracebacks. Supabase/Vercel logs 
 
 When signed in, open **Account and saves**, choose **Delete my data**, read the notice and choose **Confirm deletion**. If sign-in or deletion is unavailable, contact **Nils through the course page** for access or deletion help. Clearing site data or signing out does not delete an account.
 
-Successful account deletion removes the Supabase login, profile, saves, wallet and **all of your ledger history**, together with your account-linked game rows. A shared crew you own is passed to the other human player in the lowest occupied seat. An owned crew with no other human member is removed. Other players and surviving shared case/world records remain; applicable historical actor links become empty. A timeout leaves the outcome unknown and needs a follow-up check.
+Successful account deletion removes the Supabase login, profile, saves, private
+wallet and its personal ledger, together with personal live game state. A shared
+crew you own is passed to the other human player in the lowest occupied seat;
+an owned crew with no other human member is removed. Other players and surviving
+shared case/world records remain.
+
+If you own an admitted shared island, the screen requires a separate confirmation
+that deleting your account also deletes that island. It is not transferred to
+another player. If you are a member of someone else's island, your held copies
+return to that continuing island. Other players keep their personal Captain
+progress. Minimal shared origins and settlement history described above remain;
+some historical actor UUIDs remain while other links become empty. Automatic
+guest cleanup skips an owner whose admitted island needs this confirmation. A
+timeout leaves the outcome unknown: retry the same confirmation request.
 
 Deletion does not remove Supabase's own security audit records, platform logs/backups, your GitHub account, local browser data, host configuration or existing process caches. Supabase security audit records can contain login email, player ID and IP address. The game has no audit-log purge; provider retention is separate. Verified login cache entries can remain valid on an existing server instance for up to 60 seconds after deletion.
+
+Shared island and session endpoints also check live deletion status, so a cached
+login cannot recreate deleted authority or continue a shared game action.
 
 ## Your browser
 

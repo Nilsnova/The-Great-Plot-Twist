@@ -125,6 +125,7 @@ def test_recovery_revive_requires_a_gameplay_token_and_bounded_helper_position(b
     ("reply", "status", "code"),
     [
         (refused("insufficient_funds", price=35), 409, "insufficient_funds"),
+        (refused("economy_context_required"), 409, "economy_context_required"),
         (refused("not_in_wave"), 403, "not_in_wave"),
         (refused("wave_over"), 409, "wave_over"),
         (refused("no_such_wave"), 404, "no_such_wave"),

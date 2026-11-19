@@ -8,6 +8,8 @@ import {ISLAND_INVITE_OPENED} from '../ui/quest-events.js';
 import {GAME_STARTED, captainColours, lobbyModel} from './lobby.js';
 import {resolvePeer} from '../net/live-extras.js';
 import {ARRIVAL_KEY, SPOTS_CHANGED, ISLAND_RESET} from './island-shared.js';
+import {readEconomy,readLegacyEconomy,sameEconomyScope} from './economy-view.js';
+import {readPersonalCaptain} from './economy-captain.js';
 
 export function createGames(isl) {
   const {container, emit, reducedMotion, preferences, storage, visitStorage, loadCutscenes} = isl;
@@ -16,6 +18,7 @@ export function createGames(isl) {
     invalidatePurchaseFeedback;
   // --- the game: its lobby and room state ----------------------------------------------------------
   const currentCode = () => islandCode(isl.visiting?.code ?? isl.visitCode ?? isl.own?.code ?? '');
+  const canonical=()=>isl.mode!=='fake' && !readLegacyEconomy(isl.getEconomy?.());
   // The lobby answer once per game and landing (and when somebody new turns up in the room).
   async function syncGame(force = false) {
     const code = currentCode();
@@ -41,8 +44,11 @@ export function createGames(isl) {
     const members = state?.code === code ? state.members : answered?.members ?? [];
     const me = state?.me ?? answered?.members.find(member => member.you)?.id ?? null;
     const hostId = state?.hostId ?? answered?.members.find(member => member.role === 'host')?.id ?? null;
-    return lobbyModel({code, members, online: state?.online ?? new Set(), me, hostId,
+    const model=lobbyModel({code, members, online: state?.online ?? new Set(), me, hostId,
       hostAwayMs: state?.hostAwayMs ?? 0, started: state?.code === code && state.started === true, problem: isl.lobbyProblem});
+    if(canonical())model.start={show:true,disabled:isl.session?.settingsView?.canManage!==true,label:'Open harbor bell',
+      line:isl.session?.settingsView?.canManage?'Start the next defense at the harbor bell.':'Waiting for the current session leader.'};
+    return model;
   }
   // The captain colours of the game on screen (by join order, 0-9) and your own (0 outside a game).
   function colours() {
@@ -64,6 +70,10 @@ export function createGames(isl) {
   };
   const captainColour = () => { const {map, me} = colours(); return (me && map.get(me)) ?? 0; };
   function startGame() {
+    if(canonical()){
+      if(isl.session?.settingsView?.canManage!==true){refreshCard();return;}
+      isl.pick('island_bell');return;
+    }
     if (!isl.game?.start()) { refreshCard(); return; }
     if (isl.ui.open === 'lobby') { isl.ui.close(); isl.openSpot = null; }
   }
@@ -95,16 +105,36 @@ export function createGames(isl) {
   function resetState() {
     if (isl.visiting || isl.visitCode) return {kind: 'member'};
     if (!isl.own?.code) return {kind: 'none', message: isl.ownMessage || 'Open your island first to reset it.'};
+    if (isl.currentFunds().shared) {
+      const economy=readEconomy(isl.getEconomy());
+      if(isl.mode==='fake' || !economy)return {kind:'none',message:'Read your supported island before resetting it.'};
+      if(economy.islandOwner!==isl.getActorId())return {kind:'member'};
+      let pending;try{pending=isl.sharedReset.pending(isl.own.code);}catch{return {kind:'none',message:'The original reset request could not be read. Retry storage must be recovered first.'};}
+      if(!pending && !isl.domainAvailable('reset'))return {kind:'none',message:'Reset is unavailable for this island.'};
+      return {kind:'owner',shared:true,actorId:isl.getActorId(),code:displayIslandCode(isl.own.code),pending:!!pending,
+        economy:pending?.economyAtIntent??economy,wave:!pending && (isl.flow.busy || isl.battle===true && !isl.waveOver)};
+    }
     // The island answer may carry the starting coins (startingCoins); without it the section says "your starting coins".
-    return {kind: 'owner', code: displayIslandCode(isl.own.code), wave: isl.battle === true,
+    return {kind: 'owner', code: displayIslandCode(isl.own.code), wave: isl.battle === true,preserveCaptain:!!readPersonalCaptain(isl.own.captain),
       ...(Number.isSafeInteger(isl.own.startingCoins) ? {startingCoins: isl.own.startingCoins} : {})};
   }
   async function resetIsland(typed) {
+    const actor=isl.getActorId(),identity=isl.authGeneration(),originalCode=islandCode(isl.own?.code??'');
     isl.village.leave();
     const answer = await isl.api.freshStart({confirmCode: typed});
     if (isl.disposed || !answer.ok) return answer;
+    if(actor!==isl.getActorId() || !Object.is(identity,isl.authGeneration()) || isl.visiting || isl.visitCode || originalCode!==islandCode(isl.own?.code??''))return {...answer,ignored:true};
+    const receipt=answer.data?.receipt,shared=receipt?.action==='reset';
+    if(shared){
+      isl.session.retireOrigin(receipt.origin);
+      if(!sameEconomyScope(readEconomy(isl.getEconomy()),receipt.origin)){
+        await isl.reloadOwn();if(!isl.disposed)refreshCard();return {...answer,ignored:true};
+      }
+    }
     isl.resetGeneration++;
+    isl.wrote('own');
     isl.funding.forget(isl.own?.code);
+    if(shared){isl.own={...isl.own,economy:null,quotesStale:true};isl.tellCoins();}
     invalidatePurchaseFeedback();
     const code = islandCode(isl.own?.code ?? '') || islandCode(typed);
     // This page's memory of the old island goes too: its campaign, walls and tree picks.
@@ -116,12 +146,13 @@ export function createGames(isl) {
     await load();
     if (isl.disposed) return answer;
     emit({type: SPOTS_CHANGED, place: 'own', spot: 'cabin'}); // the members on the island read it again
-    isl.ui.toast('Your island starts fresh', 'success', `${coinText(answer.data.balance)} and wave 1. Ring the bell when you are ready.`);
+    isl.ui.toast('Your island starts fresh', 'success', shared?'The island was read again. Your personal Captain is preserved.':`${coinText(answer.data.balance)} and wave 1. Ring the bell when you are ready.`);
     emit({type: ISLAND_RESET, code: displayIslandCode(code)});
     emit({type: GAME_STARTED, code: displayIslandCode(code), first: true, fresh: true});
     return answer;
   }
   async function bellAction(action) {
+    if(action==='session'){await isl.session.ensure();refreshCard();return;}
     isl.cardMessage = '';
     const answer = action === 'join' ? await isl.flow.join(where()) : action === 'ring' ? await isl.flow.ring(where()) : null;
     if (isl.disposed || !answer || answer.ignored) return;
@@ -147,6 +178,7 @@ export function createGames(isl) {
   function visit(code) {
     const symbols = storeVisit(code, visitStorage);
     if (!symbols) return false;
+    void isl.session?.leave();
     interruptBoat();
     isl.village.leave();
     isl.reportVisitGeneration++;

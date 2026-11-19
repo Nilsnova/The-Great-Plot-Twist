@@ -17,6 +17,7 @@ export async function initializeAccountName(ctx) {
 
 export function createProfileHandlers(ctx) {
   const {store, state, transport} = ctx;
+  let ownedDeletionScope=null;
   const current=scope=>store.isCurrent(scope)&&ctx.session.isSignedIn();
   const expired=()=>ctx.refuse(store.isClosed()?'disposed':'session_expired');
   async function rerollName() {
@@ -40,11 +41,16 @@ export function createProfileHandlers(ctx) {
   }
   async function deleteMyData(confirmation) {
     if(confirmation?.confirm!==true)return ctx.refuse('confirmation_required');
-    const scope=store.scope();
-    const result = await transport.change({route: '/api/me', method: 'del',
-      body: {confirm: true}, kind: 'me'});
-    if(!current(scope))return expired();
+    const flag=confirmation.confirmOwnedIslandDeletion;
+    if(flag!==undefined && typeof flag!=='boolean')return ctx.refuse('invalid_request');
+    const scope=store.scope(),actor=state.me?.id;
+    if(flag===true && (ownedDeletionScope?.scope!==scope || ownedDeletionScope.actor!==actor))return {...ctx.refuse('confirmation_required'),message:'Your account changed. Review deletion again.'};
+    const body={confirm:true,...(flag===undefined?{}:{confirmOwnedIslandDeletion:flag})};
+    const result = await transport.change({route: '/api/me', method: 'del',body, kind: 'me'});
+    if(!current(scope) || state.me?.id!==actor)return expired();
+    if(result.reply?.status===409 && result.reply.code==='owned_island_confirmation_required')ownedDeletionScope={scope,actor};
     if (result.reply?.ok && result.mapped.accepted) {
+      ownedDeletionScope=null;
       if (result.reply.data?.deleted !== true) return ctx.refuse('invalid_request');
       ctx.onDeleted?.();
       await ctx.signOut();

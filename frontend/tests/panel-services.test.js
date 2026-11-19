@@ -70,6 +70,41 @@ describe('private deferred panel services', () => {
     expect(f.lease.getToken()).toBe(f.session.getToken());
   });
 
+  it('forwards shared capability options through the authenticated panel transport', async () => {
+    const f = setup(), body = Object.freeze({actionUid: 'shared-request'});
+    const options = Object.freeze({headers: Object.freeze({'X-Island-Economy-Version': '1'})});
+    await f.lease.request.get('/api/island/wagers', options);
+    await f.lease.request.post('/api/island/wagers/market', body, options);
+    expect(f.api.get).toHaveBeenCalledExactlyOnceWith('/api/island/wagers', options);
+    expect(f.api.post).toHaveBeenCalledExactlyOnceWith('/api/island/wagers/market', body, options);
+    expect(f.publicApi.get).not.toHaveBeenCalled();
+  });
+
+  it('checks session readiness before forwarding a capability-bearing request', async () => {
+    const f = setup({signedIn: false});
+    const options = {headers: {'X-Island-Economy-Version': '1'}};
+    expect(await f.lease.request.get('/api/island/wagers', options)).toMatchObject({ok: false});
+    expect(await f.lease.request.post('/api/island/wagers/market', {}, options)).toMatchObject({ok: false});
+    expect(f.api.get).not.toHaveBeenCalled();
+    expect(f.api.post).not.toHaveBeenCalled();
+  });
+
+  it('exposes the verified actor separately from the session lifetime identity', () => {
+    const actor = randomUUID(), f = setup({getActorId: () => actor});
+    expect(f.lease.getActorId()).toBe(actor);
+    expect(f.lease.getIdentity()).not.toBe(actor);
+    f.session.clearToken();
+    expect(f.lease.getActorId()).toBeNull();
+    f.session.setToken('replacement-session');
+    f.lease.dispose();
+    expect(f.lease.getActorId()).toBeNull();
+  });
+
+  it.each([null, undefined, 0, 'scope-identifier', {}])('does not invent an actor from %s', actor => {
+    const f = setup({getActorId: () => actor});
+    expect(f.lease.getActorId()).toBeNull();
+  });
+
   it('keeps public reads anonymous and available while signed out without admitting a private request', async () => {
     const f = setup({signedIn: false, flags: {market: false}});
     expect(await f.lease.publicGet('/api/market')).toMatchObject({ok: true, data: {public: true}});

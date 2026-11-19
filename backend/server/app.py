@@ -45,6 +45,7 @@ from server.routes import (
     board,
     bulletin,
     captain_name,
+    captain_progression,
     case,
     config,
     content,
@@ -65,6 +66,8 @@ from server.routes import (
     island_layout,
     island_reset,
     island_structures,
+    island_wager_jobs,
+    island_wagers,
     islet,
     keepalive,
     lock,
@@ -74,6 +77,8 @@ from server.routes import (
     pirate_point,
     predictions,
     save,
+    shared_revival,
+    shared_sessions,
     sports,
     structure_repair,
     wall_recovery,
@@ -298,6 +303,7 @@ def create_app(
     app.include_router(bulletin.router, prefix="/api")
     app.include_router(me.router, prefix="/api")
     app.include_router(captain_name.router, prefix="/api")
+    app.include_router(captain_progression.router, prefix="/api")
     app.include_router(save.router, prefix="/api")
     app.include_router(delete_me.router, prefix="/api")
     app.include_router(intro.router, prefix="/api")
@@ -310,8 +316,12 @@ def create_app(
     app.include_router(island.router, prefix="/api")
     app.include_router(island_structures.router, prefix="/api")
     app.include_router(structure_repair.router, prefix="/api")
+    app.include_router(shared_revival.router, prefix="/api")
+    app.include_router(shared_sessions.router, prefix="/api")
     app.include_router(island_layout.router, prefix="/api")
     app.include_router(island_boat.router, prefix="/api")
+    app.include_router(island_wagers.router, prefix="/api")
+    app.include_router(island_wager_jobs.router, prefix="/api")
     app.include_router(island_reset.router, prefix="/api")
     app.include_router(arsenal.router, prefix="/api")
     app.include_router(games.router, prefix="/api")

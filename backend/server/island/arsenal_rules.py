@@ -46,6 +46,7 @@ def not_enough_coins(name: str, price: int) -> ApiError:
 
 # The refusals of the arsenal_* functions that need no price or name.
 PLAIN_REFUSALS = {
+    "economy_context_required": (409, "Reload to use the versioned shared arsenal."),
     "no_island": (404, "There is no island with that code."),
     "not_member": (403, "Join this game first: open its link or type its code."),
     "wave_running": (409, "A wave is under way. Use the arsenal between waves."),

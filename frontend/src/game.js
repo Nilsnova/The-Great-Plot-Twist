@@ -27,6 +27,8 @@ import {sendIntent} from './adapter/intent.js';
 import {attachIsletPanel} from './screens/islet/host.js';
 import {createIsletHost} from './online/islet-host.js';
 import {createMarketHost} from './online/market-host.js';
+import {createSharedWagerHost} from './harbor/shared-wager-host.js';
+import {createIslandHudFunding} from './island/hud-funding.js';
 import {createHarbor,loadMarketCard,loadMatchCard} from './harbor/host.js';
 import {findPanelServices} from './online/panel-services.js';
 import {createWaveRewardRecovery} from './online/wave-reward-recovery.js';
@@ -107,10 +109,9 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   let mapTouch=null;
   let tutorialHooks=null,introUntil=0;
   let classDemo=null,classDemoLoad=null,island=null,islandLoad=null,islandsMode=null,islandsDecision=null,pirates=null,waves=null,wavesLoad=null;
-  let treasuryFundingKey=null;
-  let harbor=null, farHint=null, active = false, disposed=false, hud, chart, perf, marketUi=null, marketLoad=null, experience,beginRequest=0, fpsFrames = 0, fpsStart = performance.now(), fps = 0,weatherAnswer=null;
-  const externalOverlay=()=>!!(harbor?.active||island?.active||waves?.reportActive||classDemo?.active||shortcuts.active||tutorial.active||!!tutorials?.active||shell?.blocked||isAppBlocked?.()||marketUi?.active||sportsUi.active||chart?.open||sailing.active||stopPlots?.active);
-  const worldBlocked=()=>!!(harbor?.active||island?.active||waves?.reportActive||classDemo?.active||shortcuts.active||tutorial.active||!!tutorials?.active||shell?.blocked||isAppBlocked?.()||marketUi?.active||sportsUi.active);
+  let harbor=null, sharedHarbor=null, farHint=null, active = false, disposed=false, hud, chart, perf, marketUi=null, marketLoad=null, experience,beginRequest=0, fpsFrames = 0, fpsStart = performance.now(), fps = 0,weatherAnswer=null;
+  const externalOverlay=()=>!!(harbor?.active||sharedHarbor?.active||island?.active||waves?.reportActive||classDemo?.active||shortcuts.active||tutorial.active||!!tutorials?.active||shell?.blocked||isAppBlocked?.()||marketUi?.active||sportsUi.active||chart?.open||sailing.active||stopPlots?.active);
+  const worldBlocked=()=>!!(harbor?.active||sharedHarbor?.active||island?.active||waves?.reportActive||classDemo?.active||shortcuts.active||tutorial.active||!!tutorials?.active||shell?.blocked||isAppBlocked?.()||marketUi?.active||sportsUi.active);
   function resetControls(){mapTouch?.cancel();input.reset();}
   const outsideBlocked=()=>externalOverlay()||world.busy;
   const captainBlocked=()=>outsideBlocked()||island?.managing===true;
@@ -120,7 +121,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   const sailing = createSailing(container, reducedMotion, () => settings.quality === 'low');
   const isCaptainDown=()=>!!(waves?.island.captainDown||waves?.point?.controller.captainDown);
   const currentWaveAction=()=>waves?.island.wave?.action??waves?.point?.controller.wave?.action??null;
-  const world = createWorld({ emit, isBlocked:worldBlocked, disposeVisuals(){harbor?.dispose();mapTouch?.dispose();perf?.dispose();experience?.dispose();marketUi?.dispose();sportsUi.dispose();shortcuts.dispose();tutorial.dispose();isletState.dispose();stopIslet?.();stopActualIslet?.();}, transition: (id, options) => sailing.start(id, options),
+  const world = createWorld({ emit, isBlocked:worldBlocked, disposeVisuals(){harbor?.dispose();sharedHarbor?.dispose();mapTouch?.dispose();perf?.dispose();experience?.dispose();marketUi?.dispose();sportsUi.dispose();shortcuts.dispose();tutorial.dispose();isletState.dispose();stopIslet?.();stopActualIslet?.();}, transition: (id, options) => sailing.start(id, options),
     cancelTransition: sailing.end, finishTransition() { sailing.end(); graphics.renderer.domElement.focus(); }, createPlace: id => createPlace({ id, isletState, island, reducedMotion, canvas: graphics.renderer.domElement, camera: view.camera,
       battleTowers: () => (id === 'home_islet' ? waves?.island : waves?.point?.controller)?.state?.towers,
       isActive: () => active && !outsideBlocked() && !isCaptainDown() && !currentWaveAction(), player: () => controller.player.position, onFar: id => { farHint = { id, until: performance.now() + HINT_MS }; } }), attach(place) { scene.add(place.group); water.setCoast(place.group); lightPools.setPlace(place.group); controller.setPlace(place); view.setPlace(place.id, controller.player.position); } });
@@ -150,7 +151,8 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   experience=createWorldExperience({scene,container,art,world,player:controller.player,camera:view.camera,canvas:graphics.renderer.domElement,reducedMotion,preferences:getPreferences,
     send:(name,...args)=>sendIntent(adapter,name,...args),
     colourOf:id=>island?.colourOf?.(id)??null,characterScale:()=>characterScale,
-    isBlocked:outsideBlocked,presencePlace:place=>island?.presencePlace(place)??(place==='lighthouse_isle'&&(island||waves?.point)?'pirate_point':null)??classDemo?.presencePlace(place)??place});
+    isBlocked:outsideBlocked,presencePlace:place=>place==='home_islet' && island?island.presencePlace(place):
+      (place==='lighthouse_isle'&&(island||waves?.point)?'pirate_point':null)??classDemo?.presencePlace(place)??place});
   // Captains and boarders draw larger during a wave (1.4x, up to 1.8x on a phone: pirates/character-scale.js),
   // so they read at the zoomed-out battle camera; back to 1 when the wave's drawing stops.
   let characterScale=1,inBattle=false;const stopScale=[on('wave_controller_started',()=>{inBattle=true;}),on('wave_controller_stopped',()=>{inBattle=false;})];
@@ -170,6 +172,10 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   marketUi=createMarketHost({session,container,resetInput:resetControls,
     focusGame:()=>graphics.renderer.domElement.focus(),notify:message=>hud.message(message),
     onSignIn:()=>{marketUi.close();openAccount?.();},load:loadMarketCard});
+  sharedHarbor=createSharedWagerHost({session,container,getEconomy:()=>island?.economy??null,
+    onEconomy:(value,origin)=>island?.refreshEconomy(value,origin),resetInput:resetControls,
+    focusGame:()=>graphics.renderer.domElement.focus(),notify:message=>hud.message(message),
+    onSignIn:()=>{sharedHarbor.close();openAccount?.();}});
   // Lane H: the Harbor overview (menu "Harbor") and the weather board; the stalls open the cards above.
   harbor=createHarbor({container,resetInput:resetControls,focusGame:()=>graphics.renderer.domElement.focus(),getWeather:()=>weatherAnswer,
     openStall:id=>void(id==='market'?openMarket():id==='match'?sportsUi.open().catch(()=>{}):null),notify:message=>hud.message(message)});
@@ -182,6 +188,15 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   async function openMarket(){
     const task=marketUi.open();marketLoad=task;
     try{return await task;}finally{if(marketLoad===task)marketLoad=null;}
+  }
+  function openIslandHarborStall(id){
+    if(id==='weather')return harbor.openWeather();
+    const economy=island?.economy;
+    if(economy?.mode==='island_shared'&&economy.version===1)
+      return sharedHarbor.open(id==='market'?'market':'football');
+    if(island?.mode==='fake'||economy?.mode==='personal_legacy'&&economy.version===0)
+      return id==='market'?openMarket():sportsUi.open().catch(()=>{});
+    hud.message('The island is still loading. Open the Harbor again in a moment.');
   }
   const stopListening = on('interact', event => {
     if(island?.owns(event.id))return;
@@ -266,13 +281,13 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
       if(disposed)return null;
       const fakeTransport=fake?fake.createFakeIslandTransport():null;
       island=module.createIsland({container,emit,on,mode:islandsMode,transport:fakeTransport,
-        getTransport:()=>findPanelServices(session)?.request,resetInput:resetControls,reducedMotion,preferences:getPreferences,
-        focus:()=>graphics.renderer.domElement.focus({preventScroll:true}),onCoins:(value,options)=>{
-          if(options?.shared){const replace=options.fundingKey!==treasuryFundingKey;treasuryFundingKey=options.fundingKey;hud.setTreasury(options.economy,{replace});}
-          else{if(treasuryFundingKey!==null){treasuryFundingKey=null;hud.clearTreasury();}hud.setCoinSource('island');hud.setCoins(value,options);}
-        },onCaptain:level=>hud.setCaptainLevel(level),onQuestIsland:value=>hud.setQuestIsland(value),
+        isOnIsland:()=>world.current?.id==='home_islet',
+        getActorId:()=>findPanelServices(session)?.getActorId()??null,
+        getTransport:()=>findPanelServices(session)?.request,authGeneration:()=>session.getScope?.()??session,
+        onAuthGenerationChange:listener=>session.onChange(listener),resetInput:resetControls,reducedMotion,preferences:getPreferences,
+        focus:()=>graphics.renderer.domElement.focus({preventScroll:true}),onCoins:createIslandHudFunding(hud),onCaptain:level=>hud.setCaptainLevel(level),onQuestIsland:value=>hud.setQuestIsland(value),
         // The Harbor building (GAME-V3.md §4) opens the same stalls as the old Harbor overview.
-        openHarborStall:id=>void(id==='weather'?harbor.openWeather():id==='market'?openMarket():id==='match'?sportsUi.open().catch(()=>{}):null),
+        openHarborStall:id=>void(['weather','market','match'].includes(id)&&openIslandHarborStall(id)),
         // The visit chip: the old "Visiting … · Sail home" only where travel applies (src/island/one-island.js).
         travel:()=>travelOpen(),villageCamera:(action,anchor)=>{
           view.villageControl(action);
@@ -373,7 +388,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     const poses=framePoses;
     const state = weather.update(reducedMotion()?0:delta, controller.player.position, settings.quality);
     const night = sky.update(settings.hour, state, reducedMotion()?0:time); lightPools.update(reducedMotion()?0:time, night); pixelFx.update(delta);
-    audio.update(delta,{weather:state,weatherAnswer,isletBuilt:isletState.getBuilt(),speed,night,active:active&&!isAppBlocked?.()&&!world.busy&&!(marketUi?.active||sportsUi.active)&&!chart.open,place:world.current?.id});
+    audio.update(delta,{weather:state,weatherAnswer,isletBuilt:isletState.getBuilt(),speed,night,active:active&&!isAppBlocked?.()&&!world.busy&&!(marketUi?.active||sharedHarbor?.active||sportsUi.active)&&!chart.open,place:world.current?.id});
     water.update(reducedMotion()?0:time, state); sailing.update(delta);
     world.update(delta, { player: controller.player.position, time:reducedMotion()?0:time, night, weather: state,weatherAnswer,
       paused: !active || shell.blocked || !!isAppBlocked?.() });
@@ -416,7 +431,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   if (import.meta.env.DEV && new URLSearchParams(location.search).get('soundcheck')==='1') window.__island.soundcheck();
   function dispose() {
     if(disposed)return;disposed=true;rewardRecovery?.dispose();guide.dispose();container.removeEventListener('close',panelClosed,true);classDemo?.dispose();classDemo=null;waves?.dispose();waves=null;island?.dispose();island=null;void pirates?.then(harness=>harness?.dispose());
-    harbor?.dispose();mapTouch?.dispose();touch.dispose();gamepad.dispose();marketUi?.dispose();sportsUi.dispose();stopLiveWeather();stopPreferences();stopMotion();stop();stopView();stopListening();for(const stopOne of stopScale)stopOne?.(); stopArrivals(); stopVisitNamed(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
+    harbor?.dispose();sharedHarbor?.dispose();mapTouch?.dispose();touch.dispose();gamepad.dispose();marketUi?.dispose();sportsUi.dispose();stopLiveWeather();stopPreferences();stopMotion();stop();stopView();stopListening();for(const stopOne of stopScale)stopOne?.(); stopArrivals(); stopVisitNamed(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
     villageNavigation.dispose();window.removeEventListener('resize', resize); createLifetime(scene, art)();
     setMenuTravel(null);disposeDiagnostics();character.dispose();graphics.renderer.dispose();graphics.renderer.domElement.remove(); delete window.__island;
   }
@@ -425,14 +440,15 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     event.preventDefault(); dispose();
     captions.show('Graphics paused. Reload the page to restore the island.');
   }, { once: true });
-  return {dispose,resetInput:resetControls,hasOverlay:()=>!!harbor?.active||!!island?.active||!!waves?.reportActive||!!tutorials?.active||!!classDemo?.active||shortcuts.active||tutorial.active||chart.open||sailing.active||(marketUi?.active||sportsUi.active)||stopPlots.active,
-    setMode(mode){mapTouch?.cancel();if(mode!=='playing'){harbor?.close();marketUi?.close();sportsUi.close();beginRequest++;}audio.setScreen(mode);input.reset();if(mode==='playing')view.start(reducedMotion());else view.pause();},
+  return {dispose,resetInput:resetControls,hasOverlay:()=>!!harbor?.active||!!sharedHarbor?.active||!!island?.active||!!waves?.reportActive||!!tutorials?.active||!!classDemo?.active||shortcuts.active||tutorial.active||chart.open||sailing.active||(marketUi?.active||sportsUi.active)||stopPlots.active,
+    setMode(mode){mapTouch?.cancel();if(mode!=='playing'){harbor?.close();sharedHarbor?.close();marketUi?.close();sportsUi.close();beginRequest++;}audio.setScreen(mode);input.reset();if(mode==='playing')view.start(reducedMotion());else view.pause();},
     handleEscape(){
       if(shortcuts.active){shortcuts.close();return true;}
       if(tutorial.active){tutorial.close();return true;}
       if(tutorials?.handleEscape())return true;
       if(island?.handleEscape())return true;
       if(classDemo?.handleEscape())return true;
+      if(sharedHarbor?.active){sharedHarbor.close();input.reset();graphics.renderer.domElement.focus({preventScroll:true});return true;}
       if(marketUi?.pending&&!container.querySelector('.market-modal[open]')){marketUi.close();input.reset();graphics.renderer.domElement.focus({preventScroll:true});return true;}
       if(stopPlots.active){stopPlots.close();input.reset();graphics.renderer.domElement.focus({preventScroll:true});return true;}
       if(hud.closeQuickPanels?.())return true;
@@ -464,7 +480,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
       noteUiAction('play');
       introUntil=continuation?.arrival==='later'?performance.now()+90000:0;
       mapTouch?.cancel();const token=++beginRequest;
-      sportsUi.close();chart.close();
+      sharedHarbor?.close();sportsUi.close();chart.close();
       await world.whenIdle();
       if(disposed||token!==beginRequest||shell.blocked)return;
       const planned=continuation?.kind==='world'?(continuation.place??'saltreach_harbor'):'saltreach_harbor';

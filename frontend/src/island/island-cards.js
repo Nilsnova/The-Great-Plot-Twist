@@ -15,6 +15,8 @@ import {progressSummary} from './progression.js';
 import {upgradeOverviewModel} from './upgrade-overview.js';
 import {withWallRecovery} from './wall-recovery.js';
 import {preparationModel} from './preparation-model.js';
+import {launchSharedBoatScene} from './shared-boat-scene.js';
+import {boatOrigin, sameBoatOrigin} from './shared-boat-shapes.js';
 import {declaresPersonalCaptain} from './economy-captain.js';
 
 export function createCards(isl) {
@@ -87,12 +89,13 @@ export function createCards(isl) {
   };
   const captain = () => {
     const message = isl.cardMessage || (!isl.own ? isl.ownMessage : '');
+    const profile=isl.own?.captain ?? (isl.personalUnavailable ? {progressionVersion:1} : null);
     const wonWave = currentFunds().shared || declaresPersonalCaptain(isl.own?.captain) ? isl.own?.captain?.personalBestWave ?? 0 : isl.own ? unlocks().wonWave : 0;
     return {tab: isl.captainTab,
-      captain: captainModel({captain: isl.own?.captain ?? null, coins: isl.own?.coins ?? null, ...sharedCard(), points: isl.own?.skills?.points ?? null,
+      captain: captainModel({captain: profile, coins: isl.own?.coins ?? null, ...sharedCard(), points: isl.own?.skills?.points ?? null,
         unlocks: isl.own ? unlocks() : null, busy: isl.busyCaptain, message: isl.captainTab === 'captain' ? message : ''}),
       skills: skillsModel({skills: isl.own?.skills ?? null, wonWave, picked: isl.pickedSkill, busy: isl.busySkill, message: isl.captainTab === 'skills' ? message : '',
-        coins: isl.own?.coins ?? null, ...sharedCard(), personalCaptain: isl.own?.captain ?? null,
+        coins: isl.own?.coins ?? null, ...sharedCard(), personalCaptain: profile,
         captainLevel: isl.own?.captain?.level ?? 1, pickedRole: isl.pickedRole, busyRole: isl.busyRole, respecAsk: isl.respecAsk, busyRespec: isl.busyRespec,
         battle: isl.battle && !isl.waveOver, recoveryVersion: recoveryModelVersion()})};
 
@@ -108,7 +111,11 @@ export function createCards(isl) {
     treeSelect: (spotId, id) => { isl.treePicked.set(spotId, id); isl.cardMessage = ''; refreshCard(); }, tree: (spotId, path, tier) => void buyTree(spotId, path, tier)};
   const demolishHandlers = {confirm: () => void confirmDemolish(), keep: () => { const spot = isl.demolishSpot; isl.demolishSpot = null; if (spot) openBuild(spot); }};
   const demolishCardModel = () => demolishModel({quote: isl.demolishQuote, busy: isl.busyDemolish, message: isl.cardMessage});
-  const harbor = () => harborModel({campaign: campaign()});
+  const harbor = () => {
+    const model=harborModel({campaign:campaign()});
+    return {...model,stalls:model.stalls.map(stall=>['market','match'].includes(stall.id) && !isl.domainAvailable(stall.id)
+      ?{...stall,open:false,reason:'This activity is unavailable on shared islands.'}:stall)};
+  };
   const tech = () => {
     const confirmed = researchIsland();
     const shared = !!confirmed && currentFunds().shared;
@@ -119,8 +126,11 @@ export function createCards(isl) {
       message: isl.cardMessage || (!confirmed ? isl.ownMessage : ''), recoveryVersion: recoveryModelVersion()});
   };
   const wreck = () => wreckModel({campaign: campaign(), coins: isl.own?.coins ?? null, ...sharedCard(), busy: isl.busyGift, message: isl.cardMessage || (!target() ? isl.ownMessage : ''),
-    boat: isl.boatStatus, battle: isl.battle && !isl.waveOver || currentFunds().shared && (isl.flow.busy || !!isl.flow.current && !isl.waveOver)});
-  const harborHandlers = {open: id => { isl.ui.close(); try { openHarborStall(id); } catch { /* The stall answers on its own. */ } }};
+    boat: isl.boatStatus, requireRewardScope: isl.mode !== 'fake', battle: isl.battle && !isl.waveOver || currentFunds().shared && (isl.flow.busy || !!isl.flow.current && !isl.waveOver)});
+  const harborHandlers = {open: id => {
+    if(['market','match'].includes(id) && !isl.domainAvailable(id)) return;
+    isl.ui.close(); try { openHarborStall(id); } catch { /* The stall answers on its own. */ }
+  }};
   const wreckHandlers = {give: amount => void giveWreck(amount), sail: game => void sail(game)};
   const boatBlocked = () => (isl.battle && !isl.waveOver) || isl.flow.busy || (!!isl.flow.current && !isl.waveOver);
   // Dispose directly: normal Close opens the wreck card and would keep captain input blocked.
@@ -136,8 +146,14 @@ export function createCards(isl) {
   }
   async function readBoat() {
     if (!isOpen(campaign(), 'ship')) { isl.boatStatus = null; return; }
-    const ticket = ++isl.boatTicket, answer = await isl.api.boatStatus(placeCode());
-    if (isl.disposed || ticket !== isl.boatTicket) return;
+    const ticket = ++isl.boatTicket, code = target()?.code;
+    const economy = boatOrigin(isl.getEconomy()), actorId = isl.getActorId();
+    if (isl.mode !== 'fake') isl.boatStatus = null;
+    const answer = await (isl.mode === 'fake' ? isl.api.boatStatus(placeCode()) : isl.sharedBoatApi.status(placeCode()));
+    if (isl.disposed || ticket !== isl.boatTicket || code !== target()?.code) return;
+    if (isl.mode !== 'fake' && (actorId !== isl.getActorId()
+      || economy && !sameBoatOrigin(economy, isl.getEconomy()))) return;
+    if (isl.getEconomy()?.mode === 'island_shared' && !sameBoatOrigin(answer.data?.economy, isl.getEconomy())) return;
     isl.boatStatus = answer.ok ? answer.data : null;
     if (isl.ui.open === 'wreck') refreshCard();
   }
@@ -146,6 +162,20 @@ export function createCards(isl) {
     isl.boatLoading = true;
     const launch = ++isl.boatLaunch;
     const at = campaign(), code = target()?.code ?? '', where = placeCode();
+    const economy = boatOrigin(isl.getEconomy()), actorId = isl.getActorId();
+    let rewardScope = isl.mode === 'fake' ? 'player' : null;
+    if (isl.mode !== 'fake') {
+      await readBoat();
+      if (isl.disposed || launch !== isl.boatLaunch) return;
+      if (!isl.boatStatus?.open || !['island', 'player'].includes(isl.boatStatus.rewardScope)) {
+        isl.boatLoading = false; isl.ui.toast('Read the current ship rewards before sailing. Try again.', 'info'); return;
+      }
+      rewardScope = isl.boatStatus.rewardScope;
+      if (rewardScope === 'island' && (!sameBoatOrigin(economy, isl.getEconomy())
+        || !sameBoatOrigin(isl.boatStatus.economy, economy))) {
+        isl.boatLoading = false; isl.ui.toast('Read the current island treasury before sailing.', 'info'); return;
+      }
+    }
     let scene;
     try { scene = await loadBoatScene(); } catch {
       if (!isl.disposed && launch === isl.boatLaunch) { isl.boatLoading = false; isl.ui.toast('The boat could not load. Try again.', 'info'); }
@@ -154,7 +184,25 @@ export function createCards(isl) {
     if (isl.disposed || launch !== isl.boatLaunch) return;
     isl.boatLoading = false;
     if (boatBlocked() || code !== target()?.code || at?.wave !== campaign()?.wave) return;
+    if (isl.mode !== 'fake' && (actorId !== isl.getActorId()
+      || ((rewardScope === 'island' || isl.getEconomy()?.mode === 'island_shared')
+        && !sameBoatOrigin(economy, isl.getEconomy())))) {
+      isl.ui.toast('The island or sign-in changed. Read the ship rewards again.', 'info'); return;
+    }
     isl.ui.close();
+    if (rewardScope === 'island') {
+      isl.boatLoading = true;
+      const answer = await launchSharedBoatScene({createBoatGame: scene.createBoatGame, session: isl.sharedBoatSession,
+        game, container: document.body, code, reducedMotion, easy: () => preferences()?.easyFinishers === true,
+        isCurrent: () => !isl.disposed && launch === isl.boatLaunch && !boatBlocked() && code === target()?.code
+          && sameBoatOrigin(economy, isl.getEconomy()) && actorId === isl.getActorId(),
+        onSettled: () => { if (!isl.disposed) void readBoat(); },
+        onClose: () => { isl.boatGame = null; if (!isl.disposed) { focus(); openWreck(); } }});
+      if (isl.disposed || launch !== isl.boatLaunch) { answer.data?.dispose(); return; }
+      isl.boatLoading = false;
+      if (!answer.ok) { isl.ui.toast(answer.message, 'error'); openWreck(); return; }
+      isl.boatGame = answer.data; return;
+    }
     const round = scene.createBoatGame({container: document.body, game, wave: at?.wave ?? 0, code, reducedMotion,
       easy: () => preferences()?.easyFinishers === true,
       onFinish: async ({stars}) => {
@@ -178,10 +226,24 @@ export function createCards(isl) {
   }
   function bell() {
     const wave = isl.flow.current, island = target();
-    return bellModel({wave: wave?.wave ?? null, joined: wave?.joined === true, countdown: isl.flow.secondsLeft(), busy: isl.flow.busy,
+    const model=bellModel({wave: wave?.wave ?? null, joined: wave?.joined === true, countdown: isl.flow.secondsLeft(), busy: isl.flow.busy,
       visitor: !!isl.visiting, ownerName: isl.visiting?.ownerName, waveBest: island?.waveBest ?? 0, nextWave: island?.nextWave,
       preparation: preparationModel({island, wallRecovery: !recoveryControlsOn(),
         wallState: {code: isl.wallsFor, rows: [...isl.walls.values()]}}), message: isl.cardMessage});
+    if(!currentFunds().shared)return model;
+    if(!isl.domainAvailable('session'))return {...model,disabled:true,action:'none',line:'Island defense is unavailable. Reload the island.'};
+    const session=isl.session,settings=session.settingsView;
+    if(!session.proof()){
+      if(wave)return {...model,button:wave.joined?'Watching defense':'Watch defense',disabled:wave.joined || isl.flow.busy,
+        action:wave.joined?'none':'join',message:'Spectating this island. Connect your Captain before the next bell to join its roster.'};
+      const connecting=session.state.phase==='connecting';
+      return {...model,button:connecting?'Connecting…':'Retry connection',disabled:connecting,action:'session',line:session.state.message || 'Watching this island. Retry to connect your Captain.'};
+    }
+    if(!wave){
+      if(settings?.canManage!==true)return {...model,disabled:true,action:'none',line:'Waiting for the session leader to ring the bell.'};
+      return {...model,line:`Ring it and wave ${island.nextWave} sails in after a ${settings.countdownSeconds} second countdown.`};
+    }
+    return model;
   }
   function refreshCard() {
     if (isl.disposed) return;

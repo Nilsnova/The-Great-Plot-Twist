@@ -1,0 +1,27 @@
+name: Settle shared island wagers
+
+# Prepared scheduling code only. The repository variable remains unset until release approval.
+# Vercel cron is incompatible with this repository's Services deployment.
+on:
+  schedule:
+    - cron: "2-57/5 * * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  settle:
+    if: vars.ENABLE_SHARED_WAGER_SETTLEMENT == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Wake durable origin settlement worker
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SETTLEMENT_URL: ${{ vars.SHARED_WAGER_SETTLEMENT_URL }}
+        run: |
+          test -n "$SETTLEMENT_URL"
+          status=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 90 \
+            -X POST -H "Authorization: Bearer $CRON_SECRET" "$SETTLEMENT_URL")
+          echo "settlement worker answered $status"
+          test "$status" = "200"

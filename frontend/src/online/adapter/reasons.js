@@ -13,6 +13,7 @@ const messages = {
   already_in_crew: 'You already belong to a crew.',
   save_conflict: 'This save changed on another device. Choose which copy to keep.',
   name_reroll_used: 'You already used your re-roll.',
+  owned_island_confirmation_required: 'Deleting this account also deletes its owned shared island. Review and confirm that separately.',
   invalid_request: 'This request could not be understood. Report a problem if it happens again.',
   intro_incomplete: 'Finish Act 1 first.',
   save_unavailable: 'This save cannot be stored.',
@@ -28,6 +29,7 @@ const statusCodes = {
     kit_needed: 'kit_required', already_in_crew: 'already_in_crew', crew_busy: 'not_ready',
     crew_full: 'not_ready', crew_finished: 'not_ready', stale_save: 'save_conflict',
     no_rerolls_left: 'name_reroll_used', no_name_yet: 'not_ready',
+    owned_island_confirmation_required:'owned_island_confirmation_required',
   },
   422: {
     validation_error: 'invalid_request', move_refused: 'intro_incomplete', no_ending: 'intro_incomplete',
