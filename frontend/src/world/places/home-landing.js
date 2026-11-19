@@ -9,7 +9,7 @@ const halfWidth = i => THREE.MathUtils.lerp(1.24, .83, i / (PLANKS - 1));
 const boards = ['#b57a42', '#c69155', '#a36a3d', '#c38b4f', '#b17743', '#d19c60', '#a66a3d'];
 const endGrain = '#57382b', longGrain = '#805132', darkGrain = '#815535', lightGrain = '#ebba7c';
 
-const TOP = 1, SIDE = 2, PILE = 3, END = 4;
+const TOP = 1, SIDE = 2, PILE = 3, END = 4, ROPE = 5;
 const ACROSS = [0, 0, 255, 255], UPRIGHT = [0, 255, 255, 0];
 const TOP_FIRST = [255, 0, 0, 255], TOP_PAIR = [255, 255, 0, 0], CUT_RING = [255, 255, 0, 255];
 const FLAT = [0, 0, 0, 0];
@@ -59,6 +59,12 @@ function shadeTimber(material) {
             vec3 wood = base * (1.0 + fibre);
             vec3 soaked = wood * vec3(.46, .64, .64);
             return mix(mix(wood, soaked, wet), vec3(.19, .44, .39), tide * (.23 + .13 * sin(p.x * 18.0)));
+          }
+          if (surface > 4.5) {
+            float twist = (p.x + p.y * .46) * 31.0 + edge * 4.7;
+            float weave = sin(twist) * (1.0 - smoothstep(.65, 2.8, fwidth(twist)));
+            float roundness = sin(edge * 3.14159);
+            return base * (.76 + .31 * roundness + .12 * edge + .07 * weave);
           }
           float rings = .16 * sin(edge * 19.0 + sin(p.x * 9.3) * .89 + p.y * 1.9);
           return base * (.90 + .21 * edge + rings);
@@ -111,7 +117,7 @@ export function createHomeLanding(group) {
       quad(shoulder[index], shoulder[next], cap[next], cap[index], index < 5 ? '#e0af78' : '#a87853');
       quad(cap[index], cap[next], [x, top, z], cap[index], '#d5a574', END, CUT_RING);
       for (const [low, high] of wrap) {
-        quad(low[index], low[next], high[next], high[index], index < 5 ? '#f0cb83' : '#b88e55');
+        quad(low[index], low[next], high[next], high[index], index < 5 ? '#e3bd7c' : '#b18a57', ROPE, ACROSS);
       }
     }
   }
