@@ -2064,3 +2064,12 @@ Valid island/journal requests check the live deleted-actor guard after their
 request budget. Malformed bodies/queries and incompatible native requests reach
 no domain transaction. Historical exact retries still belong to their original
 actor/account/epoch; an Auth cache cannot resurrect a deleted player.
+
+Existing `game_join`/`game_leave` RPC signatures and the invite alias share the
+canonical membership transaction. A real departure withdraws only that island's
+control/slot and held copies; pending returns follow the actual accepted wave.
+Join/rejoin/leave rotate the current private topic when membership changes.
+Redundant operations and refused owner departure have no lifecycle effect. The
+HTTP create/join/list/lobby/leave routes check live actor status after their
+budgets. Lobby roles use global adopted Captain state, with legacy reads only
+for explicitly unadopted players and no initialization or read-failure fallback.

@@ -16,14 +16,15 @@ buildings and its best wave are their first game, and nothing moves.
                   wave or reads the island by its code (403 not_member)
 
 The database part is supabase/migrations/20261112040000_game_rooms.sql: game_join (the cap,
-under a lock of the island row), game_leave, game_list and game_members. Who is online is not
-stored: it comes from the presence of the island's room on the client.
+under a lock of the island row), game_leave, game_list and game_members. Room presence is
+cosmetic. Shared control and membership exits use the persisted canonical session lifecycle.
 
 Used by: routes/games.py, routes/island.py (the invite alias), service.py (co-op build,
 upgrade and the visit), waves.py (the bell and the wave join) and the tests.
 """
 
 import logging
+from asyncio import gather
 from dataclasses import dataclass, replace
 from typing import Literal
 
@@ -31,7 +32,7 @@ from pydantic import BaseModel, StrictInt, StrictStr, ValidationError
 
 from server.errors import ApiError
 from server.game.islet_store import player_not_set_up
-from server.island import store
+from server.island import personal_captain_store, store
 from server.island.codes import read_code, shown
 from server.island.store import Island
 from server.supabase_admin import SupabaseAdmin, SupabaseRejected
@@ -184,6 +185,8 @@ async def run_join(admin: SupabaseAdmin, island: Island, player_id: str) -> Join
     )
     if isinstance(reply, dict) and reply.get("status") == "refused":
         refused = read(RefusedRow, reply)
+        if error := lifecycle_refusal(refused.reason):
+            raise error
         if refused.reason == "game_full":
             raise game_full()
         if refused.reason == "no_such_game":
@@ -233,11 +236,31 @@ async def mine(admin: SupabaseAdmin, player_id: str) -> tuple[Game, ...]:
 
 async def captain_roles(admin: SupabaseAdmin, ids: list[str]) -> dict[str, str]:
     """{player: role} of the members who picked a captain role (docs/GAME-V3.md, Captain tree
-    and roles): the lobby shows it so the crew sees who does what."""
-    query = {"select": "player_id,captain_role", "player_id": f"in.({','.join(ids)})"}
-    rows = await admin.select_rows("islands", query)
-    roles = (read(CaptainRoleRow, row) for row in rows if isinstance(row, dict))
-    return {row.player_id: row.captain_role for row in roles if row.captain_role}
+    and roles). Managed profiles remain authoritative on every viewed island; an
+    explicit unadopted result alone permits the old role projection."""
+    profiles = await gather(*(personal_captain_store.read_optional(admin, actor) for actor in ids))
+    roles = {actor: profile["captain"]["role"] for actor, profile in zip(ids, profiles, strict=True)
+             if profile is not None and profile["captain"]["role"] is not None}
+    legacy = [actor for actor, profile in zip(ids, profiles, strict=True) if profile is None]
+    if legacy:
+        query = {"select": "player_id,captain_role", "player_id": f"in.({','.join(legacy)})"}
+        rows = await admin.select_rows("islands", query)
+        saved = [read(CaptainRoleRow, row) for row in rows]
+        if any(row.player_id not in legacy for row in saved):
+            raise store.unreadable()
+        roles.update({row.player_id: row.captain_role for row in saved if row.captain_role})
+    return roles
+
+
+def lifecycle_refusal(reason: str) -> ApiError | None:
+    """Keep the canonical membership guard's stable refusal codes visible."""
+    errors = {
+        "actor_inactive": (401, "unauthorized", "Sign in again before joining this game."),
+        "path_unavailable": (409, "economy_path_unavailable", "Refresh this game's session."),
+        "lifecycle_busy": (503, "lifecycle_busy", "Retry the original membership request."),
+    }
+    value = errors.get(reason)
+    return None if value is None else ApiError(*value)
 
 
 async def lobby(admin: SupabaseAdmin, typed_code: str, player_id: str) -> Lobby:
@@ -267,6 +290,8 @@ async def leave(admin: SupabaseAdmin, typed_code: str, player_id: str) -> bool:
     )
     if isinstance(reply, dict) and reply.get("status") == "refused":
         refused = read(RefusedRow, reply)
+        if error := lifecycle_refusal(refused.reason):
+            raise error
         if refused.reason == "host_cannot_leave":
             raise host_cannot_leave()
         if refused.reason == "no_such_game":

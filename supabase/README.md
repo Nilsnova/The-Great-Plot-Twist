@@ -3601,3 +3601,11 @@ Public reset replies intentionally omit a replacement treasury projection;
 original account references remain usable for legitimate old wager settlement.
 Account deletion requires explicit confirmation when it deletes an admitted
 owned island. Guest cleanup cannot silently supply that owner confirmation.
+
+`20261119000309_canonical_membership_lifecycle.sql` preserves the existing public
+`game_join`/`game_leave` signatures behind canonical scope/actor/account/profile
+locks. Captured original bodies have no direct role execution. Only public
+service entry points remain executable; no table/browser right is added. The
+same transaction changes membership, withdraws target control and stock, handles
+pending returns, and rotates the private topic. Inactive actors cannot join or
+leave through a cached token. Existing legacy room semantics remain intact.
