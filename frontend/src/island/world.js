@@ -615,6 +615,10 @@ export function decorateIsland(place, ctx = {}) {
   return {
     runArtTask: (key, operation) => tasks.run(key, operation),
     apply, pickAt, retryArt: () => Promise.all([retryArt(), staticArt.retry(), retryWallArt(), retryProgressArt(), ctx.retryAdditionalArt?.()]),
+    canJoinWall(spot) {
+      const row = recoveryState?.structures.find(item => item.spot === spot.id);
+      return structureRecoveryAppearance(spot, row, recoveryState)?.look !== 'broken';
+    },
     setRecoveryState(value) {
       const accepted = value?.recoveryVersion === 1 && RECOVERY_PHASES.has(value.displayPhase)
         && typeof value.islandEpoch === 'string' && Array.isArray(value.structures) ? value : null;

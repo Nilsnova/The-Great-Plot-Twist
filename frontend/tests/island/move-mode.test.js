@@ -82,11 +82,15 @@ describe('Move mode', () => {
       {id:'wall_3', kind:'wall', built:true, x:16.5, z:-.5},
     ];
     const render = vi.fn(), api = {move: vi.fn(async () => ({ok:true}))};
-    const mode = createMoveMode({api, render, spots: () => accepted});
+    const ruined = new Set(['wall_3']);
+    const mode = createMoveMode({api, render, spots: () => accepted, canJoinWall: wall => !ruined.has(wall.id)});
     expect(mode.start('wall_1')).toBe(true);
     mode.tap(17, -2.5);
     expect(mode.state).toMatchObject({x:17, z:-2.5, ok:false});
     expect(await mode.confirm()).toBeNull();
+    mode.tap(16.51, -2.99);
+    expect(mode.state).toMatchObject({x:16.5, z:-3, ok:false});
+    ruined.clear();
     mode.tap(16.51, -2.99);
     expect(mode.state).toMatchObject({x:16.5, z:-2.5, ok:true});
     expect(render.mock.lastCall[0].status).toBe('Wall edges aligned.');
