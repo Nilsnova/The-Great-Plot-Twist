@@ -208,5 +208,40 @@
       "The delayed-auth-refusal branch is regression evidence, not a new actual-provider browser observation.",
       "The final source is not relabeled as the executed74frontend."
     ]
+  },
+  "membershipDepartureFollowup": {
+    "comparedAt": "2026-11-19T19:22:58.914917+00:00",
+    "priorRoleGuardCandidate": "9c25ec4b08f30ba08b89cb84e362bdbd8e942754",
+    "newFrontendCandidate": "90a9a8227579c2be86cbe1d024fa75de7d61637e",
+    "additionalChangedProtectedPaths": [
+      "frontend/src/island/shared-session-client.js"
+    ],
+    "totalChangedProtectedPathsFromServed64": [
+      "frontend/src/island/island-actions.js",
+      "frontend/src/island/shared-session-client.js"
+    ],
+    "unchangedScope": "All backend, content, 108 migrations, dependency locks, Auth/SDK files and other frontend files are byte-identical. Only the existing depart helper changes inside shared-session-client.js; source before depart and from leave onward matches exactly.",
+    "runtimeGitBlob": "c97925d56a34e120044780e47e3efa91a8bb034a",
+    "newTerminalBranch": "Only an authenticated leave reply with status 403 and exact code not_member retires the saved original departure through the existing exact-record intents.departed comparison. General 403, unknown refusal and network failure remain retryable. Existing stale-controller and retired-epoch handling is preserved.",
+    "authorityBoundary": "The API binds the original record to its current authenticated actor. Canonical game_leave already removes membership, withdraws target control/slots/stock and rotates topic atomically. Retiring the local obsolete departure grants no new authority; subsequent attach still uses normal canonical membership/global-controller checks.",
+    "retainedCases": [
+      "Financial and wallet/accounting effects remain attributed to actual 64 with unchanged backend/API/SQL.",
+      "Current zero-revival and real 67-second grace/direct-own restoration remain actual 64 observations; they do not enter the removed-membership departure branch.",
+      "Owner/visitor successful Engineer first-buy remains actual 74, as separately qualified through 9c; no departed membership occurs on those traces.",
+      "Old sessions duplicate/proofless controller refusals and existing successful same-scope departures retain their branch-specific authority evidence."
+    ],
+    "needsNewActualObservation": "Same actual actor must normally rejoin then Leave on served 90, observe the authentic old-scope403not_member and automatic fresh own-session handoff after its normal UI/focus trigger. The actual 64 waiting failure remains failed until this separate proof succeeds.",
+    "reportedChecksNotRerunHere": {
+      "scope": "session client/API/intents",
+      "beforeFixFailures": 1,
+      "afterFixPassed": 76,
+      "durationSeconds": 2.09,
+      "freshBuild": "passed"
+    },
+    "limits": [
+      "This is source comparison, not a provider rerun.",
+      "No broad active-wave, arbitrary403 or realtime-transition waiver.",
+      "The final new UI handoff must keep90 source distinct from older64/74 traces."
+    ]
   }
 }
