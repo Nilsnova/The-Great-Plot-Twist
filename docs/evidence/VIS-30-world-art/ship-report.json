@@ -2,7 +2,7 @@
   "scope": "lossy WebP shipping transport of the proved masters; frame metadata, masters and authored originals unchanged",
   "sourceCommit": "840549a58623caa94db4774a408e53953c58db10",
   "compilerDirtyPaths": "M ../docs/evidence/VIS-30-world-art/README.md\n M scripts/capture-home-island-waves.mjs\n M scripts/unshipped-art.js\n M src/art/village-decode.js\n M src/art/village-families.js\n M src/art/village-raster.js\n M src/art/village/terrain-materials.js\n M tests/art/registered-raster-contract.test.js\n M tests/art/terrain-materials.test.js\n M tests/art/village-activation.test.js\n M tests/art/village-decode.test.js\n M tests/art/village-level-matrix.test.js\n M tests/art/village-shipping.test.js\n?? ../docs/evidence/VIS-30-world-art/ship-report.json\n?? ../docs/evidence/franz-1118/size/\n?? public/village/shipped/\n?? scripts/ship-village-art.mjs\n?? scripts/village-ship-browser.js\n?? src/art/village/shipped.js\n?? tests/art/village-shipped-output.test.js",
-  "bakeReportSha256": "a7a429f1dd45768f1c42d2f091757fe88845b1c23826f9f5ba4875bf6a343d8b",
+  "bakeReportSha256": "d3edd4daf0b218612f0c11d04fa0d3bb8c9b73a38118f933275fb2796941d84b",
   "browser": "153.0.8010.12",
   "encoder": "Chrome canvas toDataURL image/webp",
   "quality": 0.9,
@@ -13,20 +13,20 @@
   "sprites": {
     "files": [
       {
-        "source": "village/compiled/buildings-4x-1-4cac98be2a82.png",
-        "sourceSha256": "4cac98be2a8227dbc9e4bcccc5408e12c21ff8f858fc0fdc23ca91f4d0e7bf68",
-        "file": "village/shipped/buildings-4x-1-2739a47df6d0.webp",
-        "bytes": 43226,
-        "sha256": "2739a47df6d0b80512a3545113398058ff54eb9a6375d313a29ff002cc1fb892",
+        "source": "village/compiled/buildings-4x-1-4d1d3b5b74a0.png",
+        "sourceSha256": "4d1d3b5b74a02e1b5157dc1812f984ae3a8ec1fcf2a605bbc1767fee0b194ced",
+        "file": "village/shipped/buildings-4x-1-9753c67ef113.webp",
+        "bytes": 38940,
+        "sha256": "9753c67ef11310a77900c19096a7e6daabd19650bf38197d515de12eb775a5ae",
         "width": 392,
         "height": 392,
         "proof": {
           "pixels": 153664,
-          "visiblePixels": 75207,
-          "differingPixels": 73916,
+          "visiblePixels": 70161,
+          "differingPixels": 66170,
           "maxVisibleDelta": 255,
           "maxAlphaDelta": 0,
-          "alphaWeightedMeanRgbDelta": 4.3373012608443595
+          "alphaWeightedMeanRgbDelta": 3.6237924112621873
         }
       },
       {
@@ -64,20 +64,20 @@
         }
       },
       {
-        "source": "village/compiled/services-4x-1-6b01dd508dca.png",
-        "sourceSha256": "6b01dd508dca1e32ab35b684a67d545dd999f8a0fcc1e3b3c93843edf5f032a2",
-        "file": "village/shipped/services-4x-1-1f072aed5570.webp",
-        "bytes": 72008,
-        "sha256": "1f072aed55705aa1beb21aeb1a0b87c39ae637d55d5a3b2c08a6602ff02ff392",
+        "source": "village/compiled/services-4x-1-3e1d3ce50a9a.png",
+        "sourceSha256": "3e1d3ce50a9a77930096c6e418cf0f08010077ae25e39a3be34aebd84a115b83",
+        "file": "village/shipped/services-4x-1-b4008dc0c1ca.webp",
+        "bytes": 69846,
+        "sha256": "b4008dc0c1ca41c7849176c7e7508bf07913c2b389dfa38a6fd8bb3a35bde5c9",
         "width": 656,
         "height": 360,
         "proof": {
           "pixels": 236160,
-          "visiblePixels": 126112,
-          "differingPixels": 122994,
+          "visiblePixels": 118885,
+          "differingPixels": 113567,
           "maxVisibleDelta": 255,
           "maxAlphaDelta": 0,
-          "alphaWeightedMeanRgbDelta": 4.195342945944599
+          "alphaWeightedMeanRgbDelta": 3.8364111088954234
         }
       },
       {
@@ -234,8 +234,8 @@
         }
       }
     ],
-    "masterBytes": 10281110,
-    "shippedBytes": 2682756
+    "masterBytes": 10287959,
+    "shippedBytes": 2676308
   },
   "terrain": {
     "source": "village/terrain-materials-v1.png",
@@ -309,8 +309,8 @@
     "maxGroundTexelsPerUnit": 32
   },
   "initialTransfer": {
-    "masterPlusTerrainBytes": 12964467,
-    "shippedBytes": 2794600,
+    "masterPlusTerrainBytes": 12971316,
+    "shippedBytes": 2788152,
     "targetBytes": 4000000,
     "targetMet": true
   },
@@ -324,6 +324,22 @@
       "previousReportSha256": "1d1bb8c28d5d55c6f1e586ba12a1c4be93d32ce7cca7774ab1caa0afcbe20992",
       "previousSheet": "village/shipped/houses-4x-1-98bca75b4c81.webp",
       "verifiedReplacement": "village/shipped/houses-4x-1-1e17e4c24a61.webp"
+    },
+    {
+      "family": "buildings",
+      "browser": "157.0.8103.79",
+      "sourceCommit": "92594b174dfe55d9edffe4104cc73eb82e528783",
+      "previousReportSha256": "3b7ba566b57cae07893a6bd13b3ec18d719074a729d4ddc488ffc49081d18f1a",
+      "previousSheet": "village/shipped/buildings-4x-1-2739a47df6d0.webp",
+      "verifiedReplacement": "village/shipped/buildings-4x-1-9753c67ef113.webp"
+    },
+    {
+      "family": "services",
+      "browser": "157.0.8103.79",
+      "sourceCommit": "92594b174dfe55d9edffe4104cc73eb82e528783",
+      "previousReportSha256": "3b7ba566b57cae07893a6bd13b3ec18d719074a729d4ddc488ffc49081d18f1a",
+      "previousSheet": "village/shipped/services-4x-1-1f072aed5570.webp",
+      "verifiedReplacement": "village/shipped/services-4x-1-b4008dc0c1ca.webp"
     }
   ]
 }

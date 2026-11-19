@@ -1,0 +1,459 @@
+{
+  "scope": "offline normalized PNG source compilation; runtime activation/build exclusion and actual-game acceptance remain separate",
+  "sourceCommit": "92594b174dfe55d9edffe4104cc73eb82e528783",
+  "compilerDirtyPaths": "M src/art/village/baked.js\n?? public/village/compiled/buildings-4x-1-4d1d3b5b74a0.png\n?? public/village/compiled/services-4x-1-3e1d3ce50a9a.png",
+  "browser": "157.0.8103.79",
+  "families": [
+    "buildings",
+    "services"
+  ],
+  "proofDensities": [
+    4,
+    2.5,
+    2,
+    1.5
+  ],
+  "proofOrigins": {
+    "buildings": "92594b174dfe55d9edffe4104cc73eb82e528783",
+    "services": "92594b174dfe55d9edffe4104cc73eb82e528783"
+  },
+  "reusedReportSha256": null,
+  "normalizerHashes": {
+    "src/art/village-raster.js": "4db5ffa86253a7ece821804586518e2fabea33b33d0c59c4f3223df80d969e3f",
+    "src/art/village-decode.js": "1d55341b2c947e3bcfc019c0e8bb8722591f0a2312cd7a8a0585a873cd8fa537"
+  },
+  "transportHistory": [],
+  "original": {
+    "files": [
+      {
+        "file": "village/home-fixed-v2.png",
+        "bytes": 1585086,
+        "sha256": "ec6349ad26db4beefe3d539b6195c3609b749348da0c2cc16831b56386ee646a",
+        "width": 1774,
+        "height": 887
+      },
+      {
+        "file": "village/services-v1.png",
+        "bytes": 2193948,
+        "sha256": "d9091a95d8a3267f2c0790a06343d42d21232bc1c521bbcd1afc410914c991ff",
+        "width": 1536,
+        "height": 1024
+      }
+    ],
+    "encodedBytes": 3779034,
+    "summedDecodedBytes": 12585608
+  },
+  "compiled": {
+    "files": [
+      {
+        "file": "village/compiled/buildings-4x-1-4d1d3b5b74a0.png",
+        "bytes": 195774,
+        "sha256": "4d1d3b5b74a02e1b5157dc1812f984ae3a8ec1fcf2a605bbc1767fee0b194ced",
+        "width": 392,
+        "height": 392
+      },
+      {
+        "file": "village/compiled/services-4x-1-3e1d3ce50a9a.png",
+        "bytes": 337190,
+        "sha256": "3e1d3ce50a9a77930096c6e418cf0f08010077ae25e39a3be34aebd84a115b83",
+        "width": 656,
+        "height": 360
+      }
+    ],
+    "encodedBytes": 532964,
+    "summedDecodedBytes": 1559296,
+    "peakSingleDecodedBytes": 944640
+  },
+  "initialTransfer": {
+    "unchangedTerrainBytes": 2683357,
+    "rawPlusTerrainBytes": 6462391,
+    "compiledPlusTerrainBytes": 3216321,
+    "targetBytes": 8388608,
+    "targetMet": true
+  },
+  "budgets": {
+    "decodedPoolBytes": 12582912,
+    "combatAtlasHighBytes": 41943040,
+    "combatAtlasLowBytes": 12582912,
+    "note": "unchanged final logical frame/density means no renderer-pass or final GPU-texture saving is claimed"
+  },
+  "inputs": [
+    {
+      "name": "buildings",
+      "module": "src/art/village/buildings.js",
+      "sha256": "e98a1f7b1394f64a7765a0939b2c4264189575bf40a71930710f9ee5983916bd",
+      "frames": {
+        "cabin": {
+          "sheet": {
+            "file": "village/home-fixed-v2.png",
+            "width": 1774,
+            "height": 887
+          },
+          "rect": [
+            52,
+            24,
+            774,
+            816
+          ],
+          "logical": [
+            96,
+            96,
+            12
+          ],
+          "sourceFoot": [
+            387,
+            800
+          ],
+          "fitBounds": [
+            387,
+            800,
+            387,
+            16
+          ]
+        }
+      }
+    },
+    {
+      "name": "services",
+      "module": "src/art/village/services.js",
+      "sha256": "5c03aff21e4c2153f22d4e1e6f39e26eeab18861260cb22867f6b930dd1f3897",
+      "frames": {
+        "island-techhub": {
+          "sheet": {
+            "file": "village/services-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            20,
+            125,
+            698,
+            776
+          ],
+          "logical": [
+            80,
+            88,
+            8
+          ],
+          "sourceFoot": [
+            345,
+            761
+          ],
+          "fitBounds": [
+            345,
+            761,
+            353,
+            15
+          ]
+        },
+        "island-arsenal": {
+          "sheet": {
+            "file": "village/home-fixed-v2.png",
+            "width": 1774,
+            "height": 887
+          },
+          "rect": [
+            928,
+            191,
+            808,
+            640
+          ],
+          "logical": [
+            80,
+            80,
+            8
+          ],
+          "sourceFoot": [
+            404,
+            624
+          ],
+          "fitBounds": [
+            404,
+            624,
+            404,
+            16
+          ]
+        }
+      }
+    }
+  ],
+  "plans": [
+    {
+      "name": "buildings",
+      "pages": [
+        {
+          "file": "village/compiled/buildings-4x-1-4d1d3b5b74a0.png",
+          "width": 392,
+          "height": 392,
+          "items": [
+            {
+              "id": "cabin",
+              "rect": [
+                4,
+                4,
+                384,
+                384
+              ]
+            }
+          ]
+        }
+      ],
+      "sheets": {
+        "buildingsBaked1": {
+          "file": "village/compiled/buildings-4x-1-4d1d3b5b74a0.png",
+          "width": 392,
+          "height": 392
+        }
+      },
+      "frames": {
+        "cabin": {
+          "sheet": "buildingsBaked1",
+          "rect": [
+            4,
+            4,
+            384,
+            384
+          ],
+          "logical": [
+            96,
+            96,
+            12
+          ],
+          "sourceFoot": [
+            192,
+            336
+          ]
+        }
+      }
+    },
+    {
+      "name": "services",
+      "pages": [
+        {
+          "file": "village/compiled/services-4x-1-3e1d3ce50a9a.png",
+          "width": 656,
+          "height": 360,
+          "items": [
+            {
+              "id": "island-techhub",
+              "rect": [
+                4,
+                4,
+                320,
+                352
+              ]
+            },
+            {
+              "id": "island-arsenal",
+              "rect": [
+                332,
+                4,
+                320,
+                320
+              ]
+            }
+          ]
+        }
+      ],
+      "sheets": {
+        "servicesBaked1": {
+          "file": "village/compiled/services-4x-1-3e1d3ce50a9a.png",
+          "width": 656,
+          "height": 360
+        }
+      },
+      "frames": {
+        "island-techhub": {
+          "sheet": "servicesBaked1",
+          "rect": [
+            4,
+            4,
+            320,
+            352
+          ],
+          "logical": [
+            80,
+            88,
+            8
+          ],
+          "sourceFoot": [
+            160,
+            320
+          ]
+        },
+        "island-arsenal": {
+          "sheet": "servicesBaked1",
+          "rect": [
+            332,
+            4,
+            320,
+            320
+          ],
+          "logical": [
+            80,
+            80,
+            8
+          ],
+          "sourceFoot": [
+            160,
+            288
+          ]
+        }
+      }
+    }
+  ],
+  "compilerMemory": [
+    {
+      "family": "buildings",
+      "peakSourceBytes": 6294152,
+      "retainedDecodedAfterRelease": 0,
+      "canvasBytes": 614656,
+      "largestTemporaryCanvasBytes": 589824
+    },
+    {
+      "family": "services",
+      "peakSourceBytes": 6294152,
+      "retainedDecodedAfterRelease": 0,
+      "canvasBytes": 944640,
+      "largestTemporaryCanvasBytes": 450560
+    }
+  ],
+  "verification": [
+    {
+      "family": "buildings",
+      "results": [
+        {
+          "id": "cabin",
+          "density": 4,
+          "pixels": 147456,
+          "visiblePixels": 70161,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "cabin",
+          "density": 2.5,
+          "pixels": 57600,
+          "visiblePixels": 27626,
+          "differingPixels": 25134,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 41,
+          "alphaWeightedMeanRgbDelta": 1.9510473107659139
+        },
+        {
+          "id": "cabin",
+          "density": 2,
+          "pixels": 36864,
+          "visiblePixels": 17426,
+          "differingPixels": 16524,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 53,
+          "alphaWeightedMeanRgbDelta": 3.3061628382217294
+        },
+        {
+          "id": "cabin",
+          "density": 1.5,
+          "pixels": 20736,
+          "visiblePixels": 9968,
+          "differingPixels": 9566,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 49,
+          "alphaWeightedMeanRgbDelta": 3.2706186479695143
+        }
+      ],
+      "peakSourceBytes": 6294152,
+      "retainedDecodedAfterRelease": 0
+    },
+    {
+      "family": "services",
+      "results": [
+        {
+          "id": "island-techhub",
+          "density": 4,
+          "pixels": 112640,
+          "visiblePixels": 61992,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-techhub",
+          "density": 2.5,
+          "pixels": 44000,
+          "visiblePixels": 24623,
+          "differingPixels": 22765,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 53,
+          "alphaWeightedMeanRgbDelta": 2.2826850981445688
+        },
+        {
+          "id": "island-techhub",
+          "density": 2,
+          "pixels": 28160,
+          "visiblePixels": 15647,
+          "differingPixels": 14480,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 56,
+          "alphaWeightedMeanRgbDelta": 3.2781936567508123
+        },
+        {
+          "id": "island-techhub",
+          "density": 1.5,
+          "pixels": 15840,
+          "visiblePixels": 9019,
+          "differingPixels": 8614,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 44,
+          "alphaWeightedMeanRgbDelta": 3.435476133384974
+        },
+        {
+          "id": "island-arsenal",
+          "density": 4,
+          "pixels": 102400,
+          "visiblePixels": 56893,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-arsenal",
+          "density": 2.5,
+          "pixels": 40000,
+          "visiblePixels": 22402,
+          "differingPixels": 21456,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 59,
+          "alphaWeightedMeanRgbDelta": 3.386740840009201
+        },
+        {
+          "id": "island-arsenal",
+          "density": 2,
+          "pixels": 25600,
+          "visiblePixels": 14144,
+          "differingPixels": 13296,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 46,
+          "alphaWeightedMeanRgbDelta": 3.1663327245760784
+        },
+        {
+          "id": "island-arsenal",
+          "density": 1.5,
+          "pixels": 14400,
+          "visiblePixels": 8097,
+          "differingPixels": 7718,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 47,
+          "alphaWeightedMeanRgbDelta": 3.2743635958150765
+        }
+      ],
+      "peakSourceBytes": 6294152,
+      "retainedDecodedAfterRelease": 0
+    }
+  ],
+  "errors": [],
+  "externalRequests": []
+}
