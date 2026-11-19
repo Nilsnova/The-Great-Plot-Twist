@@ -9,10 +9,10 @@ import json
 from pathlib import Path
 
 from server.island.boat import BOAT, coins_for
-from server.island.catalogue import IslandCatalogue, load_island
+from server.island.catalogue import IslandCatalogue, load_island, runtime_catalogue
 from server.island.rules import is_boss, loot_cap
 from server.island.wave_events import bonus_base
-from tools.economy.island_balance_costs import cost_catalogue, flagged_options, sample_bills
+from tools.economy.island_balance_costs import cost_catalogue, options_outside_queues, sample_bills
 from tools.economy.island_balance_plans import building_plan, simulate_plan
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -136,7 +136,8 @@ def reset_wager_sensitivity(catalogue: IslandCatalogue) -> dict:
 
 
 def run() -> dict:
-    catalogue = load_island()
+    original = load_island()
+    catalogue = runtime_catalogue(original)
     return {
         "evidenceClass": "OFFLINE ARITHMETIC; NO SHARED-MODE PLAY OR LIVE ACTIVATION",
         "sourceSha256": {
@@ -148,11 +149,12 @@ def run() -> dict:
             "Strict queues buy unlocked levels with prior funds before the next bell.",
             "All wins are assumptions, including waves fought with incomplete planned defenses.",
             "Fixed-house bounds assume houses from wave1 and subtract no expenses.",
-            "Base seven tower spots; extra spots/culverin remain separately flagged options.",
+            "Queues use seven original tower spots; always-on culverin/extra spots are separate "
+            "options.",
             "New Carpenter and repair-only offers are retired under recovery v1; no replacement.",
         ],
         "catalogue": cost_catalogue(catalogue),
-        "flaggedOptionsOutsideBaseline": flagged_options(catalogue),
+        "optionsOutsideSampleQueues": options_outside_queues(catalogue, original),
         "sampleBills": sample_bills(catalogue),
         "revenueBounds": revenue_bounds(catalogue),
         "partyComparisonWithoutHouses": [

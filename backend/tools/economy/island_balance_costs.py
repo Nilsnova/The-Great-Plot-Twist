@@ -3,7 +3,7 @@
 Used by: tools.economy.island_balance, never by game services.
 """
 
-from server.island.catalogue import IslandCatalogue, catalogue_for_flags
+from server.island.catalogue import IslandCatalogue
 from server.island.rules import engineer_price
 
 
@@ -83,11 +83,10 @@ def sample_bills(catalogue: IslandCatalogue) -> dict:
     }
 
 
-def flagged_options(catalogue: IslandCatalogue) -> dict:
-    """Read optional prices without activating flags or changing the baseline catalogue."""
-    optional = catalogue_for_flags(catalogue, {"defenses_v2": True, "more_tower_spots": True})
-    base_kinds = {row.kind for row in catalogue.kinds}
-    base_spots = {row.id for row in catalogue.spots}
+def options_outside_queues(catalogue: IslandCatalogue, original: IslandCatalogue) -> dict:
+    """Inventory always-on additions not bought by the two illustrative queues."""
+    base_kinds = {row.kind for row in original.kinds}
+    base_spots = {row.id for row in original.spots}
     return {
         "additionalKinds": {
             row.kind: {
@@ -95,10 +94,10 @@ def flagged_options(catalogue: IslandCatalogue) -> dict:
                 "cumulativeMaximum": sum(row.prices),
                 "unlockBest": list(row.level_waves),
             }
-            for row in optional.kinds
+            for row in catalogue.kinds
             if row.kind not in base_kinds
         },
         "additionalSpots": {
-            row.id: row.unlock_wave for row in optional.spots if row.id not in base_spots
+            row.id: row.unlock_wave for row in catalogue.spots if row.id not in base_spots
         },
     }

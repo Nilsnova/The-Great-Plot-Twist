@@ -8,7 +8,7 @@
     "backend/content/defenses_v2.json": "8e1e108688b81998d032b52fd7b0e11862a4b2ea7d3d2c4f81cbbd098503e47c",
     "backend/content/wave_events.json": "581a41a2768f2d1b670d226083fca829cdbf8349b03ca936d380d445d5db8f16",
     "backend/server/island/rules.py": "fd31535a94399ee4a45e99986a12fec59d2d5d1b3db53164492d21d80800cd52",
-    "backend/server/island/catalogue.py": "5de2c9619a557619421c74703045400d46f5ce2ac3c14de291dfc3c2e3172f9c",
+    "backend/server/island/catalogue.py": "c5314dba9afb117fc1521fc9f3ba19143b7b17f3f570aceb42e01ce624d692fe",
     "backend/server/island/boat.py": "9b4d9693f6314a660a08115e9227d11bba721db72631da355e78314ff00a3b68",
     "backend/server/island/wave_events.py": "9fede25cc0d6a950ee379314449ea6b113ecf98a4eed0fe58c60e55713803450",
     "supabase/migrations/20261117025000_legacy_wave_locks.sql": "2572253fbb3b7cc09381719a897eb8b8970cabd984c184139611c7f62e105009",
@@ -24,7 +24,7 @@
     "Strict queues buy unlocked levels with prior funds before the next bell.",
     "All wins are assumptions, including waves fought with incomplete planned defenses.",
     "Fixed-house bounds assume houses from wave1 and subtract no expenses.",
-    "Base seven tower spots; extra spots/culverin remain separately flagged options.",
+    "Queues use seven original tower spots; always-on culverin/extra spots are separate options.",
     "New Carpenter and repair-only offers are retired under recovery v1; no replacement."
   ],
   "catalogue": {
@@ -230,6 +230,36 @@
           90,
           180
         ]
+      },
+      "culverin": {
+        "incremental": [
+          80,
+          160,
+          320,
+          640,
+          1280
+        ],
+        "cumulative": [
+          80,
+          240,
+          560,
+          1200,
+          2480
+        ],
+        "unlockBest": [
+          15,
+          15,
+          15,
+          20,
+          30
+        ],
+        "engineerIncremental": [
+          72,
+          144,
+          288,
+          576,
+          1152
+        ]
       }
     },
     "crew": {
@@ -388,7 +418,7 @@
     "wreckGoal": 500,
     "captainUpgradeAndRespecTargetCoins": 0
   },
-  "flaggedOptionsOutsideBaseline": {
+  "optionsOutsideSampleQueues": {
     "additionalKinds": {
       "culverin": {
         "incremental": [

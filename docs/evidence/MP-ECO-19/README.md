@@ -94,7 +94,7 @@ The main [combat fixture](../../../frontend/tests/pirates/balance-fixture.js) su
 
 The existing Engineer reduction rounds each eligible build/level increment at 10% off. A fully discounted level-5 cannon costs 837; ordinary price is 930. This is a sensitivity for an already eligible Engineer, not a free role-toggle assumption: discounted purchases bind the buyer to the next qualifying personally played Engineer wave. The timelines use no discount. Research, tower trees/skills, weapons and paid repairs receive none. Demolishing that exact cannon returns `floor(actual eligible payments / 2)`: 465 normally or 418 after all increments were discounted. Missing payment history cannot be invented, and repair/research/tree costs are not refundable building basis.
 
-The optional `defenses_v2` culverin costs 80/160/320/640/1,280 (2,480 total). With `more_tower_spots`, four additional tower spots open after records 10/20/30/40; filling all four with level-5 cannons adds 3,720 before their research/trees. These flags are excluded from the purchase queues and are not asserted enabled in a live environment.
+Culverin is now an always-on catalogue option costing 80/160/320/640/1,280 (2,480 total). Four additional tower spots are also always on and open after records 10/20/30/40; filling all four with level-5 cannons adds 3,720 before their research/trees. The two illustrative queues deliberately use the original seven tower spots and do not purchase a culverin or those extra spots. The JSON inventories them under `optionsOutsideSampleQueues`; that is a choice of sample plan, not a feature flag or an unavailable offer. Custom plans use each extra spot's actual unlock record.
 
 ## Solo and 2/4/10 Captains
 
@@ -148,3 +148,12 @@ The [spec records the exact final checks](../../../specs/MP-ECO-19-balance-asses
 Verification after integrating `main` through `a195ec35` passed **111 focused Python checks in 1.57s**, full backend Ruff and byte-identical regeneration. The recovery-v1 retirement labels and changed input hashes were refreshed; numerical results are unchanged.
 
 The `f606412f` review added a regression that first failed because a custom queue could change a standing tower's kind through an upgrade. The corrected model refuses that transition; the declared queues and every numerical result are unchanged. **112 focused checks passed in 1.31s**, full backend Ruff passed, regenerated evidence is byte-identical, and **16 relative documentation links/anchors** resolve. The source inventory now includes the split configuration/fleet/setup files. Independent arithmetic checks cover nine cumulative-income checkpoints, all 200 queue conservation rows and the 7,926-coin conditional ship total.
+
+
+## Refresh after always-on catalogue simplification
+
+After integrating `1350c2ba`, the assessment uses the same `runtime_catalogue` as the server rather than the removed flag adapter. The current catalogue includes culverin and the four extra tower spots; their existing prices and unlocks are unchanged. Original income, purchase-queue, ship and wager numerical sections remain byte-for-byte equal as JSON values. The report adds culverin to the current building inventory and relabels the former flagged-option inventory without changing its numbers. This does not turn the declared seven-spot queues into a claim about optimal play.
+
+A new custom-plan check exposed an omitted `Spot.unlock_wave`: the model could buy an extra spot before its configured record. Four tests failed before correction; plan quotes now combine the spot record with campaign and kind-level requirements. This is an offline-model correction, not a game price or unlock change. The current report and those checks are recorded in the specification.
+
+Current checks: **117 focused Python tests passed in 2.99s**; full backend Ruff, byte-identical regeneration and **16 relative documentation links/anchors** passed. The five new current-catalogue checks cover the active culverin inventory and all four configured extra-slot records; the latter four failed before the unlock correction. All existing catalogue prices, income, both 100-wave funded plans, ship deltas and wager sensitivity values remain unchanged. No full backend, browser, PostgreSQL, live service or gameplay experiment was run for this offline refresh.

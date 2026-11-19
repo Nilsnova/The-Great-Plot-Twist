@@ -24,7 +24,11 @@ def quote(catalogue: IslandCatalogue, purchase: Purchase) -> tuple[int, int]:
         raise ValueError("The building does not fit this spot.")
     if not 1 <= purchase.level <= kind.max_level:
         raise ValueError("The building level is unavailable.")
-    unlock = max(catalogue.campaign.spot_wave(spot.id), kind.level_waves[purchase.level - 1])
+    unlock = max(
+        spot.unlock_wave,
+        catalogue.campaign.spot_wave(spot.id),
+        kind.level_waves[purchase.level - 1],
+    )
     return kind.prices[purchase.level - 1], unlock
 
 

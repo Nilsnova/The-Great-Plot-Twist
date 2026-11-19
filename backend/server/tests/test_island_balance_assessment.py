@@ -5,12 +5,13 @@ Used by: reviewers regenerating the MP-ECO-19 evidence, not game routes.
 
 import pytest
 
-from server.island.catalogue import load_island
+from server.island.catalogue import load_island, runtime_catalogue
 from tools.economy.island_balance import (
     income,
     repeat_cycle,
     reset_wager_sensitivity,
     revenue_bounds,
+    run,
     shared_resources,
     ship_improvements,
 )
@@ -94,6 +95,33 @@ def test_plan_cannot_change_the_kind_of_a_standing_tower():
     queue = [Purchase("cannon_1", "cannon", 1), Purchase("cannon_1", "mortar", 2)]
     with pytest.raises(ValueError, match="kind"):
         simulate_plan(load_island(), queue, last_wave=3)
+
+
+def test_current_report_includes_always_on_defenses_without_flag_activation():
+    report = run()
+    assert report["catalogue"]["buildings"]["culverin"]["incremental"] == [80, 160, 320, 640, 1280]
+    assert report["optionsOutsideSampleQueues"]["additionalSpots"] == {
+        "cannon_8": 10,
+        "cannon_9": 20,
+        "cannon_10": 30,
+        "cannon_11": 40,
+    }
+    assert report["optionsOutsideSampleQueues"]["additionalKinds"]["culverin"][
+        "cumulativeMaximum"
+    ] == 2480
+
+
+@pytest.mark.parametrize(
+    "spot,unlock", [("cannon_8", 10), ("cannon_9", 20), ("cannon_10", 30), ("cannon_11", 40)]
+)
+def test_extra_spot_purchase_waits_for_its_persisted_catalogue_unlock(spot, unlock):
+    plan = simulate_plan(
+        runtime_catalogue(load_island()), [Purchase(spot, "cannon", 1)], last_wave=unlock + 1
+    )
+    assert all(row["purchases"] == [] for row in plan[:unlock])
+    assert plan[unlock]["purchases"] == [
+        {"plot": spot, "kind": "cannon", "level": 1, "unlockBest": unlock, "paidCoins": 30}
+    ]
 
 
 def test_ship_payments_only_improve_each_game_record():
