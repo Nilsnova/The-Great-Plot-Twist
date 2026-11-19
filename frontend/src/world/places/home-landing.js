@@ -17,13 +17,13 @@ const FLAT = [0, 0, 0, 0];
 function shadeTimber(material) {
   material.onBeforeCompile = shader => {
     shader.vertexShader = shader.vertexShader
-      .replace('#include <common>', `#include <common>
+      .replace('#include <common>', /* glsl */ `#include <common>
         attribute vec2 woodFinish;
         varying vec4 vTimber;`)
-      .replace('#include <begin_vertex>', `#include <begin_vertex>
+      .replace('#include <begin_vertex>', /* glsl */ `#include <begin_vertex>
         vTimber = vec4(position.x, position.z, woodFinish.y / 255.0, woodFinish.x);`);
     shader.fragmentShader = shader.fragmentShader
-      .replace('#include <common>', `#include <common>
+      .replace('#include <common>', /* glsl */ `#include <common>
         varying vec4 vTimber;
 
         // Larger, uneven fibres remain visible in the overview. Fine seams fade with distance.
@@ -63,7 +63,7 @@ function shadeTimber(material) {
           float rings = .16 * sin(edge * 19.0 + sin(p.x * 9.3) * .89 + p.y * 1.9);
           return base * (.90 + .21 * edge + rings);
         }`)
-      .replace('#include <color_fragment>', `#include <color_fragment>
+      .replace('#include <color_fragment>', /* glsl */ `#include <color_fragment>
         diffuseColor.rgb = finishWood(diffuseColor.rgb);`);
   };
 }
