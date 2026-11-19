@@ -25,6 +25,7 @@ import {clickVerdict, WALK_CLOSER} from '../world/reach.js';
 import {decorateProgress} from './decorations.js';
 import {makeWallConnections} from './wall-connections.js';
 import {makeBuildingFoundations} from './building-foundations.js';
+import {animateLandmarkMaterial, landmarkProfiles} from './landmark-motion.js';
 import {makeWallPurchaseLight} from './wall-purchase-light.js';
 import {createStructureRecoveryIndicators} from './structure-recovery-indicators.js';
 import {towerStateFrame} from '../art/tower-states.js';
@@ -36,6 +37,7 @@ import {createArtworkTasks, createStaticVillageArt} from './static-village-art.j
 import {createVillageArtNotice} from '../ui/village-art-notice.js';
 
 const UNIT = 16;
+const BELL_RING_SECONDS = 1.2;
 const FULL_HP_UNITS = 1_000_000;
 const RECOVERY_TOWERS = Object.freeze(['cannon', 'mortar', 'harpoon', 'culverin', 'swivel']);
 const RECOVERY_PHASES = new Set(['between_waves', 'preparing']);
@@ -221,7 +223,7 @@ export function lockWave(kinds, unlocks) {
 // ctx: {art (the place's loaded art, with 'cabin'), reducedMotion, canvas, camera, isActive, onPick(id), player() (its
 // position: a click out of reach calls onFar(id, {hint, zone}) instead of onPick),
 // loadArt (tests), and for Pirate Point: layout {spots, zones(), bell: false, cabin: false}}.
-// Returns {apply({spots, visitor, battle, unlocks}), update(dt, time), pickAt(x, z), dispose()}.
+// Returns {apply({spots, visitor, battle, unlocks}), update(dt, time, paused, frame), pickAt(x, z), dispose()}.
 // A marker shows on an empty spot only when something may be built there (unlocks, TOWER-DEFENSE.md §9).
 export function decorateIsland(place, ctx = {}) {
   const layout = ctx.layout ?? {spots: ISLAND_SPOTS, zones: islandZones, bell: true, cabin: true};
@@ -235,6 +237,15 @@ export function decorateIsland(place, ctx = {}) {
     notice?.set(value); ctx.onArtState?.(value);
   }, error => ctx.onArtError?.(error));
   const staticArt = createStaticVillageArt({root, load: ctx.loadArt ?? loadArt, sizes: artSizes, registered: getRasterFrame, tasks});
+  const landmarkMotion = new Map();
+  let landmarkClock = 0;
+  function trackMotion(mesh, id) {
+    const material = mesh?.material, profile = landmarkProfiles[id];
+    if (layout.zones === islandZones && profile && material?.map?.userData.villageArt?.source === 'png'
+        && !landmarkMotion.has(material)) {
+      landmarkMotion.set(material, animateLandmarkMaterial(material, profile));
+    }
+  }
   notice = createVillageArtNotice({container: ctx.container, isActive: ctx.isActive,
     retry: () => Promise.all([retryArt(), staticArt.retry(), retryWallArt(), retryProgressArt(), ctx.retryAdditionalArt?.()]), focus: () => ctx.canvas?.focus({preventScroll: true})});
   const progress = layout.zones === islandZones ? decorateProgress(place) : null;
@@ -415,6 +426,7 @@ export function decorateIsland(place, ctx = {}) {
     if (joined) mesh.scale.x = .62; // Keep the original level art as posts; the join draws the span.
     mesh.userData.role = activeRole({kind, level, spec: answer?.spec}); mesh.userData.art = id;
     mesh.userData.recoveryLook = appearance?.look ?? 'intact';
+    trackMotion(mesh, id);
     const meshes = [mesh], [, height, anchor] = artSizes[id], top = height * (1 - anchor) + .15;
     // One row (pipRow): 4 and 5 smaller and spaced wider than a disc, so the gold stars never overlap.
     const row = pips ? pipRow(level, {step: .6}) : {offsets: []}, pipWidth = artSizes[PIP_ART][0];
@@ -688,8 +700,8 @@ export function decorateIsland(place, ctx = {}) {
       return true;
     },
     clearPurchaseFeedback,
-    ring() { ringing = 1.2; },
-    update(dt, time = 0, paused = false) {
+    ring() { ringing = BELL_RING_SECONDS; },
+    update(dt, time = 0, paused = false, frame = {}) {
       if (disposed) return;
       refreshTowerColliders();
       notice.update();
@@ -730,9 +742,18 @@ export function decorateIsland(place, ctx = {}) {
         for (const mesh of [marker.badge, marker.lock]) mesh.material.opacity = marker.fade;
         marker.badge.position.y = marker.badge.userData.baseY + (near ? bob : 0);
       }
-      if (!bell) return;
-      if (ringing > 0 && !still) { ringing = Math.max(0, ringing - dt); bell.rotation.z = bell.userData.art ? 0 : Math.sin(ringing * 18) * .12 * ringing; }
-      else bell.rotation.z = 0;
+      trackMotion(cabin, 'cabin');
+      trackMotion(bell, 'island-bell');
+      trackMotion(arsenalMesh, ARSENAL.art);
+      if (!paused || still) {
+        const step = Number.isFinite(dt) ? Math.min(.1, Math.max(0, dt)) : 0;
+        if (!still) landmarkClock += step;
+        ringing = still ? 0 : Math.max(0, ringing - step);
+        const ring = ringing / BELL_RING_SECONDS;
+        const motion = {time: landmarkClock, wind: frame?.weather?.wind ?? frame?.wind, night: frame?.night,
+          ring: .23 * ring ** 1.45 * Math.sin((BELL_RING_SECONDS - ringing) * 16), still};
+        for (const detail of landmarkMotion.values()) detail.update(motion);
+      }
     },
     get root() { return root; },
     get wallJoins() { return wallConnections.links; },
@@ -740,7 +761,7 @@ export function decorateIsland(place, ctx = {}) {
     dispose() {
       if (disposed) return; disposed = true; cleanups.splice(0).forEach(stop => stop());
       place.colliders.splice(0, place.colliders.length, ...baseColliders);
-      tasks.dispose(); notice.dispose(); staticArt.dispose();
+      tasks.dispose(); notice.dispose(); staticArt.dispose(); landmarkMotion.clear();
       progress?.dispose(); recoveryIndicators.dispose();
       wallConnections.dispose(); selectionBracket.dispose(); foundations?.dispose();
       defenseRange?.dispose();
