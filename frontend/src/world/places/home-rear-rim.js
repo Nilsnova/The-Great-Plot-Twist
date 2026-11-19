@@ -46,17 +46,16 @@ function crossSections(coast) {
     const edge = slope < 0 ? bounds.minX + .21 : bounds.maxX - .21;
     const room = (edge - projectGround(x, z).x) / slope - .09;
     const width = THREE.MathUtils.clamp(room, .18, .34 + Math.sqrt(lift) * 3.6);
-    const point = (share, elevation) => {
-      const out = .09 + width * share;
-      return [x + x / length * out, elevation, z + z / length * out];
-    };
+    const atRadius = (distance, elevation) => [x + x / length * distance, elevation, z + z / length * distance];
+    const point = (share, elevation) => atRadius(.09 + width * share, elevation);
     const lower = lift * (.32 + Math.sin(index * .71) * .032);
     const middle = lift * (.63 + Math.cos(index * .73) * .036);
     const midEdge = .31 + Math.sin(index * .78) * .033;
     const upperEdge = .63 + Math.cos(index * .83) * .043;
     return {
       lift,
-      front: point(0, 0),
+      front: atRadius(-Math.min(.64, lift * .53), 0),
+      meadow: atRadius(-Math.min(1.74, lift * .91), 0),
       frontBatter: point(.036, lower * .22),
       frontStone: point(.053, lower * .91),
       frontLip: point(.081, lower),
@@ -92,7 +91,7 @@ function surfaceGrain() {
   return texture;
 }
 
-/** One Home painter layer between ocean and backdrop, owned by the settlement's lifetime. */
+/** Sandstone ledges and their contact with the existing meadow. */
 export function createHomeRearRim(group, art) {
   const shore = cliffProfile(surfaces.home_islet);
   const positions = [], colors = [], uvs = [], sections = crossSections(shore);
@@ -192,6 +191,10 @@ export function createHomeRearRim(group, art) {
     strip('frontLip', 'frontStone', GRASS_LIP, STONE_TOP[tint]);
     facing(a, b, 'frontStone', 'frontBatter', tint, i % 5 === 1 ? .62 : null);
     strip('frontBatter', 'front', STONE_FACE[tint], STONE_FOOT);
+    const shade = '#37481e';
+    const left = Math.min(.56, a.lift * .24), right = Math.min(.56, b.lift * .24);
+    triangle(a.front, b.front, b.meadow, shade, shade, shade, [left, right, 0]);
+    triangle(a.front, b.meadow, a.meadow, shade, shade, shade, [left, 0, 0]);
 
     const cap = (near, far, along, depth) => mixPoint(mixPoint(a[near], b[near], along), mixPoint(a[far], b[far], along), depth);
     if ([4, 6, 9, 25, 28, 31].includes(i)) grassTuft(cap('frontCap', 'middleFoot', .57, .57), 1.15);
@@ -209,7 +212,7 @@ export function createHomeRearRim(group, art) {
     side: THREE.DoubleSide, forceSinglePass: true, depthTest: false, depthWrite: false, toneMapped: false});
   const rim = new THREE.Mesh(geometry, material);
   rim.name = 'home-rear-rim';
-  rim.renderOrder = 3;
+  rim.renderOrder = 4.2;
   rim.raycast = () => {};
   group.add(rim);
   if (art) {
@@ -221,7 +224,7 @@ export function createHomeRearRim(group, art) {
       const [x, y, z] = mixPoint(mixPoint(a.upperCap, b.upperCap, along), mixPoint(a.crest, b.crest, along), depth);
       const plant = placeArt(planting, art, asset, x, z, size);
       plant.position.y += y;
-      plant.renderOrder = 4;
+      plant.renderOrder = 4.3;
       plant.raycast = () => {};
     }
   }
