@@ -77,6 +77,10 @@ def native_combat(database, *, tavern=False, coins=40, countdown=0):
     sessions = {actor: uuid4() for actor in actors}
     for actor in actors:
         assert attach(database, actor, owner, treasury, sessions[actor])["status"] == "done"
+    as_server(database)
+    assert rpc(database, "shared_session_settings", owner, owner, keys(treasury)[1],
+               sessions[owner], 1, uuid4().hex,
+               Jsonb({"countdownSeconds": countdown}))["status"] == "done"
     as_owner(database)
     snapshot = template() if tavern else template(((spot, kind),))
     snapshot.update(weatherLabel="Calm", expectedSource=rpc(
@@ -86,6 +90,10 @@ def native_combat(database, *, tavern=False, coins=40, countdown=0):
         "select revision from public.island_recovery_state where island_owner=%s", (owner,),
     ).fetchone()[0]
     snapshot["weather"] = {"kind": "calm", "ships": 1, "fog": 0}
+    snapshot["finishPolicy"] = {
+        "restartBack": 2,
+        "rescue": {"enabled": True, "fromWave": 4, "lastWave": 100, "restartBack": 1},
+    }
     snapshot["createWave"].update(seed=42, defenses=[{
         "id": spot, "kind": kind, "level": level,
         **({"spec": "tavern"} if tavern else {}),
@@ -103,6 +111,7 @@ def native_combat(database, *, tavern=False, coins=40, countdown=0):
         (started["waveId"],),
     ).fetchall())
     frozen = started["initialSnapshot"]
+    assert frozen["countdownSeconds"] == countdown
     instance = None if tavern else UUID(frozen["structures"][0]["instanceId"])
     return CombatWave(owner, member, outsider, treasury, sessions, UUID(started["waveId"]),
                       tokens, {actor: 1 for actor in actors}, frozen, instance)
