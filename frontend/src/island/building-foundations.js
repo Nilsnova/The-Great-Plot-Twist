@@ -1,5 +1,6 @@
 // Ground contact at Home's existing building anchors. The whole layer is decorative.
 import * as THREE from 'three';
+import {appendGroundShadow} from '../world/ground-shadow.js';
 import {projectGround} from '../world/projection.js';
 import {surfaceClass} from '../world/places/surfaces.js';
 import {ISLAND_PLACE} from './spots.js';
@@ -13,10 +14,6 @@ const PALETTE = [0x273121, 0x654e35, 0x92704a, 0xb99664, 0xc6a476, 0x594631].map
   hex => new THREE.Color(hex),
 );
 const [SHADOW, EAST, FRONT, BEVEL, CAP, MORTAR] = PALETTE;
-const SHADOW_SEGMENTS = Array.from({length: 16}, (_, index) => {
-  const angle = index * Math.PI / 8;
-  return [Math.cos(angle), Math.sin(angle)];
-});
 
 function corners(x, z, width, depth) {
   const clip = .24;
@@ -40,18 +37,10 @@ function geometryOf(foundations) {
   // Ground shadows all go first, so a nearby occupied footing keeps its own highlights.
   for (const {x, z, slot, ruin} of foundations) {
     const {width, depth, rear} = FORMS[slot], scale = ruin ? .72 : 1;
-    const cx = x + .25, cz = z - rear + .51, rx = (width + .54) * scale, rz = (depth + .82) * scale;
-    const center = vertex(cx, cz, 0, SHADOW, ruin ? .24 : .49);
-    const inner = [], outer = [];
-    for (const [u, v] of SHADOW_SEGMENTS) {
-      inner.push(vertex(cx + u * rx * .60, cz + v * rz * .60, 0, SHADOW, ruin ? .15 : .33));
-      outer.push(vertex(cx + u * rx, cz + v * rz, 0, SHADOW, 0));
-    }
-    for (let i = 0; i < inner.length; i++) {
-      const next = (i + 1) % inner.length;
-      indices.push(center, inner[i], inner[next]);
-      quad(inner[i], outer[i], outer[next], inner[next]);
-    }
+    appendGroundShadow((gx, gz, alpha) => vertex(gx, gz, 0, SHADOW, alpha), indices, {
+      x: x + .25, z: z - rear + .51, width: (width + .54) * scale, depth: (depth + .82) * scale,
+      opacity: ruin ? .24 : .49, innerOpacity: ruin ? .15 : .33,
+    });
   }
   for (const {x, z, slot, ruin} of foundations) {
     // Houses and watchtowers have finished stonework in their own art.
