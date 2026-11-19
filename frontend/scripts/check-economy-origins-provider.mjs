@@ -42,7 +42,7 @@ async function current(owner){
  assert.equal(rows.length,1);return rows[0];
 }
 async function account(id){
- const rows=await read('select id,state,balance_coins::text as balance,committed_coins::text as held,(select coalesce(sum(t.balance_delta),0)::text from public.island_treasury_transactions t where t.account_id=a.id) as ledgerBalance,(select coalesce(sum(t.committed_delta),0)::text from public.island_treasury_transactions t where t.account_id=a.id) as ledgerHeld from public.island_economy_accounts a where id=$1::uuid',[id]);
+ const rows=await read('select id,state,balance_coins::text as balance,committed_coins::text as held,(select coalesce(sum(t.balance_delta),0)::text from public.island_treasury_transactions t where t.account_id=a.id) as "ledgerBalance",(select coalesce(sum(t.committed_delta),0)::text from public.island_treasury_transactions t where t.account_id=a.id) as "ledgerHeld" from public.island_economy_accounts a where id=$1::uuid',[id]);
  assert.equal(rows.length,1);assert.equal(rows[0].balance,rows[0].ledgerBalance);assert.equal(rows[0].held,rows[0].ledgerHeld);return rows[0];
 }
 async function openFixture(actor,owner,epoch,actionUid,stake){
