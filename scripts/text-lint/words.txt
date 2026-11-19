@@ -446,6 +446,7 @@ complete
 completed
 component
 components
+conditional
 conditions
 configuration
 configured
@@ -506,6 +507,7 @@ courier
 course
 cove
 cover
+coverage
 crab
 cracked
 craft
@@ -896,6 +898,7 @@ game's
 gamepad
 games
 gannet
+gap
 gaps
 garden
 gate
@@ -2342,6 +2345,7 @@ swims
 swings
 switch
 switched
+symbol
 symbols
 system
 t

@@ -14,7 +14,7 @@ import { MAX_TICKS_PER_FRAME, PLAYOUT_SLEW_MS, recoveryPlayoutTarget, PREDICTION
   FINISHER_FRAME_Z, EVENT_BANNER_SECONDS, EVENT_ICONS } from './controller-shared.js';
 
 export function createFrame(ctl) {
-  const { world, getDefenses, getManaging, reducedMotion, playerId, now, place, onEvents, startNextWave, breakSeconds,
+  const { world, getDefenses, getManaging, getApproachCoverage, reducedMotion, playerId, now, place, onEvents, startNextWave, breakSeconds,
     recoveryPlayoutMs, toggleHold, createFinisherScene, easyFinishers, practiceIdentity, guideOn, createGuide, poses,
     myLevel, read, actorId, myStats, emit, cue, here, blocked, rangeFeedback, dangerFeedback, updateDefenseInspection,
     clearLiveFeedback } = ctl;
@@ -43,11 +43,12 @@ export function createFrame(ctl) {
         stateTowers: current.state.towers, towerObstacles: current.info.rules?.towerObstacles === true,
         boarders: current.state.boarders, heart: current.state.heart, wave: current.info.wave, dt });
     } else {
-      const defenses = read(getDefenses, []) ?? [];
-      ctl.guide.update({ mode: 'preview', lanes: null, defenses, stateWalls: null, stateTowers: null,
-        managing: read(getManaging, false) === true,
+      const coverage = blocked() ? null : read(getApproachCoverage, null);
+      const defenses = coverage?.defenses ?? read(getDefenses, []) ?? [];
+      ctl.guide.update({ mode: 'preview', lanes: null, defenses, stateWalls: coverage?.stateWalls ?? null,
+        stateTowers: coverage?.stateTowers ?? null, coverage, managing: read(getManaging, false) === true,
         towerObstacles: current?.info.rules?.towerObstacles ?? ctl.lastTowerObstacles, boarders: [], heart: null,
-        wave: (current?.info.wave ?? ctl.lastWave) + 1, dt });
+        wave: coverage?.wave ?? (current?.info.wave ?? ctl.lastWave) + 1, dt });
     }
   }
 

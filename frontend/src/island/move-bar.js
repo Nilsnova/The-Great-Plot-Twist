@@ -4,6 +4,7 @@
 // The island stays in view above it, so a tap on the ground picks the square. Used by index.js.
 import {node} from '../ui/kit/dom.js';
 import {createBuildingPortrait} from './building-portrait.js';
+import {createCoverageLegend} from './coverage-legend.js';
 import './move-bar.css';
 
 const ARROWS = Object.freeze([['←', 'One square west', -1, 0], ['↑', 'One square north', 0, -1], ['↓', 'One square south', 0, 1], ['→', 'One square east', 1, 0]]);
@@ -31,7 +32,8 @@ export function createMoveBar({container, handlers = {}, loadPortrait}) {
   const actions = node('div', 'island-move-actions'); actions.append(cancel, place);
   const copy = node('div', 'island-move-copy'); copy.tabIndex = 0; copy.setAttribute('aria-label', 'Move details'); copy.append(title, hint, status);
   const controls = node('div', 'island-move-controls'); controls.append(pad, actions);
-  bar.append(portrait.element, copy, controls);
+  const legend = createCoverageLegend();
+  bar.append(portrait.element, copy, controls, legend.element);
   container.append(bar);
   return {
     render(model) {
@@ -40,6 +42,7 @@ export function createMoveBar({container, handlers = {}, loadPortrait}) {
       portrait.render(model.portrait);
       title.textContent = model.title; hint.textContent = model.line; status.textContent = model.status;
       bar.classList.toggle('is-refused', model.refused); place.textContent = model.placeLabel; place.disabled = !model.ok;
+      legend.show(model.coverage, model.coverageDraft);
       for (const arrow of arrows) arrow.disabled = !!model.busy;
     },
     get element() { return bar; },

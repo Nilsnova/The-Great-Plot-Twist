@@ -372,3 +372,9 @@ See the [T58 evidence README](evidence/T58-captain-repair/README.md) for fixture
 ## CF1 captain range and danger feedback (18 Nov 2026)
 
 [Task #453](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/453), [spec](../specs/CF1-captain-combat-feedback.md) and [evidence/limits](evidence/CF1-captain-combat-feedback/README.md). Pure range/danger tests cover intent lifetime, weapon/skill reach, priority, expiry and once-per-episode sound. Audio regressions cover sustained/critical warnings, priority switches, independently clearing threats, menus, mute/unmute and wave reset. The visual revision checks sparse arc gaps, exact projected direction, the absence of damage labels, and preserved firing/impact events. Controller/native component tests cover refusal, reload, hit truth, keyboard focus, announcements and cleanup; overlay tests check projection and disposal. `node scripts/check-captain-feedback.js` runs the actual local fake game at desktop/phone sizes with native F and captures before/after state. No live multiplayer, physical touch or screen-reader speech proof is claimed.
+
+## Village approach coverage (BASE-16)
+
+[Issue #157](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/157) · [Coverage contract](../specs/COC-coverage-model.md) · [Desktop and phone evidence](evidence/COC-16/README.md)
+
+The focused model tests cover target eligibility, minimum range, conditional shots, saved health, and valid and refused Move previews. The battle-guide tests check the actual route samples, marker shapes, WebGL transparency and stable buffers. The local browser journey checks the Village Mode switch, the same paid defenses across screen sizes, and cleanup on travel and wave entry.

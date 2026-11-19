@@ -95,15 +95,24 @@ export function coverageProfile({ id, kind, level, x, z }, range) {
   return { id, kind, level, x, z, range, minRange: CONFIG[kind]?.minRange ?? 0, targets: [...PRIMARY_TARGETS[kind]] };
 }
 
+function clearWeatherCoverage(item, rangeFor) {
+  const { kind, level } = item;
+  const range = rangeFor(item, CONFIG.levels[kind][level - 1].range, skillOf(item).range ?? 0);
+  return coverageProfile(item, range);
+}
+
 /** The selected defense's clear-weather primary acquisition geometry. Actual sight and target eligibility are wave rules. */
 export function previewDefenseCoverage(defenses, selectedId, { defensesV2 = false } = {}) {
   const items = readDefenses(defenses, { culverin: defensesV2 === true });
   const item = items.find(row => row.id === selectedId && isAttackTower(row.kind));
-  if (!item) return null;
-  const { kind, level } = item;
+  return item ? clearWeatherCoverage(item, attackRanges(lookoutsOf(items)).rangeFor) : null;
+}
+
+/** Clear-weather acquisition geometry for the same installed defenses as the selected preview. */
+export function previewDefenseCoverages(defenses, { defensesV2 = false } = {}) {
+  const items = readDefenses(defenses, { culverin: defensesV2 === true });
   const { rangeFor } = attackRanges(lookoutsOf(items));
-  const range = rangeFor(item, CONFIG.levels[kind][level - 1].range, skillOf(item).range ?? 0);
-  return coverageProfile(item, range);
+  return items.filter(item => isAttackTower(item.kind)).map(item => clearWeatherCoverage(item, rangeFor));
 }
 
 // Another island's coast (Pirate Point on lighthouse_isle): {rx, rz, seed}, else the home_islet coast.

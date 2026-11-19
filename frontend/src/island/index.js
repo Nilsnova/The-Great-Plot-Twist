@@ -45,6 +45,7 @@ import {createMoveMode} from './move-mode.js';
 import {createMoveBar} from './move-bar.js';
 import {createVillageMode, isTextEntry} from './village-mode.js';
 import {createVillageBar} from './village-bar.js';
+import {approachSnapshot} from './coverage-planning.js';
 import {SPOTS, KINDS, BELL, CABIN, ISLAND_PLACE, POINT_PLACE, PP_SPOTS, isIslandZone, isPointSpot, spotById,
   ppSpotById, pointZones, defenses, slotName, campaignBuilding, placedSpot, ARSENAL} from './spots.js';
 import {createArsenal} from './arsenal.js';
@@ -89,13 +90,13 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   const parts = [createRecovery, createLoading, createGames, createCards, createActions].map(create => create(isl));
   for (const {link, ...part} of parts) Object.assign(isl, part);
   for (const part of parts) part.link?.();
-  const {recoveryPolicyOn, recoveryModelVersion, stopRecoveryPoll, readStructureRecovery, setRecoveryCombatState,
+  const {recoveryPolicyOn, recoveryControlsOn, recoveryModelVersion, stopRecoveryPoll, readStructureRecovery, setRecoveryCombatState,
     setRecoveryCheckpointHandler, firstTime, tellCoins, campaign, reading, wrote, setOwnRead, coinsAsked, target,
     where, applyWorld, syncCoreContext, setCoreCombatState, endVisit, placeName, joinFirst, load, loadPoint,
     tookCoins, arsenalCoins, reloadVisit, refreshDefended, currentCode, syncGame, wantSync, colourOf, captainColour,
     openLobby, setPresence, resetState, resetIsland, playArrival, visit, leaveGame, enterGame, sailHome,
     interruptBoat, refreshCard, refreshCardIfBuild, openHarbor, openTechHub, openWreck, selectedAnchor, openCrew,
-    openOverview, openCaptain, openLeaderboard, openCaptains, openInvite, pick, invalidateWallFeedback, build,
+    openOverview, openCaptain, openLeaderboard, openCaptains, openInvite, pick, invalidateWallFeedback, build, readWalls,
     upgrade, askDemolish, confirmDemolish, heardDemolish, specialise, buyTree, toggleVillage, startMove, moved,
     houseRange, research, giveWreck, hire, upgradeCaptain, learnSkill, takeRole, respecCaptain} = isl;
   // ownRetry: your own island's read failed for a passing reason, so the next reread (the wave wiring's
@@ -136,19 +137,58 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   isl.ui = createIslandUi({container, focus, resetInput,
     onSelection: active => isl.villageBar.render(isl.village.active && !active && !isl.moving.active)});
   // T36, flexible placement: Move mode (move-mode.js) with its bar (move-bar.js) and the preview on the island.
-  isl.moving = createMoveMode({api: isl.api, render: model => { isl.moveBar.render(model); isl.villageBar.render(isl.village.active && !model); }, preview: cell => isl.world?.preview(cell),
+  let approachTarget = '', approachMove = null, approachCache = null;
+  isl.moving = createMoveMode({api: isl.api, render: model => {
+    const draft = approachTarget && model ? isl.moving.state : null;
+    approachMove = draft?.ok && !draft.message ? draft : null;
+    isl.moveBar.render(model && approachTarget ? {...model, coverage: approachTarget, coverageDraft: !!approachMove} : model);
+    isl.villageBar.render(isl.village.active && !model);
+  }, preview: cell => isl.world?.preview(cell),
     spots: () => target()?.spots ?? [], code: () => (isl.visiting ? isl.visiting.code : null), onMoved: (answer, spotId) => void moved(answer, spotId)});
   isl.moveBar = createMoveBar({container, handlers: {nudge: (dx, dz) => isl.moving.nudge(dx, dz), place: () => void isl.moving.confirm(), cancel: () => isl.moving.cancel()}});
   // A confirmed fresh start begins a new island identity for the core display (VIS-35).
   isl.resetGeneration = 0;
-  isl.villageBar = createVillageBar({container, onLeave: () => isl.village.leave(), onPick: pick, onCamera: villageCamera});
+  isl.villageBar = createVillageBar({container, onLeave: () => isl.village.leave(), onPick: pick, onCamera: villageCamera, onCoverage: setApproachTarget});
   isl.village = createVillageMode({
     context: () => ({ready: !!isl.own?.code && !!isl.world, own: !isl.visiting && !isl.visitCode, code: isl.own?.code,
       // A successful start/join awaits preparation before flow.current is set.
       reserved: isl.flow.busy || !!isl.flow.current || (isl.battle && !isl.waveOver)}),
     render: active => isl.villageBar.render(active),
-    onLeave: () => { isl.moving.cancel(); isl.ui.close(); isl.openSpot = null; resetInput(); focus(); },
+    onLeave: () => {
+      approachTarget = ''; approachCache = null;
+      isl.villageBar.setCoverage('');
+      isl.moving.cancel(); isl.ui.close(); isl.openSpot = null; resetInput(); focus();
+    },
   });
+  function setApproachTarget(value) {
+    if (!isl.village.active || !['', 'boarders', 'ships'].includes(value) || approachTarget === value) return;
+    approachTarget = value;
+    isl.villageBar.setCoverage(value);
+    if (!value) { approachCache = null; return; }
+    if (recoveryControlsOn()) void readStructureRecovery();
+    else if (wallRecovery()) void readWalls();
+  }
+  function approachCoverage() {
+    const {own, recoveryState, recoveryStatus, recoveryIslandCode, walls, wallsFor, ui, village} = isl;
+    if (!approachTarget || !village.active || !own || ui.active || ui.selectionElement) return null;
+    const needsRecovery = recoveryControlsOn();
+    const recovery = needsRecovery && recoveryStatus === 'ready' && recoveryIslandCode === own.code
+      && recoveryState?.recoveryVersion === 1 && recoveryState.displayPhase === 'between_waves'
+      && (!own.islandEpoch || recoveryState.islandEpoch === own.islandEpoch) ? recoveryState : null;
+    const needsLegacyWalls = !needsRecovery && wallRecovery();
+    const legacyWalls = needsLegacyWalls && wallsFor === own.code ? walls : null;
+    const defensesV2 = defensesV2On() === true || recoveryPolicyOn();
+    // Accepted data and the local Move draft change independently. Stable frames reuse their snapshot.
+    const cached = approachCache;
+    if (cached?.island === own && cached.target === approachTarget && cached.draft === approachMove
+      && cached.recovery === recovery && cached.legacyWalls === legacyWalls && cached.needsLegacyWalls === needsLegacyWalls
+      && cached.needsRecovery === needsRecovery && cached.defensesV2 === defensesV2) return cached.value;
+    const value = approachSnapshot({target: approachTarget, island: own, draft: approachMove,
+      recovery, needsRecovery, legacyWalls, needsLegacyWalls, defensesV2});
+    approachCache = {island: own, target: approachTarget, draft: approachMove, recovery,
+      legacyWalls, needsLegacyWalls, needsRecovery, defensesV2, value: cached?.value.version === value.version ? cached.value : value};
+    return approachCache.value;
+  }
   const villageKeys = event => {
     if (event.defaultPrevented || isTextEntry(event.target)) return;
     const gameFocus = event.target?.matches?.('canvas') || event.target === globalThis.document?.body;
@@ -331,7 +371,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     get point() { return isl.point ? structuredClone(isl.point) : null; },
     // The wave on screen (src/pirates/, wired in game.js): the built defenses it fights with, the client
     // for Pirate Point, the island's room place (isle_<code>), joining a running wave, and the battle look.
-    defenses: () => defenses(target()?.spots ?? [], campaign()?.research?.tiers),
+    defenses: () => defenses(target()?.spots ?? [], campaign()?.research?.tiers), approachCoverage,
     get api() { return isl.api; },
     // A fresh account read after background reward settlement, guarded by its service owner and write order.
     setWalletCoins(value) {

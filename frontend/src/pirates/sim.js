@@ -33,7 +33,7 @@ import { finite, round2, coverageProfile } from './sim-read.js';
 
 // The public API, unchanged: CONFIG and the pure helpers live in their own files now.
 export { CONFIG } from './sim-config.js';
-export { createRandom, coastPoint, skillOf, previewDefenseCoverage } from './sim-read.js';
+export { createRandom, coastPoint, skillOf, previewDefenseCoverage, previewDefenseCoverages } from './sim-read.js';
 export { crewFor, warshipsFor, revivePrice, houseRoles, hasTavern, tierShare, tierFor, fleetOf, threatOf, fleetSize,
   curveFor } from './sim-fleet.js';
 

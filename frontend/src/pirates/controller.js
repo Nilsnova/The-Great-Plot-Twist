@@ -79,7 +79,8 @@ export { RECOVERY_PLAYOUT_MS, RECOVERY_PLAYOUT_MIN_MS, recoveryPlayoutTarget, CO
   readWaveInfo, tooEarlyWait, FINISH_RETRY_SECONDS, finishRetryWait, FINISHER_FRAME_Z, EVENT_BANNER_SECONDS,
   EVENT_ICONS } from './controller-shared.js';
 
-export function createWaveController({ bus, world = {}, getDefenses = () => [], getManaging = () => false, finishWave = async () => null, room = null,
+export function createWaveController({ bus, world = {}, getDefenses = () => [], getManaging = () => false, getApproachCoverage = () => null,
+  finishWave = async () => null, room = null,
   sound = null, reducedMotion = () => false, quality = () => 'high', playerId = `p-${Math.random().toString(36).slice(2, 10)}`,
   now = () => Date.now(), serverOffset = () => 0, place = null, accept = info => info.flagship !== true, listen = true,
   simOptions = {}, beamFrom = null, cutsceneFor = (result, summary) => (summary.lampsRelit ? 'lamps_relit' : result.survived ? 'wave_won' : 'wave_lost'),
@@ -158,7 +159,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     feedbackDocument.addEventListener('visibilitychange',hidden);
     stops.push(()=>feedbackDocument.removeEventListener('visibilitychange',hidden));
   }
-  Object.assign(ctl, { bus, world, getDefenses, getManaging, finishWave, room, sound, reducedMotion, quality,
+  Object.assign(ctl, { bus, world, getDefenses, getManaging, getApproachCoverage, finishWave, room, sound, reducedMotion, quality,
     playerId, now, serverOffset, place, accept, listen, simOptions, beamFrom, cutsceneFor, playCutscene,
     createRenderer, createHud, setTimer, clearTimer, onEvents, getCrew, captainLevel, captainSkills, captainWeapon,
     captainColour, startNextWave, breakSeconds, recoveryPlayoutMs, loadAuto, saveAuto, holdBreak, toggleHold,
