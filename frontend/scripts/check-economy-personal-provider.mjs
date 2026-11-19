@@ -36,9 +36,10 @@ const seed=(sql,parameters,purpose)=>install(sql,parameters,purpose,{runtimePath
 function note(event,details={}){facts.push({event,at:new Date().toISOString(),...details});console.log(JSON.stringify({event,...details}));}
 async function api(actor,path,{method='GET',body}={}){
  const answer=await requestApi(actor,path,{method,body});
- requests.push({actor:actor.label,path,method,status:answer.status,errorCode:answer.data?.error?.code??null});return answer;
+ const url=new URL(path,'http://localhost');
+ requests.push({actor:actor.label,path:url.pathname,queryKeys:[...url.searchParams.keys()],method,status:answer.status,errorCode:answer.data?.error?.code??null});return answer;
 }
-async function ok(actor,path,options){const answer=await api(actor,path,options);assert.equal(answer.status,200,path+': '+(answer.data?.error?.code??'unexpected status'));return answer.data;}
+async function ok(actor,path,options){const answer=await api(actor,path,options);assert.equal(answer.status,200,path.split('?')[0]+': '+(answer.data?.error?.code??'unexpected status'));return answer.data;}
 async function profile(actor){return ok(actor,'/api/captain');}
 async function attach(actor,economy){
  const sessionId=randomUUID(),answer=await ok(actor,'/api/island/session/attach',{method:'POST',body:{economy,sessionId,expectedGeneration:'0',actionUid:uid()}});
