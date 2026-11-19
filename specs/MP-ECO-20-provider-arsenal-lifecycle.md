@@ -75,5 +75,5 @@ documentation links and scoped whitespace checks passed. A separate read-only
 review found no demonstrated material concern in the scenario. The first
 successful development run was followed by a focused final run adding direct
 in-grace identity/generation/deadline assertions; it is not relabeled as an
-unchanged-source rerun. No full application test/build was repeated for this
+rerun on unchanged source. No full application test/build was repeated for this
 API-only test/evidence contribution.
