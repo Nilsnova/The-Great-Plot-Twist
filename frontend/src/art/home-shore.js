@@ -1,11 +1,12 @@
 import {ellipse, linear, part, rect, shadow, stroke, svg} from './paint.js';
 
 const INK = '#3c2927', WOOD = '#a86c42', BRASS = '#c29a5e';
+const SAIL_ROOM = 16, SKIFF_EYE = [6.7, 10.9];
 
 // The rope joins these painted eyes. Coordinates are in each frame's logical pixels.
 export const MOORING_EYES = Object.freeze({
   'home-mooring-bollard': Object.freeze([17, 13]),
-  'home-mooring-skiff': Object.freeze([6.7, 10.9]),
+  'home-mooring-skiff': Object.freeze([SKIFF_EYE[0], SKIFF_EYE[1] + SAIL_ROOM]),
 });
 
 function bollard(c) {
@@ -27,7 +28,9 @@ function bollard(c) {
 }
 
 function skiff(c) {
-  shadow(c, 25, 24.6, 15.1, 1.5, .19);
+  shadow(c, 25, 24.6 + SAIL_ROOM, 15.1, 1.5, .19);
+  c.save();
+  c.translate(0, SAIL_ROOM);
   const hull = svg('M3.4 8.3 C11 11.4 28.1 12.3 44.8 12.2 Q46.1 15.2 44.5 18.7 Q42.1 23.1 33.6 24.5 C20.5 26.3 8.2 22.2 3.4 8.3 Z');
   const plankShade = linear(c, 19, 9, 22, 25, [[0, '#698899'], [.48, '#4c6780'], [.77, '#304760'], [1, '#243950']]);
   part(c, hull, plankShade, {line: '#283641', width: 1, shade: false});
@@ -50,15 +53,27 @@ function skiff(c) {
   stroke(c, svg('M31.4 10.8 Q34.1 10.7 36.1 11.9 M32.4 11.6 L31.5 13.4'), '#a4bab7', .45, .65);
   c.restore();
 
+  // A small furled sail on the harbor tender. The eyes and keel retain their world coordinates.
+  stroke(c, [[25.1, 14.8], [22.4, -12.7]], '#5a3b2f', 1.9);
+  stroke(c, [[24.6, 13.1], [22, -12.3]], '#d09656', .65);
+  const sail = svg('M22.8 -11.3 Q26.1 -9 34.6 -5.6 Q31.9 -1.1 32.8 4.1 Q28.4 2.7 24.1 7.1 Q24.9 .6 22.8 -11.3 Z');
+  part(c, sail, linear(c, 23, -9, 33, 6, [[0, '#fff1ce'], [.45, '#e3c99f'], [1, '#b59266']]),
+    {line: '#765a45', width: .65, shade: false});
+  stroke(c, svg('M23.7 -9.2 Q31.3 -2.5 26.2 3.8 M24.3 5.6 Q28.2 2.4 32 3.2'), '#997b56', .52, .75);
+  stroke(c, [[23.9, -5.7], [31.9, -1.7]], '#58728a', 1.1, .84);
+  stroke(c, [[23.8, 6.9], [33.3, 3.6]], '#76523d', .67);
+  stroke(c, svg('M33.7 -5.4 Q35 4.8 39.4 12.8'), '#a2815e', .48, .86);
+
   stroke(c, svg('M5.3 8.1 Q14.9 3.8 26.8 5.2 Q32.2 5.5 37.3 7.6'), '#f0c99a', .7, .84);
   stroke(c, svg('M8.2 12.2 Q16.9 17.1 26.5 17 Q37.6 17.7 43.2 13.7'), '#e3aa72', .63);
-  part(c, ellipse(...MOORING_EYES['home-mooring-skiff'], 1.45, .91, .6), BRASS, {line: '#654b37', width: .57, depth: .43});
+  part(c, ellipse(...SKIFF_EYE, 1.45, .91, .6), BRASS, {line: '#654b37', width: .57, depth: .43});
   part(c, rect(41.7, 15.3, 2.4, 1.23, .4), '#af8253', {line: '#674b38', width: .42, depth: .54});
+  c.restore();
 }
 
 export function homeShoreFrames() {
   return {
     'home-mooring-bollard': [32, 27, 4, bollard, {outline: .55}],
-    'home-mooring-skiff': [48, 27, 2.5, skiff, {outline: .55}],
+    'home-mooring-skiff': [48, 27 + SAIL_ROOM, 2.5, skiff, {outline: .55}],
   };
 }

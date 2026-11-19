@@ -25,7 +25,9 @@ it('fits the real southwest mooring artwork without changing walking, targeting 
       const bollard = place.group.getObjectByName('home-mooring-bollard');
       const skiff = place.group.getObjectByName('home-mooring-skiff');
       const rope = place.group.getObjectByName('home-mooring-rope');
-      const parts = [bollard, skiff, rope], resources = [skiff.material, bollard.material, ...rope.children.map(mesh => mesh.geometry)];
+      const stage = place.group.getObjectByName('home-mooring-stage');
+      const parts = [bollard, skiff, rope, stage];
+      const resources = [skiff.material, bollard.material, ...rope.children.map(mesh => mesh.geometry), stage.geometry, stage.material];
       const released = resources.map(() => 0);
       resources.forEach((resource, i) => resource.addEventListener('dispose', () => released[i]++));
       const visibility = () => parts.map(mesh => mesh.visible);
@@ -57,6 +59,7 @@ it('fits the real southwest mooring artwork without changing walking, targeting 
       const target = island.pickAt(-8, 24.5);
       const standsAshore = canStand(-9.5, 19, place.colliders, place.groundHeight);
       const standsOnSkiff = canStand(-8, 24.5, place.colliders, place.groundHeight);
+      const standsOnStage = canStand(-6.4, 23.8, place.colliders, place.groundHeight);
       const sharesCollider = eyes.some(at => place.colliders.some(({x, z}) => x === at.x && z === at.z));
       const originalZones = place.zones.map(({id}) => id);
       const shoreZones = () => place.zones.filter(({id}) => id === 'island_harbor' || id === 'island_bell');
@@ -75,14 +78,14 @@ it('fits the real southwest mooring artwork without changing walking, targeting 
       place.dispose();
       place.dispose();
       return {home, battle, returned, eyes, positionsMatchGround, maxOrder, stable, released, actualHits, target,
-        width: max.x - min.x, waterline: skiff.position.y, visibleHullBottom, standsAshore, standsOnSkiff, sharesCollider,
+        width: max.x - min.x, waterline: skiff.position.y, visibleHullBottom, standsAshore, standsOnSkiff, standsOnStage, sharesCollider,
         zoneIdsStable, shoreStable, retainsTravel, wallStable, ropeChangesOnlyHeight, ropeReturns};
     } finally { place.dispose(); }
   });
   expect(result).toMatchObject({
-    home: [true, true, true], battle: [true, false, false], returned: [true, true, true],
-    eyes: [{x: -9.5, z: 19.5}, {x: -8, z: 24.5}], positionsMatchGround: true, stable: true, released: [1, 1, 1, 1],
-    actualHits: 0, target: null, standsAshore: true, standsOnSkiff: false, sharesCollider: false,
+    home: [true, true, true, true], battle: [true, false, false, false], returned: [true, true, true, true],
+    eyes: [{x: -9.5, z: 19.5}, {x: -8, z: 24.5}], positionsMatchGround: true, stable: true, released: [1, 1, 1, 1, 1, 1],
+    actualHits: 0, target: null, standsAshore: true, standsOnSkiff: false, standsOnStage: false, sharesCollider: false,
     zoneIdsStable: true, shoreStable: true, retainsTravel: true, wallStable: true, ropeChangesOnlyHeight: true, ropeReturns: true,
   });
   expect(result.maxOrder).toBeLessThan(20);
