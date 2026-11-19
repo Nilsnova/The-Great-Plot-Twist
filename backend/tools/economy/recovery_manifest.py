@@ -3,32 +3,38 @@
 No hosted URL, environment credential, arbitrary libpq option or admission is supported.
 """
 
+from __future__ import annotations
+
 import hashlib
 import json
 import os
 import re
 from pathlib import Path
+from typing import TYPE_CHECKING, Any
 from uuid import UUID
+
+if TYPE_CHECKING:
+    from psycopg import Connection
 
 
 class RecoveryError(ValueError):
     """A bounded refusal safe to print without database rows or credentials."""
 
 
-def digest(value):
+def digest(value: object) -> str:
     return hashlib.sha256(
         json.dumps(value, sort_keys=True, separators=(",", ":")).encode()
     ).hexdigest()
 
 
-def migrations(root):
+def migrations(root: str | Path) -> dict[str, str]:
     files = sorted((Path(root) / "supabase/migrations").glob("*.sql"))
     if not files or len(files) != len({path.name.split("_", 1)[0] for path in files}):
         raise RecoveryError("migration_manifest_invalid")
     return {path.name: hashlib.sha256(path.read_bytes()).hexdigest() for path in files}
 
 
-def validate_connection(connection):
+def validate_connection(connection: object) -> None:
     if not isinstance(connection, dict) or set(connection) != {"host", "port", "dbname", "user"}:
         raise RecoveryError("connection_fields_invalid")
     if (
@@ -51,12 +57,12 @@ def validate_connection(connection):
             raise RecoveryError("connection_identity_invalid")
 
 
-def local_environment():
+def local_environment() -> None:
     if any(name.startswith("PG") for name in os.environ):
         raise RecoveryError("libpq_environment_unsupported")
 
 
-def validate_manifest(value):
+def validate_manifest(value: object) -> dict[str, Any]:
     fields = {
         "version",
         "purpose",
@@ -96,7 +102,7 @@ def validate_manifest(value):
     return value
 
 
-def read_manifest(path, root):
+def read_manifest(path: str | Path, root: str | Path) -> dict[str, Any]:
     try:
         value = validate_manifest(json.loads(Path(path).read_text()))
     except (OSError, json.JSONDecodeError):
@@ -106,7 +112,7 @@ def read_manifest(path, root):
     return value
 
 
-def assert_cluster(connection, manifest):
+def assert_cluster(connection: Connection[Any], manifest: dict[str, Any]) -> None:
     row = connection.execute(
         "select inet_server_addr(), current_database(), session_user, "
         "current_setting('data_directory'), system_identifier::text "
@@ -123,7 +129,7 @@ def assert_cluster(connection, manifest):
         raise RecoveryError("cluster_identity_mismatch")
 
 
-def connect_manifest(manifest):
+def connect_manifest(manifest: dict[str, Any]) -> Connection[Any]:
     import psycopg
 
     # A libpq service/host/password environment must not override a reviewed local target.
@@ -148,7 +154,14 @@ def connect_manifest(manifest):
     return connection
 
 
-def write_manifest(path, uri, root, owner, account, epoch):
+def write_manifest(
+    path: str | Path,
+    uri: str,
+    root: str | Path,
+    owner: str | UUID,
+    account: str | UUID,
+    epoch: str | UUID,
+) -> dict[str, Any]:
     import psycopg
 
     local_environment()

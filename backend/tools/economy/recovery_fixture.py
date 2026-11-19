@@ -3,6 +3,9 @@
 Financial holds/credits are explicit server-origin primitive fixtures, not market-feed gameplay.
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
 from server.island.catalogue import load_island, runtime_catalogue
@@ -10,13 +13,16 @@ from server.island.construction_rules import catalogue_manifest
 from server.island.personal_captain import configuration
 from tools.economy.recovery_manifest import RecoveryError
 
+if TYPE_CHECKING:
+    from psycopg import Connection
 
-def require(condition, reason):
+
+def require(condition: bool, reason: str) -> None:
     if not condition:
         raise RecoveryError(reason)
 
 
-def rpc(connection, name, *arguments):
+def rpc(connection: Connection[Any], name: str, *arguments: object) -> dict[str, Any]:
     from psycopg import sql
     from psycopg.types.json import Jsonb
 
@@ -27,7 +33,7 @@ def rpc(connection, name, *arguments):
     return connection.execute(query, values).fetchone()[0]
 
 
-def seed(connection):
+def seed(connection: Connection[Any]) -> dict[str, Any]:
     owner, member, other = (UUID(int=51301), UUID(int=51302), UUID(int=51303))
     for player in (owner, member, other):
         connection.execute("insert into auth.users(id) values(%s)", (player,))
@@ -93,7 +99,7 @@ def seed(connection):
     }
 
 
-def settle_pending(connection, fixture):
+def settle_pending(connection: Connection[Any], fixture: dict[str, Any]) -> dict[str, Any]:
     connection.execute("set local role service_role")
     result = rpc(
         connection,
@@ -119,7 +125,9 @@ def settle_pending(connection, fixture):
     return result
 
 
-def prove_replays(connection, fixture, settlement):
+def prove_replays(
+    connection: Connection[Any], fixture: dict[str, Any], settlement: dict[str, Any]
+) -> None:
     origin = fixture["initial"]["currentEconomy"]
     before_wallets = connection.execute(
         "select player_id,balance from public.wallets order by player_id"

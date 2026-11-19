@@ -3,11 +3,15 @@
 This command refuses hosted/TCP targets and never reads a configured database URL or .env.
 """
 
+from __future__ import annotations
+
 import argparse
 import json
 import re
+from collections.abc import Sequence
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 from tools.economy.recovery_manifest import RecoveryError, connect_manifest, read_manifest
 from tools.economy.recovery_snapshot import reconcile
@@ -15,7 +19,12 @@ from tools.economy.recovery_snapshot import reconcile
 ROOT = Path(__file__).resolve().parents[3]
 
 
-def operator(manifest_path, action, uid=None, revision=None):
+def operator(
+    manifest_path: str | Path,
+    action: str,
+    uid: str | None = None,
+    revision: str | int | None = None,
+) -> dict[str, Any]:
     manifest = read_manifest(manifest_path, ROOT)
     with connect_manifest(manifest) as connection:
         connection.execute("set local lock_timeout='2s'")
@@ -44,7 +53,7 @@ def operator(manifest_path, action, uid=None, revision=None):
         ).fetchone()[0]
 
 
-def main(argv=None):
+def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
     rehearsal = commands.add_parser("rehearse", help="create disposable populated clusters only")

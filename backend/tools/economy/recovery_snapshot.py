@@ -3,12 +3,18 @@
 Used only by the isolated recovery tool; reports contain hashes/counts, never raw player rows.
 """
 
+from __future__ import annotations
+
 import hashlib
+from typing import TYPE_CHECKING, Any
 
 from tools.economy.recovery_manifest import RecoveryError, digest
 
+if TYPE_CHECKING:
+    from psycopg import Connection
 
-def snapshot(connection):
+
+def snapshot(connection: Connection[Any]) -> dict[str, Any]:
     from psycopg import sql
 
     tables = connection.execute(
@@ -39,7 +45,7 @@ def snapshot(connection):
     return {"tables": result, "functionDigest": digest(definitions), "digest": digest(result)}
 
 
-def protected_state(connection):
+def protected_state(connection: Connection[Any]) -> dict[str, Any]:
     state = snapshot(connection)
     return {
         name: value
@@ -56,7 +62,7 @@ def protected_state(connection):
     }
 
 
-def reconcile(connection):
+def reconcile(connection: Connection[Any]) -> dict[str, Any]:
     invalid = connection.execute("""
       select count(*) from public.island_economy_accounts a where
         a.balance_coins<>(select coalesce(sum(t.balance_delta),0)
@@ -80,7 +86,7 @@ def reconcile(connection):
     }
 
 
-def verify_restore(connection, expected):
+def verify_restore(connection: Connection[Any], expected: dict[str, Any]) -> dict[str, Any]:
     observed = snapshot(connection)
     if observed != expected:
         raise RecoveryError("restore_snapshot_mismatch")

@@ -3,26 +3,33 @@
 Creates only new disposable clusters. Auth/Realtime are SQL stand-ins; no external jobs run.
 """
 
+from __future__ import annotations
+
 import hashlib
 import json
 import os
 import subprocess
 import sys
+from collections.abc import Sequence
 from contextlib import ExitStack
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
 from tools.economy.recovery import ROOT, operator
 from tools.economy.recovery_fixture import prove_replays, require, seed, settle_pending
 from tools.economy.recovery_manifest import RecoveryError, digest, local_environment, write_manifest
 from tools.economy.recovery_snapshot import protected_state, reconcile, snapshot, verify_restore
 
+if TYPE_CHECKING:
+    from psycopg import Connection
 
-def utc():
+
+def utc() -> str:
     return datetime.now(UTC).isoformat()
 
 
-def connect(uri):
+def connect(uri: str) -> Connection[Any]:
     import psycopg
 
     connection = psycopg.connect(uri, options="-c timezone=UTC")
@@ -30,7 +37,7 @@ def connect(uri):
     return connection
 
 
-def install(uri):
+def install(uri: str) -> None:
     stub = ROOT / "backend/server/tests/case_sql/stub.sql"
     with connect(uri) as connection:
         connection.execute(stub.read_text())
@@ -38,13 +45,13 @@ def install(uri):
             connection.execute(path.read_text())
 
 
-def binary(name):
+def binary(name: str) -> str:
     import pgserver
 
     return str(Path(pgserver.pg_config(["--bindir"]).strip()) / name)
 
 
-def command(arguments):
+def command(arguments: Sequence[str]) -> None:
     # Explicit local URIs are generated inside this process; no libpq environment is inherited.
     environment = {name: value for name, value in os.environ.items() if not name.startswith("PG")}
     subprocess.run(
@@ -52,7 +59,7 @@ def command(arguments):
     )
 
 
-def backup(uri, destination):
+def backup(uri: str, destination: Path) -> dict[str, Any]:
     with connect(uri) as connection:
         connection.execute("set transaction isolation level repeatable read read only")
         snapshot_id, started, observed, transaction_snapshot = connection.execute(
@@ -84,7 +91,7 @@ def backup(uri, destination):
     }
 
 
-def restore(uri, dump):
+def restore(uri: str, dump: Path) -> None:
     with connect(uri) as connection:
         connection.execute(
             "create role anon nologin; create role authenticated nologin; "
@@ -105,14 +112,14 @@ def restore(uri, dump):
     )
 
 
-def manifest(path, uri, fixture):
+def manifest(path: Path, uri: str, fixture: dict[str, Any]) -> dict[str, Any]:
     origin = fixture["initial"]["currentEconomy"]
     return write_manifest(
         path, uri, ROOT, fixture["owner"], origin["accountId"], origin["runEpoch"]
     )
 
 
-def reapply_populated(uri):
+def reapply_populated(uri: str) -> None:
     files = [
         ROOT / "supabase/migrations/20261118050150_island_economy_operations.sql",
         next((ROOT / "supabase/migrations").glob("*_island_economy_operator_recovery.sql")),
@@ -128,7 +135,7 @@ def reapply_populated(uri):
         require(snapshot(connection) == before, "populated_migration_reapply_changed_history")
 
 
-def permissions(connection):
+def permissions(connection: Connection[Any]) -> None:
     for signature in [
         "public.island_economy_operator_context(uuid)",
         "public.island_economy_set_offers(text,uuid,uuid,uuid,numeric,text,text)",
@@ -148,7 +155,7 @@ def permissions(connection):
     )
 
 
-def cli(path, action, uid, revision):
+def cli(path: Path, action: str, uid: str, revision: int) -> dict[str, Any]:
     completed = subprocess.run(
         [
             sys.executable,
@@ -172,7 +179,7 @@ def cli(path, action, uid, revision):
     return result
 
 
-def rehearse(output):
+def rehearse(output: str | Path) -> dict[str, Any]:
     import pgserver
 
     local_environment()
