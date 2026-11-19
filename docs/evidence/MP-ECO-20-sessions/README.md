@@ -22,3 +22,7 @@ clock was fabricated. Shared admission of fresh test islands was explicit setup.
 provides the reproduction command and scope. Generic local provider helpers are
 an explicit MP-ECO-20 dependency. No hosted operation, deployment or activation
 was performed.
+
+The driver later adopted the shared working-tree/untracked-production guard.
+Its narrow guard checks do not replace or rerun this historical provider
+result; the recorded scenario hash identifies the code actually exercised.

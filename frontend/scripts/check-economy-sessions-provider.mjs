@@ -1,7 +1,6 @@
 // Bounded real-provider controller, duplicate-tab and retained-session acceptance.
 // Uses ordinary Auth/API/UI actions; only fresh shared admission is explicit setup.
 import {createHash, randomUUID} from 'node:crypto';
-import {execFileSync} from 'node:child_process';
 import {mkdir, readFile, writeFile} from 'node:fs/promises';
 import {fileURLToPath, pathToFileURL} from 'node:url';
 
@@ -20,16 +19,16 @@ const observerUrl = process.env.MP_ECO_OBSERVER_HELPERS
   : new URL('./authenticated-economy/observer.mjs', import.meta.url);
 const {createClients, api, land} = await import(helperUrl.href);
 const {observe, admit} = await import(observerUrl.href);
+const sourceUrl = new URL('./source.mjs', helperUrl);
+const {sourceEvidence} = await import(sourceUrl.href);
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const productionSource = '82abc298570ce5436c721a992f538c16d04c30e5';
-const source = execFileSync('git', ['rev-parse', 'HEAD'], {cwd: root, encoding: 'utf8'}).trim();
-execFileSync('git', ['diff', '--exit-code', productionSource, 'HEAD', '--',
-  'frontend/src', 'backend/server', 'backend/content', 'supabase/migrations',
-  ':(exclude)backend/server/tests'], {cwd: root, stdio: 'pipe'});
+const sourceBefore = sourceEvidence(productionSource, {checkoutRoot: root});
+const source = sourceBefore.actualCheckoutHead;
 const sha256 = value => createHash('sha256').update(value).digest('hex');
 const scenarioSha256 = sha256(await readFile(fileURLToPath(import.meta.url)));
 const helperHashes = {};
-for (const url of [helperUrl, observerUrl, new URL('./runtime.mjs', helperUrl)]) {
+for (const url of [helperUrl, observerUrl, new URL('./runtime.mjs', helperUrl), sourceUrl]) {
   helperHashes[fileURLToPath(url).split('/').pop()] = sha256(await readFile(fileURLToPath(url)));
 }
 await mkdir(output, {recursive: false, mode: 0o700});
@@ -217,12 +216,13 @@ try {
   if (!after.down) limitations.push('No naturally fallen state was reached; fallen reconnect/revival is not proved by this journey.');
   if (!Object.keys(after.cooldowns).length) limitations.push('Observed cooldown state was empty; nonempty cooldown persistence is not proved.');
   limitations.push('This bounded case does not establish the full authenticated acceptance matrix, grace expiry, all-browser-gone settlement or production readiness.');
-  const report = {result: 'passed', source, productionSource, scenarioSha256, helperHashes,
+  const sourceAfter = sourceEvidence(productionSource, {checkoutRoot: root});
+  const report = {result: 'passed', source, productionSource, sourceBefore, sourceAfter, scenarioSha256, helperHashes,
     startedAt, finishedAt: new Date().toISOString(), facts, limitations};
   await writeFile(output + '/result.json', JSON.stringify(report, null, 2) + '\n', {mode: 0o600});
 } catch (error) {
   await writeFile(output + '/failure.json', JSON.stringify({result: 'failed', source,
-    productionSource, scenarioSha256, helperHashes, startedAt, finishedAt: new Date().toISOString(),
+    productionSource, sourceBefore, scenarioSha256, helperHashes, startedAt, finishedAt: new Date().toISOString(),
     error: String(error), facts}, null, 2) + '\n', {mode: 0o600});
   throw error;
 } finally {
