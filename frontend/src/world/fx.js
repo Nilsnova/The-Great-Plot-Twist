@@ -27,6 +27,7 @@ uniform float uTime;
 varying vec2 vWorld;varying vec2 vCentre;varying float vAge;varying float vKind;varying float vSize;varying vec3 vColour;varying float vSeed;
 void main(){
   float fade=1.0-vAge,alpha=0.0;
+  vec3 pigment=vColour;
   vec2 px=vWorld*16.0,q=vWorld-vCentre;float r=length(q*vec2(1.0,1.25)),aa=fwidth(r)+1e-4;
   if(vKind<.5){float rad=vSize/24.0;alpha=clamp(fade*1.1+.25,0.0,1.0)*(1.0-smoothstep(rad-aa,rad+aa,length(q)));}
   else if(vKind<1.5){
@@ -39,9 +40,13 @@ void main(){
   }else{
     float grow=min(1.0,vAge*6.0)*min(1.0,fade*2.5),glow=pow(max(0.0,1.0-r/vSize),1.6)*grow;
     alpha=pxSteps(glow*1.15,4.0,px)*.62;
+    // White-hot centre, with the caller's original hue and falloff around it.
+    float core=1.0-smoothstep(.04,.36,r/vSize);
+    float peak=max(vColour.r,max(vColour.g,vColour.b));
+    pigment=mix(vColour,vec3(peak),core*.56);
   }
   if(alpha<=.003)discard;
-  gl_FragColor=vec4(vColour*alpha,1.0);
+  gl_FragColor=vec4(pigment*alpha,1.0);
   ${toScreen}
 }`;
 
