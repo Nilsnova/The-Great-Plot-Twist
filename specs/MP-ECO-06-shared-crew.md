@@ -117,3 +117,23 @@ uv run --no-sync ruff check .
 
 The prior 20-case Python result remains applicable to unchanged crew production and
 Python-test sources; that selection was not rerun for this fixture-only correction.
+
+### Current main compatibility
+
+The branch now includes main `1350c2ba` and the current shared-construction
+dependency. Main's always-on catalogue and retired flags remain intact; no crew
+price, capacity, unlock, target-account or receipt behavior changes. All six
+crew-owned source, test and migration files remain byte-identical to the prior
+reviewed component; this specification records the dependency refresh.
+
+The crew and migration-version Python selection passed **20 tests in 0.46 seconds**.
+The complete crew, legacy guard, operation-cutover and legacy island/wave
+PostgreSQL selection passed **68 tests in 30.07 seconds** in one process, with
+the full migration chain applied twice. Backend-wide Ruff passes and all
+**78 migration files** have unique versions and parse.
+
+The final construction dependency adds four extra-plot unlock tests and verification
+text after those crew checks. Its production source, SQL and imported construction
+test helpers are unchanged, so no new crew behavior or migration is introduced by
+that test-only dependency alignment. The complete shared HTTP and combat integration
+remains outside this component.
