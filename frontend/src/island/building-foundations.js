@@ -42,9 +42,9 @@ function geometryOf(foundations) {
       opacity: ruin ? .24 : .49, innerOpacity: ruin ? .15 : .33,
     });
   }
-  for (const {x, z, slot, ruin} of foundations) {
+  for (const {x, z, slot} of foundations) {
     // Houses and watchtowers have finished stonework in their own art.
-    if (ruin || slot !== 'tower') continue;
+    if (slot !== 'tower') continue;
     const {width, depth, rear} = FORMS.tower, footZ = z - rear, height = .10;
     // The gun carriage is painted just behind its selection anchor.
     const outside = corners(x, footZ, width, depth);

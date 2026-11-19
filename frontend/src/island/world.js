@@ -479,7 +479,7 @@ export function decorateIsland(place, ctx = {}) {
       // open yet, shows a lock badge instead of the glowing ring.
       const open = (!unlocks || kindsOf(spot).some(kind => (unlocks.levels?.[kind] ?? 0) >= 1)) && !spotLocked(spot, campaign);
       const hidden = battle && BATTLE_KINDS.includes(answer?.kind ?? spot.kind);
-      if (foundations && built && !hidden && slotOf(spot) !== 'wall') {
+      if (foundations && built && slotOf(spot) !== 'wall') {
         const recovery = recoveryState?.structures?.find(item => item.spot === spot.id);
         const ruin = structureRecoveryAppearance(answer, recovery, recoveryState)?.look === 'broken';
         standing.push({slot: slotOf(spot), x: where.x, z: where.z, ruin});
