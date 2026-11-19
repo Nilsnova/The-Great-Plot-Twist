@@ -6,6 +6,7 @@ import {ALL_SPOTS} from '../../src/island/spots.js';
 import {WALL_LANE_ROWS} from '../../src/island/wall-lanes.js';
 import {WALL_PERIMETER_CELLS} from '../../src/island/wall-perimeter.js';
 import {projectGround, unprojectGround} from '../../src/world/projection.js';
+import {createHomeRelief} from '../../src/world/places/home-relief.js';
 import {createHomeTerraces} from '../../src/world/places/home-terraces.js';
 import {backdrop, createLifetime} from '../../src/world/places/resources.js';
 import {surfaceClass} from '../../src/world/places/surfaces.js';
@@ -74,4 +75,23 @@ it('raises terraces without overlapping the shore, old defenses or any new wall 
   dispose(); dispose();
   expect(new Set(released).size).toBe(3);
   expect(released).toHaveLength(3);
+});
+
+it('keeps the complete wall perimeter clear of above-ground shoreline rock', () => {
+  const root = new THREE.Group(), shore = new THREE.Texture();
+  backdrop(root, shore);
+  const {position, shoreRelief} = createHomeRelief(root, shore).geometry.attributes;
+  const rocks = [];
+  for (let i = 0; i < position.count; i += 3) {
+    if (shoreRelief.getZ(i) <= 1.5) continue;
+    rocks.push([i, i + 1, i + 2].map(index => ({x: position.getX(index), y: position.getY(index)})));
+  }
+  for (const {x, z} of WALL_PERIMETER_CELLS) {
+    for (let dx = -1; dx <= 1; dx += .25) for (let dz = -1; dz <= 1; dz += .25) {
+      expect(surfaceClass('home_islet', x + dx, z + dz), `${x}, ${z}`).toBeGreaterThan(0);
+      const point = projectGround(x + dx, z + dz);
+      expect(rocks.some(triangle => covers(point, triangle)), `${x}, ${z}`).toBe(false);
+    }
+  }
+  createLifetime(root)();
 });
