@@ -108,25 +108,51 @@ def raid_arch():
     return im
 
 def ruin():
-    im,d=canvas(80,144);shadow(d,40,132,34,6)
-    poly(d,[(15,130),(20,36),(27,39),(29,23),(37,28),(42,16),(48,31),(61,27),(67,131)],INK)
-    poly(d,[(19,128),(24,39),(31,41),(33,28),(40,32),(43,24),(47,36),(58,32),(62,128)],'#96997e')
-    poly(d,[(47,36),(58,32),(62,128),(49,127)],'#6e7c64')
-    for y in range(43,126,12):
-        d.line((23,y,58,y),fill='#b5b196')
-        for x in range(28+(y%5)*2,58,15):d.line((x,y-8,x,y),fill='#596c57')
-    d.rectangle((31,45,49,62),fill=INK);d.rectangle((34,48,46,59),fill='#6f9680')
-    d.rectangle((31,105,49,130),fill=INK);d.rectangle((34,109,46,128),fill='#435c4a')
-    for x,y in [(9,126),(66,130),(18,136)]:poly(d,[(x-6,y),(x-3,y-8),(x+5,y-6),(x+8,y)],'#748268',INK)
-    d.line((20,126,24,111),fill='#829655');d.line((22,127,29,115),fill='#9aaa68')
+    im, d = canvas(80, 144)
+    shadow(d, 40, 132, 34, 6)
+    poly(d, [(15,130),(20,36),(27,39),(29,23),(37,28),(42,16),(48,31),(61,27),(67,131)], INK)
+    poly(d, [(19,128),(24,39),(31,41),(33,28),(40,32),(43,24),(47,36),(58,32),(62,128)], '#9ca287')
+    # Broad right-hand shade and chips in the broken crown match the Raid arch's lighting.
+    poly(d, [(47,36),(58,32),(62,128),(49,127)], '#5b7063')
+    poly(d, [(21,119),(24,43),(29,46),(26,95),(24,120)], '#acb095')
+    poly(d, [(33,30),(40,34),(43,27),(44,39),(39,42),(32,39)], '#b8b99e')
+    poly(d, [(48,37),(58,34),(58,47),(52,48),(50,42)], '#738477')
+    for x, y, joint in [(25,43,34),(23,67,42),(23,80,35),(22,94,39),(21,107,29),(20,119,27)]:
+        d.line((x, y, 47, y - 1), fill='#667869')
+        d.line((x + 2, y + 1, 45, y), fill='#b6b99c')
+        d.line((joint, y + 2, joint - 1, y + 8), fill='#7e8a73')
+        d.line((50, y + 2, 58, y), fill='#455d51')
+        d.line((51, y + 3, 57, y + 1), fill='#788a78')
+    d.line([(36,72),(33,77),(35,82),(31,87)], fill='#596f62')
+    # Empty openings read as recesses rather than panes of intact green glass.
+    d.rectangle((31,45,49,62), fill=INK)
+    d.rectangle((33,47,47,60), fill='#788c79')
+    d.rectangle((36,49,47,58), fill='#2e473d')
+    d.line((34,60,46,60), fill='#b0b395')
+    d.rectangle((31,105,49,130), fill=INK)
+    d.rectangle((33,108,47,128), fill='#536a5c')
+    d.rectangle((37,109,47,126), fill='#2d453b')
+    d.line((35,128,47,128), fill='#939a82')
+    for x, y in [(9,126),(66,130),(18,136)]:
+        poly(d, [(x-6,y),(x-3,y-8),(x+5,y-6),(x+8,y)], '#758570', INK)
+        poly(d, [(x-3,y-6),(x+4,y-5),(x+1,y-3),(x-4,y-2)], '#a1a38a')
+        d.line((x+3,y-3,x+6,y-1), fill='#536b5d')
+    d.line([(20,126),(23,118),(26,115)], fill='#788352')
+    d.line([(23,127),(26,123),(29,123)], fill='#94a06c')
     return im
 
 def reef():
-    im,d=canvas(96,64)
-    for x,y,rx,ry in [(21,39,17,12),(47,28,20,18),(75,43,15,10)]:
-        poly(d,[(x-rx,y),(x-rx+3,y-ry),(x+rx-5,y-ry-4),(x+rx,y),(x+7,y+4)],'#455648',INK)
-        d.line((x-rx+4,y-ry+1,x+rx-6,y-ry-3),fill='#8d9b83');d.line((x+rx-5,y-ry,x+rx-2,y-2),fill='#607461')
-        d.line((x-rx-3,y+7,x-3,y+9,x+rx+4,y+6),fill='#7fa697')
+    im, d = canvas(96, 64)
+    for x, y, rx, ry in [(21,39,17,12),(47,28,20,18),(75,43,15,10)]:
+        rim = [(x-rx,y),(x-rx+3,y-ry),(x+rx-5,y-ry-4),(x+rx,y),(x+7,y+4)]
+        poly(d, rim, '#4c6557', INK)
+        poly(d, [(x-rx+4,y-2),(x-rx+6,y-ry+1),(x+rx-7,y-ry-2),
+                 (x+4,y-ry+5),(x+3,y-3),(x-5,y)], '#748472')
+        poly(d, [(x+rx-7,y-ry-2),(x+rx-3,y-2),(x+7,y+2),(x+3,y-3),(x+4,y-ry+5)], '#526b5c')
+        d.line((x-rx+5,y-ry+2,x+rx-8,y-ry-1), fill='#a1a78d')
+        d.line([(x+3,y-ry+5),(x+2,y-ry+8),(x-1,y-3)], fill='#627767')
+        # These slabs sit on grass in The Teeth. Keep the offset ground contact subdued.
+        d.line((x-rx-3,y+7,x-3,y+9,x+rx+4,y+6), fill='#6d784f')
     return im
 
 def salvage():

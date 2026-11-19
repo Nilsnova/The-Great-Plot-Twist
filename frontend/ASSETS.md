@@ -49,7 +49,7 @@ Every row is a distinct original PNG in `public/pixel/`. Dimensions and anchors 
 | `arena-gate` | 112 × 96 | Stone arch with timber gate; case_places.py |
 | `raid-arch` | 112 × 112 | Tall stone arch and neutral pennants; case_places.py |
 | `watchtower-ruin` | 80 × 144 | Broken masonry tower, future beam origin; case_places.py |
-| `reef` | 96 × 64 | Angular shoreline rocks and water contact; case_places.py |
+| `reef` | 96 × 64 | Weathered slate slabs and grass contact on The Teeth; case_places.py |
 | `salvage-yard` | 144 × 112 | Timber hull, shelter and salvage crates; case_places.py |
 | `fog-bank` | 192 × 96 | Translucent clustered fog bands; case_places.py |
 
