@@ -6,6 +6,7 @@ import { loadArt, placeArt } from '../art.js';
 import { paintedBlob } from '../primitives.js';
 import { swayMaterial, updateSway } from '../wind.js';
 import { createBeam } from '../beam.js';
+import {createGroundShadows} from '../ground-shadow.js';
 import { places } from './registry.js';
 import { layouts, edgeTrees, homeMooring, homeUndergrowth } from './layouts.js';
 import { placeGround } from './surfaces.js';
@@ -47,6 +48,11 @@ export async function createSettlement(ctx) {
     if (id === 'home_islet') {
       createHomeRelief(group, ground.material.map);
       createHomeRearRim(group);
+      createGroundShadows(group, trees.map(([x, z]) => {
+        const scale = x === -13 && z === -12 ? .64 : 1;
+        return {x: x + .55 * scale, z: z + .7 * scale, width: 1.6 * scale, depth: 1.4 * scale,
+          opacity: .43, innerOpacity: .28};
+      }));
     }
     placements.forEach(item => {
       const mesh = placeArt(group, art, item.asset, item.x, item.z);
