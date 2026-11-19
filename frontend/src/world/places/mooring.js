@@ -46,7 +46,7 @@ function mooringContact(root, stage, x, waterline) {
   const [near, far] = stage.userData.waterAxis;
   patch((near.x + far.x) / 2, (near.y + far.y) / 2 - .08, 3.9, Math.abs(near.y - far.y) + 1.1,
     2, (near.x - far.x) / (near.y - far.y));
-  for (const foot of stage.userData.waterSupports) patch(foot.x, foot.y - .20, .93, 1.03, 1);
+  for (const foot of stage.userData.waterSupports) patch(foot.x, foot.y - .23, 1.11, 1.12, 1);
   patch(x, originY - .055, 3.7, 1.16, 0);
 
   const geometry = new BufferGeometry();
@@ -107,8 +107,9 @@ function mooringContact(root, stage, x, waterline) {
             float flow = sin(20.0 * p.y + phase * 4.0 + vWorld.x * 1.6);
             float stalk = 1.0 - smoothstep(.055, .25, abs(off.x + flow * .043));
             reflection = stalk * smoothstep(-.64, -.12, off.y) * (1.0 - smoothstep(-.11, .03, off.y)) * .33;
-            float ring = abs(length(off * vec2(2.52, 2.75)) - (.71 + .07 * flow));
-            lit = (1.0 - smoothstep(.021, .101, ring)) * (1.0 - smoothstep(-.02, .20, off.y)) * .44;
+            float ring = abs(length(off * vec2(2.52, 2.75)) - (.69 + .085 * flow));
+            lit = (1.0 - smoothstep(.033, .119, ring))
+              * (1.0 - smoothstep(-.05, .15, off.y)) * (.45 + .12 * flow);
           }
         } else {
           float along = smoothstep(.0, .16, vWaterUv.y) * (1.0 - smoothstep(.86, 1.0, vWaterUv.y));
