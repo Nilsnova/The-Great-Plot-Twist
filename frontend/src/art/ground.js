@@ -365,8 +365,10 @@ export function paintGround(id, density = 28, materials = null) {
       for (let k = 0; k < 5; k++) { const a = k / 5 * Math.PI * 2; c.fillStyle = colour; c.fill(ellipse(px + Math.cos(a) * .09, py + Math.sin(a) * .07, .07, .06)); }
       c.fillStyle = '#f29e38'; c.fill(ellipse(px, py, .04, .035)); continue; }
     if (i % 3) continue;
-    // A small tuft: three curved blades in a darker green.
-    const tuft = i % 2 ? '#56a845' : '#4a983f';
+    c.fillStyle = '#4b75374b';
+    c.fill(ellipse(px + .04, py + .015, .17, .06));
+    const tuft = linear(c, px - .075, py - .28, px + .025, py,
+      [[0, i % 2 ? '#abd763' : '#8cc44d'], [.57, '#6dac41'], [1, '#437d36']]);
     for (const [dx, lean, tall] of [[-.1, -.1, .26], [0, .02, .34], [.1, .12, .24]]) {
       const blade = new Path2D(); blade.moveTo(px + dx - .035, py); blade.quadraticCurveTo(px + dx + lean * .3, py - tall * .6, px + dx + lean, py - tall); blade.quadraticCurveTo(px + dx + lean * .2 + .03, py - tall * .5, px + dx + .035, py); blade.closePath();
       c.fillStyle = tuft; c.fill(blade);
@@ -378,9 +380,19 @@ export function paintGround(id, density = 28, materials = null) {
 
 // Projected centres and radii of the turf shoulders under the raised banks.
 const LAWN_SHOULDERS = [
-  [-13.2, -7.8, 5.6, 3.4, .96], [-6.6, -11.5, 6.3, 3.3, 1.06],
-  [7.3, -12.2, 5.9, 3.7, 1.10], [14.0, -7.2, 4.5, 3.4, .89],
-  [-12.6, 8.1, 4.9, 3.5, .86], [12.1, 8.9, 4.5, 3.5, .82],
+  [-13.0, -7.8, 6.0, 3.9, 1.38], [-6.6, -11.5, 6.6, 3.8, 1.35],
+  [7.3, -12.2, 6.4, 4.1, 1.41], [14.0, -7.2, 4.9, 3.6, 1.16],
+  [-12.6, 8.6, 5.7, 4.0, 1.14], [12.1, 9.1, 5.0, 3.9, 1.08],
+];
+
+// The central green opens into the sun. Cooler grass collects below the rocky shoulders.
+const MEADOW_GLADES = [
+  [-11.6, -7.9, 6.6, 2.7, -.46, '#387e38'],
+  [1.4, -9.3, 5.8, 4.1, .18, '#e2e988'],
+  [11.6, -5.7, 4.4, 2.9, .27, '#4e8539'],
+  [1.1, -.7, 8.5, 3.7, -.15, '#dce882'],
+  [-8.4, 8.7, 6.3, 3.5, -.35, '#477f39'],
+  [8.5, 8.3, 6.4, 3.7, .32, '#a8d366'],
 ];
 
 function paintLawnRelief(c) {
@@ -403,10 +415,10 @@ function paintLawnRelief(c) {
       const light = (.60 * slopeX + .43 * slopeY + .67) / Math.hypot(slopeX, slopeY, 1) - .67;
       const offset = (row * width + col) * 4;
       const lit = light > 0;
-      image.data[offset] = lit ? 232 : 47;
-      image.data[offset + 1] = lit ? 230 : 94;
-      image.data[offset + 2] = lit ? 135 : 44;
-      image.data[offset + 3] = 255 * Math.min(lit ? .32 : .31, Math.abs(light) * 1.35);
+      image.data[offset] = lit ? 234 : 43;
+      image.data[offset + 1] = lit ? 236 : 86;
+      image.data[offset + 2] = lit ? 143 : 44;
+      image.data[offset + 3] = 255 * Math.min(lit ? .31 : .33, Math.abs(light) * 1.28);
     }
   }
   ctx.putImageData(image, 0, 0);
@@ -444,10 +456,10 @@ function paintTerrain(c, s, coast, random, materials) {
   c.fillStyle = glow; c.fill(meadow);
   if (materials) {
     c.save(); c.fillStyle = mirroredGrassPattern(c, materials);
-    c.globalAlpha = .45;
+    c.globalAlpha = .41;
     c.fillRect(-32, -24, 64, 48);
-    c.rotate(.17); c.translate(-2.6, 1.4); c.scale(1.25, 1.15);
-    c.globalAlpha = .19;
+    c.rotate(.22); c.translate(-2.6, 1.4); c.scale(.92, 1.03);
+    c.globalAlpha = .18;
     c.fillRect(-32, -24, 64, 48);
     c.restore();
   }
@@ -455,17 +467,23 @@ function paintTerrain(c, s, coast, random, materials) {
   // into the meadow without drawing any new path or extending the dry ground.
   c.fillStyle = linear(c, -16, -12, 12, 13, [[0, '#fff0a22f'], [.40, '#efdf8410'], [.73, '#4b873c0f'], [1, '#356d3c28']]);
   c.fill(meadow);
+  for (const [x, y, width, depth, angle, color] of MEADOW_GLADES) {
+    c.save(); c.translate(x, y); c.rotate(angle); c.scale(width, depth);
+    c.fillStyle = radial(c, 0, 0, 1, [[0, `${color}52`], [.49, `${color}32`], [1, `${color}00`]]);
+    c.fill(ellipse(0, 0, 1));
+    c.restore();
+  }
   for (let i = 0; i < 26; i++) {
     const x = (random() - .5) * s.rx * 1.6, y = (random() - .5) * s.rz * 1.6 * LEGACY_DEPTH;
     const colour = random() > .5 ? '#d3e78b' : '#377e38';
     const width = 2.2 + random() * 2.6, depth = 1.4 + random() * 2.15;
-    c.fillStyle = radial(c, x, y, width, [[0, `${colour}31`], [.43, `${colour}19`], [1, `${colour}00`]]);
+    c.fillStyle = radial(c, x, y, width, [[0, `${colour}24`], [.43, `${colour}14`], [1, `${colour}00`]]);
     c.fill(ellipse(x, y, width, depth));
   }
   paintLawnRelief(c);
   c.restore();
   paintTurfBevel(c, coast, meadow, grassRadius);
-  stroke(c, meadow, '#486e39', .145, .9);
+  stroke(c, meadow, linear(c, -16, -14, 13, 12, [[0, '#64854079'], [.53, '#496d3dac'], [1, '#425f36d6']]), .145);
   paintTerraceFeet(c, beach, rim, materials);
   c.restore();
 }

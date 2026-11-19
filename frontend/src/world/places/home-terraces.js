@@ -11,18 +11,18 @@ const COAST = surfaces.home_islet;
 // wall foundations have level ground in front. The southern banks face the sea.
 const BANKS = [
   {first: 97, last: 106, foot: .935, back: .986, height: 3.05},
-  {first: 116.5, last: 124.5, foot: .770, back: .955, height: 2.75},
-  {first: 125, last: 134, foot: .900, back: .980, height: 2.12, shore: true},
-  {first: 137, last: 146, foot: .920, back: .986, height: 1.48, shore: true},
-  {first: 148, last: 156, foot: .840, back: .955, height: 3.25},
-  {first: 166, last: 171, foot: .790, back: .925, height: 3.10},
-  {first: 30, last: 37, foot: .980, back: .900, height: 1.80},
-  {first: 55, last: 67, foot: .951, back: .847, height: 1.47},
+  {first: 116.5, last: 124.5, foot: .773, back: .963, height: 3.25},
+  {first: 125, last: 135, foot: .891, back: .958, height: 2.355, shore: true},
+  {first: 137, last: 146, foot: .921, back: .955, height: 1.875, shore: true},
+  {first: 148, last: 156, foot: .826, back: .964, height: 3.495},
+  {first: 166, last: 171, foot: .790, back: .946, height: 3.51},
+  {first: 30, last: 37, foot: .985, back: .888, height: 1.92},
+  {first: 55, last: 67, foot: .958, back: .835, height: 1.62},
 ];
-const STONE = ['#c89e6c', '#d2a878', '#b9895e', '#d4af7b', '#cba373'].map(hex => new THREE.Color(hex));
-const MORTAR = new THREE.Color('#977552'), RECESS = new THREE.Color('#846343');
+const STONE = ['#c79c67', '#dbaf77', '#b88b60', '#d4ae7e', '#c59767'].map(hex => new THREE.Color(hex));
+const MORTAR = new THREE.Color('#96734f'), RECESS = new THREE.Color('#765840');
 const ENDS = [new THREE.Color('#aa8357'), new THREE.Color('#b99165')];
-const TURF = new THREE.Color('#8fb444'), LIP = new THREE.Color('#afcb56'), ROOTS = new THREE.Color('#7ba642');
+const TURF = new THREE.Color('#8bb943'), LIP = new THREE.Color('#b0d557'), ROOTS = new THREE.Color('#739e3a');
 const GRASS_CREST = TURF.clone().lerp(LIP, .56);
 const FOLIAGE = {
   97: [['birch', .56, .70, .49], ['shrub', .19, .64, .64], ['shrub', .74, .31, .49], ['flowers', .41, .31, .52]],
@@ -52,7 +52,7 @@ const SHADOW = new THREE.Color('#344032');
 const SUN = new THREE.Vector3(-.6, .71, .43).normalize();
 const GROUND_CAST = new THREE.Vector2(-SUN.x, -SUN.z).normalize();
 const STEP = .5;
-const BLOCK_WIDTHS = [1.34, 1.96, 1.66, 1.50, 1.79, 1.23];
+const BLOCK_WIDTHS = [1.72, 2.24, 2.41, 1.68, 2.16, 1.52];
 const BLOCK_BEVEL = [
   [.12, 0], [.86, 0], [1, .18], [1, .79], [.85, 1], [.14, 1], [0, .83], [0, .18],
 ];
@@ -67,26 +67,26 @@ const SOD_MATERIAL = [[2.9, ROOTS], [2.6, ROOTS], [2.0, GRASS_CREST], [1.48, TUR
 // Each stop starts a band. The two faces have deep bases, lit shoulders and grass lips.
 // A short incline at the back of the upper tread hides where it joins the old meadow.
 const REAR_PROFILE = [
-  [0, 0, -.14, RECESS], [.025, .055, -.25, STONE], [.051, .29, -.04, STONE],
-  [.079, .42, .16, STONE], [.108, .452, .215, LIP], [.165, .535, .12, TURF],
-  [.392, .513, .03, TURF], [.428, .532, -.10, RECESS], [.446, .604, -.20, STONE],
-  [.464, .812, -.035, STONE], [.482, .911, .14, STONE], [.514, .944, .24, LIP],
-  [.579, 1.013, .12, TURF], [.875, .99, .055, TURF], [.946, .857, -.01, TURF],
-  [1, .62, -.11, TURF],
+  [0, 0, -.15, RECESS], [.025, .052, -.24, STONE], [.054, .365, -.055, STONE],
+  [.074, .48, .12, STONE], [.11, .515, .21, LIP], [.168, .585, .12, TURF],
+  [.36, .565, .02, TURF], [.405, .576, -.13, RECESS], [.429, .62, -.23, STONE],
+  [.450, .84, -.055, STONE], [.481, .93, .14, STONE], [.52, .977, .24, LIP],
+  [.58, 1.032, .12, TURF], [.848, 1.01, .065, TURF], [.95, .805, -.01, TURF],
+  [1, .42, -.12, TURF],
 ];
 const FRONT_PROFILE = [
-  [0, 0, -.13, RECESS], [.055, .06, -.22, STONE], [.086, .29, -.08, STONE],
-  [.117, .46, .10, STONE], [.154, .504, .22, LIP], [.201, .569, .12, TURF],
-  [.415, .581, .025, TURF], [.461, .591, -.055, RECESS], [.49, .65, -.08, STONE],
-  [.52, .795, .01, STONE], [.544, .897, .10, STONE], [.574, .936, .215, LIP],
-  [.64, 1.01, .102, TURF], [.748, .978, .06, TURF], [.905, .716, .025, TURF],
-  [1, .17, -.07, TURF],
+  [0, 0, -.15, RECESS], [.042, .058, -.22, STONE], [.074, .33, -.08, STONE],
+  [.106, .515, .11, STONE], [.15, .55, .22, LIP], [.205, .621, .12, TURF],
+  [.392, .625, .025, TURF], [.444, .636, -.08, RECESS], [.468, .688, -.10, STONE],
+  [.499, .832, -.01, STONE], [.530, .936, .14, STONE], [.572, .969, .215, LIP],
+  [.636, 1.038, .107, TURF], [.777, 1.01, .065, TURF], [.918, .694, .025, TURF],
+  [1, .02, -.08, TURF],
 ];
 // The back of each cove has a low stone course and a broad, sunlit shoulder.
 const SHORE_PROFILE = [
-  [0, 0, -.16, RECESS], [.025, .035, -.24, STONE], [.053, .196, -.06, STONE],
-  [.090, .30, .12, STONE], [.13, .329, .20, LIP], [.21, .374, .09, TURF],
-  [.57, .36, .035, TURF], [.78, .27, .015, TURF], [.90, .145, -.04, TURF],
+  [0, 0, -.16, RECESS], [.025, .045, -.24, STONE], [.055, .273, -.07, STONE],
+  [.095, .384, .13, STONE], [.143, .416, .22, LIP], [.213, .476, .09, TURF],
+  [.56, .472, .045, TURF], [.78, .30, .015, TURF], [.90, .145, -.04, TURF],
   [1, .026, -.10, TURF],
 ];
 
