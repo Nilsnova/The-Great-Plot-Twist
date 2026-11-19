@@ -17,6 +17,7 @@ import { makeSelectedCanopy } from './selected-canopy.js';
 import { makeMooring } from './mooring.js';
 import {projectGround} from '../projection.js';
 import {createHomeRelief} from './home-relief.js';
+import {createHomeTerraces} from './home-terraces.js';
 
 const HOME_PROP_ART = {bench: 'home-bench', barrel: 'home-barrel', lantern: 'home-lantern'};
 
@@ -50,6 +51,7 @@ export async function createSettlement(ctx) {
     const ground = backdrop(group, await (ctx.loadBackdrop ?? loadBackdrop)(`places/${id}.png`));
     if (id === 'home_islet') {
       createHomeRelief(group, ground.material.map);
+      createHomeTerraces(group, ground.material.map);
       createGroundShadows(group, trees.map(([x, z]) => ({
         x: x + .52, z: z + .68, width: 1.52, depth: 1.32, opacity: .34, innerOpacity: .21,
       })));

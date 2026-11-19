@@ -7,7 +7,6 @@ import {surfaces} from '../world/places/surfaces.js';
 import {LEGACY_DEPTH} from '../world/projection.js';
 import {canvas, ellipse, linear, poly, radial, stroke} from './paint.js';
 import {cliffProfile, paintCliffFaces, paintGrassRim} from './coast-cliffs.js';
-import {paintHomeTerraces} from './home-terraces.js';
 import {meadowScale, paintMaterial, pathMaterialMask} from './village/terrain-materials.js';
 
 const SIZE = {width: 64, height: 48};
@@ -215,7 +214,6 @@ function paintTerrain(c, s, coast, random, materials) {
   c.restore();
   paintTurfBevel(c, coast, meadow, grassRadius);
   stroke(c, meadow, '#486e39', .145, .9);
-  paintHomeTerraces(c, rim, beach, materials);
 }
 function nearPath(paths, x, z, reach) {
   for (const points of paths.lines) for (let i = 1; i < points.length; i++) {
