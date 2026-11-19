@@ -3,8 +3,8 @@ export const LAND_LIMIT = 0.38;
 export const PLAYER_RADIUS = 0.34;
 export const START_HOUR = 10.4;
 export const QUALITY = {
-  high: { shadows: false, rainCount: 900, waveMarks: 160, pixelRatio: 3, renderPixels: 3_000_000 },
-  low: { shadows: false, rainCount: 350, waveMarks: 80, pixelRatio: 1, renderPixels: 1280 * 720 },
+  high: { shadows: false, rainCount: 900, waveMarks: 160, pixelRatio: 3, renderPixels: 3_000_000, groundTexels: 39 },
+  low: { shadows: false, rainCount: 350, waveMarks: 80, pixelRatio: 1, renderPixels: 1280 * 720, groundTexels: 16 },
 };
 export const settings = { quality: 'high', hour: START_HOUR, fastTime: false };
 export const colors = {
