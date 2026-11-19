@@ -4,6 +4,7 @@ import { createFrameState } from './frame-state.js';
 import {createHarborLife} from '../ambient/harbor-life.js';
 import {HOME_LANTERN_LIGHT} from '../../art/home-shore.js';
 import {outpostArtwork} from '../../art/outpost-scenery.js';
+import {harborArtId} from '../../art/harbor-buildings.js';
 import {animateLandmarkMaterial} from '../../island/landmark-motion.js';
 import { loadArt, placeArt } from '../art.js';
 import { paintedBlob } from '../primitives.js';
@@ -27,12 +28,16 @@ export async function createSettlement(ctx) {
   const { id } = ctx;
   const data = places[id];
   const placements = [...(layouts[id] ?? []), ...(ctx.placements ?? [])];
-  const home = id === 'home_islet';
-  const appearance = asset => home && Object.hasOwn(HOME_PROP_ART, asset) ? HOME_PROP_ART[asset] : outpostArtwork(asset);
+  const home = id === 'home_islet', harbor = id === 'saltreach_harbor';
+  function appearance(asset) {
+    if (harbor) return harborArtId(asset);
+    if (home && Object.hasOwn(HOME_PROP_ART, asset)) return HOME_PROP_ART[asset];
+    return outpostArtwork(asset);
+  }
   const mooring = home ? homeMooring : [];
   const trees = edgeTrees[id] ?? [];
   const extraArtIds = [
-    ...(id === 'saltreach_harbor' ? ['harbour-office-glow'] : []),
+    ...(harbor ? [appearance('harbour-office-glow')] : []),
     ...(id === 'home_islet'
       ? ['shrub', 'build-plot', 'islet-empty-plot', 'islet-locked-sign', 'islet-signal-station', 'islet-signal-station-lit', 'cabin', 'workshop', 'windmill', 'greenhouse']
       : []),
@@ -113,8 +118,9 @@ export async function createSettlement(ctx) {
       };
     });
     let windowGlow, stormFlag;
-    if (id === 'saltreach_harbor') {
-      windowGlow = placeArt(group, art, 'harbour-office-glow', -8, 8.5);
+    if (harbor) {
+      windowGlow = placeArt(group, art, appearance('harbour-office-glow'), -8, 8.5);
+      windowGlow.userData.asset = 'harbour-office-glow';
       windowGlow.material = windowGlow.material.clone(); windowGlow.renderOrder = 922;
       stormFlag = createStormFlag(group);
     }
