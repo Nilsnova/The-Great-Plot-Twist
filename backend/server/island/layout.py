@@ -194,9 +194,32 @@ def spot_named(rules: LayoutRules, spot_id: str) -> LayoutSpot | None:
 def positions_of(rules: LayoutRules, stored: dict[str, Position]) -> dict[str, Position]:
     """Use the saved cells ahead of the Home defaults, then settle off-path walls (D056)."""
     placed = {spot.spot: stored.get(spot.spot, (spot.x, spot.z)) for spot in rules.spots}
+    saved_cells = {spot: where for spot, where in stored.items() if spot in placed}
+    if rules.legacy_defaults:
+        older_walls = [
+            spot.spot
+            for spot in rules.spots
+            if spot.slot == WALL_SLOT
+            and spot.spot in saved_cells
+            and not on_wall_lane(rules, *saved_cells[spot.spot])
+        ]
+        if older_walls:
+            # A pre-lane wall may already have been displayed on a different cell.
+            # Resolve it against the earlier map before deciding whether a new default fits.
+            previous = {
+                **placed,
+                **{
+                    spot: where
+                    for spot, where in rules.legacy_defaults.items()
+                    if spot in placed and spot not in saved_cells
+                },
+            }
+            settled = settle_walls(rules, previous, stored)
+            for spot in older_walls:
+                saved_cells[spot] = placed[spot] = settled[spot]
     # A legal older move can occupy a new default. Before, that move had to leave the
     # old default clear, which gives the untouched slot a compatible anchor without a write.
-    saved = [box_of(rules, spot, where) for spot, where in stored.items() if spot in placed]
+    saved = [box_of(rules, spot, where) for spot, where in saved_cells.items()]
     for spot, previous in rules.legacy_defaults.items():
         if spot in placed and spot not in stored:
             candidate = box_of(rules, spot, placed[spot])
