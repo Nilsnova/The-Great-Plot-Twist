@@ -38,8 +38,9 @@ export function makeWallPurchaseLight() {
         shader.vertexShader = shader.vertexShader
           .replace('#include <common>', '#include <common>\n' + groundProjectionGlsl +
             '\nattribute vec2 wallGround;\nvarying vec2 wallPurchaseGround;\nuniform float wallPortraitScale;')
-          .replace('#include <begin_vertex>', '#include <begin_vertex>\nwallPurchaseGround = wallGround;' +
-            '\ntransformed.y = mix(projectGround(wallGround).y, transformed.y, wallPortraitScale);');
+          .replace('#include <begin_vertex>', /* glsl */ `#include <begin_vertex>
+            wallPurchaseGround = wallGround;
+            transformed.y = mix(projectGround(wallGround).y, transformed.y, wallPortraitScale);`);
         shader.fragmentShader = shader.fragmentShader
           .replace('#include <common>', '#include <common>\n' + purchaseFragment)
           .replace('#include <opaque_fragment>',

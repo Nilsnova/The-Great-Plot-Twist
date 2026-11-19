@@ -6,6 +6,7 @@ import {shippedSheets, shippedTerrain} from '../../src/art/village/shipped.js';
 import {collectRasterFrames, getRasterFrame} from '../../src/art/village-raster.js';
 import {UNSHIPPED, unshipped} from '../../scripts/unshipped-art.js';
 const report = JSON.parse(readFileSync(new URL('../../../docs/evidence/VIS-30-world-art/bake-report.json', import.meta.url)));
+const historical = JSON.parse(readFileSync(new URL('../../../docs/evidence/VIS-64-upright-walls/bake-report-before.json', import.meta.url)));
 const raw = collectRasterFrames(await Promise.all(report.families.map(name => import(`../../src/art/village/${name}.js`))));
 
 describe('compiled world art production activation', () => {
@@ -19,7 +20,7 @@ describe('compiled world art production activation', () => {
   });
 
   it('preserves every original source and master on disk and downloads only the shipped WebP', () => {
-    const originals = report.original.files.map(row => row.file).sort();
+    const originals = [...new Set([...report.original.files, ...historical.original.files].map(row => row.file))].sort();
     // Masters (and the retired pre-VIS64 wall sheet) and the authored terrain atlas stay on disk, out of dist.
     const held = ['village/compiled/', 'village/terrain-materials-v1.png'];
     expect(UNSHIPPED.filter(file => file.startsWith('village/') && !held.includes(file)).sort()).toEqual(originals);
