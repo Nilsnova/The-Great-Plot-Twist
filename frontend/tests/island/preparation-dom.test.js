@@ -44,7 +44,7 @@ it('the controller forwards nextWave and discards a late wall read after a visit
       const {createFakeIslandTransport} = await window.g20Import('/src/pirates/fake-api.js');
       const {BELL} = await window.g20Import('/src/island/spots.js');
       const {on,emit} = await window.g20Import('/src/core/events.js');
-      const base = createFakeIslandTransport({flags:{wall_recovery:true}});
+      const base = createFakeIslandTransport();
       base.dev.setWaveBest(20); window.bellId = BELL.id;
       const row = (spot,health) => ({spot,level:1,health,recoversAt:null,repairCost:3});
       const get = async path => {
@@ -53,7 +53,7 @@ it('the controller forwards nextWave and discards a late wall read after a visit
         const answer = await base.get(path);
         return path === '/api/island' && answer.ok ? {...answer,data:{...answer.data,nextWave:18}} : answer;
       };
-      window.prepIsland = createIsland({container:document.body,emit,on,mode:'fake',transport:{...base,get},wallRecovery:()=>true,
+      window.prepIsland = createIsland({container:document.body,emit,on,mode:'fake',transport:{...base,get},
         storage:null,visitStorage:null,menu:()=>()=>{}});
       await window.prepIsland.load(); window.prepIsland.pick(BELL.id);
     });

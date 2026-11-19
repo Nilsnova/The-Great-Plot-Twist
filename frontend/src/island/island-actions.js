@@ -15,7 +15,7 @@ import {CREW, BUILDINGS} from './td-rules.js';
 import {SPOTS_CHANGED, TOWER_SPECIALISED, TOWER_TREE_BOUGHT, HOUSE_ROLE_PICKED} from './island-shared.js';
 
 export function createActions(isl) {
-  const {emit, focus, resetInput, reducedMotion, now, wallRecovery} = isl;
+  const {emit, focus, resetInput, reducedMotion, now} = isl;
   // From the other parts (island-*.js), linked once every part exists.
   let recoveryControlsOn, recoveryModelVersion, readStructureRecovery, setOwn, campaign, wrote, target, where,
     placeOf, tookCoins, reloadVisit, reloadOwn, refreshDefended, took, refused, lobby, colours, bellAction,
@@ -67,9 +67,9 @@ export function createActions(isl) {
     refreshCard();
     showWallPurchase(action, answer);
   }
-  // D039 (flag wall_recovery): the walls' health of the island on screen; nothing at all while the flag is off.
+  // D039: the walls' health of the island on screen (the flag wall_recovery is retired, always on).
   async function readWalls() {
-    if (!wallRecovery() || isPointSpot(isl.openSpot ?? '')) return;
+    if (isPointSpot(isl.openSpot ?? '')) return;
     const asked = target()?.code;
     const answer = await isl.api.walls({code: isl.visiting ? isl.visiting.code : null});
     if (isl.disposed || !answer.ok || asked !== target()?.code) return;
