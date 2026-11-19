@@ -42,8 +42,8 @@ function surfaceSamples(pixels, width, height) {
 
 function lightLandmark(pixels, width, height) {
   const {tones, minX, minY, spanX, spanY} = surfaceSamples(pixels, width, height);
-  // A roof gets more useful detail from a bevel a logical pixel away than from individual texels.
-  const step = Math.max(1, Math.round(height / 110));
+  // A broader sample keeps the painted bevels visible after the sprite is scaled to the island.
+  const step = Math.max(1, Math.round(height / 74));
   if (spanX < step * 2 || spanY < step * 2) return;
   for (let y = minY; y <= minY + spanY; y++) {
     const down = (y - minY) / spanY;
@@ -57,6 +57,10 @@ function lightLandmark(pixels, width, height) {
       const plant = bend((green - red + 3) / 30) * bend((green - blue - 3) / 32);
       const coverage = bend((alpha - 223) / 32) * (1 - amberGlass) * (1 - plant);
       if (coverage <= 0) continue;
+      const stone = (1 - roof) * bend((luma - 43) / 99)
+        * bend((blue - red + 93) / 60) * bend((green - red + 50) / 35);
+      const varnish = bend((red - green - 13) / 35) * bend((green - blue - 6) / 39)
+        * bend((luma - 34) / 76) * (1 - stone);
 
       // The upper-left key travels across roof faces, with cool skylight below the eaves.
       const key = bend((1.00 - .73 * right - .96 * down) / .73);
@@ -66,12 +70,19 @@ function lightLandmark(pixels, width, height) {
       const samplesInside = x >= step && x + step < width && y >= step && y + step < height
         && pixels[fromSun * 4 + 3] > 224 && pixels[awayFromSun * 4 + 3] > 224;
       const relief = samplesInside ? (tones[awayFromSun] - tones[fromSun]) / 255 : 0;
-      const tileLight = .30 * sky + .10 * bend((luma - 39) / 132) + .55 * relief;
-      const faceLight = (.19 - .13 * roof) * key - .16 * shade;
-      const exposure = 1 + coverage * (roof * tileLight + faceLight);
-      pixels[i] = red * exposure + coverage * (7 * key + 13 * sky * roof - 5 * shade);
-      pixels[i + 1] = green * exposure + coverage * (4 * key + 10 * sky * roof + 2 * shade);
-      pixels[i + 2] = blue * exposure + coverage * (7 * sky * roof + 9 * shade);
+      // Keep the hand-painted grain and joints legible when the sprite is minified.
+      const grain = samplesInside ? (2 * luma - tones[fromSun] - tones[awayFromSun]) / 510 : 0;
+      const edge = relief * (.82 * roof + .56 * stone + .39 * varnish);
+      const texture = grain * (.50 * roof + .67 * stone + .48 * varnish);
+      const tileLight = .24 * sky + .095 * bend((luma - 39) / 132) - .23 * shade;
+      const faceLight = (.18 - .12 * roof) * key - (.13 + .089 * stone) * shade;
+      const exposure = 1 + coverage * (roof * tileLight + faceLight + edge + texture);
+      const plaster = key * stone;
+      const roofGlow = roof * (.78 * sky + .22 * bend((luma - 42) / 72));
+      const amber = varnish * bend((red - green - 26) / 51);
+      pixels[i] = red * exposure + coverage * (7 * key + 18 * plaster + 29 * roofGlow - 4 * shade - 9 * amber);
+      pixels[i + 1] = green * exposure + coverage * (4 * key + 14 * plaster + 27 * roofGlow + 3 * shade + 7 * amber);
+      pixels[i + 2] = blue * exposure + coverage * (8 * plaster + 18 * roofGlow + 9 * shade + 19 * amber);
     }
   }
 }
