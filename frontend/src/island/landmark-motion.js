@@ -8,7 +8,7 @@ export const landmarkProfiles = {
   'island-watchtower-l4': {pennant: [.480, .087, .886, .202]},
   'island-watchtower-l5': {pennant: [.480, .142, .879, .253]},
   'island-arsenal': {smoke: [.590, .004, .970, .163]},
-  'island-harbor': {lights: [[.653, .531, .757, .641]]},
+  'island-harbor': {lightStrength: 2.2, lights: [[.653, .531, .757, .641]]},
   'island-techhub': {sweep: [.302, .048, .705, .344],
     lights: [[.263, .512, .351, .645], [.340, .544, .415, .649], [.448, .584, .585, .704], [.612, .545, .690, .646]]},
   'island-wreck-mended': {pennant: [.574, .146, .766, .295]},
@@ -33,7 +33,7 @@ const mask = /* glsl */`
 
 // A material is owned by the place and can still be shared by every instance of that artwork.
 // The model origin seeds each sprite independently without per-building textures or draw calls.
-export function animateLandmarkMaterial(material, {pennant, bell, smoke, sweep, lights = []} = {}) {
+export function animateLandmarkMaterial(material, {pennant, bell, smoke, sweep, lights = [], lightStrength = 1} = {}) {
   const uniforms = {uLandmarkClock: {value: 0}, uLandmarkWind: {value: 0}, uLandmarkRing: {value: 0},
     uLandmarkLight: {value: 0}, uLandmarkFlicker: {value: 0}};
   if (pennant) uniforms.uLandmarkPennant = {value: pennant};
@@ -132,7 +132,7 @@ export function animateLandmarkMaterial(material, {pennant, bell, smoke, sweep, 
       uniforms.uLandmarkWind.value = still ? 0 : .005 + .012 * wind;
       uniforms.uLandmarkRing.value = still ? 0 : ring;
       uniforms.uLandmarkLight.value = .12 * night;
-      uniforms.uLandmarkFlicker.value = still ? 0 : .08 + .09 * night;
+      uniforms.uLandmarkFlicker.value = still ? 0 : (.08 + .09 * night) * lightStrength;
     },
   };
 }
