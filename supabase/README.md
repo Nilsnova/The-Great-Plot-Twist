@@ -3499,11 +3499,11 @@ islands. Supabase caches authorization for already connected subscribers; this
 migration does not evict them. Admission/departure revocation or topic rotation
 must be integrated and tested separately.
 
-Canonical authority/session/assignment storage, immutable wave economy binding,
-free revival hold/fall authority, lifecycle workers, holder deletion, remaining
-legacy guards and actual reset/deletion integration remain release gates.
-Authenticated integrated multiple-client and physical-device acceptance are
-still required separately.
+The [canonical integration below](#canonical-control-and-lifecycle-integration)
+now supplies authority/session/assignment production, immutable wave binding,
+hold/fall context, lifecycle workers, holder deletion and reset/deletion composition.
+Final authenticated product acceptance and physical-device observations retain
+their separate status in the [acceptance matrix](../docs/economy/ACCEPTANCE.md).
 
 ### Coherent shared member snapshots
 
@@ -3588,6 +3588,12 @@ islands, configure a hosted worker or activate a release.
 | `20261118224038_shared_free_revival_runtime.sql` | RLS-protected timed hold/immutable receipt records, private canonical context/hold helpers and service-only replay/completion entry points. No browser table access or money function is granted. |
 | `20261118225937_shared_legacy_wave_fences.sql` | Preserves sixteen public old signatures/defaults behind sorted scope/profile guards. Captured original bodies have no browser or service execution. Genuine retained closed personal settlement remains possible; shared-accounting sources cannot enter legacy reward recovery. |
 | `20261118230046_shared_lifecycle_transactions.sql` | One atomic owner reset or account deletion, original-origin replay and grants, sorted actor/island/wallet/profile fencing, holder disposition and Auth deletion. Historical shared UUID origins are deliberately detached from five destructive foreign keys; live-origin checks and explicit legacy purging preserve their separate semantics. Only named service boundary functions execute directly. |
+| [20261118231226_shared_wave_journal_lifecycle.sql](migrations/20261118231226_shared_wave_journal_lifecycle.sql) | Native accepted bell freezes existing wave/recovery/accounting, personal assignments, loadouts and coherent source facts. Service-only replay/start, heartbeat, join/current, input/event and Captain/structure checkpoint entry points use current controller/original-origin proof. Private snapshot/source/confirmation/revival helpers and captured bodies have no direct role execution. This composes the existing authority, not a second provider or wave store. |
+| `20261119000309_canonical_membership_lifecycle.sql` | Existing service-only room entry points compose actual membership, target control/stock withdrawal and topic rotation; captured old bodies remain private. Details follow below. |
+| [20261119001458_shared_wave_closure_worker.sql](migrations/20261119001458_shared_wave_closure_worker.sql) | Service-only `shared_session_wave_finish` and bounded `shared_session_process_due` use the canonical lock plan. Private closure normalizes grace/expiry before a proposed outcome, closes HP/run/accounting once, restores structures and settles matching returns. Actor-owned retained completion replays precede mutable controller/membership facts; current projections still require current authorization. Private closure/view/normalization aliases have no service/browser execute. |
+| [20261119002149_shared_session_pacing.sql](migrations/20261119002149_shared_session_pacing.sql) | Adds durable won-break timing to existing session settings. Service-only leave/settings, attach/start and auto-candidate/auto-start boundaries recheck current origin/control under locks. Original leave/settings receipts replay with null current projections. Explicit withdrawal invalidates journal/hold state and returns eligible idle stock; pause changes break pacing, not combat time. Captured close/retire/withdraw/snapshot bodies and the accepted-bell helper remain private. |
+| [20261119002317_shared_repair_canonical_lock_order.sql](migrations/20261119002317_shared_repair_canonical_lock_order.sql) | Keeps the shared repair signature and service-only grant. Sorted actor/owner scopes, matching account/root and existing personal anchors precede island/recovery/wave/structure locks. Frozen price/quota, financial child, HP, event and receipt remain one transaction; original receipt lookup precedes mutable authority. No new provider, table or browser grant. |
+| [20261119005642_shared_captain_fall_basis.sql](migrations/20261119005642_shared_captain_fall_basis.sql) | Replaces the same service-only Captain checkpoint boundary: a new fall cannot precede its committed current revival event tick. Sealed-prefix/basis checks and immutable report replay remain; no new authority or direct hold/fall write path is introduced. |
 
 The four session tables are not a second wave or assignment system: operational
 waves/recovery journals and `personal_captain_profiles.assignment_wave_id` remain
@@ -3609,3 +3615,58 @@ service entry points remain executable; no table/browser right is added. The
 same transaction changes membership, withdraws target control and stock, handles
 pending returns, and rotates the private topic. Inactive actors cannot join or
 leave through a cached token. Existing legacy room semantics remain intact.
+
+Apply the complete reviewed candidate chain in timestamp order. Earlier imported
+migrations can capture/wrap existing function bodies, so applying only missing
+retroactive files after later aliases does not establish the same semantics as a
+fresh chain. Verify installed versions/content against the pinned source before
+starting compatible code. The commands below do not install migrations.
+
+### Canonical rights and retained results
+
+`anon` and `authenticated` receive no execution on these native mutation/worker
+boundaries and no new table-write rights. `service_role` may execute only the
+documented public entry points; internal lock/source/snapshot/close/withdraw,
+revival-consume and captured pre-wrapper aliases explicitly revoke execution from
+`PUBLIC`, `anon`, `authenticated` and `service_role`. Their enclosing definer
+transactions invoke them. Preserve those revocations when checking the complete
+chain; broad grants to make a probe succeed change the security boundary.
+
+Retained canonical start/finish and common action receipts describe the original
+actor/account/epoch. Replaying them cannot grant current control, rewrite a terminal
+result or reveal unauthorized fresh treasury/session state. Genuine closed personal
+obligations keep their legacy settlement path; shared-accounting attempts stay
+excluded from it. Read/history access and current mutation authorization remain
+separate checks.
+
+### Local canonical worker command
+
+The [worker CLI](../backend/tools/shared_session_worker.py) uses normal server
+settings: `APP_ENV`, `SUPABASE_URL`, server-only `SUPABASE_SECRET_KEY` and the usual
+weather settings. Load credentials privately into the process environment and bind
+the URL explicitly to the owned disposable local stack. The CLI follows that
+configuration; it has no automatic loopback restriction. These examples are for
+that local environment, not a hosted worker installation or rollout:
+
+```bash
+cd backend
+uv run python -m tools.shared_session_worker --help
+uv run python -m tools.shared_session_worker --once --limit 20
+uv run python -m tools.shared_session_worker --interval 1 --limit 20
+```
+
+`--once` runs one bounded cycle. Otherwise the foreground loop defaults to one
+second; `--interval` accepts 0.25–30 seconds and `--limit` accepts 1–100 islands per
+stage (default 20). Each cycle processes due canonical leases/closures and prepares
+eligible auto-next candidates through the existing trusted template/weather path;
+SQL rechecks the durable break, source and controller before acceptance. The worker
+prints counts only. Starting this process against a deployed database is activation
+and is outside these local checks; no scheduler is configured here.
+
+The [current acceptance record](../docs/economy/ACCEPTANCE.md#current-integration-and-open-gates)
+distinguishes the completed local real-Auth/native HTTP/WSS primitive probe from
+remaining product acceptance. Manually following nonce metadata with SDK channels
+verifies policy/topic isolation, not automatic rendered-game broadcaster changes,
+full combat/domain/lifecycle flows or physical devices. Preserve the original
+76-migration cached-channel failure evidence alongside the later source-qualified
+probe; neither migration presence nor a manual channel switch proves the full game.
