@@ -1347,7 +1347,7 @@
   "failure": {
     "name": "TimeoutError",
     "message": "page.waitForResponse: Timeout 20000ms exceeded while waiting for event \"response\"",
-    "stack": "page.waitForResponse: Timeout 20000ms exceeded while waiting for event \"response\"\n    at paidClick (/workspace/mp-economy/next-126-quota/frontend/scripts/authenticated-economy/paid-repair.mjs:200:25)\n    at async runFullRepairQuotaAcceptance (/workspace/mp-economy/next-126-quota/frontend/scripts/authenticated-economy/paid-repair.mjs:118:17)\n    at async file:///workspace/mp-economy/next-126-quota/frontend/scripts/authenticated-economy/full-repair-quota.mjs:107:17"
+    "stack": "page.waitForResponse: Timeout 20000ms exceeded while waiting for event \"response\"\n    at paidClick (<checkout>/frontend/scripts/authenticated-economy/paid-repair.mjs:200:25)\n    at async runFullRepairQuotaAcceptance (<checkout>/frontend/scripts/authenticated-economy/paid-repair.mjs:118:17)\n    at async file://<checkout>/frontend/scripts/authenticated-economy/full-repair-quota.mjs:107:17"
   },
   "clientsClosed": false,
   "helperHashesAfter": {
@@ -1430,5 +1430,6 @@
         ":(exclude)backend/server/tests"
       ]
     }
-  ]
+  ],
+  "publicationSanitization": "Absolute local worktree prefixes in failure stacks replaced with checkout placeholders; original raw report retained privately. Financial and protocol values unchanged."
 }

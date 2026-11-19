@@ -53,9 +53,10 @@ another grant. Its three repairs cost another 120, and natural victory then pays
 After a loss the actual retreat rule selected wave 18 from unlock record 20. Only
 the already-declared `next_wave=1` saved-state fixture was restored between
 completed attempts; the successful reservation explicitly asserts played wave 1.
-No combat state/history was reset. The same retained real account/browser pair
-was reused after entry/click/synchronization diagnostics, with no additional
-registration or grant. [Failed-attempt summaries](failed-attempts-summary.json)
+No combat state/history was reset. One earlier pair was closed after the initial
+entry diagnostic. The final retained real account/browser pair was then reused
+through click/synchronization diagnostics, with no further registration or grant.
+[Failed-attempt summaries](failed-attempts-summary.json)
 remain failures; safe raw local reports were preserved.
 
 ## Source and execution boundaries
@@ -78,7 +79,9 @@ review; a new uninterrupted full CLI run is not claimed. The actual staged fourt
 request and independent terminal/accounting assertions are the evidence for the
 observed result.
 
-The standalone reproduction command is:
+The current isolated-provider helper package (including `servedSourceEvidence`,
+frozen here at `68497043`) is a prerequisite for this runner. It does not change
+the production candidate. Select that helper checkout explicitly when reproducing:
 
 ```sh
 NODE_EXTRA_CA_CERTS=/tmp/mp505-provider/provider-ca.crt \
@@ -97,3 +100,7 @@ credential-pattern exclusion, evidence arithmetic/source hashes and whitespace
 were checked. No broad test suite/build rerun is claimed for this harness-only
 change. No hosted migration, deployment, shared-mode activation or full #505/#513
 release acceptance is included.
+
+Published failure stacks replace absolute local worktree prefixes with
+`<checkout>/` or `<provider-checkout>/`. The sanitization is labeled in the JSON;
+raw local reports remain unchanged, and no financial or protocol values are edited.

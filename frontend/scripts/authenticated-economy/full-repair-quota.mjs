@@ -14,6 +14,7 @@ const helperRoot=resolve(helpers,'../../..');
 const {createClients,api,land,loadRuntime}=await import(pathToFileURL(resolve(helpers,'clients.mjs')));
 const {observe,install,admit}=await import(pathToFileURL(resolve(helpers,'observer.mjs')));
 const {sourceEvidence,servedSourceEvidence}=await import(pathToFileURL(resolve(helpers,'source.mjs')));
+assert.equal(typeof servedSourceEvidence,'function','Select current isolated-provider helpers with live source manifests via MP_ECO_HELPERS_ROOT');
 const runtimePath=process.env.MP_ECO_RUNTIME??'/tmp/mp505-provider/runtime.json';
 const output=process.env.MP_ECO_OUTPUT??'/tmp/mp505-full-repair-quota';
 const runtime=await loadRuntime(runtimePath);
