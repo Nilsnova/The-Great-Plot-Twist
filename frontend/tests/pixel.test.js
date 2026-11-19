@@ -6,6 +6,7 @@ import { pixelArt, pixelArtIds, pixelSizes, snapPixel } from '../src/pixel/catal
 import { artSizes, loadArt, placeArt } from '../src/world/art.js';
 import { islandSizes } from '../src/art/registry.js';
 import { frames as registeredFrames } from '../src/art/village/baked.js';
+import { compiledHomeFoliage } from '../src/art/village/home-foliage.js';
 import { getRasterFrame } from '../src/art/village-raster.js';
 import { pixelViewport } from '../src/pixel/display.js';
 
@@ -15,7 +16,10 @@ describe('active pixel artwork', () => {
     expect(new Set(pixelArt.map(item => item.id)).size).toBe(pixelArt.length);
     // Native files keep their catalogue dimensions; D063/D064 explicitly revise some rendered boxes.
     expect(pixelArt.every(item => Object.hasOwn(artSizes, item.id))).toBe(true);
-    const declared = new Set([...pixelArt.map(item => item.id), ...Object.keys(islandSizes()), ...Object.keys(registeredFrames)]);
+    const declared = new Set([
+      ...pixelArt.map(item => item.id), ...Object.keys(islandSizes()),
+      ...Object.keys(registeredFrames), ...Object.keys(compiledHomeFoliage.frames),
+    ]);
     expect(Object.keys(artSizes).sort()).toEqual([...declared].sort());
     for (const item of pixelArt) {
       const bytes = readFileSync(`public/pixel/${item.file}`);
