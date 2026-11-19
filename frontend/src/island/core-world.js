@@ -18,7 +18,7 @@ export function decorateCore(place, {prepare = paintIds, density = screenDensity
   const point = projectPoint(HEART.x, HEART.z);
   mesh.name = 'island-core'; mesh.position.set(point.x, point.y, 0);
   mesh.renderOrder = 100 + HEART.z; mesh.frustumCulled = false; mesh.visible = false;
-  mesh.userData.ground = {...HEART}; mesh.userData.portraitStructure = true; place.group.add(mesh);
+  mesh.userData.ground = {...HEART}; place.group.add(mesh);
   const foundation = makeBuildingFoundations(place.group, 'island-heart-shadow');
   let state = null, disposed = false, pending = null, materials = null, motionTime = 0;
   const detailMotion = new Map();
