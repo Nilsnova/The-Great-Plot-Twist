@@ -10,6 +10,14 @@
 .hud-play .hud-menu:hover{background:var(--u-raise)}.hud-play .hud-menu:focus-visible{outline:3px solid var(--u-gold);outline-offset:6px}
 .hud-menu-icon{width:18px;height:3px;background:currentColor;box-shadow:0 -6px currentColor,0 6px currentColor}
 
+/* The village overview frames the island between three small header badges. */
+@media(min-width:365px){
+  .hud-play.hud-village:not(.hud-wide-balance) .hud-wave:not([hidden]){
+    position:fixed;left:50%;top:18px;transform:translateX(-50%);min-height:44px;box-sizing:border-box;
+    padding:6px 12px;border:0;border-radius:var(--u-radius-sm);box-shadow:var(--u-frame);background:var(--u-sea)
+  }
+}
+
 /* The quest strip: only the current goal shows (owner, 15 Nov: "limit the visual overload"); the title's
    "1 of 10" says how many there are, and a tap on the goal shows its hint. */
 .quest-strip li:not(:has([data-current=true])){display:none}
@@ -57,6 +65,10 @@
   .quest-strip h2{font-size:16px;margin-bottom:6px}
   .hud-play .interact{bottom:84px;max-width:calc(100vw - 24px)}
   .hud-arrival{top:30%;--hud-arrival-title:26px}
+}
+@media(min-width:365px) and (max-width:900px){
+  .hud-play.hud-village:not(.hud-wide-balance) .hud-coins{font-size:18px;padding-inline:9px}
+  .hud-play.hud-village:not(.hud-wide-balance) .hud-wave:not([hidden]){top:12px;gap:4px;padding-inline:8px;font-size:16px}
 }
 /* On portrait exploration landings, keep the map and its first paths clear. */
 @media(max-width:600px) and (orientation:portrait){

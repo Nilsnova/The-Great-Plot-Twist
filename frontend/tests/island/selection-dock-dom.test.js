@@ -86,6 +86,52 @@ it('keeps pressed range and eligible upgrade distinct on the short phone', async
   });
 });
 
+it('shows actual Cannon stats and opens the existing level upgrade on touch', async () => {
+  await browser.withPage(async page => {
+    await page.evaluate(async () => {
+      await window.g20Import('/src/ui/kit/kit.css');
+      const {createIslandUi} = await window.g20Import('/src/island/ui.js');
+      const {buildCardModel} = await window.g20Import('/src/island/card-model.js');
+      const ui = createIslandUi({container: document.body});
+      window.selectionCalls = [];
+      function render(treePicked) {
+        const model = buildCardModel({spotId: 'cannon_1', slot: 'tower', coins: 1000, movable: true, treePicked,
+          spot: {id: 'cannon_1', kind: 'cannon', built: true, level: 2, upgradeCost: 127}});
+        model.coverage = {id: 'cannon_1', x: 0, z: 0, range: 39, targets: ['ships']};
+        ui.buildCard(model, handlers, {dock: true});
+      }
+      const handlers = {move() {}, upgrade: id => window.selectionCalls.push(['buy', id]),
+        treeSelect(id, node) { window.selectionCalls.push(['select', id, node]); render(node); }};
+      render('a1');
+      window.disposeSelection = () => ui.dispose();
+    });
+    const dock = page.getByRole('region', {name: 'Selected building'});
+    const upgrade = dock.getByRole('button', {name: 'Upgrade · 🪙 127', exact: true});
+    expect(await dock.locator('dt').allTextContents()).toEqual(['⌖Range', '✦Base damage']);
+    expect(await dock.locator('dd').allTextContents()).toEqual(['39', '16']);
+    for (const viewport of [{width: 1280, height: 720}, {width: 375, height: 812}, {width: 320, height: 568}]) {
+      await page.setViewportSize(viewport);
+      const bounds = await dock.evaluate(element => {
+        const box = element.getBoundingClientRect();
+        const boxes = [...element.querySelectorAll('.island-selection-actions button:not([hidden])')]
+          .map(button => button.getBoundingClientRect());
+        return {height: box.height, contained: boxes.every(button =>
+          button.width >= 44 && button.height >= 44 && button.left >= box.left && button.right <= box.right),
+        aligned: boxes[0].y === boxes[1].y};
+      });
+      expect(bounds.height, `${viewport.width}px selection dock height`).toBeLessThanOrEqual(viewport.width <= 620 ? 195 : 130);
+      expect(bounds).toMatchObject({contained: true, aligned: true});
+    }
+    await upgrade.tap();
+    const dialog = page.getByRole('dialog', {name: 'Cannon'});
+    await dialog.waitFor();
+    expect(await page.evaluate(() => window.selectionCalls)).toEqual([['select', 'cannon_1', 'level']]);
+    await dialog.getByRole('button', {name: 'Upgrade · 🪙 127', exact: true}).tap();
+    expect(await page.evaluate(() => window.selectionCalls)).toEqual([['select', 'cannon_1', 'level'], ['buy', 'cannon_1']]);
+    await page.evaluate(() => window.disposeSelection());
+  }, {hasTouch: true});
+});
+
 it('routes real dock upgrade A through pending/reselection B and never puts A refusal into B', async () => {
   await browser.withPage(async page => {
     const setup = await page.evaluate(async () => {

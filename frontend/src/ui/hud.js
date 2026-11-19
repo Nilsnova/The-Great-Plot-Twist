@@ -85,6 +85,7 @@ export function createHud(container, actions, {on = defaultOn, emit = defaultEmi
   function drawCoins() {
     cancelAnimationFrame(tickFrame);
     const known = Number.isFinite(coins);
+    overlay.classList.toggle('hud-wide-balance', known && Math.abs(coins) >= 1_000_000);
     purseText.textContent = known ? formatCoins(coins) : '🪙 …';
     drawPurseLabel();
     // Signed out there is no purse to load, so no endless "🪙 …": the chip waits until there are coins.
@@ -124,6 +125,7 @@ export function createHud(container, actions, {on = defaultOn, emit = defaultEmi
     const next = value === true;
     if (next === managing) return;
     managing = next;
+    overlay.classList.toggle('hud-village', managing);
     if (managing && strip.element.contains(document.activeElement)) actions.focus?.();
     draw();
   }

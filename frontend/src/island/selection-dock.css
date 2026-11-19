@@ -87,9 +87,75 @@
   .island-selection-actions button { width: 100%; white-space: normal; }
   .island-selection-dock.is-structure { width: calc(100% - 24px); grid-template-columns: 56px minmax(0, 1fr); }
   .island-selection-dock.is-structure .island-selection-portrait { width: 56px; height: 56px; }
-  .island-selection-dock.is-structure .island-selection-actions { display: flex; flex-wrap: wrap; gap: 6px; }
-  .island-selection-dock.is-structure .island-selection-actions button { flex: 1 0 auto; width: auto; padding: 6px; font-size: 15px; }
-  .island-selection-dock.is-structure .island-selection-actions:has(> [data-focus="upgrade"]:not([hidden])) {
+  .island-selection-dock.is-structure:not(.is-defense) .island-selection-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+  .island-selection-dock.is-structure:not(.is-defense) .island-selection-actions button { flex: 1 0 auto; width: auto; padding: 6px; font-size: 15px; }
+  .island-selection-dock.is-structure:not(.is-defense) .island-selection-actions:has(> [data-focus="upgrade"]:not([hidden])) {
     display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
+  }
+}
+
+.island-selection-dock.is-defense {
+  width: min(820px, calc(100% - 16px)); min-width: 0;
+  grid-template-columns: 80px minmax(0, 1fr) minmax(280px, auto);
+  gap: 8px 14px; padding: 12px;
+  border-color: #f0bf64; border-radius: 19px;
+  background: radial-gradient(ellipse at 11% 0%, #2c666d 0%, transparent 66%), linear-gradient(155deg, #12414a, #08262f 74%);
+  box-shadow: inset 0 0 0 2px #051c23, inset 0 0 0 3px #edc7805c, 0 2px 0 1px #08232a, 0 7px 20px #05252f8c;
+}
+.island-selection-dock.is-defense .island-selection-portrait {
+  width: 80px; height: 80px; padding: 3px;
+  border-color: #6e9b9d; border-radius: 13px;
+  background: radial-gradient(ellipse at 45% 35%, #35686c, #183e49 80%);
+  box-shadow: inset 0 0 0 2px #a4c4bc18, inset 0 -3px 7px #07222e91;
+}
+.is-defense .island-selection-portrait canvas { filter: drop-shadow(0 3px 3px #041b24ad); }
+.is-defense .island-selection-copy { row-gap: 3px; }
+.is-defense .island-selection-title { font: 800 21px/1.12 var(--u-font); }
+.island-selection-stats {
+  display: grid; flex-basis: 100%; gap: 3px;
+  margin: 1px 0 0; padding-top: 5px; border-top: 1px solid #bba47670;
+  font: 650 14px/1.2 var(--u-font);
+}
+.island-selection-stats[hidden], .island-selection-stat[hidden] { display: none; }
+.island-selection-stat, .island-selection-stat dt { display: flex; align-items: baseline; gap: 7px; min-width: 0; }
+.island-selection-stat-icon { min-width: 17px; text-align: center; color: #ffe3a8; font-size: 17px; line-height: 1; }
+.island-selection-stat dd { margin: 0; color: #ffedbc; font-weight: 800; font-variant-numeric: tabular-nums; }
+.island-selection-dock.is-defense .island-selection-actions {
+  display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 5px;
+}
+.is-defense .island-selection-actions > button {
+  grid-column: span 4; min-width: 44px; min-height: 44px; padding: 6px 9px; font-size: 15px;
+}
+.is-defense .island-selection-actions > :is([data-focus="move"], [data-focus="upgrade"]) {
+  font-size: 17px; font-weight: 800;
+}
+.is-defense .island-selection-actions > [data-focus="move"] { grid-column: span 5; }
+.is-defense .island-selection-actions > [data-focus="upgrade"] { grid-column: span 7; }
+.is-defense [data-focus="move"]::before {
+  content: ""; display: inline-block; width: .94em; height: .94em; margin-right: .38em; vertical-align: -.11em;
+  background: #f8e7bf;
+  clip-path: polygon(50% 0,67% 21%,57% 21%,57% 43%,79% 43%,79% 33%,100% 50%,79% 67%,79% 57%,57% 57%,57% 79%,67% 79%,50% 100%,33% 79%,43% 79%,43% 57%,21% 57%,21% 67%,0 50%,21% 33%,21% 43%,43% 43%,43% 21%,33% 21%);
+}
+.is-defense [data-focus="upgrade"]:enabled {
+  background: linear-gradient(#ffe6a7, #ffc353 78%, #eaa743);
+  box-shadow: inset 0 0 0 1px #fff5c2, inset 0 -2px #ae6c28a3, 0 3px 0 #77501c;
+}
+.is-defense .island-selection-actions:has(> [data-focus="move"][hidden]) > [data-focus="upgrade"] { grid-column: 1 / -1; }
+.island-selection-dock.is-defense .island-selection-actions:has(> [data-focus="upgrade"][hidden]) {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.is-defense .island-selection-actions:has(> [data-focus="upgrade"][hidden]) > button { grid-column: auto; }
+
+@media (max-width: 620px) {
+  .island-selection-dock.is-defense { grid-template-columns: 64px minmax(0, 1fr); gap: 6px 10px; padding: 10px; }
+  .island-selection-dock.is-defense .island-selection-portrait { width: 64px; height: 64px; }
+  .is-defense .island-selection-title { font-size: 18px; }
+  .is-defense .island-selection-stats { grid-template-columns: auto 1fr; font-size: 13px; column-gap: 10px; }
+  .is-defense .island-selection-stat, .is-defense .island-selection-stat dt { gap: 4px; }
+}
+@media (max-width: 360px) {
+  .island-selection-dock.is-defense { gap: 5px 8px; padding: 8px; }
+  .is-defense .island-selection-actions > :is([data-focus="move"], [data-focus="upgrade"]) {
+    padding-inline: 6px; font-size: 15px;
   }
 }
