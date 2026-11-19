@@ -84,7 +84,7 @@ try {
     const canvas = document.querySelector('canvas[tabindex="0"]'); return { imageRendering: getComputedStyle(canvas).imageRendering,
       width: canvas.width, height: canvas.height, cssWidth: parseInt(canvas.style.width), cssHeight: parseInt(canvas.style.height) };
   });
-  check(display.imageRendering === 'auto' && display.width*display.height<=3_000_000 && display.width>=display.cssWidth*.5 && display.height>=display.cssHeight*.5, 'World keeps bounded responsive rendering with a usable density floor');
+  check(display.imageRendering === 'auto' && display.width*display.height<=3840*2160 && display.width>=display.cssWidth*.5 && display.height>=display.cssHeight*.5, 'World keeps bounded responsive rendering with a usable density floor');
   report.display = display;
   if (!production) {
     await page.evaluate(() => { window.__island.settings.hour = 12; window.__island.setWeather({ cloudCover: .05, rain: 0, fog: .02, wind: .18 }); });

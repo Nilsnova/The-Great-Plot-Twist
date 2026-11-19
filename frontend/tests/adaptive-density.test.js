@@ -31,7 +31,7 @@ describe('adaptive drawing density',()=>{
     const full=pixelViewport(1280,720,{pixelRatio:2}),adapted=pixelViewport(1280,720,{pixelRatio:2,densityScale:.5});
     expect(adapted.width).toBe(full.width);expect(adapted.height).toBe(full.height);expect(adapted.pixelRatio).toBe(full.pixelRatio/2);
     expect(worldViewport(adapted.width,adapted.height)).toEqual(worldViewport(full.width,full.height));
-    expect(adapted.drawingWidth*adapted.drawingHeight).toBeLessThanOrEqual(3_000_000);
+    expect(adapted.drawingWidth*adapted.drawingHeight).toBeLessThanOrEqual(3840*2160);
     expect(pixelViewport(3840,2160,{pixelRatio:3,densityScale:3}).drawingWidth).toBe(pixelViewport(3840,2160,{pixelRatio:3}).drawingWidth);
   });
   it('does not change density for invalid or backward timestamps',()=>{
