@@ -229,3 +229,15 @@ wallet writer while the copy commits, so it tests scope discovery independently
 of intentional profile-contention refusal. The real native bell producer is an
 additional provided dependency in this run; all 100 migrations applied twice.
 Whole-backend Ruff, 100-file parsing/version uniqueness and diff checks passed.
+
+## Actual accepted-bell reset boundary
+
+Four additional checks use the committed native bell producer with real attached
+controllers, personal assignments, full frozen roster and persisted authority.
+Countdown, combat and an actually elapsed one-second expiry all refuse a new
+reset without withdrawing either slot, clearing assignments, sealing accounting
+or retaining a reset root. After an idle reset, a canonical context read supplies
+the new run; its next native bell carries the new original account/epoch while
+the prior reset UID still returns its immutable old receipt. **Four passed in
+7.05 seconds**. Local identities and combat configuration remain test fixtures;
+these are real domain transactions rather than provider-issued session evidence.
