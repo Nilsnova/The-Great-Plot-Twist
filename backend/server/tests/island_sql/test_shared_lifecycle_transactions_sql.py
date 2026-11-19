@@ -23,6 +23,7 @@ from server.tests.island_sql.test_island_treasury_sql import (  # noqa: E402
     settle,
 )
 from server.tests.island_sql.test_islands_and_waves_sql import (  # noqa: E402
+    add_players,
     as_owner,
     as_server,
     balance,
@@ -41,8 +42,20 @@ def prepared(database):
     return prepare(database)
 
 
-def prepare(database):
-    owner, member, outsider, treasury = ready(database, 100)
+def prepare(database, *, players=None):
+    if players is None:
+        owner, member, outsider, treasury = ready(database, 100)
+    else:
+        # Deterministic fixture identities allow signed lock-order tests without
+        # searching random UUIDs. Admission and personal import remain real.
+        owner, member, outsider = players
+        add_players(database, owner, member, outsider)
+        alphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"  # pragma: allowlist secret
+        code = "".join(alphabet[(owner.int >> (5 * i)) % len(alphabet)] for i in range(5))
+        open_island(database, owner, code)
+        as_server(database)
+        assert rpc(database, "game_join", member, owner, 10)["status"] == "joined"
+        treasury = rpc(database, "island_treasury_admit", owner, owner, "admit0001", 100)
     as_owner(database)
     database.execute(
         "insert into public.island_recovery_state(island_owner,recovery_version,wave_protocol) "

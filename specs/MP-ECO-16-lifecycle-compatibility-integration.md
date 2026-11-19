@@ -265,3 +265,18 @@ The earlier native reset gates and replacement-bell replay cases are included
 in this ten-case total. The complete 101-migration local chain executes twice.
 Seeded Auth identities and trusted combat configuration are fixture provenance,
 not provider-issued authentication or an independent per-hit combat verifier.
+
+## Last eligible member deletion
+
+Deletion must normalize every continuing captured shared island after exact-slot
+withdrawal/deleted-slot disposition and before Auth deletion. Otherwise an already
+expired peer grace can leave the known last departure temporarily unsealed until
+the worker runs. The existing canonical normalization hook supplies deadline and
+outcome selection under the already complete captured lock plan; this adds no new
+scope discovery or earlier lock site. Owned-island close/retirement stays separate.
+
+The eleventh native case first left that attempt unsealed. After adding the
+provided normalization call, all eleven native cases and eight committed lock/
+retry races passed **19 checks in 19.22 seconds**. The earlier-scope race now sorts
+four fixed fixture UUIDs by the actual signed hash, removing a probabilistic
+random-candidate search while preserving the strict earlier-key premise.

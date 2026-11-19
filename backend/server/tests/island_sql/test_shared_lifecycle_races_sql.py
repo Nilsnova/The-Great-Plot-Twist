@@ -9,7 +9,7 @@ from concurrent.futures import ThreadPoolExecutor
 from queue import Queue
 from threading import Barrier, Event
 from time import monotonic
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 
@@ -63,19 +63,9 @@ def profile_is_unlocked(observer, actor, *, key_share_writer=False):
         )
 
 
-def add_legacy_stock(connection, actor, *, lower_than=None, held=True):
+def add_legacy_stock(connection, actor, *, owner=None, held=True):
     as_owner(connection)
-    for _ in range(100):
-        owner = uuid4()
-        if lower_than is None or connection.execute(
-            "select hashtextextended('island-economy:'||%s,0) < "
-            "(select min(hashtextextended('island-economy:'||p::text,0)) "
-            "from unnest(%s::uuid[]) p)",
-            (str(owner), lower_than),
-        ).fetchone()[0]:
-            break
-    else:
-        pytest.fail("Could not allocate an earlier signed scope key for the retry check.")
+    owner = owner or uuid4()
     add_players(connection, owner)
     alphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"  # pragma: allowlist secret
     code = "".join(alphabet[(owner.int >> (5 * i)) % len(alphabet)] for i in range(5))
@@ -160,11 +150,14 @@ def test_new_earlier_stock_scope_retries_whole_batch_before_domain_effects(scrat
         psycopg.connect(scratch_server.get_uri(), autocommit=True) as observer,
         ThreadPoolExecutor(max_workers=1) as pool,
     ):
-        _, actor, _, _, _ = prepare(writer)
-        as_owner(writer)
-        initial_owners = rpc(writer, "island_lifecycle_actor_owners", actor)
-        initial_guards = rpc(writer, "island_lifecycle_guard_actors", actor, initial_owners)
-        legacy_owner, copy = add_legacy_stock(writer, actor, held=False, lower_than=initial_guards)
+        candidates = [UUID(int=2_704_001 + index) for index in range(4)]
+        ordered = writer.execute(
+            "select id from unnest(%s::uuid[]) id "
+            "order by hashtextextended('island-economy:'||id::text,0)", (candidates,)
+        ).fetchall()
+        legacy_owner, outsider, actor, owner = [row[0] for row in ordered]
+        prepare(writer, players=(owner, actor, outsider))
+        _, copy = add_legacy_stock(writer, actor, owner=legacy_owner, held=False)
         writer.commit()
         # This session-level scope survives the writer commit. After discovering
         # the newly held copy, deletion must release its old profile locks and

@@ -533,6 +533,9 @@ begin
           if v_owner<>p_actor_id and exists(select 1 from public.island_economy_state
             where island_owner=v_owner) then
             perform public.shared_session_rotate_topic_locked(v_owner);
+            -- A known last departure also consumes already-expired peer grace
+            -- before Auth cascades. The complete cohort plan is already held.
+            perform public.shared_session_normalize_locked(v_owner,v_now);
           end if;
         end loop;
         insert into public.island_deleted_player_dispositions(player_id,deleted_at)
