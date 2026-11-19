@@ -6,9 +6,10 @@ succession lifecycle. The imported core API explicitly leaves this provider open
 MP-ECO-03 explicitly requires this implementation. This package completes that
 boundary against the actual imported Captain and wave accounting hooks.
 
-Status: canonical controller/provider foundation implemented first; native bell,
-journal, checkpoint, closure, worker/client integration and full acceptance are
-being completed in dependent increments. No release or activation is implied.
+Status: the canonical controller/provider, native accepted bell, frozen-roster
+journal and Captain/structure checkpoint producer are implemented. Canonical
+closure, autonomous processing, settings and full client acceptance follow in
+dependent increments. No release or activation is implied.
 
 ## Existing sources and ownership
 
@@ -104,6 +105,16 @@ input UID/counter ordering is accepted. Retry does not restart a hold. Raw clien
 `captain_revive` is refused. MP-ECO-12 owns the sole durable hold records and
 completion receipt; it consumes the checked current fall through the private
 session context/consume hooks in the same journal transaction.
+
+The native producer compares the prepared static `expectedSource` and health
+revision under its locks before inserting the bell. An accepted start root is
+replayed before template preparation or current membership, phase and generation
+checks. Its historical result has no current treasury, session or fighter proof.
+Read-only members may page the journal without a controlling proof; only the
+current frozen controller may append commands or report combat checkpoints.
+Checkpoint HP increases are limited to actual ordered revival events and bounded
+Tavern healing. A revival basis whose effective tick has not been replayed cannot
+authorize a later fall report.
 
 ## Closure, deletion and autonomous progress
 
