@@ -182,3 +182,20 @@ and an actual saved-origin market wager settling once after reset and physical
 member/owner deletion. Market evidence and clock advancement are labelled test
 fixtures; authority remains the real persisted provider. The replacement account
 receives no portion of the old wager's payout.
+
+## Membership compatibility checkpoint
+
+CLI-generated `20261119000309_canonical_membership_lifecycle.sql` implements the
+existing join/leave wrappers and keeps both original aliases private. Target
+withdrawal cannot revoke a controller or assignment on another island. Stock
+without a controlling lease still returns at an idle boundary. Shared membership
+and topic changes roll back together if its exact copy disposition fails. Inactive
+actors are refused by the database even through the legacy service signatures.
+
+Eight new membership cases first produced seven failures on the old behavior.
+After implementation, the combined membership, original game-room, lifecycle and
+committed race suite passed **40 checks in 20.09 seconds**. The complete 99-file
+migration chain was executed twice by the disposable runner. Whole-backend Ruff,
+99-file SQL parsing, unique migration versions and whitespace checks passed.
+Native reserved-slot leave and active owner-delete closure checks remain separate
+until the supplied accepted-bell/canonical-close implementation is committed.
