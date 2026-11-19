@@ -86,9 +86,11 @@ export async function runFullRepairQuotaAcceptance({ownerPage,memberPage,observe
     const origin=await ownerPage.evaluate(()=>window.__island.island.economy);
     assert.equal((await memberPage.evaluate(()=>window.__island.island.economy)).accountId,origin.accountId);
     assert.equal((await observe('select current_wave_id from public.island_recovery_state where island_owner=$1',[origin.islandOwner]))[0].current_wave_id,null);
+    const priorWave=await ownerPage.evaluate(()=>window.__island?.waves?.island.wave?.info.waveId??null);
     await openCard(ownerPage,'island_bell');
     await pointerClick(ownerPage,ownerPage.locator('.island-card[open] [data-focus="bell"]:not([disabled])'));
-    await ownerPage.waitForFunction(()=>!!window.__island?.waves?.island.wave,null,{timeout:20000});
+    await ownerPage.waitForFunction(prior=>{const wave=window.__island?.waves?.island.wave;
+      return !!wave && !wave.done && wave.info.waveId!==prior;},priorWave,{timeout:20000});
     const wave=await ownerPage.evaluate(()=>window.__island.waves.island.wave.info.waveId);
     await memberPage.waitForFunction(wave=>window.__island?.waves?.island.wave?.info.waveId===wave,wave,{timeout:20000});
     const preparing=await recovery(ownerPage),intactRow=preparing.structures.find(row=>row.spot===spots[0]);
