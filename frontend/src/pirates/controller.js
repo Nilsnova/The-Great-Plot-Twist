@@ -54,6 +54,7 @@
 import { createPoses } from './poses.js';
 import { createLiveAttackFeedback } from './live-attack-feedback.js';
 import { createWave } from './sim.js';
+import {sameFrozenNativeWave} from '../island/shared-wave-shapes.js';
 import { waveGapMs } from '../net/live-rules.js';
 import { captainStats, readSkills, readWeapon } from './captain-stats.js';
 import { ROOM_EVENTS, createInputSchedule } from './sync.js';
@@ -219,7 +220,20 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     const snapshot = recoveryPolicy === 'structure-recovery-v1' ? readRecoverySnapshot(info.initialSnapshot, info.waveId) : null;
     if (recoveryPolicy === 'structure-recovery-v1' && !snapshot) return null;
     ctl.lastTowerObstacles = info.rules?.towerObstacles === true;
-    if (ctl.wave?.info.waveId === info.waveId) return ctl.wave;
+    if (ctl.wave?.info.waveId === info.waveId) {
+      const current=ctl.wave,proof=read(getSessionProof,null);
+      if(current.info.nativeShared && current.info.spectator && info.nativeShared && !info.spectator
+        && !current.done && !current.recoveryFinishAnswered && sameFrozenNativeWave(current.info,info)
+        && validSessionProof(proof) && proof.sessionId===info.controlSessionId
+        && sameEconomyScope(proof.origin,info.initialSnapshot.economy)
+        && info.initialSnapshot.participants.some(row=>row.participantToken===info.participantToken)) {
+        // Keep simulation, HP, replay head, cooldowns and pending history intact.
+        current.info=info;current.nativeActorId=proof.actorId;
+        current.actorCounter=Math.max(current.actorCounter,info.lastActorCounter);
+        current.moveSentAt=-Infinity;
+      }
+      return current;
+    }
     // A friend rang the next wave while ours still runs here (a ship that sinks a moment later on this
     // client): play ours to its end at once, so our part is finished and paid, then start the new one.
     if (ctl.wave && !ctl.wave.done) settle(ctl.wave);

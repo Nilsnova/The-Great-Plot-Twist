@@ -16,7 +16,7 @@ async function pointerClick(page,button) {
   let point=null;
   for(let attempt=0;attempt<40 && !point;attempt++) {
     point=await button.evaluate(element=>{
-      element.scrollIntoView({block:'center',inline:'nearest'});
+      element.scrollIntoView({block:'center',inline:'nearest',behavior:'instant'});
       const box=element.getBoundingClientRect(),x=box.x+box.width/2,y=box.y+box.height/2;
       const hit=document.elementFromPoint(x,y);
       return !element.disabled && box.width>0 && box.height>0
@@ -107,8 +107,8 @@ async function accounting(observe, account, wave) {
  * Direct same-UID/fourth-request probes are explicitly transport-layer checks, not UI-click claims.
  */
 export async function runPaidRepairAcceptance({ownerPage,memberPage,observe,api,outputDir,
-  spot='wall_1',spots=[spot],reconnectMember=page=>page.reload()}) {
-  const report = {sourceCommit:SOURCE,status:'running',scenario:'actual-provider-paid-repair',steps:[],limits:[
+  spot='wall_1',spots=[spot],reconnectMember=page=>page.reload(),sourceCommit=SOURCE}) {
+  const report = {sourceCommit,status:'running',scenario:'actual-provider-paid-repair',steps:[],limits:[
     'Temporary local provider accounts; no hosted service or deployment.',
     'Natural simulation checkpoints retain the existing accepted-combat-report trust model.',
     'Same-UID and refused fourth requests use actual authenticated transport, not a UI click.',
@@ -165,7 +165,10 @@ export async function runPaidRepairAcceptance({ownerPage,memberPage,observe,api,
     report.steps.push({name:'immutable transport retry after later natural damage',accounting:prior});
     // Reload is an ordinary client reconnect. The page keeps its provider session and reacquires product state.
     await reconnectMember(memberPage);
-    await memberPage.waitForFunction(() => !!window.__island?.waves?.island.wave,null,{timeout:30000});
+    await memberPage.waitForFunction(waveId => {
+      const app=window.__island,info=app?.waves?.island.wave?.info,proof=app?.island.session.proof();
+      return info?.waveId===waveId && info.spectator===false && !!proof && proof.sessionId===info.controlSessionId;
+    },wave,{timeout:30000});
     for (const [ordinal,page] of [[2,memberPage],[3,ownerPage]]) {
       await damagedCard(page,spot);
       const paid = await paidClick(page,spot);

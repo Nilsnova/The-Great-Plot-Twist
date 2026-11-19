@@ -387,6 +387,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       if (isl.disposed || !target()) return null;
       if (isl.visitCode && !(await joinFirst(isl.visitCode))) return null; // a friend's wave: join the game first
       if (isl.disposed || !target()) return null;
+      if(isl.getEconomy()?.mode==='island_shared' && !isl.session.proof())await isl.session.ensure();
+      if(isl.disposed || !target())return null;
       const looked = await isl.flow.look(where());
       if (!looked?.ok) return looked;
       if (isl.flow.current && !isl.flow.current.joined) return isl.flow.join(where());

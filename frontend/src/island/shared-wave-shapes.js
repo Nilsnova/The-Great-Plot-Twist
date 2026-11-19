@@ -9,6 +9,13 @@ const exact=(value,keys)=>value && typeof value==='object' && !Array.isArray(val
  && Object.keys(value).length===keys.length && keys.every(key=>Object.hasOwn(value,key));
 const originKeys=['mode','version','islandOwner','accountId','runEpoch'];
 export const nativeOrigin=value=>exact(value,originKeys)?sessionOrigin(value):null;
+const canonical=value=>Array.isArray(value)?value.map(canonical):value && typeof value==='object'
+ ?Object.fromEntries(Object.keys(value).sort().map(key=>[key,canonical(value[key])])):value;
+export function sameFrozenNativeWave(previous,next){
+ const before=nativeOrigin(previous?.initialSnapshot?.economy),after=nativeOrigin(next?.initialSnapshot?.economy);
+ return !!before && !!after && previous.waveId===next.waveId && sameEconomyScope(before,after)
+  && JSON.stringify(canonical(previous.initialSnapshot))===JSON.stringify(canonical(next.initialSnapshot));
+}
 export function validInitialCaptains(snapshot){
  const tokens=snapshot?.participants?.map(row=>row.participantToken),initial=snapshot?.captainInitialState;
  return !!tokens && exact(initial,tokens) && tokens.every(token=>{
