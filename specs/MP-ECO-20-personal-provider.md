@@ -3,6 +3,9 @@
 Responsible teammate: Ianno Hollensteiner (`Iannomh123456`). Covers the bounded
 personal-participation and Engineer-generation portions of #505.
 
+Implemented driver and source-qualified results are recorded in
+[the owned evidence note](../docs/evidence/MP-ECO-20-personal-provider/README.md).
+
 Use actual local GoTrue identities, production bearer API routes and independent
 read-only committed-state observations. A headless client runs the unmodified
 production simulation from the exact frozen snapshot and complete real sealed
