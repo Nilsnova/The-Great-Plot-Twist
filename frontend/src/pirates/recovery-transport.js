@@ -44,7 +44,7 @@ export function recoveryRefusal(answer) {
 /** 'later', 'refresh' or 'terminal' for a refusal (see above). */
 export function refusalKind(refusal) {
   const status = refusal?.status ?? 0, code = refusal?.code ?? '';
-  if (status === 0 || status >= 500 || status === 429 || LATER_CODES.has(code)) return 'later';
+  if (status === 0 || status === 401 || status >= 500 || status === 429 || LATER_CODES.has(code)) return 'later';
   return REFRESH_CODES.has(code) ? 'refresh' : 'terminal';
 }
 /** How long to wait before the next try: Retry-After when given, else 0.25 s doubling up to 8 s. */
@@ -118,6 +118,15 @@ export function simulationInputFromJournal(event) {
   const normalized = commandForJournal(command);
   if (!normalized) return null;
   const input = { ...normalized, by: token };
+  if(event.type==='captain_revive' && Object.hasOwn(event.payload,'operationId')){
+    const payload=event.payload,captain=payload.captain;
+    if(Object.keys(payload).length!==6 || !['operationId','fallId','holdId'].every(key=>isParticipantToken(payload[key]))
+      || payload.targetId!==command.targetId || Object.keys(command).length!==5
+      || !['type','targetId','downAt','x','z'].every(key=>Object.hasOwn(command,key))
+      || !isObject(captain) || Object.keys(captain).length!==3 || !['level','skills','weapon'].every(key=>Object.hasOwn(captain,key)))return null;
+    input.canonicalReviveSeq=event.serverSeq;input.canonicalFallId=payload.fallId;
+    input.trustedCaptain=JSON.parse(JSON.stringify(captain));
+  }
   if (['captain_shot', 'captain_strike', 'captain_revive'].includes(command.type)) {
     const captain = event.payload.captain;
     if (!isObject(captain) || !Number.isInteger(captain.level) || captain.level < 1 || captain.level > 5
@@ -159,6 +168,10 @@ export function createRecoveryTransport({ get, post } = {}) {
       const body = { waveProtocol: 2, ...checkpoint };
       return Promise.resolve(post(`/api/waves/${encodeURIComponent(waveId)}/health`, body))
         .then(dataOrRefusal, thrownRefusal);
+    },
+    captains({waveId,report}={}){
+      if(typeof waveId!=='string' || !report || report.waveProtocol!==2)return Promise.resolve(null);
+      return Promise.resolve(post(`/api/waves/${encodeURIComponent(waveId)}/captains`,report)).then(dataOrRefusal,thrownRefusal);
     },
     finishWave(body) {
       if (!validRecoveryFinishBody(body)) return Promise.resolve(null);

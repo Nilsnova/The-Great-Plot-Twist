@@ -74,6 +74,7 @@ import {createBoatRoundSession} from './shared-boat-session.js';
 import {createIslandSession} from './island-session.js';
 import {readLegacyEconomy} from './economy-view.js';
 import {createSharedWaveApi} from './shared-wave-api.js';
+import {createSharedRevivalApi} from './shared-revival-api.js';
 
 export {ARRIVAL_KEY, SPOTS_CHANGED, NEWS_KEY, CAMPAIGN_UNLOCKED, TOWER_SPECIALISED, TOWER_TREE_BOUGHT,
   HOUSE_ROLE_PICKED, VISIT_NAMED, ISLAND_RESET, CHART_NAMES, ALL_REPAIRED} from './island-shared.js';
@@ -152,6 +153,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   isl.session = createIslandSession(isl);
   isl.sharedWaves = createSharedWaveApi({transport:isl.islandTransport,getEconomy:isl.getEconomy,getActorId,
     getProof:()=>isl.session.proof(),onEconomy:isl.refreshEconomy,storage,allowLegacy:()=>mode==='fake' || !!readLegacyEconomy(isl.getEconomy())});
+  isl.sharedRevival=createSharedRevivalApi({transport:isl.islandTransport,getEconomy:isl.getEconomy,getActorId,getProof:()=>isl.session.proof(),storage});
   isl.api = createIslandApi({transport: isl.islandTransport, ...economyContext, onEconomy: isl.refreshEconomy,
     sharedWaves:()=>mode!=='fake' && isl.domainAvailable('session')?isl.sharedWaves:null,
     economy: () => isl.currentFunds().shared ? isl.currentFunds().economy : undefined, sharedSnapshot: () => isl.visitCode && !isl.visiting ? null : isl.visiting ?? isl.own,
@@ -377,6 +379,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     get recoveryVersion() { return recoveryModelVersion(); },
     roomPlace,
     get session() { return isl.session; },
+    completeRevival:intent=>isl.sharedRevival.complete(intent),
     // A recovery wave ended on screen (controller.js): free the bell and the village, and with its close
     // answer ({survived, loot, coins, waveBest, flags}) tell the island like a finish answer.
     recoveryWaveEnded(waveId, data = null) { if (!isl.disposed && typeof waveId === 'string') isl.flow.ended(waveId, data); },

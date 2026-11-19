@@ -102,6 +102,7 @@ export function wireWaves(ctx) {
     onIslandEvents: events => { noteReport(() => defenseReport?.events(events)); noteReport(publishCore); },
     recoveryTransport,
     getSessionProof:()=>island?.session?.proof()??null,
+    completeRevival:intent=>island.completeRevival(intent),
     practiceIdentity: () => ({player: practicePlayer(ctx.getPracticeToken?.()) ?? ctx.practicePlayer ?? null, island: island?.gameCode ?? roomTopic}),
     islandRoom, islandPlace: ISLAND_PLACE,
     getCrew: () => defended()?.crew ?? null,
@@ -266,8 +267,9 @@ export function wireWaves(ctx) {
       figureMatches = new Map();
       if (!controller || !Array.isArray(party) || !party.length) return null;
       const matches = figureMatches = matchFigures({party, figures: list, mine: controller.playerId});
-      controller.setFigures?.(figurePositions(matches));
-      return hiddenFigures(matches, party);
+      const canonical=controller.wave.info?.nativeShared===true;
+      controller.setFigures?.(canonical?null:figurePositions(matches));
+      return hiddenFigures(matches, party,{canonical});
     },
     // A shot or a blow poses the body that made it (src/pirates/poses.js): {own, figures} with your pose
     // ({kind, flip, age} or null) and Map(presence figure id -> pose) by the matches of figures() above;

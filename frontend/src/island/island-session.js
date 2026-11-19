@@ -10,7 +10,9 @@ export function createIslandSession(isl,{client=null,windowTarget=globalThis,doc
  const control=client??createSharedSessionClient({
   api:createSharedSessionApi({transport:isl.islandTransport,getEconomy:isl.getEconomy,getActorId:isl.getActorId}),
   getEconomy:()=>selected()?isl.getEconomy():null,getActorId:isl.getActorId,getAuthGeneration:isl.authGeneration,storage:isl.storage,
-  onState:()=>isl.refreshCard?.(),
+  onState:state=>{isl.refreshCard?.();if(['controller','spectator'].includes(state.phase)){
+   void isl.sharedWaves?.retryFinishes();void isl.sharedRevival?.retryPending();
+  }},
  });
  async function ensure(){
   if(!selected()){await control.leave();return {ok:false,status:409,code:'session_context_required',message:'Read the selected island before controlling its Captain.'};}

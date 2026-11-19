@@ -10,6 +10,10 @@ const hero = (id, colour, x, z, extra = {}) => ({ id, colour, x, z, hp: 100, max
 const figure = (id, colour, x, z) => ({ id, colour, x, z });
 
 describe('matching the sim captains to the presence figures', () => {
+  it('hides native duplicate standing figures while the wave draws canonical bodies at journal positions',()=>{
+    const party=[hero('native',0,1,2)],matches=matchFigures({party,figures:[figure('presence',0,1,2)]});
+    expect([...hiddenFigures(matches,party,{canonical:true})]).toEqual(['presence']);
+  });
   it('pairs each captain with the figure in its lobby colour near where the sim has it', () => {
     const party = [hero('p-me', 0, 0, 0), hero('p-ben', 1, 10, 4), hero('p-ana', 2, -6, 3, { down: true, hp: 0 })];
     const figures = [figure('live-captain-1', 1, 10.6, 4.2), figure('live-captain-2', 2, -6, 3), figure('live-captain-3', 3, 0, 0)];
@@ -82,6 +86,19 @@ describe('the presence figures hide a fallen captain and say where they stand', 
 });
 
 describe('the hp bar of a teammate sits over their presence figure', () => {
+  it('draws a native standing body at its retained journal pose until trusted withdrawal even without presence',async()=>{
+    const {createWave}=await import('../../src/pirates/sim.js');
+    const {createWaveRenderer,packAtlas,ATLAS_IDS,bandOf}=await import('../../src/pirates/render.js');
+    const {pirateDimensions}=await import('../../src/pixel/pirate-catalog.js');
+    const {projectGround}=await import('../../src/world/projection.js');
+    const atlas={texture:new THREE.Texture(),...packAtlas([...ATLAS_IDS,'captain-1'],{...pirateDimensions,'captain-1':[24,32,3]})};
+    const renderer=createWaveRenderer({scene:new THREE.Scene(),atlas,nativeCaptains:true,fx:()=>null});
+    const state={...createWave({seed:1,wave:1}).state(),party:[hero('native',0,1,2)]};
+    renderer.update({state,figures:new Map([['native',{x:50,z:60}]])});
+    const band=renderer.root.children.find(item=>item.name===`pirates:boarders:${bandOf(2)}`).geometry;
+    expect(band.instanceCount).toBe(1);expect(band.getAttribute('iPos').array[0]).toBeCloseTo(projectGround(1,2).x);
+    state.party[0].present=false;renderer.update({state});expect(band.instanceCount).toBe(0);renderer.dispose();
+  });
   it('draws the bar at the figure when one is drawn, else where the sim has the captain', async () => {
     const { createWave } = await import('../../src/pirates/sim.js');
     const { createWaveRenderer, packAtlas } = await import('../../src/pirates/render.js');

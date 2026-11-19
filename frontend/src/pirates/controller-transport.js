@@ -12,6 +12,7 @@ import { commandForJournal, MAX_INPUT_BATCH, MAX_INPUT_BATCH_BYTES, RECOVERY_FLU
 import { makeActionUid } from '../screens/islet/action-uid.js';
 import { MAX_TICKS_PER_FRAME, canonicalJson, validCanonicalClose, END_BEAT_MS, HEALTH_CHECKPOINT_COALESCE_MS } from './controller-shared.js';
 import {readNativeFinish} from '../island/shared-wave-shapes.js';
+import {createCaptainSynchronizer} from './canonical-captains.js';
 
 export function createTransport(ctl) {
   const { room, now, recoveryTransport, actorId, later, emit, noteLiveInput } = ctl;
@@ -75,6 +76,10 @@ export function createTransport(ctl) {
       const vector = current.sim.recoveryHealthVector();
       const signature = vector ? canonicalJson(vector) : null;
       if (signature && signature !== current.recoveryHealthPersistedSignature) void checkpointBeforeRepair({ force: false }).catch(error => console.error(error));
+    }
+    if(current.info.nativeShared && ctl.controls(current) && !current.done && !current.recoveryPolling && current.recoveryReplay.complete()
+      && typeof recoveryTransport.captains==='function' && at-(current.captainLastSyncAt??-Infinity)>=HEALTH_CHECKPOINT_COALESCE_MS){
+      current.captainLastSyncAt=at;void syncCaptains();
     }
     reconcileTerminalRecovery(current);
     tryRecoveryFinish(current);
@@ -154,6 +159,11 @@ export function createTransport(ctl) {
       const accepted = acceptedRecoveryInputs(answer.accepted, batch, current.info.participantToken);
       current.recoveryInputAttempts = 0;
       if (accepted?.size) {
+        if(current.info.nativeShared){
+          current.recoveryAcks??=new Map();
+          for(const event of answer.accepted)current.recoveryAcks.set(event.payload.inputUid,event);
+          while(current.recoveryAcks.size>64)current.recoveryAcks.delete(current.recoveryAcks.keys().next().value);
+        }
         current.recoveryPending = current.recoveryPending.filter(item => !accepted.has(item.inputUid));
         return true;
       }
@@ -163,6 +173,7 @@ export function createTransport(ctl) {
     }
     // No answer at all is an unknown outcome: the same batch again later (same UIDs, same counters).
     const refusal = answer?.refused ? answer : recoveryRefusal(answer);
+    current.lastInputRefusal=refusal;
     const kind = refusalKind(refusal);
     if (kind === 'later') {
       current.recoveryInputRetryAt = now() + refusalDelayMs(refusal, current.recoveryInputAttempts++);
@@ -204,6 +215,7 @@ export function createTransport(ctl) {
   }
 
   async function flushRecoveryInputs(current) {
+    if(current.info.nativeShared && !ctl.controls(current))return false;
     while (current.recoverySending) {
       const pending = current.recoverySendPromise;
       if (!pending) return false;
@@ -221,6 +233,19 @@ export function createTransport(ctl) {
       if (!applyInputAnswer(current, batch, answer)) return false;
     }
     return true;
+  }
+  const syncCaptains=createCaptainSynchronizer({getCurrent:()=>ctl.wave,controls:ctl.controls,flush:flushRecoveryInputs,
+    fetch:fetchRecoveryFrontier,advance:advanceRecoveryThrough,send:request=>recoveryTransport.captains(request)});
+  async function sendCanonicalCommand(command,pending=null){
+    const current=ctl.wave;
+    if(!current?.info.nativeShared || !ctl.controls(current))return {ok:false,code:'session_context_required'};
+    let entry=pending;
+    if(!entry){if(!submit(command))return {ok:false,code:'input_refused'};entry=current.recoveryPending.at(-1);}
+    if(canonicalJson(entry.command)!==canonicalJson(commandForJournal(command)))return {ok:false,code:'input_refused'};
+    await flushRecoveryInputs(current);
+    const event=current.recoveryAcks?.get(entry.inputUid);
+    return event?{ok:true,event}:current.recoveryPending.some(row=>row.inputUid===entry.inputUid)
+      ?{ok:false,code:'input_sync_required',pending:entry}:{ok:false,code:current.lastInputRefusal?.code??'input_refused'};
   }
 
   function checkpointBeforeRepair({ force = true } = {}) {
@@ -520,5 +545,5 @@ export function createTransport(ctl) {
   function link() { // the names of the other parts, once every part exists (controller.js)
     ({ tagActors, receiveCosmetic, handle, roundLoot, end, presentEnd, stop } = ctl);
   }
-  return { submit, pumpRecovery, checkpointBeforeRepair, tryRecoveryFinish, handOffRecoveryFinish, receive, link };
+  return { submit, pumpRecovery, checkpointBeforeRepair, syncCaptains, sendCanonicalCommand, tryRecoveryFinish, handOffRecoveryFinish, receive, link };
 }

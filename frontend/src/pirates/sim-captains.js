@@ -9,7 +9,7 @@ export function createCaptains(sim) {
   const { C, recoveryPolicy, REWIND_TICKS, seenAt, freeStructureRepair, captainStatsFor, withFlagship, curve,
     finisher, rescue, HO, taverns, housesNear, cannonById, towerHealth, towerById, wallById, jammed, ships, balls,
     shells, captains, blades, boarders, H, party, militia, militiaById, now, damageBoarder, findTarget, targetKey,
-    fire, visible, rebuild, boostWall, applyRecoveryEvent, canonicalCaptains } = sim;
+    fire, visible, rebuild, boostWall, applyRecoveryEvent, canonicalCaptains, canonicalLoadouts } = sim;
   const captainBy = input => (typeof input.by === 'string' && /^[A-Za-z0-9_.:-]{1,64}$/.test(input.by) ? input.by : null);
   const captainLevel = input => (Number.isInteger(input.level) ? clamp(input.level, 1, C.captain.levels.length) : 1);
 
@@ -156,16 +156,24 @@ export function createCaptains(sim) {
   }
   // A teammate next to a fallen captain (within revive reach of where the helper stood) stands them up.
   function captainRevive(input, events) {
-    if(canonicalCaptains)return; // Native revival is a server journal restore fact.
     const by = captainBy(input), R = H.revive;
     if (!by || !finite(input.x) || !finite(input.z) || typeof input.targetId !== 'string') return;
     const helper = party.get(by), hero = party.get(input.targetId);
-    if (!helper || helper.down || !hero || hero === helper || !hero.down) return;
+    if(!helper || !hero || hero===helper || !hero.down)return;
+    if(canonicalCaptains){
+      const frozen=canonicalLoadouts?.[by],trusted=input.trustedCaptain;
+      if(!Number.isSafeInteger(input.canonicalReviveSeq) || input.canonicalReviveSeq<1 || input.canonicalReviveSeq<=(hero.reviveBasisSeq??0)
+        || hero.withdrawn || hero.fallId && hero.fallId!==input.canonicalFallId || !frozen || !trusted
+        || ['level','weapon'].some(key=>frozen[key]!==trusted[key]) || JSON.stringify(frozen.skills)!==JSON.stringify(trusted.skills))return;
+    }else if(helper.down)return;
     // A delayed paid event belongs to exactly one fall; it cannot revive a later fall.
     if (input.downAt !== undefined && input.downAt !== Math.round(hero.downAt / C.tick)) return;
-    if (distance(input.x, input.z, hero.x, hero.z) > R.reach + R.slack) return;
-    helper.seen = sim.ticks * C.tick; helper.away = false; helper.x = input.x; helper.z = input.z;
+    if(!canonicalCaptains){
+      if (distance(input.x, input.z, hero.x, hero.z) > R.reach + R.slack) return;
+      helper.seen = sim.ticks * C.tick; helper.away = false; helper.x = input.x; helper.z = input.z;
+    }
     hero.down = false; hero.downAt = null; hero.hp = Math.max(1, Math.round(hero.maxHp * captainStatsFor(1, input.skills).reviveShare)); // a medic's help-up gives more hp (captain-stats.js)
+    if(canonicalCaptains){hero.reviveBasisSeq=input.canonicalReviveSeq;hero.fallId=null;}
     events.push({ type: 'captain_revived', t: now(), captainId: hero.id, by, hp: hero.hp, x: round2(hero.x), z: round2(hero.z) });
   }
   // A boarder's blow at a militia fighter (the Barracks): at 0 hp it falls, and every boarder on it walks on.
@@ -191,6 +199,7 @@ export function createCaptains(sim) {
       x: round2(hero.x), z: round2(hero.z) });
     if (hero.hp > 0) return;
     hero.down = true; hero.downAt = now();
+    if(canonicalCaptains)hero.fallId=null;
     events.push({ type: 'captain_fell', t: now(), captainId: hero.id, x: round2(hero.x), z: round2(hero.z) });
     for (const other of boarders) if (other.foe === hero.id) { other.foe = null; other.goal = null; if (other.state === 'fighting') other.state = 'walking'; }
   }
