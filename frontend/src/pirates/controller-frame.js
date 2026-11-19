@@ -45,9 +45,10 @@ export function createFrame(ctl) {
     } else {
       const coverage = blocked() ? null : read(getApproachCoverage, null);
       const defenses = coverage?.defenses ?? read(getDefenses, []) ?? [];
+      // New waves always use tower obstacles. A running wave keeps its frozen rules above.
       ctl.guide.update({ mode: 'preview', lanes: null, defenses, stateWalls: coverage?.stateWalls ?? null,
         stateTowers: coverage?.stateTowers ?? null, coverage, managing: read(getManaging, false) === true,
-        towerObstacles: current?.info.rules?.towerObstacles ?? ctl.lastTowerObstacles, boarders: [], heart: null,
+        towerObstacles: true, boarders: [], heart: null,
         wave: coverage?.wave ?? (current?.info.wave ?? ctl.lastWave) + 1, dt });
     }
   }

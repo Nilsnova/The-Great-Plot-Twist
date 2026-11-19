@@ -111,19 +111,23 @@ describe('core display through the actual wave controller', () => {
 
   it('forwards management state to previews while retaining useful live guide updates', async () => {
     let managing = true;
+    let coverage = null;
     const guide = {update: vi.fn(), setVisible: vi.fn(), dispose: vi.fn()};
     const createGuide = vi.fn(async () => guide);
-    const h = harness({guide: true, createGuide, getManaging: () => managing});
+    const h = harness({guide: true, createGuide, getManaging: () => managing, getApproachCoverage: () => coverage});
     h.controller.update(0); await flush(); h.controller.update(0);
     expect(createGuide).toHaveBeenCalledOnce();
-    expect(guide.update).toHaveBeenLastCalledWith(expect.objectContaining({mode: 'preview', managing: true}));
-    managing = false; h.controller.update(0);
+    expect(guide.update).toHaveBeenLastCalledWith(expect.objectContaining({mode: 'preview', managing: true, towerObstacles: true}));
+    coverage = {target: 'boarders', wave: 3, defenses: [], stateWalls: [], stateTowers: []};
+    h.controller.update(0);
+    expect(guide.update).toHaveBeenLastCalledWith(expect.objectContaining({mode: 'preview', coverage, wave: 3, towerObstacles: true}));
+    coverage = null; managing = false; h.controller.update(0);
     expect(guide.update).toHaveBeenLastCalledWith(expect.objectContaining({mode: 'preview', managing: false}));
     h.controller.start(INFO); await flush();
     for (const value of [true, false]) {
       managing = value; h.step(50);
       const view = guide.update.mock.calls.at(-1)[0];
-      expect(view).toMatchObject({mode: 'wave', wave: INFO.wave, defenses: [], heart: h.controller.state.heart});
+      expect(view).toMatchObject({mode: 'wave', wave: INFO.wave, defenses: [], heart: h.controller.state.heart, towerObstacles: false});
       expect(view.managing).not.toBe(true);
       expect(guide.setVisible).toHaveBeenLastCalledWith(true);
     }

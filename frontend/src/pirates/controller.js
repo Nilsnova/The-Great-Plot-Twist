@@ -100,7 +100,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     holdE: false, holdPrompt: false, // E or the prompt held down (a revive)
     figures: null, // the presence figures' positions of the other captains (setFigures)
     runLoot: 0, auto: !!loadAuto(), level: null, skills: null, weapon: null,
-    guide: null, guideLoading: false, lastWave: 0, lastTowerObstacles: false,
+    guide: null, guideLoading: false, lastWave: 0,
     autoBlade: true, rangePreview: false }; // the browser checks turn it off to let a captain fall on purpose (controller.autoBlade)
   const myLevel = () => { const value = Number(ctl.level ?? captainLevel()); return Number.isInteger(value) ? Math.min(5, Math.max(1, value)) : 1; };
   const read = (get, fallback) => { try { return get(); } catch { return fallback; } };
@@ -209,7 +209,6 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
       || typeof recoveryTransport.checkpoint !== 'function' || typeof recoveryTransport.finishWave !== 'function')) return null;
     const snapshot = recoveryPolicy === 'structure-recovery-v1' ? readRecoverySnapshot(info.initialSnapshot, info.waveId) : null;
     if (recoveryPolicy === 'structure-recovery-v1' && !snapshot) return null;
-    ctl.lastTowerObstacles = info.rules?.towerObstacles === true;
     if (ctl.wave?.info.waveId === info.waveId) return ctl.wave;
     // A friend rang the next wave while ours still runs here (a ship that sinks a moment later on this
     // client): play ours to its end at once, so our part is finished and paid, then start the new one.
