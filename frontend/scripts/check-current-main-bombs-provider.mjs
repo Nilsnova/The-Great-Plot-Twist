@@ -35,6 +35,21 @@ const read = (statement, parameters = []) => observe(statement, parameters, {run
 const setup = (statement, parameters, purpose) => install(statement, parameters, purpose, {runtimePath});
 function ok(reply, label) { assert.equal(reply.status, 200, label + ': ' + JSON.stringify(reply.data)); return reply.data; }
 function note(event, detail = {}) { const row = {event, at: new Date().toISOString(), ...detail}; facts.push(row); console.log(JSON.stringify(row)); }
+async function enter(page, options = {}) {
+  try { await land(page, options); }
+  catch (error) {
+    if (error.name !== 'TimeoutError') throw error;
+    // A real successful Create/Join can remove its dialog before Playwright finishes its wait.
+    await page.waitForFunction(({join}) => window.__island?.world.current?.id === 'home_islet'
+      && !!(window.__island.island?.visiting ?? window.__island.island?.island)
+      && (!join || (window.__island.island?.visiting?.code ?? window.__island.island?.island?.code) === join),
+    {join: options.join ?? null}, {timeout: 30000});
+  }
+  for (const name of ['Skip', 'Got it']) {
+    const button = page.getByRole('button', {name, exact: true}).first();
+    if (await button.isVisible().catch(() => false)) await button.click({noWaitAfter: true});
+  }
+}
 async function watch(page) {
   await page.waitForFunction(() => !!window.__island?.waves?.island?.wave, null, {timeout: 45000});
   return page.evaluate(() => {
@@ -98,7 +113,8 @@ try {
   rendered = await createClients({labels: ['bomb-owner', 'bomb-mate'], runtimePath,
     expectedCommit: baseline, independentBrowsers: true});
   const [owner, mate] = rendered.clients;
-  await land(owner.page, {create: true});
+  note('actual-registered-clients-ready', {independentBrowserProcesses: 2});
+  await enter(owner.page, {create: true});
   const own = ok(await api(owner.page, '/api/island'), 'Legacy island');
   const code = own.code;
   await setup('select public.apply_wallet_transaction($1::uuid,5000,\'starting_coins\',$2)',
@@ -110,7 +126,7 @@ try {
   assert.equal(purchased.carried, 'fire_bombs');
   note('real-legacy-purchase', {carried: purchased.carried, browserProcesses: 2});
   await owner.page.evaluate(async () => { await window.__island.island.load(); await window.__island.island.arsenal.refresh(); });
-  await land(mate.page, {join: code});
+  await enter(mate.page, {join: code});
   const started = ok(await api(owner.page, '/api/waves/start', {method: 'POST', body: {
     where: code, waveProtocol: 2, actionUid: uid()}}), 'Actual legacy protocol-2 start');
   note('actual-legacy-start-api', {recoveryVersion: started.recoveryVersion, waveProtocol: started.waveProtocol});
@@ -139,7 +155,7 @@ try {
   const two = await replay(mate.page, ownWave.snapshot, accepted.events, accepted.seal, ownWave.token);
   checkBomb(one); assert.deepEqual(two, one);
   await owner.page.screenshot({path: output + '/legacy-after-area-blast.png'});
-  await mate.page.reload({waitUntil: 'domcontentloaded'}); await land(mate.page); await watch(mate.page);
+  await mate.page.reload({waitUntil: 'domcontentloaded'}); await enter(mate.page); await watch(mate.page);
   const replayed = await replay(mate.page, ownWave.snapshot, accepted.events, accepted.seal, ownWave.token);
   checkBomb(replayed); assert.deepEqual(replayed, one);
   note('original-four-argument-recovery-producer', {recoveryVersion: 1, protocol: 2, nativeShared: false,
