@@ -140,8 +140,8 @@ try {
   const code = own.code;
   await setup('select public.apply_wallet_transaction($1::uuid,5000,\'starting_coins\',$2)',
     [owner.actorId, uid()], 'Explicit extra disposable wallet budget for buying the test weapon; not natural income');
-  await setup('update public.islands set wave_best=10,next_wave=1 where player_id=$1::uuid',
-    [owner.actorId], 'Explicit saved unlock and ordinary repeat-attempt fixture; no earned-progress claim');
+  await setup('update public.islands set wave_best=50,next_wave=1 where player_id=$1::uuid',
+    [owner.actorId], 'Explicit saved wave-50 unlock and ordinary repeat-attempt fixture; no earned-progress claim');
   const purchased = ok(await api(owner.page, '/api/island/arsenal/buy', {method: 'POST',
     body: {weapon: 'fire_bombs', actionUid: uid(), code}}), 'Legacy fire-bomb purchase');
   assert.equal(purchased.carried, 'fire_bombs');
