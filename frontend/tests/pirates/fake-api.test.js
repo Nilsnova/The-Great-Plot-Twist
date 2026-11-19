@@ -1,5 +1,6 @@
 // The in-memory island and wave API (BUILD-PLAN 3.4): prices, refusals, loot and timing.
 import { describe, expect, it } from 'vitest';
+import {onWallPerimeter} from '../../src/island/placement.js';
 import { createFakeIslandApi, createFakeIslandTransport, createFakeWorld, fakeFlagsFor, islandRoom, lootFor, readIslandCode, wantsFakeIslands } from '../../src/pirates/fake-api.js';
 
 const clock = (start = Date.UTC(2026, 10, 11, 12, 0, 0, 400)) => {
@@ -12,7 +13,7 @@ async function refusal(promise) {
 }
 
 describe('fake island API', () => {
-  it.each([false, true])('rejects fresh walls through scenery and reconciles a paid retry (member=%s)', async member => {
+  it.each([false, true])('settles a fresh wall to the edge and reconciles a paid retry (member=%s)', async member => {
     const world = createFakeWorld();
     const host = createFakeIslandApi({world});
     const visitor = createFakeIslandApi({world, playerId: 'visitor'});
@@ -25,13 +26,10 @@ describe('fake island API', () => {
     const request = {spot: 'wall_1', kind: 'wall', actionUid: 'buy-old-wall', ...(member ? {code} : {})};
     const before = (await api.island()).coins;
 
-    await expect(api.build(request)).rejects.toMatchObject({status: 409, code: 'place_taken'});
-    expect((await api.island()).coins).toBe(before);
-    expect(island.built.has('wall_1')).toBe(false);
-    expect(island.positions.get('wall_1')).toEqual(old);
-
-    island.positions.set('wall_1', {x: -18.5, z: -1});
-    await api.build(request);
+    const built = await api.build(request);
+    const wall = built.spots.find(item => item.id === 'wall_1');
+    expect(onWallPerimeter(wall.x, wall.z)).toBe(true);
+    expect(island.positions.get('wall_1')).toEqual({x: wall.x, z: wall.z});
     expect(island.built.has('wall_1')).toBe(true);
     expect((await api.island()).coins).toBe(before - 10);
     island.positions.set('wall_1', old);
@@ -41,6 +39,25 @@ describe('fake island API', () => {
     await expect(api.build({...request, actionUid: 'buy-standing-wall'})).rejects.toMatchObject({
       status: 409, code: 'spot_taken',
     });
+  });
+
+  it('keeps a legacy paid wall and purchases a new wall at its moved perimeter socket', async () => {
+    const world = createFakeWorld(), api = createFakeIslandApi({world});
+    const initial = await api.island();
+    const island = world.islands.get(initial.code.slice(5));
+    island.built.add('wall_7');
+    island.positions = new Map([['wall_7', {x: 8.5, z: 2}]]);
+    const wall = (view, id) => view.spots.find(spot => spot.id === id);
+    expect(wall(await api.island(), 'wall_7')).toMatchObject({built: true, x: 8.5, z: 2});
+    await expect(api.move({spot: 'wall_1', x: 1.5, z: 8})).rejects.toMatchObject({code: 'off_path'});
+    expect(wall(await api.move({spot: 'wall_1', x: 18, z: -6}), 'wall_1')).toMatchObject({built: false, x: 18, z: -6});
+    const purchase = {spot: 'wall_1', kind: 'wall', actionUid: 'perimeter-wall'};
+    const built = await api.build(purchase);
+    expect(wall(built, 'wall_1')).toMatchObject({built: true, x: 18, z: -6});
+    expect(wall(built, 'wall_7')).toMatchObject({built: true, x: 8.5, z: 2});
+    expect(built.coins).toBe(initial.coins - 10);
+    expect((await api.build(purchase)).coins).toBe(built.coins);
+    expect(wall(await api.island(), 'wall_1')).toMatchObject({built: true, x: 18, z: -6});
   });
 
   it('accepts protocol-two capability and keeps the legacy policy for a legacy island', async () => {

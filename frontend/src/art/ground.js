@@ -48,7 +48,7 @@ function wallGrassEdge(surface, meadow) {
     }
     return {angle, width, radius: Math.min(.994, radius + .011)};
   });
-  return angle => {
+  function neededRadius(angle) {
     const edge = meadow(angle);
     let radius = edge;
     for (const shoulder of shoulders) {
@@ -56,6 +56,22 @@ function wallGrassEdge(surface, meadow) {
       radius = Math.max(radius, edge + (shoulder.radius - edge) * fade * fade * (3 - 2 * fade));
     }
     return radius;
+  }
+  // Blend neighbouring footings into one grass edge. Fill the small notches between
+  // square pads first, then soften the end of each run into the existing meadow.
+  const count = 180, step = Math.PI * 2 / count;
+  const sample = (list, index) => list[(index + count) % count];
+  const nearby = (list, index) => [-3, -2, -1, 0, 1, 2, 3].map(offset => sample(list, index + offset));
+  const measured = Array.from({length: count}, (_, index) => neededRadius(index * step));
+  const expanded = measured.map((_, index) => Math.max(...nearby(measured, index)));
+  const joined = expanded.map((_, index) => Math.min(...nearby(expanded, index)));
+  const smooth = joined.map((value, index) =>
+    (sample(joined, index - 2) + 2 * sample(joined, index - 1) + 3 * value +
+      2 * sample(joined, index + 1) + sample(joined, index + 2)) / 9);
+  return angle => {
+    const at = angle / step, first = Math.floor(at), progress = at - first;
+    const radius = sample(smooth, first) * (1 - progress) + sample(smooth, first + 1) * progress;
+    return Math.max(meadow(angle), radius);
   };
 }
 
