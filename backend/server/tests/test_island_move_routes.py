@@ -143,15 +143,16 @@ def test_an_illegal_move_is_refused_before_the_database_is_asked(world, x, z, st
     assert move_calls(world) == []
 
 
-def test_a_wall_moved_off_every_pirate_path_is_409_off_path(world):
+def test_a_wall_moved_inside_the_perimeter_is_409_off_path(world):
     response = move(world, spot="wall_1", x=-4, z=-5.5)
     assert response.status_code == 409
-    assert response.json()["error"] == {"code": "off_path", "message": "Walls go on a pirate path."}
+    assert response.json()["error"] == {"code": "off_path", "message": layout.WALL_EDGE_MESSAGE}
     assert move_calls(world) == []
 
 
-def test_a_wall_stored_off_every_path_shows_on_the_nearest_lane_cell(world):
-    # D056: a wall moved before the rule (the old north spot of wall_11) stands on a lane now.
+def test_a_paid_wall_from_before_d056_keeps_its_settled_legacy_cell(world):
+    # The earlier pirate-lane rule already settled this old, moved wall on read.
+    world.database.buildings[PLAYER_ID] = [{"plot": "wall_11", "building_type": "wall"}]
     world.database.layout_rows = [{"plot": "wall_11", "x_half": -8, "z_half": -11}]
     answer = world.island().json()
     where = (spot(answer, "wall_11")["x"], spot(answer, "wall_11")["z"])

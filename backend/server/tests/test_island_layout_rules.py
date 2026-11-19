@@ -8,13 +8,15 @@ Used by: pytest (cd backend && uv run pytest).
 """
 
 import json
+from dataclasses import replace
 
 import pytest
 
 from server.island import layout
 from server.island.catalogue import load_island
 
-RULES = layout.load_layout()
+# This module retains the D056 expectations for saves and fixed-layout mode.
+RULES = replace(layout.load_layout(), wall_perimeter=frozenset(), wall_defaults={})
 
 
 def refused_code(spot_id: str, x: float, z: float, positions=None) -> str:
