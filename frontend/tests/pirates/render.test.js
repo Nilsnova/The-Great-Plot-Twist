@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { describe, expect, it } from 'vitest';
 import { CONFIG, coastPoint, createWave } from '../../src/pirates/sim.js';
-import { ATLAS_IDS, BOARDER_BANDS, MUSKET, createWaveRenderer, packAtlas } from '../../src/pirates/render.js';
+import { ATLAS_IDS, BOARDER_BANDS, CHARACTER_SCALE, MUSKET, createWaveRenderer, packAtlas } from '../../src/pirates/render.js';
 import { pirateDimensions } from '../../src/pixel/pirate-catalog.js';
 import {projectGround} from '../../src/world/projection.js';
 
@@ -73,6 +73,28 @@ describe('pirate wave renderer', () => {
     expect(renderer.stats().instances).toBe(0);
     expect(renderer.root.visible).toBe(false);
     renderer.dispose();
+  });
+
+  it('keeps the Home boarders’ contact shading on shore and clears it with the battle', () => {
+    const scene = new THREE.Scene();
+    const renderer = createWaveRenderer({scene, atlas: atlas(), place: 'home_islet', reducedMotion: () => true});
+    const state = {ships: [], walls: [], towers: [], boarders: [
+      {id: 'landed', x: 1, z: -3, hp: 9, maxHp: 9},
+      {id: 'offshore', x: 22, z: 0, hp: 9, maxHp: 9},
+    ]};
+    renderer.update({state});
+    const shadow = renderer.root.getObjectByName('pirate-foot-shadows');
+    const contact = shadow.geometry.getAttribute('footprint'), pin = projectGround(1, -3);
+    expect(shadow.visible).toBe(true);
+    expect(shadow.geometry.instanceCount).toBe(1);
+    expect(contact.getX(0)).toBeCloseTo(pin.x + .15 * CHARACTER_SCALE);
+    expect(contact.getY(0)).toBeCloseTo(pin.y - .05 * CHARACTER_SCALE);
+    renderer.setVisible(false);
+    renderer.update({state});
+    expect(shadow.geometry.instanceCount).toBe(0);
+    expect(shadow.visible).toBe(false);
+    renderer.dispose();
+    expect(shadow.parent).toBeNull();
   });
   it('pools one selected defense overlay below the captain range and clears it at every handoff', () => {
     const scene = new THREE.Scene(), record = {id: 'mortar_1', kind: 'mortar', level: 3, x: 4, z: -6};

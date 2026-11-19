@@ -40,4 +40,16 @@ describe('composition and motion contracts', () => {
     character.animate(.1, 3);
     expect(character.sprite.scale.y).toBe(1);
   });
+  it('leans around the captain’s foot in the direction of travel and settles on release', () => {
+    const character = createCharacter(materials(), {idleMotion: () => true});
+    character.group.position.set(2, 19, 5);
+    character.face(1, 0);
+    character.animate(.07, 3);
+    const lean = character.sprite.rotation.z;
+    expect(lean).toBeLessThan(0);
+    expect(character.sprite.position.x).toBe(projectPoint(2, 5).x);
+    for (let frame = 0; frame < 10; frame++) character.animate(.07, 0);
+    expect(character.sprite.rotation.z).toBeCloseTo(0, 4);
+    expect(character.sprite.position.y).toBe(projectPoint(2, 5).y);
+  });
 });

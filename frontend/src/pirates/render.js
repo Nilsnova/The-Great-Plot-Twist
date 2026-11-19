@@ -38,6 +38,7 @@ import {projectGround, projectGroundVector, projectLegacyGround, groundProjectio
 import {defenseDisplayAnchors} from '../island/defense-display.js';
 import {makeDefenseRange} from '../island/defense-range.js';
 import {makeSelectionBracket} from '../island/selection-bracket.js';
+import {createActorContacts} from '../world/actor-contact.js';
 
 const UNIT = 16;
 const facingTo = item => projectGroundVector(item.toX - item.x, (item.toZ ?? item.z ?? 0) - (item.z ?? 0)).x < 0 ? -1 : 1;
@@ -365,6 +366,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   beamFrom = null, place = null, recoveryV1 = false, fx = () => scene.userData?.pixelFx ?? null }) {
   const owned = [], root = new THREE.Group(); root.name = 'pirate-wave'; scene.add(root);
   const combatOverlay = createCombatOverlay(root);
+  const contacts = place === 'home_islet' ? createActorContacts(root, 'pirate-foot-shadows', 320) : null;
   const rect = {};
   for (const [id, r] of Object.entries(atlas.rects)) {
     // A hair in from every edge so neighbours never bleed in.
@@ -809,7 +811,9 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     if (!r) return;
     // A brute (wave 20+) is bigger and redder than the rest of the crowd.
     const big = boarder.brute ? BRUTE_LOOK.scale : 1, look = boarder.brute ? BRUTE_LOOK.tint : {};
-    layer.push(r, x, y, r.w * K() * big, r.h * K() * big, .5, r.anchor * K() * big, opt(1, look, meta.facing < 0, hit ? (rect[cartoon] ? .35 : .7) : 0));
+    const scale = K() * big;
+    contacts?.add(boarder.x, boarder.z, scale);
+    layer.push(r, x, y, r.w * scale, r.h * scale, .5, r.anchor * scale, opt(1, look, meta.facing < 0, hit ? (rect[cartoon] ? .35 : .7) : 0));
     if (boarder.hp < boarder.maxHp) {
       const top = y + (r.h - r.anchor) * K() - .35, w = .9, share = Math.max(0, boarder.hp / boarder.maxHp);
       layer.push(rect[WHITE], x - w / 2 - .0625, top - .0625, w + .125, .25, 0, 0, tinted(DARK, .8));
@@ -833,7 +837,9 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     const id = hit ? 'militia-hit' : striking ? 'militia-strike' : unit.state === 'walking' && !still() ? MILITIA_IDS[1 + step] : 'militia';
     const r = rect[id];
     if (!r) return;
-    layer.push(r, x, y, r.w * K(), r.h * K(), .5, r.anchor * K(), opt(1, null, meta.facing < 0, hit ? .35 : 0));
+    const scale = K();
+    contacts?.add(unit.x, unit.z, scale);
+    layer.push(r, x, y, r.w * scale, r.h * scale, .5, r.anchor * scale, opt(1, null, meta.facing < 0, hit ? .35 : 0));
     if (unit.hp < unit.maxHp) {
       const top = y + (r.h - r.anchor) * K() - .35, w = .9, share = Math.max(0, unit.hp / unit.maxHp);
       layer.push(rect[WHITE], x - w / 2 - .0625, top - .0625, w + .125, .25, 0, 0, tinted(DARK, .8));
@@ -1163,6 +1169,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   function draw() {
     for (const layer of layerList) layer.begin();
     for (const layer of bands) layer.begin();
+    contacts?.begin();
     const state = latest;
     if (state && visible) {
       for (const wreck of wrecks.items) {
@@ -1221,6 +1228,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     }
     for (const layer of layerList) layer.end();
     for (const layer of bands) layer.end();
+    contacts?.end();
     wallConnections.show(posts, state?.walls ?? [], {visible, inBreak});
     // Reused every frame (no new Map per frame): this frame's walls and towers by id.
     const walls = frameWalls, towers = frameTowers;
@@ -1346,6 +1354,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       if (disposed) return; disposed = true;
       wallConnections.dispose();
       combatOverlay.dispose();
+      contacts?.dispose();
       defenseSelection?.dispose();
       defenseRange?.dispose();
       root.removeFromParent(); root.clear();
