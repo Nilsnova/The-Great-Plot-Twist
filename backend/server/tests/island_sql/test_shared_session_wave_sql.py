@@ -36,6 +36,21 @@ def live_room(database):
 
 def bell(database, room, *, countdown=0, uid="native_bell_001"):
     owner, _, _, treasury, sessions = room
+    as_server(database)
+    assert (
+        rpc(
+            database,
+            "shared_session_settings",
+            owner,
+            owner,
+            keys(treasury)[1],
+            sessions[owner],
+            1,
+            uuid4().hex,
+            Jsonb({"countdownSeconds": countdown}),
+        )["status"]
+        == "done"
+    )
     as_owner(database)
     revision = database.execute(
         "select revision from public.island_recovery_state where island_owner=%s", (owner,)
@@ -91,6 +106,17 @@ def test_bell_freezes_full_roster_personal_assignment_and_original_economy(datab
     }
     assert snapshot["islandEpoch"] != keys(treasury)[1]
     assert len(snapshot["participants"]) == 2
+    assert snapshot["captainInitialState"] == {
+        row["participantToken"]: {
+            "x": 0,
+            "z": 0,
+            "hpUnits": 1_000_000,
+            "downAtTick": None,
+            "fallId": None,
+            "reviveBasisSeq": 0,
+        }
+        for row in snapshot["participants"]
+    }
     assert all(set(row) == {"participantToken", "captain"} for row in snapshot["participants"])
     for actor in (owner, member):
         assert authority(database, actor, owner)["actor_assignment_wave_id"] == str(wave)
@@ -282,6 +308,7 @@ def test_raw_revive_or_away_cannot_hide_or_heal_a_shared_captain(database):
     started = bell(database, room)
     for command in (
         {"type": "captain_revive", "targetId": str(uuid4()), "x": 0, "z": 0},
+        {"type": "captain_withdrawn", "participantToken": str(uuid4()), "reason": "leave"},
         {"type": "captain_move", "x": 0, "z": 0, "away": True},
         {"type": "captain_revive_hold_start", "targetId": None, "fallId": None},
     ):

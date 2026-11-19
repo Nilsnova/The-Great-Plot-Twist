@@ -8,8 +8,9 @@ boundary against the actual imported Captain and wave accounting hooks.
 
 Status: the canonical controller/provider, native accepted bell, frozen-roster
 journal, checkpoints, terminal settlement and autonomous deadline processing are
-implemented. Session settings, auto-next pacing, runnable worker and full client
-acceptance follow in dependent increments. No release or activation is implied.
+implemented, including persisted leader settings, controller exit, automatic
+pacing and the standalone worker. Full client acceptance is coordinated
+separately. No release or activation is implied.
 
 ## Existing sources and ownership
 
@@ -82,6 +83,10 @@ transaction. Difficulty and roster never shrink after bell.
 `islandEpoch/reset_epoch` is a separate identity. The full token roster and frozen
 Captain stats exist at bell. Public participant rows retain opaque tokens, with
 no player/profile/account IDs added to those rows. Late arrivals are spectators.
+The sibling `initialSnapshot.captainInitialState` maps exactly those tokens to
+their actual initial `{x:0,z:0,hpUnits:1000000,downAtTick:null,fallId:null,
+reviveBasisSeq:0}` facts. Every frozen Captain exists before the first move;
+later state is reconstructed from the same complete ordered journal.
 
 Shared input acceptance authenticates the current controller/generation and
 matching personal assignment under the same locks as journal insertion. Only a
@@ -148,6 +153,36 @@ abandon/expire attempts, return pending copies or execute enabled auto-next.
 Provide a runnable CLI worker plus bounded service RPCs. Actual deployment/worker
 activation remains outside this local task; daily keepalive and five-minute
 wager polling are not a substitute for this worker.
+
+Auto-next preserves the existing won-only eight-second break. The existing
+island settings row retains the preceding closed wave, deadline and paused
+remaining time. Pause stops only that break clock; losses remain manual. The
+worker prepares a coherent server template, then a service-only auto-start
+transaction rechecks that exact preceding wave, current epoch, elected connected
+leader and deadline. Player and automatic starts call one private accepted-bell
+implementation. Automatic starts use a deterministic server operation identity
+in the existing common registry, never a fabricated player click. A manual bell,
+reset or owner retirement cancels the old pending break. The leader's persisted
+countdown applies at the accepted bell.
+
+From `backend/`, `uv run python -m tools.shared_session_worker --once` runs one
+bounded cycle; omit `--once` for a foreground loop (one second by default,
+`--interval` accepts 0.25–30 seconds and `--limit` accepts 1–100 islands per
+stage). It reads the normal server settings and uses the same default-place
+weather/fallback policy as a bell without geo headers. Output contains counts
+only. No browser, presence message or daily cron is required. Running this
+process against a deployed database is a separate activation, not performed by
+the local verification.
+
+Native Captains remain targetable at their last accepted position until a
+trusted `captain_withdrawn` event is replayed. Its outer participant token and
+payload token match; payload contains exactly `{participantToken,reason}` with
+the existing withdrawal reason enum. The server supplies sequence/tick; actor,
+input UID and actor counter are null. It appears once after the current sealed
+prefix and never modifies a previously acknowledged prefix. No removal event
+is appended beyond the final legal tick; overall terminal closure ends that
+wave instead. Native simulation ignores the legacy eight-second heard timeout
+and permanently fences a withdrawn token against already queued later input.
 
 ## Private channel generations
 
