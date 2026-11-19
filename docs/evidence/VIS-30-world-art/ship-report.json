@@ -2,7 +2,7 @@
   "scope": "lossy WebP shipping transport of the proved masters; frame metadata, masters and authored originals unchanged",
   "sourceCommit": "840549a58623caa94db4774a408e53953c58db10",
   "compilerDirtyPaths": "M ../docs/evidence/VIS-30-world-art/README.md\n M scripts/capture-home-island-waves.mjs\n M scripts/unshipped-art.js\n M src/art/village-decode.js\n M src/art/village-families.js\n M src/art/village-raster.js\n M src/art/village/terrain-materials.js\n M tests/art/registered-raster-contract.test.js\n M tests/art/terrain-materials.test.js\n M tests/art/village-activation.test.js\n M tests/art/village-decode.test.js\n M tests/art/village-level-matrix.test.js\n M tests/art/village-shipping.test.js\n?? ../docs/evidence/VIS-30-world-art/ship-report.json\n?? ../docs/evidence/franz-1118/size/\n?? public/village/shipped/\n?? scripts/ship-village-art.mjs\n?? scripts/village-ship-browser.js\n?? src/art/village/shipped.js\n?? tests/art/village-shipped-output.test.js",
-  "bakeReportSha256": "bffd1c25e15f381b101d53207904a4e0fb35c5986322c3f2c1025849fcb27c13",
+  "bakeReportSha256": "7ef353eb4757daa95aa47b59044c58c8adc5576bc92d2f02527e591ad798040b",
   "browser": "153.0.8010.12",
   "encoder": "Chrome canvas toDataURL image/webp",
   "quality": 0.9,
@@ -47,20 +47,20 @@
         }
       },
       {
-        "source": "village/compiled/landmarks-4x-1-724da3f9da87.png",
-        "sourceSha256": "724da3f9da87f46b5ef85bfcc27648c7022aaa886c60080b168c538e19193aaf",
-        "file": "village/shipped/landmarks-4x-1-0dadfa96f3c1.webp",
-        "bytes": 152950,
-        "sha256": "0dadfa96f3c1c8c3d4bb31dc71cc76b48556e8fb739dfbe156d18fcb39832f6b",
+        "source": "village/compiled/landmarks-4x-1-4198ec1a6975.png",
+        "sourceSha256": "4198ec1a6975df77221fd3bfe10f98213a2d00cb4737f3982348a7454a811211",
+        "file": "village/shipped/landmarks-4x-1-6408e6b51774.webp",
+        "bytes": 152446,
+        "sha256": "6408e6b5177404431f5a70564a987f6d9135d5d92b5ed7e557c3423ce9c0bcd5",
         "width": 1024,
         "height": 520,
         "proof": {
           "pixels": 532480,
           "visiblePixels": 234529,
-          "differingPixels": 210554,
+          "differingPixels": 210850,
           "maxVisibleDelta": 255,
           "maxAlphaDelta": 0,
-          "alphaWeightedMeanRgbDelta": 3.4507360238819973
+          "alphaWeightedMeanRgbDelta": 3.6726468782527557
         }
       },
       {
@@ -234,8 +234,8 @@
         }
       }
     ],
-    "masterBytes": 10647693,
-    "shippedBytes": 2737862
+    "masterBytes": 10652638,
+    "shippedBytes": 2737358
   },
   "terrain": {
     "source": "village/terrain-materials-v1.png",
@@ -309,8 +309,8 @@
     "maxGroundTexelsPerUnit": 39
   },
   "initialTransfer": {
-    "masterPlusTerrainBytes": 13331050,
-    "shippedBytes": 2849706,
+    "masterPlusTerrainBytes": 13335995,
+    "shippedBytes": 2849202,
     "targetBytes": 4000000,
     "targetMet": true
   },
@@ -404,6 +404,14 @@
       "previousReportSha256": "62130a3c17eeee8820982b55e30652e88441f500ed2a76dab00be49bc079df9a",
       "previousSheet": "village/shipped/core-4x-1-0c6bf0898624.webp",
       "verifiedReplacement": "village/shipped/core-4x-1-548ce0fbfb28.webp"
+    },
+    {
+      "family": "landmarks",
+      "browser": "157.0.8103.79",
+      "sourceCommit": "bee25ebfbe0138662b7afe155b1f3273a1ab4326",
+      "previousReportSha256": "9ac098cac0730df665ee12f50fc8645f02bb32c2a2b908b05f0972abadc10fc9",
+      "previousSheet": "village/shipped/landmarks-4x-1-0dadfa96f3c1.webp",
+      "verifiedReplacement": "village/shipped/landmarks-4x-1-6408e6b51774.webp"
     }
   ]
 }
