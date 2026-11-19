@@ -11,6 +11,8 @@ const REPAIR = '/api/island/structures/repair';
 
 async function dismissGuides(page) {
   for(let turn=0;turn<8;turn++) {
+    const cutscene=page.locator('dialog.cutscene[open]');
+    if(await cutscene.count()) {await cutscene.getByRole('button',{name:'Skip',exact:true}).click();continue;}
     const goal=page.locator('.goal-card[open]');
     if(await goal.count()) {await goal.getByRole('button',{name:'Got it',exact:true}).click();continue;}
     const tutorial=page.locator('.tutorial-card[open]');
