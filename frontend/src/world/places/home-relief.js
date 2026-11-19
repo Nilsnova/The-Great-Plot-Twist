@@ -99,7 +99,8 @@ export function createHomeRelief(group, coastArt) {
         vec4 rock = texture2D(uCoastArt, vec2(logical.x / 64.0, -logical.y * ${LEGACY_DEPTH} / 48.0) + .5);
         if (rock.a < .78) discard;
         float grain = dot(rock.rgb, vec3(.30, .59, .11));
-        gl_FragColor = vec4(vStone * mix(.83, 1.18, smoothstep(.11, .40, grain)), 1.0);
+        vec3 shadedStone = vStone * mix(.68, 1.28, smoothstep(.09, .41, grain));
+        gl_FragColor = vec4(mix(shadedStone, rock.rgb, .48), 1.0);
         #include <colorspace_fragment>
       }`,
   });

@@ -8,6 +8,13 @@ const HEIGHTS = [0, .12, .25, .59, 1.34, 2.17, 2.01, 1.31, .47, .34,
   1.17, 1.91, 1.55, .62, .37, 1.31, 1.96, 1.48, .44, 0];
 const STONE_LIGHT = '#c5a681', STONE = '#ab8b68', STONE_DARK = '#8b7053';
 const MOSS = ['#718f3e', '#7d9844', '#839c49'];
+// The small sea rocks sit between the three beach approaches, beyond the playable coast.
+const SEA_ROCKS = [
+  {bearing: 38, distance: 2.9, width: 1.05, height: 1.45},
+  {bearing: 46, distance: 3.95, width: .72, height: .82},
+  {bearing: 136, distance: 3.7, width: 1.09, height: 1.57},
+  {bearing: 146, distance: 3.65, width: .76, height: .85},
+];
 const mixPoint = (a, b, share) => a.map((value, index) => value + (b[index] - value) * share);
 
 // The shared silhouette supplies the exact coast. Every row is outboard of it, and the
@@ -54,12 +61,12 @@ function surfaceGrain() {
 export function createHomeRearRim(group) {
   const positions = [], colors = [], uvs = [], sections = crossSections();
   const tint = new THREE.Color();
-  function triangle(a, b, c, first, second = first, third = first) {
-    for (const [[x, elevation, z], style] of [[a, first], [b, second], [c, third]]) {
+  function triangle(a, b, c, first, second = first, third = first, opacity = [1, 1, 1]) {
+    for (const [[x, elevation, z], style, alpha] of [[a, first, opacity[0]], [b, second, opacity[1]], [c, third, opacity[2]]]) {
       const ground = projectGround(x, z);
       positions.push(ground.x, ground.y + elevation, .1 * z);
       tint.set(style);
-      colors.push(tint.r, tint.g, tint.b);
+      colors.push(tint.r, tint.g, tint.b, alpha);
       uvs.push(ground.x * .38, (ground.y + elevation) * .38);
     }
   }
@@ -71,6 +78,32 @@ export function createHomeRearRim(group) {
     const edge = (point, offset) => [point[0] + offset, point[1], point[2]];
     panel(edge(top, -.019), edge(top, .019), edge(bend, .031), edge(bend, -.031), '#9b7d5d', '#876b50');
     triangle(edge(bend, -.031), edge(bend, .031), bottom, '#876b50', '#876b50', '#9c7d5f');
+  }
+  function addSeaRock({bearing, distance, width, height}, shore) {
+    const {x, z} = shore[bearing / 2], length = Math.hypot(x, z);
+    const originX = x + distance * x / length, originZ = z + distance * z / length;
+    const sides = 7;
+    const ring = (scale, elevation, skew) => Array.from({length: sides}, (_, side) => {
+      const angle = (side + .18) * Math.PI * 2 / sides;
+      const radius = width * scale * (1 + .13 * Math.sin(side * 7.3 + bearing));
+      return [originX + Math.cos(angle) * radius - skew, elevation * (1 + .11 * Math.cos(side * 2.7)),
+        originZ + Math.sin(angle) * radius * .86];
+    });
+    const base = ring(1, 0, 0), shoulder = ring(.91, height * .52, .05), crown = ring(.52, height * .94, .17);
+    const surfEdge = ring(1.42, 0, 0), surf = '#cbf4e9';
+    for (const index of [0, 1, 2, 4, 5, 6]) {
+      const next = (index + 1) % sides;
+      const opacity = index < 3 ? .78 : .31;
+      triangle(base[index], surfEdge[index], surfEdge[next], surf, surf, surf, [opacity, 0, 0]);
+      triangle(base[index], surfEdge[next], base[next], surf, surf, surf, [opacity, 0, opacity]);
+    }
+    for (let index = 0; index < sides; index++) {
+      const next = (index + 1) % sides;
+      const lit = index < 3 || index > 4;
+      panel(base[index], base[next], shoulder[next], shoulder[index], '#746f5f', lit ? '#a49b84' : '#817a69');
+      panel(shoulder[index], shoulder[next], crown[next], crown[index], lit ? '#a49b84' : '#817a69', lit ? '#cec0a4' : '#a09582');
+      triangle(crown[index], crown[next], [originX - .2, height, originZ], '#c9b89b', '#c2b29b', '#d9c6a6');
+    }
   }
   for (let i = 0; i + 1 < sections.length; i++) {
     const a = sections[i], b = sections[i + 1], moss = MOSS[i < 8 ? 0 : i < 14 ? 1 : 2];
@@ -99,9 +132,11 @@ export function createHomeRearRim(group) {
       triangle(left, right, sprig, moss, moss, '#a1ad56');
     }
   }
+  const shore = cliffProfile(surfaces.home_islet);
+  for (const rock of SEA_ROCKS) addSeaRock(rock, shore);
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-  geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+  geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 4));
   geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
   const material = new THREE.MeshBasicMaterial({map: surfaceGrain(), vertexColors: true, transparent: true,
     side: THREE.DoubleSide, forceSinglePass: true, depthTest: false, depthWrite: false, toneMapped: false});
