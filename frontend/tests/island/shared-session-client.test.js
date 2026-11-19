@@ -7,12 +7,13 @@ const storage=()=>{const rows=new Map();return {getItem:key=>rows.get(key)??null
 function locks(){const held=new Set();return {async request(name,_options,run){if(held.has(name))return run(null);held.add(name);try{return await run({name});}finally{held.delete(name);}}};}
 const clients=[];afterEach(async()=>{await Promise.all(clients.splice(0).map(client=>client.dispose()));});
 function setup(extra={}){
- const fixture=++fixtureNumber;let actor=actorId,selected=economy(),uids=0;const states=[],saved=extra.storage??storage(),provider=extra.locks??locks();
- const api={attach:vi.fn(async()=>({ok:true,data:metadata()})),read:vi.fn(async proof=>({ok:true,data:metadata(!!proof)})),
-  heartbeat:vi.fn(async()=>({ok:true,data:metadata()})),disconnect:vi.fn(async()=>({ok:true,data:metadata(false)}))};
+ const fixture=++fixtureNumber;let actor=actorId,selected=economy(),uids=0;const states=[],timers=[],saved=extra.storage??storage(),provider=extra.locks??locks();
+ const api={attach:vi.fn(async record=>{const data=metadata();if(record.body.expectedGeneration!=='0')data.session.connectionGeneration=String(BigInt(record.body.expectedGeneration)+1n);return {ok:true,data};}),
+  read:vi.fn(async proof=>{const data=metadata(!!proof);if(proof)data.session.connectionGeneration=proof.connectionGeneration;return {ok:true,data};}),
+  heartbeat:vi.fn(async proof=>{const data=metadata();data.session.connectionGeneration=proof.connectionGeneration;return {ok:true,data};}),disconnect:vi.fn(async()=>({ok:true,data:metadata(false)}))};
  const client=createSharedSessionClient({api,getActorId:()=>actor,getEconomy:()=>selected,storage:saved,locks:provider,
-  makeUid:()=>`session_uid_${fixture}_${++uids}`,makeSessionId:()=>sessionId,setTimer:()=>1,clearTimer(){},onState:value=>states.push(value)});
- clients.push(client);return {client,api,saved,states,provider,setActor:value=>{actor=value;},setEconomy:value=>{selected=value;},allocated:()=>uids};
+  makeUid:()=>`session_uid_${fixture}_${++uids}`,makeSessionId:()=>sessionId,setTimer:run=>{timers.push(run);return timers.length;},clearTimer(){},onState:value=>states.push(value)});
+ clients.push(client);return {client,api,saved,states,timers,provider,setActor:value=>{actor=value;},setEconomy:value=>{selected=value;},allocated:()=>uids};
 }
 it('withholds controller proof until a fresh GET follows the attach response',async()=>{
  const f=setup();let release;f.api.read.mockImplementation(()=>new Promise(resolve=>{release=resolve;}));
@@ -72,4 +73,29 @@ it('shares a heartbeat in progress instead of racing current metadata responses'
  const f=setup();await f.client.open();let release;f.api.heartbeat.mockImplementation(()=>new Promise(resolve=>{release=resolve;}));
  const first=f.client.heartbeat(),second=f.client.heartbeat();expect(f.api.heartbeat).toHaveBeenCalledOnce();
  release({ok:true,data:metadata()});await Promise.all([first,second]);expect(f.client.proof()).not.toBeNull();
+});
+
+it.each(['attach','read','heartbeat'])('releases the captured obsolete document lock after late %s',async boundary=>{
+ const first=setup();if(boundary==='heartbeat')await first.client.open();let release;
+ first.api[boundary].mockImplementation(()=>new Promise(resolve=>{release=resolve;}));
+ const pending=boundary==='heartbeat'?first.client.heartbeat():first.client.open();
+ await vi.waitFor(()=>expect(first.api[boundary]).toHaveBeenCalledOnce());first.setActor('66666666-6666-4666-8666-666666666666');
+ release({ok:true,data:metadata()});await pending;
+ const next=setup({storage:first.saved,locks:first.provider});await next.client.open();
+ expect(next.api.attach).toHaveBeenCalledOnce();expect(next.client.proof()).not.toBeNull();
+});
+it('never releases a newer actor lock when the obsolete read finally completes',async()=>{
+ const f=setup();let release;f.api.read.mockImplementationOnce(()=>new Promise(resolve=>{release=resolve;}));
+ const old=f.client.open();await vi.waitFor(()=>expect(f.api.read).toHaveBeenCalledOnce());await f.client.disconnect();
+ const otherActor='66666666-6666-4666-8666-666666666666';f.setActor(otherActor);await f.client.open();
+ release({ok:true,data:metadata()});await old;
+ expect(f.client.proof()?.actorId).toBe(otherActor);
+});
+
+it('releases obsolete ownership when the next scheduled heartbeat observes an identity loss',async()=>{
+ const first=setup();await first.client.open();first.setActor(null);first.timers.at(-1)();
+ // Releasing a held Web Lock completes asynchronously before another document can acquire it.
+ await Promise.resolve();
+ const next=setup({storage:first.saved,locks:first.provider});await next.client.open();
+ expect(next.client.proof()).not.toBeNull();expect(next.api.attach).toHaveBeenCalledOnce();
 });

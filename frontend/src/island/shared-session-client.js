@@ -21,13 +21,22 @@ export function createSharedSessionClient({api,getEconomy,getActorId,getAuthGene
  const cancelTimer=()=>{if(timer!==null)clearTimer(timer);timer=null;};
  function schedule(captured){
   cancelTimer();if(!current(captured))return;
-  timer=setTimer(()=>{timer=null;if(current(captured))void (active?heartbeat():open());},heartbeatMs);
+  timer=setTimer(()=>{timer=null;
+   if(current(captured))void (active?heartbeat():open());
+   else if(scope===captured)abandon(held,ticket);
+  },heartbeatMs);
  }
  function demote(phase,message){active=null;snapshot=null;held?.release();held=null;notify(phase,message);}
+ function abandon(lock,mine){
+  lock?.release();
+  if(mine===ticket && held===lock){cancelTimer();active=null;snapshot=null;held=null;scope=null;notify('unavailable','The session selection changed.');}
+  return failed('session_context_changed','The session selection changed.',0);
+ }
  function proof(){return active && held?.current && current(scope)?clone(active):null;}
  async function refresh(captured,mine,record){
+  const lock=held;
   const answer=await api.read(record);
-  if(mine!==ticket || !current(captured) || record && !held?.current)return failed('session_context_changed','The session selection changed.',0);
+  if(mine!==ticket || !current(captured) || record && !lock?.current)return abandon(lock,mine);
   const data=answer.ok?readSessionMetadata(answer.data):null;
   if(!data){demote('unavailable',answer.message??'The current session could not be read.');schedule(captured);return answer.ok?failed('unreadable','The current session could not be verified.',502):answer;}
   scope=captured;snapshot=data;
@@ -45,7 +54,7 @@ export function createSharedSessionClient({api,getEconomy,getActorId,getAuthGene
   let record;
   try{record=intents.begin(captured.actorId,captured.origin);}catch(error){demote('unavailable',error.message);return failed('session_retry_unavailable',error.message,503);}
   const answer=await api.attach(record);
-  if(mine!==ticket || !current(captured) || !held?.current)return failed('session_context_changed','The session selection changed.',0);
+  if(mine!==ticket || !current(captured) || !lock?.current)return abandon(lock,mine);
   if(!answer.ok){
    if(answer.code==='stale_controller'){try{intents.refuse(record);}catch{/* No replacement is allocated here. */}}
    demote('unavailable',answer.message??'The controlling session could not attach.');schedule(captured);return answer;
@@ -64,10 +73,10 @@ export function createSharedSessionClient({api,getEconomy,getActorId,getAuthGene
   flight=pending.finally(()=>{if(flight===finished)flight=null;});const finished=flight;return flight;
  }
  async function sendHeartbeat(){
-  const record=proof(),captured=scope,mine=ticket;
+  const record=proof(),captured=scope,mine=ticket,lock=held;
   if(!record)return failed('session_context_required','Read your current controlling session.');
   cancelTimer();const answer=await api.heartbeat(record);
-  if(mine!==ticket || !current(captured) || !held?.current)return failed('session_context_changed','The session selection changed.',0);
+  if(mine!==ticket || !current(captured) || !lock?.current)return abandon(lock,mine);
   const data=answer.ok?readSessionMetadata(answer.data):null;
   if(!data || !data.session.isController || data.session.sessionId!==record.sessionId || data.session.connectionGeneration!==record.connectionGeneration)
    demote('unavailable',answer.message??'Reconnect to the current session.');
