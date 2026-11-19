@@ -11,16 +11,59 @@
 ## How to read it
 
 - Every command starts in the repository root. `cd backend` or `cd frontend` comes first, as in [ENGINEERING.md, section 3](ENGINEERING.md#3-commands).
-- **No test uses the network.** Outside services, the sign-in check, the database and the clock are fakes ([ENGINEERING.md, section 5](ENGINEERING.md), rule 3).
+- **Read the evidence layer.** Default unit/component tests inject outside services,
+  sign-in, transport or clocks. Opt-in SQL checks execute real disposable PostgreSQL.
+  Separately recorded authenticated acceptance uses actual Auth, REST and Realtime;
+  it is not established by a fake transport or an emulated phone viewport.
 - **No CI.** The only GitHub Actions workflow is the keep-alive ([.github/workflows/keepalive.yml](../.github/workflows/keepalive.yml)). Each pull request pastes its own results ([CONTRIBUTING.md](../CONTRIBUTING.md)).
 
-The planned shared economy has a separate [MP-ECO-20 acceptance matrix](economy/ACCEPTANCE.md).
+The integrated shared economy has a separate [MP-ECO-20 acceptance matrix](economy/ACCEPTANCE.md).
 Its [offline assertion/evidence tests](../backend/server/tests/test_economy_acceptance.py)
 run with `cd backend && uv run pytest -q server/tests/test_economy_acceptance.py`.
 They validate decimal treasury reconciliation and evidence metadata, using synthetic
 inputs. They do not verify treasury RPCs, hosted authentication or the integrated
 multiplayer economy. Runtime SQL, authenticated-browser and physical-device evidence
 remain separate; the existing fake-room `test:mp` check does not establish them.
+
+## Shared economy integration checkpoint — 19 November 2026
+
+Source inventory: `5f1cfa7c34b7610234ffaef7b76ac66c143516e2`. Canonical
+authority, native sessions/journal/closure worker, personal Captain progression,
+domain transactions and reset/deletion are present. The rows below locate checks;
+they do not declare the final authenticated scenario matrix complete. The shared
+snapshot still disables the domain/session capabilities consumed by the real UI;
+coordinated client enablement remains an integration gate at this source.
+
+| Layer / area | Checks | Boundary |
+|---|---|---|
+| Python HTTP and coherent reads | [core routes](../backend/server/tests/test_core_economy_routes.py), [shared snapshots](../backend/server/tests/test_shared_snapshot.py), [session routes](../backend/server/tests/test_shared_session_routes.py), [wave routes](../backend/server/tests/test_shared_wave_routes.py) | Strict capability/origin/controller DTOs, verified-actor forwarding, quote and replay handling; fake Auth/Admin remain explicit. |
+| Native canonical SQL | [control](../backend/server/tests/island_sql/test_shared_session_control_sql.py), [accepted bell/journal](../backend/server/tests/island_sql/test_shared_session_wave_sql.py), [terminal effects](../backend/server/tests/island_sql/test_shared_session_close_sql.py), [worker](../backend/server/tests/island_sql/test_shared_session_worker_sql.py) | Actual provider and producer RPCs. Trusted templates, combat reports, selected clock/state fixtures and the worker's SQL transport adapter are qualified per module; these are not provider-authenticated clients. |
+| Domain SQL and races | [cross-domain acceptance](../backend/server/tests/island_sql/test_shared_domain_acceptance_sql.py), [native combat](../backend/server/tests/island_sql/test_shared_combat_native_sql.py), [revival journal](../backend/server/tests/island_sql/test_shared_revival_journal_sql.py) | Real treasury/registry/assets, rollback and concurrency. Domain-unit helpers seed canonical facts without replacing the provider. Native revival uses real producer/hold time but synthetic accepted combat reports; it does not verify every simulated hit. |
+| Lifecycle SQL | [reset/deletion](../backend/server/tests/island_sql/test_shared_lifecycle_transactions_sql.py), [committed lock races](../backend/server/tests/island_sql/test_shared_lifecycle_races_sql.py), [native lifecycle](../backend/server/tests/island_sql/test_shared_lifecycle_native_sql.py), [membership](../backend/server/tests/island_sql/test_canonical_membership_lifecycle_sql.py) | Actual lifecycle transactions, original-account retention, private aliases and lock order; isolated database setup is not actual provider account deletion. |
+| Client/component | [session client](../frontend/tests/island/shared-session-client.test.js), [wave API](../frontend/tests/island/shared-wave-api.test.js), [shared core](../frontend/tests/island/shared-core.test.js), [arsenal](../frontend/tests/island/shared-arsenal.test.js), [wagers](../frontend/tests/harbor/shared-wagers-http.test.js) | Real client modules with controlled HTTP/auth/channel inputs; browser DOM checks remain component evidence. |
+
+Recorded checkpoints must retain their exact sources:
+
+| Source and check | Actual result | Limit |
+|---|---|---|
+| `799242b4a494f8760136bead5b2ed02c461c0bdd`, broad backend excluding the documented unchanged exhaustive settings matrix, disposable SQL enabled | **15,185 passed, 28 failed, 5 skipped in 1003.19s**, exit 1 | A failed historical checkpoint, not the final result. The five skips lacked the Node/client dependencies used by place-registry checks. |
+| `b696faf485443444cf4ffc98e080e51b95ca17f8` plus `491265ff` and `374df4c6`, affected modules after test/dev-tool compatibility alignment | **121 passed in 64.35s**, then **98 passed in 44.63s**, both exit 0, no skips | 219 distinct affected cases include all 28 formerly failing nodes. These bounded runs do not relabel the earlier broad run or replace a final aggregate run. |
+| `a6de304bbeb5f45983e18d043c848c71a4566609`, fresh 106-migration local stack and three actual registered Chromium/SDK users | Limited native HTTP/WSS probe completed: real attachment/adoption, bell/replay/input, outsider denial, topic isolation across admission/departure and terminal observation after last withdrawal | Service-only admission of a fresh island is labeled setup. SDK channels manually follow metadata; rendered gameplay, automatic product topic changes and the complete scenario matrix are not verified. |
+
+Before the final pinned backend run, provide Node and frontend dependencies matching
+`frontend/package-lock.json` (`cd frontend && npm ci`, or a verified matching local
+installation). A source worktree without those packages must report registry skips.
+The final command, from the repository root, is:
+
+```bash
+cd backend
+CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' --with pglast pytest -q --ignore=server/tests/correctness/test_settings_contract.py
+```
+
+This command is a pending final gate, not a reported final pass. Record exact source,
+command, exit status, JUnit, skip reasons and migration hashes. Run the affected
+frontend suites/build on that same candidate. The [current acceptance gates](economy/ACCEPTANCE.md#current-integration-and-open-gates)
+also require the actual rendered two-player journey and product Realtime transitions.
 
 ## 1. Backend unit tests (pytest)
 
@@ -48,7 +91,11 @@ Size: 188 test files under [backend/server/tests/](../backend/server/tests/) (15
 
 ## 2. Backend SQL suites (opt-in)
 
-They build a throwaway PostgreSQL on a Unix socket, apply **all migrations twice**, run each test in a rolled-back transaction, and never read a database URL or credentials ([case_sql/conftest.py](../backend/server/tests/case_sql/conftest.py)). Plain `uv run pytest` skips them.
+They build a throwaway PostgreSQL on a Unix socket and apply **all migrations twice**.
+Tests use rollback transactions or module-isolated clusters for committed races;
+they never read a hosted database URL or credentials
+([case_sql/conftest.py](../backend/server/tests/case_sql/conftest.py)). Plain
+`uv run pytest` skips these opt-in checks.
 
 Command pattern (from `backend/`):
 `CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q server/tests/<suite>`
