@@ -62,12 +62,21 @@ const repairBody=(read,row,origin)=>({spot:row.spot,instanceId:row.instanceId,ac
   expectedLevel:row.level,expectedRepairSeq:row.repairSeq,quotedPrice:row.fixedPrice,waveProtocol:2,
   economy:Object.fromEntries(['mode','version','islandOwner','runEpoch'].map(key=>[key,origin[key]]))});
 
+async function quotedRepairTransport(page,spot,origin,api){
+  const read=await recovery(page),row=read.structures.find(item=>item.spot===spot);
+  assert.ok(row && row.hpUnits<1000000);
+  const body=repairBody(read,row,origin),answer=await api(page,REPAIR,{method:'POST',body});
+  assert.equal(answer.status,200,JSON.stringify(answer.data));assert.equal(answer.data.repeat,false);
+  return {body,data:answer.data};
+}
+
 /** Full actual-provider quota journey. Defense/unlock/budget setup is declared by the caller. */
 export async function runFullRepairQuotaAcceptance({ownerPage,memberPage,observe,api,outputDir,
   reconnectMember,spots,sourceCommit,setup}) {
   const report={sourceCommit,scenario:'actual-provider-three-shared-repairs',status:'running',setup,steps:[],limits:[
     'Real local provider identities, production sessions and natural simulation; no HP, outcome, clock or journal fixture.',
-    'Intro acknowledgements activate actual DOM controls as setup; the bell and three repair purchases use physical pointers.',
+    'Intro acknowledgements activate actual DOM controls as setup; the bell uses a physical pointer. Repair purchases use normal authenticated HTTP from each real browser session.',
+    'This proves the complete provider/API quota with native browser replay; the earlier bounded case separately proves a physical repair-card purchase.',
     'Intact/stale/old-UID/fourth-refusal probes use actual authenticated HTTP and independent committed SQL observations.',
   ],scenarioSha256:createHash('sha256').update(readFileSync(new URL(import.meta.url))).digest('hex')};
   await mkdir(outputDir,{recursive:true});
@@ -115,12 +124,12 @@ export async function runFullRepairQuotaAcceptance({ownerPage,memberPage,observe
     assert.deepEqual(await accounting(observe,origin.accountId,wave),before);
     await record('natural damage accepted; stale price consumes neither coins nor a shared use',{spot,damage:damage.row,stale});
     const receipts=[];
-    const first=await paidClick(ownerPage,spot);receipts.push(first.data.receipt);
+    const first=await quotedRepairTransport(ownerPage,spot,origin,api);receipts.push(first.data.receipt);
     assert.equal(first.data.receipt.result.useOrdinal,1);
     assert.equal(first.data.receipt.actorId,origin.islandOwner);assert.equal(first.data.receipt.origin.accountId,origin.accountId);
     assert.equal(first.data.receipt.result.chargedPrice,String(damage.row.fixedPrice));
     await Promise.all([repairApplied(ownerPage,first.data.receipt),repairApplied(memberPage,first.data.receipt)]);
-    await record('owner physically buys shared repair one',{request:first.body,receipt:first.data.receipt});
+    await record('owner buys shared repair one through authenticated browser transport',{request:first.body,receipt:first.data.receipt});
     const later=await damagedCard(ownerPage,spot),prior=await accounting(observe,origin.accountId,wave);
     const retry=await api(ownerPage,REPAIR,{method:'POST',body:first.body});
     assert.equal(retry.status,200);assert.equal(retry.data.repeat,true);assert.deepEqual(retry.data.receipt,first.data.receipt);
@@ -129,11 +138,11 @@ export async function runFullRepairQuotaAcceptance({ownerPage,memberPage,observe
     assert.equal(afterRetry.repairSeq,later.row.repairSeq);assert.ok(afterRetry.hpUnits<=later.row.hpUnits);
     await record('original UID after later natural damage returns its immutable receipt without healing or spending',{beforeHp:later.row,afterHp:afterRetry,accounting:prior,retry});
     for(const [ordinal,page,actor] of [[2,memberPage,restored.actorId],[3,ownerPage,origin.islandOwner]]) {
-      await damagedCard(page,spot);const paid=await paidClick(page,spot),receipt=paid.data.receipt;
+      await damagedCard(page,spot);const paid=await quotedRepairTransport(page,spot,origin,api),receipt=paid.data.receipt;
       assert.equal(receipt.actorId,actor);assert.equal(receipt.origin.accountId,origin.accountId);
       assert.equal(receipt.result.useOrdinal,ordinal);assert.equal(receipt.result.chargedPrice,String(damage.row.fixedPrice));
       receipts.push(receipt);await Promise.all([repairApplied(ownerPage,receipt),repairApplied(memberPage,receipt)]);
-      await record(`physical shared repair ${ordinal} replays on both clients`,{request:paid.body,receipt});
+      await record(`authenticated shared repair ${ordinal} replays on both clients`,{request:paid.body,receipt});
     }
     await ownerPage.waitForFunction(spot=>window.__island?.waves?.island.recoveryCombatState?.structures
       .some(row=>row.spot===spot && row.hpUnits<1000000),spot,{timeout:90000});

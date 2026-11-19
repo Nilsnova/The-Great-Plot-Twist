@@ -22,8 +22,10 @@ deployment or feature activation is included.
   ordinary authenticated API using a new current quote. No structure row, HP,
   journal event, combat outcome or clock is installed or changed by the harness.
 - Ordinary first-game intro controls may be acknowledged through their actual
-  DOM buttons. The bell and three paid repair actions use physical pointer hit
-  testing. Card selection uses the existing development inspection interface.
+  DOM buttons. The bell uses physical pointer hit testing; paid repairs use the
+  normal authenticated API from each real browser session. Card selection uses
+  the existing development inspection interface. The prior bounded T60 case
+  retains its separate physical repair-card proof.
 
 The stronger paid defenses provide ordinary combat time for the assertions. They
 do not change simulation rules or extend a protocol timeout. Reconnect occurs
@@ -38,7 +40,8 @@ repair sequence's available combat time.
    with a higher connection generation and the same live reservation.
 3. Natural damage reaches the production replay and accepted health checkpoint.
    A stale quoted price refuses without a financial or quota effect.
-4. Two actors physically purchase exactly three successful shared repairs. Each
+4. Two real browser actors purchase exactly three successful shared repairs through
+   authenticated HTTP. Each
    current-level price is exact and both independent replays apply every repair.
 5. Retrying the first successful UID after later natural damage returns exactly
    its original receipt without healing, charging or consuming another use.
