@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { describe, expect, it } from 'vitest';
 import { CONFIG, coastPoint, createWave } from '../../src/pirates/sim.js';
 import {SAILING_WAKE} from '../../src/art/fleet-wake.js';
-import { ATLAS_IDS, BOARDER_BANDS, CARTOON_EXTRA_IDS, CHARACTER_SCALE, MUSKET, STANDING_IDS, createWaveRenderer, packAtlas } from '../../src/pirates/render.js';
+import { ATLAS_IDS, BOARDER_BANDS, CARTOON_EXTRA_IDS, CHARACTER_SCALE, MUSKET, STANDING_IDS, bandOf, createWaveRenderer, packAtlas } from '../../src/pirates/render.js';
 import { pirateDimensions } from '../../src/pixel/pirate-catalog.js';
 import {projectGround} from '../../src/world/projection.js';
 
@@ -122,6 +122,27 @@ describe('pirate wave renderer', () => {
     expect(shadow.visible).toBe(false);
     renderer.dispose();
     expect(shadow.parent).toBeNull();
+  });
+
+  it.each([false, true])('settles a newly landed boarder around the shore pin (reduced motion: %s)', reduced => {
+    const scene = new THREE.Scene();
+    const renderer = createWaveRenderer({scene, atlas: atlas(), place: 'home_islet', reducedMotion: () => reduced});
+    const boarder = {id: 'boarder-1', x: 16, z: 7, state: 'walking', facing: 1, hp: 9, maxHp: 9};
+    const state = {ships: [], walls: [], towers: [], boarders: [boarder]};
+    renderer.events([{type: 'boarder_landed', boarderId: boarder.id, x: boarder.x, z: boarder.z}]);
+    renderer.update({state});
+    const figures = renderer.root.getObjectByName(`pirates:boarders:${bandOf(boarder.z)}`).geometry;
+    const pos = figures.getAttribute('iPos'), size = figures.getAttribute('iSize'), pin = projectGround(boarder.x, boarder.z);
+    expect(pos.getX(0)).toBeCloseTo(pin.x);
+    expect(pos.getY(0)).toBeCloseTo(pin.y);
+    expect(pos.getZ(0)).toBeCloseTo(reduced ? 0 : .093);
+    const firstHeight = size.getY(0), firstAnchor = size.getW(0);
+    for (let frame = 0; frame < 15; frame++) renderer.update({state, dt: 1 / 60});
+    expect(pos.getY(0)).toBeCloseTo(pin.y);
+    expect(pos.getZ(0)).toBeCloseTo(reduced ? 0 : -.042);
+    expect(size.getY(0) * (reduced ? 1 : .9)).toBeCloseTo(firstHeight);
+    expect(size.getW(0) * (reduced ? 1 : .9)).toBeCloseTo(firstAnchor);
+    renderer.dispose();
   });
 
   it('trails sailing ships along the Home water plane and clears the foam when they stop', () => {

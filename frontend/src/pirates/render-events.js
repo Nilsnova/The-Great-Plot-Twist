@@ -7,7 +7,7 @@ import { facingTo, FIRE_SECONDS, FLASH_SECONDS, SHIP_SIZE, SHIP_VARIANTS, SINK_S
 // The arguments in this order (render.js passes them so; positional, so the minifier shortens them).
 export function createEvents(parts, posts, ships, crew, guards, fire, wallFlash, balls, sinkers, wrecks, splashes,
   shells, bursts, tracers, jamShots, warnings, fallen, strikes, K, still, low, effects, spark) {
-  const { shipMeta, shooterAt, muzzleOf, boarderMeta, militiaMeta } = parts;
+  const { shipMeta, shooterAt, muzzleOf, boarderMeta, boarderArrived, militiaMeta } = parts;
   // The renderer's clock and latest state as update() last set them (render.js calls sync() right after, every frame).
   let clock = 0, simNow = 0, latest = null;
   function sync(now, simTime, state) { clock = now; simNow = simTime; latest = state; }
@@ -209,7 +209,11 @@ export function createEvents(parts, posts, ships, crew, guards, fire, wallFlash,
         break;
       }
       case 'ship_warning': warnings.add(item => Object.assign(item, { x: event.x, z: event.z, at: clock, boss: event.boss })); break;
-      case 'boarder_landed': splashes.add(item => Object.assign(item, { x: event.x, z: event.z, at: clock, big: false })); break;
+      case 'boarder_landed': {
+        splashes.add(item => Object.assign(item, { x: event.x, z: event.z, at: clock, big: false }));
+        boarderArrived(event.boarderId);
+        break;
+      }
       case 'boarder_hit': {
         boarderMeta(event.boarderId).flashUntil = clock + FLASH_SECONDS;
         spark(x, y + .7, { count: event.blade ? 10 : 6, speed: [.8, 2.6], angle: Math.PI / 2, spread: 2.4, gravity: 7, life: [.3, .6], colour: event.blade ? '#e8eee8' : '#b0402f', size: [1, 2] });

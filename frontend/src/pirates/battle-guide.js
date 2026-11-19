@@ -219,7 +219,11 @@ uniform sampler2D uIcons;varying vec2 vLocal;varying vec4 vColor;varying vec2 vU
 void main(){
   float r=length(vLocal),a=vColor.a;vec3 rgb=vColor.rgb;
   if(vShape<.5){a*=1.0-smoothstep(.82,1.0,r);}
-  else if(vShape<1.5){a*=smoothstep(.62,.72,r)*(1.0-smoothstep(.9,1.0,r));}
+  else if(vShape<1.5){
+    float rim=smoothstep(.853,.887,r)*(1.0-smoothstep(.930,.962,r));
+    float glow=smoothstep(.76,.9,r)*(1.0-smoothstep(.92,1.0,r));
+    a*=max(rim,.24*glow);
+  }
   else if(vShape<2.5){float x=vLocal.x,y=abs(vLocal.y);
     // A chevron pointing along +x: the big arrowhead minus a smaller one set back behind it.
     a*=step(-.75,x)*step(y,(.85-x)*.62)*(1.0-step(y,(.1-x)*.62));}
@@ -322,7 +326,7 @@ export function skullAt(landing, heart = CONFIG.boarding.heart, walls = [], scal
   return [round2(landing.x + dx / d * SKULL_SHIFT * scale), round2(landing.z + dz / d * SKULL_SHIFT * scale)];
 }
 const RGB = hex => { const c = new THREE.Color(hex); return { r: c.r, g: c.g, b: c.b }; };
-const LANE = RGB('#ffe08a'), RED = RGB('#ff4a36'), DARK = RGB('#1f2622'), GOLD = RGB('#ffd34d'), WHITE = { r: 1, g: 1, b: 1 };
+const LANE = RGB('#ffe08a'), RED = RGB('#ff4a36'), DARK = RGB('#1f2622'), GOLD = RGB('#f8dc98'), WHITE = { r: 1, g: 1, b: 1 };
 const BAR = { good: RGB('#7ed957'), low: RGB('#ffd34d'), bad: RGB('#ff4a36') };
 const COVERAGE_MARKS = {
   uncovered: {shape: SHAPE.gap, width: .89, height: 1.26, color: {...RGB('#f0e1c4'), a: .86}},
@@ -442,8 +446,9 @@ export function createBattleGuide({ scene, reducedMotion = () => false, characte
   }
   function drawHeart(heart, live) {
     const pulse = still() ? 1 : 1 + (live ? .08 : .04) * Math.sin(clock * 3), y = drawnY(heart.z), r = 4 * k * pulse;
-    ground.push(SHAPE.ring, heart.x, y, r + .3 * k, (r + .3 * k) * Y, { ...DARK, a: .55 });
-    ground.push(SHAPE.ring, heart.x, y, r, r * Y, { ...GOLD, a: live ? .95 : .75 });
+    const edge = r + .12 * k;
+    ground.push(SHAPE.ring, heart.x, y, edge, edge * Y, { ...DARK, a: live ? .44 : .36 });
+    ground.push(SHAPE.ring, heart.x, y, r, r * Y, { ...GOLD, a: live ? .94 : .60 });
     const badge = projectGround(heart.x, heart.z);
     air.push(SHAPE.icon, badge.x, badge.y + 2.4 * k, 2 * k * pulse, 2 * k * pulse, { ...WHITE, a: 1 }, { icon: 'heart' });
   }
