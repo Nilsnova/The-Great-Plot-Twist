@@ -7,6 +7,8 @@ import {surfaces} from '../world/places/surfaces.js';
 import {cliffProfile} from '../art/coast-cliffs.js';
 import {projectedCoastBounds} from '../world/projection.js';
 const COAST_BOUNDS = projectedCoastBounds(cliffProfile(surfaces.home_islet));
+// Display-space framing for Home's central path, from the cabins to the Heart and watchtower.
+const PORTRAIT_WORK = {left: -13.45, right: 4.1, bottom: -9.4, top: 14.7};
 
 // Real overlay insets describe usable room independently of the chosen working zoom.
 function villageSpace(camera, viewport = null) {
@@ -38,13 +40,18 @@ export function createCamera(input) {
   const follow = new THREE.Vector2(camera.position.x, camera.position.y);
   let villageFit = true, villageZoom = 1, villageX = 0, villageY = 0;
   const fitVillage = () => { villageFit = true; villageZoom = 1; villageX = villageY = 0; };
-  // The cabin/left-house/heart district is useful on a narrow screen; outskirts remain pannable.
   const workVillage = () => {
     const frame = villageBase(); if (!frame) return;
-    const phone = (camera.right - camera.left) / (camera.top - camera.bottom) < .8;
-    const center = phone ? projectPoint(-4, -4) : {x: frame.centerX, y: frame.centerY};
-    villageFit = false; villageZoom = phone ? Math.max(frame.zoom, .9) : frame.zoom * 1.05;
-    villageX = center.x; villageY = center.y;
+    const {width, height, free} = villageSpace(camera, villageViewport);
+    villageFit = false;
+    if (width / height < .8) {
+      const {left, right, bottom, top} = PORTRAIT_WORK;
+      villageZoom = Math.max(frame.zoom, Math.min(width / (right - left), height * free / (top - bottom)));
+      villageX = (left + right) / 2; villageY = (bottom + top) / 2;
+      return;
+    }
+    villageZoom = frame.zoom * 1.05;
+    villageX = frame.centerX; villageY = frame.centerY;
   };
   const villageBase = () => villageFrame(camera, placeId, villageViewport);
   const workingZoom = frame => Math.max(frame.zoom, Math.min(2, villageZoom));
