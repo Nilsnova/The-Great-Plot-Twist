@@ -405,6 +405,7 @@ export function createActions(isl) {
       emit({type: 'captain_role_picked', role: id});
       isl.ui.toast(`You are the ${ROLE_BY_ID[id].name} now!`, 'success');
     } else { isl.cardMessage = answer.message; if (['locked', 'role_known', 'captain_context_required', 'captain_revision_mismatch'].includes(answer.code)) await reloadOwn(); }
+    if (!current()) return;
     isl.busyRole = false;
     if (current()) refreshCard();
   }
@@ -423,6 +424,7 @@ export function createActions(isl) {
       isl.ui.toast(currentFunds().shared || declaresPersonalCaptain(isl.own?.captain) ? ['Skills reset.', engineerCommitmentLine(isl.own?.captain)].filter(Boolean).join(' ')
         : `Skills reset · ${coinText(isl.own.coins)}`, 'success');
     } else { isl.cardMessage = answer.message; if (['nothing_to_reset', 'captain_context_required', 'captain_revision_mismatch'].includes(answer.code)) await reloadOwn(); }
+    if (!current()) return;
     isl.busyRespec = false; isl.respecAsk = false;
     if (current()) refreshCard();
   }

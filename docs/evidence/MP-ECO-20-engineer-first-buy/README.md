@@ -28,3 +28,11 @@ npm run build
 ```
 
 The production build and spoiler guard passed. The actual-provider scenario is a bounded first-purchase proof, separate from the remaining multiplayer acceptance matrix. It makes no hosted deployment, full frontend-suite or live-migration claim.
+
+## Auth generation during a refused role refresh
+
+A subsequent self-review found a separate narrow race introduced by keeping the role/respec busy flag through the refreshed read. If a refused action awaited its fallback home read, authentication could change and a new actor's action could start before that old continuation returned. The old continuation could then clear the newer action's busy flag. Two regression cases reproduced the failure before the follow-up fix. Both actions now recheck their captured authenticated actor immediately before resetting their busy state.
+
+The five focused suites, including `captain-role-refresh-race.test.js`, then passed **31 tests** and the production build/spoiler guard passed again. `auth-guard-follow-up.json` pins the executed runtime/test blobs, records the exact command and distinguishes the dirty verification worktree from its committed base.
+
+The actual-provider result remains attributed to frontend **74be4855** and was not rerun for this two-check delta. Its successful owner/visitor traces retain the same authenticated actor and already pass the success branch's post-refresh check. The new final check also evaluates true on those unchanged success traces and introduces no request, quote, receipt or money movement. That is a bounded trace-equivalence argument for reusing the first-buy evidence, not a claim that the final source was executed against the provider.
