@@ -34,7 +34,7 @@ from server.tests.island_sql.test_islands_and_waves_sql import (  # noqa: E402
     start,
 )
 
-ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
+ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"  # pragma: allowlist secret
 PRICE = 60  # pistols in islands.json; the price always comes from the server
 
 

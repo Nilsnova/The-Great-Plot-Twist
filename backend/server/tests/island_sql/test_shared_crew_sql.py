@@ -39,7 +39,7 @@ CATALOGUE = manifest(load_island())
 
 def setup(connection, coins=200):
     owner, member, outsider, treasury = ready(connection, coins)
-    alphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
+    alphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"  # pragma: allowlist secret
     code = "".join(alphabet[(member.int >> (5 * index)) % len(alphabet)] for index in range(5))
     open_island(connection, member, code)
     as_owner(connection)

@@ -904,7 +904,7 @@ def test_legacy_build_rechecks_global_personal_mode_after_waiting_for_transition
 ):
     server = scratch_server
     owner, actor, _, treasury, _ = initialized(database)
-    alphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
+    alphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"  # pragma: allowlist secret
     code = "".join(alphabet[(actor.int >> (5 * index)) % len(alphabet)] for index in range(5))
     open_island(database, actor, code)
     as_owner(database)
