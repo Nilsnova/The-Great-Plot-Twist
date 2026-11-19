@@ -20,4 +20,12 @@ describe('placement camera intent', () => {
     for (const invalid of [{cells: []}, {spotId: 'wall_1', x: NaN, z: 1}, {}]) focus(invalid);
     expect(view.focusVillage).toHaveBeenCalledTimes(2);
   });
+  it('focuses a historical battle position without a building selection', () => {
+    const view = {focusVillage: vi.fn()}, focus = createVillagePlacementFocus(view);
+    const location = {x: -18.5, z: -1, positionOnly: true};
+    focus(location); focus({...location});
+    expect(view.focusVillage.mock.calls).toEqual([[{x: -18.5, z: -1, lift: 1}]]);
+    focus({...location, positionOnly: false});
+    expect(view.focusVillage).toHaveBeenCalledTimes(1);
+  });
 });

@@ -261,7 +261,7 @@ describe('the campaign buildings (GAME-V3.md §4, §5)', () => {
     expect(hub.branches.map(row => [row.branch, row.summary, row.folded])).toEqual([
       ['cannon', 'Cannon skills · tier 1 of 3 ✓', true], ['mortar', 'Mortar skills', false], ['wall', 'Wall skills', false], ['watchtower', 'Watchtower skills', false]]);
     const first = row => row.tiers[0].nodes[0];
-    expect(first(hub.branches[0])).toMatchObject({state: 'done', button: null, note: 'Every cannon here can pick one of them.', line: 'Rapid · Heavy shot · Chain shot'});
+    expect(first(hub.branches[0])).toMatchObject({state: 'done', button: null, line: 'Rapid · Heavy shot · Chain shot'});
     expect(hub.branches.slice(1).map(row => [first(row).button.label, first(row).button.disabled])).toEqual([
       ['Research · 🪙 220', true], ['Research · 🪙 120', false], ['Research · 🪙 160', true]]);
     expect(first(hub.branches[1]).button.reason).toBe('Not enough 🪙: you need 🪙 70 more.');
@@ -292,6 +292,32 @@ describe('the campaign buildings (GAME-V3.md §4, §5)', () => {
     expect(late.branches[0].tiers[2].nodes.map(node => [node.id, node.state])).toEqual([['broadside', 'closed'], ['grapeshot', 'chosen']]);
     expect(late.branches[0].tiers[2].nodes[0].button).toMatchObject({disabled: true, reason: 'Not enough 🪙: you need 🪙 630 more.'});
   });
+  it('counts only accepted built matches, including extra and older aliased spots, and distinguishes loading from an empty island', () => {
+    const campaign = atWave(25), branch = (kind, spots) => techModel({campaign, spots}).branches.find(row => row.branch === kind).scope;
+    expect(branch('cannon').ids).toBe(null);
+    expect(branch('cannon', []).ids).toEqual([]);
+    const spots = [tower(true), {...tower(true), id: 'cannon_8', x: 6, z: 7}, {...tower(true, 'mortar'), id: 'tower_s2'},
+      {...tower(), id: 'cannon_3'}, {...tower(true), id: 'not_a_spot'}, {...tower(true), id: 'pp_tower_1'},
+      {id: 'tower_1', kind: 'watchtower', level: 2, built: true, spec: 'spotter'}];
+    expect(branch('cannon', spots)).toMatchObject({ids: ['cannon_1', 'cannon_8'], tree: true});
+    expect(branch('mortar', spots).ids).toEqual(['cannon_2']);
+    expect(branch('wall', spots)).toMatchObject({ids: [], tree: false});
+    expect(branch('watchtower', spots)).toMatchObject({ids: ['tower_1'], eligibleLookouts: 1});
+    expect(branch('watchtower', [{...spots.at(-1), spec: 'war_drums'}]).eligibleLookouts).toBe(0);
+  });
+  it('compares accepted capstones and uses both server prices while listing only equipped losses', () => {
+    const campaign = atWave(25, {research: {done: ['cannon'], tiers: {cannon: {tier: 3, tier2: 'rapid_2', tier3: 'broadside'}},
+      branches: [{branch: 'cannon', prices: [181, 361, 631]}]}});
+    const spots = [{...tower(true), spec: 'broadside'}, {...tower(true), id: 'cannon_8', spec: 'rapid'},
+      {...tower(), id: 'cannon_2', spec: 'broadside'}, {...tower(true, 'mortar'), id: 'cannon_3', spec: 'broadside'}];
+    const model = techModel({campaign, spots, coins: 3000, towerPrices: {towerSkills: {cannon: {capstone: 601}}}});
+    const comparison = model.branches[0].tiers[2].capstone;
+    expect(comparison).toMatchObject({current: {id: 'broadside', state: 'chosen', button: null},
+      alternative: {id: 'grapeshot', state: 'closed', button: {label: 'Change to it · 🪙 631'}},
+      equippedIds: ['cannon_1'], researchPrice: '🪙 631', equipPrice: '🪙 601'});
+    expect(techModel({campaign}).branches[0].tiers[2].capstone.equippedIds).toBe(null);
+    expect(techModel({campaign, spots: []}).branches[0].tiers[2].capstone.equippedIds).toEqual([]);
+  });
   it('hides new Quick Mend and Mason Drill offers while preserving saved choices and Bastion HP', () => {
     const research = {done: ['wall'], tiers: {wall: {tier: 3, tier2: 'mason_drill', tier3: 'bastion'}}};
     const campaign = atWave(25, {research});
@@ -305,6 +331,7 @@ describe('the campaign buildings (GAME-V3.md §4, §5)', () => {
     expect(option(legacy, 3, 'bastion').line).toBe('50% more strength, and it mends itself slowly.');
     expect(current.recoveryVersion).toBe(1);
     expect(option(current, 2, 'mason_drill').line).toBe('Mason Drill remains in saved research but no longer affects repair.');
+    expect(option(current, 2, 'mason_drill').scopeLine).toBe('');
     expect(option(current, 3, 'bastion').line).toBe('Bastion adds 50% max HP when equipped.');
     const noSavedDrill = techModel({campaign: atWave(25, {research: {done: ['wall']}}), coins: 5000, recoveryVersion: 1});
     expect(wall(noSavedDrill).tiers[1].nodes.map(node => node.id)).toEqual(['thick_walls']);
