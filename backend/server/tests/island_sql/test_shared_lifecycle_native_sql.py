@@ -213,7 +213,7 @@ def test_deleted_native_starter_preserves_health_journal_copy_and_survivor_win(d
     ).fetchone() == (member,)
     assert database.execute(
         "select actor_id,participant_token is not null from public.recovery_wave_events "
-        "where wave_id=%s and event_kind='captain_input'", (started["waveId"],)
+        "where wave_id=%s and input_uid='deleted-starter-input01'", (started["waveId"],)
     ).fetchone() == (None, True)
     assert database.execute(
         "select initial_snapshot,checkpoint_actor from public.recovery_wave_states "
@@ -303,3 +303,27 @@ def test_native_member_leave_reserves_copy_until_actual_canonical_close(database
         "select holder,holder_generation,pending_return_wave_id from public.arsenal_copies "
         "where id=%s", (copy,)
     ).fetchone() == (None, 2, None)
+
+
+def test_deleting_last_eligible_member_normalizes_expired_peer_grace_in_same_transaction(database):
+    room = native_room(database)
+    started = native_bell(database, room)
+    as_owner(database)
+    # TEST ONLY clock fixture: the peer's fixed grace has actually elapsed at
+    # deletion time. No browser read/worker should be required to finish removal.
+    database.execute(
+        "update public.shared_session_controls set "
+        "last_seen=clock_timestamp()-interval '61 seconds',"
+        "connected_until=null,active_since=null,"
+        "grace_until=clock_timestamp()-interval '1 second' where player_id=%s",
+        (room["owner"],),
+    )
+    assert delete(database, room["member"]) == {"status": "deleted"}
+    as_owner(database)
+    assert database.execute(
+        "select outcome from public.island_wave_closures where wave_id=%s", (started["waveId"],)
+    ).fetchone() == ("abandoned",)
+    assert database.execute(
+        "select count(*) from public.shared_session_slots where wave_id=%s and status='withdrawn'",
+        (started["waveId"],),
+    ).fetchone() == (2,)
