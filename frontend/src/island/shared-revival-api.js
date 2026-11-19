@@ -8,7 +8,7 @@ import {sessionAssertion,sessionUid,validSessionProof} from './shared-session-sh
 const options=Object.freeze({headers:ECONOMY_CAPABILITY_HEADERS});
 const copy=value=>JSON.parse(JSON.stringify(value));
 const failed=(code,message,status=409)=>({ok:false,status,code,message});
-const refreshCodes=new Set(['health_sync_required','hold_incomplete','stale_controller','reconnect_required']);
+const refreshCodes=new Set(['health_sync_required','hold_incomplete','hold_invalidated','hold_missing','stale_controller','reconnect_required']);
 const count=value=>Number.isSafeInteger(value) && value>=0;
 const fields=['economy','actionUid','waveId','targetToken','fallId','holdId','sessionId','connectionGeneration'];
 function validRecord(record){

@@ -19,8 +19,8 @@ it('retains the exact original completion body after unknown401 even when a call
  expect(next.transport.post.mock.calls[0][1]).toEqual(original);expect((await next.api.complete(intent())).ok).toBe(true);expect(next.rows.size).toBe(0);
  expect(next.transport.post.mock.calls[1][1]).toEqual(original);expect(original).not.toHaveProperty('hpUnits');expect(original.economy).not.toHaveProperty('accountId');
 });
-it('refreshes definitive hold/proof refusals with the same immutable completion UID and fall',async()=>{
- const f=fixture();f.transport.post.mockResolvedValueOnce({ok:false,status:409,code:'health_sync_required'});await f.api.complete(intent());
+it.each(['health_sync_required','hold_incomplete','hold_invalidated','hold_missing'])('refreshes definitive %s with the same immutable completion UID and fall',async code=>{
+ const f=fixture();f.transport.post.mockResolvedValueOnce({ok:false,status:409,code});await f.api.complete(intent());
  const old=f.transport.post.mock.calls[0][1];await f.api.complete({...intent(),holdId:'11111111-1111-4111-8111-111111111111'});
  expect(f.transport.post.mock.calls[1][1]).toMatchObject({actionUid:old.actionUid,fallId:old.fallId,holdId:'11111111-1111-4111-8111-111111111111'});
 });
