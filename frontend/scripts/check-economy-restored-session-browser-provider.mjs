@@ -88,7 +88,8 @@ async function settings(page) {
   await page.getByRole('button', {name: 'Settings', exact: true}).click({noWaitAfter: true});
   await page.locator('.island-reset').waitFor({state: 'visible'});
 }
-const {chromium}=await import('playwright-core');
+const {createRequire}=await import('node:module');
+const {chromium}=createRequire(helper)('playwright-core');
 const {loadRuntime}=await import(helper.href);
 const {requestApi}=await import(new URL('./api-clients.mjs',helper).href);
 const saved=JSON.parse(await readFile(savedPath,'utf8'));const runtime=await loadRuntime(runtimePath);
