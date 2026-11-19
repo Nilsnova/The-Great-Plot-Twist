@@ -3,9 +3,9 @@ import {expect, it} from 'vitest';
 import {browserHarness} from '../g20-browser.js';
 const browser = browserHarness();
 
-it('keeps supplied healthy HP, real portrait and readable44px actions within both viewports', async () => {
+it('keeps supplied healthy HP, real portrait and readable44px actions across desktop and phone', async () => {
   await browser.withPage(async page => {
-    for (const viewport of [{width: 1280, height: 720}, {width: 375, height: 812}]) {
+    for (const viewport of [{width: 1280, height: 720}, {width: 375, height: 812}, {width: 320, height: 568}]) {
       await page.setViewportSize(viewport);
       const result = await page.evaluate(async () => {
         await window.g20Import('/src/ui/kit/kit.css');
@@ -35,6 +35,49 @@ it('keeps supplied healthy HP, real portrait and readable44px actions within bot
       expect(bounds.buttons.every(b => b.width >= 44 && b.height >= 44)).toBe(true);
       await page.evaluate(() => window.selectionUi.dispose());
     }
+  });
+});
+
+it('keeps pressed range and eligible upgrade distinct on the short phone', async () => {
+  await browser.withPage(async page => {
+    await page.setViewportSize({width: 320, height: 568});
+    await page.evaluate(async () => {
+      await window.g20Import('/src/ui/kit/kit.css');
+      const {createIslandUi} = await window.g20Import('/src/island/ui.js');
+      const {buildCardModel} = await window.g20Import('/src/island/card-model.js');
+      const ui = createIslandUi({container: document.body});
+      const model = buildCardModel({spotId: 'cannon_1', coins: 1000, movable: true,
+        spot: {id: 'cannon_1', kind: 'cannon', built: true, level: 2}});
+      model.coverage = {id: 'cannon_1', x: 0, z: 0, range: 38, targets: ['ships', 'boarders']};
+      ui.buildCard(model, {move() {}, upgrade() {}, camera() {}}, {dock: true});
+      window.shortSelection = {ui, house: coins => ui.buildCard(buildCardModel({spotId: 'house_2', coins, movable: true,
+        spot: {id: 'house_2', kind: 'house', built: true, level: 1, upgradeCost: 100}}), {move() {}, upgrade() {}}, {dock: true})};
+    });
+    const range = page.getByRole('button', {name: 'Range', exact: true});
+    const surface = locator => locator.evaluate(node => {
+      const style = getComputedStyle(node);
+      return [style.backgroundColor, style.backgroundImage];
+    });
+    await range.click();
+    await page.mouse.move(1, 1);
+    const pressed = await surface(range);
+    await range.hover();
+    expect(await range.getAttribute('aria-pressed')).toBe('true');
+    expect(await surface(range)).toEqual(pressed);
+    await range.click();
+    expect(await surface(range)).not.toEqual(pressed);
+    await page.evaluate(() => window.shortSelection.house(1000));
+    const upgrade = page.getByRole('button', {name: 'Upgrade · 🪙 100', exact: true});
+    expect(await upgrade.isEnabled()).toBe(true);
+    const offered = await surface(upgrade);
+    await page.evaluate(() => window.shortSelection.house(0));
+    expect(await upgrade.isDisabled()).toBe(true);
+    expect(await surface(upgrade)).not.toEqual(offered);
+    const bounds = await upgrade.boundingBox();
+    expect(bounds.width).toBeGreaterThanOrEqual(44);
+    expect(bounds.height).toBeGreaterThanOrEqual(44);
+    expect(bounds.x + bounds.width).toBeLessThanOrEqual(320);
+    await page.evaluate(() => window.shortSelection.ui.dispose());
   });
 });
 
