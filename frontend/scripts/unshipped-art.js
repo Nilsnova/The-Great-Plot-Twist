@@ -11,7 +11,7 @@ export const UNSHIPPED = Object.freeze([
   'places/title.webp', // the painted title backdrop
   'places/title.png', // its fallback
   // Original world authoring sheets stay in the repository; runtime uses the proved compiled sources.
-  'village/buildings-hero-v1.png', 'village/houses-v1.png', 'village/landmarks-v1.png',
+  'village/buildings-hero-v1.png', 'village/houses-v1.png', 'village/houses-v2.png', 'village/landmarks-v1.png',
   'village/services-v1.png', 'village/nature-v1.png', 'village/cannons-v1.png',
   'village/walls-posts-v1.png', 'village/walls-surfaces-v1.png',
   'village/core-v1.png', 'village/progress-v1.png', 'village/mortars-v1.png',

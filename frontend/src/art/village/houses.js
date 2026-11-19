@@ -1,22 +1,22 @@
 // Tight authored rectangles and common level-group fit preserve relative growth at approved presentation sizes.
 export const sheets = {
-  villageHouses: {file: 'village/houses-v1.png', width: 1254, height: 1254},
+  villageHouses: {file: 'village/houses-v2.png', width: 1261, height: 1247},
 };
 
-const PLAIN_FIT = [207, 365, 186, 16], ROLE_FIT = [206, 387, 207, 16];
+const PLAIN_FIT = [209, 391, 209, 14], ROLE_FIT = [209, 416, 209, 14];
 const house = (rect, sourceFoot, role = false) => ({
   sheet: 'villageHouses', rect, sourceFoot,
   logical: role ? [96, 88, 8] : [80, 80, 8], fitBounds: role ? ROLE_FIT : PLAIN_FIT,
 });
 
 export const frames = {
-  'island-house': house([46, 85, 322, 304], [163, 288]),
-  'island-house-l2': house([420, 79, 389, 313], [207, 297]),
-  'island-house-l3': house([847, 22, 384, 380], [198, 365]),
-  'island-house-barracks': house([24, 474, 391, 324], [185, 310], true),
-  'island-house-tavern': house([435, 474, 381, 325], [192, 310], true),
-  'island-house-workshop': house([840, 474, 394, 326], [205, 310], true),
-  'island-house-barracks-l3': house([23, 839, 393, 399], [186, 384], true),
-  'island-house-tavern-l3': house([428, 838, 393, 401], [199, 385], true),
-  'island-house-workshop-l3': house([839, 838, 400, 402], [206, 387], true),
+  'island-house': house([23, 106, 351, 303], [175, 289]),
+  'island-house-l2': house([418, 23, 418, 389], [209, 375]),
+  'island-house-l3': house([872, 2, 360, 405], [180, 391]),
+  'island-house-barracks': house([10, 452, 397, 334], [198, 320], true),
+  'island-house-tavern': house([413, 445, 408, 340], [204, 326], true),
+  'island-house-workshop': house([840, 433, 418, 360], [209, 346], true),
+  'island-house-barracks-l3': house([23, 843, 374, 388], [187, 374], true),
+  'island-house-tavern-l3': house([415, 819, 392, 416], [196, 402], true),
+  'island-house-workshop-l3': house([828, 810, 418, 430], [209, 416], true),
 };

@@ -475,3 +475,7 @@ in the cartoon style of the Tech hub and the Harbor (src/art/campaign.js). Respo
 | Frame | Size | What it shows |
 |---|---|---|
 | `island-arsenal` | 80 × 80 (anchor 8) | Stone armory with a slate roof and ridge cap, an iron-banded timber door under a brass crossed-muskets shield, a weapon rack with three guns, a red-banded powder barrel and a red pennant |
+
+## Home house family (19 Nov 2026)
+
+The original [nine house sprites](public/village/houses-v2.png) were made with OpenAI image generation using Johannes Franz Lang's Home Island concept as a lighting and material reference. The plain houses gain a porch and then an upper dormer and balcony. Barracks, Tavern, and Workshop use distinct silhouettes and retain their existing crossed swords, tankard, and hammer signs. The [source report](../docs/evidence/VIS-06-houses/asset-report-v2.json) records measured alpha bounds and ground feet. The existing browser compiler produces the world-only WebP. The authored PNG remains out of the production build.
