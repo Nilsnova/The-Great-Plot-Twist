@@ -13,7 +13,7 @@ import { createBeam } from '../beam.js';
 import {createGroundShadows} from '../ground-shadow.js';
 import { places } from './registry.js';
 import { layouts, edgeTrees, homeMooring } from './layouts.js';
-import { placeGround } from './surfaces.js';
+import { placeGround, surfaceClass } from './surfaces.js';
 import { backdrop, createLifetime, loadBackdrop } from './resources.js';
 import { makeSelectedCanopy } from './selected-canopy.js';
 import { makeMooring } from './mooring.js';
@@ -57,6 +57,7 @@ export async function createSettlement(ctx) {
   const cleanups = [], dispose = createLifetime(group, art, cleanups);
   try {
     const ground = backdrop(group, await (ctx.loadBackdrop ?? loadBackdrop)(`places/${id}.png`));
+    let captainShadow;
     if (id === 'home_islet') {
       createHomeRelief(group, ground.material.map);
       createHomeTerraces(group, ground.material.map, art);
@@ -67,6 +68,9 @@ export async function createSettlement(ctx) {
         reach: [2.04, 2.32, 1.88][i % 3], canopy: true, opacity: .87,
       }));
       createGroundShadows(group, [...treeShadows, ...bedShadows]);
+      captainShadow = createGroundShadows(group, [{x: 0, z: 0, width: .38, depth: .32, reach: .38, opacity: .83}]);
+      captainShadow.name = 'home-captain-contact';
+      captainShadow.visible = false;
     }
     let lanternLight;
     placements.forEach(item => {
@@ -145,6 +149,13 @@ export async function createSettlement(ctx) {
       update(dt, state) {
         state = frameState(dt, state);
         player = state.player;
+        if (captainShadow) {
+          const {x, z} = player;
+          const foot = projectGround(x, z);
+          // Near the very edge a cast shadow would otherwise spill down the cliff face.
+          captainShadow.visible = surfaceClass(id, x * 1.027, z * 1.027) > 0;
+          captainShadow.position.set(foot.x, foot.y, 0);
+        }
         const still = home && (typeof ctx.reducedMotion === 'function' ? ctx.reducedMotion() : !!ctx.reducedMotion);
         const wind = state.weather?.wind ?? 0, breeze = Math.max(.14, wind);
         foliage.forEach(updateCanopyOpacity);

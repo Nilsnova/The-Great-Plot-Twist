@@ -68,4 +68,5 @@ export function createGroundShadows(group, shadows) {
   mesh.renderOrder = 20;
   mesh.raycast = () => {};
   group.add(mesh);
+  return mesh;
 }
