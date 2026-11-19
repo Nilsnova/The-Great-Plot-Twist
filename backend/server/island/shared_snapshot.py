@@ -19,8 +19,8 @@ from server.island.treasury_models import decimal_string
 from server.supabase_admin import SupabaseAdmin, SupabaseRejected
 
 # Implemented versioned paths; each route still checks its flags and permissions.
-# Move and reset remain unavailable until their coordinated client paths are ready.
-SUPPORTED_CAPABILITIES = frozenset({"arsenal", "session", "repair", "market", "match"})
+# Move remains unavailable; it has no coordinated shared client path.
+SUPPORTED_CAPABILITIES = frozenset({"arsenal", "session", "repair", "reset", "market", "match"})
 
 
 def unreadable() -> SupabaseRejected:

@@ -1992,8 +1992,8 @@ The application registers the existing global GET `/api/captain` and POST
 Its strict personal version/revision/root contract is independent of the viewed island's money
 mode, and missing adoption is explicitly `409 captain_not_initialized` on GET. Read failures
 never mean an unadopted profile. Shared snapshots advertise the implemented versioned
-arsenal/session/repair/market/match paths. Move and reset remain unavailable pending their
-coordinated client paths. A capability is protocol support, not permission: existing route
+arsenal/session/repair/reset/market/match paths. Move remains unavailable pending its
+coordinated client path. A capability is protocol support, not permission: existing route
 flags, membership, origin and controller checks still apply. This adds no public conversion.
 
 ## Shared wave accounting foundation (MP-ECO-03)

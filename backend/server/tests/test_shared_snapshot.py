@@ -112,7 +112,7 @@ def test_snapshot_quotes_use_actual_shared_basis_personal_discount_and_stored_la
     assert result["layout"] == {"version": 2, "grid": 0.5, "movable": False}
     assert {
         name for name, value in result["capabilities"].items() if value["available"]
-    } == {"arsenal", "session", "repair", "market", "match"}
+    } == {"arsenal", "session", "repair", "reset", "market", "match"}
     assert all(
         value["reason"] is None if value["available"] else value["reason"]
         for value in result["capabilities"].values()
