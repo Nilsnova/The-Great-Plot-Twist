@@ -56,3 +56,21 @@ adapter, completed Captain checkpoint routing, or the not-yet-integrated native
 SQL current/join/report/closure functions. Their actual contracts remain required;
 an absent RPC fails closed. Native runtime capability remains disabled until the
 combined handlers, client and persisted lifecycle pass integration checks.
+
+## Captain and strict-reply follow-up
+
+The authenticated `/waves/{waveId}/captains` endpoint now binds the frozen
+controller proof to the exact sealed Captain checkpoint and preserves only the
+server-produced fall identity. Its response may omit known withdrawn slots still
+present in the submitted frozen roster, but cannot add an unrequested token or
+alter any returned HP, fall tick, revival basis or journal prefix. It uses the
+existing recovery write budget and explicit deleted-account guard.
+
+The strict transport selection now passes **110 fixture tests in 6.86s**, including
+5001-digit exact generation increment, paired GET proof refusal before any read,
+reserved root namespace refusal before any read, malformed prerequisite refusal
+without Captain initialization, strict fresh-envelope fields and native delay
+headers. Full backend Ruff and complete diff checks pass. The original 72-case
+checkpoint was older adapter source. Captain routing is now implemented; real
+SQL/Python composition and authenticated native client acceptance are still
+separate outstanding verification gates.

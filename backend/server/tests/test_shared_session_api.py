@@ -361,3 +361,154 @@ def test_public_replay_probe_returns_only_owned_original_wave_without_current_au
         api.replay_wave_start(Admin([value]), ACTOR, OWNER, EPOCH, "saved_bell_001")
     )
     assert answer["historical"] is True and answer["economy"] is None and answer["session"] is None
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        dict(reason="captain_context_required"),
+        dict(status="done", reason="captain_context_required"),
+        dict(status="refused", reason="captain_context_required", extra=True),
+    ],
+)
+def test_malformed_prerequisite_refusal_never_initializes_a_captain(value):
+    from server.island.shared_session_models import SessionAttach
+
+    body = SessionAttach(
+        economy={key: value for key, value in ORIGIN.items() if key != "accountId"},
+        sessionId=SESSION,
+        expectedGeneration="0",
+        actionUid="attach_001",
+    )
+    admin = Admin([value])
+    with pytest.raises(SupabaseRejected):
+        asyncio.run(api.session_call(admin, ACTOR, "attach", body))
+    assert len(admin.calls) == 1
+
+
+def test_large_exact_connection_generation_does_not_fail_after_committed_attach():
+    from server.island.shared_session_models import SessionAttach
+
+    before, after = "9" * 5001, "1" + "0" * 5001
+    body = SessionAttach(
+        economy={key: value for key, value in ORIGIN.items() if key != "accountId"},
+        sessionId=SESSION,
+        expectedGeneration=before,
+        actionUid="attach_001",
+    )
+    result = dict(status="done", economy=economy(), session=metadata())
+    result["session"]["connectionGeneration"] = after
+    admin = Admin([result])
+    answer = asyncio.run(api.session_call(admin, ACTOR, "attach", body))
+    assert answer["session"]["connectionGeneration"] == after
+    assert admin.calls[0][1]["p_expected_generation"] == before
+
+
+@pytest.mark.parametrize("extra", ["envelope", "money"])
+def test_fresh_economy_projection_rejects_unknown_fields(extra):
+    value = dict(status="done", economy=economy(), session=metadata(False))
+    target = value["economy"] if extra == "envelope" else value["economy"]["treasury"]
+    target["privateCoins"] = "5"
+    with pytest.raises(SupabaseRejected):
+        asyncio.run(api.read_session(Admin([value]), ACTOR, OWNER, EPOCH))
+
+
+def captain_report():
+    from server.island.shared_session_models import CaptainReport
+
+    return CaptainReport.model_validate(
+        dict(
+            economy={key: value for key, value in ORIGIN.items() if key != "accountId"},
+            sessionId=SESSION,
+            connectionGeneration="1",
+            waveProtocol=2,
+            checkpointUid="captains_001",
+            throughTick=10,
+            inputHeadSeq=2,
+            captains={TOKEN: dict(hpUnits=0, downAtTick=7, reviveBasisSeq=0)},
+        )
+    )
+
+
+def captain_reply():
+    return dict(
+        accepted=True,
+        repeated=False,
+        throughTick=10,
+        inputHeadSeq=2,
+        captains={TOKEN: dict(hpUnits=0, downAtTick=7, reviveBasisSeq=0, fallId=SESSION)},
+    )
+
+
+def test_captain_checkpoint_keeps_actual_server_fall_nonce_and_exact_controller_source():
+    admin = Admin([captain_reply()])
+    answer = asyncio.run(
+        api.report_captains(admin, ACTOR, WAVE, OWNER, EPOCH, SESSION, "1", captain_report())
+    )
+    assert answer["captains"][TOKEN]["fallId"] == SESSION
+    name, args = admin.calls[0]
+    assert name == "shared_session_wave_captains"
+    assert set(args["p_report"]) == {"checkpointUid", "throughTick", "inputHeadSeq", "captains"}
+    assert "fallId" not in args["p_report"]["captains"][TOKEN]
+
+
+@pytest.mark.parametrize("change", ["accepted", "fall", "token", "hp", "prefix"])
+def test_captain_checkpoint_response_cannot_substitute_prefix_or_reported_state(change):
+    value = captain_reply()
+    if change == "accepted":
+        value["accepted"] = 1
+    elif change == "fall":
+        value["captains"][TOKEN]["fallId"] = None
+    elif change == "token":
+        value["captains"][OWNER] = value["captains"].pop(TOKEN)
+    elif change == "hp":
+        value["captains"][TOKEN]["downAtTick"] = 8
+    else:
+        value["throughTick"] = 11
+    with pytest.raises(SupabaseRejected):
+        asyncio.run(
+            api.report_captains(
+                Admin([value]), ACTOR, WAVE, OWNER, EPOCH, SESSION, "1", captain_report()
+            )
+        )
+
+
+@pytest.mark.parametrize(
+    "reason",
+    [
+        "input_tick_ahead",
+        "page_watermark_invalid",
+        "page_incomplete",
+        "captain_hp_increase",
+        "captain_down",
+    ],
+)
+def test_known_native_refusals_remain_explicit_without_legacy_fallback(reason):
+    with pytest.raises(ApiError) as error:
+        api.checked({"status": "refused", "reason": reason})
+    assert error.value.status_code == 409 and error.value.code == reason
+
+
+def test_too_early_preserves_the_trusted_retry_after_delay():
+    with pytest.raises(ApiError) as error:
+        api.checked({"status": "refused", "reason": "too_early", "waitSeconds": 3})
+    assert error.value.code == "wave_too_early" and error.value.headers == {"Retry-After": "3"}
+
+
+@pytest.mark.parametrize("wait", [True, "3", 0, -1, 86401])
+def test_malformed_native_retry_delay_is_not_interpreted_as_authority(wait):
+    with pytest.raises(SupabaseRejected):
+        api.checked({"status": "refused", "reason": "too_early", "waitSeconds": wait})
+
+
+def test_native_away_command_is_not_a_disconnect_authority():
+    admin = Admin([])
+    item = RecoveryInput(
+        inputUid="input_001",
+        actorCounter=1,
+        tick=0,
+        command=dict(type="captain_move", x=0, z=0, away=True),
+    )
+    with pytest.raises(ApiError):
+        asyncio.run(api.append_inputs(admin, ACTOR, WAVE, OWNER, EPOCH, SESSION, "1", [item]))
+    assert admin.calls == []

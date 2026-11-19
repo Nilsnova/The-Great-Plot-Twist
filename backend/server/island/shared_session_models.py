@@ -17,12 +17,15 @@ from pydantic import (
     StrictFloat,
     StrictInt,
     StrictStr,
+    TypeAdapter,
     model_validator,
 )
 
 from server.island.economy_http_models import SharedEconomy
 from server.island.shared_wave_http import SharedWaveProof
-from server.island.treasury_store import EnvelopeRow, account_from_row
+from server.island.treasury_store import EnvelopeRow as BaseEnvelope
+from server.island.treasury_store import MoneyRow as BaseMoney
+from server.island.treasury_store import account_from_row
 from server.island.wave_recovery import RecoveryCheckpoint
 
 Unsigned = Annotated[StrictStr, Field(pattern=r"^(0|[1-9][0-9]*)$")]
@@ -36,12 +39,21 @@ def player_uid(value: str) -> str:
 
 
 ActionUid = Annotated[
-    StrictStr, Field(pattern=r"^[A-Za-z0-9_-]{8,64}$"), AfterValidator(player_uid)
+    StrictStr, TypeAdapter, Field(pattern=r"^[A-Za-z0-9_-]{8,64}$"), AfterValidator(player_uid)
 ]
 
 
 class Origin(SharedEconomy):
     accountId: UUID
+
+
+class MoneyRow(BaseMoney):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+
+class EnvelopeRow(BaseEnvelope):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+    treasury: MoneyRow
 
 
 class SessionAttach(BaseModel):
@@ -63,6 +75,12 @@ class SessionSettings(SessionLeave):
 
     @model_validator(mode="after")
     def has_change(self) -> Self:
+        if any(
+            getattr(self, name) is None
+            for name in self.model_fields_set
+            if name in {"breakPaused", "autoNext", "countdownSeconds"}
+        ):
+            raise ValueError("Provided settings cannot be null.")
         if all(
             getattr(self, name) is None for name in ("breakPaused", "autoNext", "countdownSeconds")
         ):
@@ -79,7 +97,9 @@ class SessionData(BaseModel):
     leaderId: UUID | None
     graceUntil: AwareDatetime | None
     place: Annotated[
-        StrictStr, Field(pattern=r"^isle_[abcdefghjkmnpqrstuvwxyz23456789]{5}_[0-9a-f]{24}$")
+        StrictStr,
+        TypeAdapter,
+        Field(pattern=r"^isle_[abcdefghjkmnpqrstuvwxyz23456789]{5}_[0-9a-f]{24}$"),
     ]
     topicGeneration: Positive
     breakPaused: StrictBool
@@ -213,7 +233,7 @@ class NativeWave(BaseModel):
     countdownSeconds: StrictInt = Field(ge=0, le=60)
     weather: NativeWeather
     boss: StrictBool
-    flagship: Literal[False]
+    flagship: StrictBool
     rules: list[StrictStr]
     repeat: StrictBool
     historical: StrictBool
@@ -231,6 +251,10 @@ class NativeWave(BaseModel):
     def original_snapshot(self) -> Self:
         origin = Origin.model_validate(self.initialSnapshot.get("economy"))
         snapshot = self.initialSnapshot
+        if origin.model_dump(mode="json") != snapshot["economy"]:
+            raise ValueError("Immutable origin identities must be canonical.")
+        if self.flagship:
+            raise ValueError("An island wave cannot be a Pirate Point flagship.")
         if str(origin.islandOwner) != str(self.islandOwner) or snapshot.get("waveId") != str(
             self.waveId
         ):
@@ -257,11 +281,19 @@ class NativeWave(BaseModel):
         participants = snapshot.get("participants")
         if not isinstance(participants, list) or not 1 <= len(participants) <= 10:
             raise ValueError("Missing frozen roster.")
-        tokens = [FrozenParticipant.model_validate(row).participantToken for row in participants]
+        frozen = [FrozenParticipant.model_validate(row) for row in participants]
+        if any(
+            row.model_dump(mode="json") != raw
+            for row, raw in zip(frozen, participants, strict=True)
+        ):
+            raise ValueError("Frozen participant identities must be canonical.")
+        tokens = [row.participantToken for row in frozen]
         if len(set(tokens)) != len(tokens) or snapshot.get("rosterSize") != len(tokens):
             raise ValueError("Invalid frozen participant roster.")
         if self.islandOwner != origin.islandOwner:
             raise ValueError("Wrong immutable owner.")
+        if TypeAdapter(AwareDatetime).validate_python(snapshot.get("startsAt")) != self.startsAt:
+            raise ValueError("Wrong immutable start time.")
         if self.historical and (
             not self.repeat
             or self.economy is not None
@@ -372,3 +404,28 @@ class FinishReport(BaseModel):
         ]
         | None
     ) = Field(default=None, max_length=24)
+
+
+class CaptainState(CaptainFact):
+    fallId: UUID | None
+
+    @model_validator(mode="after")
+    def fall_identity(self) -> Self:
+        if (self.hpUnits == 0) != (self.fallId is not None):
+            raise ValueError("Only a fallen Captain has a server fall identity.")
+        return self
+
+
+class CaptainResult(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+    accepted: StrictBool
+    repeated: StrictBool
+    throughTick: StrictInt = Field(ge=0, le=18_000)
+    inputHeadSeq: StrictInt = Field(ge=0)
+    captains: dict[UUID, CaptainState] = Field(min_length=1, max_length=10)
+
+    @model_validator(mode="after")
+    def accepted_success(self) -> Self:
+        if not self.accepted:
+            raise ValueError("A Captain success must be accepted.")
+        return self

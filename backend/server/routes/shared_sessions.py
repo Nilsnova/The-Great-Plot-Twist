@@ -11,16 +11,18 @@ from uuid import UUID
 
 from fastapi import APIRouter, Query, Request
 
+from server.errors import ApiError
 from server.island import shared_lifecycle, shared_session_api
 from server.island.economy_http import require_economy_capability
 from server.island.service import IslandCatalogueDep
 from server.island.shared_session_models import (
+    CaptainReport,
     Positive,
     SessionAttach,
     SessionLeave,
     SessionSettings,
 )
-from server.island.shared_wave_http import SharedWaveProof
+from server.island.shared_wave_http import SharedWaveProof, require_shared_wave_client
 from server.routes.island import IslandPlayerDep
 from server.supabase_admin import AdminDep
 
@@ -46,6 +48,8 @@ async def read_session(
     session_id: Annotated[UUID | None, Query(alias="sessionId")] = None,
     connection_generation: Annotated[Positive | None, Query(alias="connectionGeneration")] = None,
 ) -> dict:
+    if (session_id is None) != (connection_generation is None):
+        raise ApiError(422, "validation_error", "Provide both connection proof fields.")
     await gate(request, admin, player.id, read=True)
     return await shared_session_api.read_session(
         admin,
@@ -99,3 +103,26 @@ async def change_settings(
 ) -> dict:
     await gate(request, admin, player.id)
     return await shared_session_api.session_call(admin, player.id, "settings", body)
+
+
+@router.post("/waves/{wave_id}/captains")
+async def report_captains(
+    wave_id: UUID,
+    body: CaptainReport,
+    player: IslandPlayerDep,
+    admin: AdminDep,
+    request: Request,
+) -> dict:
+    require_shared_wave_client(request, body.waveProtocol)
+    request.app.state.recovery_write_budget.spend(player.id)
+    await shared_lifecycle.ensure_not_deleted(admin, player.id)
+    return await shared_session_api.report_captains(
+        admin,
+        player.id,
+        wave_id,
+        str(body.economy.islandOwner),
+        str(body.economy.runEpoch),
+        str(body.sessionId),
+        body.connectionGeneration,
+        body,
+    )
