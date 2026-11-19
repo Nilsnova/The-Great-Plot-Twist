@@ -3,6 +3,9 @@
 Responsible teammate: Ianno Hollensteiner (`Iannomh123456`). Separate bounded #505
 case for real timed teammate revival at zero available shared funds.
 
+Source-qualified API/simulation results and their explicit rendered boundary are in
+[the owned evidence note](../docs/evidence/MP-ECO-20-zero-revival-provider/README.md).
+
 Use two actual local Auth sessions, production session/wave/input/revival routes,
 the unchanged production simulation and actual sealed server time. Wait for genuine
 enemy damage to fell one Captain while the other remains standing. Submit only the
