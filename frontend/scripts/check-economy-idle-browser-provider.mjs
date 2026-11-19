@@ -41,7 +41,7 @@ async function finishEntry(page, options = {}) {
       if (await button.isVisible().catch(() => false)) await button.click({noWaitAfter: true, timeout: 3000});
     }
     const lobby = page.locator('.island-card-lobby[open] .island-lobby-start');
-    if (await lobby.isVisible().catch(() => false)) await lobby.click({noWaitAfter: true});
+    if (await lobby.isVisible().catch(() => false)) await page.keyboard.press('Escape');
     await page.waitForTimeout(200);
   }
   const current = await page.evaluate(() => ({place: window.__island?.world.current?.id,
@@ -73,9 +73,11 @@ async function settings(page) {
   await page.locator('.island-reset').waitFor({state: 'visible'});
 }
 try {
+  console.log('Creating actual registered browser pair');
   environment = await createClients({labels: ['idle-owner', 'idle-member'], runtimePath, expectedCommit: baseline, independentBrowsers: true});
   const [owner, member] = environment.clients;
   report.servedBefore = servedSourceEvidence(environment.runtime);
+  console.log('Entering owner game');
   await finishEntry(owner.page, {create: true});
   let initial = await api(owner.page, '/api/island'); assert.equal(initial.status, 200);
   const code = initial.data.code;
@@ -83,6 +85,7 @@ try {
   await install('update public.islands set wave_best=50,next_wave=51 where player_id=$1::uuid', [owner.actorId],
     'Explicit saved-unlock fixture for idle build/research/arsenal controls; no natural progress claim', {runtimePath});
   await refresh(owner.page);
+  console.log('Entering invited member game');
   await finishEntry(member.page, {join: code});
   await refresh(member.page);
   const visit = () => api(member.page, '/api/island/visit/' + encodeURIComponent(code));
@@ -117,7 +120,7 @@ try {
   view = await snapshot(); assert.equal(view.spots.find(spot => spot.id === 'wall_1').built, true);
   const afterBuild = view.economy.treasury.availableCoins;
   assert.equal(BigInt(afterBuild), 5000n - BigInt(built.body.quotedCoins));
-  await capture(member.page, output, 'member-quoted-build');
+  await buildCard.screenshot({path: output + '/member-quoted-build.png'});
   note('visible-invited-member-quoted-build', {layer: 'rendered product', quote: built.body.quotedCoins, available: afterBuild, cardText: buildText});
   const retry = await api(member.page, '/api/island/build', {method: 'POST', body: built.body}); assert.equal(retry.status, 200);
   const changed = await api(member.page, '/api/island/build', {method: 'POST', body: {...built.body, quotedCoins: String(BigInt(built.body.quotedCoins) + 1n)}}); assert.equal(changed.status, 409);
@@ -142,7 +145,7 @@ try {
     note('visible-member-research-' + option, {layer: 'rendered product', displayed: text, intent: researched.body, research: view.research.find(row => row.branch === 'cannon'), available: view.economy.treasury.availableCoins});
   }
   assert.equal(view.research.find(row => row.branch === 'cannon').choice2, 'long_guns');
-  await capture(member.page, output, 'member-research-reversal');
+  await tech.screenshot({path: output + '/member-research-reversal.png'});
 
   await closeCards(member.page); await member.page.evaluate(() => window.__island.island.pick('wall_1'));
   await member.page.locator('.island-card-build[open] [data-focus="demolish"]').click({noWaitAfter: true});
@@ -164,7 +167,7 @@ try {
   const stock = await api(member.page, '/api/island/arsenal?code=' + encodeURIComponent(code)); assert.equal(stock.status, 200);
   assert.equal(stock.data.total, 1); assert.equal(stock.data.copies[0].holder, null);
   note('visible-member-shared-arsenal-buy-and-return', {layer: 'rendered product', displayed: weaponText, total: stock.data.total, stored: stock.data.stored});
-  await capture(member.page, output, 'member-arsenal-return');
+  await arsenal.screenshot({path: output + '/member-arsenal-return.png'});
 
   captainBefore = await api(member.page, '/api/captain');
   await settings(member.page);
