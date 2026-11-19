@@ -17,6 +17,13 @@ import {arsenalOrigin, isArsenalEconomy, isArsenalLegacyContext, readSharedArsen
 const REFRESH_ON = new Set(['taken', 'arsenal_full', 'no_such_copy', 'wave_running', 'insufficient_funds', 'locked', 'nothing_held', 'action_used', 'stale_holder', 'economy_epoch_mismatch']);
 const nameOf = (data, id) => { const copy = data.copies.find(item => item.id === id); return copy ? `${WEAPON_BY_ID[copy.weapon].name} #${copy.no}` : 'The weapon'; };
 
+// Only an exact duplicate READ may avoid invalidating otherwise coherent construction quotes.
+const redundantSharedRead = (before, next, known) => readSharedArsenal(before) && isArsenalEconomy(known)
+  && sameArsenalOrigin(before.economy, next.economy) && sameArsenalOrigin(known, next.economy)
+  && before.arsenalRevision === next.arsenalRevision && known.revision === next.economy.revision
+  && ['balanceCoins', 'committedCoins', 'availableCoins'].every(key => known.treasury[key] === next.economy.treasury[key])
+  && JSON.stringify({...before, economy: null}) === JSON.stringify({...next, economy: null});
+
 export function createArsenal(options = {}) {
   const {api, ui, emit = () => {}, enabled = () => false, readEnabled = enabled, code = () => null, place = () => 'own',
     level = () => 1, skills = () => [], onCoins = () => {}, asking = () => () => true,
@@ -46,12 +53,13 @@ export function createArsenal(options = {}) {
     };
   }
   function redraw() { if (ui.open === 'arsenal') ui.arsenalCard(model(), handlers); }
-  function take(data, fresh, expectedOrigin) {
+  function take(data, fresh, expectedOrigin, readOnly = false) {
     if (readSharedArsenal(data)) {
       if (expectedOrigin && !sameArsenalOrigin(data.economy, expectedOrigin)) return false;
       if (readSharedArsenal(current()) && sameArsenalOrigin(current().economy, data.economy)
         && BigInt(data.arsenalRevision) < BigInt(current().arsenalRevision)) return false;
-      onEconomy(data.economy, expectedOrigin ?? arsenalOrigin(data.economy));
+      if (!readOnly || !redundantSharedRead(current(), data, selectedEconomy()))
+        onEconomy(data.economy, expectedOrigin ?? arsenalOrigin(data.economy));
       const known = selectedEconomy();
       answer = sameArsenalOrigin(known, data.economy) && BigInt(known.revision) >= BigInt(data.economy.revision)
         ? {...data, economy: known} : data;
@@ -70,7 +78,7 @@ export function createArsenal(options = {}) {
     if (mine !== ticket) return result;
     loading = false;
     if (asked !== key() || !readEnabled()) return result;
-    if (result.ok) { if (enabled()) take(result.data, fresh, result.expectedOrigin); if (loadFailed) { message = ''; loadFailed = false; } }
+    if (result.ok) { if (enabled()) take(result.data, fresh, result.expectedOrigin, true); if (loadFailed) { message = ''; loadFailed = false; } }
     else if (!result.ok && !current()) { message = result.message; loadFailed = true; }
     redraw();
     return result;
