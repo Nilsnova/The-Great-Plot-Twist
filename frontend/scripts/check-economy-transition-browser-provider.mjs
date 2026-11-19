@@ -88,7 +88,7 @@ async function settings(page) {
   await page.locator('.island-reset').waitFor({state: 'visible'});
 }
 const frames = [];
-const watch = page => page.on('websocket', socket => {
+const watch = (page,label) => page.on('websocket', socket => {
   const captureFrame = (direction, event) => {
     try {
       const frame = JSON.parse(String(event.payload));
@@ -96,14 +96,14 @@ const watch = page => page.on('websocket', socket => {
       const kind = Array.isArray(frame) ? frame[3] : frame.event;
       const payload = Array.isArray(frame) ? frame[4] : frame.payload;
       if (typeof topic === 'string' && topic.includes('live:place:') && ['phx_join','phx_reply','phx_leave'].includes(kind))
-        frames.push({direction,topic,kind,status: payload?.status ?? null,at:new Date().toISOString()});
+        frames.push({label,direction,topic,kind,status: payload?.status ?? null,at:new Date().toISOString()});
     } catch {}
   };
   socket.on('framesent', event => captureFrame('sent', event));
   socket.on('framereceived', event => captureFrame('received', event));
 });
 const state = page => page.evaluate(() => ({mode:(window.__island.island.visiting ?? window.__island.island.island)?.economy?.mode,
-  place:window.__island.island.roomPlace(),proof:window.__island.island.session.proof(),metadata:window.__island.island.session.metadata}));
+  place:window.__island.island.roomPlace(),proof:window.__island.island.session.proof(),metadata:window.__island.island.session.metadata,activeWaveId:window.__island.island.flow.current?.wave?.waveId??null}));
 async function reenter(page, options = {}) {
   await closeCards(page); await page.locator('.hud-menu').click({noWaitAfter:true});
   await page.getByRole('button',{name:'Return to title',exact:true}).click({noWaitAfter:true});
@@ -111,7 +111,7 @@ async function reenter(page, options = {}) {
 }
 try {
   environment = await createClients({labels:['transition-owner','transition-member'],runtimePath,expectedCommit:baseline,independentBrowsers:false});
-  const [owner,member]=environment.clients; watch(owner.page);watch(member.page);
+  const [owner,member]=environment.clients; watch(owner.page,'owner');watch(member.page,'member');
   report.servedBefore=servedSourceEvidence(environment.runtime);
   await finishEntry(owner.page,{create:true});
   const before=await api(owner.page,'/api/island'); assert.equal(before.status,200); const code=before.data.code;
@@ -127,9 +127,9 @@ try {
   await member.page.waitForFunction(()=>!!window.__island.island.session.proof(),null,{timeout:20000});
   const shared=await state(member.page); assert.equal(shared.mode,'island_shared');assert.ok(shared.proof);
   const expected='realtime:live:place:'+shared.metadata.session.place+':'+shared.metadata.session.topicGeneration;
-  for(let n=0;n<40&&!frames.slice(frameBoundary).some(f=>f.direction==='received'&&f.topic===expected&&f.kind==='phx_reply'&&f.status==='ok');n++)await member.page.waitForTimeout(250);
-  assert.ok(frames.slice(frameBoundary).some(f=>f.direction==='sent'&&f.topic===expected&&f.kind==='phx_join'));
-  assert.ok(frames.slice(frameBoundary).some(f=>f.direction==='received'&&f.topic===expected&&f.kind==='phx_reply'&&f.status==='ok'));
+  for(let n=0;n<40&&!frames.slice(frameBoundary).some(f=>f.label==='member'&&f.direction==='received'&&f.topic===expected&&f.kind==='phx_reply'&&f.status==='ok');n++)await member.page.waitForTimeout(250);
+  assert.ok(frames.slice(frameBoundary).some(f=>f.label==='member'&&f.direction==='sent'&&f.topic===expected&&f.kind==='phx_join'));
+  assert.ok(frames.slice(frameBoundary).some(f=>f.label==='member'&&f.direction==='received'&&f.topic===expected&&f.kind==='phx_reply'&&f.status==='ok'));
   note('ordinary-resume-adopts-admitted-shared-session-and-product-private-topic',{layer:'real UI resume, actual accepted session metadata and passive WebSocket frames',legacyMode:legacy.mode,sharedMode:shared.mode,canonicalPlace:shared.place,acceptedCanonicalJoin:true,discovery:'Menu Return to title, then normal Continue/Join; no manual island.load or SDK topic'});
   const visit=async()=>{const r=await api(member.page,'/api/island/visit/'+encodeURIComponent(code));assert.equal(r.status,200);return r.data;};
   let view=await visit(); const account=view.economy.accountId;
@@ -140,20 +140,38 @@ try {
     const row=card.locator('[data-crew="'+crew+'"]');
     await row.waitFor({state:'visible'});const shown=await row.innerText();const old=view.economy.treasury.availableCoins;
     const result=await mutation(member.page,'/api/island/hire',row.locator('button'));
-    view=await visit();assert.equal(BigInt(old)-BigInt(view.economy.treasury.availableCoins),BigInt(result.body.quotedCoins));
-    assert.equal(view.crew[crew],1);note('visible-invited-member-crew-'+crew,{layer:'visible product and committed shared read',displayed:shown,charge:result.body.quotedCoins,available:view.economy.treasury.availableCoins});
+    view=await visit();assert.equal(BigInt(old)-BigInt(view.economy.treasury.availableCoins),BigInt(result.data.receipt.result.chargedCoins));
+    assert.equal(view.crew[crew],1);note('visible-invited-member-crew-'+crew,{layer:'visible product and committed shared read',displayed:shown,charge:result.data.receipt.result.chargedCoins,available:view.economy.treasury.availableCoins});
   }
   await card.screenshot({path:output+'/member-crew.png'});
   const ledger=await read('select balance_coins::text,(select coalesce(sum(balance_delta),0)::text from public.island_treasury_transactions t where t.account_id=a.id) ledger from public.island_economy_accounts a where id=$1::uuid',[account]);
   assert.equal(ledger[0].balance_coins,ledger[0].ledger);
   note('crew-independent-ledger-conservation',{layer:'read-only PostgreSQL',...ledger[0]});
   await closeCards(member.page);await member.page.locator('.hud-menu').click({noWaitAfter:true});
+  await member.page.getByRole('button',{name:'Arsenal',exact:true}).click({noWaitAfter:true});
+  const arsenalCard=member.page.locator('.island-card-arsenal[open]');
+  await mutation(member.page,'/api/island/arsenal/buy',arsenalCard.locator('.island-arsenal-type[data-weapon="pistols"]').getByRole('button',{name:/Buy/}));
+  const inventory=async()=>{const r=await api(member.page,'/api/island/arsenal?code='+encodeURIComponent(code));assert.equal(r.status,200);return r.data;};
+  let stock=await inventory();assert.equal(stock.total,1);assert.equal(stock.copies[0].holder,member.actorId);const copy=stock.copies[0].id;
+  await mutation(member.page,'/api/island/arsenal/return',arsenalCard.locator('[data-focus="arsenal-return"]'));
+  stock=await inventory();assert.equal(stock.copies[0].id,copy);assert.equal(stock.copies[0].holder,null);assert.equal(stock.stored,1);
+  await mutation(member.page,'/api/island/arsenal/take',arsenalCard.locator('.island-arsenal-copy').getByRole('button',{name:/^Take/}));
+  stock=await inventory();assert.equal(stock.copies[0].id,copy);assert.equal(stock.copies[0].holder,member.actorId);assert.equal(stock.stored,0);
+  await mutation(member.page,'/api/island/arsenal/return',arsenalCard.locator('[data-focus="arsenal-return"]'));
+  stock=await inventory();assert.equal(stock.copies[0].id,copy);assert.equal(stock.copies[0].holder,null);assert.equal(stock.stored,1);
+  const afterArsenal=await visit();assert.equal(afterArsenal.economy.treasury.availableCoins,'4840');
+  const purchase=await read('select count(*) purchases,coalesce(sum(balance_delta),0)::text delta from public.island_treasury_transactions where account_id=$1::uuid and reason=\'weapon_purchase\'',[account]);
+  assert.equal(purchase[0].purchases,1);assert.equal(purchase[0].delta,'-60');
+  await arsenalCard.screenshot({path:output+'/member-visible-arsenal-stored.png'});
+  note('visible-member-arsenal-buy-return-take-return-conserves-copy-and-one-debit',{layer:'ordinary rendered product, actual inventory and independent ledger',sameCopy:true,total:1,stored:1,purchases:1,delta:'-60',available:'4840'});
+  await closeCards(member.page);await member.page.locator('.hud-menu').click({noWaitAfter:true});
+  const leaveBoundary=frames.length;
   const leaving=member.page.waitForResponse(r=>new URL(r.url()).pathname==='/api/games/leave'&&r.request().method()==='POST');
   await member.page.getByRole('button',{name:'Leave this game',exact:true}).click({noWaitAfter:true});
   assert.equal((await leaving).status(),200);
   await member.page.waitForFunction(()=>!window.__island.island.visiting,null,{timeout:20000});
-  for(let n=0;n<40&&!frames.some(f=>f.topic===expected&&f.kind==='phx_leave');n++)await member.page.waitForTimeout(250);
-  assert.ok(frames.some(f=>f.topic===expected&&f.kind==='phx_leave'));
+  for(let n=0;n<40&&!frames.slice(leaveBoundary).some(f=>f.label==='member'&&f.direction==='sent'&&f.topic===expected&&f.kind==='phx_leave');n++)await member.page.waitForTimeout(250);
+  assert.ok(frames.slice(leaveBoundary).some(f=>f.label==='member'&&f.direction==='sent'&&f.topic===expected&&f.kind==='phx_leave'));
   const departed=await state(member.page);assert.notEqual(departed.place,shared.place);
   note('visible-member-leave-revokes-product-session-and-leaves-old-topic',{layer:'ordinary Menu action, actual HTTP200 and passive WebSocket leave',oldPlaceCleared:true,canonicalTopicLeft:true,proofCleared:!departed.proof});
   await member.context.close();
@@ -162,7 +180,7 @@ try {
   const ownerState=await state(owner.page);const ownView=await api(owner.page,'/api/island');assert.equal(ownView.status,200);
   const proof={economy:context(ownView.data.economy),sessionId:ownerState.proof.sessionId,connectionGeneration:ownerState.proof.connectionGeneration};
   const started=await api(owner.page,'/api/waves/start',{method:'POST',body:{...proof,where:code,waveProtocol:2,actionUid:uid()}});assert.equal(started.status,200);
-  const waveId=started.data.waveId;
+  const waveId=started.data.waveId;report.wave={waveId,initialSnapshot:started.data.initialSnapshot};
   const disconnect=owner.page.waitForResponse(r=>new URL(r.url()).pathname==='/api/island/session/disconnect'&&r.request().method()==='POST');
   await owner.page.evaluate(()=>window.__island.island.session.disconnect());assert.equal((await disconnect).status(),200);
   await owner.context.setOffline(true);
@@ -172,7 +190,8 @@ try {
   await owner.context.setOffline(false);await owner.page.reload({waitUntil:'domcontentloaded'});await finishEntry(owner.page);
   await owner.page.waitForFunction(()=>!!window.__island.island.session.proof(),null,{timeout:20000});
   const restored=await state(owner.page);
-  assert.equal(restored.metadata.session.reservation,null);
+  assert.notEqual(restored.activeWaveId,waveId);
+  const assignment=await read('select assignment_wave_id from public.personal_captain_profiles where player_id=$1::uuid',[owner.actorId]);assert.equal(assignment[0].assignment_wave_id,null);
   const stillClosed=await read('select outcome,loot_coins::text from public.island_wave_closures where wave_id=$1::uuid',[waveId]);assert.deepEqual(stillClosed,closed);
   note('real-grace-expiry-browser-restoration-does-not-resurrect-old-attempt',{layer:'real67s, independent canonical worker closure, ordinary document restore and actual fresh controller metadata',oldAttemptClosed:true,outcome:'abandoned',loot:'0',freshController:true,oldReservationAbsent:true});
   report.status='passed';
