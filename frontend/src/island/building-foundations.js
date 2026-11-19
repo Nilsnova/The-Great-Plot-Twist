@@ -1,7 +1,7 @@
 // Ground contact at Home's existing building anchors. The whole layer is decorative.
 import * as THREE from 'three';
 import {appendGroundShadow} from '../world/ground-shadow.js';
-import {projectGround} from '../world/projection.js';
+import {projectGround, unprojectGround} from '../world/projection.js';
 import {surfaceClass} from '../world/places/surfaces.js';
 import {ISLAND_PLACE} from './spots.js';
 
@@ -20,8 +20,8 @@ const PALETTE = [0x283021, 0x666960, 0x96917a, 0xc4b185, 0xcbb68c, 0x655f51, 0xd
   hex => new THREE.Color(hex),
 );
 const [SHADOW, EAST, FRONT, BEVEL, CAP, MORTAR, SUNLIT, LEE] = PALETTE;
-const RETAINING_STONE = [0xb4a38a, 0x97856e, 0x7c6958, 0x6e5d4c].map(hex => new THREE.Color(hex));
-const [SHOULDER, RETAINING_FRONT, RETAINING_SIDE, RETAINING_JOINT] = RETAINING_STONE;
+const RETAINING_STONE = [0xc3a47b, 0xb0916b, 0x9a7f61, 0x80694f, 0x726049].map(hex => new THREE.Color(hex));
+const [SHOULDER, RETAINING_FRONT, RETAINING_SIDE, RETAINING_JOINT, EMBEDDED_STONE] = RETAINING_STONE;
 const PAD_FACES = [[2, EAST], [3, EAST], [4, FRONT], [5, FRONT], [6, FRONT]];
 const onLand = (x, z) => surfaceClass(ISLAND_PLACE, x, z) !== 0;
 
@@ -43,7 +43,11 @@ function retainingToe(outside, x, z, footZ) {
   // Shift the whole lower course together, so its corners never fold into the tower pin.
   while (base.some(([gx, gz]) => !onLand(gx - shoreX * inshore, gz - shoreZ * inshore)) && inshore < 2.4) inshore += .13;
   const height = -.9 - .35 * inshore;
-  return base.map(([gx, gz]) => ({x: gx - shoreX * inshore, z: gz - shoreZ * inshore, height}));
+  return base.map(([gx, gz], i) => {
+    const [capX, capZ] = outside[i];
+    return onLand(capX, capZ) ? {x: capX, z: capZ, height: 0}
+      : {x: gx - shoreX * inshore, z: gz - shoreZ * inshore, height};
+  });
 }
 
 function geometryOf(foundations) {
@@ -73,16 +77,30 @@ function geometryOf(foundations) {
     const outside = corners(x, footZ, width, depth);
     const toes = retainingToe(outside, x, z, footZ);
     if (toes) {
-      const course = (corner, fraction, tint) => {
-        const [gx, gz] = outside[corner], toe = toes[corner];
-        return vertex(THREE.MathUtils.lerp(gx, toe.x, fraction), THREE.MathUtils.lerp(gz, toe.z, fraction), toe.height * fraction, tint);
-      };
+      const {lerp} = THREE.MathUtils;
       for (const [edge] of PAD_FACES) {
         const next = edge + 1, stone = edge < 4 ? RETAINING_SIDE : RETAINING_FRONT;
-        quad(course(edge, .46, stone), course(next, .46, stone), course(next, 1, stone), course(edge, 1, stone));
-        quad(course(edge, .40, RETAINING_JOINT), course(next, .40, RETAINING_JOINT),
-          course(next, .46, RETAINING_JOINT), course(edge, .46, RETAINING_JOINT));
-        quad(course(edge, 0, SHOULDER), course(next, 0, SHOULDER), course(next, .40, stone), course(edge, .40, stone));
+        const [ax, az] = outside[edge], [bx, bz] = outside[next], a = toes[edge], b = toes[next];
+        if (a.height === 0 && b.height === 0) continue;
+        const course = (across, fraction, tint) => {
+          const gx = lerp(lerp(ax, bx, across), lerp(a.x, b.x, across), fraction);
+          const gz = lerp(lerp(az, bz, across), lerp(a.z, b.z, across), fraction);
+          const rise = lerp(a.height, b.height, across) * fraction;
+          const projected = projectGround(gx, gz), behind = unprojectGround(projected.x, projected.y + rise);
+          // The farther end embeds into the existing earth as the projected stone meets the top.
+          const alpha = onLand(behind.x, behind.z) ? 1 - .85 * THREE.MathUtils.smoothstep(fraction, .36, 1) : 1;
+          return vertex(gx, gz, rise, tint, alpha);
+        };
+        const panel = (from, to, upper, lower, upperTint, lowerTint = upperTint) => quad(
+          course(from, upper, upperTint), course(to, upper, upperTint), course(to, lower, lowerTint), course(from, lower, lowerTint),
+        );
+        panel(0, 1, 0, .41, SHOULDER, stone);
+        panel(0, 1, .41, .46, RETAINING_JOINT);
+        panel(0, 1, .46, 1, stone, EMBEDDED_STONE);
+        if (Math.hypot(bx - ax, bz - az) > .55) {
+          panel(.64, .689, .08, .41, RETAINING_JOINT, EMBEDDED_STONE);
+          panel(.34, .384, .46, .94, RETAINING_JOINT, EMBEDDED_STONE);
+        }
       }
     }
     const inset = corners(x, footZ, width - .10, depth - .10);
