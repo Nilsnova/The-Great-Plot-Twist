@@ -14,17 +14,19 @@ import { FRAMES, SHIP_VARIANTS, SHIP_SIZE, SHIP_DRAWN_SIZE, SHIP_DRAWN, WHITE, o
 
 // The arguments in this order (render.js passes them so; positional, so the minifier shortens them).
 export function createDraw(rect, layers, bands, posts, ships, crew, guards, splashes, wallFlash, K, still, low,
-  drawnX, drawnY, effects, spark, nativeCaptains = false, contacts = null) {
+  drawnX, drawnY, effects, spark, nativeCaptains = false, contacts = null, sailingWake = null) {
   // The renderer's clock and latest state as update() last set them (render.js calls sync() right after, every frame).
   let clock = 0, simNow = 0, latest = null, captain = null, revive = null, figures = null;
   function sync(now, simTime, state, own, helping, drawnAt) { clock = now; simNow = simTime; latest = state; captain = own; revive = helping; figures = drawnAt; }
   function shipMeta(id, kind, x, z, toX, toZ) {
     let meta = ships.get(id);
     if (!meta) {
-      const at = projectGround(x, z), dx = projectGround(toX ?? 0, toZ ?? 0).x - at.x;
+      const heading = projectGroundVector((toX ?? 0) - x, (toZ ?? 0) - z), dx = heading.x;
+      const at = projectGround(x, z);
       const facing = Math.abs(dx) > .5 ? (dx < 0 ? -1 : 1) : (at.x > 0 ? -1 : 1);
       let hash = 0; for (const char of id) hash = (hash * 31 + char.charCodeAt(0)) | 0;
-      meta = { kind, facing, phase: (hash >>> 0) % 997 / 997 * 4, flashUntil: -1, bornAt: clock };
+      meta = { kind, facing, wakeAngle: Math.atan2(heading.y, dx), x, z,
+        phase: (hash >>> 0) % 997 / 997 * 4, flashUntil: -1, bornAt: clock };
       ships.set(id, meta);
     }
     return meta;
@@ -47,11 +49,19 @@ export function createDraw(rect, layers, bands, posts, ships, crew, guards, spla
     // A hit shows as a short warm flash, kept light so a ship under steady fire never turns white.
     const fadeIn = Math.min(1, (clock - meta.bornAt) / .6), flashing = clock < meta.flashUntil ? (ship.boss ? .2 : .3) : 0;
     const share = ship.maxHp > 0 ? Math.max(0, Math.min(1, ship.hp / ship.maxHp)) : 1, burning = ship.hp > 0 && share < 1 / 3;
-    // A wake behind a sailing ship: two pale strokes on the water.
+    // One painted wake per Home ship, aligned to the sailing route in the projected water plane.
     if (ship.state === 'sailing' && !low() && !still()) {
-      const back = -meta.facing * size.w * .45, wob = Math.floor(clock * 6 + meta.phase) % 2;
-      layer.push(rect[WHITE], x + back, y - .05, size.w * .28, .06, .5, 0, opt(.45 * fadeIn));
-      layer.push(rect[WHITE], x + back * 1.35 - wob * .1, y + .08, size.w * .18, .06, .5, 0, opt(.3 * fadeIn));
+      if (sailingWake) {
+        const angle = meta.wakeAngle, wash = Math.sin(clock * 4.2 + meta.phase);
+        const stern = size.w * .26;
+        const height = size.w * (.22 + wash * .014);
+        layer.push(sailingWake, x - stern * Math.cos(angle), y - stern * Math.sin(angle) - .10,
+          size.w * (.91 + wash * .045), height, .84, height * .5, opt(fadeIn * (.77 + wash * .08), null, false, 0, angle));
+      } else {
+        const back = -meta.facing * size.w * .45, wob = Math.floor(clock * 6 + meta.phase) % 2;
+        layer.push(rect[WHITE], x + back, y - .05, size.w * .28, .06, .5, 0, opt(.45 * fadeIn));
+        layer.push(rect[WHITE], x + back * 1.35 - wob * .1, y + .08, size.w * .18, .06, .5, 0, opt(.3 * fadeIn));
+      }
     }
     // A ship a harpoon (or Chain shot) holds back (GAME-V3.md §5): foam rings on the water around the hull, swelling
     // a little, and a small coil of rope over it. Cartoon-only: a pixel atlas has neither frame.

@@ -37,7 +37,8 @@ import { makeSelectionBracket } from '../island/selection-bracket.js';
 import { makeDefenseRange } from '../island/defense-range.js';
 import { defenseDisplayAnchors } from '../island/defense-display.js';
 import { createSmoother } from './smoothing.js';
-import { projectGround } from '../world/projection.js';
+import { projectGround, projectGroundVector } from '../world/projection.js';
+import { SAILING_WAKE } from '../art/fleet-wake.js';
 import { createActorContacts } from '../world/actor-contact.js';
 import { towerLook } from './tower-health.js';
 import { UNIT, spriteVertex, spriteFragment, createLayer, CAPACITY, LAYER_ORDER, BANDS, BAND_CAPACITY, BAND_FROM,
@@ -81,6 +82,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     rect[id] = { u0: (r.x + .01) / atlas.width, u1: (r.x + r.w - .01) / atlas.width,
       v0: 1 - (r.y + r.h - .01) / atlas.height, v1: 1 - (r.y + .01) / atlas.height, w: r.w / UNIT, h: r.h / UNIT, anchor: r.anchor / UNIT };
   }
+  const sailingWake = place === 'home_islet' ? rect[SAILING_WAKE.id] : null;
   const K = () => { const k = Number(scene?.userData?.characterScale); return Number.isFinite(k) && k >= 1 && k <= 3 ? k : CHARACTER_SCALE; };
   const material = new THREE.ShaderMaterial({ vertexShader: spriteVertex, fragmentShader: spriteFragment,
     uniforms: { uMap: { value: atlas.texture } }, transparent: true, premultipliedAlpha: true, depthTest: false, depthWrite: false, toneMapped: false });
@@ -170,7 +172,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   const spark = (x, y, options) => { const f = effects(); if (!f || still()) return; f.burst(x, y, low() ? { ...options, count: Math.ceil(options.count / 3) } : options); };
 
   const parts = createDraw(rect, layers, bands, posts, ships, crew, guards, splashes, wallFlash, K, still, low,
-    drawnX, drawnY, effects, spark, nativeCaptains, contacts);
+    drawnX, drawnY, effects, spark, nativeCaptains, contacts, sailingWake);
   const events = createEvents(parts, posts, ships, crew, guards, fire, wallFlash, balls, sinkers, wrecks, splashes,
     shells, bursts, tracers, jamShots, warnings, fallen, strikes, K, still, low, effects, spark);
   function onEvent(event) {
@@ -224,7 +226,14 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       }
       for (const ship of state.ships) {
         const at = smooth(ship);
-        drawShip(at, shipMeta(ship.id, ship.kind, at.x, at.z));
+        const meta = shipMeta(ship.id, ship.kind, at.x, at.z);
+        if (sailingWake && ship.state === 'sailing' && Math.hypot(ship.x - meta.x, ship.z - meta.z) > .08) {
+          const heading = projectGroundVector(ship.x - meta.x, ship.z - meta.z);
+          meta.wakeAngle = Math.atan2(heading.y, heading.x);
+          meta.x = ship.x;
+          meta.z = ship.z;
+        }
+        drawShip(at, meta);
       }
       for (const boarder of state.boarders ?? []) drawBoarder(smooth(boarder));
       for (const unit of state.militia ?? []) drawMilitia(unit);

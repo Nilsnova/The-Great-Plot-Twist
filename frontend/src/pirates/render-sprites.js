@@ -14,6 +14,8 @@ import { WALL_ATLAS_IDS } from '../art/village/walls.js';
 import { wallAtlasView } from '../art/wall-atlas.js';
 import { toScreen, pixelGlsl } from '../world/pixel-glsl.js';
 
+import { paintSailingWake, SAILING_WAKE } from '../art/fleet-wake.js';
+
 export const UNIT = 16;
 export const facingTo = item => projectGroundVector(item.toX - item.x, (item.toZ ?? item.z ?? 0) - (item.z ?? 0)).x < 0 ? -1 : 1;
 export const WHITE = 'white';
@@ -152,12 +154,18 @@ export async function loadAtlas({ quality = 'high', colour = 0, towerStates = fa
   const ids = [...new Set([...ATLAS_IDS.filter(id => !PIXEL_ONLY_IDS.includes(id)), ...CARTOON_EXTRA_IDS, ...TIER_IDS, ...WALL_ATLAS_IDS, ...FIRE_LEVEL_IDS, ...HARPOON_IDS, ...GUNBOAT_IDS,
     ...(towerStates ? TOWER_STATE_IDS : []), ...(culverins ? CULVERIN_IDS : []), ...(culverins && towerStates ? CULVERIN_STATE_IDS : []),
     ...(swivels ? SWIVEL_IDS : []), ...(swivels && towerStates ? SWIVEL_STATE_IDS : []), ...MARK_ATLAS_IDS])];
-  const extra = [[WHITE, 8, 8]];
+  const extra = [[WHITE, 8, 8], [SAILING_WAKE.id, SAILING_WAKE.width, SAILING_WAKE.height]];
   if (towerStates) extra.push([HEALTH_BADGE, RECOVERY_BADGE.width, RECOVERY_BADGE.height],
     [RUIN_BADGE, RECOVERY_BADGE.width, RECOVERY_BADGE.height]);
   const atlas = await cartoonAtlas(ids, { quality, extra });
   const white = atlas.rects[WHITE], context = atlas.image.getContext('2d');
   context.fillStyle = '#fff'; context.fillRect(white.x * atlas.density, white.y * atlas.density, white.w * atlas.density, white.h * atlas.density);
+  const wake = atlas.rects[SAILING_WAKE.id];
+  context.save();
+  context.translate(wake.x * atlas.density, wake.y * atlas.density);
+  context.scale(atlas.density, atlas.density);
+  paintSailingWake(context);
+  context.restore();
   if (towerStates) {
     for (const id of [HEALTH_BADGE, RUIN_BADGE]) {
       const { x, y } = atlas.rects[id];
