@@ -28,7 +28,7 @@ async function sources(){
  return {side,frontend,protectedSource:sourceEvidence(runtime.expectedCommit),primary:servedSourceEvidence(runtime)};
 }
 const report={scenario:'visible-unrestricted-wagers',status:'running',startedAt:new Date().toISOString(),steps:[],limits:[
- 'Two independent rendered browsers with actual provider SDK sign-in; normal development inspection selects existing cards only.',
+ 'Two independent rendered browsers with actual provider SDK session restoration; normal development inspection selects existing cards only.',
  'All stakes/All in/confirmation/reset actions use native visible controls and physical pointer buttons, not direct financial requests.',
  'Saved Harbor record4 and one200grant are explicit initial setup; only external quote transport is a fixture.',
  'Default real UTC clocks and actual five-minute deadlines; ordinary scheduler HTTP is a service action, not a visible user control.',
@@ -86,9 +86,9 @@ try{
  for(const saved of prepared.clients){
   const browser=await chromium.launch({executablePath:'/usr/bin/chromium',headless:true,args:['--no-sandbox','--disable-dev-shm-usage','--disable-gpu','--ignore-certificate-errors-spki-list='+runtime.certificateSpki]});browsers.push(browser);
   const page=await browser.newPage({viewport:{width:1280,height:900}});page.setDefaultTimeout(15000);await page.goto('http://127.0.0.1:55106',{waitUntil:'domcontentloaded'});
-  await page.evaluate(async({url,key,email,password})=>{const {createAuthClient}=await import('/src/online/supabase-sdk.js');const client=createAuthClient(url,key,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
-   const result=await client.auth.signInWithPassword({email,password});if(result.error||!result.data.session)throw Error('Actual provider SDK sign-in failed');sessionStorage.setItem('plot-twist-auth-v1',JSON.stringify(result.data.session));client.auth.stopAutoRefresh();
-  },{url:runtime.providerUrl,key:runtime.anonKey,email:saved.email,password:saved.password});
+  await page.evaluate(async({url,key,session,actorId})=>{const {createAuthClient}=await import('/src/online/supabase-sdk.js');const client=createAuthClient(url,key,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
+   const result=await client.auth.setSession({access_token:session.access_token,refresh_token:session.refresh_token});if(result.error||!result.data.session||result.data.user?.id!==actorId)throw Error('Actual provider SDK session restoration failed: '+(result.error?.status??'identity'));sessionStorage.setItem('plot-twist-auth-v1',JSON.stringify(result.data.session));client.auth.stopAutoRefresh();
+  },{url:runtime.providerUrl,key:runtime.anonKey,session:saved.session,actorId:saved.actorId});
   await page.reload({waitUntil:'domcontentloaded'});await page.waitForFunction(async()=>{const {session}=await import('/src/online/session.js');return session.isSignedIn();},null,{timeout:30000});
   const me=await api(page,'/api/me');assert.equal(me.status,200);assert.equal(me.data.id,saved.actorId);
   clients.push({label:saved.label,actorId:saved.actorId,page});
@@ -96,7 +96,7 @@ try{
  const [owner,member]=clients;
  for(const client of clients){await land(client.page,client===member?{join:prepared.code}:{});await client.page.waitForFunction(owner=>window.__island?.island.economy?.islandOwner===owner&&window.__island.island.economy.mode==='island_shared',owner.actorId,{timeout:45000});await openMarket(client.page);await cardBank(client.page,'200','0');}
  const privateBefore=await wallets();const account=prepared.economy.accountId;
- await check('two actual SDK-signed-in independent rendered clients show one shared bank',{browserProcesses:2,bankTexts:await Promise.all(clients.map(c=>cardBank(c.page,'200','0')))});
+ await check('two actual SDK-restored independent rendered clients show one shared bank',{browserProcesses:2,bankTexts:await Promise.all(clients.map(c=>cardBank(c.page,'200','0')))});
  const one=await place(member,'1','up');await Promise.all(clients.map(c=>cardBank(c.page,'199','1')));
  const second=await place(owner,'1','down');await Promise.all(clients.map(c=>cardBank(c.page,'198','2')));
  const all=await place(member,'198','up',{all:true});await Promise.all(clients.map(c=>cardBank(c.page,'0','200')));
