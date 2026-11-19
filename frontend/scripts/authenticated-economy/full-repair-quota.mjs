@@ -118,10 +118,14 @@ try {
   if(!retain){await ownerEnv?.close();await memberEnv?.close();}
   report.clientsClosed=!retain;
   report.helperHashesAfter=hashes();report.helpersUnchanged=JSON.stringify(report.helperHashesBefore)===JSON.stringify(report.helperHashesAfter);
+  report.ownScriptHashesAfter={driver:digest(fileURLToPath(import.meta.url)),repairScenario:digest(resolve(root,'frontend/scripts/authenticated-economy/paid-repair.mjs'))};
+  report.ownScriptsUnchanged=report.ownScriptHashesAfter.driver===report.driverSha256
+    &&report.ownScriptHashesAfter.repairScenario===report.repairScenarioSha256;
   try{report.sourceAfter=sourceEvidence(BASELINE,{checkoutRoot:helperRoot});report.scenarioSourceAfter=sourceEvidence(BASELINE,{checkoutRoot:root});report.servedSourceAfter=servedSourceEvidence(runtime);
     assert.equal(digest(migrationManifestPath),report.providerMigrations.manifestSha256);}
   catch(error){report.status='failed';report.sourceFailure=error.message;process.exitCode=1;}
   if(!report.helpersUnchanged){report.status='failed';report.helperFailure='A frozen helper changed during observation';process.exitCode=1;}
+  if(!report.ownScriptsUnchanged){report.status='failed';report.scenarioFailure='An executed scenario file changed during observation';process.exitCode=1;}
   await save();
 }
 console.log(JSON.stringify({status:report.status,report:resolve(output,'driver-report.json'),failure:report.failure?.message}));

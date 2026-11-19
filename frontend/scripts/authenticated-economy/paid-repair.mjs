@@ -174,9 +174,13 @@ export async function runFullRepairQuotaAcceptance({ownerPage,memberPage,observe
       await record(`authenticated shared repair ${ordinal} replays on both clients`,{request:paid.body,receipt});
       previousSpot=target;
     }
-    const fourthSpot=await naturalRepairTarget(ownerPage,spots,previousSpot);
-    assert.equal((await ownerPage.evaluate(()=>window.__island.waves.island.checkpointBeforeRepair())).ok,true);
-    const exhausted=await recovery(ownerPage),row=exhausted.structures.find(item=>item.spot===fourthSpot),finalBefore=await accounting(observe,origin.accountId,wave);
+    let exhausted=await recovery(ownerPage),row=exhausted.structures.find(item=>spots.includes(item.spot)&&item.hpUnits<1000000);
+    assert.equal(exhausted.remainingPaidUses,0);
+    // The server's existing damaged row is already accepted authority. A fresh
+    // checkpoint is needed only when damage exists solely in the client replay.
+    if(!row){const target=await naturalRepairTarget(ownerPage,spots,previousSpot),accepted=await acceptedNaturalDamage(ownerPage,target);
+      exhausted=accepted.read;row=accepted.row;}
+    const finalBefore=await accounting(observe,origin.accountId,wave);
     assert.equal(exhausted.remainingPaidUses,0);assert.ok(row.hpUnits<1000000);
     const fourth=await api(ownerPage,REPAIR,{method:'POST',body:repairBody(exhausted,row,origin)});
     assert.equal(fourth.status,409);assert.equal(fourth.data.error.code,'repair_limit_reached');
