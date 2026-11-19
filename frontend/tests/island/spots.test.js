@@ -6,7 +6,7 @@ import {edgeTrees} from '../../src/world/places/layouts.js';
 import {places} from '../../src/world/places/registry.js';
 import {FAKE_SPOTS} from './fake.js';
 import {CONFIG} from '../../src/pirates/sim.js';
-import {checkMove, footprintOf, KEEP_OUT, onWallLane, positionsOf} from '../../src/island/placement.js';
+import {checkMove, footprintOf, KEEP_OUT, onWallPerimeter, positionsOf} from '../../src/island/placement.js';
 
 describe('island spots', () => {
   it('has 22 unique ids from one mapping table, in the order and kinds of the server', () => {
@@ -45,7 +45,10 @@ describe('island spots', () => {
     }
   });
   it('keeps the original inland house plots, north watchtower and surrounding defenses', () => {
-    for (const wall of SPOTS.filter(spot => spot.slot === 'wall')) expect(onWallLane(wall.x, wall.z), wall.id).toBe(true);
+    const placed = positionsOf();
+    for (const wall of SPOTS.filter(spot => spot.slot === 'wall')) {
+      expect(onWallPerimeter(placed[wall.id].x, placed[wall.id].z), wall.id).toBe(true);
+    }
     const corners = SPOTS.filter(spot => spot.edge === 'corner').map(spot => [Math.sign(spot.x), Math.sign(spot.z)].join());
     expect(new Set(corners).size).toBe(4);
     for (const spot of SPOTS.filter(spot => ['house', 'watchtower'].includes(spot.kind))) expect(surfaceClass('home_islet', spot.x, spot.z)).toBe(2);
@@ -56,9 +59,9 @@ describe('island spots', () => {
   });
   it('keeps spots apart from each other, the trees and the landing', () => {
     const placed = positionsOf();
-    for (const {id, x, z} of SPOTS) expect(checkMove(id, x, z, placed), id).toEqual({ok: true});
+    for (const {id} of SPOTS) expect(checkMove(id, placed[id].x, placed[id].z, placed), id).toEqual({ok: true});
     const fixed = KEEP_OUT.filter(({id}) => id === CABIN.id || id === BELL.id);
-    const boxes = [...SPOTS.map(item => ({...item, w: footprintOf(item.id), d: footprintOf(item.id)})), ...fixed];
+    const boxes = [...SPOTS.map(item => ({id: item.id, ...placed[item.id], w: footprintOf(item.id), d: footprintOf(item.id)})), ...fixed];
     for (const box of boxes) for (const [x, z] of edgeTrees.home_islet) {
       // This uses the building footprint and trunk radius, so two nearby corners may still be clear.
       const dx = Math.max(0, Math.abs(box.x - x) - box.w / 2);

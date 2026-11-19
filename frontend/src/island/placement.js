@@ -6,12 +6,11 @@
 //   positionsOf(spots)                  where each spot stands: the answer's x/z, else its fixed spot
 //   checkMove(spotId, x, z, positions)  {ok: true} or {ok: false, code, message} (the server's codes)
 //   routeOpen(positions)                a way from the heart to the beach (towers, houses block)
-//   onWallLane(x, z)                    a wall centred here stands on a pirate path (D056, wall-lanes.js)
+//   onWallPerimeter(x, z)               a wall centred here sits in the island's grass-edge row
 import {ALL_SPOTS, offeredSpots, spotById, ISLAND_PLACE} from './spots.js';
 import {surfaceClass} from '../world/places/surfaces.js';
-import {WALL_LANE_ROWS} from './wall-lanes.js';
+import {WALL_PERIMETER_CELLS, WALL_PERIMETER_DEFAULTS} from './wall-perimeter.js';
 import {WALL_OBSTACLES} from './wall-obstacles.js';
-import {addedWallRow} from './wall-rows.js';
 export {WALL_OBSTACLES};
 
 export const GRID = 0.5;
@@ -36,13 +35,15 @@ export const snap = (x, z) => ({x: Math.round(x / GRID) * GRID + 0, z: Math.roun
 export const footprintOf = spotId => FOOTPRINTS[spotById(spotId)?.slot] ?? 0;
 const land = (x, z) => surfaceClass(ISLAND_PLACE, x, z);
 
-// {spotId: {x, z}} for the 22 spots (and the extra tower spots the answer lists, D060): a finite x/z of the
-// answer wins (a moved spot), else the fixed spot.
-export function positionsOf(spots = []) {
+// A supplied position wins. Empty wall plots use the perimeter defaults; paid legacy walls with
+// no stored coordinates keep their original spot. No answer means the initial build grid.
+export function positionsOf(spots) {
   const placed = {};
-  for (const spot of offeredSpots(spots)) {
+  for (const spot of offeredSpots(spots ?? [])) {
     const sent = Array.isArray(spots) ? spots.find(item => item?.id === spot.id) : null;
-    placed[spot.id] = Number.isFinite(sent?.x) && Number.isFinite(sent?.z) ? {x: sent.x, z: sent.z} : {x: spot.x, z: spot.z};
+    const perimeter = spots === undefined || sent?.built === false ? WALL_PERIMETER_DEFAULTS[spot.id] : null;
+    const where = Number.isFinite(sent?.x) && Number.isFinite(sent?.z) ? sent : perimeter ?? spot;
+    placed[spot.id] = {x: where.x, z: where.z};
   }
   return placed;
 }
@@ -51,15 +52,10 @@ const boxOf = (spotId, where) => ({x: where.x, z: where.z, w: footprintOf(spotId
 export const overlaps = (a, b) => Math.abs(a.x - b.x) < (a.w + b.w) / 2 && Math.abs(a.z - b.z) < (a.d + b.d) / 2;
 const refuse = (code, message) => ({ok: false, code, message});
 
-// D056: a wall stands only where it stops boarders on their way to the heart (the rows of wall-lanes.js).
-const LANES = new Map(WALL_LANE_ROWS.map(([z, ...runs]) => [z, runs]));
-export function onWallLane(x, z) {
-  const runs = LANES.get(z + 0);
-  if (!runs) return false;
-  for (let i = 0; i < runs.length; i += 2) if (x >= runs[i] && x <= runs[i + 1]) return true;
-  return false;
-}
-export const OFF_PATH = 'Walls go on a pirate path.';
+// Discrete centres leave a single buildable row. A half-step inward or outward is not another row.
+const PERIMETER = new Set(WALL_PERIMETER_CELLS.map(({x, z}) => `${x},${z}`));
+export const onWallPerimeter = (x, z) => PERIMETER.has(`${x},${z}`);
+export const OFF_PATH = 'Walls go in one row along the grass edge.';
 
 /** A new wall may not cross the fixed scenery reserved on the island. */
 export function wallSceneryConflict(spotId, x, z) {
@@ -69,27 +65,36 @@ export function wallSceneryConflict(spotId, x, z) {
     : overlaps(moved, item));
 }
 
-export function checkMove(spotId, x, z, positions = positionsOf()) {
-  if (!spotById(spotId)) return refuse('no_such_spot', 'There is no such build spot.');
+function checkCell(spot, x, z, positions) {
   if (!onGrid(x) || !onGrid(z)) return refuse('off_grid', 'Pick a square of the build grid.');
   if (land(x, z) === SEA) return refuse('not_on_land', 'Buildings stand on land, not in the sea.');
-  if (spotById(spotId).slot === 'wall' && !onWallLane(x, z)) return refuse('off_path', OFF_PATH);
-  const moved = boxOf(spotId, {x, z});
+  if (spot.slot === 'wall' && !onWallPerimeter(x, z)) return refuse('off_path', OFF_PATH);
+  const moved = boxOf(spot.id, {x, z});
   const fixed = KEEP_OUT.find(item => overlaps(moved, item));
   if (fixed) return refuse('place_taken', `That is too close to ${fixed.name}.`);
-  if (spotById(spotId).slot === 'wall') {
-    const scenery = wallSceneryConflict(spotId, x, z);
+  if (spot.slot === 'wall') {
+    const scenery = wallSceneryConflict(spot.id, x, z);
     if (scenery) return refuse('place_taken', `That is too close to ${scenery.name}.`);
   }
-  const other = Object.entries(positions).find(([id, where]) => id !== spotId && overlaps(moved, boxOf(id, where)));
-  if (other) return refuse('place_taken', 'Another building stands there.');
-  const final = {...positions, [spotId]: {x, z}};
-  if (spotById(spotId).slot === 'wall') {
-    const walls = placed => ALL_SPOTS.filter(spot => spot.slot === 'wall').map(spot => placed[spot.id]).filter(Boolean);
-    if (addedWallRow(walls(positions), walls(final), HEART)) return refuse('wall_rows', 'Use at most three wall rows per approach. Align pieces to share a row.');
-  }
+  const other = Object.entries(positions).some(([id, where]) => id !== spot.id && overlaps(moved, boxOf(id, where)));
+  return other ? refuse('place_taken', 'Another building stands there.') : {ok: true};
+}
+
+export function checkMove(spotId, x, z, positions = positionsOf()) {
+  const spot = spotById(spotId);
+  if (!spot) return refuse('no_such_spot', 'There is no such build spot.');
+  const verdict = checkCell(spot, x, z, positions);
+  if (!verdict.ok) return verdict;
+  const final = {...positions, [spot.id]: {x, z}};
   if (!routeOpen(final)) return refuse('blocks_route', 'That would wall the heart in. Leave the pirates a way through.');
-  return {ok: true};
+  return verdict;
+}
+
+export function freeWallCells(spotId, positions = positionsOf()) {
+  const spot = spotById(spotId);
+  // Moving a wall cannot affect routeOpen. Check the shared route once for the whole preview.
+  if (spot?.slot !== 'wall' || !routeOpen(positions)) return [];
+  return WALL_PERIMETER_CELLS.filter(({x, z}) => checkCell(spot, x, z, positions).ok);
 }
 
 // --- the route from the heart to the beach (layout.py's route_open) ---
