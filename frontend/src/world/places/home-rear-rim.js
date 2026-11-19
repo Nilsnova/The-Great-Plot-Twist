@@ -46,16 +46,19 @@ function crossSections(coast) {
     const edge = slope < 0 ? bounds.minX + .21 : bounds.maxX - .21;
     const room = (edge - projectGround(x, z).x) / slope - .09;
     const width = THREE.MathUtils.clamp(room, .18, .34 + Math.sqrt(lift) * 3.6);
-    const atRadius = (distance, elevation) => [x + x / length * distance, elevation, z + z / length * distance];
-    const point = (share, elevation) => atRadius(.09 + width * share, elevation);
+    const point = (share, elevation) => {
+      const distance = .09 + width * share;
+      return [x + x / length * distance, elevation, z + z / length * distance];
+    };
     const lower = lift * (.32 + Math.sin(index * .71) * .032);
     const middle = lift * (.63 + Math.cos(index * .73) * .036);
     const midEdge = .31 + Math.sin(index * .78) * .033;
     const upperEdge = .63 + Math.cos(index * .83) * .043;
     return {
       lift,
-      front: atRadius(-Math.min(.64, lift * .53), 0),
-      meadow: atRadius(-Math.min(1.74, lift * .91), 0),
+      // The bottom of the face projects down the bluff while its footprint stays offshore.
+      front: point(0, -Math.min(.25, lift * .13)),
+      shadowEdge: point(0, -Math.min(.96, lift * .48)),
       frontBatter: point(.036, lower * .22),
       frontStone: point(.053, lower * .91),
       frontLip: point(.081, lower),
@@ -193,8 +196,8 @@ export function createHomeRearRim(group, art) {
     strip('frontBatter', 'front', STONE_FACE[tint], STONE_FOOT);
     const shade = '#37481e';
     const left = Math.min(.56, a.lift * .24), right = Math.min(.56, b.lift * .24);
-    triangle(a.front, b.front, b.meadow, shade, shade, shade, [left, right, 0]);
-    triangle(a.front, b.meadow, a.meadow, shade, shade, shade, [left, 0, 0]);
+    triangle(a.front, b.front, b.shadowEdge, shade, shade, shade, [left, right, 0]);
+    triangle(a.front, b.shadowEdge, a.shadowEdge, shade, shade, shade, [left, 0, 0]);
 
     const cap = (near, far, along, depth) => mixPoint(mixPoint(a[near], b[near], along), mixPoint(a[far], b[far], along), depth);
     if ([4, 6, 9, 25, 28, 31].includes(i)) grassTuft(cap('frontCap', 'middleFoot', .57, .57), 1.15);
