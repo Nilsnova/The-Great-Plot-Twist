@@ -21,7 +21,7 @@ from server.tests.island_sql.test_islands_and_waves_sql import (  # noqa: E402
 
 FUNCTION = "public.leaderboard_best_runs(timestamptz, timestamptz, timestamptz)"
 FUNCTION_NAME = "public.leaderboard_best_runs"
-CODE_CHARACTERS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"  # pragma: allowlist secret
+CODE_CHARACTERS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
 
 
 def player(number: int) -> UUID:
