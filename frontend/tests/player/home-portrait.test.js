@@ -31,7 +31,7 @@ it('frames more vertical ground in portrait and keeps screen-to-world reversible
 
 it.each([375, 1280])('makes nearer positions larger and keeps input reversible at width %s', width => {
   const camera = makeCamera(), overview = createHomePortrait(camera);
-  const near = new THREE.Vector3(3, -7, 0), far = new THREE.Vector3(3, 7, 0);
+  const near = new THREE.Vector3(3, -18, 0), far = new THREE.Vector3(3, 18, 0);
   const previous = near.clone().project(camera);
   overview.update({...phone, width});
   const after = near.clone().project(camera), back = far.clone().project(camera);
