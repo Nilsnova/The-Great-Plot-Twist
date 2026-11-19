@@ -74,6 +74,12 @@ Initialization preserves known skill IDs and their genuine point costs; it grant
 
 Acquired personal data may be deleted with that player's account; shared canonical receipt retention/de-identification follows the separate deletion policy. Shared island reset must not call legacy Captain-reset routines. All legacy respec/session paths must be adapted or explicitly refused before a bound Captain can use them; no existing route is wired by this contribution.
 
+## Shared construction quotes after a personal role change
+
+The integrated client refreshes authoritative shared-island offers after successful role selection or respec. The Engineer price depends on the buyer's personal role: updating the personal card alone leaves the selected island's previous construction intent behind. Both cached shared home and visited snapshots are marked stale, and older reads are fenced before the personal profile is applied. Authenticated-actor guards protect the subsequent reads. Failed reads keep the offers unavailable; the client never invents a discounted quote.
+
+`frontend/tests/island/engineer-role-quotes-dom.test.js` covers the first construction request after selecting Engineer or leaving Engineer through respec, for both home and visited islands, plus failed quote refreshes. These use the actual island assembly and Chromium DOM with synthetic authoritative transport responses. Actual authenticated-provider first-click verification is a separate acceptance boundary.
+
 ## Acceptance and verification
 
 - Preserve legacy levels/known skills/role and points without charging any wallet or using owned-island best.
