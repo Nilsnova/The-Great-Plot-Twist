@@ -693,7 +693,11 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
         break;
       }
       case 'ship_warning': warnings.add(item => Object.assign(item, { x: event.x, z: event.z, at: clock, boss: event.boss })); break;
-      case 'boarder_landed': splashes.add(item => Object.assign(item, { x: event.x, z: event.z, at: clock, big: false })); break;
+      case 'boarder_landed': {
+        splashes.add(item => Object.assign(item, { x: event.x, z: event.z, at: clock, big: false }));
+        if (contacts && typeof event.boarderId === 'string') boarderMeta(event.boarderId).landedAt = clock;
+        break;
+      }
       case 'boarder_hit': {
         boarderMeta(event.boarderId).flashUntil = clock + FLASH_SECONDS;
         spark(x, y + .7, { count: event.blade ? 10 : 6, speed: [.8, 2.6], angle: Math.PI / 2, spread: 2.4, gravity: 7, life: [.3, .6], colour: event.blade ? '#e8eee8' : '#b0402f', size: [1, 2] });
@@ -813,7 +817,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     let meta = crew.get(id);
     if (!meta) {
       let hash = 0; for (const char of id) hash = (hash * 31 + char.charCodeAt(0)) | 0;
-      meta = { phase: (hash >>> 0) % 991 / 991 * 2, flashUntil: -1, facing: 1 };
+      meta = { phase: (hash >>> 0) % 991 / 991 * 2, flashUntil: -1, landedAt: -1, facing: 1 };
       crew.set(id, meta);
     }
     return meta;
@@ -830,9 +834,12 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     // A brute (wave 20+) is bigger and redder than the rest of the crowd.
     const big = boarder.brute ? BRUTE_LOOK.scale : 1, look = boarder.brute ? BRUTE_LOOK.tint : {};
     const scale = K() * big;
-    const lean = contacts && !reduced && !hit && boarder.state === 'walking' ? -.042 * meta.facing : 0;
+    const walking = contacts && !reduced && !hit && boarder.state === 'walking';
+    // Absorb the first step at the physical beach pin, then settle into the walk.
+    const land = walking ? Math.max(0, 1 - (clock - meta.landedAt) / .23) : 0;
+    const lean = walking ? (-.042 + .135 * land) * meta.facing : 0, height = scale * (1 - .10 * land);
     contacts?.add(boarder.x, boarder.z, scale);
-    layer.push(r, x, y, r.w * scale, r.h * scale, .5, r.anchor * scale,
+    layer.push(r, x, y, r.w * scale, r.h * height, .5, r.anchor * height,
       opt(1, look, meta.facing < 0, hit ? (rect[cartoon] ? .35 : .7) : 0, lean));
     if (boarder.hp < boarder.maxHp) {
       const top = y + (r.h - r.anchor) * K() - .35, w = .9, share = Math.max(0, boarder.hp / boarder.maxHp);
