@@ -44,12 +44,13 @@ export async function createSettlement(ctx) {
   group.name = `place:${id}`;
   const frameState = createFrameState(ctx, data.spawn);
   const cleanups = [], dispose = createLifetime(group, art, cleanups);
+  let mooringStage = null;
   try {
     const ground = backdrop(group, await (ctx.loadBackdrop ?? loadBackdrop)(`places/${id}.png`));
     if (id === 'home_islet') {
       createHomeRelief(group, ground.material.map);
       createHomeRearRim(group, art);
-      createHomeLanding(group);
+      mooringStage = createHomeLanding(group);
       createGroundShadows(group, trees.map(([x, z]) => {
         const scale = x === -13 && z === -12 ? .64 : 1;
         return {x: x + .55 * scale, z: z + .7 * scale, width: 1.6 * scale, depth: 1.4 * scale,
@@ -145,7 +146,7 @@ export async function createSettlement(ctx) {
     };
     if (mooringRope) {
       // The southwest wave approach crosses the skiff; the beach post stays on the sand.
-      place.setMooringBattle = active => { skiff.visible = mooringRope.visible = !active; };
+      place.setMooringBattle = active => { skiff.visible = mooringRope.visible = mooringStage.visible = !active; };
     }
     ctx.decorate?.(place, art, cleanups);
     if (id === 'home_islet' || id === 'saltreach_harbor') {
