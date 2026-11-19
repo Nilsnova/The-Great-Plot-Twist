@@ -4,7 +4,7 @@ import {APPROACH_DEPTH, cliffProfile} from '../../art/coast-cliffs.js';
 import {groundProjectionGlsl, LEGACY_DEPTH, projectGround} from '../projection.js';
 import {surfaces} from './surfaces.js';
 
-const STONES = ['#b9a183', '#c9af90', '#a89d8d', '#ad967b', '#b5a287', '#a59a87'].map(color => new THREE.Color(color));
+const STONES = ['#c1a783', '#c9ad8e', '#ada096', '#b39a7f', '#bba48b', '#a19a91'].map(color => new THREE.Color(color));
 const BEDROCK = new THREE.Color('#6e6254');
 const OUTCROP = new THREE.Color('#a3a098');
 const SUBMERGED_STONE = new THREE.Color('#66887c');
@@ -31,7 +31,7 @@ function homeCliffGeometry(rows = cliffProfile(surface)) {
     faceNormal.subVectors(b, a).cross(edge.subVectors(c, a)).normalize();
     exterior.set(a.x + b.x + c.x, 6, a.z + b.z + c.z);
     if (faceNormal.dot(exterior) < 0) faceNormal.negate();
-    return Math.max(-.43, faceNormal.dot(SUN)) * .51;
+    return Math.max(-.43, faceNormal.dot(SUN)) * .57;
   }
   function triangle(a, b, c, tint, tones, bias, fractions, region, sun = sunlight(a, b, c)) {
     for (const [i, vertex] of [a, b, c].entries()) {
@@ -260,14 +260,17 @@ export function createHomeRelief(group, coastArt) {
         float rockGrain = smoothstep(.06, .46, grain);
         float depth = vShoreRelief.y;
         float pores = stoneGrain(logical * vec2(13.0, 16.5)) - .5;
+        float strata = stoneGrain(vec2(logical.x * 1.8 + depth * 2.3, logical.y * 6.1)) - .5;
         float grainBreak = sin(logical.x * 1.74 + logical.y * .83) * .14
           + cos(logical.x * 4.23 - logical.y * 3.23) * .07;
         float damp = smoothstep(.53, 1.0, depth + grainBreak) * smoothstep(.45, 1.7, vShoreRelief.x);
-        vec3 stone = vStone * (mix(.82, 1.13, rockGrain) + pores * .07 + grainBreak * .15);
+        vec3 stone = vStone * (mix(.82, 1.13, rockGrain) + pores * .09 + grainBreak * .15 + strata * .14);
+        float cap = (1.0 - smoothstep(.07, .28, depth)) * smoothstep(.11, .51, dot(vStone, vec3(.30, .58, .12)));
+        stone = mix(stone, stone * vec3(1.19, 1.09, 1.02), cap);
         float moss = smoothstep(.62, .84, rockGrain + grainBreak * .7)
           * (1.0 - smoothstep(.04, .26, depth)) * .52;
         stone = mix(stone, stone * vec3(.82, 1.05, .67), moss);
-        stone = mix(stone, stone * vec3(.54, .65, .73) + vec3(.008, .024, .031), damp * .76);
+        stone = mix(stone, stone * vec3(.48, .65, .74) + vec3(.007, .025, .039), damp * .82);
         gl_FragColor = vec4(mix(stone, rock.rgb, .10), 1.0);
         #include <colorspace_fragment>
       }`,
