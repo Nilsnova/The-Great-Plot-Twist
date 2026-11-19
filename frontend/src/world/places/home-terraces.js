@@ -12,20 +12,24 @@ const COAST = surfaces.home_islet;
 const BANKS = [
   {first: 97, last: 106, foot: .935, back: .986, height: 3.05},
   {first: 116.5, last: 124.5, foot: .770, back: .955, height: 2.75},
+  {first: 125, last: 134, foot: .900, back: .980, height: 2.12, shore: true},
+  {first: 137, last: 146, foot: .920, back: .986, height: 1.48, shore: true},
   {first: 148, last: 156, foot: .840, back: .955, height: 3.25},
   {first: 166, last: 171, foot: .790, back: .925, height: 3.10},
   {first: 30, last: 37, foot: .980, back: .900, height: 1.80},
   {first: 55, last: 67, foot: .951, back: .847, height: 1.47},
 ];
-const STONE = ['#bf9367', '#c69d72', '#b48762', '#cbab7e', '#c09b70'].map(hex => new THREE.Color(hex));
-const MORTAR = new THREE.Color('#8d6d4e'), RECESS = new THREE.Color('#785d43');
-const ENDS = [new THREE.Color('#9c7952'), new THREE.Color('#b08c61')];
-const TURF = new THREE.Color('#8da936'), LIP = new THREE.Color('#a9bf4b'), ROOTS = new THREE.Color('#78a336');
+const STONE = ['#c89e6c', '#d2a878', '#b9895e', '#d4af7b', '#cba373'].map(hex => new THREE.Color(hex));
+const MORTAR = new THREE.Color('#977552'), RECESS = new THREE.Color('#846343');
+const ENDS = [new THREE.Color('#aa8357'), new THREE.Color('#b99165')];
+const TURF = new THREE.Color('#8fb444'), LIP = new THREE.Color('#afcb56'), ROOTS = new THREE.Color('#7ba642');
 const GRASS_CREST = TURF.clone().lerp(LIP, .56);
 const FOLIAGE = {
   97: [['birch', .56, .70, .49], ['shrub', .19, .64, .64], ['shrub', .74, .31, .49], ['flowers', .41, .31, .52]],
   116.5: [['shrub', .21, .73, .65], ['shrub', .27, .68, .51], ['grass-tuft', .56, .74, .56], ['shrub', .81, .71, .62],
     ['shrub', .37, .28, .41], ['flowers', .72, .34, .56]],
+  125: [['grass-tuft', .16, .66, .43], ['shrub', .42, .74, .47], ['flowers', .72, .74, .37]],
+  137: [['shrub', .68, .71, .42], ['flowers', .23, .58, .37], ['grass-tuft', .41, .63, .40]],
   148: [['shrub', .31, .68, .60], ['shrub', .38, .72, .51], ['grass-tuft', .66, .73, .62], ['shrub', .83, .70, .52],
     ['flowers', .15, .34, .60], ['shrub', .57, .32, .44]],
   166: [['birch', .65, .72, .51], ['shrub', .42, .67, .66], ['shrub', .54, .69, .47], ['flowers', .21, .29, .60],
@@ -37,6 +41,8 @@ const FOLIAGE = {
 const ROCK_GARDENS = {
   97: [.25, .78],
   116.5: [.82, -.16],
+  125: [.30, .72],
+  137: [.72, .68],
   148: [.15, -.19],
   166: [.28, .80],
   30: [.60, .72],
@@ -75,6 +81,13 @@ const FRONT_PROFILE = [
   [.52, .795, .01, STONE], [.544, .897, .10, STONE], [.574, .936, .215, LIP],
   [.64, 1.01, .102, TURF], [.748, .978, .06, TURF], [.905, .716, .025, TURF],
   [1, .17, -.07, TURF],
+];
+// The back of each cove has a low stone course and a broad, sunlit shoulder.
+const SHORE_PROFILE = [
+  [0, 0, -.16, RECESS], [.025, .035, -.24, STONE], [.053, .196, -.06, STONE],
+  [.090, .30, .12, STONE], [.13, .329, .20, LIP], [.21, .374, .09, TURF],
+  [.57, .36, .035, TURF], [.78, .27, .015, TURF], [.90, .145, -.04, TURF],
+  [1, .026, -.10, TURF],
 ];
 
 function onTop(x, y) {
@@ -228,8 +241,9 @@ export function createHomeTerraces(root, coastArt, art) {
     }
   }
 
-  for (const {first, last, foot, back, height} of BANKS) {
-    const front = foot > back, profile = front ? FRONT_PROFILE : REAR_PROFILE;
+  for (const {first, last, foot, back, height, shore} of BANKS) {
+    const front = foot > back;
+    const profile = shore ? SHORE_PROFILE : front ? FRONT_PROFILE : REAR_PROFILE;
     // The terrace ends close in stone where an old ramp began. Keep them away from the adjoining lanes.
     const start = first + (front ? 1 : 1.5), finish = last - (front ? 1 : 1.5);
     function samplePoint(sample) {

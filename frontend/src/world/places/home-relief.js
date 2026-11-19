@@ -4,9 +4,9 @@ import {APPROACH_DEPTH, CLIFF_DEPTH, cliffProfile} from '../../art/coast-cliffs.
 import {groundProjectionGlsl, LEGACY_DEPTH, projectGround} from '../projection.js';
 import {surfaces} from './surfaces.js';
 
-const STONES = ['#c1a783', '#c9ad8e', '#ada096', '#b39a7f', '#bba48b', '#a19a91'].map(color => new THREE.Color(color));
-const BEDROCK = new THREE.Color('#6e6254');
-const OUTCROP = new THREE.Color('#a3a098');
+const STONES = ['#c7a376', '#d0ab81', '#bca387', '#b9936e', '#c4a581', '#ac9581'].map(color => new THREE.Color(color));
+const BEDROCK = new THREE.Color('#765f4b');
+const OUTCROP = new THREE.Color('#b6a78c');
 const SUBMERGED_STONE = new THREE.Color('#66887c');
 const TURF = new THREE.Color('#91b949');
 const BLOCK_WIDTHS = [4.1, 6, 4.8, 3.5, 5.1, 5.9, 3.8];
@@ -48,7 +48,7 @@ export const sandstoneFinishGlsl = /* glsl */`
     float fractured = smoothstep(.45, .74, slab.x * .80 + chip.x * .20);
     float split = 1.0 - smoothstep(.050, .139 + aa, abs(separation - .52));
     float crest = 1.0 - smoothstep(.021, .069 + aa, abs(separation - .66));
-    coarse *= 1.0 + fractured * (.21 * crest - .20 * split);
+    coarse *= 1.0 + fractured * (.17 * crest - .15 * split);
 
     // Lower joints are occluded. The two exposed shoulders roll into the cut.
     vec2 eroded = cut + (vec2(slab.x, chip.x) - .5) * vec2(.10, .10);
