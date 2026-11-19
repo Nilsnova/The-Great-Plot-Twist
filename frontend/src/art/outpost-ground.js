@@ -1,11 +1,5 @@
 import {canvas, ellipse, linear, stroke} from './paint.js';
 
-const artPaths = new Set([
-  'pixel/ground.png', 'places/saltreach_harbor.png', 'places/smugglers_cove.png',
-  'places/wreck_point.png', 'places/the_teeth.png',
-]);
-export const isOutpostGround = path => artPaths.has(path);
-
 function material(red, green, blue) {
   if (green >= red + 6 && green >= blue + 30) return 1;
   return red > green + 18 && green > blue + 38 ? 2 : 0;
