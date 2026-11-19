@@ -3,7 +3,7 @@ export const shippedSheets = {
   "village/compiled/buildings-4x-1-4d1d3b5b74a0.png": {"file":"village/shipped/buildings-4x-1-9753c67ef113.webp","width":392,"height":392},
   "village/compiled/houses-4x-1-749130c563bf.png": {"file":"village/shipped/houses-4x-1-1e17e4c24a61.webp","width":984,"height":1408},
   "village/compiled/landmarks-4x-1-724da3f9da87.png": {"file":"village/shipped/landmarks-4x-1-0dadfa96f3c1.webp","width":1024,"height":520},
-  "village/compiled/services-4x-1-3e1d3ce50a9a.png": {"file":"village/shipped/services-4x-1-b4008dc0c1ca.webp","width":656,"height":360},
+  "village/compiled/services-4x-1-7a3d2f9b5d5b.png": {"file":"village/shipped/services-4x-1-5c96f97c1c68.webp","width":720,"height":920},
   "village/compiled/nature-4x-1-237071b5ed40.png": {"file":"village/shipped/nature-4x-1-6826391b7154.webp","width":984,"height":880},
   "village/compiled/cannons-4x-1-f0a74bf14d40.png": {"file":"village/shipped/cannons-4x-1-3d73a5433fd9.webp","width":928,"height":1000},
   "village/compiled/walls-4x-1-4905aac4841a.png": {"file":"village/shipped/walls-4x-1-412ae50cc0b9.webp","width":1000,"height":1008},
