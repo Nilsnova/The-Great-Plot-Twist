@@ -22,16 +22,21 @@ it('uses visible pixels and painter order, and invalidates a selection when home
     const growing = sprite(101, [0, 0, 64, 64]).translateX(-4);
     const distant = sprite(101, [0, 0, 64, 64]).translateX(20);
     const trees = [foreground, background, clearHalf, growing, distant];
+    for (const mesh of [building, ...trees]) mesh.userData.ground = {x: mesh.position.x, z: 0};
+    building.userData.portraitSize = 1.5;
     const canopy = makeSelectedCanopy(trees);
     const matched = () => trees.map(mesh => canopy.has(mesh));
     const materials = [building, ...trees].map(({material}) => material);
     try {
       canopy.show(building);
       const first = matched(), unchanged = canopy.show(building);
+      canopy.show(building, 2);
+      const portrait = matched();
+      canopy.show(building);
       for (const mesh of trees) mesh.scale.setScalar(1.5);
       const changed = canopy.show(building), grown = matched();
       canopy.show(null);
-      return {first, unchanged, changed, grown, closed: matched(), sameMaterials: [building, ...trees].every((mesh, i) => mesh.material === materials[i])};
+      return {first, unchanged, portrait, changed, grown, closed: matched(), sameMaterials: [building, ...trees].every((mesh, i) => mesh.material === materials[i])};
     } finally {
       for (const mesh of [building, ...trees]) {
         mesh.geometry.dispose(); mesh.material.map.dispose(); mesh.material.dispose();
@@ -41,6 +46,7 @@ it('uses visible pixels and painter order, and invalidates a selection when home
   expect(result).toEqual({
     first: [true, false, false, false, false],
     unchanged: false,
+    portrait: [true, false, false, true, false],
     changed: true,
     grown: [true, false, false, true, false],
     closed: [false, false, false, false, false],
