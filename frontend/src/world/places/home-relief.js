@@ -1,6 +1,6 @@
 // Rock relief is presentation only. Dry stone follows the approved painted coast mask.
 import * as THREE from 'three';
-import {APPROACH_DEPTH, cliffProfile} from '../../art/coast-cliffs.js';
+import {APPROACH_DEPTH, CLIFF_DEPTH, cliffProfile} from '../../art/coast-cliffs.js';
 import {groundProjectionGlsl, LEGACY_DEPTH, projectGround} from '../projection.js';
 import {surfaces} from './surfaces.js';
 
@@ -12,6 +12,7 @@ const TURF = new THREE.Color('#91b949');
 const BLOCK_WIDTHS = [4.1, 6, 4.8, 3.5, 5.1, 5.9, 3.8];
 const ROCKY_ARCS = [[9, 36], [54, 81]];
 const TERRACE_ARCS = [[25, 34], [55, 67]];
+const CUT_CORNERS = [[.11, 0], [.80, 0], [1, .20], [.98, .78], [.82, 1], [.16, 1], [0, .84], [0, .18]];
 const surface = surfaces.home_islet;
 const SUN = new THREE.Vector3(-.61, .71, -.32).normalize();
 
@@ -77,6 +78,18 @@ function stoneVertex(rows, index, fraction, inset) {
   return new THREE.Vector3(x - x / radius * inset, -depth * fraction, z - z / radius * inset);
 }
 
+function sampleColumn(rows, widths, depths, across, drop) {
+  const side = Math.max(0, widths.findIndex(value => value >= across) - 1);
+  const row = Math.max(0, depths.findIndex(value => value >= drop) - 1);
+  const u = (across - widths[side]) / (widths[side + 1] - widths[side]);
+  const v = (drop - depths[row]) / (depths[row + 1] - depths[row]);
+  const a = rows[row][side], b = rows[row][side + 1];
+  const c = rows[row + 1][side + 1], d = rows[row + 1][side];
+  // Sample the original two triangles, so the sculpt begins inside the existing facade.
+  return u >= v ? a.clone().multiplyScalar(1 - u).addScaledVector(b, u - v).addScaledVector(c, v)
+    : a.clone().multiplyScalar(1 - v).addScaledVector(c, u).addScaledVector(d, v - u);
+}
+
 function homeCliffGeometry(rows = cliffProfile(surface)) {
   const positions = [], colors = [], relief = [], cuts = [];
   const faceNormal = new THREE.Vector3(), edge = new THREE.Vector3(), exterior = new THREE.Vector3();
@@ -93,16 +106,70 @@ function homeCliffGeometry(rows = cliffProfile(surface)) {
       positions.push(display.x, display.y, vertex.z + vertex.y * .6 + bias);
       colors.push(tint.r * light, tint.g * light, tint.b * light);
       relief.push(-vertex.y, fractions[i], region);
-      cuts.push(cut?.[i] ?? 0, cut ? 1 : 0);
+      cuts.push(cut?.[i][0] ?? 0, cut?.[i][1] ?? 0, cut ? 1 : 0);
     }
   }
   function panel(a, b, c, d, tint, upper, lower, from, to, bias = 0, region = 0, cut) {
     const sun = (sunlight(a, b, c) + sunlight(a, c, d)) / 2;
     const [left, right] = cut ?? [];
     triangle(a, b, c, tint, [upper, upper, lower], bias, [from, from, to], region, sun,
-      cut && [left, right, right]);
+      cut && [[left, 1 - from], [right, 1 - from], [right, 1 - to]]);
     triangle(a, c, d, tint, [upper, lower, lower], bias, [from, to, to], region, sun,
-      cut && [left, right, left]);
+      cut && [[left, 1 - from], [right, 1 - to], [left, 1 - to]]);
+  }
+
+  function carveColumn(grid, widths, depths, {rockDepth, block, span, turn, bevel}) {
+    const courses = rockDepth > 2.35 ? [0, .34 + turn * .07, .69 + bevel * .063, 1] : [0, .52 + turn * .082, 1];
+    const shoreClearance = .055;
+    const relief = .62 + .38 * THREE.MathUtils.smoothstep(rockDepth, 1.45, 2.74);
+    const range = (edge, u) => edge === 0 || edge === 1 ? edge : edge + (u - .5) * .12 * turn
+      + .019 * Math.sin(u * 4.6 + edge * 9.4 + block * 1.73);
+    for (let row = 0; row < courses.length - 1; row++) {
+      const twoStones = (row === 1 && span > 3.3) || (row === 0 && span > 5.35 && block % 2 === 0);
+      const columns = twoStones ? [0, .53 + Math.cos(block * 2.81 + row * 1.53) * .10, 1] : [0, 1];
+      for (let column = 0; column < columns.length - 1; column++) {
+        const seed = block * 2.37 + row * 1.29 + column * 4.91;
+        // Keep a narrow apron of the original curved facade all around the sculpt.
+        const left = columns[column] + (column === 0 ? shoreClearance : .031);
+        const right = columns[column + 1] - (column === columns.length - 2 ? shoreClearance : .031);
+        const toe = row === courses.length - 2 ? .098 + .044 * bevel : .032;
+        const pigment = STONES[(block + row * 2 + column * 3) % STONES.length];
+        const at = (uv, recess) => {
+          const [u, v] = uv;
+          const taper = v * toe;
+          const across = THREE.MathUtils.lerp(left + taper, right - taper, u);
+          const ceiling = range(courses[row], across) + (row === 0 ? shoreClearance : .012);
+          const floor = range(courses[row + 1], across) - (row === courses.length - 2 ? shoreClearance : .017);
+          const drop = THREE.MathUtils.lerp(ceiling, floor, v);
+          const point = sampleColumn(grid, widths, depths, across, drop);
+          // This axis is orthogonal to the view. Recesses change depth and normals, not the silhouette.
+          const retreat = Math.min(recess * relief, Math.max(0, CLIFF_DEPTH + point.y) / LEGACY_DEPTH);
+          point.y -= retreat * LEGACY_DEPTH;
+          point.z -= retreat;
+          return {point, drop, uv: [u, 1 - v]};
+        };
+        const outline = CUT_CORNERS.map(([u, v], i) => [
+          THREE.MathUtils.clamp(u + .047 * Math.sin(seed + i * 2.25), 0, 1),
+          THREE.MathUtils.clamp(v + .075 * Math.sin(seed * .71 + i * 1.73), 0, 1),
+        ]);
+        const rim = outline.map((uv, i) => at(uv, .23 + .044 * Math.cos(seed + i)));
+        const shoulder = outline.map(([u, v], i) => at([.135 + .73 * u, .18 + .64 * v],
+          .038 + .041 * (.5 + .5 * Math.sin(seed + i * 1.47))));
+        const peak = at([.46 + .10 * Math.sin(seed), .51 + .105 * Math.cos(seed)], .006);
+        function facet(a, b, c, tones) {
+          triangle(a.point, b.point, c.point, pigment, tones, 0, [a.drop, b.drop, c.drop], 0, undefined,
+            [a.uv, b.uv, c.uv]);
+        }
+        for (let i = 0; i < rim.length; i++) {
+          const next = (i + 1) % rim.length;
+          const upper = (rim[i].uv[1] + rim[next].uv[1]) * .5;
+          const edgeTone = -.12 + upper * .25;
+          facet(rim[i], rim[next], shoulder[next], [edgeTone - .07, edgeTone - .07, edgeTone + .055]);
+          facet(rim[i], shoulder[next], shoulder[i], [edgeTone - .07, edgeTone + .055, edgeTone + .055]);
+          facet(peak, shoulder[i], shoulder[next], [.065, edgeTone * .34, edgeTone * .34]);
+        }
+      }
+    }
   }
 
   // A continuous dark bed shows only where separate columns taper away from one another.
@@ -135,17 +202,22 @@ function homeCliffGeometry(rows = cliffProfile(surface)) {
           THREE.MathUtils.lerp(.015, .985, u)) + lean, first, last);
         return stoneVertex(rows, sample, drop, inset + edgeCut);
       };
+      const middle = (start + end) / 2;
+      const rockDepth = THREE.MathUtils.lerp(rows[Math.floor(middle)].depth, rows[Math.ceil(middle)].depth, middle % 1);
+      const sculpted = rockDepth > 1.45 && end - start > 2.15;
+      const seam = sculpted ? pigment.clone().lerp(BEDROCK, .28 + .30 * THREE.MathUtils.smoothstep(rockDepth, 1.45, 2.74)) : pigment;
+      const grid = face.map((_, level) => across.map((_, side) => point(level, side)));
       for (let level = 0; level < face.length - 1; level++) {
         const [from, , upper] = face[level], [to, , lower] = face[level + 1];
         for (let side = 0; side < across.length - 1; side++) {
           const tone = [-.04, .045, -.17][side];
-          panel(point(level, side), point(level, side + 1), point(level + 1, side + 1), point(level + 1, side),
-            pigment, upper + tone, lower + tone, from, to, 0, 0, [across[side], across[side + 1]]);
+          panel(grid[level][side], grid[level][side + 1], grid[level + 1][side + 1], grid[level + 1][side],
+            seam, upper + tone, lower + tone, from, to, sculpted ? -.53 : 0, 0,
+            sculpted ? undefined : [across[side], across[side + 1]]);
         }
       }
+      if (sculpted) carveColumn(grid, across, face.map(([drop]) => drop), {rockDepth, block, span: end - start, turn, bevel});
 
-      const middle = (start + end) / 2;
-      const rockDepth = THREE.MathUtils.lerp(rows[Math.floor(middle)].depth, rows[Math.ceil(middle)].depth, middle % 1);
       if (rockDepth > 1.8 && end - start > 1.8) {
         // Individual low stones break the foot of the columns. Water softens their edges and colour.
         const half = Math.min(1.55, (end - start) * .32), toe = middle + .32 * turn;
@@ -240,7 +312,7 @@ function homeCliffGeometry(rows = cliffProfile(surface)) {
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
   geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
   geometry.setAttribute('shoreRelief', new THREE.Float32BufferAttribute(relief, 3));
-  geometry.setAttribute('shoreCut', new THREE.Float32BufferAttribute(cuts, 2));
+  geometry.setAttribute('shoreCut', new THREE.Float32BufferAttribute(cuts, 3));
   return geometry;
 }
 
@@ -250,11 +322,11 @@ export function createHomeRelief(group, coastArt) {
     vertexColors: true, side: THREE.DoubleSide, forceSinglePass: true, transparent: true, depthTest: true, depthWrite: true, toneMapped: false,
     vertexShader: /* glsl */`
       attribute vec3 shoreRelief;
-      attribute vec2 shoreCut;
+      attribute vec3 shoreCut;
       varying vec2 vReliefPoint;
       varying vec3 vStone;
       varying vec3 vShoreRelief;
-      varying vec2 vShoreCut;
+      varying vec3 vShoreCut;
       void main() {
         vReliefPoint = position.xy;
         vStone = color;
@@ -269,7 +341,7 @@ export function createHomeRelief(group, coastArt) {
       varying vec2 vReliefPoint;
       varying vec3 vStone;
       varying vec3 vShoreRelief;
-      varying vec2 vShoreCut;
+      varying vec3 vShoreCut;
       void main() {
         vec2 logical = unprojectGround(vReliefPoint);
         vec2 shore = logical / vec2(${surface.rx.toFixed(1)}, ${surface.rz.toFixed(1)});
@@ -317,10 +389,10 @@ export function createHomeRelief(group, coastArt) {
           + cos(logical.x * 4.23 - logical.y * 3.23) * .07;
         float damp = smoothstep(.53, 1.0, depth + grainBreak) * smoothstep(.45, 1.7, vShoreRelief.x);
         vec3 stone = vStone * (mix(.86, 1.13, rockGrain) + grainBreak * .13);
-        stone = cutSandstone(stone, layers, vec2(vShoreCut.x, 1.0 - depth), vShoreCut.y);
+        stone = cutSandstone(stone, layers, vShoreCut.xy, vShoreCut.z);
         float cap = (1.0 - smoothstep(.07, .28, depth)) * smoothstep(.11, .51, dot(vStone, vec3(.30, .58, .12)));
         stone = mix(stone, stone * vec3(1.19, 1.09, 1.02), cap);
-        float overhang = (1.0 - smoothstep(.001, .082, depth)) * vShoreCut.y;
+        float overhang = (1.0 - smoothstep(.001, .082, depth)) * vShoreCut.z;
         stone *= 1.0 - overhang * .28;
         float moss = smoothstep(.62, .84, rockGrain + grainBreak * .7)
           * (1.0 - smoothstep(.04, .26, depth)) * .52;
