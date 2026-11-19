@@ -15,6 +15,7 @@ psycopg = pytest.importorskip("psycopg")
 from server.app import create_app  # noqa: E402
 from server.auth import PlayerVerifier  # noqa: E402
 from server.flags import parse_flags  # noqa: E402
+from server.island.catalogue import load_island  # noqa: E402
 from server.tests.helpers import CONFIGURED_SETTINGS, FakeClock  # noqa: E402
 from server.tests.island_helpers import CALM, FakeWeather  # noqa: E402
 from server.tests.island_sql.test_structure_repair_sql import (  # noqa: E402
@@ -572,7 +573,7 @@ def test_accepted_bell_member_join_and_paid_repair_match_committed_state(databas
     ).fetchone() == (instance(database),)
 
 
-def test_saved_v1_extra_spots_and_culverin_start_without_legacy_flags(database):
+def test_saved_v1_extra_spots_and_culverin_still_start_with_a_narrower_catalogue(database):
     epoch, _ = seed_recovery(
         database,
         (
@@ -601,6 +602,11 @@ def test_saved_v1_extra_spots_and_culverin_start_without_legacy_flags(database):
     )
     admin = ScratchRecoveryAdmin(database)
     app = create_app(settings, verifier, admin, weather_source=FakeWeather(CALM))
+    # Retired flag names no longer disable runtime offers. Narrow this synthetic server
+    # catalogue explicitly to retain coverage for saved defenses removed from future offers.
+    assert app.state.island.more_tower_spots is True
+    assert any(kind.kind == "culverin" for kind in app.state.island.kinds)
+    app.state.island = load_island()
     owner_balance = balance(database, OWNER)
 
     with TestClient(app) as client:
@@ -712,7 +718,7 @@ def test_saved_v1_extra_spots_and_culverin_start_without_legacy_flags(database):
     assert {item["id"] for item in snapshot["createWave"]["defenses"]} >= set(by_spot)
 
 
-def test_saved_v1_culverin_repair_preserves_the_empty_plot_unlock(database):
+def test_saved_v1_culverin_between_wave_repair_and_unoffered_plot_remain_compatible(database):
     epoch, _ = seed_recovery(database, (("cannon_8", "culverin"),))
     as_server(database)
     # Culverins open at wave 15, and cannon_9 opens at wave 20.
@@ -730,6 +736,11 @@ def test_saved_v1_culverin_repair_preserves_the_empty_plot_unlock(database):
     verifier = PlayerVerifier(settings, transport=httpx.MockTransport(login), clock=FakeClock())
     admin = ScratchRecoveryAdmin(database)
     app = create_app(settings, verifier, admin, weather_source=FakeWeather(CALM))
+    # Retired flag names no longer disable runtime offers. Narrow this synthetic server
+    # catalogue explicitly to retain coverage for saved defenses removed from future offers.
+    assert app.state.island.more_tower_spots is True
+    assert any(kind.kind == "culverin" for kind in app.state.island.kinds)
+    app.state.island = load_island()
     owner_balance = balance(database, OWNER)
     member_balance = balance(database, MEMBER)
 
