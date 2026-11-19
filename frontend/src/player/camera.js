@@ -26,7 +26,9 @@ export function villageFrame(camera, placeId, viewport = null) {
   const space = villageSpace(camera, viewport);
   if (placeId !== 'home_islet' || !space) return null;
   const {width, height, top, bottom, free} = space, bounds = COAST_BOUNDS, margin = .4;
-  const zoom = Math.min(1, width / (bounds.maxX - bounds.minX + margin * 2), height * free / (bounds.maxY - bounds.minY + margin * 2));
+  // In the wide village view the raised watchtower and the outer pier extend past the shore.
+  const heightMargin = viewport?.width / viewport?.height >= .72 ? 2.3 : margin;
+  const zoom = Math.min(1, width / (bounds.maxX - bounds.minX + margin * 2), height * free / (bounds.maxY - bounds.minY + heightMargin * 2));
   const centerX = (bounds.minX + bounds.maxX) / 2, centerY = (bounds.minY + bounds.maxY) / 2;
   return {x: centerX, y: centerY - (bottom - top) * height / (2 * zoom), zoom, centerX, centerY, bounds};
 }

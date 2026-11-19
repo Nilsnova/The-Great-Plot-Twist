@@ -67,8 +67,9 @@
   .hud-arrival{top:30%;--hud-arrival-title:26px}
 }
 @media(min-width:365px) and (max-width:900px){
-  .hud-play.hud-village:not(.hud-wide-balance) .hud-coins{font-size:18px;padding-inline:9px}
-  .hud-play.hud-village:not(.hud-wide-balance) .hud-wave:not([hidden]){top:12px;gap:4px;padding-inline:8px;font-size:16px}
+  .hud-play.hud-village:not(.hud-wide-balance) .hud-coins{font-size:17px;letter-spacing:0;padding-inline:8px}
+  .hud-play.hud-village:not(.hud-wide-balance) .hud-wave:not([hidden]){top:12px;gap:3px;padding-inline:7px;font-size:14px}
+  .hud-play.hud-village:not(.hud-wide-balance) .hud-menu{gap:8px;padding-inline:12px;font-size:15px}
 }
 /* On portrait exploration landings, keep the map and its first paths clear. */
 @media(max-width:600px) and (orientation:portrait){
