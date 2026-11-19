@@ -327,7 +327,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     }
     view.setVillageView(true,villageViewport);
     if(active&&!outsideBlocked()&&height>villageViewport.top+villageViewport.bottom){
-      focusPlacement(island.moving);focusSelection(placing?null:island.selection);
+      focusPlacement(island.moving);focusSelection(placing?null:island.selection,villageViewport);
     }
   }
   // Where a world point hangs on screen, as fractions of the canvas (the floating E prompt and the "Walk closer" hint).
