@@ -34,7 +34,7 @@ function overviewFrame(camera, viewport) {
   const portrait = portraitIslandFrame(camera, viewport);
   const pivot = (viewport.bottom - viewport.top) / viewport.height;
   const strength = (portrait ? .24 : .23) * Math.min(1, free / .6);
-  return {portrait, pivot, strength, limit: free * .84, widthGain: portrait ? .94 : .91};
+  return {portrait, pivot, strength, limit: free * .84, widthGain: portrait ? .92 : .91};
 }
 
 // Compose the fixed ground map toward a vanishing point. The near shore grows relative to the
