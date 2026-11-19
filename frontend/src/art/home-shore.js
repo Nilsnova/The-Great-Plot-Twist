@@ -1,12 +1,12 @@
 import {ellipse, linear, part, poly, radial, rect, shadow, stroke, svg} from './paint.js';
 
 const INK = '#3c2927', WOOD = '#a86c42', BRASS = '#c29a5e';
-const SAIL_ROOM = 25, SKIFF_EYE = [6.7, 10.9];
+const SKIFF_EYE = [6.7, 10.9];
 
 // The rope joins these painted eyes. Coordinates are in each frame's logical pixels.
 export const MOORING_EYES = Object.freeze({
   'home-mooring-bollard': Object.freeze([17, 13]),
-  'home-mooring-skiff': Object.freeze([SKIFF_EYE[0], SKIFF_EYE[1] + SAIL_ROOM]),
+  'home-mooring-skiff': Object.freeze(SKIFF_EYE),
 });
 // Top-left texture coordinates of the glass opening, away from the metal frame.
 export const HOME_LANTERN_LIGHT = Object.freeze([.292, .261, .689, .527]);
@@ -30,9 +30,7 @@ function bollard(c) {
 }
 
 function skiff(c) {
-  shadow(c, 25, 24.6 + SAIL_ROOM, 15.1, 1.5, .29);
-  c.save();
-  c.translate(0, SAIL_ROOM);
+  shadow(c, 25, 24.6, 15.1, 1.5, .29);
   const hull = svg('M3.4 8.3 C11 11.4 28.1 12.3 44.8 12.2 Q46.1 15.2 44.5 18.7 Q42.1 23.1 33.6 24.5 C20.5 26.3 8.2 22.2 3.4 8.3 Z');
   const plankShade = linear(c, 19, 9, 22, 25, [[0, '#719da7'], [.34, '#3e7893'], [.68, '#234f71'], [1, '#16354f']]);
   part(c, hull, plankShade, {line: '#283641', width: 1, shade: false});
@@ -59,25 +57,21 @@ function skiff(c) {
   stroke(c, svg('M31.4 10.8 Q34.1 10.7 36.1 11.9 M32.4 11.6 L31.5 13.4'), '#a4bab7', .45, .65);
   c.restore();
 
-  // A loose linen sail, rigged to the tender's existing hull and ballast.
-  stroke(c, [[25.7, 14.4], [23.2, -21.5]], '#684533', 2.25);
-  stroke(c, [[25.1, 13.1], [22.8, -21.1]], '#d79a5d', .78);
-  stroke(c, svg('M22.9 -20.6 L14.3 8.3 M24.6 -20.2 L39.8 12.5'), '#957955', .51, .88);
-  const sail = svg('M24 -20.5 Q32.5 -18.1 40.5 -16.4 Q37.4 -9.3 39.6 2.8 Q31.6 1.1 24.6 5.7 Q26.3 -4.9 24 -20.5 Z');
-  part(c, sail, linear(c, 23, -15, 41, 2, [[0, '#fff6d8'], [.48, '#ecdab0'], [1, '#b89565']]),
-    {line: '#785e49', width: .67, shade: false});
-  stroke(c, svg('M25.7 -17.6 Q31 -9.1 27.4 1.8 M27 3.7 Q34 .4 38.7 1.5 M26.1 -19.4 Q33.3 -17.8 39 -15.8'), '#ac905e', .5, .64);
-  const compass = svg('M32.6 -15.1 L33.5 -10.3 L36.7 -8.3 L33.3 -7.9 L31.9 -3.6 L31.1 -8.3 L28.2 -10.1 L31.4 -10.6 Z');
-  part(c, compass, '#35526d', {line: '#46647c', width: .36, shade: false});
-  stroke(c, [[23.9, 5.5], [40, 2.2]], '#794e36', .92);
-  part(c, svg('M23.1 -21.5 Q19.1 -23.6 14.1 -21.6 L16.2 -19.2 L13.8 -17.7 Q18.8 -18.9 23.3 -19.2 Z'),
-    '#315477', {line: '#3c4350', width: .44, shade: false});
+  // The linen is furled and stowed inboard while the tender is tied up.
+  const sail = svg('M12.4 8.5 Q15.2 5.1 22.5 5.5 L34.6 7.7 Q37.8 9 35.2 11.7 Q31.1 13.2 25.6 11.8 L14.1 10.8 Z');
+  part(c, sail, linear(c, 20, 5, 20, 12.3, [[0, '#fff1ca'], [.45, '#dfc498'], [1, '#b29363']]),
+    {line: '#785e49', width: .62, shade: false});
+  stroke(c, svg('M13.5 8.4 Q21.2 7 26.7 9.1 T35.9 9.7 M17.7 6.6 L16.9 10.8 M28.9 7.3 L28.1 12'),
+    '#95764f', .63, .87);
+  part(c, svg('M22.9 8.2 L23.2 9.3 L24.7 10 L23.1 9.9 L22.4 10.7 L22.1 9.6 L20.8 9.1 L22.3 9.2 Z'),
+    '#35526d', {line: false, shade: false});
+  stroke(c, svg('M10.5 11.6 L34.9 14.1'), '#825738', 1.04);
+  stroke(c, svg('M10.5 11.45 L34.9 13.95'), '#e5b580', .44);
 
   stroke(c, svg('M5.3 8.1 Q14.9 3.8 26.8 5.2 Q32.2 5.5 37.3 7.6'), '#f0c99a', .7, .84);
   stroke(c, svg('M8.2 12.2 Q16.9 17.1 26.5 17 Q37.6 17.7 43.2 13.7'), '#e3aa72', .63);
   part(c, ellipse(...SKIFF_EYE, 1.45, .91, .6), BRASS, {line: '#654b37', width: .57, depth: .43});
   part(c, rect(41.7, 15.3, 2.4, 1.23, .4), '#af8253', {line: '#674b38', width: .42, depth: .54});
-  c.restore();
 }
 
 function bench(c) {
@@ -141,7 +135,7 @@ function lantern(c) {
 export function homeShoreFrames() {
   return {
     'home-mooring-bollard': [32, 27, 4, bollard, {outline: .55}],
-    'home-mooring-skiff': [48, 27 + SAIL_ROOM, 2.5, skiff, {outline: .55}],
+    'home-mooring-skiff': [48, 27, 2.5, skiff, {outline: .55}],
     'home-bench': [48, 32, 3, bench, {outline: .29}],
     'home-barrel': [24, 32, 3, barrel, {outline: .34}],
     'home-lantern': [16, 24, 2, lantern, {outline: .23}],

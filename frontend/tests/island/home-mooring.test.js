@@ -83,7 +83,8 @@ it('fits the real southwest mooring artwork without changing walking, targeting 
       place.dispose();
       place.dispose();
       return {home, battle, returned, eyes, positionsMatchGround, maxOrder, stable, released, actualHits, target,
-        width: (max.x - min.x) * skiff.scale.x, waterline: skiff.position.y, visibleHullBottom, standsAshore, standsOnSkiff, standsOnStage, sharesCollider,
+        width: (max.x - min.x) * skiff.scale.x, height: (max.y - min.y) * skiff.scale.y,
+        waterline: skiff.position.y, visibleHullBottom, standsAshore, standsOnSkiff, standsOnStage, sharesCollider,
         zoneIdsStable, shoreStable, retainsTravel, wallStable, propsStayAtTheirFeet};
     } finally { place.dispose(); }
   });
@@ -96,7 +97,8 @@ it('fits the real southwest mooring artwork without changing walking, targeting 
     zoneIdsStable: true, shoreStable: true, retainsTravel: true, wallStable: true, propsStayAtTheirFeet: true,
   });
   expect(result.maxOrder).toBeLessThan(20);
-  expect(result.width).toBeCloseTo(3.72);
+  expect(result.width).toBeCloseTo(3);
+  expect(result.height).toBeCloseTo(27 / 16);
   expect(result.waterline).toBeCloseTo(-14.7);
   expect(result.visibleHullBottom).toBeGreaterThanOrEqual(-14.88);
   expect(result.visibleHullBottom).toBeLessThan(-14.65);
