@@ -51,7 +51,8 @@ it('fits the real southwest mooring artwork without changing walking, targeting 
       for (let y = 0; y < image.height; y++) for (let x = 0; x < image.width; x++) {
         if (pixels[(y * image.width + x) * 4 + 3] > 90) bottom = y + 1;
       }
-      const visibleHullBottom = skiff.position.y + max.y - (max.y - min.y) * bottom / image.height;
+      const visibleHullBottom = skiff.position.y +
+        (max.y - (max.y - min.y) * bottom / image.height) * skiff.scale.y;
       const actualHits = new THREE.Raycaster(new THREE.Vector3(skiff.position.x, skiff.position.y + .5, 10), new THREE.Vector3(0, 0, -1))
         .intersectObjects(parts, true).length;
       const target = island.pickAt(-8, 24.5);
@@ -82,7 +83,7 @@ it('fits the real southwest mooring artwork without changing walking, targeting 
       place.dispose();
       place.dispose();
       return {home, battle, returned, eyes, positionsMatchGround, maxOrder, stable, released, actualHits, target,
-        width: max.x - min.x, waterline: skiff.position.y, visibleHullBottom, standsAshore, standsOnSkiff, standsOnStage, sharesCollider,
+        width: (max.x - min.x) * skiff.scale.x, waterline: skiff.position.y, visibleHullBottom, standsAshore, standsOnSkiff, standsOnStage, sharesCollider,
         zoneIdsStable, shoreStable, retainsTravel, wallStable, propsStayAtTheirFeet};
     } finally { place.dispose(); }
   });
@@ -95,7 +96,7 @@ it('fits the real southwest mooring artwork without changing walking, targeting 
     zoneIdsStable: true, shoreStable: true, retainsTravel: true, wallStable: true, propsStayAtTheirFeet: true,
   });
   expect(result.maxOrder).toBeLessThan(20);
-  expect(result.width).toBeLessThanOrEqual(3);
+  expect(result.width).toBeCloseTo(3.72);
   expect(result.waterline).toBeCloseTo(-14.7);
   expect(result.visibleHullBottom).toBeGreaterThanOrEqual(-14.88);
   expect(result.visibleHullBottom).toBeLessThan(-14.65);
@@ -121,7 +122,10 @@ it('moves the skiff, rope and rooted vegetation together and restores their rest
       const plants = place.group.children.filter(mesh => mesh.material?.userData.sway);
       const planted = plants.map(mesh => mesh.position.toArray());
       const [x, z] = place.spawn;
-      const wave = (time, paused = false) => place.update(1 / 60, {time, paused, player: {x, z}, night: 0, weather: {wind: .5}});
+      const wave = (time, paused = false) => {
+        place.update(1 / 60, {time, paused, player: {x, z}, night: 0, weather: {wind: .5}});
+        place.prepareMooringRender();
+      };
       const pose = () => [...skiff.position.toArray(), skiff.rotation.z];
       const end = i => new THREE.Vector3().fromBufferAttribute(cord, i)
         .add(new THREE.Vector3().fromBufferAttribute(cord, i + 1)).multiplyScalar(.5);
@@ -141,11 +145,14 @@ it('moves the skiff, rope and rooted vegetation together and restores their rest
       const frozen = pose().every((v, i) => v === changed[i]) && moved.distanceTo(end(cord.count - 2)) === 0
         && wake.value === movingWake && plants.every((mesh, i) => mesh.material.userData.sway.uniform.value === sway[i]);
       const bollard = place.group.getObjectByName('home-mooring-bollard');
-      bollard.scale.y = skiff.scale.y = .65;
-      rope.children[0].onBeforeRender();
+      const scale = skiff.scale.y;
+      bollard.scale.y *= .65;
+      skiff.scale.y *= .65;
+      place.prepareMooringRender();
       const portraitGap = Math.max(eye(bollard).distanceTo(end(0)), eye(skiff).distanceTo(end(cord.count - 2)));
-      bollard.scale.y = skiff.scale.y = 1;
-      rope.children[0].onBeforeRender();
+      bollard.scale.y = 1;
+      skiff.scale.y = scale;
+      place.prepareMooringRender();
       place.setMooringBattle(true);
       wave(2);
       const hiddenDuringWave = !skiff.visible && !rope.visible && !water.visible && pose().every((v, i) => v === changed[i]);

@@ -415,7 +415,10 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
       hint:farHint?{text:WALK_CLOSER,at:screenAt(farHint.id)}:null,managing:island?.managing===true&&!inBattle,waveStatus,speed,blocked:!active||outsideBlocked()||!!waves?.island.wave||!!waves?.point?.controller.wave }); tutorials?.update(delta); input.endFrame();
   }, () => {
     const draw=shell.mode!=='title';
-    if(draw)homePortrait.draw(scene,()=>graphics.renderer.render(scene,view.camera));
+    if(draw)homePortrait.draw(scene,()=>{
+      world.current?.prepareMooringRender?.();
+      graphics.renderer.render(scene,view.camera);
+    });
     graphics.sampleFrame(performance.now(),{active:draw&&active&&!outsideBlocked()});
   });
   // The narrator and the tutorials: right after the first frame (and again on each arrival if that load failed).

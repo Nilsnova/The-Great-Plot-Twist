@@ -67,6 +67,7 @@ export async function createSettlement(ctx) {
     const [bollard, skiff] = mooring.map(({asset, x, z}) => {
       const mesh = placeArt(group, art, asset, x, z);
       mesh.name = asset;
+      if (asset === 'home-mooring-skiff') mesh.scale.setScalar(1.24);
       mesh.renderOrder = 16;
       mesh.raycast = () => {};
       return mesh;
@@ -155,7 +156,10 @@ export async function createSettlement(ctx) {
       }, dispose,
     };
     // Keep the southwest approach clear of the floating mooring during battle.
-    if (shoreBoat) place.setMooringBattle = shoreBoat.setBattle;
+    if (shoreBoat) {
+      place.setMooringBattle = shoreBoat.setBattle;
+      place.prepareMooringRender = shoreBoat.prepareRender;
+    }
     ctx.decorate?.(place, art, cleanups);
     if (id === 'home_islet' || id === 'saltreach_harbor') {
       const life = createHarborLife({ place, art, ctx });
