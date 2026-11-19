@@ -4,16 +4,66 @@
 >
 > **Who uses it:** teammates validating the shared economy before release.
 
-**Status:** guarded domain runtime integration; canonical lifecycle acceptance is incomplete. Published dependencies
+**Status:** canonical backend source is integrated; coordinated client capabilities
+and final authenticated acceptance are incomplete.
+This inventory was reviewed at `5f1cfa7c34b7610234ffaef7b76ac66c143516e2`.
+Published dependencies
 provide the [contract #515](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/515),
 [permission policy #516](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/516) and
 [treasury/operation registry #517](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/517).
-The permission RPC reader still lacks its production persistent authority provider;
-personal Captain/Engineer/assignment and lifecycle integration remain prerequisites.
+The production persistent authority provider, personal Captain/Engineer assignments,
+native session/journal producer, closure worker and reset/deletion composition are
+now present. Their presence is not a completed runtime scenario matrix.
 The required scenario matrix remains incomplete. See [#505](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/505)
 and the [bounded specification](../../specs/MP-ECO-20-integration-acceptance.md).
 
-## Local database evidence
+## Current integration and open gates
+
+The [canonical session specification](../../specs/MP-ECO-11-canonical-wave-sessions.md),
+[lifecycle composition](../../specs/MP-ECO-16-island-lifecycle.md)
+and registered [application routes](../../backend/server/app.py) replace the earlier
+missing-provider prerequisite. Domain-unit tests now verify the actual provider
+and seed its underlying facts explicitly; they do not install a substitute. Native
+SQL suites create controls, roster, assignments, journal state and holds through the
+actual production hooks, with their template/report/clock boundaries labeled.
+
+A fresh local stack installed all 106 migrations in canonical timestamp order from
+`a6de304bbeb5f45983e18d043c848c71a4566609`. A limited probe used three real
+registered Auth users in distinct Chromium processes, the production SDK/API and
+private WebSockets, without network interception or authority fixtures. It observed
+Captain adoption and fresh control, native bell/replay/input, outsider refusal,
+current-topic isolation across admission/departure and terminal state after the last
+withdrawal. Fresh-island service-only treasury admission was explicit installer
+setup. This was an SDK/API primitive probe, not rendered gameplay or public
+legacy-save conversion. Honest channels manually followed current metadata; automatic
+product topic changes remain unverified. Application/migration bytes are unchanged
+between that source and the inventory source; the intervening change is a test.
+
+The [test map](../TEST-MAP.md#shared-economy-integration-checkpoint--19-november-2026)
+records source-qualified checkpoints. In particular, the historical `799242b4`
+broad run remains **15,185 passed, 28 failed, 5 skipped**, exit 1. The later **219**
+passing affected cases include those 28 node IDs on their separately recorded
+source. They do not establish a final full-backend pass.
+
+| Pending acceptance gate | Required next observation |
+|---|---|
+| Final common source | Freeze the reviewed API/frontend/migrations together; rerun backend regressions with disposable SQL and matching frontend Node dependencies, affected client suites/build and migration checks. Retain exact failures/skips and source hashes. |
+| Coordinated client capabilities | At the inventory source, `shared_snapshot.py` still declares session/arsenal/move/repair/reset/market/match unavailable. The real island client gates those controls on the snapshot. Complete the reviewed capability/client integration before treating direct SDK calls as reachable game actions. |
+| Rendered two-player journey | Actual provider sessions use ordinary game UI, coherent shared quotes, session attachment, native journal/input/checkpoints and terminal handling. Capture visible scoped funds, accepted actions and committed database effects; no fake adapters or response replacement. |
+| Product Realtime transitions | Honest rendered clients automatically follow new topic metadata across admission, membership leave, reset and deletion. Retained malicious sockets cannot receive new protected data or inject accepted gameplay. Manual SDK topic changes alone do not close this gate. |
+| Session and participation | Actual duplicate tabs/cross-island assignment, countdown/spectator exclusion, reconnect before and after real grace, succession, frozen difficulty/loadouts, pause/auto-next and no-browser worker closure agree with persisted receipts. |
+| Money and domain effects | The scenario matrix below passes across core spending, crew, arsenal, repairs, wagers and ship rewards, with concurrent funds, replay/conflict, old-epoch privacy, exact ledger reconciliation and unchanged personal recipients. |
+| Combat repair and free revival | Rendered real simulation/journal produces damage, falls, poses and uninterrupted target-bound holds; quota/debit ordering, zero-coin revival, interruption/generation fencing and terminal healing match actual state. Synthetic accepted combat reports remain lower-layer evidence. |
+| Personal progress and lifecycle | Actual participation/Engineer generation effects, owner-only idle reset with open old wagers, member/confirmed-owner deletion and Auth rejection preserve the documented assets, old origins and other players' personal progress. |
+| Compatibility | Both supported wave protocols, capability/old-client refusals, failed prerequisite reads and legacy/class Harbor/Pirate Point/duel/excluded-product paths retain their declared accounting without a shared-to-personal fallback. |
+
+Natural-feed/time observations, physical devices and legacy-save conversion/public
+rollout must retain their own explicit status. Feed fixtures or accelerated clocks
+do not become natural-provider evidence, viewport emulation is not a physical phone,
+and service-only admission of a fresh test island does not prove conversion. None
+of this authorizes hosted changes, rollout or activation.
+
+## Earlier local database evidence
 
 The [database follow-up](../../specs/MP-ECO-20-database-acceptance.md) verifies
 guarded domain transactions against the published treasury and operation registry.
@@ -39,12 +89,12 @@ CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' --with pglast 
 Reservation/leader/assignment authority and the repair wave's immutable economy
 binding are explicitly injected test fixtures. Real membership, domain functions,
 treasury, global operations, recovery rows and transaction locks execute in the
-disposable database. These results establish those database boundaries, not the
-missing production authority/producer, autonomous lifecycle workers, actual reset
+disposable database. These results establish those historical database boundaries, not the
+then-missing production authority/producer, autonomous lifecycle workers, actual reset
 or deletion, public route admission, authenticated clients or physical devices.
 The complete matrix below remains a target rather than a completed runtime claim.
 
-## Local authentication and Realtime evidence
+## Earlier 76-migration authentication and Realtime evidence
 
 A separate disposable stack used official Auth, PostgreSQL, REST and Realtime
 services with verified local TLS. Its source was baseline
@@ -69,7 +119,9 @@ The cached-connection checks **failed**: a subscriber admitted while an island
 was legacy could still send and receive after shared admission, and an already
 connected member could still send and receive after leaving. Tightening the RLS
 predicate alone cannot satisfy those lifecycle gates. Canonical revocation or
-topic rotation and a new authenticated run on the complete source remain required.
+topic rotation and a new authenticated run on the complete source were required.
+The newer limited probe above verifies current-topic isolation with manual SDK
+selection; the rendered product transition gate remains open.
 
 ## Evidence layers
 
@@ -120,8 +172,9 @@ grace, longest-active-member succession with stable player-ID tie break, and shi
 rewards paid only for positive cumulative score improvements. Their implementations
 must preserve these values. Reset permits open wagers, whose settlement remains
 confined to the old retired account. Owner deletion deletes that island while
-preserving other players' personal Captain progress. Conversion and the actual
-reset/deletion transactions remain prerequisites; this matrix authorizes no activation.
+preserving other players' personal Captain progress. Reset/deletion transactions
+are now implemented; their complete authenticated scenarios remain open. Conversion
+and rollout retain their separate status; this matrix authorizes no activation.
 
 ## Offline assertions
 
