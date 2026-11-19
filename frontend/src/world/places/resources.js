@@ -4,6 +4,7 @@ import {QUALITY, settings} from '../../config.js';
 import {legacyBackdrop} from '../ground-transform.js';
 import { loadTexture } from '../texture.js';
 import { hasGround, paintGround } from '../../art/ground.js';
+import {isOutpostGround, paintOutpostGround} from '../../art/outpost-ground.js';
 import { premultiply, screenDensity, smoothTexture } from '../../art/textures.js';
 import {acquireRasterSheet} from '../../art/village-raster.js';
 import {TERRAIN_SHEET} from '../../art/village/terrain-materials.js';
@@ -20,6 +21,18 @@ export async function loadBackdrop(path, {quality = settings.quality} = {}) {
     } finally { lease.release(); }
   }
   const texture = await loadTexture(`${import.meta.env.BASE_URL}${path}`);
+  if (isOutpostGround(path) && texture.image?.width && typeof document !== 'undefined') {
+    const density = Math.max(16, Math.min(32, (QUALITY[quality] ?? QUALITY.high).groundTexels, screenDensity(quality) * 10));
+    const original = texture.image;
+    try {
+      const painted = smoothTexture(paintOutpostGround(original, density, {muted: id === 'the_teeth'}));
+      painted.userData.coastSource = original;
+      texture.dispose();
+      return painted;
+    } catch (error) {
+      if (error?.name !== 'SecurityError') { texture.dispose(); throw error; }
+    }
+  }
   texture.colorSpace = THREE.SRGBColorSpace; texture.magFilter = THREE.NearestFilter;
   texture.minFilter = THREE.NearestFilter; texture.generateMipmaps = false; return texture;
 }
