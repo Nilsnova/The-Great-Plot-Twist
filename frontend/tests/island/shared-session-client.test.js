@@ -13,7 +13,7 @@ function setup(extra={}){
   heartbeat:vi.fn(async proof=>{const data=metadata();data.session.connectionGeneration=proof.connectionGeneration;return {ok:true,data};}),disconnect:vi.fn(async()=>({ok:true,data:metadata(false)})),
   leave:vi.fn(async record=>({ok:true,data:controlReceipt('session_leave',record)})),settings:vi.fn(async record=>({ok:true,data:controlReceipt('session_settings',record)}))};
  const client=createSharedSessionClient({api,getActorId:()=>actor,getEconomy:()=>selected,storage:saved,locks:provider,
-  makeUid:()=>`session_uid_${fixture}_${++uids}`,makeSessionId:extra.makeSessionId??(()=>sessionId),setTimer:run=>{timers.push(run);return timers.length;},clearTimer(){},onState:value=>states.push(value)});
+  makeUid:()=>`session_uid_${fixture}_${++uids}`,makeSessionId:extra.makeSessionId??(()=>sessionId),setTimer:run=>{timers.push(run);return timers.length;},clearTimer(){},onState:value=>states.push(value),onAttached:extra.onAttached});
  clients.push(client);return {client,api,saved,states,timers,provider,setActor:value=>{actor=value;},setEconomy:value=>{selected=value;},allocated:()=>uids};
 }
 it('withholds controller proof until a fresh GET follows the attach response',async()=>{
@@ -160,4 +160,22 @@ it('retires known old-run departure only on definite epoch mismatch against a fr
  f.api.attach.mockImplementation(async record=>({ok:true,data:{...metadata(),economy:next,session:{...metadata().session,sessionId:record.body.sessionId}}}));
  f.api.read.mockImplementation(async record=>({ok:true,data:{...metadata(!!record),economy:next}}));await f.client.open();
  expect(f.api.leave).toHaveBeenCalledOnce();expect(f.api.attach).toHaveBeenCalledOnce();expect(f.client.proof()?.origin.accountId).toBe(next.accountId);
+});
+
+it('hydrates only after independent fresh control confirmation, never on heartbeat or spectator read',async()=>{
+ const hydrated=vi.fn(),f=setup({onAttached:hydrated});let release;f.api.read.mockImplementationOnce(()=>new Promise(resolve=>{release=resolve;}));
+ const opening=f.client.open();await vi.waitFor(()=>expect(release).toBeTypeOf('function'));expect(hydrated).not.toHaveBeenCalled();
+ release({ok:true,data:metadata()});await opening;expect(hydrated).toHaveBeenCalledOnce();expect(hydrated.mock.calls[0][0]).toEqual(f.client.proof());
+ await f.client.open();await f.client.heartbeat();expect(hydrated).toHaveBeenCalledOnce();
+ const other=setup({onAttached:hydrated});other.api.read.mockResolvedValue({ok:true,data:metadata(false)});await other.client.open();expect(hydrated).toHaveBeenCalledOnce();
+});
+it('releases only the old lock when identity changes during post-attach hydration',async()=>{
+ let release;const first=setup({onAttached:()=>new Promise(resolve=>{release=resolve;})});const opening=first.client.open();
+ await vi.waitFor(()=>expect(release).toBeTypeOf('function'));first.setActor(null);release();
+ expect((await opening).code).toBe('session_context_changed');expect(first.client.proof()).toBeNull();
+ const next=setup({storage:first.saved,locks:first.provider});await next.client.open();expect(next.client.proof()).not.toBeNull();
+});
+
+it('does not replace a confirmed session with invented defaults when domain hydration fails',async()=>{
+ const f=setup({onAttached:async()=>{throw new Error('domain unavailable');}});expect((await f.client.open()).ok).toBe(true);expect(f.client.proof()).not.toBeNull();
 });

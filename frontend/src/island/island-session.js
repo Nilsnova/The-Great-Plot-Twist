@@ -1,5 +1,5 @@
 // Bind the document-held canonical session to the selected, visible island; no second context store.
-import {readEconomy} from './economy-view.js';
+import {readEconomy,sameEconomyScope} from './economy-view.js';
 import {createSharedSessionApi} from './shared-session-api.js';
 import {createSharedSessionClient} from './shared-session-client.js';
 
@@ -10,6 +10,15 @@ export function createIslandSession(isl,{client=null,windowTarget=globalThis,doc
  const control=client??createSharedSessionClient({
   api:createSharedSessionApi({transport:isl.islandTransport,getEconomy:isl.getEconomy,getActorId:isl.getActorId}),
   getEconomy:()=>selected()?isl.getEconomy():null,getActorId:isl.getActorId,getAuthGeneration:isl.authGeneration,storage:isl.storage,
+  onAttached:async proof=>{
+   const actor=isl.getActorId(),identity=isl.authGeneration(),selection=isl.selectionGeneration,visit=isl.visitCode;
+   const guard=()=>selected() && actor===proof.actorId && actor===isl.getActorId() && Object.is(identity,isl.authGeneration())
+    && selection===isl.selectionGeneration && visit===isl.visitCode && sameEconomyScope(readEconomy(isl.getEconomy()),proof.origin)
+    && control.proof()?.sessionId===proof.sessionId && control.proof()?.connectionGeneration===proof.connectionGeneration;
+   if(!guard())return;
+   await Promise.all([isl.reloadOwn({guard}),...(isl.visiting?[isl.reloadVisit({guard})]:[])]);
+   if(guard()){isl.applyWorld();isl.refreshCard();}
+  },
   onState:state=>{isl.refreshCard?.();if(['controller','spectator'].includes(state.phase)){
    void isl.sharedWaves?.retryFinishes();void isl.sharedRevival?.retryPending();
   }},

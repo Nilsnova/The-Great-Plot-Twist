@@ -9,7 +9,7 @@ const failed=(code,message,status=409)=>({ok:false,status,code,message});
 const clone=value=>JSON.parse(JSON.stringify(value));
 const heartbeatMs=5000;
 export function createSharedSessionClient({api,getEconomy,getActorId,getAuthGeneration=()=>0,storage,locks=globalThis.navigator?.locks,
- makeUid=makeActionUid,makeSessionId=()=>globalThis.crypto.randomUUID(),onState=()=>{},
+ makeUid=makeActionUid,makeSessionId=()=>globalThis.crypto.randomUUID(),onState=()=>{},onAttached=async()=>{},
  setTimer=(run,ms)=>setTimeout(run,ms),clearTimer=id=>clearTimeout(id)}={}){
  const tab=createSessionTabLock({locks}),intents=createSessionIntents({storage,makeUid,makeSessionId});
  let disposed=false,ticket=0,flight=null,pingFlight=null,settingsFlight=null,settingsScope=null,timer=null,held=null,active=null,scope=null,snapshot=null;
@@ -72,7 +72,12 @@ export function createSharedSessionClient({api,getEconomy,getActorId,getAuthGene
   const data=readSessionMetadata(answer.data);
   if(!data || !data.session.isController || data.session.sessionId!==record.body.sessionId){demote('unavailable','The stored attachment could not be verified.');return failed('unreadable','The stored attachment could not be verified.',502);}
   try{intents.confirm(record,data);}catch(error){demote('unavailable',error.message);return failed('session_retry_unavailable',error.message,503);}
-  return refresh(captured,mine,{actorId:captured.actorId,origin:captured.origin,sessionId:data.session.sessionId,connectionGeneration:data.session.connectionGeneration});
+  const fresh=await refresh(captured,mine,{actorId:captured.actorId,origin:captured.origin,sessionId:data.session.sessionId,connectionGeneration:data.session.connectionGeneration});
+  if(fresh.ok && proof()){
+   try{await onAttached(proof());}catch{/* Domain hydration cannot grant control or replace a confirmed session. */}
+   if(mine!==ticket || !current(captured) || !lock.current)return abandon(lock,mine);
+  }
+  return fresh;
  }
  function open(){
   if(flight)return flight;
