@@ -58,7 +58,7 @@ function hullRipples(root, x, waterline) {
         #include <colorspace_fragment>
       }`,
   });
-  const mesh = new Mesh(new PlaneGeometry(3.7, .92), material);
+  const mesh = new Mesh(new PlaneGeometry(4.05, .92), material);
   mesh.name = 'home-mooring-water';
   mesh.position.set(x, waterline - .14, 0);
   mesh.renderOrder = 14.9;
@@ -103,11 +103,10 @@ export function makeMooring(root, bollard, skiff) {
     }
     shadow.needsUpdate = light.needsUpdate = true;
   }
-  // Portrait composition updates the sprite scales immediately before rendering.
-  rope.children[0].onBeforeRender = drawRope;
   drawRope();
   let resting = true;
   return {
+    prepareRender() { if (rope.visible) drawRope(); },
     setBattle(active) { skiff.visible = rope.visible = contact.visible = stage.visible = !active; },
     update(time, wind, still, night = 0) {
       contact.material.uniforms.uWakeNight.value = night;
@@ -125,7 +124,6 @@ export function makeMooring(root, bollard, skiff) {
         skiff.rotation.z = Math.sin(time * 1.7 - .86) * (.027 + wind * .012);
       }
       resting = still;
-      drawRope();
     },
   };
 }
