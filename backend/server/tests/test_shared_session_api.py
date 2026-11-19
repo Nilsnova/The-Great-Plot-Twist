@@ -580,3 +580,18 @@ def test_browser_cannot_submit_a_canonical_withdrawal_event_as_an_input():
     with pytest.raises(ApiError):
         asyncio.run(api.append_inputs(admin, ACTOR, WAVE, OWNER, EPOCH, SESSION, "1", [item]))
     assert admin.calls == []
+
+
+def test_unknown_attach_generation_accepts_the_positive_retained_server_successor():
+    from server.island.shared_session_models import SessionAttach
+
+    body = SessionAttach(
+        economy={key: value for key, value in ORIGIN.items() if key != "accountId"},
+        sessionId=SESSION,
+        expectedGeneration="0",
+        actionUid="attach_001",
+    )
+    reply = dict(status="done", economy=economy(), session=metadata())
+    reply["session"]["connectionGeneration"] = "2"
+    answer = asyncio.run(api.session_call(Admin([reply]), ACTOR, "attach", body))
+    assert answer["session"]["connectionGeneration"] == "2"

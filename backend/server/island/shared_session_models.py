@@ -39,7 +39,7 @@ def player_uid(value: str) -> str:
 
 
 ActionUid = Annotated[
-    StrictStr, TypeAdapter, Field(pattern=r"^[A-Za-z0-9_-]{8,64}$"), AfterValidator(player_uid)
+    StrictStr, Field(pattern=r"^[A-Za-z0-9_-]{8,64}$"), AfterValidator(player_uid)
 ]
 
 
