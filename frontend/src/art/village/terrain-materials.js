@@ -29,11 +29,15 @@ export function materialCells(name, bounds = BACKDROP) {
   return cells;
 }
 
+export function materialRect(image, name) {
+  // A caller may still hand over the authored original (evidence scripts); its crops are the authored rects.
+  return shippedTerrain && image?.width === shippedTerrain.width && image?.height === shippedTerrain.height
+    ? shippedTerrain.rects[name] : TERRAIN_MATERIALS[name].rect;
+}
+
 /** The caller owns clipping. No full-size intermediate canvas or retained decoded image. */
 export function paintMaterial(context, image, name, {bounds = BACKDROP, alpha = 1} = {}) {
-  // A caller may still hand over the authored original (evidence scripts); its crops are the authored rects.
-  const rect = shippedTerrain && image?.width === shippedTerrain.width && image?.height === shippedTerrain.height
-    ? shippedTerrain.rects[name] : TERRAIN_MATERIALS[name].rect;
+  const rect = materialRect(image, name);
   context.save(); context.globalAlpha *= alpha;
   for (const cell of materialCells(name, bounds)) {
     context.save();

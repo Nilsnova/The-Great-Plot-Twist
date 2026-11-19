@@ -7,7 +7,7 @@ import {surfaceClass, surfaces} from '../world/places/surfaces.js';
 import {LEGACY_DEPTH} from '../world/projection.js';
 import {canvas, ellipse, linear, poly, radial, stroke} from './paint.js';
 import {cliffProfile, paintCliffFaces, paintGrassRim} from './coast-cliffs.js';
-import {meadowScale, paintMaterial, pathMaterialMask} from './village/terrain-materials.js';
+import {materialRect, meadowScale, paintMaterial, pathMaterialMask} from './village/terrain-materials.js';
 
 const SIZE = {width: 64, height: 48};
 // Paths of each island (logical x/z, a polyline each) and small clearings [x, z, radius].
@@ -84,11 +84,15 @@ const PAVERS = [
   ['#ceb98f', '#9d8a67', '#e9d3a7'], ['#d7ba91', '#ac8c65', '#f1d2a8'],
   ['#d5c6a5', '#ac9b7e', '#efdfbf'], ['#ccbda0', '#9b8e76', '#e7d7b9'],
 ];
+// Individual stone faces cut from the sandstone sheet. Its grouted seams never cross a drawn slab.
+const PAVER_FACES = [[.026, .024, .107, .047], [.193, .025, .112, .046], [.364, .029, .106, .047],
+  [.563, .021, .106, .047], [.725, .025, .106, .047], [.875, .026, .094, .047]];
 
 /** Dressed limestone blocks on the original paths and building clearings. */
 function paintPavers(c, paths, materials) {
   const bounds = {left: -SIZE.width / 2, top: -SIZE.height / 2, right: SIZE.width / 2, bottom: SIZE.height / 2};
-  const random = seeded(18281), faces = new Path2D();
+  const random = seeded(18281);
+  const sheet = materials && materialRect(materials, 'path');
   c.save();
   c.clip(pathMaterialMask(paths, PAVING_WIDTH));
   c.fillStyle = '#9e936f';
@@ -100,7 +104,8 @@ function paintPavers(c, paths, materials) {
     while (left < bounds.right) {
       const width = .72 + random() * .19, joint = .012 + random() * .013;
       const chip = .046 + random() * .076, drift = (random() - .5) * .037;
-      const [face, edge, sun] = PAVERS[Math.floor(random() * PAVERS.length)];
+      const pigment = Math.floor(random() * PAVERS.length);
+      const [face, edge, sun] = PAVERS[pigment];
       const x = left + joint, y = row + joint + drift;
       const right = left + width - joint, bottom = row + depth - joint + drift;
       left += width;
@@ -116,7 +121,12 @@ function paintPavers(c, paths, materials) {
       c.fillStyle = linear(c, x + .034, y, x + width * .61, bottom,
         [[0, sun], [.29, face], [.83, face], [1, edge]]);
       c.fill(top);
-      faces.addPath(top);
+      if (sheet) {
+        const [sx, sy, sw, sh] = sheet, [u, v, w, h] = PAVER_FACES[pigment];
+        c.save(); c.clip(top); c.globalAlpha = .58;
+        c.drawImage(materials, sx + u * sw, sy + v * sh, w * sw, h * sh, x, y, right - x, bottom - y);
+        c.restore();
+      }
       c.fillStyle = sun + '53';
       c.fill(ellipse(x + width * .23, y + depth * .28, .024 + chip * .22, .012));
       if (chip > .104) {
@@ -125,12 +135,6 @@ function paintPavers(c, paths, materials) {
       }
     }
     row += depth;
-  }
-  // Limestone grain stays on the cut faces, leaving the worn joints legible around them.
-  if (materials) {
-    c.clip(faces);
-    c.globalCompositeOperation = 'soft-light';
-    paintMaterial(c, materials, 'path', {alpha: .23});
   }
   c.restore();
 }
@@ -283,11 +287,7 @@ function paintTerrain(c, s, coast, random, materials) {
   glow.addColorStop(.52, '#8ebc46');
   glow.addColorStop(1, '#579638');
   c.fillStyle = glow; c.fill(meadow);
-  if (materials) {
-    c.globalCompositeOperation = 'soft-light';
-    paintMaterial(c, materials, 'grass', {alpha: .49});
-    c.globalCompositeOperation = 'source-over';
-  }
+  if (materials) paintMaterial(c, materials, 'grass', {alpha: .71});
   // A broad change in light from the sunlit back ledges to the lower shore ties their caps
   // into the meadow without drawing any new path or extending the dry ground.
   c.fillStyle = linear(c, -16, -12, 12, 13, [[0, '#f3d67832'], [.46, '#f4d36b09'], [.73, '#42783b10'], [1, '#345b303c']]);
