@@ -573,7 +573,8 @@ def test_accepted_bell_member_join_and_paid_repair_match_committed_state(databas
     ).fetchone() == (instance(database),)
 
 
-def test_saved_v1_extra_spots_and_culverin_still_start_with_a_narrower_catalogue(database):
+@pytest.mark.parametrize("narrow_catalogue", [False, True], ids=["standard", "narrow"])
+def test_saved_v1_extra_spots_and_culverin_still_start(database, narrow_catalogue):
     epoch, _ = seed_recovery(
         database,
         (
@@ -602,11 +603,12 @@ def test_saved_v1_extra_spots_and_culverin_still_start_with_a_narrower_catalogue
     )
     admin = ScratchRecoveryAdmin(database)
     app = create_app(settings, verifier, admin, weather_source=FakeWeather(CALM))
-    # Retired flag names no longer disable runtime offers. Narrow this synthetic server
-    # catalogue explicitly to retain coverage for saved defenses removed from future offers.
+    # Retired flag names no longer disable runtime offers. Narrow the catalogue explicitly
+    # for the case where a saved defense is removed from future offers.
     assert app.state.island.more_tower_spots is True
     assert any(kind.kind == "culverin" for kind in app.state.island.kinds)
-    app.state.island = load_island()
+    if narrow_catalogue:
+        app.state.island = load_island()
     owner_balance = balance(database, OWNER)
 
     with TestClient(app) as client:
@@ -647,7 +649,7 @@ def test_saved_v1_extra_spots_and_culverin_still_start_with_a_narrower_catalogue
             "cannon_11",
         }
         assert island_spots["cannon_11"]["kind"] == "culverin"
-        assert "culverin" in island_spots["cannon_7"]["kinds"]
+        assert ("culverin" in island_spots["cannon_7"]["kinds"]) is not narrow_catalogue
         assert island_response.json()["unlocks"]["unlocked"]
         assert "culverin:5" in island_response.json()["unlocks"]["unlocked"]
         assert island_spots["cannon_11"]["upgradeCost"] == 160
@@ -684,7 +686,7 @@ def test_saved_v1_extra_spots_and_culverin_still_start_with_a_narrower_catalogue
         )
         assert repaired_culverin["hpUnits"] == 1_000_000
 
-        occupied_plot_build = client.post(
+        unavailable_plot_build = client.post(
             "/api/island/build",
             headers=HEADERS["owner"],
             json={"spot": "cannon_9", "kind": "cannon", "actionUid": "gated-new-spot-01"},
@@ -692,13 +694,21 @@ def test_saved_v1_extra_spots_and_culverin_still_start_with_a_narrower_catalogue
         wrong_kind_build = client.post(
             "/api/island/build",
             headers=HEADERS["owner"],
-            json={"spot": "cannon_7", "kind": "wall", "actionUid": "wrong-kind-build-01"},
+            json={
+                "spot": "cannon_7",
+                "kind": "culverin" if narrow_catalogue else "wall",
+                "actionUid": "wrong-kind-build-01",
+            },
         )
 
-    assert occupied_plot_build.status_code == 409
-    assert occupied_plot_build.json()["error"]["code"] == "spot_taken"
+    if narrow_catalogue:
+        assert unavailable_plot_build.status_code == 404
+    else:
+        assert unavailable_plot_build.status_code == 409
+        assert unavailable_plot_build.json()["error"]["code"] == "spot_taken"
     assert wrong_kind_build.status_code == 422
-    assert wrong_kind_build.json()["error"]["code"] == "wrong_kind"
+    if not narrow_catalogue:
+        assert wrong_kind_build.json()["error"]["code"] == "wrong_kind"
     assert balance(database, OWNER) == owner_balance
     assert database.execute(
         "select count(*) from public.islet_buildings where player_id=%s", (OWNER,)
@@ -718,11 +728,15 @@ def test_saved_v1_extra_spots_and_culverin_still_start_with_a_narrower_catalogue
     assert {item["id"] for item in snapshot["createWave"]["defenses"]} >= set(by_spot)
 
 
-def test_saved_v1_culverin_between_wave_repair_and_unoffered_plot_remain_compatible(database):
+@pytest.mark.parametrize("narrow_catalogue", [False, True], ids=["standard", "narrow"])
+def test_saved_v1_culverin_between_wave_repair_with_an_unavailable_plot(database, narrow_catalogue):
     epoch, _ = seed_recovery(database, (("cannon_8", "culverin"),))
     as_server(database)
-    # Culverins open at wave 15, and cannon_9 opens at wave 20.
-    database.execute("update public.islands set wave_best=15 where player_id=%s", (OWNER,))
+    # At wave 15 the standard catalogue offers cannon_9, but building there is locked until 20.
+    database.execute(
+        "update public.islands set wave_best=%s where player_id=%s",
+        (40 if narrow_catalogue else 15, OWNER),
+    )
     settings = replace(CONFIGURED_SETTINGS, flags=parse_flags("islands"))
 
     def login(request: httpx.Request) -> httpx.Response:
@@ -736,11 +750,10 @@ def test_saved_v1_culverin_between_wave_repair_and_unoffered_plot_remain_compati
     verifier = PlayerVerifier(settings, transport=httpx.MockTransport(login), clock=FakeClock())
     admin = ScratchRecoveryAdmin(database)
     app = create_app(settings, verifier, admin, weather_source=FakeWeather(CALM))
-    # Retired flag names no longer disable runtime offers. Narrow this synthetic server
-    # catalogue explicitly to retain coverage for saved defenses removed from future offers.
     assert app.state.island.more_tower_spots is True
     assert any(kind.kind == "culverin" for kind in app.state.island.kinds)
-    app.state.island = load_island()
+    if narrow_catalogue:
+        app.state.island = load_island()
     owner_balance = balance(database, OWNER)
     member_balance = balance(database, MEMBER)
 
@@ -749,8 +762,11 @@ def test_saved_v1_culverin_between_wave_repair_and_unoffered_plot_remain_compati
         assert island_response.status_code == 200, island_response.text
         spots = {item["id"]: item for item in island_response.json()["spots"]}
         assert spots["cannon_8"]["kind"] == "culverin"
-        assert not spots["cannon_9"]["built"]
-        assert "culverin" in spots["cannon_9"]["kinds"]
+        if narrow_catalogue:
+            assert "cannon_9" not in spots
+        else:
+            assert not spots["cannon_9"]["built"]
+            assert "culverin" in spots["cannon_9"]["kinds"]
         assert "culverin:1" in island_response.json()["unlocks"]["unlocked"]
 
         state_response = client.get(
@@ -783,10 +799,13 @@ def test_saved_v1_culverin_between_wave_repair_and_unoffered_plot_remain_compati
             json={"spot": "cannon_9", "kind": "cannon", "actionUid": "empty-gated-plot-01"},
         )
 
-    assert empty_plot_build.status_code == 409
-    assert empty_plot_build.json()["error"] == {
-        "code": "locked", "message": "Opens after wave 20."
-    }
+    if narrow_catalogue:
+        assert empty_plot_build.status_code == 404
+    else:
+        assert empty_plot_build.status_code == 409
+        assert empty_plot_build.json()["error"] == {
+            "code": "locked", "message": "Opens after wave 20."
+        }
     assert balance(database, OWNER) == owner_balance
     assert balance(database, MEMBER) == member_balance - 80
     assert database.execute(
