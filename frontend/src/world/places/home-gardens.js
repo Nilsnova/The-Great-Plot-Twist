@@ -84,11 +84,11 @@ function packGardenArt(sources) {
 }
 
 export function createHomeGardens(root, art) {
-  if (typeof document === 'undefined') return;
+  if (typeof document === 'undefined') return [];
   const sources = ART.map(id => art[id]?.map?.image);
-  if (sources.some(source => !source?.width || !source?.height)) return;
+  if (sources.some(source => !source?.width || !source?.height)) return [];
   const packed = packGardenArt(sources);
-  if (!packed) return;
+  if (!packed) return [];
 
   const plants = BEDS.flatMap(([x, z, side, scale, understory]) => [
     {id: 'shrub', x, z, scale},
@@ -128,4 +128,6 @@ export function createHomeGardens(root, art) {
     previousDepth = depth;
   };
   root.add(mesh);
+  return BEDS.map(([x, z, , scale]) => ({x, z, width: scale * .68, depth: scale * .45,
+    reach: scale * .47, opacity: .59}));
 }

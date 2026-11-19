@@ -60,12 +60,13 @@ export async function createSettlement(ctx) {
     if (id === 'home_islet') {
       createHomeRelief(group, ground.material.map);
       createHomeTerraces(group, ground.material.map, art);
-      createHomeGardens(group, art);
+      const bedShadows = createHomeGardens(group, art);
       prepareHomeFoliage(art, selectedCanopy.preserveMask);
-      createGroundShadows(group, trees.map(([x, z], i) => ({
+      const treeShadows = trees.map(([x, z], i) => ({
         x, z: z + .12, width: [.93, .85, .88][i % 3], depth: .68,
         reach: [2.04, 2.32, 1.88][i % 3], canopy: true, opacity: .87,
-      })));
+      }));
+      createGroundShadows(group, [...treeShadows, ...bedShadows]);
     }
     let lanternLight;
     placements.forEach(item => {

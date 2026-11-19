@@ -31,7 +31,7 @@ export function texturedWallBatches(links, posts, art, {selectedId = null, selec
     for (const [x, y, groundX, groundZ] of points) {
       layer.positions.push(x, y, 0);
       layer.ground.push(groundX, groundZ);
-      layer.colors.push(shade, shade, shade);
+      layer.colors.push(shade, shade * .982, shade * .939);
     }
     const u0 = (frame.x + .5) / art.width, u1 = (frame.x + frame.w - .5) / art.width;
     const base = 1 - (frame.y + frame.h - .5) / art.height;
@@ -60,14 +60,14 @@ export function texturedWallBatches(links, posts, art, {selectedId = null, selec
       const id = wallSurfaceFrame(link.level, name);
       const inset = link.level === 2 ? PALE_STONE_BASE_INSET[name] : 0;
       const strip = (low, high) => [low[start], low[end], high[end], high[start]];
-      quad(layer, strip(foot, shoulder), id, shade * .62, [inset, .32]);
+      quad(layer, strip(foot, shoulder), id, shade * .61, [inset, .32]);
       quad(layer, strip(shoulder, lip), id, shade, [.32, 1]);
-      quad(layer, strip(lip, crown), wallSurfaceFrame(link.level, 'top'), shade * .86);
+      quad(layer, strip(lip, crown), wallSurfaceFrame(link.level, 'top'), shade * .92);
     }
     // The positive X and Z faces are camera-facing under the village projection.
-    if (!vertical || showEnd) side(3, 2, 'front', .86);
-    if (vertical || showEnd) side(1, 2, 'side', .69);
-    quad(layer, crown, wallSurfaceFrame(link.level, 'top'), .96);
+    if (!vertical || showEnd) side(3, 2, 'front', .94);
+    if (vertical || showEnd) side(1, 2, 'side', .74);
+    quad(layer, crown, wallSurfaceFrame(link.level, 'top'), 1.09);
   }
   const byId = new Map(posts.map(post => [post.id, post]));
   for (const link of links) {
@@ -109,7 +109,7 @@ export function texturedWallBatches(links, posts, art, {selectedId = null, selec
       const height = HEIGHTS[post.level - 1];
       quad(layer, [[post.x-CROWN_HALF,post.z-CROWN_HALF],[post.x+CROWN_HALF,post.z-CROWN_HALF],
         [post.x+CROWN_HALF,post.z+CROWN_HALF],[post.x-CROWN_HALF,post.z+CROWN_HALF]]
-        .map(([x,z]) => {const point=projectPoint(x,z);return [point.x,point.y+height+.02,x,z];}), wallSurfaceFrame(post.level,'top'));
+        .map(([x,z]) => {const point=projectPoint(x,z);return [point.x,point.y+height+.02,x,z];}), wallSurfaceFrame(post.level,'top'), 1.09);
       continue;
     }
     // Damage and selection never enlarge a post. Scale around its source foot,
