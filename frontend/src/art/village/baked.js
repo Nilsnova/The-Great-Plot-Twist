@@ -1,7 +1,7 @@
 // Generated from approved raw families; lossless PNG transport optimization changes no frame coordinates.
 export const sheets = {
   "buildingsBaked1": {"file":"village/compiled/buildings-4x-1-4d1d3b5b74a0.png","width":392,"height":392},
-  "housesBaked1": {"file":"village/compiled/houses-4x-1-749130c563bf.png","width":984,"height":1408},
+  "housesBaked1": {"file":"village/compiled/houses-4x-1-edc6d4aa9c8c.png","width":984,"height":1408},
   "landmarksBaked1": {"file":"village/compiled/landmarks-4x-1-724da3f9da87.png","width":1024,"height":520},
   "servicesBaked1": {"file":"village/compiled/services-4x-1-7a3d2f9b5d5b.png","width":720,"height":920},
   "natureBaked1": {"file":"village/compiled/nature-4x-1-237071b5ed40.png","width":984,"height":880},
