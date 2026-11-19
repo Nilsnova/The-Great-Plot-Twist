@@ -482,6 +482,11 @@ export function createHomeRelief(group, coastArt) {
         stone = mix(stone, stone * vec3(1.19, 1.09, 1.02), cap);
         float overhang = (1.0 - smoothstep(.001, .082, depth)) * vShoreCut.z;
         stone *= 1.0 - overhang * .19;
+        // Sand reflects warm daylight into recessed joints. Keep the turf overhang and wet toe dark.
+        float reflected = smoothstep(.055, .23, depth) * (1.0 - smoothstep(.72, .96, depth));
+        float recess = 1.0 - smoothstep(.11, .35, dot(vStone, vec3(.30, .58, .12)));
+        float dust = reflected * recess * (.83 + .19 * rockGrain + .27 * grainBreak);
+        stone += dust * vec3(.127, .080, .046);
         float moss = smoothstep(.62, .84, rockGrain + grainBreak * .7)
           * (1.0 - smoothstep(.04, .26, depth)) * .52;
         stone = mix(stone, stone * vec3(.82, 1.05, .67), moss);
