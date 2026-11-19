@@ -8,6 +8,7 @@ import {surfaceClass} from '../world/places/surfaces.js';
 import {isCapstone, readBonus, readSpec} from '../campaign/tech.js';
 import {readTree} from '../pirates/tower-trees.js';
 import {EXTRA_SPOT_TABLE, offeredExtra} from './extra-spots.js';
+import {WALL_PERIMETER_DEFAULTS} from './wall-perimeter.js';
 
 export const ISLAND_PLACE = 'home_islet';
 export const KINDS = Object.freeze({
@@ -110,7 +111,9 @@ export function placedSpot(id, spots = []) {
   const where = spotById(id);
   if (!where) return null;
   const sent = Array.isArray(spots) ? spots.find(item => item?.id === where.id) : null;
-  return Number.isFinite(sent?.x) && Number.isFinite(sent?.z) ? {...where, x: sent.x, z: sent.z} : where;
+  if (Number.isFinite(sent?.x) && Number.isFinite(sent?.z)) return {...where, x: sent.x, z: sent.z};
+  const emptyWall = sent?.built === false ? WALL_PERIMETER_DEFAULTS[where.id] : null;
+  return emptyWall ? {...where, ...emptyWall} : where;
 }
 // The interaction zones of the island, in the shape of registry.js: walk up and press E (or tap Inspect).
 // spots: the answer's spots, so a moved building is reached where it stands now.
