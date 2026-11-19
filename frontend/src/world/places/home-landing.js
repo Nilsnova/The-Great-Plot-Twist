@@ -121,17 +121,17 @@ export function createHomeLanding(group) {
   mount('home-timber-landing', 6);
 
   const stageStart = far + .02, stageStep = .32, stagePlanks = 18;
-  const stageEnd = stageStart + stageStep * stagePlanks;
+  const stageEnd = stageStart + stageStep * stagePlanks, elbow = stageStart + 2.9;
   const stageCenter = z => {
-    const along = z - stageStart;
     // Swing clear of the tender, then follow its berth toward the water.
-    return center(far) - Math.min(along, 2.9) * 1.41 - Math.max(0, along - 2.9) * .23;
+    return center(far) - (Math.min(z, elbow) - stageStart) * 1.41 - Math.max(0, z - elbow) * .23;
   };
   const deckTop = () => .275, deckBottom = () => .045;
   // A short right berth projects beside the gangway. The main deck runs along the skiff.
   for (const offset of [-1.14, .91]) {
-    timber(offset - .105, offset + .105, stageStart, stageEnd + .03, () => -.22, deckBottom,
-      longGrain, endGrain, stageCenter);
+    for (const [from, to] of [[stageStart, elbow], [elbow, stageEnd + .03]]) {
+      timber(offset - .105, offset + .105, from, to, () => -.22, deckBottom, longGrain, endGrain, stageCenter);
+    }
   }
   for (let i = 0; i < stagePlanks; i++) {
     const from = stageStart + stageStep * i, to = from + stageStep - .022;
