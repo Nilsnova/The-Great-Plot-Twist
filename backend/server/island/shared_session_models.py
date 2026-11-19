@@ -219,6 +219,16 @@ class FrozenParticipant(BaseModel):
     captain: FrozenCaptain
 
 
+class InitialCaptainFacts(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+    x: StrictFloat = Field(ge=0, le=0, allow_inf_nan=False)
+    z: StrictFloat = Field(ge=0, le=0, allow_inf_nan=False)
+    hpUnits: StrictInt = Field(ge=1_000_000, le=1_000_000)
+    downAtTick: None
+    fallId: None
+    reviveBasisSeq: StrictInt = Field(ge=0, le=0)
+
+
 class NativeWave(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
     status: Literal["started"]
@@ -288,6 +298,11 @@ class NativeWave(BaseModel):
         ):
             raise ValueError("Frozen participant identities must be canonical.")
         tokens = [row.participantToken for row in frozen]
+        initial = snapshot.get("captainInitialState")
+        if not isinstance(initial, dict) or set(initial) != {str(token) for token in tokens}:
+            raise ValueError("Initial Captain state must cover exactly the frozen roster.")
+        for fact in initial.values():
+            InitialCaptainFacts.model_validate(fact)
         if len(set(tokens)) != len(tokens) or snapshot.get("rosterSize") != len(tokens):
             raise ValueError("Invalid frozen participant roster.")
         if self.islandOwner != origin.islandOwner:

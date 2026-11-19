@@ -78,6 +78,11 @@ def wave():
             islandEpoch=EPOCH,
             weatherLabel="Calm",
             createWave={"boss": False},
+            captainInitialState={
+                TOKEN: dict(
+                    x=0, z=0, hpUnits=1000000, downAtTick=None, fallId=None, reviveBasisSeq=0
+                )
+            },
             recoveryVersion=1,
             waveProtocol=2,
             wave=1,
@@ -595,3 +600,28 @@ def test_unknown_attach_generation_accepts_the_positive_retained_server_successo
     reply["session"]["connectionGeneration"] = "2"
     answer = asyncio.run(api.session_call(Admin([reply]), ACTOR, "attach", body))
     assert answer["session"]["connectionGeneration"] == "2"
+
+
+@pytest.mark.parametrize(
+    "change",
+    ["missing_map", "extra_token", "missing_token", "position", "hp", "basis", "extra_fact"],
+)
+def test_native_snapshot_initial_captain_facts_are_exact_and_cover_frozen_tokens(change):
+    value = wave()
+    states = value["initialSnapshot"]["captainInitialState"]
+    if change == "missing_map":
+        value["initialSnapshot"].pop("captainInitialState")
+    elif change == "extra_token":
+        states[OWNER] = deepcopy(states[TOKEN])
+    elif change == "missing_token":
+        states.clear()
+    elif change == "position":
+        states[TOKEN]["x"] = 3
+    elif change == "hp":
+        states[TOKEN]["hpUnits"] = 999999
+    elif change == "basis":
+        states[TOKEN]["reviveBasisSeq"] = 1
+    else:
+        states[TOKEN]["actorId"] = ACTOR
+    with pytest.raises(ValidationError):
+        NativeWave.model_validate(value)

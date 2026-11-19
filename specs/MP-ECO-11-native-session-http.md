@@ -106,3 +106,20 @@ proof fencing. The combined adapter/PostgreSQL selection passes **70 cases in
 11.71s**. Legacy progression and shortened trusted test timings are explicit
 seeds; authentication and browser behavior are not claimed by this database
 composition. The full migration chain is applied twice to Unix-socket PostgreSQL.
+
+The immutable snapshot now requires `captainInitialState` beside its unchanged
+two-field participants. Keys exactly match the opaque frozen roster tokens;
+each value is exactly `{x:0,z:0,hpUnits:1000000,downAtTick:null,fallId:null,
+reviveBasisSeq:0}`. Seven malformed initial-map cases failed before validation.
+Native replay can therefore seed the same actual canonical initial facts for
+all Captains before applying the journal.
+
+An actual idle-held-copy disconnect/grace case independently failed before the
+canonical withdrawal hook fixed idle stock handling. It now passes through the
+real worker without a wave, read or new bell. The combined selection passes
+**135 cases in 16.94s**, including **nine committed-RPC PostgreSQL cases** and
+strict HTTP/model fixtures. Trusted shortened catalogue timings are explicit;
+countdown zero is selected through the actual persisted settings API. All **102
+unique migrations parse** and the disposable fixture applies the full chain
+twice. Full backend Ruff and complete diff checks pass. These are local domain
+and transport checks, with no hosted application or authenticated browser claim.

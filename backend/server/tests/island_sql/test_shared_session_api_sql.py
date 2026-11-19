@@ -24,7 +24,7 @@ from server.errors import ApiError  # noqa: E402
 from server.island import shared_arsenal_requests  # noqa: E402
 from server.island import shared_session_api as api  # noqa: E402
 from server.island.catalogue import Weather, load_island  # noqa: E402
-from server.island.shared_session_models import CaptainReport, SessionAttach  # noqa: E402
+from server.island.shared_session_models import CaptainReport, SessionAttach, SessionSettings  # noqa: E402
 from server.island.shared_wave_http import SharedWaveProof  # noqa: E402
 from server.island.wave_recovery import RecoveryInput  # noqa: E402
 from server.tests.case_sql.conftest import scratch_server as scratch_server  # noqa: E402
@@ -108,6 +108,14 @@ def room(connection, *, maximum_seconds=900):
         )
         result = asyncio.run(api.session_call(admin, str(actor), "attach", body, catalogue))
         assert result["session"]["connectionGeneration"] == "1"
+    settings = SessionSettings(
+        economy=intent,
+        sessionId=sessions[owner],
+        connectionGeneration="1",
+        actionUid=uuid4().hex,
+        countdownSeconds=0,
+    )
+    asyncio.run(api.session_call(admin, str(owner), "settings", settings))
     return admin, catalogue, owner, member, outsider, treasury, intent, sessions
 
 
@@ -613,3 +621,45 @@ def test_real_released_controller_unknown_generation_preserves_counter_and_histo
     )
     assert stale["session"]["isSpectator"] is True and stale["session"]["sessionId"] is None
     assert fresh["session"]["isController"] is True
+
+
+def test_real_idle_disconnect_grace_returns_copy_without_a_read_or_new_wave(database):
+    prepared = room(database)
+    admin, catalogue, owner, _, _, treasury, intent, sessions = prepared
+    bought = asyncio.run(
+        shared_arsenal_requests.request_change(
+            admin,
+            catalogue,
+            str(owner),
+            str(owner),
+            keys(treasury)[1],
+            "copy_buy_001",
+            "buy",
+            weapon="pistols",
+        )
+    )
+    copy = bought["receipt"]["result"]["copyId"]
+    proof = SharedWaveProof(economy=intent, sessionId=sessions[owner], connectionGeneration="1")
+    disconnected = asyncio.run(api.session_call(admin, str(owner), "disconnect", proof))
+    assert disconnected["session"]["graceUntil"] is not None
+    as_owner(database)
+    assert database.execute(
+        "select holder::text from public.arsenal_copies where id=%s", (copy,)
+    ).fetchone() == (str(owner),)
+    database.execute(
+        "update public.shared_session_controls "
+        "set grace_until=clock_timestamp()-interval '1 second' where player_id=%s",
+        (owner,),
+    )
+    database.commit()
+    asyncio.run(admin.call_function("shared_session_process_due", {"p_limit": 20}))
+    as_owner(database)
+    assert database.execute(
+        "select holder,trunc(holder_generation)::text,pending_return_wave_id "
+        "from public.arsenal_copies where id=%s",
+        (copy,),
+    ).fetchone() == (None, "2", None)
+    assert database.execute(
+        "select count(*) from public.wave_runs where island_owner=%s", (owner,)
+    ).fetchone() == (0,)
+    reconciles(database, keys(treasury)[0])
