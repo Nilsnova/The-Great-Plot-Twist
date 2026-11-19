@@ -75,10 +75,11 @@ claiming that the whole actions module matches.
 
 The old core/session HTTP refusals retain their unchanged authority dependencies;
 role-free combat, revival, repair, wager and ship cases retain their stated
-sources and limits. **Role/respec UI and the first construction afterward require
-a new actual-provider browser observation on the served fix candidate.** The
-separately reported 29 Chromium DOM checks and build are not rerun here and do not
-replace that observation. The original stale-quote failure remains a failure.
+sources and limits. Role/respec UI and the first construction afterward required
+a separate actual-provider observation. The [Engineer first-purchase proof](../MP-ECO-20-engineer-first-buy/README.md)
+now records that observation for both the owner and invited visitor. Its 29
+Chromium DOM checks and build remain separate evidence, rather than substitutes
+for the actual browser result. The original stale-quote failure remains a failure.
 
 The final actor-guard follow-up,
 `9c25ec4b08f30ba08b89cb84e362bdbd8e942754`, adds exactly two `current()`
