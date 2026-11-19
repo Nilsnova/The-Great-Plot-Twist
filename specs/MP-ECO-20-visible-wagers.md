@@ -31,8 +31,16 @@ source/helper/factory/config hashes and independent committed-state observations
 An ordinary reload during waiting can bridge real SDK/session restoration, and
 the member Settings view can show that spending rights do not confer reset rights.
 
-Use one allocated browser pair only, no extra contexts. Existing development
+Use two independent browser processes for the market case. Existing development
 inspection may select a card, but money/reset actions use visible native inputs
 and physically hit-tested buttons. This does not claim natural prices, all
 counterexamples in UI, or the entire #505 matrix. No product rule, hosted service,
-migration, deployment or activation changes. Local English commits only.
+migration, deployment or activation changes.
+
+The separate one-browser Match observation uses an explicit saved record 7 before
+fresh admission and opens the normal football card. The actual unavailable source
+must yield no choices or stake confirmation and leave shared and personal history
+unchanged. It does not fabricate a football result.
+
+Actual staged results, the real source-age retry, source boundaries and retained
+failed attempts are recorded in the [evidence](../docs/evidence/MP-ECO-20-visible-wagers/README.md).
