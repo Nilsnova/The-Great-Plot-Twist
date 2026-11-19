@@ -80,10 +80,10 @@ POST /api/waves/finish  {"waveId": "6f1c...", "survived": true, "shipsSunk": 7,
     sunk) and "finisher" (a boss finisher was won) add 20 + 4 x n and 15 + 3 x n to the base of a
     won wave n (content/wave_events.json), only on an island wave whose seed brings the galleon or
     on a boss wave; any other bonus is dropped, never refused.
-    rescued (optional, T38/D044, default false): a won last-chance rescue. With the flag "rescue"
-    on, a lost island wave from wave 4 to 100 then falls back to the best wave minus 1 instead of
-    minus 2 (island/rescue.py); anywhere else it is ignored, never refused. Loot, best wave and
-    flags never change because of it; the first finish that closes the wave decides, once.
+    rescued (optional, T38/D044, default false): a won last-chance rescue. A lost island wave
+    from wave 4 to 100 then falls back to the best wave minus 1 instead of minus 2
+    (island/rescue.py); anywhere else it is ignored, never refused. Loot, best wave and flags
+    never change because of it; the first finish that closes the wave decides, once.
     walls (optional, decision D039, proposed; ignored while the flag wall_recovery is off):
     every wall's health in percent (0 to 100) when the finishing player's simulation ended the
     wave. The first finish of an island wave keeps them (island_walls_record()); later
@@ -161,7 +161,7 @@ from server.island.waves import WaveStart
 from server.lock.place import place_from_headers
 from server.routes.island import ACTION_UID_PATTERN, IslandPlayerDep
 from server.routes.weather import WeatherRulesDep, WeatherSourceDep
-from server.settings import Settings, SettingsDep
+from server.settings import SettingsDep
 from server.supabase_admin import AdminDep, SupabaseAdmin
 from server.weather.mapping import format_utc_time
 
@@ -223,7 +223,7 @@ class FinishRequest(BaseModel):
     shipsSunk: StrictInt = Field(ge=0, le=MAX_SHIPS_SUNK)
     # v3 waves: the treasure galleon sunk, a boss finisher won (paid only where the wave allows it).
     bonuses: list[Literal["galleon", "finisher"]] | None = Field(default=None, max_length=2)
-    # T38: a won last-chance rescue on a lost wave (counts only with the flag "rescue", rescue.py).
+    # T38: a won last-chance rescue on a lost wave (rescue.py).
     rescued: StrictBool = False
     # D039: the health of every wall when this player's simulation ended the wave (percent).
     walls: dict[WALL_SPOT, WALL_HEALTH] | None = Field(default=None, max_length=MAX_WALLS)
@@ -312,13 +312,8 @@ class FinishResponse(BaseModel):
     recovery: RecoveryFinishResponse | None = None
 
 
-async def start_walls(
-    admin: SupabaseAdmin, settings: Settings, wave: WaveStart
-) -> dict[str, int] | None:
-    """D039: the walls a wave starts with, only while the flag wall_recovery is on (it needs
-    the 20261114100000_wall_recovery.sql migration). Off: no "walls" in the answer at all."""
-    if not is_enabled("wall_recovery", settings.flags):
-        return None
+async def start_walls(admin: SupabaseAdmin, wave: WaveStart) -> dict[str, int] | None:
+    """D039: the walls a wave starts with (the flag wall_recovery is retired, always on)."""
     return await wall_repair.walls_for_wave(admin, wave)
 
 
@@ -399,12 +394,6 @@ async def post_start(
                 seed,
                 requested_rules,
             )
-            if template["createWave"].get("defensesV2"):
-                requested_rules = [
-                    name
-                    for name in wave_rules.SIM_RULES
-                    if name in requested_rules or name == "defenses_v2"
-                ]
     started = await waves.start_protocol2(
         admin,
         catalogue,
@@ -419,7 +408,7 @@ async def post_start(
         resolved=(place, owner),
         make_seed=lambda _limit: seed,
     )
-    walls = await start_walls(admin, settings, started)
+    walls = await start_walls(admin, started)
     return wave_out(started, walls, await wave_rules.rules_for_wave(admin, settings, started))
 
 
@@ -437,7 +426,7 @@ async def post_join(
         admin, catalogue, player.id, body.waveId, protocol=body.waveProtocol
     )
     require_protocol2(joined, body.waveProtocol)
-    walls = await start_walls(admin, settings, joined)
+    walls = await start_walls(admin, joined)
     return wave_out(joined, walls, await wave_rules.rules_for_wave(admin, settings, joined))
 
 
@@ -458,7 +447,7 @@ async def get_current(
     if running is None:
         return None
     require_protocol2(running, wave_protocol)
-    walls = await start_walls(admin, settings, running)
+    walls = await start_walls(admin, running)
     return wave_out(running, walls, await wave_rules.rules_for_wave(admin, settings, running))
 
 
@@ -487,7 +476,7 @@ async def post_finish(
             body.survived,
             body.shipsSunk,
             sorted(set(body.bonuses or [])),
-            rescued=body.rescued and is_enabled("rescue", settings.flags),
+            rescued=body.rescued,
             checkpoint=body.checkpoint.model_dump(mode="json", by_alias=True),
         )
         recovery_state = reply.get("recovery")
@@ -510,14 +499,13 @@ async def post_finish(
         body.survived,
         body.shipsSunk,
         sorted(set(body.bonuses or [])),
-        rescued=body.rescued and is_enabled("rescue", settings.flags),
+        rescued=body.rescued,
     )
     # D039: the first finish of an island wave keeps its walls' health for the next wave. The
     # finish above is already paid, so this is best effort: a failure is logged, never a 5xx.
     # The owner's rule (fix/playtest-1117): a finished wave leaves every wall of the island whole;
     # the first finish records them all at 100 % (clearing damage left from before the rule).
-    if is_enabled("wall_recovery", settings.flags):
-        await wall_repair.record_after_finish(admin, player.id, body.waveId, body.walls, whole=True)
+    await wall_repair.record_after_finish(admin, player.id, body.waveId, body.walls, whole=True)
     return FinishResponse(
         loot=finished.loot,
         coins=finished.coins,
