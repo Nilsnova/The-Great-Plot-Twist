@@ -22,6 +22,7 @@
 }
 .island-selection-title { font: 800 20px/1.2 var(--u-serif); }
 .island-selection-copy p { margin: 0; font: 14px/1.3 var(--u-font); }
+.island-selection-copy .island-selection-stats { flex: 0 0 100%; color: #f3deb2; font: 700 13px/1.35 var(--u-font); }
 .island-selection-identity { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 8px; }
 .island-selection-level { color: #f0d798; font-weight: 750; white-space: nowrap; }
 .island-selection-level::before {
@@ -46,17 +47,17 @@
   box-shadow: inset 0 1px #ffffff26, inset 0 -2px #091f2688, 0 2px 0 #061d25;
 }
 .island-selection-dock [data-focus="close"] { background: #153b45; }
-.island-selection-dock button:hover:not(:disabled):not([aria-pressed="true"]):not([data-focus="upgrade"]) { background: #315f67; }
+.island-selection-dock button:hover:not(:disabled):not([aria-pressed="true"]):not([data-focus="upgrade"]):not(.is-upgrade-entry) { background: #315f67; }
 .island-selection-dock button.kit-quiet[aria-pressed="true"] {
   background: #d9ece3; color: #133941; border-color: #b5d7cd;
   box-shadow: inset 0 1px #fff8, 0 2px 0 #061d25;
 }
-.island-selection-dock [data-focus="upgrade"]:enabled {
+.island-selection-dock [data-focus="upgrade"]:enabled, .island-selection-dock .is-upgrade-entry:enabled {
   background: linear-gradient(#ffe4a5, #f3bd58 72%, #e8aa46);
   color: #30210f; border-color: #ffdf95;
   box-shadow: inset 0 1px #fffae1, inset 0 -2px #9859216b, 0 2px 0 #694621;
 }
-.island-selection-dock [data-focus="upgrade"]:enabled:hover {
+.island-selection-dock [data-focus="upgrade"]:enabled:hover, .island-selection-dock .is-upgrade-entry:enabled:hover {
   background: linear-gradient(#ffefbb, #ffce72 76%, #efb552);
 }
 .island-selection-dock button:disabled {

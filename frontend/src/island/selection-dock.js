@@ -27,7 +27,7 @@ export function createSelectionDock({container, onClose, onDetails, loadPortrait
   const portrait = createBuildingPortrait({className: 'island-selection-portrait', loadPortrait});
   const copy = node('div', 'island-selection-copy'), title = node('strong', 'island-selection-title');
   const level = node('span', 'island-selection-level'), hp = node('p', 'island-selection-health');
-  const spec = node('span', 'island-selection-spec');
+  const spec = node('span', 'island-selection-spec'), stats = node('p', 'island-selection-stats');
   const identity = node('p', 'island-selection-identity'); identity.append(level, spec);
   const stats = node('dl', 'island-selection-stats');
   function statistic(icon) {
@@ -96,6 +96,8 @@ export function createSelectionDock({container, onClose, onDetails, loadPortrait
         showDamage(hasCurrentDamage ? 'Damage' : 'Base damage', hasCurrentDamage ? currentDamage : baseDamage);
       }
       title.textContent = model.title; level.textContent = `Level ${model.level}`;
+      stats.textContent = model.slot === 'tower' ? model.stats ?? '' : ''; stats.hidden = !stats.textContent;
+      details.classList.toggle('is-upgrade-entry', !!model.tree && model.mode === 'upgrade');
       const role = activeRole(model);
       spec.textContent = ROLES[role]?.name ?? SPECS[model.skills?.current]?.name ?? '';
       spec.hidden = !spec.textContent;

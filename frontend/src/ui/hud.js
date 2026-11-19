@@ -205,7 +205,8 @@ export function createHud(container, actions, {on = defaultOn, emit = defaultEmi
     return places[id]?.name ?? '';
   }
   function arrive(id) {
-    place = id;const name = placeName(id);chapter.textContent = name;
+    place = id;overlay.classList.toggle('hud-home', id === 'home_islet');
+    const name = placeName(id);chapter.textContent = name;measureHeader();
     if (overlay.classList.contains('exploring')) showBanner(name);
   }
   arrive(place);
