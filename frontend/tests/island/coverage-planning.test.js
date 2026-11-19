@@ -55,4 +55,25 @@ describe('approach coverage from village data', () => {
     expect(view({target: 'ships', needsLegacyWalls: true}).complete).toBe(true);
     expect(view({needsRecovery: true, recovery: {structures: [towerHealth]}}).complete).toBe(false);
   });
+
+  it('leaves ground gaps unknown until blocking tower health is confirmed without hiding sea gaps', () => {
+    const nonBlockers = [{id: 'tower_1', kind: 'watchtower', level: 1, built: true, x: 6, z: 6},
+      {id: 'house_1', kind: 'house', level: 1, built: true, x: 6, z: 12}];
+    const planning = {island: {...island, spots: [...island.spots, ...nonBlockers]}, needsRecovery: true};
+    const missing = {structures: [wallHealth]};
+    const outside = {x: 100, z: 0};
+    const statusAt = ({towers, complete}, target) => classifyApproach([{...outside, target}], towers, {complete})[0].status;
+
+    const ground = view({...planning, recovery: missing});
+    expect(ground.complete).toBe(false);
+    expect(statusAt(ground, 'boarders')).toBe('unknown');
+    const sea = view({...planning, recovery: missing, target: 'ships'});
+    expect(sea.complete).toBe(true);
+    expect(statusAt(sea, 'sailing-ships')).toBe('uncovered');
+    for (const hpUnits of [0, 1_000_000]) {
+      const confirmed = view({...planning, recovery: {structures: [wallHealth, {...towerHealth, hpUnits}]}});
+      expect(confirmed.complete).toBe(true);
+      expect(statusAt(confirmed, 'boarders')).toBe('uncovered');
+    }
+  });
 });

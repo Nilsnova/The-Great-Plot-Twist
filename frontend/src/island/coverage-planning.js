@@ -1,4 +1,5 @@
 import {campaignOf} from '../campaign/index.js';
+import {blocksAsTower} from '../pirates/tower-obstacles.js';
 import {prepareApproachTowers} from './coverage-model.js';
 import {nextWaveNumber} from './preparation-model.js';
 import {defenses} from './spots.js';
@@ -25,7 +26,8 @@ export function approachSnapshot({target, island, draft, recovery, needsRecovery
     statusById.set(defense.id, health ? (health.hp > 0 ? 'ready' : 'destroyed') : needsRecovery ? 'unknown' : 'ready');
     const legacy = wall ? legacyWalls?.get(defense.id)?.health : undefined;
     const legacyKnown = Number.isInteger(legacy) && legacy >= 0 && legacy <= 100;
-    if (wall && (needsRecovery && !health || needsLegacyWalls && !legacyKnown)) routesKnown = false;
+    const missingRecoveryObstacle = needsRecovery && !health && (wall || blocksAsTower(defense.kind));
+    if (missingRecoveryObstacle || (wall && needsLegacyWalls && !legacyKnown)) routesKnown = false;
     const moved = draft?.spotId === defense.id && draft.ok && !draft.message
       && Number.isFinite(draft.x) && Number.isFinite(draft.z);
     return {...defense, ...(moved ? {x: draft.x, z: draft.z} : {}), ...(legacyKnown ? {health: legacy} : {})};
