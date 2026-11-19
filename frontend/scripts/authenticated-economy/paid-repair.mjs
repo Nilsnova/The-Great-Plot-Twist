@@ -221,3 +221,65 @@ export async function runPaidRepairAcceptance({ownerPage,memberPage,observe,api,
   }
   return report;
 }
+
+/** Bounded regression for a real restored member: one repair, not the full three-use matrix. */
+export async function runReconnectedRepairAcceptance({ownerPage,memberPage,observe,api,outputDir,
+  reconnectMember,spots,sourceCommit=SOURCE}) {
+  const report={sourceCommit,status:'running',scenario:'actual-provider-reconnected-member-repair',steps:[],limits:[
+    'One genuine paid repair after an ordinary member reload; the full three-use provider matrix is separate.',
+    'Real temporary local provider identities and native simulation reports; no hosted service, injected HP or outcomes.',
+    'Development inspection selects cards; the bell and paid repair use hit-tested physical pointers.',
+  ],scenarioSha256:createHash('sha256').update(readFileSync(new URL(import.meta.url))).digest('hex')};
+  await mkdir(outputDir,{recursive:true});
+  try {
+    const origin=await ownerPage.evaluate(()=>window.__island.island.economy);
+    const memberBefore=await memberPage.evaluate(()=>window.__island.island.session.proof());
+    assert.ok(memberBefore,'the invited member begins with genuine current control');
+    assert.equal((await observe('select current_wave_id from public.island_recovery_state where island_owner=$1',[origin.islandOwner]))[0].current_wave_id,null);
+    await openCard(ownerPage,'island_bell');
+    await pointerClick(ownerPage,ownerPage.locator('.island-card[open] [data-focus="bell"]:not([disabled])'));
+    await ownerPage.waitForFunction(()=>!!window.__island?.waves?.island.wave,null,{timeout:20000});
+    const wave=await ownerPage.evaluate(()=>window.__island.waves.island.wave.info.waveId);
+    await memberPage.waitForFunction(wave=>window.__island?.waves?.island.wave?.info.waveId===wave,wave,{timeout:20000});
+    await reconnectMember(memberPage);
+    await memberPage.waitForFunction(wave=>{
+      const app=window.__island,info=app?.waves?.island.wave?.info,proof=app?.island.session.proof();
+      return info?.waveId===wave && info.spectator===false && !!proof && proof.sessionId===info.controlSessionId;
+    },wave,{timeout:30000});
+    const restored=await memberPage.evaluate(()=>{
+      const info=window.__island.waves.island.wave.info,proof=window.__island.island.session.proof();
+      return {actorId:proof.actorId,sessionId:proof.sessionId,connectionGeneration:proof.connectionGeneration,
+        waveId:info.waveId,spectator:info.spectator,controlSessionId:info.controlSessionId,participantToken:info.participantToken};
+    });
+    assert.equal(restored.actorId,memberBefore.actorId);
+    assert.equal(restored.sessionId,memberBefore.sessionId);
+    assert.ok(BigInt(restored.connectionGeneration)>BigInt(memberBefore.connectionGeneration));
+    assert.equal((await observe('select current_wave_id from public.island_recovery_state where island_owner=$1',[origin.islandOwner]))[0].current_wave_id,wave);
+    report.steps.push({name:'ordinary reload restores the existing frozen participant while the canonical wave remains active',restored});
+    const damaged=await memberPage.waitForFunction(spots=>window.__island?.waves?.island.recoveryCombatState?.structures
+      .find(row=>spots.includes(row.spot) && row.hpUnits<1000000)?.spot??null,spots,{timeout:90000});
+    const spot=await damaged.jsonValue(),damage=await damagedCard(memberPage,spot);
+    const before=await accounting(observe,origin.accountId,wave),paid=await paidClick(memberPage,spot);
+    assert.equal(paid.data.receipt.actorId,restored.actorId);assert.equal(paid.data.receipt.origin.accountId,origin.accountId);
+    assert.equal(paid.data.receipt.result.useOrdinal,1);assert.equal(paid.data.receipt.result.chargedPrice,String(damage.row.fixedPrice));
+    const after=await accounting(observe,origin.accountId,wave);
+    assert.equal(BigInt(after.balance),BigInt(before.balance)-BigInt(damage.row.fixedPrice));
+    assert.equal(after.committed,before.committed);assert.equal(after.receipts,before.receipts+1);assert.equal(after.used,1);
+    await Promise.all([repairApplied(memberPage,paid.data.receipt),repairApplied(ownerPage,paid.data.receipt)]);
+    report.steps.push({name:'restored member physically repairs natural damage once from the shared treasury',receipt:paid.data.receipt,before,after});
+    await memberPage.screenshot({path:join(outputDir,'reconnected-member-paid-repair.png')});
+    let closed=null;const until=Date.now()+180000;
+    while(Date.now()<until){const rows=await observe('select closed_at,closed_hp from public.recovery_wave_states where wave_id=$1',[wave]);
+      if(rows[0]?.closed_at){closed=rows[0];break;}await ownerPage.waitForTimeout(1000);}
+    assert.ok(closed,'the ordinary played wave must close canonically');
+    assert.ok(Object.values(closed.closed_hp).some(hp=>hp<1000000),'natural closed combat damage remains visible');
+    const terminal=[];
+    for(const page of [ownerPage,memberPage]){const read=await recovery(page);assert.equal(read.displayPhase,'between_waves');
+      assert.ok(read.structures.every(row=>row.hpUnits===1000000));terminal.push({remainingPaidUses:read.remainingPaidUses,structures:read.structures});}
+    assert.deepEqual((await observe('select closed_at,closed_hp from public.recovery_wave_states where wave_id=$1',[wave]))[0],closed);
+    report.steps.push({name:'both clients read full current HP while natural closed HP stays immutable',closed,terminal});
+    report.status='passed';
+  }catch(error){report.status='failed';report.error=error.message;throw error;}
+  finally{await writeFile(join(outputDir,'t60-reconnected-repair.json'),`${JSON.stringify(report,null,2)}\n`);}
+  return report;
+}
