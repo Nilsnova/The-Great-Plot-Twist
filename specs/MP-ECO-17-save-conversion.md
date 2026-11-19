@@ -4,9 +4,9 @@
 >
 > **Who uses it:** the MP-ECO economy, progression, inventory and release contributors and the teammate reviewing a conversion report.
 
-- **Status:** draft design; executable conversion waits for MP-ECO-01–16 and MP-ECO-22 integration. No production snapshot, migration, conversion or admission is performed here.
+- **Status:** executable offline auditor and populated disposable rehearsal implemented. No production collector, converter, snapshot, migration or admission is provided.
 - **Responsible teammate:** Ianno Hollensteiner (`Iannomh123456`).
-- **Branch:** `docs/mp-eco-17-conversion`.
+- **Branch:** `feat/mp-eco-conversion-rehearsal`.
 - **Issue:** [MP-ECO-17 #497](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/497), under [epic #492](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/492).
 - **Source baseline:** repository revision `a0edb550`. Schema/source findings below describe this checkout, not an inspected live database.
 
@@ -18,15 +18,15 @@ The safe initial strategy is to preserve existing personal wallets and obligatio
 
 ## Scope and dependencies
 
-This package delivers the source inventory, proposed mapping, report contract, conservation checks, blocked cases and rehearsal plan. It changes only this spec. It adds no API, migration, runtime writer, new wallet reason or database access tool. Future executable work must use the integrated MP-ECO-01/02 account and transaction primitives rather than creating a second treasury implementation.
+This package provides the historical source inventory below, a strict offline snapshot/policy schema, an executable deterministic preview, conservation checks and populated disposable PostgreSQL rehearsal tests. It adds no API, production collector/converter, migration, runtime writer, wallet reason or live database command. The test composition uses the integrated MP-ECO-01/02 account and transaction primitives rather than a second treasury implementation. Actual rollout and populated production exports remain separate work.
 
 MP-ECO-01 defines semantic versions and action origins; 02 owns treasury/admission primitives; 03 preserves wave and personal-claim receipts; 04/05 own shared purchases and refunds; 07 owns Captain entitlements and Engineer commitments; 09/10 own copies and holder deletion; 11 owns admission/active-wave boundaries; 13 owns retired effects; 14/15 own bets and ship rewards; 16 owns reset/owner deletion; 22 supplies the selected owner-reset recovery behavior. MP-ECO-20/21 own authenticated acceptance, release ordering and any separately approved live operation.
 
 The agreed shared response envelope is supplied by MP-ECO-01, not redefined here: `economy` identifies mode `island_shared`, version `1`, `islandOwner`, UUID `accountId`, UUID `runEpoch`, decimal-string `revision`, and `treasury` decimal strings `balanceCoins`, `committedCoins`, `availableCoins`. Balance includes held principal; `availableCoins = balanceCoins - committedCoins`. An account/epoch is fixed for one run. Reset creates new identities; pausing admission/offers does not restore legacy accounting. Missing-table/read failures never mean legacy mode.
 
-## Source inventory and disposition
+## Historical source inventory and required disposition
 
-Use the latest definition in the complete migration chain, not only the first schema comment. The following are the source families a snapshot/report must cover; unknown money-bearing or asset-bearing origins block the affected conversion.
+The following inventory records the earlier `a0edb550` source audit. Integrated main `3bdd8eda` now contains the account, personal-profile, copy, original-obligation and deletion foundations; the executable rehearsal described below uses those current implementations. Always use the latest definition in the complete migration chain. Unknown money-bearing or asset-bearing origins block the affected conversion. A caller-provided family tag is not proof that a production database was fully inventoried.
 
 | Source | Current origin and identity | Proposed disposition |
 |---|---|---|
@@ -206,7 +206,10 @@ Block admission if the implementation cannot preserve continuing-island weapons/
 | Owner resets after admission, or a flag is disabled later | New reset account/epoch receives only its authorized starting grant. Old operations retain their origins; no legacy payout fallback, replayed admission grant or resurrected asset snapshot. |
 | Members demolish defenses and lose every available coin | Apply the chosen owner-reset recovery rule. Valid pending payouts/available ship rewards and ordinary free attempts remain usable; no migration bailout or private funds import is created. |
 
-## Done when
+## Original design checklist
+
+This checklist records the earlier design increment. The executable deliverable,
+its checks and the remaining production-only gates are described below.
 
 For this design contribution:
 
@@ -221,8 +224,119 @@ For executable conversion in a later implementation contribution:
 - [ ] Approved opening, personal-point/retirement, refund, inventory and deletion maps are bound to the report/receipt. Identity sets and cash/obligation/entitlement invariants pass before and after rehearsal.
 - [ ] Reconciliation and pause/recovery evidence is reviewed under MP-ECO-20/21. Exact future test commands are recorded with that implementation; no tests or live checks are claimed merely because they are planned here.
 
-## Contracts and verification status
+## Historical design verification
 
 This design adds no current public or database contract. It consumes the MP-ECO-01 economy envelope and proposes only an internal offline snapshot/report and admission-manifest contract for later review. Future implementation updates its route/migration comments, INTERFACES and database policy matrix in the task that owns those changes. `island_economy_state`, account identities, treasury mutation functions and shared code remain owned by 01/02 and are not edited here.
 
 **Verified:** source inventory at `a0edb550`, all 24 local link targets, all 33 wallet reasons, the illustrative JSON/private-cash equality and staged diff whitespace. **Not verified:** integrated foundation commits, live data, applied schema, live cleanup behavior, actual conversion, authenticated clients, balance or rollout; no app tests are needed for this documentation-only contribution. **Remaining:** product mappings, integrated prerequisites, executable audit/rehearsal and independent human review. **Reviewer:** a different human teammate, not assigned by this draft. **Last updated:** 2026-11-18.
+
+## Executable offline preview and disposable rehearsal
+
+The new command reads two local JSON files and writes a JSON report to stdout:
+
+```sh
+cd backend
+uv run --no-sync python -m tools.economy.conversion \
+  ../docs/evidence/MP-ECO-17/synthetic-snapshot.json \
+  ../docs/evidence/MP-ECO-17/synthetic-policy.json
+```
+
+The committed example is entirely synthetic. Its 200-coin grant is a fixture choice,
+not the selected production opening policy. There is no default opening grant. The
+strict policy requires its own identity, review reference, distinct declared reviewers,
+selected cohort, exact opening grant, point interval/cost mapping and preservation
+dispositions. A missing field produces a blocking finding identifying that field.
+The program cannot authenticate a review reference or authorize a live operation.
+
+`conversion_models.py` defines the strict input schema. Money and ledger deltas are
+canonical decimal strings. The snapshot includes personal wallets/ledger/timber,
+acquired Captain level and personal point source, retired IDs and pending Engineer
+generation/assignment, every building instance/actual payment/layout, all four crew
+counts, research/wreck progress, every stored/carried copy with its origin/tenure,
+residual personal weapons/equipped value, original accounts/ledgers and old obligations.
+Unknown fields, kinds, reasons, missing source families and unresolved origins fail
+closed. The command rejects duplicate JSON keys and non-JSON numeric constants.
+
+`snapshotSha256`, `policySha256` and `manifestSha256` bind the checked facts and
+decisions. Keyed source row collections, nested copies/buildings/payments/ledgers and
+membership/wave identity sets are sorted canonically. Saved skill and personal-weapon
+array values retain their stored order. `--expected-snapshot` and `--expected-policy`
+refuse changed reviewed inputs. Reports contain `coverageClaim: supplied_facts_only`:
+they validate the supplied records and never claim that a live database was collected.
+
+An eligible report has `status: ready_for_rehearsal`, separate unchanged personal,
+asset/account/obligation facts, and per-island proposed grants/refund bases/copy IDs.
+For already shared islands it proposes no new grant. A blocked report produces no
+applicable island plan. Canonicalizing an input never mutates its saved values.
+
+The auditor checks wallet/treasury reconciliation and uniqueness, actual-cost levels,
+normal earned/spent/unspent points from personal wins, all copy identities/holders,
+and the original account/epoch or personal recipient of every obligation. Its proposal
+never pools personal balances, refunds paid skills, replaces retired identifiers,
+creates compensation, deletes overflow or treats held principal as new money.
+
+Residual `weapons_owned`/equipped entries are detected from those actual saved fields;
+same-type copies are not evidence that an old source was already converted. Such
+records remain blocked with `unmapped_weapon`. Missing/previously-refunded actual
+payment basis and unknown source kinds likewise remain blocked. A legacy ship claim
+on an affected island preserves its original paid reference and record, but blocks
+with `ship_cap_mapping_required` until its reviewed cap-transition mapping exists.
+The program does not guess that mapping or reopen a paid reward.
+
+### What the populated SQL rehearsal executes
+
+`server/tests/conversion_rehearsal_helpers.py` is explicitly **TEST ONLY** and refuses
+non-Unix-socket connections. It is imported by tests, never a production route/tool.
+The existing disposable fixture installs the complete migration chain twice. The
+case populates two legacy islands and an old shared run, actual wallets/ledger rows,
+an acquired Captain baseline with retired `quick_fix`, a pending Engineer generation,
+retired Carpenter/Mason Drill state, moved building/layout and an actual 90-coin
+payment, 20 stored plus two carried copies, and a real held stake in a retired account.
+
+Inside one outer transaction the rehearsal acquires the existing signed scope locks,
+checks its immutable private test receipt before stale-source checks, recollects the
+fixture facts, and calls the actual treasury admission and Captain initialization
+functions. Owner-written fixture mappings bind actual refund entitlements and existing
+copy IDs to the new account. No source file supplies a production mapping writer.
+Injected failures after a real grant and after asset mappings must roll everything
+back. The test receipt exists only in the disposable `conversion_rehearsal` schema;
+it is not an installed application table or live conversion authorization.
+
+The tests prove one grant/receipt per manifest under parallel execution; changed
+manifest/policy conflicts; stale wallet, each crew counter and personal weapon state
+refusals; actual-cost 90-to-45 refund; old private refund refusal after admission;
+no compensation or personal coin changes; preserved acquired IDs/points/Engineer
+generation; all 22 copy IDs and refusal of another purchase; legitimate late settlement
+into the retired original account; and both owner-deletion orderings. The deletion
+race observes the actual PostgreSQL blocking lock, then verifies the surviving
+Captain and wallet. Cleanup without the required owner confirmation is refused.
+The original private-wager, closed/unclaimed-wave and ship cases also have explicit
+offline source/recipient/terms checks or a named blocking mapping finding.
+
+### Reproduce the bounded verification
+
+From `backend/`:
+
+```sh
+uv run --no-sync python -m pytest -q server/tests/test_conversion_preview.py
+CASE_PG_SCRATCH=1 uv run --no-sync --with pgserver --with 'psycopg[binary]' \
+  --with pglast python -m pytest -q \
+  server/tests/island_sql/test_conversion_rehearsal_sql.py \
+  server/tests/island_sql/test_legacy_wave_fences_sql.py::test_closed_personal_protocol_two_reward_survives_adoption_and_replays_once \
+  server/tests/island_sql/test_shared_arsenal_sql.py::test_valid_legacy_twenty_stored_four_carried_converts_and_all_returns_commit
+uv run --no-sync ruff check tools/economy/conversion.py \
+  tools/economy/conversion_models.py tools/economy/conversion_rules.py \
+  server/tests/test_conversion_preview.py server/tests/conversion_rehearsal_helpers.py \
+  server/tests/island_sql/test_conversion_rehearsal_sql.py
+```
+
+Exact executed results and source limits are recorded in
+[the owned evidence note](../docs/evidence/MP-ECO-17/README.md). The full backend,
+frontend, authenticated provider and production conversion suites were not rerun for
+this offline change. There is no database URL, credential input, environment-file
+loader, HTTP request, migration, deployment or feature activation in the command.
+
+Remaining production gates are the real consistent export/collector, an independently
+reviewed opening amount/policy and any blocked historical maps, a production transaction
+writer and source-qualified operational cutover/recovery authorization. This executable
+auditor and disposable composition do not silently turn those gates into completed work.
