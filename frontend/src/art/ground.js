@@ -7,7 +7,7 @@ import {surfaceClass, surfaces} from '../world/places/surfaces.js';
 import {LEGACY_DEPTH} from '../world/projection.js';
 import {canvas, ellipse, linear, poly, radial, stroke} from './paint.js';
 import {cliffProfile, paintCliffFaces, paintGrassRim} from './coast-cliffs.js';
-import {materialRect, meadowScale, paintMaterial, pathMaterialMask} from './village/terrain-materials.js';
+import {materialRect, meadowScale, mirroredGrassPattern, paintMaterial, pathMaterialMask} from './village/terrain-materials.js';
 
 const SIZE = {width: 64, height: 48};
 // Paths of each island (logical x/z, a polyline each) and small clearings [x, z, radius].
@@ -288,9 +288,12 @@ function paintTerrain(c, s, coast, random, materials) {
   glow.addColorStop(1, '#579638');
   c.fillStyle = glow; c.fill(meadow);
   if (materials) {
-    paintMaterial(c, materials, 'grass', {alpha: .60});
-    c.save(); c.rotate(.17); c.translate(-2.6, 1.4); c.scale(1.25, 1.15);
-    paintMaterial(c, materials, 'grass', {alpha: .27});
+    c.save(); c.fillStyle = mirroredGrassPattern(c, materials);
+    c.globalAlpha = .60;
+    c.fillRect(-32, -24, 64, 48);
+    c.rotate(.17); c.translate(-2.6, 1.4); c.scale(1.25, 1.15);
+    c.globalAlpha = .27;
+    c.fillRect(-32, -24, 64, 48);
     c.restore();
   }
   // A broad change in light from the sunlit back ledges to the lower shore ties their caps

@@ -232,8 +232,9 @@ void main(){
       float wash=(1.0-band(abs(d-surf-washAdvance-grain*.31),.061))*smoothstep(.41,.76,grain);
       colour=mix(colour,uShallow2,wash*mix(.35,.25,rockShore)*shoreLight);
       float rockFoam=smoothstep(.43,.74,grain+.12*run);
-      float backwash=1.0-band(abs(d-.30-grain*.24),.067);
-      colour=mix(colour,uFoam,backwash*rockFoam*rockShore*.47*shoreLight);
+      float backwash=1.0-band(abs(d-.29-grain*.24),.073);
+      float bubbles=(1.0-band(abs(d-.71-grain*.28-run*.10),.045))*smoothstep(.59,.77,grain);
+      colour=mix(colour,uFoam,max(backwash*rockFoam*.66,bubbles*.73)*rockShore*shoreLight);
       waterlineLight=mix(1.0,mix(.42,1.0,rockFoam),rockShore);
     }
   }
