@@ -58,27 +58,33 @@ function skiff(c) {
   stroke(c, svg('M31.4 10.8 Q34.1 10.7 36.1 11.9 M32.4 11.6 L31.5 13.4'), '#a4bab7', .45, .65);
   c.restore();
 
-  // The small lug sail is laced to its lowered yard while the tender is tied up.
-  stroke(c, svg('M21.6 13.7 L19.9 2.19'), '#65442e', 1.32);
-  stroke(c, svg('M21.37 13.17 L19.75 2.59'), '#dba66d', .48);
-  const sail = svg('M15.0 3.5 L28.7 1.88 Q29.3 6.03 35.5 10.55 Q28.15 12.8 22.0 10.91 Q19.1 9.03 15.0 3.5 Z');
-  part(c, sail, linear(c, 15, 3, 31, 12.7,
-    [[0, '#fae4b3'], [.38, '#fff2cb'], [.68, '#ecce94'], [1, '#c09b66']]),
-    {line: '#785e49', width: .52, shade: false});
-  stroke(c, svg('M15.9 4.15 Q20.8 8.38 23.05 10.43 M27.8 2.8 Q27.9 6.78 34.3 10.35'), '#b5905f', .46, .79);
-  stroke(c, svg('M16.6 4.6 Q20.72 5.13 25.35 4.43 M24.8 9.44 Q29.62 9.82 32.85 8.95'), '#fff3cd', .44, .93);
-  const mark = svg('M24.9 5.09 L25.7 8.29 M23.72 6.74 L26.5 6.11 M23.15 7.58 Q24.17 9.21 25.7 8.29 Q27.45 8.42 27.32 6.84');
-  stroke(c, mark, '#365c75', .58, .93);
-  part(c, ellipse(24.85, 5.04, .43, .43), '#365c75', {line: false, shade: false});
-  stroke(c, svg('M13.65 3.62 L30.11 1.71 M18.24 10.63 L35.71 11.13'), '#724b33', 1.05);
-  stroke(c, svg('M13.8 3.36 L29.94 1.46 M18.47 10.38 L35.59 10.87'), '#e3ae74', .44);
-  stroke(c, svg('M8.12 8.13 L14.26 3.38 M31.26 2.1 L41.24 11.26'), '#b88c61', .44);
-  stroke(c, svg('M10.25 11.57 L34.78 14.1'), '#88603c', .88);
-
   stroke(c, svg('M5.3 8.1 Q14.9 3.8 26.8 5.2 Q32.2 5.5 37.3 7.6'), '#f0c99a', .7, .84);
   stroke(c, svg('M8.2 12.2 Q16.9 17.1 26.5 17 Q37.6 17.7 43.2 13.7'), '#e3aa72', .63);
   part(c, ellipse(...SKIFF_EYE, 1.45, .91, .6), BRASS, {line: '#654b37', width: .57, depth: .43});
   part(c, rect(41.7, 15.3, 2.4, 1.23, .4), '#af8253', {line: '#674b38', width: .42, depth: .54});
+
+  // A slanting yard and rounded linen carry the tender's anchor above the deck.
+  stroke(c, [[23.4, 1.9], [23.9, 16.55]], '#62432e', 1.24);
+  stroke(c, [[23.1, 2.1], [23.65, 16.15]], '#ce9960', .46);
+  part(c, ellipse(23.4, 1.84, .69, .55), BRASS, {line: '#6a4b35', width: .32, shade: false});
+  stroke(c, svg('M9.1 9.2 L16.6 3.62 L23.32 2.19 L31.75 7.2 L40.45 12.46'), '#a7825e', .45, .85);
+  const sail = svg('M17 4.09 L31.48 7.51 Q30.74 10.65 33.24 13.56 Q25.53 11.23 14.8 12.69 Q17.09 9.44 17 4.09 Z');
+  part(c, sail, linear(c, 15.7, 8, 33.72, 11.4,
+    [[0, '#b69066'], [.22, '#e9cc98'], [.49, '#fff0c7'], [.75, '#f0d6a9'], [1, '#a78360']]),
+    {line: '#785d48', width: .54, shade: false});
+  c.save(); c.clip(sail);
+  part(c, svg('M28.16 6.06 Q26.19 9.05 30.19 13.05 L34.53 14.16 L32.51 7.3 Z'),
+    '#a07b59', {line: false, shade: false, alpha: .29});
+  stroke(c, svg('M18.66 5.43 Q18.67 9.26 17.14 11.88 M28.27 7.2 Q27.05 10.58 29.82 12.18 M16.55 11.74 Q24.13 10.84 31.61 12.41'),
+    '#b1936e', .46, .84);
+  c.restore();
+  const mark = svg('M23.65 7.02 L23.39 10.75 M21.92 8.52 L25.09 8.69 M21.13 9.32 Q21.43 10.69 23.39 10.75 Q25.32 11.12 26.02 9.65');
+  stroke(c, mark, '#34566e', .68);
+  part(c, ellipse(23.69, 6.92, .54, .54), '#34566e', {line: false, shade: false});
+  stroke(c, [[16, 3.47], [32.58, 7.34]], '#67462e', 1.08);
+  stroke(c, [[16.42, 3.21], [32.38, 7.03]], '#d4a06c', .42);
+  stroke(c, [[15.06, 12.61], [12.19, 13.12]], '#bc9565', .46);
+  stroke(c, [[33.24, 13.56], [38.86, 14.12]], '#ad855f', .47);
 }
 
 function harborRowboat(c) {
@@ -103,13 +109,21 @@ function coastalSailboat(dark) {
   return (c, {w}) => {
     const mast = w / 2 - 8, bow = w - 10;
     const linen = dark ? ['#84928b', '#617773', '#354c50'] : ['#fff1cc', '#e7cfa1', '#b69a71'];
-    const cloth = linear(c, mast - 19, 28, mast + 18, 81, [[0, linen[0]], [.52, linen[1]], [1, linen[2]]]);
+    const cloth = linear(c, mast - 19, 43, mast + 32, 74,
+      [[0, linen[2]], [.17, linen[1]], [.45, linen[0]], [.73, linen[1]], [1, linen[2]]]);
     shadow(c, w / 2, 102, w / 2 - 8, 4, .29);
     stroke(c, [[mast, 14], [mast, 86]], '#574033', 3.4);
     stroke(c, [[mast - .64, 15], [mast - .64, 83]], '#c2925a', .9);
     const main = svg(`M${mast - 2} 19 Q${mast + 12} 48 ${bow - 6} 74 Q${mast + 16} 74 ${mast - 2} 79 Z`);
     const jib = svg(`M${mast - 4} 19 Q${mast - 13} 48 16 76 Q${mast - 12} 76 ${mast - 4} 79 Z`);
     for (const sail of [jib, main]) part(c, sail, cloth, {line: '#625141', width: .95, shade: false});
+    c.save(); c.clip(main);
+    part(c, svg(`M${mast - 1} 24 Q${mast + 5} 57 ${mast + 13} 75 L${mast + 6} 80 L${mast - 3} 80 Z`),
+      linen[2], {line: false, shade: false, alpha: .32});
+    part(c, svg(`M${mast + 4} 33 Q${mast + 20} 61 ${bow - 17} 71 Q${mast + 13} 66 ${mast + 4} 33 Z`),
+      linen[0], {line: false, shade: false, alpha: .5});
+    stroke(c, svg(`M${mast + 2} 77 Q${mast + 15} 70 ${bow - 7} 73`), linen[2], 1.2, .83);
+    c.restore();
     stroke(c, svg(`M${mast - 5} 35 Q${mast - 12} 57 20 74 M${mast + 2} 34 Q${mast + 16} 57 ${bow - 13} 73`),
       linen[2], .92, .9);
     if (dark) {
@@ -123,8 +137,16 @@ function coastalSailboat(dark) {
     stroke(c, [[mast + 4, 16], [mast + 10, 17.4]], '#e0ab5f', .75);
     const hull = svg(`M7 86 Q${mast + 9} 85 ${bow} 82 Q${bow - 2} 95 ${bow - 13} 98 Q${bow - 22} 104 25 102 Q14 99 7 86 Z`);
     part(c, hull, linear(c, 15, 83, 21, 103,
-      [[0, '#ca9159'], [.38, dark ? '#84563e' : '#a47247'], [.61, '#684533'], [1, '#30475a']]),
+      [[0, '#d4a164'], [.27, dark ? '#84563e' : '#a47247'], [.47, '#4b6471'], [.72, '#254159'], [1, '#183142']]),
       {line: '#433133', width: 1.2, shade: false});
+    c.save(); c.clip(hull);
+    const deck = svg(`M8 86 Q${mast + 10} 86 ${bow - .5} 82 Q${bow - 8} 88 ${mast + 14} 91 Q24 92 8 86 Z`);
+    part(c, deck, linear(c, 16, 83, 33, 91, [[0, '#e5bd83'], [.53, '#bc8553'], [1, '#72503a']]),
+      {line: false, shade: false});
+    c.clip(deck);
+    for (const x of [21, 31, mast, mast + 14, mast + 22, bow - 12])
+      stroke(c, [[x, 84.8], [x + 4, 91.7]], '#846044', .77);
+    c.restore();
     stroke(c, svg(`M12 89 Q${mast + 9} 92 ${bow - 5} 86 M20 97 Q${mast + 14} 103 ${bow - 11} 93`),
       '#4c3a36', 1.01);
     stroke(c, svg(`M11 88 Q${mast + 9} 90 ${bow - 4} 85`), '#e5ad61', 1.28);
