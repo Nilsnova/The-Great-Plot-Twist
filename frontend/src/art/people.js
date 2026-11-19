@@ -63,31 +63,57 @@ function face(c, x, y, {side = false} = {}) {
   }
   stroke(c, line([[x - 1, y + 2.9], [x, y + 3.4], [x + 1, y + 2.9]]), INK, .7);
 }
+// A near cheek and ear sit opposite a short far cheek. The visible nose turns with the face plane.
+function quarterHead(c, x, y, scale = 1) {
+  c.save(); c.translate(x, y); c.scale(scale, scale);
+  part(c, ellipse(-4.45, .9, 1.17, 1.33), '#eab28b', {depth: .65, width: .77});
+  const head = poly([
+    [-4.7, -2.42], [-1.4, -4.5], [2.65, -3.98], [4.42, -1.88], [4.48, .2], [5.12, 1.24],
+    [4.21, 1.82], [3.55, 3.55], [1.16, 4.77], [-2.9, 4.03], [-4.66, 1.97],
+  ], [1.18, 2.3, 2.15, 1.4, .5, .55, .45, 1.13, 1.5, 1.4, 1.1]);
+  part(c, head, skin(c, -.2, .05, 5.25), {depth: 1.3, shade: SKIN_DARK});
+  part(c, poly([[-4.6, -2], [-2.23, -2.6], [-2.42, -.55], [-3.52, 1.5], [-4.65, .52]], .76),
+    '#7a4a2e', {depth: .6, width: .7});
+  part(c, ellipse(-1.62, 2.14, 1.08, .66), '#ef9f86', {line: false, shade: false, alpha: .7});
+  part(c, ellipse(-.79, .36, .82, 1.1), INK, {line: false, shade: false});
+  part(c, ellipse(2.88, .46, .55, .94), INK, {line: false, shade: false});
+  c.fillStyle = '#fff';
+  c.fill(ellipse(-.59, -.03, .3, .3));
+  c.fill(ellipse(3.02, .13, .22, .27));
+  stroke(c, [[2.59, 1.17], [3.56, 1.52], [2.91, 1.93]], '#b77561', .5, .82);
+  stroke(c, [[.23, 2.72], [1.29, 3.05], [2.63, 2.64]], INK, .65);
+  c.restore();
+}
 // The tricorn: a wide upturned brim, a rounded crown and a coloured band.
-function hat(c, pal, x, y, view, sunlight) {
-  const brim = view === '-side'
-    ? poly([[x - 7.4, y + .4], [x - 3, y + 3], [x + 3.6, y + 3], [x + 7.6, y + 1.2], [x + 5.8, y + 6], [x - 5.8, y + 6.2]], [1.4, 2, 2, 1.4, 2, 2])
-    : poly([[x - 8.4, y - .8], [x - 3.6, y + 3.6], [x + 3.6, y + 3.6], [x + 8.4, y - .8], [x + 6.4, y + 6.2], [x - 6.4, y + 6.2]], [1.4, 2, 2, 1.4, 2, 2]);
+function hat(c, pal, x, y, view, sunlight, quarter = false) {
+  const edge = quarter
+    ? [[x - 8.68, y - .8], [x - 3.7, y + 3.39], [x + 2.8, y + 4.05], [x + 8.48, y + .45], [x + 6.62, y + 5.35], [x - 6.28, y + 6.23]]
+    : view === '-side' ? [[x - 7.4, y + .4], [x - 3, y + 3], [x + 3.6, y + 3], [x + 7.6, y + 1.2], [x + 5.8, y + 6], [x - 5.8, y + 6.2]]
+      : [[x - 8.4, y - .8], [x - 3.6, y + 3.6], [x + 3.6, y + 3.6], [x + 8.4, y - .8], [x + 6.4, y + 6.2], [x - 6.4, y + 6.2]];
+  const brim = poly(edge, [1.4, 2, 2, 1.4, 2, 2]);
+  const crownOffset = quarter ? -.8 : 0;
   const crown = sunlight ? cloth(c, x - 3.8, y - 1, x + 3.4, y + 5, pal.hat) : pal.hat;
-  part(c, rect(x - 4.2, y - 1.8, 8.4, 6.6, 3.4), crown, {depth: 1.4, gloss: ellipse(x - 1.8, y + .3, 1.6, .9)});
-  part(c, rect(x - 4, y + 1.6, 8, 1.7, .6), pal.band, {depth: .6, width: .8});
+  part(c, rect(x - 4.2 + crownOffset, y - 1.8, 8.4, 6.6, 3.4), crown, {depth: 1.4, gloss: ellipse(x - 1.8 + crownOffset, y + .3, 1.6, .9)});
+  part(c, rect(x - 4 + crownOffset, y + 1.6, 8, 1.7, .6), pal.band, {depth: .6, width: .8});
   const brimColour = mix(pal.hat, INK, .12);
   part(c, brim, sunlight ? cloth(c, x - 6.1, y + 1.5, x + 5, y + 6.2, brimColour) : brimColour,
     {depth: 1.1, gloss: rect(x - 5, y + 3.4, 4, .8, .4), light: sunlight ? mix(brimColour, '#f7d6a3', .34) : undefined});
   if (sunlight) {
     c.save(); c.clip(brim);
     const leftTip = view === '-side' ? .88 : -.28;
-    stroke(c, [[x - 8, y + leftTip], [x - 4.2, y + 3.4], [x, y + 3.9], [x + 4.4, y + 3.3], [x + 7.8, y + .36]],
+    const fold = quarter ? [[x - 8.2, y + leftTip], [x - 4.25, y + 3.26], [x + .5, y + 4.11], [x + 3.9, y + 3.56], [x + 8.15, y + .89]]
+      : [[x - 8, y + leftTip], [x - 4.2, y + 3.4], [x, y + 3.9], [x + 4.4, y + 3.3], [x + 7.8, y + .36]];
+    stroke(c, fold,
       mix(pal.band, '#e0ac58', .62), .94);
     stroke(c, [[x - 7.8, y + leftTip], [x - 4.1, y + 3.18], [x - .9, y + 3.58]], '#fff0b7', .42, .78);
     stroke(c, [[x - 5.7, y + 5.05], [x - 2, y + 5.56], [x + .2, y + 5.53], [x + 4.5, y + 5.15]],
       mix(brimColour, '#b5c6c5', .34), .35, .74);
     c.restore();
   }
-  const badge = ellipse(x, y + 4.4, 1.2, 1);
+  const badge = ellipse(x + (quarter ? 1.6 : 0), y + 4.4, 1.2, 1);
   part(c, badge, sunlight ? cloth(c, x - 1, y + 3.3, x + 1, y + 5.4, pal.band) : pal.band, {width: .6, shade: false});
 }
-function captainBody(c, pal, view, step, {armed = false, originalMaterial = false} = {}) {
+function captainBody(c, pal, view, step, {armed = false, originalMaterial = false, quarter = false} = {}) {
   const cx = 12, back = view.startsWith('-back'), side = view === '-side', diagonal = view.endsWith('-diagonal');
   const sunlight = !originalMaterial;
   if (sunlight) c.outlineStops = OUTLINE_LIGHT;
@@ -98,22 +124,42 @@ function captainBody(c, pal, view, step, {armed = false, originalMaterial = fals
     const swing = lift === 1 ? 2.2 : lift === 2 ? -2.2 : 0;
     boots(c, [[cx - 1.8 - swing, 23.4, 6 - (lift ? .6 : 0)], [cx - 1.8 + swing, 23.4, 6]], sunlight);
   } else boots(c, [[cx - 4.4, 23.4 - (lift === 1 ? 1.2 : 0), 6], [cx + .8, 23.4 - (lift === 2 ? 1.2 : 0), 6]], sunlight);
+  // The far sleeve goes behind the torso. The near sleeve keeps the original walk cadence.
+  const arm = (x, y, angle, size = 1) => {
+    c.save(); c.translate(x, y); c.rotate(angle);
+    if (size !== 1) c.scale(size, size);
+    const sleeve = cloth(c, -1.7, 1, 1.6, 6, pal.coat);
+    part(c, rect(-1.6, -.6, 3.2, 6.6, 1.6), sleeve);
+    stroke(c, [[-1.16, 5.32], [1.14, 5.50]], '#ce9753', .57);
+    part(c, ellipse(0, 6.4, 1.6), skin(c, 0, 6.4, 1.6), {depth: .7, gloss: ellipse(-.4, 6, .59, .44), light: '#ffe1b9'});
+    c.restore();
+  };
+  const swing = step === '-walk-1' ? .35 : step === '-walk-2' ? -.35 : 0;
+  if (quarter) arm(cx + 4.38, 16.52, -.18 - swing * .4, .74);
   // The coat: a rounded bell with tails, buttons and a belt.
-  const coat = side
-    ? poly([[cx - 3.6, 15], [cx + 3.4, 15], [cx + 4.4, 24.4], [cx - 5.6, 25]], [3, 3, 1.6, 1.6])
-    : poly([[cx - 4.8, 15], [cx + 4.8, 15], [cx + 6.4, 25], [cx - 6.4, 25]], [3.2, 3.2, 1.8, 1.8]);
+  const coat = quarter ? poly([
+    [cx - 5.25, 16.1], [cx - 2.7, 14.8], [cx + 3.82, 15.38], [cx + 4.35, 19.1],
+    [cx + 5.7, 24.33], [cx + 1.3, 25.2], [cx - 6.15, 24.44],
+  ], [1.8, 2.2, 2.25, 1.4, 1.45, 1.2, 1.6])
+    : side ? poly([[cx - 3.6, 15], [cx + 3.4, 15], [cx + 4.4, 24.4], [cx - 5.6, 25]], [3, 3, 1.6, 1.6])
+      : poly([[cx - 4.8, 15], [cx + 4.8, 15], [cx + 6.4, 25], [cx - 6.4, 25]], [3.2, 3.2, 1.8, 1.8]);
   const coatPaint = sunlight ? cloth(c, cx - 5, 15, cx + 5, 25, pal.coat) : pal.coat;
   part(c, coat, coatPaint, {depth: 2.2, gloss: ellipse(cx - 2.6, 17.4, 1.3, 2.2),
     light: sunlight ? mix(pal.coat, '#f8df9b', .42) : undefined});
   if (!back && !side) {
-    part(c, poly([[cx - 2, 15.2], [cx + 2, 15.2], [cx, 19.6]], .6), '#f6efe0', {depth: .5, width: .8});
-    for (const y of [19.8, 22.4]) part(c, ellipse(cx + 2.4, y, .62),
-      sunlight ? brass(c, cx + 1.9, y - .5, cx + 2.8, y + .6) : GOLD, {width: .6, shade: false});
+    const collar = quarter ? [[cx - .54, 15.29], [cx + 2.64, 15.23], [cx + 1.92, 19.65]]
+      : [[cx - 2, 15.2], [cx + 2, 15.2], [cx, 19.6]];
+    part(c, poly(collar, .6), '#f6efe0', {depth: .5, width: .8});
+    const button = cx + (quarter ? 3.2 : 2.4);
+    for (const y of [19.8, 22.4]) part(c, ellipse(button, y, .62),
+      sunlight ? brass(c, cx + (quarter ? 2.7 : 1.9), y - .5, cx + (quarter ? 3.6 : 2.8), y + .6) : GOLD, {width: .6, shade: false});
   }
   if (back) stroke(c, line([[cx, 20.5], [cx, 25]]), mix(pal.coat, INK, .45), .8);
-  part(c, rect(side ? cx - 4 : cx - 5.4, 20.6, side ? 8 : 10.8, 1.9, .7), '#3a2a24', {depth: .5, width: .8});
+  const belt = quarter ? poly([[cx - 5.25, 20.1], [cx + 4.53, 20.47], [cx + 4.85, 21.72], [cx + 1.62, 22.26], [cx - 5.55, 21.8]], .65)
+    : rect(side ? cx - 4 : cx - 5.4, 20.6, side ? 8 : 10.8, 1.9, .7);
+  part(c, belt, '#3a2a24', {depth: .5, width: .8});
   if (!back) {
-    const buckleX = side ? cx + 1.2 : cx - 1.2;
+    const buckleX = quarter ? cx + .4 : side ? cx + 1.2 : cx - 1.2;
     part(c, rect(buckleX, 20.3, 2.4, 2.5, .6), sunlight ? brass(c, buckleX, 20.3, buckleX + 2.4, 22.8) : GOLD,
       {width: .6, shade: false});
     if (sunlight) part(c, rect(buckleX + .79, 21.18, .82, .55, .17), '#855530', {line: false, shade: false});
@@ -126,22 +172,18 @@ function captainBody(c, pal, view, step, {armed = false, originalMaterial = fals
     stroke(c, [[cx + 4.7, 22.65], [cx + 3, 23.8], [cx + 1.8, 24.1]], mix(pal.coat, '#263c54', .55), .56, .75);
     c.restore();
   }
-  // Arms: coat sleeves with round hands; the side view shows one arm swinging.
-  const arm = (x, y, angle) => {
-    c.save(); c.translate(x, y); c.rotate(angle);
-    const sleeve = cloth(c, -1.7, 1, 1.6, 6, pal.coat);
-    part(c, rect(-1.6, -.6, 3.2, 6.6, 1.6), sleeve);
-    stroke(c, [[-1.16, 5.32], [1.14, 5.50]], '#ce9753', .57);
-    part(c, ellipse(0, 6.4, 1.6), skin(c, 0, 6.4, 1.6), {depth: .7, gloss: ellipse(-.4, 6, .59, .44), light: '#ffe1b9'});
-    c.restore();
-  };
-  const swing = step === '-walk-1' ? .35 : step === '-walk-2' ? -.35 : 0;
   if (!armed) {
-    if (side) arm(cx + .4, 16.4, swing);
+    if (quarter) arm(cx - 4.67, 16.29, .09 + swing * .4, 1.07);
+    else if (side) arm(cx + .4, 16.4, swing);
     else { arm(cx - 5.4, 16.2, .16 + swing * .4); arm(cx + 5.4, 16.2, -.16 - swing * .4); }
   }
   // The head: big and round, hair peeking out under the hat.
   const hx = side ? cx + 1 : diagonal ? cx + 2 : cx, hy = 10.6;
+  if (quarter) {
+    quarterHead(c, hx + .18, hy + .35);
+    hat(c, pal, hx, hy - 7, view, sunlight, true);
+    return;
+  }
   const head = back ? (sunlight ? cloth(c, hx - 4.8, hy - 3.4, hx + 5.3, hy + 5.3, '#7a4a2e') : '#7a4a2e')
     : sunlight ? skin(c, hx, hy + .4, 5.5) : SKIN;
   part(c, ellipse(hx, hy + .4, 5.5, 5.1), head, {depth: 1.6, shade: back ? undefined : SKIN_DARK});
@@ -152,7 +194,7 @@ function captainBody(c, pal, view, step, {armed = false, originalMaterial = fals
   }
   hat(c, pal, hx, hy - 7, view, sunlight);
 }
-function captain(pal, view, step) { return c => captainBody(c, pal, view, step); }
+function captain(pal, view, step) { return c => captainBody(c, pal, view, step, {quarter: view === ''}); }
 // The musket pose, facing right: the captain stands at the middle of a 48 px box, the long gun level.
 export function musketPose(pal, firing, angle = null) {
   return approvedMusketPose(pal, firing, angle);
@@ -342,37 +384,46 @@ function crewFigure(kind) {
     c.outlineStops = OUTLINE_LIGHT;
     const cx = 8; shadow(c, cx, 29.3, 4.8, 1.4);
     boots(c, [[cx - 3.4, 24, 5.4], [cx + .2, 24, 5.4]], true);
-    part(c, poly([[cx - 3.6, 17], [cx + 3.6, 17], [cx + 4.4, 25], [cx - 4.4, 25]], [2.4, 2.4, 1.2, 1.2]),
-      cloth(c, cx - 3.2, 17, cx + 4.1, 25, look.shirt));
+    part(c, ellipse(cx + 3.75, 21.72, 1.0), skin(c, cx + 3.75, 21.72, 1), {depth: .45, width: .7});
+    const shirt = poly([
+      [cx - 3.83, 18.26], [cx - 2.36, 16.72], [cx + 2.89, 17.29], [cx + 3.37, 20.1],
+      [cx + 3.83, 24.45], [cx + 1.5, 25.1], [cx - 4.06, 24.56],
+    ], [1.2, 1.7, 1.5, 1.2, 1.1, .8, 1]);
+    part(c, shirt, cloth(c, cx - 3.2, 17, cx + 3.5, 25, look.shirt));
     if (look.stripe) {
       const stripe = cloth(c, cx - 3.9, 19.2, cx + 3.9, 22.3, look.stripe);
-      for (const y of [19.2, 21.6]) part(c, rect(cx - 3.9, y, 7.8, 1.1, .4), stripe, {line: false, shade: false});
+      c.save(); c.clip(shirt); c.fillStyle = stripe;
+      for (const y of [19.2, 21.6]) c.fill(poly([
+        [cx - 4.1, y - .16], [cx - .5, y + .25], [cx + 2.3, y + .15], [cx + 3.8, y - .14],
+        [cx + 3.8, y + .69], [cx + 2.3, y + 1.22], [cx - .5, y + 1.39], [cx - 4.1, y + .83],
+      ], .4));
+      c.restore();
     }
     if (kind === 'carpenter') {
-      part(c, rect(cx - 3, 20, 6, 5.4, 1), cloth(c, cx - 3, 20, cx + 2.5, 25.4, '#7a5236'), {depth: .8});
+      part(c, poly([[cx - 2.58, 19.8], [cx + 2.77, 20.18], [cx + 2.94, 24.84], [cx + .8, 25.4], [cx - 2.87, 24.9]], .85),
+        cloth(c, cx - 2.7, 20, cx + 2.5, 25.4, '#7a5236'), {depth: .8});
       stroke(c, [[cx - 2.3, 21.5], [cx - 2.2, 24.4], [cx + 1.9, 24.4]], '#d39e68', .35, .78);
       part(c, rect(cx + 3.4, 18.6, 1.2, 6, .4), '#8a5a36', {width: .7});
       part(c, rect(cx + 2.2, 17.6, 3.6, 1.8, .5), linear(c, cx + 3, 17.6, cx + 3, 19.4,
         [[0, '#ede9cf'], [.4, '#b0bdc3'], [1, '#687782']]), {width: .7});
     }
     if (kind === 'gunner') { part(c, rect(cx - 6.4, 13, 1.1, 13, .5), '#8a5a36', {width: .7}); part(c, ellipse(cx - 5.85, 12.6, 1.1, 1.3), '#3a2a24', {width: .7}); }
-    for (const s of [-1, 1]) {
-      const x = cx + s * 4.2;
-      part(c, ellipse(x, 22.4, 1.3), skin(c, x, 22.4, 1.3), {depth: .5, width: .8});
-    }
-    part(c, ellipse(cx, 12.6, 4.2, 4), skin(c, cx, 12.6, 4.2), {depth: 1.2, shade: SKIN_DARK});
-    for (const dx of [-1.5, 1.5]) part(c, ellipse(cx + dx, 13, .62, .9), INK, {line: false, shade: false});
-    part(c, ellipse(cx + 2.6, 14.6, .8, .5), '#ef9f86', {line: false, shade: false, alpha: .6});
-    part(c, ellipse(cx - 2.6, 14.6, .8, .5), '#ef9f86', {line: false, shade: false, alpha: .6});
+    part(c, rect(cx - 4.63, 17.57, 2.57, 4.65, 1.15),
+      cloth(c, cx - 4.63, 17.4, cx - 2.04, 22.3, look.shirt), {depth: .7, width: .75});
+    part(c, ellipse(cx - 3.83, 22.54, 1.35), skin(c, cx - 3.83, 22.54, 1.35), {depth: .5, width: .8});
+    quarterHead(c, cx + .23, 12.56, .77);
     // Headwear: the gunner's bandana, the carpenter's cap, the lookout's cap with a spyglass.
-    const cap = poly([[cx - 4.4, 11.4], [cx - 3, 8], [cx + 3, 8], [cx + 4.4, 11.4]], [1.2, 2.4, 2.4, 1.2]);
+    const cap = poly([
+      [cx - 4.38, 11.57], [cx - 3.06, 8.2], [cx + 2.52, 7.92], [cx + 3.66, 10.35],
+      [cx + 4.36, 11.02], [cx + 2.1, 11.61], [cx - 1.6, 11.48],
+    ], [1.1, 2.05, 2.4, 1.3, .57, .9, 1.22]);
     part(c, cap, cloth(c, cx - 3.5, 8, cx + 3.5, 11.4, look.cap), {depth: .9});
     c.save(); c.clip(cap);
     stroke(c, [[cx - 3.2, 10.3], [cx - 1.9, 9.11], [cx + .4, 8.9]], mix(look.cap, '#fff1c1', .52), .4, .85);
     c.restore();
     if (kind === 'gunner') {
       part(c, poly([[cx + 3.6, 10.4], [cx + 6.4, 11.6], [cx + 5, 13]], .6), look.cap, {depth: .4, width: .8});
-      part(c, rect(cx - 2.15, 9.65, 4.3, .95, .3), GOLD, {line: false, shade: false});
+      part(c, rect(cx - 1.22, 9.72, 3.4, .84, .3), GOLD, {line: false, shade: false});
     }
     if (kind === 'lookout') {
       part(c, rect(cx + 2.6, 14.6, 5, 1.8, .7), brass(c, cx + 2.6, 14.6, cx + 4, 16.4), {depth: .5, width: .8});
