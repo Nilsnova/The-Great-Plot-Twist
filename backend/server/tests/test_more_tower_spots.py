@@ -1,9 +1,9 @@
 """D060: more tower spots over time.
 
 islands.json "extraTowerSpots" lists cannon_8..cannon_11 with the won wave each one needs; they
-join the island only while the flag more_tower_spots is on (catalogue.catalogue_for_flags), take
-every kind cannon_1 takes, stand where island_layout.json "extraSpots" says, and are allowed by
-supabase/migrations/20261117010000_more_tower_spots.sql. With the flag off nothing changes.
+join the island (catalogue.runtime_catalogue; the flag more_tower_spots is retired, always on),
+take every kind cannon_1 takes, stand where island_layout.json "extraSpots" says, and are allowed
+by supabase/migrations/20261117010000_more_tower_spots.sql.
 """
 
 import re
@@ -16,7 +16,7 @@ from server.errors import ApiError
 from server.flags import FLAG_NAMES, parse_flags
 from server.game.building_catalogue import load_buildings
 from server.island import layout, rules
-from server.island.catalogue import IslandFileError, catalogue_for_flags, load_island
+from server.island.catalogue import IslandFileError, load_island, runtime_catalogue
 from server.tests.helpers import assert_error
 from server.tests.island_helpers import ISLAND_SETTINGS, World
 
@@ -29,7 +29,7 @@ EXTRA = {"cannon_8": 10, "cannon_9": 20, "cannon_10": 30, "cannon_11": 40}
 
 
 def flagged(**flags: bool):
-    return catalogue_for_flags(CATALOGUE, {"more_tower_spots": True, **flags})
+    return runtime_catalogue(CATALOGUE)
 
 
 def test_the_flag_is_known_and_off_by_default():
@@ -37,24 +37,14 @@ def test_the_flag_is_known_and_off_by_default():
     assert parse_flags("")["more_tower_spots"] is False
 
 
-def test_flag_off_is_the_same_catalogue_and_the_same_22_spots():
-    assert catalogue_for_flags(CATALOGUE, parse_flags("islands")) is CATALOGUE
-    assert len(CATALOGUE.spots) == 22
-    assert not {spot.id for spot in CATALOGUE.spots} & set(EXTRA)
-    assert CATALOGUE.more_tower_spots is False
-    assert len(layout.island_layout().spots) == 22
-
-
-def test_flag_on_adds_four_tower_spots_with_every_tower_kind():
+def test_four_tower_spots_join_with_every_tower_kind():
     catalogue = flagged()
     extra = catalogue.spots[22:]
     assert [(spot.id, spot.unlock_wave) for spot in extra] == list(EXTRA.items())
-    template = next(spot for spot in CATALOGUE.spots if spot.id == "cannon_1")
+    template = next(spot for spot in catalogue.spots if spot.id == "cannon_1")
     assert all(spot.kinds == template.kinds for spot in extra)
-    assert set(template.kinds) == {"cannon", "mortar", "harpoon", "swivel"}
-    # With defenses_v2 on as well, the culverin comes along.
-    both = flagged(defenses_v2=True)
-    assert all("culverin" in spot.kinds for spot in both.spots[22:])
+    # The culverin (defenses_v2, always on) comes along.
+    assert set(template.kinds) == {"cannon", "mortar", "harpoon", "swivel", "culverin"}
 
 
 @pytest.mark.parametrize(("spot", "wave"), list(EXTRA.items()))
@@ -153,14 +143,8 @@ def test_flag_on_the_island_answer_lists_the_extra_spots():
     world = World(settings=replace(ISLAND_SETTINGS, flags=ON))
     spots = world.island().json()["spots"]
     assert [spot["id"] for spot in spots][22:] == list(EXTRA)
-    assert spots[22]["kinds"] == ["cannon", "mortar", "harpoon", "swivel"]
+    assert spots[22]["kinds"] == ["cannon", "mortar", "harpoon", "swivel", "culverin"]
     assert (spots[22]["x"], spots[22]["z"]) == (-8.5, 12.0)
-
-
-def test_flag_off_the_island_answer_has_22_spots_and_refuses_an_extra_spot():
-    world = World()
-    assert len(world.island().json()["spots"]) == 22
-    assert_error(world.build(spot="cannon_8"), 404, "no_such_spot")
 
 
 def test_the_server_refuses_a_locked_extra_spot_before_the_database():

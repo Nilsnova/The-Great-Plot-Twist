@@ -122,15 +122,6 @@ def test_a_rescue_the_wave_does_not_allow_is_ignored_not_refused(wave, place, su
     assert restart_back_sent(world) == 2
 
 
-def test_with_the_flag_off_a_rescue_changes_nothing():
-    world = rescue_world(settings=ISLAND_SETTINGS)
-
-    response = world.finish(survived=False, rescued=True)
-
-    assert response.status_code == 200
-    assert restart_back_sent(world) == 2
-
-
 def test_a_rescue_never_moves_the_loot_or_the_best_wave_arguments():
     plain, saved = rescue_world(), rescue_world()
 
