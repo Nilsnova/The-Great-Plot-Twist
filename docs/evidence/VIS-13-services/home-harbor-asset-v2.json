@@ -1,0 +1,120 @@
+{
+  "sourceFile": "frontend/public/village/home-harbor-v2.png",
+  "generatedBy": "OpenAI built-in image generation, 2026-11-19",
+  "reference": "Home Island concept supplied by Johannes Franz Lang, 2026-11-19",
+  "referenceSha256": "e93b1486918789502c33e4b3a445c1019fce5d19ade9d9e8ea41e106bae911dc",
+  "sha256": "a21c44f3a329abe2fa80b292e20d9c1baa7fc33bf1fc1cd67c7325dd488e9221",
+  "bytes": 1064637,
+  "nativeSize": [
+    1254,
+    1254
+  ],
+  "mode": "RGBA",
+  "alpha": {
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "meaningfulThreshold": 32
+  },
+  "cells": [
+    {
+      "id": "island-harbor",
+      "rect": [
+        43,
+        55,
+        563,
+        494
+      ],
+      "sourceFoot": [
+        281,
+        478
+      ],
+      "nativeGroundFoot": [
+        324,
+        533
+      ],
+      "logical": [
+        80,
+        72,
+        8
+      ],
+      "meaningfulAlphaBounds": [
+        12,
+        12,
+        551,
+        482
+      ]
+    },
+    {
+      "id": "island-wreck",
+      "rect": [
+        670,
+        150,
+        509,
+        380
+      ],
+      "sourceFoot": [
+        254,
+        364
+      ],
+      "nativeGroundFoot": [
+        924,
+        514
+      ],
+      "logical": [
+        96,
+        56,
+        6
+      ],
+      "meaningfulAlphaBounds": [
+        12,
+        12,
+        497,
+        368
+      ],
+      "fitBounds": [
+        353,
+        364,
+        353,
+        16
+      ]
+    },
+    {
+      "id": "island-wreck-mended",
+      "rect": [
+        40,
+        659,
+        554,
+        530
+      ],
+      "sourceFoot": [
+        277,
+        514
+      ],
+      "nativeGroundFoot": [
+        317,
+        1173
+      ],
+      "logical": [
+        96,
+        80,
+        6
+      ],
+      "meaningfulAlphaBounds": [
+        12,
+        12,
+        542,
+        518
+      ],
+      "fitBounds": [
+        385,
+        514,
+        385,
+        16
+      ]
+    }
+  ]
+}
