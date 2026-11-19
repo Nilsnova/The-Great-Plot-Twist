@@ -9,7 +9,7 @@ export function createCaptains(sim) {
   const { C, recoveryPolicy, REWIND_TICKS, seenAt, freeStructureRepair, captainStatsFor, withFlagship, curve,
     finisher, rescue, HO, taverns, housesNear, cannonById, towerHealth, towerById, wallById, jammed, ships, balls,
     shells, captains, blades, boarders, H, party, militia, militiaById, now, damageBoarder, findTarget, targetKey,
-    fire, visible, rebuild, boostWall, applyRecoveryEvent } = sim;
+    fire, visible, rebuild, boostWall, applyRecoveryEvent, canonicalCaptains } = sim;
   const captainBy = input => (typeof input.by === 'string' && /^[A-Za-z0-9_.:-]{1,64}$/.test(input.by) ? input.by : null);
   const captainLevel = input => (Number.isInteger(input.level) ? clamp(input.level, 1, C.captain.levels.length) : 1);
 
@@ -129,10 +129,11 @@ export function createCaptains(sim) {
 
   // Captain health (GAME-V3.md §3). A captain is in the wave from their first captain_move; a shot or a
   // blow of a known captain also says where they stand. A fallen captain's shots and blows do nothing.
-  const presentAt = (hero, t) => !hero.away && t - hero.seen <= H.stale + 1e-9;
+  const presentAt = (hero, t) => !hero.away && (canonicalCaptains ? !hero.withdrawn : t - hero.seen <= H.stale + 1e-9);
   function standing(by, input) {
     const hero = party.get(by);
-    if (!hero) return true; // not in the party (an older client, a test): the gun works as before
+    if (!hero) return !canonicalCaptains; // Legacy waves retain their original first-move admission.
+    if(hero.withdrawn)return false;
     if (hero.down) return false;
     hero.seen = sim.ticks * C.tick; hero.away = false; hero.x = input.x; hero.z = input.z;
     return true;
@@ -142,6 +143,7 @@ export function createCaptains(sim) {
     if (!by || !finite(input.x) || !finite(input.z)) return;
     const t = sim.ticks * C.tick;
     let hero = party.get(by);
+    if(canonicalCaptains && (!hero || hero.withdrawn || Object.hasOwn(input,'away')))return;
     if (!hero) {
       if (input.away === true || party.size >= H.most) return;
       hero = { id: by, x: input.x, z: input.z, hp: H.hp, maxHp: H.hp, down: false, downAt: null, seen: t, colour: 0, away: false };
@@ -154,6 +156,7 @@ export function createCaptains(sim) {
   }
   // A teammate next to a fallen captain (within revive reach of where the helper stood) stands them up.
   function captainRevive(input, events) {
+    if(canonicalCaptains)return; // Native revival is a server journal restore fact.
     const by = captainBy(input), R = H.revive;
     if (!by || !finite(input.x) || !finite(input.z) || typeof input.targetId !== 'string') return;
     const helper = party.get(by), hero = party.get(input.targetId);
@@ -224,6 +227,10 @@ export function createCaptains(sim) {
     // v3 waves: while a finisher runs the battle stands still: only positions and the finisher's own input count.
     if (input.type === 'finisher_input' || input.type === 'finisher_ready') { finisher.input(input); rescue.input(input); return; }
     if (input.type === 'structure_repaired') { applyRecoveryEvent(input.event); return; }
+    if(input.type==='captain_withdrawn' && canonicalCaptains){
+      const hero=party.get(input.by);if(hero && !hero.withdrawn){hero.withdrawn=true;hero.away=true;}
+      return;
+    }
     if ((finisher.active || rescue.active) && input.type !== 'captain_move') return;
     if (input.type === 'fire') {
       const cannon = typeof input.cannonId === 'string' ? cannonById.get(input.cannonId) : undefined;

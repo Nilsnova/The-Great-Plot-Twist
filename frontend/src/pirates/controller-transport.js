@@ -11,13 +11,15 @@ import { commandForJournal, MAX_INPUT_BATCH, MAX_INPUT_BATCH_BYTES, RECOVERY_FLU
   simulationInputFromJournal } from './recovery-transport.js';
 import { makeActionUid } from '../screens/islet/action-uid.js';
 import { MAX_TICKS_PER_FRAME, canonicalJson, validCanonicalClose, END_BEAT_MS, HEALTH_CHECKPOINT_COALESCE_MS } from './controller-shared.js';
+import {readNativeFinish} from '../island/shared-wave-shapes.js';
 
 export function createTransport(ctl) {
   const { room, now, recoveryTransport, actorId, later, emit, noteLiveInput } = ctl;
   // From the other parts (controller-*.js), linked once every part exists.
   let tagActors, receiveCosmetic, handle, roundLoot, end, presentEnd, stop;
   function submit(input, lead = INPUT_LEAD_TICKS) {
-    if (!ctl.wave || ctl.wave.done || ctl.wave.state.phase !== 'running') return false;
+    if (!ctl.wave || ctl.wave.done || ctl.wave.state.phase !== 'running' || !ctl.controls(ctl.wave)) return false;
+    if(ctl.wave.info.nativeShared && (input.type==='captain_revive' || input.type==='captain_move' && Object.hasOwn(input,'away')))return false;
     if (ctl.wave.recoveryReplay) {
       const command = commandForJournal(input);
       if (!command) return false;
@@ -43,7 +45,7 @@ export function createTransport(ctl) {
   function pumpRecovery(current, at) {
     if (!current.recoveryReplay || !recoveryTransport) return;
     const waveId = current.info.waveId;
-    if (!current.recoverySending && current.recoveryPending.length
+    if (ctl.controls(current) && !current.recoverySending && current.recoveryPending.length
       && (at - current.recoveryLastFlushAt >= RECOVERY_FLUSH_MS || current.recoveryFlushNow) && at >= current.recoveryInputRetryAt) {
       current.recoveryLastFlushAt = at;
       current.recoveryFlushNow = false;
@@ -68,7 +70,7 @@ export function createTransport(ctl) {
     }
     if (recoveryPollDue(current, at)) void fetchRecoveryFrontier(current);
     // The health vector and its signature only when a checkpoint could go out (not every frame).
-    if (!current.done && !current.recoveryInvalid && !current.recoveryHealthCheckpointPromise && !current.catchingUp
+    if (ctl.controls(current) && !current.done && !current.recoveryInvalid && !current.recoveryHealthCheckpointPromise && !current.catchingUp
       && at - current.recoveryHealthLastAttemptAt >= HEALTH_CHECKPOINT_COALESCE_MS) {
       const vector = current.sim.recoveryHealthVector();
       const signature = vector ? canonicalJson(vector) : null;
@@ -238,6 +240,7 @@ export function createTransport(ctl) {
   }
 
   async function checkpointRecovery(current, { force = true } = {}) {
+    if(current?.info.nativeShared && !ctl.controls(current))return {ok:false,code:'session_context_required'};
     if (!current?.recoveryReplay || !recoveryTransport?.checkpoint || current.recoveryFinishAnswered
       || current.recoveryInvalid) return { ok: false, code: 'recovery_unavailable' };
     // A paid repair needs the server to know this screen's damage. When the last accepted checkpoint already holds
@@ -361,6 +364,7 @@ export function createTransport(ctl) {
   }
 
   function tryRecoveryFinish(current) {
+    if(current?.info.nativeShared && !ctl.controls(current) && !current.recoveryFinishRequest)return false;
     if (!current?.recoveryFinishPending || current.recoveryFinishing || current.recoveryFinishAnswered
       || current.recoveryFinishFailed || !current.done || current.recoveryInvalid || current.recoverySending
       || current.recoveryPolling || !current.recoveryReplay?.complete()
@@ -397,17 +401,19 @@ export function createTransport(ctl) {
     Promise.resolve().then(() => ctl.disposed ? null : recoveryTransport.finishWave(body)).then(answer => {
       if (ctl.disposed) return;
       const recovered = answer?.data?.recovery;
-      const completeClose = answer?.ok === true && typeof answer.data.survived === 'boolean' && validCanonicalClose(recovered, current);
+      const nativeClose=current.info.nativeShared && answer?.ok===true && readNativeFinish({...answer.data,economy:null,session:null},
+        {actorId:current.nativeActorId,origin:current.info.initialSnapshot.economy},current.info.waveId);
+      const completeClose = !!nativeClose || answer?.ok === true && !current.info.nativeShared && typeof answer.data.survived === 'boolean' && validCanonicalClose(recovered, current);
       if (completeClose) {
         current.answer = answer.data;
         current.recoveryFinishAnswered = true;
         current.recoveryFinishPending = false;
-        current.result = { ...(current.result ?? current.sim.result()), survived: answer.data.survived };
+        current.result = { ...(current.result ?? current.sim.result()), survived: nativeClose?answer.data.outcome==='won':answer.data.survived };
         current.done = true;
         // An old receipt must never change the new wave's loot chip or run total.
-        if (ctl.wave === current) { presentEnd(current); roundLoot(current, answer.data.loot); }
+        if (ctl.wave === current) { presentEnd(current); if(!nativeClose)roundLoot(current, answer.data.loot); }
         else if (Number.isFinite(answer.data.loot)) current.roundLoot = answer.data.loot;
-        emitRecoveryFinish(current.info.waveId, answer.data, current.recoveryFinishExtra);
+        emitRecoveryFinish(current.info.waveId, answer.data, {...current.recoveryFinishExtra,...(nativeClose?{nativeShared:true,recovery:true,origin:answer.data.origin,completion:answer.data.completion,outcome:answer.data.outcome,survived:answer.data.outcome==='won'}:{})});
         return;
       }
       const refusal = answer?.ok === true ? { refused: true, status: 502, code: 'unreadable' }

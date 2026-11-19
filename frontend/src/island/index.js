@@ -73,6 +73,7 @@ import {createSharedBoatApi} from './shared-boat-api.js';
 import {createBoatRoundSession} from './shared-boat-session.js';
 import {createIslandSession} from './island-session.js';
 import {readLegacyEconomy} from './economy-view.js';
+import {createSharedWaveApi} from './shared-wave-api.js';
 
 export {ARRIVAL_KEY, SPOTS_CHANGED, NEWS_KEY, CAMPAIGN_UNLOCKED, TOWER_SPECIALISED, TOWER_TREE_BOUGHT,
   HOUSE_ROLE_PICKED, VISIT_NAMED, ISLAND_RESET, CHART_NAMES, ALL_REPAIRED} from './island-shared.js';
@@ -148,14 +149,16 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   isl.islandTransport = transport ?? isl.live;
   isl.sharedBoatApi = createSharedBoatApi({transport: isl.islandTransport, getEconomy: isl.getEconomy, onEconomy: isl.refreshEconomy});
   isl.sharedBoatSession = createBoatRoundSession({api: isl.sharedBoatApi, getEconomy: isl.getEconomy, getActorId, storage});
+  isl.session = createIslandSession(isl);
+  isl.sharedWaves = createSharedWaveApi({transport:isl.islandTransport,getEconomy:isl.getEconomy,getActorId,
+    getProof:()=>isl.session.proof(),onEconomy:isl.refreshEconomy,storage,allowLegacy:()=>mode==='fake' || !!readLegacyEconomy(isl.getEconomy())});
   isl.api = createIslandApi({transport: isl.islandTransport, ...economyContext, onEconomy: isl.refreshEconomy,
+    sharedWaves:()=>mode!=='fake' && isl.domainAvailable('session')?isl.sharedWaves:null,
     economy: () => isl.currentFunds().shared ? isl.currentFunds().economy : undefined, sharedSnapshot: () => isl.visitCode && !isl.visiting ? null : isl.visiting ?? isl.own,
     personalCaptain: () => isl.own?.captain ?? (isl.personalUnavailable ? {progressionVersion: 1} : null),
     personalScope: () => `${getActorId() ?? ''}:${isl.own?.code ?? ''}`, pendingStorage: storage, authGeneration, negotiateEconomy: mode !== 'fake',
     waveProtocol: where => where === 'pirate_point' ? 1 : 2});
-  isl.recoveryTransport = Object.freeze({get: (path, ...options) => isl.islandTransport.get(path, ...options),
-    post: (path, body, ...options) => isl.islandTransport.post(path, body, ...options)});
-  isl.session = createIslandSession(isl);
+  isl.recoveryTransport = Object.freeze(isl.sharedWaves.recoveryTransport(isl.islandTransport));
   const roomPlace = () => mode === 'fake' || readLegacyEconomy(isl.getEconomy())
     ? islandRoom(isl.visiting?.code ?? isl.visitCode ?? isl.own?.code ?? '') || null : isl.session.roomPlace();
   isl.ui = createIslandUi({container, focus, resetInput,
