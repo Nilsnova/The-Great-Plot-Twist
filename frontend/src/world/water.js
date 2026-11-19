@@ -202,6 +202,7 @@ void main(){
 
 export function createWater(scene) {
   const colours = { uDeep: '#07566e', uMid: '#087f96', uLight: '#3dbdc9', uShallow: '#38c9b5', uShallow2: '#8be2c5', uFoam: '#f4fffa', uGlint: '#e6fff5', uStroke: '#63cfd6' };
+  const homeColours = {...colours, uDeep: '#07667e', uMid: '#0b94a5', uLight: '#45c8cf', uShallow: '#3dcbb8', uShallow2: '#8cebd1'};
   const uniforms = { ...seaUniforms };
   for (const [key, value] of Object.entries(colours)) uniforms[key] = { value: new THREE.Color(value) };
   const material = new THREE.ShaderMaterial({ uniforms, vertexShader: worldVertex, fragmentShader: fragment,
@@ -215,6 +216,8 @@ export function createWater(scene) {
     setQuality(name) { detail = QUALITY[name]?.waveMarks >= 160 ? 1 : 0; seaUniforms.uDetail.value = detail; },
     // Read the coast of the place just attached; without a readable backdrop the sea stays open.
     setCoast(group) {
+      const palette = group?.name === 'place:home_islet' ? homeColours : colours;
+      for (const [key, value] of Object.entries(palette)) uniforms[key].value.set(value);
       const backdrop = findBackdrop(group);
       try {
         if (!backdrop) throw new Error('no backdrop');
