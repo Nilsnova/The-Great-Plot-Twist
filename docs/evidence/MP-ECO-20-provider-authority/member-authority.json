@@ -1,0 +1,193 @@
+{
+  "result": "passed",
+  "startedAt": "2026-11-19T17:23:45.273Z",
+  "finishedAt": "2026-11-19T17:24:03.331Z",
+  "productionSource": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+  "sourceBefore": {
+    "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+    "actualCheckoutHead": "02905c8386323814bfef05462854bded278b6859",
+    "productionDiffFromBaseline": "empty",
+    "paths": [
+      "backend/server",
+      "backend/content",
+      "frontend/src",
+      "supabase/migrations",
+      "backend/uv.lock",
+      "backend/pyproject.toml",
+      "frontend/package-lock.json",
+      "frontend/package.json",
+      ":(exclude)backend/server/tests"
+    ]
+  },
+  "sourceAfter": {
+    "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+    "actualCheckoutHead": "02905c8386323814bfef05462854bded278b6859",
+    "productionDiffFromBaseline": "empty",
+    "paths": [
+      "backend/server",
+      "backend/content",
+      "frontend/src",
+      "supabase/migrations",
+      "backend/uv.lock",
+      "backend/pyproject.toml",
+      "frontend/package-lock.json",
+      "frontend/package.json",
+      ":(exclude)backend/server/tests"
+    ]
+  },
+  "servedSourcesBefore": [
+    {
+      "service": "api",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "02905c8386323814bfef05462854bded278b6859",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    },
+    {
+      "service": "frontend",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "02905c8386323814bfef05462854bded278b6859",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    }
+  ],
+  "servedSourcesAfter": [
+    {
+      "service": "api",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "02905c8386323814bfef05462854bded278b6859",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    },
+    {
+      "service": "frontend",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "02905c8386323814bfef05462854bded278b6859",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    }
+  ],
+  "helpersBefore": {
+    "member-authority.mjs": "40b12765c5917aef0ae2f4c0977431c979a0f79316748dee361d87cf04b9d7a6",
+    "api-clients.mjs": "a9369da75350b882ac6a312c20903965a362409978e86e108c256f9cc450a9f7",
+    "observer.mjs": "40cb288da9f9a80e337fba5a39a12b1b23501ad1ff48a2a4614975492997f140",
+    "runtime.mjs": "d1387a35fd7243df58e8d9589586034b3a098489bb20e43bece9b6b45040865f",
+    "source.mjs": "56d138914dc5b4e15159162bb21db68c985b2c9083c2e5bac4b34a90502ea8d9",
+    "record-source.mjs": "0c30cbbc32f1728d2fc6957ecf108bb02f210d2f0665a20e5d2401caf0b5bc0a",
+    "../../../backend/tools/authenticated_economy/observe.py": "18707a8ed12d18c69a4c04de1a416089ccbe89619f5f6f6e9a270840df551839",
+    "../../../backend/tools/authenticated_economy/config.py": "9c1ab2bc84f0e5da14748624064a8a68357a52a44d3d79473251302a46082b47",
+    "../../../backend/tools/authenticated_economy/application.py": "05effdff57cb2443ac691c1e0bf4741563bece314a476cfbc4d6ae0a13b6bd6e",
+    "../../../backend/tools/authenticated_economy/worker.py": "49da1ea8bd677741af8665e0588b3fd4be9ef924a4d229bd60320c2cfe2cd906"
+  },
+  "helpersAfter": {
+    "member-authority.mjs": "40b12765c5917aef0ae2f4c0977431c979a0f79316748dee361d87cf04b9d7a6",
+    "api-clients.mjs": "a9369da75350b882ac6a312c20903965a362409978e86e108c256f9cc450a9f7",
+    "observer.mjs": "40cb288da9f9a80e337fba5a39a12b1b23501ad1ff48a2a4614975492997f140",
+    "runtime.mjs": "d1387a35fd7243df58e8d9589586034b3a098489bb20e43bece9b6b45040865f",
+    "source.mjs": "56d138914dc5b4e15159162bb21db68c985b2c9083c2e5bac4b34a90502ea8d9",
+    "record-source.mjs": "0c30cbbc32f1728d2fc6957ecf108bb02f210d2f0665a20e5d2401caf0b5bc0a",
+    "../../../backend/tools/authenticated_economy/observe.py": "18707a8ed12d18c69a4c04de1a416089ccbe89619f5f6f6e9a270840df551839",
+    "../../../backend/tools/authenticated_economy/config.py": "9c1ab2bc84f0e5da14748624064a8a68357a52a44d3d79473251302a46082b47",
+    "../../../backend/tools/authenticated_economy/application.py": "05effdff57cb2443ac691c1e0bf4741563bece314a476cfbc4d6ae0a13b6bd6e",
+    "../../../backend/tools/authenticated_economy/worker.py": "49da1ea8bd677741af8665e0588b3fd4be9ef924a4d229bd60320c2cfe2cd906"
+  },
+  "facts": [
+    {
+      "event": "member-demolished-owner-building-with-shared-refund",
+      "at": "2026-11-19T17:23:54.263Z",
+      "quotedRefund": "5",
+      "personalFunding": false
+    },
+    {
+      "event": "invited-member-changed-owner-research-decision",
+      "at": "2026-11-19T17:23:55.460Z",
+      "ownerChoice": "rapid_2",
+      "memberChoice": "long_guns",
+      "quotedCost": "360",
+      "ownerApprovalRequired": false
+    },
+    {
+      "event": "nonmembers-and-forged-account-epoch-refused",
+      "at": "2026-11-19T17:23:57.231Z",
+      "statuses": [
+        403,
+        403,
+        422,
+        409
+      ],
+      "treasuryUnchanged": true
+    },
+    {
+      "event": "session-successor-kept-member-ownership",
+      "at": "2026-11-19T17:23:57.583Z",
+      "controllerAndLeader": true,
+      "settingsStatus": 200,
+      "resetStatus": 403
+    },
+    {
+      "event": "owner-reset-and-old-operation-isolation",
+      "at": "2026-11-19T17:24:00.932Z",
+      "newBudget": "200",
+      "newGrantCount": 1,
+      "changedEpoch": true,
+      "oldReceiptRetained": true,
+      "memberCaptainUnchanged": true
+    },
+    {
+      "event": "confirmed-owner-deletion-preserved-other-players",
+      "at": "2026-11-19T17:24:03.327Z",
+      "initialConfirmationStatus": 409,
+      "ownedIslandDeleted": true,
+      "authDeleted": true,
+      "memberCaptainUnchanged": true,
+      "continuingWalletsUnchanged": true,
+      "cachedOwnerStatus": 404
+    }
+  ],
+  "limitations": [
+    "API-only registered identities; no anonymous guest admission or rendered interaction is claimed.",
+    "Fresh6000capital and savedwave20 unlock are explicit setup; no history/clock/HP/outcome is edited.",
+    "Personal preservation checks use the actual initialized level1 profile; earned receipt/milestone preservation is a separate case.",
+    "No owner succession or automatic new owner is inferred."
+  ]
+}
