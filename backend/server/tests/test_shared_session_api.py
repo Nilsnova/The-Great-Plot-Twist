@@ -339,3 +339,25 @@ def test_session_read_preserves_required_spectator_null_fields():
     answer = asyncio.run(api.read_session(Admin([value]), ACTOR, OWNER, EPOCH))
     assert answer["session"]["sessionId"] is None
     assert answer["session"]["connectionGeneration"] is None
+
+
+def test_public_replay_probe_returns_none_only_for_exact_new_reply():
+    admin = Admin([{"status": "new"}])
+    assert asyncio.run(api.replay_wave_start(admin, ACTOR, OWNER, EPOCH, "saved_bell_001")) is None
+    assert admin.calls[0][0] == "shared_session_wave_replay"
+
+
+@pytest.mark.parametrize(
+    "value", [{"status": "new", "extra": True}, {}, {"status": "another_success"}]
+)
+def test_public_replay_probe_refuses_noncanonical_new_states(value):
+    with pytest.raises(SupabaseRejected):
+        asyncio.run(api.replay_wave_start(Admin([value]), ACTOR, OWNER, EPOCH, "saved_bell_001"))
+
+
+def test_public_replay_probe_returns_only_owned_original_wave_without_current_authority():
+    value = historical_wave()
+    answer = asyncio.run(
+        api.replay_wave_start(Admin([value]), ACTOR, OWNER, EPOCH, "saved_bell_001")
+    )
+    assert answer["historical"] is True and answer["economy"] is None and answer["session"] is None
