@@ -1,0 +1,30 @@
+{
+  "status": "blocked",
+  "reasons": [
+    "storage_budget_exceeded"
+  ],
+  "sourceCommit": "3bdd8eda16470795fdedd68c42fffab54e5f2ced",
+  "controls": {
+    "retainedWaves": 100,
+    "eventsPerWave": 14400,
+    "storageBudgetBytes": 1073741824,
+    "eventBudget": 2000000,
+    "safetyFactor": 2
+  },
+  "forecast": {
+    "retainedEvents": 1440000,
+    "bytesPerEventUpperEstimate": 660,
+    "reservedBytes": 1900800000,
+    "safetyFactor": 2
+  },
+  "retention": {
+    "action": "retain_all",
+    "destructiveOperations": 0,
+    "automaticCleanup": false
+  },
+  "constraints": {
+    "durableCrossWorkerEventCap": false,
+    "productionCapacityGuarantee": false,
+    "newWaveAdmissionMustBeReviewedBeforeRollout": true
+  }
+}

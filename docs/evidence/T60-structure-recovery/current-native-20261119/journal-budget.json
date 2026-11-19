@@ -1,0 +1,32 @@
+{
+  "sourceCommit": "3bdd8eda16470795fdedd68c42fffab54e5f2ced",
+  "measurementSha256": "743e68a355d70c46f3df2de76891089a6f833f639b223cbd0929fe067f338dd4",
+  "journalEvents": 2000,
+  "allocatedBytes": 1318912,
+  "payloadBytes": 596000,
+  "eventTupleBytes": 872000,
+  "sample": {
+    "actors": 2,
+    "commandsPerActor": 1000,
+    "batchLimit": 32,
+    "fixedHeadPages": 8,
+    "maxEncodedPageBytes": 95384,
+    "capturedHead": 2000,
+    "prefixSha256": "7328c37c94eb200eb3261031b40bb29735ec93e01dc87dd998531f77ce4cdf26"
+  },
+  "timing": {
+    "meanInputBatchMs": 24.314,
+    "maximumPageMs": 5.609
+  },
+  "retention": {
+    "closedJournalRowsRetained": 2000,
+    "canonicalClosureRowsRetained": 1,
+    "destructiveOperations": 0
+  },
+  "limits": [
+    "Disposable Unix-socket PostgreSQL; seeded Auth identities, not provider sign-in.",
+    "Native SQL bypasses HTTP token buckets; no cross-worker capacity guarantee.",
+    "Allocation is the scratch relation plus indexes, not isolated per-wave attribution.",
+    "Retain canonical/accounting history; no automatic deletion policy selected."
+  ]
+}

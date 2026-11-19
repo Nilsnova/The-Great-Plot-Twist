@@ -1,0 +1,26 @@
+{
+  "sourceCommit": "3bdd8eda16470795fdedd68c42fffab54e5f2ced",
+  "testSha256": "a19ae124856243c31a159db59524a194890f86ef69316810f2662b89a5055a0a",
+  "restoreTick": 388,
+  "firstEscape": [
+    {
+      "tick": 393,
+      "boarderId": "boarder_2",
+      "x": -1.06,
+      "z": 3.41,
+      "standingTowerHP": 80,
+      "edgeDistance": 0.06000000000000005
+    },
+    {
+      "tick": 393,
+      "boarderId": "boarder_2",
+      "x": -1.06,
+      "z": 3.41,
+      "standingTowerHP": 80,
+      "edgeDistance": 0.06000000000000005
+    }
+  ],
+  "independentReplaysAgree": true,
+  "bothRestoredTowersFired": true,
+  "limit": "Production replay/simulation with a synthetic sealed paid event; no provider/browser payment claim."
+}
