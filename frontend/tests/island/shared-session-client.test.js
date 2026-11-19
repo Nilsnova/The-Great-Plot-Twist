@@ -3,7 +3,7 @@ import {afterEach,it,expect,vi} from 'vitest';
 import {createSharedSessionClient} from '../../src/island/shared-session-client.js';
 import {actorId,economy,metadata,sessionId} from './shared-session-fixture.js';
 let fixtureNumber=0;
-const storage=()=>{const rows=new Map();return {getItem:key=>rows.get(key)??null,setItem:(key,value)=>rows.set(key,value),rows};};
+const storage=()=>{const rows=new Map();return {getItem:key=>rows.get(key)??null,setItem:(key,value)=>rows.set(key,value),removeItem:key=>rows.delete(key),rows};};
 function locks(){const held=new Set();return {async request(name,_options,run){if(held.has(name))return run(null);held.add(name);try{return await run({name});}finally{held.delete(name);}}};}
 const clients=[];afterEach(async()=>{await Promise.all(clients.splice(0).map(client=>client.dispose()));});
 function setup(extra={}){
@@ -12,7 +12,7 @@ function setup(extra={}){
   read:vi.fn(async proof=>{const data=metadata(!!proof);if(proof)data.session.connectionGeneration=proof.connectionGeneration;return {ok:true,data};}),
   heartbeat:vi.fn(async proof=>{const data=metadata();data.session.connectionGeneration=proof.connectionGeneration;return {ok:true,data};}),disconnect:vi.fn(async()=>({ok:true,data:metadata(false)}))};
  const client=createSharedSessionClient({api,getActorId:()=>actor,getEconomy:()=>selected,storage:saved,locks:provider,
-  makeUid:()=>`session_uid_${fixture}_${++uids}`,makeSessionId:()=>sessionId,setTimer:run=>{timers.push(run);return timers.length;},clearTimer(){},onState:value=>states.push(value)});
+  makeUid:()=>`session_uid_${fixture}_${++uids}`,makeSessionId:extra.makeSessionId??(()=>sessionId),setTimer:run=>{timers.push(run);return timers.length;},clearTimer(){},onState:value=>states.push(value)});
  clients.push(client);return {client,api,saved,states,timers,provider,setActor:value=>{actor=value;},setEconomy:value=>{selected=value;},allocated:()=>uids};
 }
 it('withholds controller proof until a fresh GET follows the attach response',async()=>{
@@ -98,4 +98,20 @@ it('releases obsolete ownership when the next scheduled heartbeat observes an id
  await Promise.resolve();
  const next=setup({storage:first.saved,locks:first.provider});await next.client.open();
  expect(next.client.proof()).not.toBeNull();expect(next.api.attach).toHaveBeenCalledOnce();
+});
+
+it('keeps an unknown late attachment inert after navigation and retries only the captured destination',async()=>{
+ let count=0;const f=setup({makeSessionId:()=>++count===1?sessionId:'99999999-9999-4999-8999-999999999999'});let release;
+ f.api.attach.mockImplementationOnce(()=>new Promise(resolve=>{release=resolve;}));
+ f.api.attach.mockImplementation(async()=>({ok:false,status:409,code:'controller_held'}));
+ const old=f.client.open();await vi.waitFor(()=>expect(f.api.attach).toHaveBeenCalledOnce());
+ const original=structuredClone(f.api.attach.mock.calls[0][0]);
+ const destination={...economy(),islandOwner:'66666666-6666-4666-8666-666666666666',accountId:'77777777-7777-4777-8777-777777777777',runEpoch:'88888888-8888-4888-8888-888888888888'};
+ f.setEconomy(destination);release({ok:true,data:metadata()});await old;
+ expect(f.api.read).not.toHaveBeenCalled();expect(f.client.proof()).toBeNull();await f.client.open();
+ const next=structuredClone(f.api.attach.mock.calls[1][0]);expect(next.origin.islandOwner).toBe(destination.islandOwner);
+ f.timers.at(-1)();await vi.waitFor(()=>expect(f.api.attach).toHaveBeenCalledTimes(3));
+ expect(f.api.attach.mock.calls[2][0]).toEqual(next);expect(f.api.attach.mock.calls.filter(call=>call[0].origin.islandOwner===actorId)).toHaveLength(1);
+ expect([...f.saved.rows.values()].some(value=>value.includes(original.body.actionUid))).toBe(true);
+ expect(f.client.state.phase).toBe('waiting');expect(f.api.heartbeat).not.toHaveBeenCalled();
 });
