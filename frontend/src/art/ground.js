@@ -123,7 +123,7 @@ function paintPavers(c, paths, materials) {
       c.fill(top);
       if (sheet) {
         const [sx, sy, sw, sh] = sheet, [u, v, w, h] = PAVER_FACES[pigment];
-        c.save(); c.clip(top); c.globalAlpha = .58;
+        c.save(); c.clip(top); c.globalAlpha = .55; c.globalCompositeOperation = 'luminosity';
         c.drawImage(materials, sx + u * sw, sy + v * sh, w * sw, h * sh, x, y, right - x, bottom - y);
         c.restore();
       }
@@ -287,7 +287,12 @@ function paintTerrain(c, s, coast, random, materials) {
   glow.addColorStop(.52, '#8ebc46');
   glow.addColorStop(1, '#579638');
   c.fillStyle = glow; c.fill(meadow);
-  if (materials) paintMaterial(c, materials, 'grass', {alpha: .71});
+  if (materials) {
+    paintMaterial(c, materials, 'grass', {alpha: .60});
+    c.save(); c.rotate(.17); c.translate(-2.6, 1.4); c.scale(1.25, 1.15);
+    paintMaterial(c, materials, 'grass', {alpha: .27});
+    c.restore();
+  }
   // A broad change in light from the sunlit back ledges to the lower shore ties their caps
   // into the meadow without drawing any new path or extending the dry ground.
   c.fillStyle = linear(c, -16, -12, 12, 13, [[0, '#f3d67832'], [.46, '#f4d36b09'], [.73, '#42783b10'], [1, '#345b303c']]);
