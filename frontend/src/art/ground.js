@@ -12,15 +12,26 @@ import {meadowScale, paintMaterial, pathMaterialMask} from './village/terrain-ma
 const SIZE = {width: 64, height: 48};
 // Paths of each island (logical x/z, a polyline each) and small clearings [x, z, radius].
 const PATHS = {
-  home_islet: {lines: [[[0, -15], [0, -5.5], [0, 7.5], [.6, 14], [1.6, 21]], [[-13, -5.5], [13, -5.5]], [[-11, 7.5], [12, 7.5]], [[0, 11], [8.5, 12.6]]],
-    clearings: [[0, -14, 3.2], [-8, 6.6, 3.4], [8.5, 12.4, 2.4], [7, -6, 2.6], [-8, -6, 2.6]]},
+  home_islet: {
+    lines: [
+      [[0, -14], [0, -5.2], [0, 7.7], [.6, 14], [1.6, 21]],
+      [[-8, -6], [-5.5, -5.2], [4.8, -5.2], [7, -6]],
+      [[-8, 6.6], [-4, 7.7], [7.6, 7.7], [12.6, 7.5]],
+      [[.3, 11], [4.4, 12.5], [8.5, 12.5]],
+      [[0, -12], [-2.8, -10.8], [-5.5, -11.5]],
+      [[0, -12], [4.1, -10.6], [8.5, -12.5]],
+    ],
+    widths: [1.48, 1.04, 1.18, .94, .91, .98],
+    clearings: [[0, -14, 2.33], [-8, 6.6, 2.65], [8.5, 12.4, 1.57], [7, -6, 1.53], [-8, -6, 1.53],
+      [0, 2, 2.28], [8.5, -12.5, 2.02], [-5.5, -11.5, 1.89], [12.6, 7.5, 1.75]],
+  },
 };
 const seeded = seed => () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
 
 const PAVERS = [
-  ['#c9ba9c', '#b1a085', '#d9c9a9'], ['#cfbea0', '#b6a487', '#dfcdae'],
-  ['#c8baa2', '#b2a28b', '#d9cbb4'], ['#c3b398', '#ad9e83', '#d3c3a6'],
-  ['#d0bfaa', '#b7a68e', '#dfceb7'], ['#c8b79c', '#b09f84', '#d8c7a8'],
+  ['#d6bd94', '#b9a280', '#e6cca6'], ['#d4c2a4', '#b2a382', '#e6d2b2'],
+  ['#c9b99c', '#af9a7f', '#d8c8a6'], ['#c6ab87', '#a88d70', '#d6bd9b'],
+  ['#d9c6a6', '#b6a386', '#e8d6b8'], ['#c8b292', '#a9957c', '#d8c5a8'],
 ];
 
 /** World-anchored limestone setts with shallow bevels and narrow, subdued joints. */
@@ -113,17 +124,17 @@ export function paintGround(id, density = 28, materials = null) {
   c.restore();
   c.lineWidth = .16; c.strokeStyle = '#3d7f36'; c.stroke(meadow);
   if (materials) { c.save(); c.clip(beach); c.lineWidth = .055; c.strokeStyle = '#d2e58b'; c.stroke(meadow); c.restore(); }
-  // Paths: a sandy band with a darker edge and a soft inner light.
+  // Stone village footpaths retain a thin bank of warm sand against the grass.
   if (paths) {
-    const trail = new Path2D(); for (const points of paths.lines) points.forEach(([x, z], i) => (i ? trail.lineTo(...at(x, z)) : trail.moveTo(...at(x, z))));
-    c.save(); c.clip(coast(.99)); c.lineCap = 'round'; c.lineJoin = 'round';
-    for (const [width, colour] of [[2.5, '#b98f57'], [2.2, '#e7c88a'], [1.1, '#efd7a0']]) {
-      c.lineWidth = width; c.strokeStyle = colour; c.stroke(trail);
-      for (const [x, z, r] of paths.clearings) { c.fillStyle = colour; c.fill(ellipse(...at(x, z), r + (width - 2.2) / 2, (r + (width - 2.2) / 2) * .72)); }
+    c.save(); c.clip(coast(.99));
+    for (const [padding, colour] of [[.16, '#a88c62'], [.067, '#e5c691'], [0, '#efd7a0']]) {
+      c.fillStyle = colour;
+      c.fill(pathMaterialMask(paths, 2.04, padding));
     }
     if (materials) paintPavers(c, paths, materials);
+    c.clip(pathMaterialMask(paths));
     c.globalAlpha = materials ? .25 : 1;
-    c.fillStyle = '#d7b273'; for (let i = 0; i < 120; i++) { const [points] = [paths.lines[Math.floor(random() * paths.lines.length)]], t = random(), j = Math.floor(t * (points.length - 1)), f = t * (points.length - 1) - j;
+    c.fillStyle = '#d7b273'; for (let i = 0; i < 120; i++) { const points = paths.lines[Math.floor(random() * paths.lines.length)], t = random(), j = Math.floor(t * (points.length - 1)), f = t * (points.length - 1) - j;
       const [x0, z0] = points[j], [x1, z1] = points[Math.min(points.length - 1, j + 1)]; c.fill(ellipse(...at(x0 + (x1 - x0) * f + (random() - .5) * 1.4, z0 + (z1 - z0) * f + (random() - .5) * 1.4), .09, .06)); }
     c.restore();
   }
