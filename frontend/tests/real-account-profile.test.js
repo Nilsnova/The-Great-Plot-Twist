@@ -58,6 +58,31 @@ describe('real account profile',()=>{
     expect(test.calls.map(call=>call.method)).toEqual(['DELETE','GET','DELETE']);
     expect(test.ctx.signOut).toHaveBeenCalledOnce();expect(test.ctx.session.isSignedIn()).toBe(false);
   });
+  it('requires a server-owned-island classification before forwarding the extra explicit consent',async()=>{
+    const test=setup();test.replies.push(fail(409,'owned_island_confirmation_required'));
+    expect((await test.handlers.deleteMyData({confirm:true})).reason).toBe('owned_island_confirmation_required');
+    expect(test.calls).toEqual([{method:'DELETE',route:'/api/me',body:{confirm:true}}]);
+    expect(test.ctx.signOut).not.toHaveBeenCalled();
+    test.replies.push(okay({deleted:true}));
+    expect((await test.handlers.deleteMyData({confirm:true,confirmOwnedIslandDeletion:true})).accepted).toBe(true);
+    expect(test.calls[1].body).toEqual({confirm:true,confirmOwnedIslandDeletion:true});
+  });
+  it('preserves an explicit false boolean for the server classification without escalating it',async()=>{
+    const test=setup();test.replies.push(fail(409,'owned_island_confirmation_required'));
+    expect((await test.handlers.deleteMyData({confirm:true,confirmOwnedIslandDeletion:false})).reason).toBe('owned_island_confirmation_required');
+    expect(test.calls).toEqual([{method:'DELETE',route:'/api/me',body:{confirm:true,confirmOwnedIslandDeletion:false}}]);
+    expect(test.ctx.signOut).not.toHaveBeenCalled();
+  });
+  it.each(['true',1,null])('rejects nonboolean owned-island consent %j before transport',async value=>{
+    const test=setup();expect((await test.handlers.deleteMyData({confirm:true,confirmOwnedIslandDeletion:value})).reason).toBe('invalid_request');
+    expect(test.calls).toEqual([]);
+  });
+  it('does not carry owned-island consent to a new authenticated adapter scope',async()=>{
+    const test=setup();test.replies.push(fail(409,'owned_island_confirmation_required'));await test.handlers.deleteMyData({confirm:true});
+    test.store.invalidate();test.store.commit({me:{...me,id:'another-player'}});
+    expect((await test.handlers.deleteMyData({confirm:true,confirmOwnedIslandDeletion:true})).reason).toBe('confirmation_required');
+    expect(test.calls).toHaveLength(1);expect(test.ctx.signOut).not.toHaveBeenCalled();
+  });
   it('never signs out when a successful delete reply lacks deleted true',async()=>{
     const test=setup();test.replies.push(okay({deleted:false}));
     expect((await test.handlers.deleteMyData({confirm:true})).reason).toBe('invalid_request');
