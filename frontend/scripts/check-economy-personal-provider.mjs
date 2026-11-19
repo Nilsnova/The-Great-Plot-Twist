@@ -56,8 +56,11 @@ async function noProgress(actors){
 }
 async function participation(waveId){return read('select player_id,confirmed_at>=a.starts_at as post_start from public.island_wave_participation_receipts p join public.island_wave_accounting a on a.wave_id=p.wave_id where p.wave_id=$1::uuid order by player_id',[waveId]);}
 async function waveIncome(waveId){
- const rows=await read("select a.account_id,a.run_epoch,c.outcome,c.loot_coins::text as loot,(select count(*)::int from public.island_treasury_transactions t where t.reference='wave:'||a.wave_id::text and t.reason='pirate_loot') as credits,(select coalesce(sum(t.balance_delta),0)::text from public.island_treasury_transactions t where t.reference='wave:'||a.wave_id::text and t.reason='pirate_loot') as credited from public.island_wave_accounting a join public.island_wave_closures c on c.wave_id=a.wave_id where a.wave_id=$1::uuid",[waveId]);
- assert.equal(rows.length,1);assert.equal(rows[0].credited,rows[0].loot);return rows[0];
+ const rows=await read("select a.account_id,a.run_epoch,a.played_wave,a.reward_basis,c.earned_bonuses,c.outcome,c.loot_coins::text as loot,(select count(*)::int from public.island_treasury_transactions t where t.reference='wave:'||a.wave_id::text and t.reason='pirate_loot') as credits,(select coalesce(sum(t.balance_delta),0)::text from public.island_treasury_transactions t where t.reference='wave:'||a.wave_id::text and t.reason='pirate_loot') as credited from public.island_wave_accounting a join public.island_wave_closures c on c.wave_id=a.wave_id where a.wave_id=$1::uuid",[waveId]);
+ assert.equal(rows.length,1);const row=rows[0],basis=row.reward_basis;
+ const bonus=row.earned_bonuses.reduce((total,name)=>total+BigInt(basis.bonuses[name]),0n);
+ const expected=row.outcome==='won'?(BigInt(basis.baseCoins)+BigInt(basis.perWaveCoins)*BigInt(row.played_wave)+BigInt(basis.perHouseCoins)*BigInt(basis.houseLevels)+bonus)*BigInt(basis.bossMultiplier):0n;
+ assert.equal(row.loot,String(expected));assert.equal(row.credited,row.loot);return row;
 }
 async function naturalFinish(actor,proof,wave,{otherHeartbeats=[]}={}){
  const play=createPersonalPlayout(wave),deadline=Date.now()+240000;let lastHeartbeat=0;
@@ -97,9 +100,9 @@ try{
  const proofs=new Map();for(const actor of env.clients)proofs.set(actor,await attach(actor,economy));
  await seed('update public.personal_captain_profiles set level=5 where player_id=$1::uuid',[engineer.actorId],
   'Acquired Captain-level eligibility fixture only; no personal win or skill point is granted');
+ const walletBefore=await read('select player_id,balance::text from public.wallets where player_id=any($1::uuid[]) order by player_id',[env.clients.map(row=>row.actorId)]);
  let current=await profile(engineer);
  await ok(engineer,'/api/captain/role',{method:'POST',body:{progressionVersion:1,expectedRevision:current.captain.revision,actionUid:uid(),role:'engineer'}});
- const walletBefore=await read('select player_id,balance::text from public.wallets where player_id=any($1::uuid[]) order by player_id',[env.clients.map(row=>row.actorId)]);
  const visit='/api/island/visit/'+code;
  const first=await build(engineer,visit,proofs.get(engineer),'wall_1');
  const c1=(await profile(engineer)).captain.engineerCommitment.id;
@@ -109,6 +112,7 @@ try{
  const respec=await ok(engineer,'/api/captain/respec',{method:'POST',body:{progressionVersion:1,expectedRevision:current.captain.revision,actionUid:uid()}});
  assert.equal(respec.captain.role,'engineer');assert.equal(respec.captain.engineerCommitment.id,c1);
  const legacy=await api(engineer,'/api/island/role',{method:'POST',body:{role:'medic'}});assert.equal(legacy.status,409);
+ const legacyRespec=await api(engineer,'/api/island/respec',{method:'POST',body:{actionUid:uid()}});assert.equal(legacyRespec.status,409);
  for(const actor of [offline,spectator])await leave(actor,proofs.get(actor));
  for(const actor of [owner,engineer,countdown])await heartbeat(actor,proofs.get(actor));
  await ok(owner,'/api/island/session/settings',{method:'POST',body:{...proofs.get(owner),actionUid:uid(),countdownSeconds:10,autoNext:false}});
@@ -121,10 +125,19 @@ try{
  await noProgress([offline,spectator,countdown]);
  const frozen=await read('select engineer_commitment_id from public.personal_captain_wave_snapshots where player_id=$1::uuid and wave_id=$2::uuid',[engineer.actorId,wave.waveId]);assert.equal(frozen[0].engineer_commitment_id,c1);
  const assigned=await profile(engineer);const assignedRespec=await api(engineer,'/api/captain/respec',{method:'POST',body:{progressionVersion:1,expectedRevision:assigned.captain.revision,actionUid:uid()}});assert.equal(assignedRespec.status,409);
- note('multiple-discounts-one-generation-and-countdown-fences',{prices:['9','9'],generation:c1,roster:3,preStartParticipation:0,roleBlocked:refusedRole.status,legacyBlocked:legacy.status,assignedRespecBlocked:assignedRespec.status});
+ note('multiple-discounts-one-generation-and-countdown-fences',{prices:['9','9'],generation:c1,roster:3,preStartParticipation:0,roleBlocked:refusedRole.status,legacyBlocked:legacy.status,legacyRespecBlocked:legacyRespec.status,assignedRespecBlocked:assignedRespec.status});
  while(Date.now()<=Date.parse(wave.startsAt)+200)await wait(Math.min(500,Date.parse(wave.startsAt)+250-Date.now()));
  await heartbeat(owner,proofs.get(owner));await heartbeat(engineer,proofs.get(engineer));
  const confirmed=await participation(wave.waveId);assert.equal(confirmed.length,2);assert.ok(confirmed.every(row=>row.post_start));
+ const combatSpectator=await ok(spectator,'/api/waves/current?where='+code+'&waveProtocol=2');assert.equal(combatSpectator.session.isSpectator,true);
+ const oldProof=proofs.get(engineer);
+ await ok(engineer,'/api/island/session/disconnect',{method:'POST',body:oldProof});
+ assert.deepEqual(await participation(wave.waveId),confirmed);
+ const restored=await ok(engineer,'/api/island/session/attach',{method:'POST',body:{economy,sessionId:oldProof.sessionId,expectedGeneration:oldProof.connectionGeneration,actionUid:uid()}});
+ assert.equal(BigInt(restored.session.connectionGeneration),BigInt(oldProof.connectionGeneration)+1n);
+ proofs.set(engineer,{...oldProof,connectionGeneration:restored.session.connectionGeneration});
+ assert.deepEqual(await participation(wave.waveId),confirmed);
+ note('confirmed-participation-survived-real-disconnect',{confirmedActors:2,rotatedConnection:true,spectatorRewardReceipts:0});
  await leave(engineer,proofs.get(engineer));
  const proofB=await attach(engineer,economyB);await build(engineer,'/api/island',proofB,'wall_1');
  const c2=(await profile(engineer)).captain.engineerCommitment.id;assert.notEqual(c2,c1);
@@ -160,8 +173,14 @@ try{
  assert.equal(terminalB.finished.completion.engineerCommitmentId,c2);
  current=await profile(engineer);assert.equal(current.captain.engineerCommitment,null);assert.equal(current.skills.earned,1);
  const walletAfter=await read('select player_id,balance::text from public.wallets where player_id=any($1::uuid[]) order by player_id',[env.clients.map(row=>row.actorId)]);assert.deepEqual(walletAfter,walletBefore);
+ const accounts=await read('select a.id,a.state,a.balance_coins::text as balance,a.committed_coins::text as held,(select coalesce(sum(t.balance_delta),0)::text from public.island_treasury_transactions t where t.account_id=a.id) as ledger_balance,(select coalesce(sum(t.committed_delta),0)::text from public.island_treasury_transactions t where t.account_id=a.id) as ledger_held from public.island_economy_accounts a where a.island_owner in ($1::uuid,$2::uuid) order by a.id',[owner.actorId,engineer.actorId]);
+ assert.equal(accounts.length,3);for(const account of accounts){assert.equal(account.balance,account.ledger_balance);assert.equal(account.held,account.ledger_held);assert.equal(account.held,'0');}
+ assert.equal(accounts.find(row=>row.id===admitted.currentEconomy.accountId).balance,String(182n+BigInt(income.loot)));
+ assert.equal(accounts.find(row=>row.id===admittedB.currentEconomy.accountId).balance,String(191n+BigInt(incomeB.loot)));
+ assert.equal(accounts.find(row=>row.id!==admitted.currentEconomy.accountId&&row.id!==admittedB.currentEconomy.accountId).balance,'200');
  note('matching-natural-completion-only-clears-successor',{outcome:terminalB.finished.outcome,clearedGeneration:c2,earnedPoints:current.skills.earned,allPrivateWalletsUnchanged:true});
  note('wave-income-once-across-acknowledgements',{winning:income,secondAttempt:incomeB,lateWinClaimKeptOriginalOutcome:true,houseBossBonusCoverage:false});
+ note('free-personal-actions-and-all-account-ledgers-reconciled',{accounts,allPrivateWalletsUnchanged:true});
  const sourceAfter=servedSourceEvidence(runtime);
  for(const url of helperUrls)assert.equal(sha(await readFile(url)),helperHashes[fileURLToPath(url).split('/').pop()],'Helper changed during run');
  await writeFile(output+'/result.json',JSON.stringify({result:'passed',source,expectedCommit,ownHashes,helperHashes,sourceBefore,sourceAfter,startedAt,finishedAt:new Date().toISOString(),facts,requests,
