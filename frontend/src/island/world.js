@@ -13,7 +13,8 @@ import {makeFootprint, makeWallLanes} from './move-preview.js';
 import {makeSelectionBracket} from './selection-bracket.js';
 import {makeDefenseRange} from './defense-range.js';
 import {makeBuildingFeedback, makeWallFeedback} from './wall-feedback.js';
-import {FOOTPRINTS, KEEP_OUT, footprintOf} from './placement.js';
+import {FOOTPRINTS, KEEP_OUT, footprintOf, overlaps, positionsOf} from './placement.js';
+import {HOME_COTTAGES, SOUTH_BELL} from './home-plan.js';
 import {isOpen, spotWave, waveOf} from '../campaign/index.js';
 import {LOCK_WAVES} from '../art/campaign.js';
 import {SLOT_KINDS} from './td-rules.js';
@@ -282,6 +283,27 @@ export function decorateIsland(place, ctx = {}) {
     bell.userData.portraitSize = 2.03;
     staticArt.track(bell, 'island-bell');
   }
+  const cottageArt = layout.zones === islandZones ? drawn('island-house') : null;
+  const cottages = cottageArt ? HOME_COTTAGES.map(site => {
+    const mesh = sprite(root, cottageArt, site.x, site.z, site.id);
+    mesh.userData.portraitSize = 1.83;
+    mesh.raycast = () => {};
+    staticArt.track(mesh, 'island-house');
+    return {site, mesh};
+  }) : [];
+  let bellPosition = BELL;
+  function updateScenery(spots) {
+    if (!bell || layout.zones !== islandZones) return;
+    const occupied = Object.entries(positionsOf(spots)).map(([id, point]) => {
+      const size = footprintOf(id);
+      return {...point, w: size, d: size};
+    });
+    const free = footprint => !occupied.some(plot => overlaps(plot, footprint));
+    // Old saves may already use this piece of ground. Keep their accepted placement and a usable bell.
+    bellPosition = free({...SOUTH_BELL, w: 2, d: 2}) ? SOUTH_BELL : BELL;
+    moveSprite(bell, bellPosition.x, bellPosition.z);
+    for (const {site, mesh} of cottages) mesh.visible = free(site);
+  }
   // The campaign's buildings (home island only): one mesh per frame they can show, the right one visible.
   const campaignMeshes = new Map(); // building id -> {frame name -> mesh}
   const campaignTextures = new Map();
@@ -353,7 +375,9 @@ export function decorateIsland(place, ctx = {}) {
       installed.push(collider);
     }
     place.colliders.splice(0, place.colliders.length, ...baseColliders,
-      ...fixtures.map(({id, x, z, w: width, d: depth}) => ({x, z, width, depth, islandBuilding: true, spotId: id})), ...installed);
+      ...fixtures.map(({id, x, z, w: width, d: depth}) => ({x, z, width, depth, islandBuilding: true, spotId: id})),
+      ...cottages.filter(({mesh}) => mesh.visible).map(({site: {id, x, z, w: width, d: depth}}) => ({x, z, width, depth, islandBuilding: true, spotId: id})),
+      ...installed);
     refreshTowerColliders();
   }
   let preview = null;
@@ -440,7 +464,7 @@ export function decorateIsland(place, ctx = {}) {
     const places = hidden || !crew ? [] : crewPlaces(spots.map(item => {
       const spot = SPOTS.find(entry => entry.id === item.id), where = spot ? whereOf(spot) : null;
       return where ? {...item, x: where.x, z: where.z} : null;
-    }).filter(Boolean), crew, {bell: layout.bell === false ? null : BELL});
+    }).filter(Boolean), crew, {bell: bell ? bellPosition : null});
     const key = places.map(item => `${item.kind}@${item.x},${item.z}`).join('|');
     if (shown.get('crew')?.key === key) return;
     clear('crew');
@@ -453,6 +477,7 @@ export function decorateIsland(place, ctx = {}) {
     if (disposed) return;
     if (battle || feedbackScope !== state.feedbackScope) clearPurchaseFeedback();
     state = {spots, visitor, battle, unlocks, crew, campaign, arsenal: arsenal === true, feedbackScope};
+    updateScenery(spots);
     place.setMooringBattle?.(battle);
     if (battle || visitor) {
       defenseRange?.show(null);
@@ -483,7 +508,7 @@ export function decorateIsland(place, ctx = {}) {
       const frame = known ? campaignArt(CAMPAIGN_BUILDINGS.find(item => item.id === id), campaign) : null;
       for (const [name, mesh] of Object.entries(meshes)) mesh.visible = name === frame;
     }
-    const standing = [];
+    const standing = cottages.filter(({mesh}) => mesh.visible).map(({site: {x, z}}) => ({slot: 'house', x, z}));
     for (const spot of SPOTS) {
       const answer = spots.find(item => item.id === spot.id), built = answer?.built === true, where = whereOf(spot);
       const marker = markers.get(spot.id);
@@ -520,7 +545,7 @@ export function decorateIsland(place, ctx = {}) {
     // The wave's renderer draws the crew during a battle; outside one they stand by their posts.
     if (art) showCrew(spots, crew, battle);
     if (layout.zones === islandZones) {
-      place.zones = islandZones({visitor, spots, arsenal: state.arsenal});
+      place.zones = islandZones({visitor, spots, arsenal: state.arsenal, bell: bellPosition});
     } else place.zones = [...baseZones, ...(known ? layout.zones() : [])];
     applyColliders(spots, known, campaign);
   }
@@ -609,7 +634,7 @@ export function decorateIsland(place, ctx = {}) {
     if (front) return front;
     const candidates = [...SPOTS.filter(spot => !isExtraSpot(spot.id) || state.spots.some(item => item.id === spot.id))
         .map(spot => ({id: spot.id, ...whereOf(spot), w: 2.4, h: spot.kind === 'watchtower' ? 5 : 3})),
-      ...(bell ? [{id: BELL.id, x: BELL.x, z: BELL.z, w: 1.6, h: 3.4}] : []),
+      ...(bell ? [{id: BELL.id, ...bellPosition, w: 1.6, h: 3.4}] : []),
       ...(arsenalMesh?.visible ? [{id: ARSENAL.id, x: ARSENAL.x, z: ARSENAL.z, w: ARSENAL.w / 2, h: ARSENAL.h}] : []),
       ...(campaignMeshes.size ? CAMPAIGN_BUILDINGS.map(item => ({id: item.id, x: item.x, z: item.z, w: item.w, h: item.h})) : []),
       ...(state.visitor || layout.cabin === false ? [] : [{id: CABIN.id, x: CABIN.x, z: CABIN.z, w: 3, h: 6}])];
@@ -656,6 +681,7 @@ export function decorateIsland(place, ctx = {}) {
   let ringing = 0;
   return {
     runArtTask: (key, operation) => tasks.run(key, operation),
+    get bellPosition() { return bell ? {...bellPosition} : null; },
     apply, pickAt, retryArt: () => Promise.all([retryArt(), staticArt.retry(), retryWallArt(), retryProgressArt(), ctx.retryAdditionalArt?.()]),
     canJoinWall(spot) {
       const row = recoveryState?.structures.find(item => item.spot === spot.id);

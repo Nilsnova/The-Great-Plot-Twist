@@ -46,7 +46,7 @@ export async function createSettlement(ctx) {
   const cleanups = [], dispose = createLifetime(group, art, cleanups);
   let mooringStage = null;
   try {
-    const ground = backdrop(group, await (ctx.loadBackdrop ?? loadBackdrop)(`places/${id}.png`));
+    const ground = backdrop(group, await (ctx.loadBackdrop ?? loadBackdrop)(`places/${id}.png`, {referencePlan: id === 'home_islet' && !!ctx.island}));
     const homeReference = ground.material.map.userData?.homeReference;
     if (id === 'home_islet') {
       if (!homeReference) {

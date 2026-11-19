@@ -9,6 +9,7 @@ import {createArtworkTasks, createStaticVillageArt} from '../../src/island/stati
 import {createVillageArtNotice} from '../../src/ui/village-art-notice.js';
 import {campaignOf} from '../../src/campaign/index.js';
 import {BELL, ARSENAL} from '../../src/island/spots.js';
+import {HOME_COTTAGES, SOUTH_BELL} from '../../src/island/home-plan.js';
 const flush = () => new Promise(setImmediate);
 const material = () => new THREE.MeshBasicMaterial({map: new THREE.Texture()});
 const deferred = () => { let resolve; const promise = new Promise(done => { resolve = done; }); return {promise, resolve}; };
@@ -24,7 +25,7 @@ it('prepares static bell/tech art at the same ground foot and keeps authoritativ
   expect(requests.some(row => row.ids.includes(ARSENAL.art))).toBe(false); expect(drawing.root.getObjectByName('island-arsenal')).toBeUndefined();
   requests.find(row => row.ids.length === 1 && row.ids[0] === 'island-bell').resolve({'island-bell': bellMap});
   requests.find(row => row.ids.length === 1 && row.ids[0] === 'island-techhub').resolve({'island-techhub': techMap}); await flush();
-  expect(bell.material).toBe(bellMap); expect(bell.position.equals(original)).toBe(true); expect(bell.userData.ground).toEqual({x: BELL.x, z: BELL.z});
+  expect(bell.material).toBe(bellMap); expect(bell.position.equals(original)).toBe(true); expect(bell.userData.ground).toEqual(SOUTH_BELL);
   bell.geometry.computeBoundingBox(); expect(bell.geometry.parameters).toMatchObject({width: 3.5, height: 4.5});
   expect(bell.geometry.boundingBox.min.y).toBe(-.5); expect(bell.geometry.boundingBox.max.y).toBe(4); expect(tech.material).toBe(techMap); expect(tech.visible).toBe(true);
   drawing.ring(); drawing.update(.1); expect(bell.rotation.z).toBe(0);
@@ -33,6 +34,31 @@ it('prepares static bell/tech art at the same ground foot and keeps authoritativ
   expect(service.visible).toBe(true); drawing.apply(state(false)); wait.resolve({[ARSENAL.art]: arsenalMap}); await flush();
   expect(service.visible).toBe(false); expect(service.material).toBe(arsenalMap); drawing.apply(state(true)); expect(service.visible).toBe(true);
   expect(drawing.root.children.filter(mesh => mesh.name === 'island-arsenal')).toHaveLength(1); expect(load.mock.calls.filter(([ids]) => ids.includes(ARSENAL.art))).toHaveLength(1); drawing.dispose();
+});
+
+it('fits the decorative cottages and live bell around accepted persistent placements', async () => {
+  const load = async ids => Object.fromEntries(ids.map(id => [id, material()]));
+  const {place, drawing} = start(load);
+  const [west, east] = HOME_COTTAGES;
+  const hasCottage = site => drawing.root.getObjectByName(site.id).visible;
+  const blocked = site => place.colliders.some(item => item.spotId === site.id);
+  const bellZone = () => place.zones.find(zone => zone.id === BELL.id);
+  expect(drawing.bellPosition).toEqual(SOUTH_BELL);
+  expect(bellZone()).toMatchObject({x: SOUTH_BELL.x, z: SOUTH_BELL.z - .8});
+  expect([west,east].every(site => hasCottage(site) && blocked(site))).toBe(true);
+
+  const placed = [
+    {id: 'cannon_1', kind: 'cannon', built: true, level: 1, x: SOUTH_BELL.x, z: SOUTH_BELL.z},
+    {id: 'cannon_2', kind: 'cannon', built: true, level: 1, x: west.x, z: west.z},
+  ];
+  drawing.apply({spots: placed});
+  await flush();
+  expect(drawing.bellPosition).toEqual(BELL);
+  expect(bellZone()).toMatchObject({x: BELL.x, z: BELL.z + .8});
+  expect(hasCottage(west)).toBe(false); expect(blocked(west)).toBe(false);
+  expect(hasCottage(east)).toBe(true); expect(blocked(east)).toBe(true);
+  expect(place.colliders.find(item => item.spotId === 'cannon_1')).toMatchObject(SOUTH_BELL);
+  drawing.dispose();
 });
 
 it('reports main artwork failure, coalesces actual retries and clears the failure only after success', async () => {

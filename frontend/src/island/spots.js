@@ -114,11 +114,11 @@ export function placedSpot(id, spots = []) {
 }
 // The interaction zones of the island, in the shape of registry.js: walk up and press E (or tap Inspect).
 // spots: the answer's spots, so a moved building is reached where it stands now.
-export function islandZones({visitor = false, spots = [], arsenal = false} = {}) {
+export function islandZones({visitor = false, spots = [], arsenal = false, bell = BELL} = {}) {
   const zone = (id, name, x, z, radius) => ({id, name, x, z, y: ZONE_Y, radius});
   return [
     ...offeredSpots(spots).map(item => { const [x, z] = landward(placedSpot(item.id, spots)); return zone(item.id, slotName(item.slot), x, z, SPOT_RADIUS); }),
-    zone(BELL.id, 'Harbor bell', BELL.x, BELL.z + .8, ROUND_RADIUS),
+    zone(BELL.id, 'Harbor bell', bell.x, bell.z + (bell === BELL ? .8 : -.8), ROUND_RADIUS),
     ...CAMPAIGN_BUILDINGS.map(item => { const [x, z] = landward(item, 1.6); return zone(item.id, item.name, x, z + .6, BIG_REACH); }),
     ...(visitor ? [] : [zone(CABIN.id, 'Your cabin', CABIN.x + 2.5, CABIN.z + 1.2, ROUND_RADIUS)]),
     ...(arsenal ? [zone(ARSENAL.id, ARSENAL.name, ...landward(ARSENAL, 1.6), BIG_REACH)].map(item => ({...item, z: item.z + .6})) : []),
