@@ -169,7 +169,7 @@ function perimeterSpots(rows) {
   return rows.map(row => {
     if (!emptyWall(row)) return row;
     const cell = assigned.get(row.id);
-    return {...row, x: cell?.x, z: cell?.z};
+    return {...row, x: cell?.x ?? null, z: cell?.z ?? null};
   });
 }
 // T36: the answer's layout ({version 1: the fixed spots, 2: something moved; the fake can always move}).
