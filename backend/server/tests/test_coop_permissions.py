@@ -231,7 +231,10 @@ def test_an_outsider_is_refused_with_the_action_named_and_nothing_runs(
     response = call(world, method, path, body)
 
     assert_error(response, 403, "not_member")
-    assert response.json()["error"]["message"] == permissions.refusal(action).message
+    # D039 (T47): an upgrade first reads the walls of the island (wall_repair.check_upgrade), so an
+    # outsider meets the visit rule there, before the upgrade's own rule.
+    named = permissions.ISLAND_VISIT if path == "/api/island/upgrade" else action
+    assert response.json()["error"]["message"] == permissions.refusal(named).message
     if function is not None:
         assert world.database.calls(function) == []
 
