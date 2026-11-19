@@ -236,7 +236,7 @@ def view_of(
         skills=skills_of(catalogue, mine),
         weapons=weapons_of(catalogue, mine),
         campaign=campaign_of(purchase_catalogue, progress.wave_best, research, progress.wreck_paid),
-        layout=layout.info_of(grid, stored),
+        layout=layout.info_of(grid, stored, allow_move=catalogue.placement),
         recovery_version=recovery_version,
     )
 
@@ -266,9 +266,8 @@ def weapons_of(catalogue: IslandCatalogue, progress: Progress) -> WeaponsView:
 async def read_stored(
     admin: SupabaseAdmin, catalogue: IslandCatalogue, owner: str
 ) -> dict[str, Position] | None:
-    """The island's moved spots (T36), or None (the fixed spots, no moving) while the flag
-    "placement" is off: then the layout table is never asked."""
-    if not catalogue.placement:
+    """Read positions for placement and wall purchases, including when Move is disabled."""
+    if not catalogue.placement and not layout.island_layout().wall_perimeter:
         return None
     return await layout_store.read_layout(admin, owner)
 
@@ -423,8 +422,6 @@ async def prepare_wall_build(
     """A paid wall keeps its coordinate. Save the previewed empty socket before charging,
     using the same compare-and-swap as a move. Other placement writes can only replace it
     with another legal socket. A refused purchase leaves the empty marker at the same place."""
-    if not catalogue.placement:
-        return  # fixed legacy mode
     runtime = catalogue_for_existing_structures(catalogue, built)
     grid = layout.island_layout(runtime.more_tower_spots)
     if not grid.wall_perimeter:
@@ -435,7 +432,9 @@ async def prepare_wall_build(
             raise ApiError(503, "layout_unavailable", "The wall layout is not available yet.")
         stored = layout_store.positions_from(rows)
         positions = layout.positions_of(grid, stored, built)
-        where = positions[spot_id]
+        where = positions.get(spot_id)
+        if where is None:
+            raise ApiError(409, "place_taken", layout.WALL_FULL_MESSAGE)
         layout.check_move(grid, positions, spot_id, *where)
         if stored.get(spot_id) == where:
             return
@@ -1272,7 +1271,7 @@ async def visit(
         spots,
         progress.crew,
         campaign,
-        layout.info_of(grid, stored),
+        layout.info_of(grid, stored, allow_move=catalogue.placement),
         recovery_version,
     )
 

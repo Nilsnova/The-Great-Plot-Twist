@@ -53,12 +53,13 @@ def layout_reads(world: World) -> int:
 # --- the flag off: everything as before ---
 
 
-def test_with_the_flag_off_the_island_shows_the_fixed_spots_and_never_asks_the_layout():
+def test_with_the_flag_off_the_island_shows_perimeter_coordinates_and_disables_move():
     world = World()  # islands on, placement off
     answer = world.island().json()
-    assert spot(answer, "wall_1") | {"x": -18.5, "z": -1.0} == spot(answer, "wall_1")
+    x, z = layout.island_layout().wall_defaults["wall_1"]
+    assert spot(answer, "wall_1") | {"x": x, "z": z} == spot(answer, "wall_1")
     assert answer["layout"] == {"version": 1, "grid": 0.5, "movable": False}
-    assert layout_reads(world) == 0
+    assert layout_reads(world) == 1
 
 
 def test_with_the_flag_off_a_move_is_404_feature_off_and_nothing_is_stored():

@@ -144,6 +144,18 @@ def test_friend_purchase_saves_the_socket_on_the_owners_island(world):
     assert rpc_paths(world).index("island_move") < rpc_paths(world).index("island_build")
 
 
+def test_disabling_move_still_sells_only_a_perimeter_wall(perimeter):
+    world = World()
+    world.database.layout_rows = [row("wall_1", (-12, 0.5))]
+    answer = world.island().json()
+    assert not answer["layout"]["movable"]
+    assert xy(answer, "wall_1") == SOCKETS[0]
+    response = world.build(spot="wall_1", kind="wall")
+    assert response.status_code == 200
+    assert xy(response.json(), "wall_1") == SOCKETS[0]
+    assert world.database.layout_rows == [row("wall_1", SOCKETS[0])]
+
+
 @pytest.mark.parametrize(("reason", "needed"), [("busy", 2), ("wave_running", 1)])
 def test_failed_placement_never_charges_for_a_wall(world, reason, needed):
     world.database.move_replies = [{"status": "refused", "reason": reason}] * needed
@@ -174,6 +186,7 @@ def test_an_old_island_with_no_free_socket_cannot_buy_a_wall(world, perimeter):
     world.database.buildings[PLAYER_ID] = [
         {"plot": spot_id, "building_type": "wall"} for spot_id, _ in saved
     ]
+    assert xy(world.island().json(), "wall_1") == (None, None)
     response = world.build(spot="wall_1", kind="wall")
     assert response.status_code == 409
     assert response.json()["error"]["code"] == "place_taken"

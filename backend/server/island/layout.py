@@ -35,6 +35,7 @@ SEA, BEACH = 0, 1
 # Walls never block the route: the boarders hack through them (src/pirates/sim.js).
 WALL_SLOT = "wall"
 WALL_EDGE_MESSAGE = "Walls go in one row along the grass edge."
+WALL_FULL_MESSAGE = "There is no free wall socket along the grass edge."
 Position = tuple[float, float]
 
 
@@ -263,17 +264,14 @@ def settle_perimeter(
         (spot.spot for spot in walls if spot.spot not in built),
         key=lambda spot_id: spot_id not in perimeter_rows,
     )
-    unavailable = {}
     for spot_id in empty:
         preferred = perimeter_rows.get(spot_id, rules.wall_defaults[spot_id])
         where = nearest_wall_cell(
             rules, settled, spot_id, preferred, rules.wall_perimeter, perimeter=True
         )
-        if where is None:
-            unavailable[spot_id] = preferred  # its overlapping cell will refuse a purchase
-        else:
+        if where is not None:
             settled[spot_id] = where
-    return settled | unavailable
+    return settled
 
 
 def settle_walls(
@@ -365,10 +363,12 @@ def place_spots(rules: LayoutRules, spots: tuple, stored: dict[str, Position] | 
     )
 
 
-def info_of(rules: LayoutRules, stored: dict[str, Position] | None) -> LayoutInfo:
+def info_of(
+    rules: LayoutRules, stored: dict[str, Position] | None, *, allow_move: bool = True
+) -> LayoutInfo:
     """stored is None when the layout could not be read: the fixed spots, no moving."""
     version = 2 if stored else 1
-    return LayoutInfo(version, rules.grid, stored is not None)
+    return LayoutInfo(version, rules.grid, allow_move and stored is not None)
 
 
 def footprint_of(rules: LayoutRules, spot_id: str) -> float:

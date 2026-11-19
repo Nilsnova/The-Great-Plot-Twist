@@ -4,7 +4,7 @@ The rules are in backend/server/island/layout.py (pure) and placement.py (the fl
 the fixed spots in backend/content/island_layout.json, the database part in
 supabase/migrations/20261114110000_island_layout.sql. Like every island route it needs a signed-in
 player and the flag "islands", and the flag "placement" (404 feature_off while either is off;
-without "placement" every island answer shows the fixed spots and layout.movable false).
+without "placement" the island still shows its saved walls, with layout.movable false).
 Answers carry `Cache-Control: private, no-store`.
 
 POST /api/island/move  {"spot": "cannon_1", "x": -10, "z": -10.5, "code"?: "ISLE-K7Q2M"}
