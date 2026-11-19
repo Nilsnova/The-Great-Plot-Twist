@@ -11,11 +11,12 @@ if(!runtimePath||!output)throw Error('Use --runtime LOCAL_RUNTIME_JSON --output 
 const helper=process.env.MP_ECO_AUTH_HELPERS?pathToFileURL(process.env.MP_ECO_AUTH_HELPERS):new URL('./authenticated-economy/clients.mjs',import.meta.url);
 const observer=process.env.MP_ECO_OBSERVER_HELPERS?pathToFileURL(process.env.MP_ECO_OBSERVER_HELPERS):new URL('./authenticated-economy/observer.mjs',import.meta.url);
 const {loadRuntime}=await import(helper.href),{observe,install,admit}=await import(observer.href);
+const {sourceEvidence}=await import(new URL('./source.mjs',helper.href));
 const runtime=await loadRuntime(runtimePath);
 const root=fileURLToPath(new URL('../../',import.meta.url));
 const source=execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim();
 const productionSource='3bdd8eda16470795fdedd68c42fffab54e5f2ced';
-execFileSync('git',['diff','--exit-code',productionSource,'HEAD','--','frontend/src','backend/server','supabase/migrations',':(exclude)backend/server/tests'],{cwd:root,stdio:'pipe'});
+const productionEvidence=sourceEvidence(productionSource);
 const harnessSha256=createHash('sha256').update(await readFile(fileURLToPath(import.meta.url))).digest('hex');
 const facts=[],requests=[],startedAt=new Date().toISOString();
 await mkdir(output,{recursive:true});
@@ -124,5 +125,5 @@ try{
  const captainAfter=await api(owner,'/api/captain');assert.deepEqual(captainAfter.data,captainBefore.data);
  const page=await api(member,'/api/island/wagers?islandOwner='+owner.actorId+'&product=market_call');assert.equal(page.status,200);assert.equal(page.data.economy.accountId,replacement.account);assert.deepEqual(page.data.items,[]);
  note('retired-origin-completion-isolated-from-current-run',{layer:'committed SQL observer and authenticated current-run page',oldAccount:oldFinal,currentAccount:await account(replacement.account),startingGrantCount:grants[0].count,personalWalletsUnchanged:true,personalCaptainUnchanged:true});
- await writeFile(output+'/result.json',JSON.stringify({result:'passed',source,productionSource,harnessSha256,startedAt,finishedAt:new Date().toISOString(),facts,requests,limitations:['No browser rendering or natural market-feed outcome is claimed.','Admission, advanced unlock and trusted price readings are explicit disposable fixtures.','Financial mutations use existing real SQL product functions; resets/retries/readbacks use real registered-session production HTTP.','Only one-coin/all-available/reinvestment/original-account-reset observations are covered; other acceptance rows remain independent.','No immutable financial row, product clock, HP or outcome column was edited; no hosted service, migration or activation.']},null,2)+'\n');
-}catch(error){await writeFile(output+'/failure.json',JSON.stringify({result:'failed',source,productionSource,harnessSha256,startedAt,finishedAt:new Date().toISOString(),failure:{name:error.name,message:error.message,stack:error.stack},facts,requests},null,2)+'\n');throw error;}
+ await writeFile(output+'/result.json',JSON.stringify({result:'passed',source,productionSource,productionEvidence,harnessSha256,startedAt,finishedAt:new Date().toISOString(),facts,requests,limitations:['No browser rendering or natural market-feed outcome is claimed.','Admission, advanced unlock and trusted price readings are explicit disposable fixtures.','Financial mutations use existing real SQL product functions; resets/retries/readbacks use real registered-session production HTTP.','Only one-coin/all-available/reinvestment/original-account-reset observations are covered; other acceptance rows remain independent.','No immutable financial row, product clock, HP or outcome column was edited; no hosted service, migration or activation.']},null,2)+'\n');
+}catch(error){await writeFile(output+'/failure.json',JSON.stringify({result:'failed',source,productionSource,productionEvidence,harnessSha256,startedAt,finishedAt:new Date().toISOString(),failure:{name:error.name,message:error.message,stack:error.stack},facts,requests},null,2)+'\n');throw error;}

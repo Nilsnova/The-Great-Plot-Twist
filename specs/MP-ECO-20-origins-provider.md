@@ -40,4 +40,10 @@ transport statuses, fixture purposes, due times and before/after account facts.
 Evidence establishes these bounded observations only; the complete fifteen-scenario
 matrix and natural-provider market outcomes need their own evidence.
 
+Before future provider operations, reuse the shared `sourceEvidence` helper from
+the configured provider helper root. Require actual tracked production working-tree
+bytes to match the declared baseline and reject untracked production files. A
+test-only branch commit is allowed; a clean committed-head comparison alone is not
+sufficient source qualification. Record the guard result in the scenario report.
+
 No hosted migration, deployment or public activation is included in this contribution.
