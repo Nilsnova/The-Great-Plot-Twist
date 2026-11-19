@@ -11,20 +11,19 @@ const REPAIR = '/api/island/structures/repair';
 
 async function pointerClick(page,button) {
   await button.waitFor({state:'visible',timeout:10000});
-  // A visible card can still be sliding into the modal top layer. Wait for
-  // actual pointer ownership instead of forcing a click through that transition.
-  const handle=await button.elementHandle();
-  await page.waitForFunction(element=>{
-    if(!element || !element.isConnected || element.disabled)return false;
-    const box=element.getBoundingClientRect(),x=box.x+box.width/2,y=box.y+box.height/2;
-    const hit=document.elementFromPoint(x,y);
-    return box.width>0 && box.height>0 && (hit===element || element.contains(hit));
-  },handle,{timeout:10000});
-  const point=await button.evaluate(element=>{
-    const box=element.getBoundingClientRect(),x=box.x+box.width/2,y=box.y+box.height/2;
-    const hit=document.elementFromPoint(x,y);
-    return !element.disabled && (hit===element || element.contains(hit))?{x,y}:null;
-  });
+  // Recovery controls follow a long card. Use ordinary scrolling and reacquire
+  // the locator after each render, then require actual pointer ownership.
+  let point=null;
+  for(let attempt=0;attempt<40 && !point;attempt++) {
+    await button.scrollIntoViewIfNeeded();
+    point=await button.evaluate(element=>{
+      const box=element.getBoundingClientRect(),x=box.x+box.width/2,y=box.y+box.height/2;
+      const hit=document.elementFromPoint(x,y);
+      return !element.disabled && box.width>0 && box.height>0
+        && (hit===element || element.contains(hit))?{x,y}:null;
+    });
+    if(!point)await page.waitForTimeout(50);
+  }
   assert.ok(point,'the visible enabled button must actually receive the physical pointer');
   await page.mouse.click(point.x,point.y);
 }
