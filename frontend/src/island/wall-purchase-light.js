@@ -18,6 +18,11 @@ vec3 lightPurchasedWall(vec3 color, float alpha) {
   return mix(color, brass, 0.64 * share * wallPurchaseStrength);
 }`;
 
+const portraitVertex = /* glsl */`
+  wallPurchaseGround = wallGround;
+  transformed.y = mix(projectGround(wallGround).y, transformed.y, wallPortraitScale);
+`;
+
 export function makeWallPurchaseLight() {
   const anchor = {value: new Vector2()};
   const strength = {value: 0};
@@ -38,8 +43,7 @@ export function makeWallPurchaseLight() {
         shader.vertexShader = shader.vertexShader
           .replace('#include <common>', '#include <common>\n' + groundProjectionGlsl +
             '\nattribute vec2 wallGround;\nvarying vec2 wallPurchaseGround;\nuniform float wallPortraitScale;')
-          .replace('#include <begin_vertex>', '#include <begin_vertex>\nwallPurchaseGround = wallGround;' +
-            '\ntransformed.y = mix(projectGround(wallGround).y, transformed.y, wallPortraitScale);');
+          .replace('#include <begin_vertex>', '#include <begin_vertex>' + portraitVertex);
         shader.fragmentShader = shader.fragmentShader
           .replace('#include <common>', '#include <common>\n' + purchaseFragment)
           .replace('#include <opaque_fragment>',
