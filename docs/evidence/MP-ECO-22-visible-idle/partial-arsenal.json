@@ -607,7 +607,7 @@
   "failure": {
     "name": "TimeoutError",
     "message": "page.waitForFunction: Timeout 30000ms exceeded.",
-    "stack": "page.waitForFunction: Timeout 30000ms exceeded.\n    at /workspace/mp-economy/next-505-idle-browser/frontend/scripts/check-economy-lifecycle-browser-provider.mjs:139:22"
+    "stack": "page.waitForFunction: Timeout 30000ms exceeded.\n    at <scenario-checkout>/frontend/scripts/check-economy-lifecycle-browser-provider.mjs:139:22"
   },
   "frames": [],
   "servedAfter": [
