@@ -54,7 +54,16 @@ async function enter(page, options = {}) {
   }, {join: options.join ?? null}, {timeout: 30000});
 }
 async function watch(page) {
-  await page.waitForFunction(() => !!window.__island?.waves?.island?.wave, null, {timeout: 45000});
+  let found = false;
+  for (let attempt = 0; attempt < 90; attempt++) {
+    const tutorial = page.getByRole('button', {name: 'Got it', exact: true}).first();
+    if (await tutorial.isVisible().catch(() => false)) await tutorial.click({noWaitAfter: true});
+    found = await page.evaluate(() => !!window.__island?.waves?.island?.wave);
+    if (found) break;
+    if (attempt % 10 === 0) await page.evaluate(() => window.__island?.island?.joinRunningWave());
+    await page.waitForTimeout(500);
+  }
+  assert.ok(found, 'The real game did not attach its current wave after visible tutorial dismissal');
   return page.evaluate(() => {
     const controller = window.__island.waves.island, wave = controller.wave;
     controller.autoBlade = false;
