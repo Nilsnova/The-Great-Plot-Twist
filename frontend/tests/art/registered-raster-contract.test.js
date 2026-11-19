@@ -5,6 +5,7 @@ const state = vi.hoisted(() => ({decode: vi.fn(), images: []}));
 vi.mock('../../src/art/village-decode.js', () => ({decodeRasterSheet: (...args) => state.decode(...args)}));
 vi.mock('../../src/world/texture.js', () => ({loadTexture: vi.fn()}));
 import * as baked from '../../src/art/village/baked.js';
+import {compiledHomeFoliage} from '../../src/art/village/home-foliage.js';
 import {shippedFamily} from '../../src/art/village-families.js';
 import {collectRasterFrames, getRasterFrame, rasterFrameSizes} from '../../src/art/village-raster.js';
 import {artSizes, loadArt} from '../../src/world/art.js';
@@ -23,8 +24,8 @@ beforeEach(() => {
 afterEach(() => { vi.unstubAllGlobals(); vi.restoreAllMocks(); vi.clearAllMocks(); });
 
 it('binds exactly the approved compiled IDs and native/logical feet to the active provider', () => {
-  const approved = shippedFamily(baked), expected = collectRasterFrames([approved]);
-  expect(Object.keys(rasterFrameSizes()).sort()).toEqual(Object.keys(approved.frames).sort());
+  const approved = shippedFamily(baked), expected = collectRasterFrames([approved, compiledHomeFoliage]);
+  expect(Object.keys(rasterFrameSizes()).sort()).toEqual(Object.keys(expected).sort());
   for (const [id, frame] of Object.entries(expected)) {
     expect(getRasterFrame(id), id).toEqual(frame);
     const [width, height, anchor] = frame.logical;
