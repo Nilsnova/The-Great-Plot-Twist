@@ -47,7 +47,7 @@ async function manage(page) {
     const canvas = g.renderer.domElement.getBoundingClientRect(), bar = document.querySelector('.island-village-mode:not([hidden])').getBoundingClientRect();
     const quest = document.querySelector('.quest-strip')?.getBoundingClientRect(), purse = document.querySelector('.hud-coins')?.getBoundingClientRect();
     const top = Math.max(80, (canvas.width < 640 ? Math.max(quest?.bottom ?? 0, purse?.bottom ?? 0) : 80) + 12);
-    return villageFrame(g.camera, 'home_islet', {height: canvas.height, top, bottom: canvas.height - bar.top + 12});
+    return villageFrame(g.camera, 'home_islet', {width: canvas.width, height: canvas.height, top, bottom: canvas.height - bar.top + 12});
   });
   await page.waitForFunction(fit => {
     const camera = window.__island.camera;
