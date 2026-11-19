@@ -18,7 +18,7 @@ deployment or feature activation is included.
 - Its saved unlock record is wave 20, with wave 1 selected as a repeat. Both
   Captains receive explicit level-five/won-wave-20/ten-earned-point eligibility.
   These fixtures do not claim that the milestones were naturally earned.
-- Every one of six level-three shore walls is bought and upgraded through the
+- Every one of twelve level-three shore/inner-ring walls is bought and upgraded through the
   ordinary authenticated API using a new current quote. No structure row, HP,
   journal event, combat outcome or clock is installed or changed by the harness.
 - Ordinary first-game intro controls may be acknowledged through their actual

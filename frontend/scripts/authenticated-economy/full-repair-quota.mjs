@@ -20,6 +20,7 @@ const runtime=await loadRuntime(runtimePath);
 assert.equal(runtime.expectedCommit,BASELINE,'the provider must declare this exact current candidate');
 const context=e=>Object.fromEntries(['mode','version','islandOwner','runEpoch'].map(key=>[key,e[key]]));
 const uid=()=>randomUUID().replaceAll('-','');
+const spots=Array.from({length:12},(_,index)=>'wall_'+(index+1));
 const digest=path=>createHash('sha256').update(readFileSync(path)).digest('hex');
 const helperPaths=['clients.mjs','runtime.mjs','observer.mjs','source.mjs'];
 const hashes=()=>Object.fromEntries([
@@ -90,7 +91,7 @@ try {
   report.setup.push({name:'declared saved-state prerequisites',treasuryGrant:'2000',islandWaveBest:20,nextPlayedWave:1,
     personalCaptainLevel:5,personalWonWaveBest:20,personalEarnedPoints:10,actors:[owner.actorId,member.actorId],code});
   const purchases=[];
-  for(const spot of ['wall_1','wall_2','wall_3','wall_4','wall_5','wall_6'])for(let level=1;level<=3;level++){
+  for(const spot of spots)for(let level=1;level<=3;level++){
     const view=await api(owner.page,'/api/island');assert.equal(view.status,200);
     const kind=level===1?'build':'upgrade',quote=view.data.quotes[kind].find(row=>row.target.spot===spot&&row.available);
     assert.ok(quote,`A real current level-${level} ${spot} quote is required`);
@@ -98,15 +99,15 @@ try {
     const result=await checked(owner.page,'/api/island/'+kind,body);
     purchases.push({spot,level,request:body,receipt:result.data.receipt});
   }
-  report.setup.push({name:'ordinary quoted defense purchases',description:'Six level-three shore walls retain enough ordinary combat time for the complete quota journey.',purchases});
+  report.setup.push({name:'ordinary quoted defense purchases',description:'Twelve level-three walls cover the shore and inner ring while ordinary combat exercises the complete quota journey.',purchases});
   for(const client of [owner,member])await client.page.evaluate(async()=>await window.__island.island.load());
   const current=await api(owner.page,'/api/island');assert.equal(current.status,200);
-  for(const spot of ['wall_1','wall_2','wall_3','wall_4','wall_5','wall_6'])assert.equal(current.data.spots.find(row=>row.id===spot).level,3);
+  for(const spot of spots)assert.equal(current.data.spots.find(row=>row.id===spot).level,3);
   report.walletsBefore=await observe('select player_id,balance from public.wallets where player_id=any($1::uuid[]) order by player_id',[[owner.actorId,member.actorId]],{runtimePath});
   await save();console.log('Declared real-provider defense setup is ready');
   report.result=await runFullRepairQuotaAcceptance({ownerPage:owner.page,memberPage:member.page,
     api,observe:(sql,params)=>observe(sql,params,{runtimePath}),outputDir:output,sourceCommit:BASELINE,
-    setup:report.setup,spots:['wall_1','wall_2','wall_3','wall_4','wall_5','wall_6'],
+    setup:report.setup,spots,
     reconnectMember:async page=>{await page.reload();await land(page,{join:code});await finishRepairSceneEntry(page);}});
   report.walletsAfter=await observe('select player_id,balance from public.wallets where player_id=any($1::uuid[]) order by player_id',[[owner.actorId,member.actorId]],{runtimePath});
   assert.deepEqual(report.walletsAfter,report.walletsBefore);report.status='passed';

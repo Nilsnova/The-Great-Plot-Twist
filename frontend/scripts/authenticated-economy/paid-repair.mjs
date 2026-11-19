@@ -127,7 +127,7 @@ export async function runFullRepairQuotaAcceptance({ownerPage,memberPage,observe
     assert.ok(BigInt(restored.connectionGeneration)>BigInt(beforeControl.connectionGeneration));
     await record('ordinary member reconnect retains frozen participant and shared untouched allowance',{beforeControl,restored,accounting:await accounting(observe,origin.accountId,wave)});
     const damaged=await ownerPage.waitForFunction(spots=>window.__island?.waves?.island.recoveryCombatState?.structures
-      .find(row=>spots.includes(row.spot) && row.hpUnits<1000000)?.spot??null,spots,{timeout:90000});
+      .find(row=>spots.includes(row.spot) && row.hpUnits>0 && row.hpUnits<1000000)?.spot??null,spots,{timeout:90000});
     const spot=await damaged.jsonValue(),damage=await damagedCard(ownerPage,spot),staleBody=repairBody(damage.read,damage.row,origin);
     staleBody.quotedPrice++;
     const stale=await api(ownerPage,REPAIR,{method:'POST',body:staleBody});
