@@ -310,6 +310,11 @@ try {
   assert.equal(hashValue(settled.map(copy => copy.id).sort()), identityHash);
   assert.equal(settled.filter(copy => copy.holder !== null).length, 0);
   assert.equal(settled.filter(copy => copy.pending_return_wave_id !== null).length, 0);
+  for (const copy of settled) {
+    const earlier = preWave.copies.find(row => row.id === copy.id);
+    assert.equal(BigInt(copy.holder_generation), BigInt(earlier.holderGeneration)
+      + (earlier.holder === null ? 0n : 1n), 'Canonical return must advance each original held tenure once');
+  }
   const snapshotAfter = await read('select initial_snapshot from public.recovery_wave_states where wave_id=$1::uuid', [started.waveId]);
   assert.equal(hashValue(snapshotAfter[0].initial_snapshot), initialHash);
   const frozenAfter = await read('select player_id::text,copy_id::text,copy_generation::text,frozen_captain '
