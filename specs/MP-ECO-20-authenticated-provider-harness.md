@@ -38,7 +38,7 @@ root, start a fresh isolated provider and install this checkout's migrations:
 
 ```bash
 cd backend
-uv run --with 'psycopg[binary]' python -m tools.authenticated_economy.stack up
+uv run --with 'psycopg[binary]' python -m tools.authenticated_economy.stack up --expected-commit FULL_CANDIDATE_SHA
 uv run --with 'psycopg[binary]' python -m tools.authenticated_economy.stack migrate
 uv run --with 'psycopg[binary]' python -m tools.authenticated_economy.application
 ```
@@ -58,6 +58,27 @@ installed; a prepared environment can set `pythonEnvironment` and `uvCacheDir` i
 that private runtime file. Each scenario writes a credential-free report and
 screenshots under its own `/tmp/mp505-*` output directory. `MP_ECO_OUTPUT` changes
 the output directory. These tools reject edited nonlocal endpoints before use.
+
+The runtime requires `expectedCommit`, an explicit full production candidate SHA.
+An initialized runtime cannot silently switch that candidate. Historical reports
+retain their original SHA. API/frontend startup records private process/source
+manifests; new clients verify the actual running processes and both served source
+trees against the configured candidate before using them. A changed or untracked
+production file is refused, while test-only commits remain permitted.
+
+`api-clients.mjs` provides `createApiClients({labels, runtimePath, expectedCommit})`
+for real GoTrue signup and production token verification without browser rendering.
+It returns `clients`, whose `request(path, options)` performs authenticated local
+production HTTP and returns `{status, data}`. Common `api(client, path, options)`
+accepts these clients as well as browser pages. `createClients` uses independent
+Chromium processes per player by default; it retains ordinary browser SDK/session
+restoration. Credentials remain private in memory and must never enter reports.
+
+The local `tools.authenticated_economy.worker` wrapper runs the unchanged canonical
+worker with explicit generated local settings and ordinary weather policy. It
+uses actual deadline/service RPCs, not fixture clocks or outcomes. Its private
+source manifest identifies the running process. Start it from `backend/` with
+`uv run python -m tools.authenticated_economy.worker --interval 1`.
 
 The default scenario mode exercises actual browser Auth/SDK and production HTTP
 without entering the WebGL game. `MP_ECO_RENDERED=1` requests normal frontdoor and

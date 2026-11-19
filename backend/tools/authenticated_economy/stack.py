@@ -100,12 +100,15 @@ def wait_http(url: str, *, headers: dict | None = None, cafile: str | None = Non
 def realtime_ready(runtime: dict) -> bool:
     if not sql(runtime, "select to_regclass('realtime.schema_migrations')::text"):
         return False
-    return sql(
-        runtime,
-        f"select coalesce(max(version),0)>={REALTIME_TENANT_VERSION} "
-        "and exists(select 1 from pg_inherits "
-        "where inhparent=to_regclass('realtime.messages')) from realtime.schema_migrations",
-    ) == "t"
+    return (
+        sql(
+            runtime,
+            f"select coalesce(max(version),0)>={REALTIME_TENANT_VERSION} "
+            "and exists(select 1 from pg_inherits "
+            "where inhparent=to_regclass('realtime.messages')) from realtime.schema_migrations",
+        )
+        == "t"
+    )
 
 
 def up(runtime: dict) -> None:
@@ -206,8 +209,9 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("action", choices=("init", "up", "migrate", "status", "down"))
     parser.add_argument("--directory", type=Path, default=Path("/tmp/mp505-provider"))
+    parser.add_argument("--expected-commit", help="Explicit full production candidate SHA")
     args = parser.parse_args()
-    runtime = create(args.directory)
+    runtime = create(args.directory, args.expected_commit)
     if args.action == "up":
         up(runtime)
     elif args.action == "migrate":

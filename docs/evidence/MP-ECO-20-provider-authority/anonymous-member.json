@@ -1,0 +1,185 @@
+{
+  "result": "passed",
+  "productionSource": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+  "startedAt": "2026-11-19T17:39:02.148Z",
+  "finishedAt": "2026-11-19T17:39:13.849Z",
+  "sourceBefore": {
+    "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+    "actualCheckoutHead": "02905c8386323814bfef05462854bded278b6859",
+    "productionDiffFromBaseline": "empty",
+    "paths": [
+      "backend/server",
+      "backend/content",
+      "frontend/src",
+      "supabase/migrations",
+      "backend/uv.lock",
+      "backend/pyproject.toml",
+      "frontend/package-lock.json",
+      "frontend/package.json",
+      ":(exclude)backend/server/tests"
+    ]
+  },
+  "sourceAfter": {
+    "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+    "actualCheckoutHead": "02905c8386323814bfef05462854bded278b6859",
+    "productionDiffFromBaseline": "empty",
+    "paths": [
+      "backend/server",
+      "backend/content",
+      "frontend/src",
+      "supabase/migrations",
+      "backend/uv.lock",
+      "backend/pyproject.toml",
+      "frontend/package-lock.json",
+      "frontend/package.json",
+      ":(exclude)backend/server/tests"
+    ]
+  },
+  "servedSourcesBefore": [
+    {
+      "service": "api",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "02905c8386323814bfef05462854bded278b6859",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    },
+    {
+      "service": "frontend",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "02905c8386323814bfef05462854bded278b6859",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    }
+  ],
+  "servedSourcesAfter": [
+    {
+      "service": "api",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "02905c8386323814bfef05462854bded278b6859",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    },
+    {
+      "service": "frontend",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "02905c8386323814bfef05462854bded278b6859",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    }
+  ],
+  "guestServer": {
+    "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+    "actualCheckoutHead": "02905c8386323814bfef05462854bded278b6859",
+    "productionDiffFromBaseline": "empty",
+    "paths": [
+      "backend/server",
+      "backend/content",
+      "frontend/src",
+      "supabase/migrations",
+      "backend/uv.lock",
+      "backend/pyproject.toml",
+      "frontend/package-lock.json",
+      "frontend/package.json",
+      ":(exclude)backend/server/tests"
+    ],
+    "demoFlag": true,
+    "demoMode": false,
+    "wrapperSha256": "1c6478a635fcb2e4692266745aa8828fb2373aca2a6100333631d1abd9023b85"
+  },
+  "secondaryAuthComposeSha256": "505a271c0d0c27399594822296e7fa1f912df870dc4ba6ced8d58414a823e11e",
+  "helpersBefore": {
+    "anonymous-member.mjs": "cc63596c6d7bffcb8b8e4c29195e4065cd915e70ba889b39c1cac0260cd3e60c",
+    "api-clients.mjs": "a9369da75350b882ac6a312c20903965a362409978e86e108c256f9cc450a9f7",
+    "observer.mjs": "40cb288da9f9a80e337fba5a39a12b1b23501ad1ff48a2a4614975492997f140",
+    "runtime.mjs": "d1387a35fd7243df58e8d9589586034b3a098489bb20e43bece9b6b45040865f",
+    "source.mjs": "56d138914dc5b4e15159162bb21db68c985b2c9083c2e5bac4b34a90502ea8d9",
+    "../../../backend/tools/authenticated_economy/guest_application.py": "1c6478a635fcb2e4692266745aa8828fb2373aca2a6100333631d1abd9023b85",
+    "../../../backend/tools/authenticated_economy/application.py": "05effdff57cb2443ac691c1e0bf4741563bece314a476cfbc4d6ae0a13b6bd6e",
+    "../../../backend/tools/authenticated_economy/observe.py": "18707a8ed12d18c69a4c04de1a416089ccbe89619f5f6f6e9a270840df551839",
+    "../../../backend/tools/authenticated_economy/config.py": "9c1ab2bc84f0e5da14748624064a8a68357a52a44d3d79473251302a46082b47"
+  },
+  "helpersAfter": {
+    "anonymous-member.mjs": "cc63596c6d7bffcb8b8e4c29195e4065cd915e70ba889b39c1cac0260cd3e60c",
+    "api-clients.mjs": "a9369da75350b882ac6a312c20903965a362409978e86e108c256f9cc450a9f7",
+    "observer.mjs": "40cb288da9f9a80e337fba5a39a12b1b23501ad1ff48a2a4614975492997f140",
+    "runtime.mjs": "d1387a35fd7243df58e8d9589586034b3a098489bb20e43bece9b6b45040865f",
+    "source.mjs": "56d138914dc5b4e15159162bb21db68c985b2c9083c2e5bac4b34a90502ea8d9",
+    "../../../backend/tools/authenticated_economy/guest_application.py": "1c6478a635fcb2e4692266745aa8828fb2373aca2a6100333631d1abd9023b85",
+    "../../../backend/tools/authenticated_economy/application.py": "05effdff57cb2443ac691c1e0bf4741563bece314a476cfbc4d6ae0a13b6bd6e",
+    "../../../backend/tools/authenticated_economy/observe.py": "18707a8ed12d18c69a4c04de1a416089ccbe89619f5f6f6e9a270840df551839",
+    "../../../backend/tools/authenticated_economy/config.py": "9c1ab2bc84f0e5da14748624064a8a68357a52a44d3d79473251302a46082b47"
+  },
+  "facts": [
+    {
+      "event": "real-anonymous-identity-and-invitation-admission",
+      "at": "2026-11-19T17:39:08.235Z",
+      "providerVerifiedAnonymous": true,
+      "beforeInvite": 403,
+      "badInvite": 404,
+      "admittedCount": 1,
+      "afterInvite": 200,
+      "primaryDemoOff": 403,
+      "uninvitedStatus": 403
+    },
+    {
+      "event": "admitted-anonymous-member-has-equal-spending-and-owner-fences",
+      "at": "2026-11-19T17:39:13.847Z",
+      "guestBuild": 200,
+      "guestDemolition": 200,
+      "guestResearchChange": 200,
+      "guestReset": 403,
+      "bank": {
+        "balance": "1085",
+        "held": "0",
+        "ledger_balance": "1085"
+      },
+      "personalWalletsUnchanged": true
+    }
+  ],
+  "limitations": [
+    "Actual anonymous Auth and invited-class admission through a separate official GoTrue instance/demo-enabledAPI only; primary services remained frozen/demo-off.",
+    "API-only evidence; no anonymous browser login/rendered controls are claimed.",
+    "Fresh2000capital/savedresearchunlock are explicit fixtures, not earning/conversion.",
+    "The private optional wager client is not committed; successful guest HTTPbet is a separate case."
+  ]
+}

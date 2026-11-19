@@ -1,0 +1,304 @@
+{
+  "result": "passed",
+  "source": "7bc63fd1eb80fe0fa745b23615702c5d6495da72",
+  "expectedCommit": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+  "ownHashes": {
+    "check-economy-zero-revival-provider.mjs": "bea13e82623aa6485c0a9d07907a8330bccfb49e59e8cd86156e89cdd5069323",
+    "economy-personal-playout.mjs": "f3f661f1dfc58c0671a871f601f595d9cb98f69932f68b177c4932fd4a05adcf",
+    "economy-personal-loader.mjs": "ff638a8ba34d9f3972733c500a2203d813b1403b59dad656113522110c5a8ee8"
+  },
+  "helperHashes": {
+    "api-clients.mjs": "a9369da75350b882ac6a312c20903965a362409978e86e108c256f9cc450a9f7",
+    "observer.mjs": "40cb288da9f9a80e337fba5a39a12b1b23501ad1ff48a2a4614975492997f140",
+    "source.mjs": "56d138914dc5b4e15159162bb21db68c985b2c9083c2e5bac4b34a90502ea8d9",
+    "runtime.mjs": "d1387a35fd7243df58e8d9589586034b3a098489bb20e43bece9b6b45040865f"
+  },
+  "sourceBefore": [
+    {
+      "service": "api",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "02905c8386323814bfef05462854bded278b6859",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    },
+    {
+      "service": "frontend",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "02905c8386323814bfef05462854bded278b6859",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    }
+  ],
+  "sourceAfter": [
+    {
+      "service": "api",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "02905c8386323814bfef05462854bded278b6859",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    },
+    {
+      "service": "frontend",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "02905c8386323814bfef05462854bded278b6859",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    }
+  ],
+  "startedAt": "2026-11-19T17:46:39.663Z",
+  "finishedAt": "2026-11-19T17:47:09.048Z",
+  "facts": [
+    {
+      "event": "enemy-caused-fall-at-zero-treasury",
+      "at": "2026-11-19T17:47:05.684Z",
+      "battleSeconds": 24.85,
+      "reviver": "zero-revive-member",
+      "target": "zero-revive-owner",
+      "helperHpUnits": 800000,
+      "targetHpUnits": 0,
+      "treasury": "0",
+      "paidUsed": 0
+    },
+    {
+      "event": "real-two-second-free-revival-at-zero",
+      "at": "2026-11-19T17:47:09.011Z",
+      "requiredMs": 2000,
+      "earlyStatus": 409,
+      "restoredHPUnits": 500000,
+      "journalEvents": 1,
+      "sameReceiptRetry": true,
+      "treasuryBeforeAfter": "0",
+      "allMoneyAndQuotaFactsUnchanged": true,
+      "paidUsed": 0
+    }
+  ],
+  "accounting": {
+    "account": [
+      {
+        "balance": "0",
+        "held": "0",
+        "revision": "1",
+        "transactions": 1
+      }
+    ],
+    "wallets": [
+      {
+        "player_id": "9db20113-2f8e-4991-9165-32065f51d1c4",
+        "balance": "200",
+        "transactions": 1
+      },
+      {
+        "player_id": "d1986a3b-c3ee-4577-b508-0afd5f3a01ab",
+        "balance": "0",
+        "transactions": 0
+      }
+    ],
+    "quota": [
+      {
+        "paid_used": 0
+      }
+    ]
+  },
+  "limitations": [
+    "API/headless actual-provider case; no rendered hold is claimed.",
+    "Only zero-capital fresh island admission is a setup fixture; no HP, fall, outcome, input journal, hold timestamp or clock was fabricated.",
+    "Captain reports are computed from unchanged production simulation over complete actual server-sealed prefixes, under its existing client-report trust contract.",
+    "No product/helper/schema change, hosted migration, conversion, deployment or activation.",
+    "The acting helper's zero private balance was confirmed separately by a read-only completed-hold/actor-wallet join; the target retained its normal200 starting balance.",
+    "No ordinary rendered browser hold or feedback is claimed."
+  ],
+  "requestCount": 237,
+  "requestSummary": [
+    {
+      "actor": "zero-revive-owner",
+      "path": "/api/games",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 1
+    },
+    {
+      "actor": "zero-revive-member",
+      "path": "/api/games/join",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 1
+    },
+    {
+      "actor": "zero-revive-owner",
+      "path": "/api/island/session/attach",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 1
+    },
+    {
+      "actor": "zero-revive-member",
+      "path": "/api/island/session/attach",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 1
+    },
+    {
+      "actor": "zero-revive-owner",
+      "path": "/api/island/session/settings",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 1
+    },
+    {
+      "actor": "zero-revive-owner",
+      "path": "/api/waves/start",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 1
+    },
+    {
+      "actor": "zero-revive-member",
+      "path": "/api/waves/join",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 1
+    },
+    {
+      "actor": "zero-revive-owner",
+      "path": "/api/island/session/heartbeat",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 7
+    },
+    {
+      "actor": "zero-revive-member",
+      "path": "/api/island/session/heartbeat",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 7
+    },
+    {
+      "actor": "zero-revive-owner",
+      "path": "/api/waves/158e9bc1-11b8-47af-935f-8d14aad27fec/events",
+      "method": "GET",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [
+        "islandOwner",
+        "runEpoch",
+        "sessionId",
+        "connectionGeneration",
+        "after"
+      ],
+      "count": 106
+    },
+    {
+      "actor": "zero-revive-owner",
+      "path": "/api/waves/158e9bc1-11b8-47af-935f-8d14aad27fec/captains",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 92
+    },
+    {
+      "actor": "zero-revive-member",
+      "path": "/api/waves/158e9bc1-11b8-47af-935f-8d14aad27fec/captains",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 14
+    },
+    {
+      "actor": "zero-revive-member",
+      "path": "/api/waves/158e9bc1-11b8-47af-935f-8d14aad27fec/inputs",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 1
+    },
+    {
+      "actor": "zero-revive-member",
+      "path": "/api/island/revive",
+      "method": "POST",
+      "status": 409,
+      "errorCode": "hold_incomplete",
+      "queryKeys": [],
+      "count": 1
+    },
+    {
+      "actor": "zero-revive-member",
+      "path": "/api/island/revive",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 2
+    }
+  ],
+  "supplementalReadOnlyObservation": {
+    "source": "read-only completed hold joined to its authenticated actor wallet and original account",
+    "observedAt": "2026-11-19T17:49:19.478Z",
+    "facts": {
+      "required_ms": 2000,
+      "helper_private_balance": "0",
+      "shared_balance": "0",
+      "shared_committed": "0"
+    }
+  }
+}
