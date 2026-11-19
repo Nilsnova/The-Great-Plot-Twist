@@ -32,18 +32,22 @@ function meadowEdge(angle) {
   return Math.min(meadowScale(angle), .865 + .12 * inward * inward * (3 - 2 * inward));
 }
 
-function paintBeachDetails(c, coast, beach, rim, materials) {
+function paintBeachDetails(c, beach, rim, materials) {
   c.save();
   c.clip(beach);
   c.globalCompositeOperation = 'source-atop';
   c.globalAlpha = .88;
   c.fillStyle = linear(c, -16, -13, 15, 13, [[0, '#fff0bf83'], [.40, '#fbda9f38'], [.73, '#d2a97508'], [1, '#926d583d']]);
   c.fill(beach);
-  for (const inset of [.953, .967, .979]) {
-    const wetSand = new Path2D(beach);
-    wetSand.addPath(coast(angle => inset + .006 * Math.sin(8 * angle - 1) + .004 * Math.cos(17 * angle), .003, 1));
-    c.fillStyle = linear(c, -14, -12, 14, 8, [[0, '#c9a27434'], [.44, '#a57c572c'], [1, '#945f512f']]);
-    c.fill(wetSand, 'evenodd');
+  // Overlapping washes follow the waterline as one varied stain, with a soft edge on dry sand.
+  for (let i = 1; i < rim.length - 1; i += 2) {
+    const {x, y} = rim[i], previous = rim[i - 1], next = rim[i + 1];
+    const tangent = Math.atan2(next.y - previous.y, next.x - previous.x);
+    const reach = 1.02 + .27 * Math.sin(i * .41) + .17 * Math.cos(i * .77);
+    c.save(); c.translate(.997 * x, .997 * y); c.rotate(tangent); c.scale(2.55, reach);
+    c.fillStyle = radial(c, 0, 0, 1, [[0, '#976e4e55'], [.40, '#a7815d31'], [.72, '#b18c6217'], [1, '#b18c6200']]);
+    c.fill(ellipse(0, 0, 1));
+    c.restore();
   }
   // Rocky shoulders shade the sand at their feet. The four open approaches keep a warm centre.
   for (let i = 2; i < rim.length - 1; i += 5) {
@@ -376,11 +380,11 @@ function paintTerrain(c, s, coast, random, materials) {
   c.fillStyle = '#f2d595'; c.fill(beach);
   if (materials) { c.save(); c.clip(beach); paintMaterial(c, materials, 'sand', {alpha: .9}); c.restore(); }
   c.save(); c.clip(beach);
-  c.lineWidth = .84; c.strokeStyle = '#dec291'; c.stroke(beach);
-  c.lineWidth = .25; c.strokeStyle = '#bea374'; c.stroke(beach);
+  c.lineWidth = .84; c.strokeStyle = '#e6c78e'; c.stroke(beach);
+  c.lineWidth = .25; c.strokeStyle = '#c9a878'; c.stroke(beach);
   c.fillStyle = '#e2bf7e'; for (let i = 0; i < 260; i++) { const a = random() * Math.PI * 2, k = .86 + random() * .13; c.fill(ellipse(Math.cos(a) * s.rx * k, Math.sin(a) * s.rz * k * .72, .07 + random() * .08, .05)); }
   c.restore();
-  paintBeachDetails(c, coast, beach, rim, materials);
+  paintBeachDetails(c, beach, rim, materials);
   if (!materials) paintGrassRim(c, rim, beach);
   const grassRadius = materials ? meadowEdge : () => .85;
   const meadow = coast(grassRadius, .012, 3);

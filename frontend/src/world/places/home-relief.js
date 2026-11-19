@@ -356,6 +356,7 @@ export function createHomeRelief(group, coastArt) {
         vec2 layers = vec2(logical.x + logical.y * .26, -vShoreRelief.x + logical.y * .12);
         // Preserve all of the visible, playable upper beach, including the existing shallow coves.
         vec4 rock = texture2D(uCoastArt, vec2(logical.x / 64.0, -logical.y * ${LEGACY_DEPTH} / 48.0) + .5);
+        float sandPigment = smoothstep(.065, .24, rock.r - rock.g);
         if (vShoreRelief.z > 1.5) {
           if (length(shore) > rim || rock.a < .78) discard;
           float height = -vShoreRelief.x;
@@ -378,6 +379,9 @@ export function createHomeRelief(group, coastArt) {
             gl_FragColor = vec4(mix(turf, rock.rgb, seam), opacity);
           } else {
             vec3 shoulder = cutSandstone(vStone * (.95 + weather * .24), layers, vec2(.5), 0.0);
+            // Let the ground's sand colour collect in the foot of the same raised shoulder.
+            float silt = sandPigment * (1.0 - smoothstep(.12, .68, height + weather * .23));
+            shoulder = mix(shoulder, rock.rgb * (.93 + pore * .10), .91 * silt);
             gl_FragColor = vec4(shoulder, opacity);
           }
           #include <colorspace_fragment>
@@ -416,7 +420,8 @@ export function createHomeRelief(group, coastArt) {
         stone = mix(stone, stone * vec3(.48, .65, .74) + vec3(.007, .025, .039), damp * .82);
         float tide = smoothstep(.67, .84, depth + grainBreak) * (1.0 - smoothstep(.85, .99, depth)) * damp;
         stone += tide * vec3(.006, .020, .023);
-        gl_FragColor = vec4(mix(stone, rock.rgb, .10), 1.0);
+        float settledSand = sandPigment * (1.0 - smoothstep(.15, .78, vShoreRelief.x + grainBreak));
+        gl_FragColor = vec4(mix(stone, rock.rgb, .10 + .59 * settledSand), 1.0);
         #include <colorspace_fragment>
       }`,
   });
