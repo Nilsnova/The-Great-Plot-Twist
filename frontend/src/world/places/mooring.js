@@ -58,7 +58,7 @@ function hullRipples(root, x, waterline) {
         #include <colorspace_fragment>
       }`,
   });
-  const mesh = new Mesh(new PlaneGeometry(4.05, .92), material);
+  const mesh = new Mesh(new PlaneGeometry(3.7, .92), material);
   mesh.name = 'home-mooring-water';
   mesh.position.set(x, waterline - .14, 0);
   mesh.renderOrder = 14.9;

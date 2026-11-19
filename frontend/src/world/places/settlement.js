@@ -67,7 +67,6 @@ export async function createSettlement(ctx) {
     const [bollard, skiff] = mooring.map(({asset, x, z}) => {
       const mesh = placeArt(group, art, asset, x, z);
       mesh.name = asset;
-      if (asset === 'home-mooring-skiff') mesh.scale.setScalar(1.24);
       mesh.renderOrder = 16;
       mesh.raycast = () => {};
       return mesh;
