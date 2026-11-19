@@ -127,7 +127,7 @@ function makePurchaseFeedback(root, name, {dustFront = 0, dustDepth = 1, stillOp
   return {
     get current() { return current; },
     get light() { return light; },
-    show(spotId, level, {x, z, kind}, reduced, width = 1) {
+    show(spotId, level, {x, z, kind}, reduced, width = 1, view = {x, z}) {
       if (!dust) {
         dust = feedbackMesh(root, dustGeometry(dustFront), name);
         // Airborne glints interleave with upright sprites while the dust stays under them.
@@ -135,10 +135,10 @@ function makePurchaseFeedback(root, name, {dustFront = 0, dustDepth = 1, stillOp
         motes = feedbackMesh(root, moteGeometry(), `${name}-motes`);
         motes.material.blending = THREE.AdditiveBlending;
       }
-      const point = projectGround(x, z);
+      const point = projectGround(view.x, view.z);
       dust.position.set(point.x, point.y, 0);
       motes.position.copy(dust.position);
-      motes.renderOrder = 100 + z + .05;
+      motes.renderOrder = 100 + view.z + .05;
       spread = width;
       motes.scale.x = spread;
       current = {spotId, level, x, z, ...(kind ? {kind} : {})};

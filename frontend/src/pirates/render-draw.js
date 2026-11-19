@@ -139,7 +139,7 @@ export function createDraw(rect, layers, bands, posts, ships, crew, guards, spla
   }
   // A fallen boarder (or militia): the sprite sinks and fades under a puff of smoke.
   function faceActor(meta, actor) {
-    const target = actor.wallId ? posts.find(post => post.id === actor.wallId) : actor.towerId ? posts.find(post => post.id === actor.towerId)
+    const target = actor.wallId ? posts.find(post => post.id === actor.wallId) : actor.towerId ? posts.find(post => post.id === actor.towerId)?.view
       : latest?.party?.find(unit => unit.id === actor.foe) ?? latest?.boarders?.find(unit => unit.id === actor.foe)
         ?? latest?.militia?.find(unit => unit.id === actor.foe);
     const dx = target ? projectGroundVector(target.x - actor.x, target.z - actor.z).x

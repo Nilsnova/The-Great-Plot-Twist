@@ -387,7 +387,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     anchor(zone) {
       const thing = placedSpot(zone, target()?.spots) ?? ppSpotById(zone) ?? (zone === BELL.id ? BELL : zone === CABIN.id ? CABIN : zone === ARSENAL.id ? ARSENAL : campaignBuilding(zone));
       if (!thing) return null;
-      return {x: thing.x, z: thing.z, lift: thing.kind === 'watchtower' ? 4.6 : thing.h ? Math.min(4.6, thing.h * .7) : 2.6};
+      return {x: thing.x, z: thing.z, ...isl.world?.displayAnchor?.(zone), lift: thing.kind === 'watchtower' ? 4.6 : thing.h ? Math.min(4.6, thing.h * .7) : 2.6};
     },
     presencePlace(place) {
       if (place !== ISLAND_PLACE) return null;
@@ -499,7 +499,11 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     get ui() { return isl.ui; },
     get active() { return isl.ui.active || !!isl.cutscene || isl.boatLoading || !!isl.boatGame; }, // Pending rounds hold the keys too.
     get managing() { return isl.village.active; },
-    get selection() { return selectedAnchor(); },
+    get selection() {
+      const selection = selectedAnchor();
+      return selection?.kind && !selection.positionOnly
+        ? {...selection, ...isl.world?.displayAnchor?.(selection.spotId)} : selection;
+    },
     get selectionElement() { return isl.ui.selectionElement; },
     get defenseReportIdentity() { return defenseReportIdentity(); },
     canFocusDefenseReport, resolveDefenseReport, focusDefenseReport,
