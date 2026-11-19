@@ -15,9 +15,9 @@ import pytest
 
 from server.island.catalogue import (
     IslandFileError,
-    catalogue_for_flags,
     load_island,
     read_tower_trees,
+    runtime_catalogue,
 )
 from server.tests.helpers import assert_error
 from server.tests.island_helpers import GUEST, GUEST_ID, PLAYER, PLAYER_ID
@@ -63,7 +63,7 @@ def test_the_file_reads_five_kinds_with_rising_prices_and_the_campaign_waves():
     assert cannon_tree.tier_name("a", 2) == "Drill II"
     # The culverin's tree only counts while its kind is in the catalogue (the flag defenses_v2).
     assert catalogue.tree_of("culverin") is None
-    assert catalogue_for_flags(catalogue, {"defenses_v2": True}).tree_of("culverin") is not None
+    assert runtime_catalogue(catalogue).tree_of("culverin") is not None
 
 
 def test_a_broken_file_is_refused_with_a_clear_message(tmp_path):
@@ -90,7 +90,7 @@ def test_the_island_answer_carries_the_tree_of_each_tower_and_the_prices():
     assert shown["tree"] == {"a": 2, "b": 1}
     assert next(spot for spot in body["spots"] if spot["id"] == "wall_1")["tree"] is None
     trees = body["prices"]["towerTrees"]
-    assert set(trees) == {"cannon", "mortar", "harpoon", "swivel"}  # the culverin: flag off
+    assert set(trees) == {"cannon", "mortar", "harpoon", "swivel", "culverin"}
     assert trees["cannon"] == {
         "prices": [1000, 2200, 4800],
         "waves": [20, 35, 45],

@@ -87,7 +87,7 @@ it('keeps an island with unavailable canonical health fail closed, then discover
         return answer;
       }};
     const island = createIsland({container: document.body, emit, on, mode: 'fake', transport, storage: null,
-      structureRecoveryOn: () => false, wallRecovery: () => true, menu: () => () => {}, setTimer, clearTimer});
+      structureRecoveryOn: () => false, menu: () => () => {}, setTimer, clearTimer});
     await island.load();
     await island.build('wall_1', 'wall');
     island.pick('wall_1');
@@ -114,7 +114,7 @@ it('does not downgrade a persisted v1 island when the structure endpoint says fe
     const {createIsland} = await window.g20Import('/src/island/index.js');
     const {createFakeIslandTransport} = await window.g20Import('/src/pirates/fake-api.js');
     const {on, emit} = await window.g20Import('/src/core/events.js');
-    const base = createFakeIslandTransport({flags: {wall_recovery: true}});
+    const base = createFakeIslandTransport();
     base.dev.setWaveBest(20); base.dev.setCoins(5000);
     const transport = {...base,
       get: async path => {
@@ -134,7 +134,7 @@ it('does not downgrade a persisted v1 island when the structure endpoint says fe
         return answer;
       }};
     const island = createIsland({container: document.body, emit, on, mode: 'fake', transport, storage: null,
-      structureRecoveryOn: () => false, wallRecovery: () => true, menu: () => () => {}});
+      structureRecoveryOn: () => false, menu: () => () => {}});
     await island.load();
     for (const [spot, kind] of [['wall_1', 'wall'], ['cannon_1', 'cannon']]) {
       if (!island.island.spots.find(item => item.id === spot)?.built) await island.build(spot, kind);
@@ -187,7 +187,7 @@ it('keeps a previously discovered v1 policy when a later structure read says fea
     const {createIsland} = await window.g20Import('/src/island/index.js');
     const {createFakeIslandTransport} = await window.g20Import('/src/pirates/fake-api.js');
     const {on, emit} = await window.g20Import('/src/core/events.js');
-    const base = createFakeIslandTransport({flags: {wall_recovery: true}});
+    const base = createFakeIslandTransport();
     base.dev.setWaveBest(20); base.dev.setCoins(5000);
     const state = {serverNow: '2026-11-17T12:00:00Z', islandEpoch: '22345678-1234-4234-8234-123456789abc', revision: 4,
       recoveryVersion: 1, waveProtocol: 2, displayPhase: 'between_waves', repairWindow: 'between_waves', waveId: null,
@@ -208,7 +208,7 @@ it('keeps a previously discovered v1 policy when a later structure read says fea
         return base.get(path);
       }};
     const island = createIsland({container: document.body, emit, on, mode: 'fake', transport, storage: null,
-      structureRecoveryOn: () => false, wallRecovery: () => true, setTimer, clearTimer, menu: () => () => {}});
+      structureRecoveryOn: () => false, setTimer, clearTimer, menu: () => () => {}});
     await island.load();
     for (const [spot, kind] of [['wall_1', 'wall'], ['cannon_1', 'cannon']]) {
       if (!island.island.spots.find(item => item.id === spot)?.built) await island.build(spot, kind);

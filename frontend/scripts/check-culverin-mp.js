@@ -1,7 +1,7 @@
-// Release check for the flag `defenses_v2` (T43, the culverin; decision D048, specs/T43-new-defenses.md "Integration
-// as built") with two captains on one island, before the flag goes on in production. Headless Chrome, one browser
-// context, the fake server shared by both tabs (?islands=fake&fakeworld=…, fake-api.js) with the flag on
-// (&fakeflags=defenses_v2: the culverin's kinds, prices and unlocks, and rules ["defenses_v2"] on its waves) and the
+// Release check for the culverin (T43, decision D048, specs/T43-new-defenses.md "Integration as built"; its flag
+// defenses_v2 is retired, always on) with two captains on one island. Headless Chrome, one browser context, the fake
+// server shared by both tabs (?islands=fake&fakeworld=…, fake-api.js: the culverin's kinds, prices and unlocks, and
+// the rule defenses_v2 on its waves) and the
 // BroadcastChannel room, as check-arsenal-mp.js and check-placement-mp.js. The host (Nils) creates a game, the member
 // (Ben) joins it with the code. The scenarios, each reported PASS or FAIL with what was measured:
 //   1 card      an empty tower spot's build card offers the Culverin (its name, line and price), locked "Opens after
@@ -30,9 +30,6 @@
 //               culverins) draws idle, firing, damaged and broken frames from the sim's own states
 //   T health    a separate context with &fakeflags=defenses_v2,tower_health: the wave carries both rules, the culverin
 //               fights with 56 hp at level 1 (a cannon 80) and fires
-//   F flag off  a separate context without the flag: no culverin on the card, in the island answer (spots, prices,
-//               unlocks) or the wave's rules; a culverin build is refused 422 wrong_kind uncharged; a cannon and a
-//               harpoon tower build, draw and fight as before (towers with their level's range, no culverin events)
 //   E           no browser errors
 // Timing-only failures (a 2 s bound) are reported with the time the change did arrive. Exit code 1 when any
 // scenario fails.
@@ -282,7 +279,7 @@ async function arm(captain) {
   });
 }
 
-let host = null, ben = null, off = null;
+let host = null, ben = null;
 const paid = {};
 try {
   host = await openCaptain('Nils', 'me', {create: true});
@@ -645,45 +642,6 @@ try {
     assert.ok(fired > 0, 'the culverin fired with tower health on');
     note(`rules ${JSON.stringify(fight.rules)}; towers ${JSON.stringify(fight.towers)}; ${fired} culverin shots`);
     await ctx.close();
-  });
-
-  await scenario('F', 'flag off: no culverin on the card, in the answer or the wave; existing towers as before', async note => {
-    const offContext = await env.page.context().browser().newContext({viewport: {width: 960, height: 600}});
-    const list = [];
-    off = await openCaptain('Ola', 'me', {create: true}, {flags: '', ctx: offContext, list});
-    await off.page.waitForFunction(() => !!document.querySelector('.island-card-lobby[open]') || window.__island.island.ui.open !== 'lobby', null, {timeout: 15000});
-    if (await off.page.locator('.island-card-lobby[open] .island-lobby-start').count()) await off.page.locator('.island-card-lobby[open] .island-lobby-start').click();
-    await closeCards(off);
-    await island(off, async i => { i.dev.setWaveBest(19); i.dev.setCoins(2000); await i.load(); });
-    const card = await openCard(off, GUN);
-    assert.deepEqual(card.choices.map(item => item.kind), ['cannon', 'mortar', 'harpoon'], `the flag-off choices: ${JSON.stringify(card.choices)}`);
-    await closeCards(off);
-    const answer = await answerOf(off);
-    const mentions = JSON.stringify({spots: answer.spots, prices: answer.prices, unlocks: answer.unlocks}).includes('culverin');
-    assert.equal(mentions, false, 'the island answer never mentions a culverin');
-    const coins = await coinsOf(off);
-    const refused = await raw(off, 'POST', '/api/island/build', {spot: GUN, kind: 'culverin', actionUid: `off${Date.now().toString(36)}`});
-    assert.deepEqual({ok: refused.ok, status: refused.status, code: refused.code}, {ok: false, status: 422, code: 'wrong_kind'}, 'a culverin with the flag off');
-    assert.equal(await coinsOf(off), coins, 'nothing paid');
-    note(`flag off: choices ${JSON.stringify(card.choices.map(item => item.name))}; answer mentions culverin: ${mentions}; API build → ${refused.status} ${refused.code} "${refused.message}"`);
-    await island(off, async i => { await i.build('cannon_1', 'cannon'); await i.build('cannon_2', 'harpoon'); });
-    for (const [spot, kind, art] of [['cannon_1', 'cannon', 'island-cannon'], ['cannon_2', 'harpoon', 'island-harpoon']]) {
-      await follows(off, spot, (drawn, item) => drawn?.kind === kind && drawn.art === art && item?.kind === kind, `the ${kind}`, Date.now());
-    }
-    await off.page.evaluate(() => { window.__cul = {fired: 0}; window.__island.on('culverin_fired', () => { window.__cul.fired++; }); });
-    const rung = await island(off, async i => { const a = await i.ringBell(); return {ok: a.ok, code: a.code ?? null}; });
-    assert.ok(rung.ok, `Ola rang the bell: ${JSON.stringify(rung)}`);
-    await until(off, now => now?.ships > 0, 'the first ships', 90000);
-    const fight = await off.page.evaluate(() => { const w = window.__island.waves.island.wave;
-      return {rules: w.info.rules ?? null, towers: w.sim.state().towers.map(t => `${t.id}:${t.kind}:${t.level}:${t.range}`)}; });
-    const {CONFIG} = await off.page.evaluate(async () => { const m = await import('/src/pirates/sim.js'); return {CONFIG: {cannon: m.CONFIG.levels.cannon[0].range, harpoon: m.CONFIG.levels.harpoon[0].range}}; });
-    assert.equal(fight.rules?.defensesV2 ?? false, false, `no defenses_v2 rule: ${JSON.stringify(fight.rules)}`);
-    assert.deepEqual(fight.towers, [`cannon_1:cannon:1:${CONFIG.cannon}`, `cannon_2:harpoon:1:${CONFIG.harpoon}`], 'the towers fight as before');
-    await until(off, now => !now || now.done, 'the end of the wave', 400000);
-    assert.equal(await off.page.evaluate(() => window.__cul.fired), 0, 'no culverin_fired');
-    note(`flag-off wave: rules ${JSON.stringify(fight.rules)}, towers ${JSON.stringify(fight.towers)}, culverin_fired 0`);
-    await shot('F-flag-off', list);
-    await offContext.close();
   });
 
   const audio = env.errors.filter(text => /AudioContext|audio device/i.test(text));
