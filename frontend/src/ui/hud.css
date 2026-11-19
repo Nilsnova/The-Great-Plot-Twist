@@ -87,3 +87,15 @@ html[data-reduced-motion=true] .hud-arrival{animation:none}
 
 /* T51: no goals before the player is on a game's island (open water behind the front door). */
 .hud-bare .quest-strip{display:none}
+
+/* Shared money stays one HUD group; exact large amounts wrap rather than round. */
+.hud-play .hud-coins[data-economy=shared]{display:grid;grid-template-columns:minmax(0,1fr);gap:5px;max-width:min(560px,calc(100vw - 150px));white-space:normal}
+.hud-play .hud-coins[data-economy=shared] .hud-coins-value{min-width:0;overflow-wrap:anywhere}
+.hud-treasury-name{font:700 12px/1.2 var(--u-font);color:var(--u-mute)}
+.hud-treasury-held{font:600 12px/1.35 var(--u-font);color:var(--u-mute);overflow-wrap:anywhere}
+.hud-play .hud-coins[data-economy=shared] .hud-wave{padding:6px 0 0;border-left:0;border-top:1px solid #ba963c80}
+html:has(.hud-coins[data-economy=shared]) .island-visit{top:max(82px,var(--hud-island-treasury-bottom,0px))}
+@media(max-width:900px){
+  html:has(.hud-coins[data-economy=shared]) .island-visit{top:max(70px,var(--hud-island-treasury-bottom,0px))}
+  html:has(.hud-coins[data-economy=shared]):has(.island-visit:not([hidden])) .hud-play .quest-strip{margin-top:calc(var(--hud-quest-offset,0px) + 62px)}
+}
