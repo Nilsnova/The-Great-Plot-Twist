@@ -39,16 +39,19 @@ async function enter(page, options = {}) {
   try { await land(page, options); }
   catch (error) {
     if (error.name !== 'TimeoutError') throw error;
-    // A real successful Create/Join can remove its dialog before Playwright finishes its wait.
-    await page.waitForFunction(({join}) => window.__island?.world.current?.id === 'home_islet'
-      && !!(window.__island.island?.visiting ?? window.__island.island?.island)
-      && (!join || (window.__island.island?.visiting?.code ?? window.__island.island?.island?.code) === join),
-    {join: options.join ?? null}, {timeout: 30000});
   }
   for (const name of ['Skip', 'Got it']) {
     const button = page.getByRole('button', {name, exact: true}).first();
     if (await button.isVisible().catch(() => false)) await button.click({noWaitAfter: true});
   }
+  // A real completed Join may use the normalized code while HTTP includes its ISLE prefix.
+  await page.waitForFunction(({join}) => {
+    const island = window.__island?.island;
+    const actual = island?.visiting?.code ?? island?.island?.code;
+    const clean = value => String(value ?? '').replace(/^ISLE-/i, '').toUpperCase();
+    return window.__island?.world.current?.id === 'home_islet' && !!actual
+      && (!join || clean(actual) === clean(join));
+  }, {join: options.join ?? null}, {timeout: 30000});
 }
 async function watch(page) {
   await page.waitForFunction(() => !!window.__island?.waves?.island?.wave, null, {timeout: 45000});
@@ -69,10 +72,16 @@ async function watch(page) {
 async function replay(page, snapshot, events, sealedThroughTick, token) {
   return page.evaluate(async ({snapshot, events, sealedThroughTick, token}) => {
     const {createWave} = await import('/src/pirates/sim.js');
+    const {readRules} = await import('/src/pirates/wave-rules.js');
+    const {recoveryWaveDefenses} = await import('/src/pirates/recovery-snapshot.js');
+    const {eventFor} = await import('/src/pirates/wave-events.js');
     const {simulationInputFromJournal} = await import('/src/pirates/recovery-transport.js');
     const {createWaveReplay, createReplayDriver} = await import('/src/pirates/wave-replay.js');
-    const sim = createWave({...snapshot.createWave, rules: snapshot.rules, recoveryVersion: 1, waveProtocol: 2,
-      recoveryStructures: snapshot.structures,
+    const sim = createWave({...snapshot.createWave, ...readRules(snapshot.rules),
+      seed: snapshot.seed, countdown: 0, defenses: recoveryWaveDefenses(snapshot),
+      event: snapshot.createWave.event ?? eventFor(snapshot.createWave.wave, snapshot.seed),
+      finishers: true, finisherPreparation: true, towerHealth: true,
+      recoveryVersion: 1, waveProtocol: 2, recoveryStructures: snapshot.structures,
       ...(snapshot.captainInitialState ? {canonicalCaptains: snapshot.captainInitialState,
         canonicalLoadouts: Object.fromEntries(snapshot.participants.map(row => [row.participantToken, row.captain]))} : {})});
     const journal = createWaveReplay();
@@ -92,13 +101,17 @@ async function replay(page, snapshot, events, sealedThroughTick, token) {
       boarders: sim.state().boarders.map(row => ({id: row.id, x: row.x, z: row.z, hp: row.hp}))};
   }, {snapshot, events, sealedThroughTick, token});
 }
-async function journal(owner, waveId) {
-  const rows = await read('select server_seq::int as "serverSeq",effective_tick as "effectiveTick",type, '
-    + 'participant_token::text as "participantToken",payload from public.recovery_wave_events '
-    + 'where wave_id=$1::uuid order by server_seq', [waveId]);
-  const clock = await read('select greatest(-1,floor(extract(epoch from (clock_timestamp()-starts_at))/.05)::int-1) as tick '
-    + 'from public.wave_runs where id=$1::uuid', [waveId]);
-  return {events: rows, seal: Math.min(18000, clock[0].tick)};
+async function journal(actor, waveId, proof = null) {
+  const query = new URLSearchParams({after: '0'});
+  if (proof) for (const [key, value] of Object.entries({islandOwner: proof.economy.islandOwner,
+    runEpoch: proof.economy.runEpoch, sessionId: proof.sessionId,
+    connectionGeneration: proof.connectionGeneration})) query.set(key, value);
+  const path = '/api/waves/' + waveId + '/events?' + query;
+  const reply = actor.request ? await actor.request(path) : await api(actor.page, path);
+  const page = ok(reply, 'Actual sealed journal page');
+  assert.equal(page.events.length ? page.events.at(-1).serverSeq : 0, page.headSeq,
+    'This bounded observation requires the whole actual prefix in one page');
+  return {events: page.events, seal: page.sealedThroughTick};
 }
 function checkBomb(result) {
   assert.equal(result.fired.length, 1);
@@ -148,7 +161,7 @@ try {
   });
   await owner.page.waitForFunction(() => window.bombObserved.some(row => row.type === 'captain_blast' && row.hits > 0), null, {timeout: 30000});
   await mate.page.waitForFunction(() => window.bombObserved.some(row => row.type === 'captain_blast' && row.hits > 0), null, {timeout: 30000});
-  const accepted = await journal(owner.actorId, ownWave.waveId);
+  const accepted = await journal(owner, ownWave.waveId);
   const shots = accepted.events.filter(row => row.payload?.command?.type === 'captain_shot');
   assert.equal(shots.length, 1); assert.equal(shots[0].payload.captain.weapon, 'fire_bombs');
   const one = await replay(owner.page, ownWave.snapshot, accepted.events, accepted.seal, ownWave.token);
@@ -183,7 +196,7 @@ try {
   let prefix, pre;
   for (let attempt = 0; attempt < 45; attempt++) {
     for (const [index, actor] of [host, guest].entries()) ok(await actor.request('/api/island/session/heartbeat', {method: 'POST', body: proofs[index]}), 'Native heartbeat');
-    prefix = await journal(host.actorId, wave.waveId);
+    prefix = await journal(host, wave.waveId, proofs[0]);
     if (prefix.seal >= 0) pre = await replay(owner.page, wave.initialSnapshot, prefix.events, prefix.seal, wave.participantToken);
     if (pre?.ships.length) break;
     await new Promise(resolve => setTimeout(resolve, 1000));
@@ -196,7 +209,7 @@ try {
   const appended = ok(await host.request('/api/waves/' + wave.waveId + '/inputs', {method: 'POST', body: {...proofs[0], waveProtocol: 2, inputs}}), 'Native normal inputs');
   assert.equal(appended.accepted.at(-1).payload.captain.weapon, 'fire_bombs');
   await new Promise(resolve => setTimeout(resolve, 3000));
-  prefix = await journal(host.actorId, wave.waveId);
+  prefix = await journal(host, wave.waveId, proofs[0]);
   const nativeOne = await replay(owner.page, wave.initialSnapshot, prefix.events, prefix.seal, wave.participantToken);
   const nativeTwo = await replay(mate.page, wave.initialSnapshot, prefix.events, prefix.seal, wave.participantToken);
   checkBomb(nativeOne); assert.deepEqual(nativeTwo, nativeOne);
