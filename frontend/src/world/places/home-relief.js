@@ -4,44 +4,38 @@ import {APPROACH_DEPTH, cliffProfile} from '../../art/coast-cliffs.js';
 import {groundProjectionGlsl, LEGACY_DEPTH, projectGround} from '../projection.js';
 import {surfaces} from './surfaces.js';
 
-const SANDSTONE = ['#d5ae82', '#ddb88d', '#caa079', '#cba17b', '#d5aa7f'].map(color => new THREE.Color(color));
-const PILLAR_JOINT = new THREE.Color('#775e4b');
-const SUBMERGED_STONE = new THREE.Color('#64877d');
-const TURF = new THREE.Color('#86b746');
-const SHOULDER_LEVELS = [[.06, 0, -.24], [.13, .17, -.14], [.23, .25, -.27], [.27, .39, .19],
-  [.37, .82, .06], [.49, 1, .27], [.96, .97, .12], [1.28, .62, -.04], [1.45, .21, -.11], [1.58, 0, -.19]];
-const SHELF_ARCS = [[25, 34], [55, 67]];
-const BLOCK_WIDTHS = [5.2, 3.65, 6.4, 4.5, 6.1, 3.8, 4.9];
-const COURSES = [
-  {offset: 0, tint: .35, levels: [[0, .47, .2], [.11, .11, .38], [.29, .025, .07], [.375, .38, -.27]]},
-  {offset: 2, tint: .20, levels: [[.32, .31, -.24], [.41, .17, .22], [.57, .02, .035], [.69, .43, -.25]]},
-  {offset: 4, tint: .08, levels: [[.64, .39, -.16], [.73, .12, .18], [.91, .055, -.06], [1, .32, -.30]]},
-];
-const FACETS = [-.19, .05, -.25];
+const STONES = ['#b9a183', '#c9af90', '#a89d8d', '#ad967b', '#b5a287', '#a59a87'].map(color => new THREE.Color(color));
+const BEDROCK = new THREE.Color('#6e6254');
+const OUTCROP = new THREE.Color('#a3a098');
+const SUBMERGED_STONE = new THREE.Color('#66887c');
+const TURF = new THREE.Color('#91b949');
+const BLOCK_WIDTHS = [4.1, 6, 4.8, 3.5, 5.1, 5.9, 3.8];
+const ROCKY_ARCS = [[9, 36], [54, 81]];
+const TERRACE_ARCS = [[25, 34], [55, 67]];
 const surface = surfaces.home_islet;
-const SUN = new THREE.Vector3(-.55, .75, -.35).normalize();
-
-function interpolate(rows, index) {
-  const left = Math.floor(index), mix = index - left, a = rows[left], b = rows[Math.min(left + 1, rows.length - 1)];
-  return {x: THREE.MathUtils.lerp(a.x, b.x, mix), z: THREE.MathUtils.lerp(a.z, b.z, mix), depth: THREE.MathUtils.lerp(a.depth, b.depth, mix)};
-}
+const SUN = new THREE.Vector3(-.61, .71, -.32).normalize();
 
 function stoneVertex(rows, index, fraction, inset) {
-  const {x, z, depth} = interpolate(rows, index);
-  const radius = Math.hypot(x, z), sideX = x / radius, sideZ = z / radius;
-  return new THREE.Vector3(x - sideX * inset, -depth * fraction, z - sideZ * inset);
+  const first = Math.floor(index), mix = index - first;
+  const a = rows[first], b = rows[Math.min(first + 1, rows.length - 1)];
+  const {lerp} = THREE.MathUtils;
+  const x = lerp(a.x, b.x, mix), z = lerp(a.z, b.z, mix), depth = lerp(a.depth, b.depth, mix);
+  const radius = Math.hypot(x, z);
+  return new THREE.Vector3(x - x / radius * inset, -depth * fraction, z - z / radius * inset);
 }
 
 function homeCliffGeometry(rows = cliffProfile(surface)) {
   const positions = [], colors = [], relief = [];
-  const faceNormal = new THREE.Vector3(), edge = new THREE.Vector3(), out = new THREE.Vector3();
-  function triangle(a, b, c, tint, tones, bias, fractions, region) {
+  const faceNormal = new THREE.Vector3(), edge = new THREE.Vector3(), exterior = new THREE.Vector3();
+  function sunlight(a, b, c) {
     faceNormal.subVectors(b, a).cross(edge.subVectors(c, a)).normalize();
-    out.set(a.x + b.x + c.x, 6, a.z + b.z + c.z);
-    if (faceNormal.dot(out) < 0) faceNormal.negate();
-    const sun = Math.max(-.48, faceNormal.dot(SUN)) * .49;
+    exterior.set(a.x + b.x + c.x, 6, a.z + b.z + c.z);
+    if (faceNormal.dot(exterior) < 0) faceNormal.negate();
+    return Math.max(-.43, faceNormal.dot(SUN)) * .51;
+  }
+  function triangle(a, b, c, tint, tones, bias, fractions, region, sun = sunlight(a, b, c)) {
     for (const [i, vertex] of [a, b, c].entries()) {
-      const light = THREE.MathUtils.clamp(.72 + sun + tones[i], .24, 1.45);
+      const light = THREE.MathUtils.clamp(.77 + sun + tones[i], .24, 1.44);
       const display = projectGround(vertex.x, vertex.z - vertex.y / LEGACY_DEPTH);
       positions.push(display.x, display.y, vertex.z + vertex.y * .6 + bias);
       colors.push(tint.r * light, tint.g * light, tint.b * light);
@@ -49,84 +43,132 @@ function homeCliffGeometry(rows = cliffProfile(surface)) {
     }
   }
   function panel(a, b, c, d, tint, upper, lower, from, to, bias = 0, region = 0) {
-    triangle(a, b, c, tint, [upper, upper, lower], bias, [from, from, to], region);
-    triangle(a, c, d, tint, [upper, lower, lower], bias, [from, to, to], region);
-  }
-  const nearEnd = (rows.length - 1) / 2;
-  for (let i = 0; i < nearEnd; i++) {
-    panel(stoneVertex(rows, i, 0, 0), stoneVertex(rows, i + 1, 0, 0),
-      stoneVertex(rows, i + 1, 1, 0), stoneVertex(rows, i, 1, 0), PILLAR_JOINT, .03, -.16, 0, 1, -.74);
-    if (rows[i].depth <= APPROACH_DEPTH + .2 || rows[i + 1].depth <= APPROACH_DEPTH + .2) continue;
-    // Lower ledges are visibly under the water and never enter the opaque coast or approach mask.
-    const toe = sample => Math.max(0, Math.sin(sample * .63) + .55 * Math.cos(sample * .29));
-    const left = toe(i), right = toe(i + 1);
-    const a = stoneVertex(rows, i, .92, .04), b = stoneVertex(rows, i + 1, .92, .04);
-    const c = stoneVertex(rows, i + 1, 1.11 + right * .08, -.25 - right * .31);
-    const d = stoneVertex(rows, i, 1.11 + left * .08, -.25 - left * .31);
-    const e = stoneVertex(rows, i + 1, 1.32 + right * .21, -.32 - right * .34);
-    const f = stoneVertex(rows, i, 1.32 + left * .21, -.32 - left * .34);
-    const tone = .30 + left * .20;
-    panel(a, b, c, d, SUBMERGED_STONE, .19, tone, 0, .30, -.45, 1);
-    panel(d, c, e, f, SUBMERGED_STONE, tone, -.32, .30, 1, -.45, 1);
+    const sun = (sunlight(a, b, c) + sunlight(a, c, d)) / 2;
+    triangle(a, b, c, tint, [upper, upper, lower], bias, [from, from, to], region, sun);
+    triangle(a, c, d, tint, [upper, lower, lower], bias, [from, to, to], region, sun);
   }
 
-  // Each height has its own block rhythm. Alternating joints, width and bevel make courses read
-  // as cut sandstone with shallow overhangs, even when the entire island is on a narrow screen.
-  for (const {offset, tint, levels} of COURSES) {
-    for (let start = 0, block = offset; start < nearEnd; block++) {
-      const end = Math.min(nearEnd, start + BLOCK_WIDTHS[block % BLOCK_WIDTHS.length] - (start === 0 ? offset * .31 : 0));
-      const lean = Math.sin(block * 2.17), notch = Math.cos(block * 2.43);
-      const pigment = SANDSTONE[block % SANDSTONE.length];
-      const shoulders = [0, .155 + .065 * lean, .815 + .071 * notch, 1];
-      function point(level, across) {
-        const [drop, inset] = levels[level];
-        const middle = Math.sin(across * Math.PI);
-        const taper = Math.max(0, Math.abs(across - .5) - .30) * .82;
-        const index = THREE.MathUtils.lerp(start, end, THREE.MathUtils.lerp(.016, .984, across));
-        const tilt = Math.sin(block * .93 + level * .8) * .036 + (across - .5) * lean * .079;
-        return stoneVertex(rows, index, THREE.MathUtils.clamp(drop + tilt * middle, 0, 1), inset + taper);
+  // A continuous dark bed shows only where separate columns taper away from one another.
+  const nearEnd = (rows.length - 1) / 2;
+  for (let i = 0; i < nearEnd; i++) {
+    if (Math.max(rows[i].depth, rows[i + 1].depth) <= APPROACH_DEPTH + .025) continue;
+    panel(stoneVertex(rows, i, 0, 0), stoneVertex(rows, i + 1, 0, 0),
+      stoneVertex(rows, i + 1, 1, 0), stoneVertex(rows, i, 1, 0), BEDROCK, .03, -.18, 0, 1, -.67);
+  }
+
+  for (const [first, last] of ROCKY_ARCS) {
+    for (let start = first, block = first; start < last; block++) {
+      const end = Math.min(last, start + BLOCK_WIDTHS[block % BLOCK_WIDTHS.length]);
+      const turn = Math.sin(block * 2.17), bevel = Math.cos(block * 2.43);
+      const pigment = STONES[block % STONES.length];
+      const across = [0, .18 + turn * .075, .76 + bevel * .085, 1];
+      const split = .66 + bevel * .13;
+      const face = [
+        [0, .16, .21], [.12 - bevel * .05, .02, .27], [split, .005, -.06],
+        [.88 + turn * .035, .04, -.12], [1, .25, -.25],
+      ];
+      // A column keeps a broad main face. Its shoulders alternate in width and the foot fans out.
+      const point = (level, side) => {
+        const [drop, inset] = face[level], u = across[side];
+        const joint = side === 0 || side === 3;
+        const crease = Math.sin(block * 2.3 + level * 1.6 + u * 1.8);
+        const edgeCut = joint ? .21 + .06 * bevel + .075 * crease : 0;
+        const lean = (drop - .2) * turn * .43 + crease * (joint ? .19 : .075);
+        const sample = THREE.MathUtils.clamp(THREE.MathUtils.lerp(start, end,
+          THREE.MathUtils.lerp(.015, .985, u)) + lean, first, last);
+        return stoneVertex(rows, sample, drop, inset + edgeCut);
+      };
+      for (let level = 0; level < face.length - 1; level++) {
+        const [from, , upper] = face[level], [to, , lower] = face[level + 1];
+        for (let side = 0; side < across.length - 1; side++) {
+          const tone = [-.04, .045, -.17][side];
+          panel(point(level, side), point(level, side + 1), point(level + 1, side + 1), point(level + 1, side),
+            pigment, upper + tone, lower + tone, from, to);
+        }
       }
-      for (let side = 0; side < FACETS.length; side++) {
-        const left = shoulders[side], right = shoulders[side + 1];
-        const sections = Math.max(1, Math.ceil((end - start) * (right - left)));
-        const facetTint = FACETS[side] * (1 + .25 * notch);
-        for (let i = 0; i < sections; i++) {
-          const a = THREE.MathUtils.lerp(left, right, i / sections);
-          const b = THREE.MathUtils.lerp(left, right, (i + 1) / sections);
-          for (let height = 0; height < levels.length - 1; height++) {
-            const [from, , upper] = levels[height], [to, , lower] = levels[height + 1];
-            panel(point(height, a), point(height, b), point(height + 1, b), point(height + 1, a),
-              pigment, upper + facetTint + tint, lower + facetTint + tint, from, to);
+
+      const middle = (start + end) / 2;
+      const rockDepth = THREE.MathUtils.lerp(rows[Math.floor(middle)].depth, rows[Math.ceil(middle)].depth, middle % 1);
+      if (rockDepth > 1.8 && end - start > 1.8) {
+        // Individual low stones break the foot of the columns. Water softens their edges and colour.
+        const half = Math.min(1.55, (end - start) * .32), toe = middle + .32 * turn;
+        const inset = -.24 - (.13 + .10 * bevel);
+        const top = stoneVertex(rows, toe, 1.07, inset * .78);
+        const left = stoneVertex(rows, toe - half, 1.29, inset);
+        const right = stoneVertex(rows, toe + half, 1.33, inset - .16);
+        const ridge = stoneVertex(rows, toe, 1.34, inset - .46);
+        const foot = stoneVertex(rows, toe - .22 * turn, 1.55 + bevel * .11, inset - .51);
+        triangle(left, top, ridge, SUBMERGED_STONE, [-.08, .41, .15], -.43, [.48, 0, .36], 1);
+        triangle(top, right, ridge, SUBMERGED_STONE, [.41, -.1, .065], -.43, [0, .54, .36], 1);
+        triangle(left, ridge, foot, SUBMERGED_STONE, [-.08, .10, -.3], -.43, [.48, .36, 1], 1);
+        triangle(ridge, right, foot, SUBMERGED_STONE, [.055, -.1, -.3], -.43, [.36, .54, 1], 1);
+
+        // Short turf caps alternate with uncapped stone. The raised shape follows each rock mass.
+        // Low crests near the interior terraces give the two authored forms room to meet.
+        const fromTerrace = Math.min(...TERRACE_ARCS.map(([left, right]) => Math.max(0, left - middle, middle - right)));
+        if (fromTerrace > 1.4) {
+          const capHeight = .54 + THREE.MathUtils.smoothstep(fromTerrace, 1.4, 4.3) * (.76 + .12 * bevel);
+          const turfDepth = .78 + .17 * turn, grassCap = block % 4 !== 2;
+          const crest = [[.025, 0], [.08, .52], [.23, .86], [.42, 1], [turfDepth, .94], [turfDepth + .4, .40], [turfDepth + .66, 0]];
+          const cap = crest.map(([inset, rise], level) => across.map((u, side) => {
+            const shoulder = side === 0 || side === 3;
+            const sample = THREE.MathUtils.lerp(start + .08, end - .08, u);
+            const height = capHeight * rise * (shoulder ? .48 + .10 * bevel : 1 + .082 * turn * (level - 2));
+            return stoneVertex(rows, sample, -height / rockDepth, inset + (shoulder ? .27 : 0));
+          }));
+          for (let level = 0; level < crest.length - 1; level++) {
+            const grass = grassCap && level >= 3, baseTone = [-.01, .07, .22, .11, -.035, -.10][level];
+            for (let side = 0; side < across.length - 1; side++) {
+              const tone = [-.08, .045, -.13][side];
+              panel(cap[level][side], cap[level][side + 1], cap[level + 1][side + 1], cap[level + 1][side],
+                grass ? TURF : pigment, baseTone + tone, baseTone + tone - .06, level, level + 1, .9, grass ? 3 : 2);
+            }
           }
         }
       }
       start = end;
     }
   }
-  // The narrow grass rim rises above the original ground at the rocky front shoulders. Its lower
-  // edge meets the cliff, then it rolls back into the low meadow. It is underneath placeable art.
-  function shoulderHeight(sample, depth) {
-    const fromShelves = Math.min(...SHELF_ARCS.map(([start, end]) => Math.max(0, start - sample, sample - end)));
-    const taper = THREE.MathUtils.smoothstep(depth, 1.35, 3.1);
-    const relief = THREE.MathUtils.smoothstep(fromShelves, .1, 3.4);
-    return taper * (.23 + relief * (1.09 + .20 * Math.sin(sample * .58)));
-  }
-  const rim = rows.slice(0, nearEnd + 1).map(({depth}, sample) => {
-    const height = shoulderHeight(sample, depth) / depth;
-    return SHOULDER_LEVELS.map(([reach, rise], level) => {
-      const offset = reach * (1 + .13 * Math.sin(sample * .66) + .07 * Math.cos(sample * .32 + level * .32));
-      return stoneVertex(rows, sample, -height * rise, offset);
-    });
-  });
-  for (let i = 0; i < nearEnd; i++) {
-    if (rows[i].depth < 1.35 && rows[i + 1].depth < 1.35) continue;
-    for (let level = 0; level < SHOULDER_LEVELS.length - 1; level++) {
-      const a = rim[i][level], b = rim[i + 1][level];
-      const c = rim[i + 1][level + 1], d = rim[i][level + 1];
-      const [, from, upper] = SHOULDER_LEVELS[level], [, to, lower] = SHOULDER_LEVELS[level + 1];
-      const grass = level >= 5, sand = SANDSTONE[Math.floor((i + (level >= 2 ? 2 : 0)) / 3) % SANDSTONE.length];
-      const tone = grass ? 0 : -.08 - Math.max(0, Math.sin(i * Math.PI * 2 / 3)) * .18;
-      panel(a, b, c, d, grass ? TURF : sand, upper + tone, lower + tone, from, to, 1.2, grass ? 3 : 2);
+
+  // Broken boulder clusters frame the sandy cove. Their bases stay on the old top, outside
+  // the entrance lane, and their bevels cast enough contrast to read beside the larger cliff.
+  const boulders = [
+    {sample: 33.9, radius: 1.33, inset: .67, height: 1.87, pigment: OUTCROP},
+    {sample: 35.2, radius: .69, inset: .61, height: .75, pigment: STONES[5]},
+    {sample: 55.1, radius: 1.21, inset: .67, height: 1.75, pigment: OUTCROP},
+    {sample: 53.9, radius: .64, inset: .56, height: .68, pigment: STONES[3]},
+    {sample: 21.7, radius: 1.65, inset: .13, height: 1.49, foot: .99, pigment: OUTCROP},
+    {sample: 26.1, radius: 1.43, inset: .14, height: 1.21, foot: .98, pigment: STONES[1]},
+    {sample: 61.5, radius: 1.71, inset: .16, height: 1.46, foot: .98, pigment: OUTCROP},
+    {sample: 71.9, radius: 1.32, inset: .15, height: 1.26, foot: .99, pigment: STONES[1]},
+  ];
+  const outline = [[-.85, -.43], [.13, -.60], [.94, -.31], [.82, .31], [.21, .58], [-.68, .50]];
+  const rings = [
+    {scale: 1.03, level: 0, lean: 0, highlight: -.23},
+    {scale: 1, level: .22, lean: 0, highlight: -.10},
+    {scale: .78, level: .82, lean: -.08, highlight: .045},
+    {scale: .54, level: .99, lean: -.13, highlight: .23},
+  ];
+  for (const {sample, radius, inset, height, foot = 0, pigment} of boulders) {
+    const coastDepth = stoneVertex(rows, sample, -1, inset).y;
+    const region = foot > 0 ? 0 : 2, bias = 1.32;
+    const crownDepth = foot * .38;
+    const rim = rings.map(({scale, level, lean}) => outline.map(([arc, reach]) =>
+      stoneVertex(rows, sample + (arc * scale + lean) * radius,
+        foot - height * (level + level * .079 * reach) / coastDepth, Math.max(.035, inset + reach * scale))));
+    for (let ring = 0; ring < rim.length - 1; ring++) {
+      const {highlight: upper} = rings[ring], {highlight: lower} = rings[ring + 1];
+      for (let edge = 0; edge < outline.length; edge++) {
+        const next = (edge + 1) % outline.length;
+        panel(rim[ring][edge], rim[ring][next], rim[ring + 1][next], rim[ring + 1][edge],
+          pigment, upper, lower, foot * (1 - rings[ring].level * .62), foot * (1 - rings[ring + 1].level * .62), bias, region);
+      }
+    }
+    const peak = stoneVertex(rows, sample - .13 * radius, foot - height / coastDepth, inset + .11);
+    const crown = rim[rim.length - 1];
+    for (let edge = 0; edge < outline.length; edge++) {
+      triangle(crown[edge], crown[(edge + 1) % outline.length], peak, pigment, [.18, .19, .25], bias,
+        [crownDepth, crownDepth, crownDepth], region);
     }
   }
 
@@ -170,18 +212,18 @@ export function createHomeRelief(group, coastArt) {
           float height = -vShoreRelief.x;
           float opacity = smoothstep(.015, .24, height);
           if (opacity < .02) discard;
-          float freckles = sin(logical.x * 18.0 + sin(logical.y * 21.0)) * cos(logical.y * 32.0);
+          float pore = sin(logical.x * 23.0 + sin(logical.y * 21.0)) * cos(logical.y * 38.0);
           if (vShoreRelief.z > 2.5) {
-            float green = smoothstep(1.18, 1.47, (rock.g + .01) / (rock.r + .01));
-            gl_FragColor = vec4(mix(vStone, rock.rgb, green * .58) * (.94 + freckles * .055), opacity);
+            float green = smoothstep(1.13, 1.44, (rock.g + .01) / (rock.r + .01));
+            // Fine fringe and the scene's own grass grain keep the cap attached to the meadow.
+            gl_FragColor = vec4(mix(vStone, rock.rgb, green * .53) * (.99 + pore * .075), opacity);
           } else {
-            float joint = 1.0 - smoothstep(.018, .067, abs(vShoreRelief.y - .25));
-            gl_FragColor = vec4(vStone * (.94 + freckles * .032 - joint * .20), opacity);
+            gl_FragColor = vec4(vStone * (.97 + pore * .047), opacity);
           }
           #include <colorspace_fragment>
           return;
         }
-        if (length(shore) < rim * 1.012) discard;
+        if (length(shore) < rim * 1.003) discard;
         if (vShoreRelief.z > .5) {
           if (rock.a >= .5) discard;
           float depth = vShoreRelief.y;
@@ -197,22 +239,17 @@ export function createHomeRelief(group, coastArt) {
         if (rock.a < .78) discard;
         float grain = dot(rock.rgb, vec3(.30, .59, .11));
         float rockGrain = smoothstep(.06, .46, grain);
-        float wet = smoothstep(.75, .98, vShoreRelief.y) * smoothstep(.45, 1.7, vShoreRelief.x);
-        float course = vShoreRelief.y;
-        float grainBreak = sin(logical.x * .88 + logical.y * .34) * .017
-          + cos(logical.x * 2.13 - logical.y * .82) * .008;
-        float joint = min(abs(course + grainBreak - .36), abs(course + grainBreak - .67));
-        float recess = 1.0 - smoothstep(.012, .061, joint);
-        vec3 stone = vStone * mix(.75, 1.22, rockGrain);
-        stone = mix(stone, stone * vec3(.69, .66, .62), recess * .61);
-        // A broken trace of moss under the turf links the upper stone to the meadow. Shallow
-        // beach approaches start too low for this transition and keep their warm sand.
-        float tallFace = smoothstep(.20, .38, vShoreRelief.x);
-        float mossCoverage = smoothstep(.51, .87, rockGrain + 4.0 * grainBreak);
-        float moss = smoothstep(.06, .14, course) * (1.0 - smoothstep(.19, .28, course)) * tallFace * mossCoverage;
-        stone = mix(stone, stone * vec3(.73, .94, .62), moss * .51);
-        stone = mix(stone, stone * vec3(.61, .72, .78) + vec3(.004, .018, .023), wet * .75);
-        gl_FragColor = vec4(mix(stone, rock.rgb, .17), 1.0);
+        float depth = vShoreRelief.y;
+        float ripple = sin(logical.x * 12.5 + logical.y * 6.6 + sin(logical.y * 22.7) * 1.25);
+        float grainBreak = sin(logical.x * 1.74 + logical.y * .83) * .14
+          + cos(logical.x * 4.23 - logical.y * 3.23) * .07;
+        float damp = smoothstep(.53, 1.0, depth + grainBreak) * smoothstep(.45, 1.7, vShoreRelief.x);
+        vec3 stone = vStone * (mix(.82, 1.13, rockGrain) + ripple * .035 + grainBreak * .15);
+        float moss = smoothstep(.62, .84, rockGrain + grainBreak * .7)
+          * (1.0 - smoothstep(.04, .26, depth)) * .52;
+        stone = mix(stone, stone * vec3(.82, 1.05, .67), moss);
+        stone = mix(stone, stone * vec3(.54, .65, .73) + vec3(.008, .024, .031), damp * .76);
+        gl_FragColor = vec4(mix(stone, rock.rgb, .10), 1.0);
         #include <colorspace_fragment>
       }`,
   });
