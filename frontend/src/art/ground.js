@@ -7,6 +7,7 @@ import {surfaceClass, surfaces} from '../world/places/surfaces.js';
 import {LEGACY_DEPTH} from '../world/projection.js';
 import {canvas, ellipse, linear, poly, radial, stroke} from './paint.js';
 import {cliffProfile, paintCliffFaces, paintGrassRim} from './coast-cliffs.js';
+import {paintShorePockets} from './shore-pockets.js';
 import {materialRect, meadowScale, mirroredGrassPattern, paintMaterial, pathMaterialMask} from './village/terrain-materials.js';
 
 const SIZE = {width: 64, height: 48};
@@ -68,6 +69,7 @@ function paintBeachDetails(c, coast, beach, rim, materials) {
     }
   }
   if (materials) paintMaterial(c, materials, 'sand', {alpha: .10});
+  paintShorePockets(c, rim, materials);
   c.restore();
 }
 
