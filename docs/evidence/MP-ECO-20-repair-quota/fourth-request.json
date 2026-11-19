@@ -1,0 +1,200 @@
+{
+  "at": "2026-11-19T17:41:23.685Z",
+  "state": {
+    "serverNow": "2026-11-19T17:41:22.890611Z",
+    "islandEpoch": "5f927075-5db7-42a5-89ed-fd2d727ec114",
+    "revision": 77,
+    "recoveryVersion": 1,
+    "waveProtocol": 2,
+    "displayPhase": "combat",
+    "repairWindow": "reserved_wave",
+    "waveId": "5fb66201-ad16-424a-9150-2819635a0fa3",
+    "remainingPaidUses": 0,
+    "structures": [
+      {
+        "spot": "wall_1",
+        "instanceId": "ca5314fd-2e2d-4c2d-9ec2-ab3a3ffca154",
+        "kind": "wall",
+        "level": 3,
+        "hpUnits": 1000000,
+        "maxHP": 200,
+        "rateUnitsPerSecond": 0,
+        "estimatedFreeSeconds": null,
+        "fixedPrice": 40,
+        "repairSeq": 1
+      },
+      {
+        "spot": "wall_10",
+        "instanceId": "9fd9997c-aee4-4f0c-8475-718b4db35b2c",
+        "kind": "wall",
+        "level": 3,
+        "hpUnits": 1000000,
+        "maxHP": 200,
+        "rateUnitsPerSecond": 0,
+        "estimatedFreeSeconds": null,
+        "fixedPrice": 40,
+        "repairSeq": 0
+      },
+      {
+        "spot": "wall_11",
+        "instanceId": "b2b0287d-6339-4fb1-8097-db16258d575b",
+        "kind": "wall",
+        "level": 3,
+        "hpUnits": 1000000,
+        "maxHP": 200,
+        "rateUnitsPerSecond": 0,
+        "estimatedFreeSeconds": null,
+        "fixedPrice": 40,
+        "repairSeq": 0
+      },
+      {
+        "spot": "wall_12",
+        "instanceId": "0a00d394-a1e0-4ae5-b1ef-f211cfdcd3d4",
+        "kind": "wall",
+        "level": 3,
+        "hpUnits": 1000000,
+        "maxHP": 200,
+        "rateUnitsPerSecond": 0,
+        "estimatedFreeSeconds": null,
+        "fixedPrice": 40,
+        "repairSeq": 0
+      },
+      {
+        "spot": "wall_2",
+        "instanceId": "b3ab68c4-2f6c-4994-b19c-81eff33c78e2",
+        "kind": "wall",
+        "level": 3,
+        "hpUnits": 1000000,
+        "maxHP": 200,
+        "rateUnitsPerSecond": 0,
+        "estimatedFreeSeconds": null,
+        "fixedPrice": 40,
+        "repairSeq": 0
+      },
+      {
+        "spot": "wall_3",
+        "instanceId": "f0899156-6227-49d9-a7b6-f959de2d7569",
+        "kind": "wall",
+        "level": 3,
+        "hpUnits": 1000000,
+        "maxHP": 200,
+        "rateUnitsPerSecond": 0,
+        "estimatedFreeSeconds": null,
+        "fixedPrice": 40,
+        "repairSeq": 2
+      },
+      {
+        "spot": "wall_4",
+        "instanceId": "fb9a68f2-0492-460e-8e59-bb4fdfc10213",
+        "kind": "wall",
+        "level": 3,
+        "hpUnits": 0,
+        "maxHP": 200,
+        "rateUnitsPerSecond": 0,
+        "estimatedFreeSeconds": null,
+        "fixedPrice": 40,
+        "repairSeq": 2
+      },
+      {
+        "spot": "wall_5",
+        "instanceId": "c7300deb-aab1-42c1-9670-105b469725b4",
+        "kind": "wall",
+        "level": 3,
+        "hpUnits": 0,
+        "maxHP": 200,
+        "rateUnitsPerSecond": 0,
+        "estimatedFreeSeconds": null,
+        "fixedPrice": 40,
+        "repairSeq": 1
+      },
+      {
+        "spot": "wall_6",
+        "instanceId": "668b483d-8c73-4b85-8de4-f490e6f7f9ee",
+        "kind": "wall",
+        "level": 3,
+        "hpUnits": 1000000,
+        "maxHP": 200,
+        "rateUnitsPerSecond": 0,
+        "estimatedFreeSeconds": null,
+        "fixedPrice": 40,
+        "repairSeq": 0
+      },
+      {
+        "spot": "wall_7",
+        "instanceId": "8f1b57d6-e341-42f7-b9c7-bbe4e1fc960e",
+        "kind": "wall",
+        "level": 3,
+        "hpUnits": 1000000,
+        "maxHP": 200,
+        "rateUnitsPerSecond": 0,
+        "estimatedFreeSeconds": null,
+        "fixedPrice": 40,
+        "repairSeq": 0
+      },
+      {
+        "spot": "wall_8",
+        "instanceId": "5d120e3b-0e1d-49e1-88bb-2f418d96d6ca",
+        "kind": "wall",
+        "level": 3,
+        "hpUnits": 1000000,
+        "maxHP": 200,
+        "rateUnitsPerSecond": 0,
+        "estimatedFreeSeconds": null,
+        "fixedPrice": 40,
+        "repairSeq": 0
+      },
+      {
+        "spot": "wall_9",
+        "instanceId": "36f9e893-848e-4516-963b-4e684df91211",
+        "kind": "wall",
+        "level": 3,
+        "hpUnits": 1000000,
+        "maxHP": 200,
+        "rateUnitsPerSecond": 0,
+        "estimatedFreeSeconds": null,
+        "fixedPrice": 40,
+        "repairSeq": 0
+      }
+    ],
+    "economy": {
+      "mode": "island_shared",
+      "version": 1,
+      "islandOwner": "d095652c-be12-4ace-b501-8fddb66de724",
+      "accountId": "90c5e8bd-bd4e-480e-8ad9-2527eda18a25",
+      "runEpoch": "1c2fb238-aa35-48b7-9e4c-3735cb0dee31",
+      "revision": "43",
+      "treasury": {
+        "balanceCoins": "920",
+        "committedCoins": "0",
+        "availableCoins": "920"
+      }
+    }
+  },
+  "body": {
+    "spot": "wall_4",
+    "instanceId": "fb9a68f2-0492-460e-8e59-bb4fdfc10213",
+    "actionUid": "8fdf0712-1358-4eaa-b061-c52c405502e8",
+    "expectedEpoch": "5f927075-5db7-42a5-89ed-fd2d727ec114",
+    "expectedWindow": "reserved_wave",
+    "expectedWaveId": "5fb66201-ad16-424a-9150-2819635a0fa3",
+    "expectedLevel": 3,
+    "expectedRepairSeq": 2,
+    "quotedPrice": 40,
+    "waveProtocol": 2,
+    "economy": {
+      "mode": "island_shared",
+      "version": 1,
+      "islandOwner": "d095652c-be12-4ace-b501-8fddb66de724",
+      "runEpoch": "1c2fb238-aa35-48b7-9e4c-3735cb0dee31"
+    }
+  },
+  "fourth": {
+    "status": 409,
+    "data": {
+      "error": {
+        "code": "repair_limit_reached",
+        "message": "This island has used all three shared repairs."
+      }
+    }
+  }
+}

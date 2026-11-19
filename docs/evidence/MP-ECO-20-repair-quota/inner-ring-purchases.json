@@ -1,0 +1,740 @@
+[
+  {
+    "spot": "wall_7",
+    "level": 1,
+    "request": {
+      "economy": {
+        "mode": "island_shared",
+        "version": 1,
+        "islandOwner": "d095652c-be12-4ace-b501-8fddb66de724",
+        "runEpoch": "1c2fb238-aa35-48b7-9e4c-3735cb0dee31"
+      },
+      "actionUid": "611fd5bb-b9de-41df-9be1-33e319312c3e",
+      "spot": "wall_7",
+      "kind": "wall",
+      "instanceId": null,
+      "expectedLevel": 0,
+      "quotedCoins": "10"
+    },
+    "receipt": {
+      "receiptId": "60167acb-877e-4be3-9a4f-5c043dda58ee",
+      "actionUid": "611fd5bb-b9de-41df-9be1-33e319312c3e",
+      "action": "build",
+      "actorId": "d095652c-be12-4ace-b501-8fddb66de724",
+      "origin": {
+        "mode": "island_shared",
+        "version": 1,
+        "islandOwner": "d095652c-be12-4ace-b501-8fddb66de724",
+        "accountId": "90c5e8bd-bd4e-480e-8ad9-2527eda18a25",
+        "runEpoch": "1c2fb238-aa35-48b7-9e4c-3735cb0dee31"
+      },
+      "result": {
+        "spot": "wall_7",
+        "kind": "wall",
+        "level": 1,
+        "instanceId": "8f1b57d6-e341-42f7-b9c7-bbe4e1fc960e",
+        "chargedCoins": "10",
+        "refundedCoins": "0",
+        "engineerCommitmentId": null,
+        "treasuryReceiptId": "ea04beff-0eb0-48e5-af83-9c800d6eb687"
+      }
+    }
+  },
+  {
+    "spot": "wall_7",
+    "level": 2,
+    "request": {
+      "economy": {
+        "mode": "island_shared",
+        "version": 1,
+        "islandOwner": "d095652c-be12-4ace-b501-8fddb66de724",
+        "runEpoch": "1c2fb238-aa35-48b7-9e4c-3735cb0dee31"
+      },
+      "actionUid": "1fea35e3-21ea-42fd-9d29-ba1b2071bdca",
+      "spot": "wall_7",
+      "kind": "wall",
+      "instanceId": "8f1b57d6-e341-42f7-b9c7-bbe4e1fc960e",
+      "expectedLevel": 1,
+      "quotedCoins": "20"
+    },
+    "receipt": {
+      "receiptId": "42ca5cb4-1605-42a0-b5fb-9af7c72c0032",
+      "actionUid": "1fea35e3-21ea-42fd-9d29-ba1b2071bdca",
+      "action": "upgrade",
+      "actorId": "d095652c-be12-4ace-b501-8fddb66de724",
+      "origin": {
+        "mode": "island_shared",
+        "version": 1,
+        "islandOwner": "d095652c-be12-4ace-b501-8fddb66de724",
+        "accountId": "90c5e8bd-bd4e-480e-8ad9-2527eda18a25",
+        "runEpoch": "1c2fb238-aa35-48b7-9e4c-3735cb0dee31"
+      },
+      "result": {
+        "spot": "wall_7",
+        "kind": "wall",
+        "level": 2,
+        "instanceId": "8f1b57d6-e341-42f7-b9c7-bbe4e1fc960e",
+        "chargedCoins": "20",
+        "refundedCoins": "0",
+        "engineerCommitmentId": null,
+        "treasuryReceiptId": "c44382c3-b433-449e-815f-f3841aa8fa3d"
+      }
+    }
+  },
+  {
+    "spot": "wall_7",
+    "level": 3,
+    "request": {
+      "economy": {
+        "mode": "island_shared",
+        "version": 1,
+        "islandOwner": "d095652c-be12-4ace-b501-8fddb66de724",
+        "runEpoch": "1c2fb238-aa35-48b7-9e4c-3735cb0dee31"
+      },
+      "actionUid": "1be8f90f-9b13-4502-aec0-d99ae532da11",
+      "spot": "wall_7",
+      "kind": "wall",
+      "instanceId": "8f1b57d6-e341-42f7-b9c7-bbe4e1fc960e",
+      "expectedLevel": 2,
+      "quotedCoins": "40"
+    },
+    "receipt": {
+      "receiptId": "98b8387f-cba6-4346-b9e8-4679150c3f3b",
+      "actionUid": "1be8f90f-9b13-4502-aec0-d99ae532da11",
+      "action": "upgrade",
+      "actorId": "d095652c-be12-4ace-b501-8fddb66de724",
+      "origin": {
+        "mode": "island_shared",
+        "version": 1,
+        "islandOwner": "d095652c-be12-4ace-b501-8fddb66de724",
+        "accountId": "90c5e8bd-bd4e-480e-8ad9-2527eda18a25",
+        "runEpoch": "1c2fb238-aa35-48b7-9e4c-3735cb0dee31"
+      },
+      "result": {
+        "spot": "wall_7",
+        "kind": "wall",
+        "level": 3,
+        "instanceId": "8f1b57d6-e341-42f7-b9c7-bbe4e1fc960e",
+        "chargedCoins": "40",
+        "refundedCoins": "0",
+        "engineerCommitmentId": null,
+        "treasuryReceiptId": "2035113a-0cf0-450d-85ab-348295b8480a"
+      }
+    }
+  },
+  {
+    "spot": "wall_8",
+    "level": 1,
+    "request": {
+      "economy": {
+        "mode": "island_shared",
+        "version": 1,
+        "islandOwner": "d095652c-be12-4ace-b501-8fddb66de724",
+        "runEpoch": "1c2fb238-aa35-48b7-9e4c-3735cb0dee31"
+      },
+      "actionUid": "1cd16d13-f96b-4ec9-8f20-1db69365ba94",
+      "spot": "wall_8",
+      "kind": "wall",
+      "instanceId": null,
+      "expectedLevel": 0,
+      "quotedCoins": "10"
+    },
+    "receipt": {
+      "receiptId": "ac2b824d-0e9a-48c0-946f-1ce86505eaa0",
+      "actionUid": "1cd16d13-f96b-4ec9-8f20-1db69365ba94",
+      "action": "build",
+      "actorId": "d095652c-be12-4ace-b501-8fddb66de724",
+      "origin": {
+        "mode": "island_shared",
+        "version": 1,
+        "islandOwner": "d095652c-be12-4ace-b501-8fddb66de724",
+        "accountId": "90c5e8bd-bd4e-480e-8ad9-2527eda18a25",
+        "runEpoch": "1c2fb238-aa35-48b7-9e4c-3735cb0dee31"
+      },
+      "result": {
+        "spot": "wall_8",
+        "kind": "wall",
+        "level": 1,
+        "instanceId": "5d120e3b-0e1d-49e1-88bb-2f418d96d6ca",
+        "chargedCoins": "10",
+        "refundedCoins": "0",
+        "engineerCommitmentId": null,
+        "treasuryReceiptId": "5b09f92d-db80-4746-a655-8e8f851688d6"
+      }
+    }
+  },
+  {
+    "spot": "wall_8",
+    "level": 2,
+    "request": {
+      "economy": {
+        "mode": "island_shared",
+        "version": 1,
+        "islandOwner": "d095652c-be12-4ace-b501-8fddb66de724",
+        "runEpoch": "1c2fb238-aa35-48b7-9e4c-3735cb0dee31"
+      },
+      "actionUid": "9273f999-ab00-4568-857d-0f0d1406c4bb",
+      "spot": "wall_8",
+      "kind": "wall",
+      "instanceId": "5d120e3b-0e1d-49e1-88bb-2f418d96d6ca",
+      "expectedLevel": 1,
+      "quotedCoins": "20"
+    },
+    "receipt": {
+      "receiptId": "d333916e-e420-44d3-9737-e203d9d4cc55",
+      "actionUid": "9273f999-ab00-4568-857d-0f0d1406c4bb",
+      "action": "upgrade",
+      "actorId": "d095652c-be12-4ace-b501-8fddb66de724",
+      "origin": {
+        "mode": "island_shared",
+        "version": 1,
+        "islandOwner": "d095652c-be12-4ace-b501-8fddb66de724",
+        "accountId": "90c5e8bd-bd4e-480e-8ad9-2527eda18a25",
+        "runEpoch": "1c2fb238-aa35-48b7-9e4c-3735cb0dee31"
+      },
+      "result": {
+        "spot": "wall_8",
+        "kind": "wall",
+        "level": 2,
+        "instanceId": "5d120e3b-0e1d-49e1-88bb-2f418d96d6ca",
+        "chargedCoins": "20",
+        "refundedCoins": "0",
+        "engineerCommitmentId": null,
+        "treasuryReceiptId": "e24ea9ed-fe67-4a29-a21a-a8727b80497c"
+      }
+    }
+  },
+  {
+    "spot": "wall_8",
+    "level": 3,
+    "request": {
+      "economy": {
+        "mode": "island_shared",
+        "version": 1,
+        "islandOwner": "d095652c-be12-4ace-b501-8fddb66de724",
+        "runEpoch": "1c2fb238-aa35-48b7-9e4c-3735cb0dee31"
+      },
+      "actionUid": "3a957882-c410-476a-9fd9-65e804ae4177",
+      "spot": "wall_8",
+      "kind": "wall",
+      "instanceId": "5d120e3b-0e1d-49e1-88bb-2f418d96d6ca",
+      "expectedLevel": 2,
+      "quotedCoins": "40"
+    },
+    "receipt": {
+      "receiptId": "c124496f-e1df-4f99-ae38-4266ad534353",
+      "actionUid": "3a957882-c410-476a-9fd9-65e804ae4177",
+      "action": "upgrade",
+      "actorId": "d095652c-be12-4ace-b501-8fddb66de724",
+      "origin": {
+        "mode": "island_shared",
+        "version": 1,
+        "islandOwner": "d095652c-be12-4ace-b501-8fddb66de724",
+        "accountId": "90c5e8bd-bd4e-480e-8ad9-2527eda18a25",
+        "runEpoch": "1c2fb238-aa35-48b7-9e4c-3735cb0dee31"
+      },
+      "result": {
+        "spot": "wall_8",
+        "kind": "wall",
+        "level": 3,
+        "instanceId": "5d120e3b-0e1d-49e1-88bb-2f418d96d6ca",
+        "chargedCoins": "40",
+        "refundedCoins": "0",
+        "engineerCommitmentId": null,
+        "treasuryReceiptId": "4a538ca4-212d-4e43-a028-e5436b4b53c8"
+      }
+    }
+  },
+  {
+    "spot": "wall_9",
+    "level": 1,
+    "request": {
+      "economy": {
+        "mode": "island_shared",
+        "version": 1,
+        "islandOwner": "d095652c-be12-4ace-b501-8fddb66de724",
+        "runEpoch": "1c2fb238-aa35-48b7-9e4c-3735cb0dee31"
+      },
+      "actionUid": "2205c58f-fd9d-401f-bebd-9d294f2492fa",
+      "spot": "wall_9",
+      "kind": "wall",
+      "instanceId": null,
+      "expectedLevel": 0,
+      "quotedCoins": "10"
+    },
+    "receipt": {
+      "receiptId": "814f4680-d0e9-456a-9528-b5469ab0a110",
+      "actionUid": "2205c58f-fd9d-401f-bebd-9d294f2492fa",
+      "action": "build",
+      "actorId": "d095652c-be12-4ace-b501-8fddb66de724",
+      "origin": {
+        "mode": "island_shared",
+        "version": 1,
+        "islandOwner": "d095652c-be12-4ace-b501-8fddb66de724",
+        "accountId": "90c5e8bd-bd4e-480e-8ad9-2527eda18a25",
+        "runEpoch": "1c2fb238-aa35-48b7-9e4c-3735cb0dee31"
+      },
+      "result": {
+        "spot": "wall_9",
+        "kind": "wall",
+        "level": 1,
+        "instanceId": "36f9e893-848e-4516-963b-4e684df91211",
+        "chargedCoins": "10",
+        "refundedCoins": "0",
+        "engineerCommitmentId": null,
+        "treasuryReceiptId": "04e8ba2e-77ea-4d98-803b-0d67334a38c2"
+      }
+    }
+  },
+  {
+    "spot": "wall_9",
+    "level": 2,
+    "request": {
+      "economy": {
+        "mode": "island_shared",
+        "version": 1,
+        "islandOwner": "d095652c-be12-4ace-b501-8fddb66de724",
+        "runEpoch": "1c2fb238-aa35-48b7-9e4c-3735cb0dee31"
+      },
+      "actionUid": "ac700a5a-8661-454e-9feb-903e293b5c64",
+      "spot": "wall_9",
+      "kind": "wall",
+      "instanceId": "36f9e893-848e-4516-963b-4e684df91211",
+      "expectedLevel": 1,
+      "quotedCoins": "20"
+    },
+    "receipt": {
+      "receiptId": "c7c1e9d4-bffa-4ef8-a157-2c782a127cd1",
+      "actionUid": "ac700a5a-8661-454e-9feb-903e293b5c64",
+      "action": "upgrade",
+      "actorId": "d095652c-be12-4ace-b501-8fddb66de724",
+      "origin": {
+        "mode": "island_shared",
+        "version": 1,
+        "islandOwner": "d095652c-be12-4ace-b501-8fddb66de724",
+        "accountId": "90c5e8bd-bd4e-480e-8ad9-2527eda18a25",
+        "runEpoch": "1c2fb238-aa35-48b7-9e4c-3735cb0dee31"
+      },
+      "result": {
+        "spot": "wall_9",
+        "kind": "wall",
+        "level": 2,
+        "instanceId": "36f9e893-848e-4516-963b-4e684df91211",
+        "chargedCoins": "20",
+        "refundedCoins": "0",
+        "engineerCommitmentId": null,
+        "treasuryReceiptId": "2385f832-b28d-4052-9ea8-6b77cc406cf3"
+      }
+    }
+  },
+  {
+    "spot": "wall_9",
+    "level": 3,
+    "request": {
+      "economy": {
+        "mode": "island_shared",
+        "version": 1,
+        "islandOwner": "d095652c-be12-4ace-b501-8fddb66de724",
+        "runEpoch": "1c2fb238-aa35-48b7-9e4c-3735cb0dee31"
+      },
+      "actionUid": "79f914db-6991-466a-a333-ff8e60fd79b6",
+      "spot": "wall_9",
+      "kind": "wall",
+      "instanceId": "36f9e893-848e-4516-963b-4e684df91211",
+      "expectedLevel": 2,
+      "quotedCoins": "40"
+    },
+    "receipt": {
+      "receiptId": "c7e9a6ce-d94c-4d7e-8f80-ec375c123ba8",
+      "actionUid": "79f914db-6991-466a-a333-ff8e60fd79b6",
+      "action": "upgrade",
+      "actorId": "d095652c-be12-4ace-b501-8fddb66de724",
+      "origin": {
+        "mode": "island_shared",
+        "version": 1,
+        "islandOwner": "d095652c-be12-4ace-b501-8fddb66de724",
+        "accountId": "90c5e8bd-bd4e-480e-8ad9-2527eda18a25",
+        "runEpoch": "1c2fb238-aa35-48b7-9e4c-3735cb0dee31"
+      },
+      "result": {
+        "spot": "wall_9",
+        "kind": "wall",
+        "level": 3,
+        "instanceId": "36f9e893-848e-4516-963b-4e684df91211",
+        "chargedCoins": "40",
+        "refundedCoins": "0",
+        "engineerCommitmentId": null,
+        "treasuryReceiptId": "84b4282a-75fe-4f20-b70f-caf5cf8b4d87"
+      }
+    }
+  },
+  {
+    "spot": "wall_10",
+    "level": 1,
+    "request": {
+      "economy": {
+        "mode": "island_shared",
+        "version": 1,
+        "islandOwner": "d095652c-be12-4ace-b501-8fddb66de724",
+        "runEpoch": "1c2fb238-aa35-48b7-9e4c-3735cb0dee31"
+      },
+      "actionUid": "f77e634b-e700-48f8-997c-5585fb40e568",
+      "spot": "wall_10",
+      "kind": "wall",
+      "instanceId": null,
+      "expectedLevel": 0,
+      "quotedCoins": "10"
+    },
+    "receipt": {
+      "receiptId": "24e6be9c-f42b-4664-848c-666e2e782629",
+      "actionUid": "f77e634b-e700-48f8-997c-5585fb40e568",
+      "action": "build",
+      "actorId": "d095652c-be12-4ace-b501-8fddb66de724",
+      "origin": {
+        "mode": "island_shared",
+        "version": 1,
+        "islandOwner": "d095652c-be12-4ace-b501-8fddb66de724",
+        "accountId": "90c5e8bd-bd4e-480e-8ad9-2527eda18a25",
+        "runEpoch": "1c2fb238-aa35-48b7-9e4c-3735cb0dee31"
+      },
+      "result": {
+        "spot": "wall_10",
+        "kind": "wall",
+        "level": 1,
+        "instanceId": "9fd9997c-aee4-4f0c-8475-718b4db35b2c",
+        "chargedCoins": "10",
+        "refundedCoins": "0",
+        "engineerCommitmentId": null,
+        "treasuryReceiptId": "cef2fb10-2794-4251-ad96-ddb7bb1175e3"
+      }
+    }
+  },
+  {
+    "spot": "wall_10",
+    "level": 2,
+    "request": {
+      "economy": {
+        "mode": "island_shared",
+        "version": 1,
+        "islandOwner": "d095652c-be12-4ace-b501-8fddb66de724",
+        "runEpoch": "1c2fb238-aa35-48b7-9e4c-3735cb0dee31"
+      },
+      "actionUid": "b1cb81a3-f7e2-4b12-a6da-5258613f2d23",
+      "spot": "wall_10",
+      "kind": "wall",
+      "instanceId": "9fd9997c-aee4-4f0c-8475-718b4db35b2c",
+      "expectedLevel": 1,
+      "quotedCoins": "20"
+    },
+    "receipt": {
+      "receiptId": "08fb9de9-4388-4c29-b762-ba90bec5c398",
+      "actionUid": "b1cb81a3-f7e2-4b12-a6da-5258613f2d23",
+      "action": "upgrade",
+      "actorId": "d095652c-be12-4ace-b501-8fddb66de724",
+      "origin": {
+        "mode": "island_shared",
+        "version": 1,
+        "islandOwner": "d095652c-be12-4ace-b501-8fddb66de724",
+        "accountId": "90c5e8bd-bd4e-480e-8ad9-2527eda18a25",
+        "runEpoch": "1c2fb238-aa35-48b7-9e4c-3735cb0dee31"
+      },
+      "result": {
+        "spot": "wall_10",
+        "kind": "wall",
+        "level": 2,
+        "instanceId": "9fd9997c-aee4-4f0c-8475-718b4db35b2c",
+        "chargedCoins": "20",
+        "refundedCoins": "0",
+        "engineerCommitmentId": null,
+        "treasuryReceiptId": "f619b10c-7a7d-4259-97aa-49d0d590c909"
+      }
+    }
+  },
+  {
+    "spot": "wall_10",
+    "level": 3,
+    "request": {
+      "economy": {
+        "mode": "island_shared",
+        "version": 1,
+        "islandOwner": "d095652c-be12-4ace-b501-8fddb66de724",
+        "runEpoch": "1c2fb238-aa35-48b7-9e4c-3735cb0dee31"
+      },
+      "actionUid": "68a19a25-5873-4861-b24a-938b2587c654",
+      "spot": "wall_10",
+      "kind": "wall",
+      "instanceId": "9fd9997c-aee4-4f0c-8475-718b4db35b2c",
+      "expectedLevel": 2,
+      "quotedCoins": "40"
+    },
+    "receipt": {
+      "receiptId": "e7f97054-d83f-486d-82c1-d3ed79756eb3",
+      "actionUid": "68a19a25-5873-4861-b24a-938b2587c654",
+      "action": "upgrade",
+      "actorId": "d095652c-be12-4ace-b501-8fddb66de724",
+      "origin": {
+        "mode": "island_shared",
+        "version": 1,
+        "islandOwner": "d095652c-be12-4ace-b501-8fddb66de724",
+        "accountId": "90c5e8bd-bd4e-480e-8ad9-2527eda18a25",
+        "runEpoch": "1c2fb238-aa35-48b7-9e4c-3735cb0dee31"
+      },
+      "result": {
+        "spot": "wall_10",
+        "kind": "wall",
+        "level": 3,
+        "instanceId": "9fd9997c-aee4-4f0c-8475-718b4db35b2c",
+        "chargedCoins": "40",
+        "refundedCoins": "0",
+        "engineerCommitmentId": null,
+        "treasuryReceiptId": "e9938098-277a-429b-85a6-e1fc5a0ab56a"
+      }
+    }
+  },
+  {
+    "spot": "wall_11",
+    "level": 1,
+    "request": {
+      "economy": {
+        "mode": "island_shared",
+        "version": 1,
+        "islandOwner": "d095652c-be12-4ace-b501-8fddb66de724",
+        "runEpoch": "1c2fb238-aa35-48b7-9e4c-3735cb0dee31"
+      },
+      "actionUid": "1bff9acc-1254-4f3f-8f53-9ae84450a2cc",
+      "spot": "wall_11",
+      "kind": "wall",
+      "instanceId": null,
+      "expectedLevel": 0,
+      "quotedCoins": "10"
+    },
+    "receipt": {
+      "receiptId": "95b5b9e5-64c5-48cb-843e-49dae59cc005",
+      "actionUid": "1bff9acc-1254-4f3f-8f53-9ae84450a2cc",
+      "action": "build",
+      "actorId": "d095652c-be12-4ace-b501-8fddb66de724",
+      "origin": {
+        "mode": "island_shared",
+        "version": 1,
+        "islandOwner": "d095652c-be12-4ace-b501-8fddb66de724",
+        "accountId": "90c5e8bd-bd4e-480e-8ad9-2527eda18a25",
+        "runEpoch": "1c2fb238-aa35-48b7-9e4c-3735cb0dee31"
+      },
+      "result": {
+        "spot": "wall_11",
+        "kind": "wall",
+        "level": 1,
+        "instanceId": "b2b0287d-6339-4fb1-8097-db16258d575b",
+        "chargedCoins": "10",
+        "refundedCoins": "0",
+        "engineerCommitmentId": null,
+        "treasuryReceiptId": "b7710e8f-0203-4f54-b6a3-d8137cbcd39a"
+      }
+    }
+  },
+  {
+    "spot": "wall_11",
+    "level": 2,
+    "request": {
+      "economy": {
+        "mode": "island_shared",
+        "version": 1,
+        "islandOwner": "d095652c-be12-4ace-b501-8fddb66de724",
+        "runEpoch": "1c2fb238-aa35-48b7-9e4c-3735cb0dee31"
+      },
+      "actionUid": "02ab1a17-a8e2-41e7-a220-b72d5a962205",
+      "spot": "wall_11",
+      "kind": "wall",
+      "instanceId": "b2b0287d-6339-4fb1-8097-db16258d575b",
+      "expectedLevel": 1,
+      "quotedCoins": "20"
+    },
+    "receipt": {
+      "receiptId": "228375c1-12d3-4203-b1dd-1a63159816a1",
+      "actionUid": "02ab1a17-a8e2-41e7-a220-b72d5a962205",
+      "action": "upgrade",
+      "actorId": "d095652c-be12-4ace-b501-8fddb66de724",
+      "origin": {
+        "mode": "island_shared",
+        "version": 1,
+        "islandOwner": "d095652c-be12-4ace-b501-8fddb66de724",
+        "accountId": "90c5e8bd-bd4e-480e-8ad9-2527eda18a25",
+        "runEpoch": "1c2fb238-aa35-48b7-9e4c-3735cb0dee31"
+      },
+      "result": {
+        "spot": "wall_11",
+        "kind": "wall",
+        "level": 2,
+        "instanceId": "b2b0287d-6339-4fb1-8097-db16258d575b",
+        "chargedCoins": "20",
+        "refundedCoins": "0",
+        "engineerCommitmentId": null,
+        "treasuryReceiptId": "b0854cf3-efb9-4be9-990d-ff05104c22d6"
+      }
+    }
+  },
+  {
+    "spot": "wall_11",
+    "level": 3,
+    "request": {
+      "economy": {
+        "mode": "island_shared",
+        "version": 1,
+        "islandOwner": "d095652c-be12-4ace-b501-8fddb66de724",
+        "runEpoch": "1c2fb238-aa35-48b7-9e4c-3735cb0dee31"
+      },
+      "actionUid": "3a207dbc-68ad-4f00-a69d-9ade950e7ec5",
+      "spot": "wall_11",
+      "kind": "wall",
+      "instanceId": "b2b0287d-6339-4fb1-8097-db16258d575b",
+      "expectedLevel": 2,
+      "quotedCoins": "40"
+    },
+    "receipt": {
+      "receiptId": "75081ff9-0123-4253-8fac-6a0e3527b4a0",
+      "actionUid": "3a207dbc-68ad-4f00-a69d-9ade950e7ec5",
+      "action": "upgrade",
+      "actorId": "d095652c-be12-4ace-b501-8fddb66de724",
+      "origin": {
+        "mode": "island_shared",
+        "version": 1,
+        "islandOwner": "d095652c-be12-4ace-b501-8fddb66de724",
+        "accountId": "90c5e8bd-bd4e-480e-8ad9-2527eda18a25",
+        "runEpoch": "1c2fb238-aa35-48b7-9e4c-3735cb0dee31"
+      },
+      "result": {
+        "spot": "wall_11",
+        "kind": "wall",
+        "level": 3,
+        "instanceId": "b2b0287d-6339-4fb1-8097-db16258d575b",
+        "chargedCoins": "40",
+        "refundedCoins": "0",
+        "engineerCommitmentId": null,
+        "treasuryReceiptId": "276a0621-871e-462a-8659-7aa09065c1ea"
+      }
+    }
+  },
+  {
+    "spot": "wall_12",
+    "level": 1,
+    "request": {
+      "economy": {
+        "mode": "island_shared",
+        "version": 1,
+        "islandOwner": "d095652c-be12-4ace-b501-8fddb66de724",
+        "runEpoch": "1c2fb238-aa35-48b7-9e4c-3735cb0dee31"
+      },
+      "actionUid": "39d253ac-6b11-4ab6-8494-0f2c84965a8a",
+      "spot": "wall_12",
+      "kind": "wall",
+      "instanceId": null,
+      "expectedLevel": 0,
+      "quotedCoins": "10"
+    },
+    "receipt": {
+      "receiptId": "3a44a708-75b7-440d-955a-8b8f48d7a4f6",
+      "actionUid": "39d253ac-6b11-4ab6-8494-0f2c84965a8a",
+      "action": "build",
+      "actorId": "d095652c-be12-4ace-b501-8fddb66de724",
+      "origin": {
+        "mode": "island_shared",
+        "version": 1,
+        "islandOwner": "d095652c-be12-4ace-b501-8fddb66de724",
+        "accountId": "90c5e8bd-bd4e-480e-8ad9-2527eda18a25",
+        "runEpoch": "1c2fb238-aa35-48b7-9e4c-3735cb0dee31"
+      },
+      "result": {
+        "spot": "wall_12",
+        "kind": "wall",
+        "level": 1,
+        "instanceId": "0a00d394-a1e0-4ae5-b1ef-f211cfdcd3d4",
+        "chargedCoins": "10",
+        "refundedCoins": "0",
+        "engineerCommitmentId": null,
+        "treasuryReceiptId": "cf60e89e-d37d-4c7d-bf0d-b9ed3e548136"
+      }
+    }
+  },
+  {
+    "spot": "wall_12",
+    "level": 2,
+    "request": {
+      "economy": {
+        "mode": "island_shared",
+        "version": 1,
+        "islandOwner": "d095652c-be12-4ace-b501-8fddb66de724",
+        "runEpoch": "1c2fb238-aa35-48b7-9e4c-3735cb0dee31"
+      },
+      "actionUid": "d6945ff3-9c96-4f8b-bfea-36e57b5115de",
+      "spot": "wall_12",
+      "kind": "wall",
+      "instanceId": "0a00d394-a1e0-4ae5-b1ef-f211cfdcd3d4",
+      "expectedLevel": 1,
+      "quotedCoins": "20"
+    },
+    "receipt": {
+      "receiptId": "3ea629f0-3e97-421c-a1fe-47e409b7c205",
+      "actionUid": "d6945ff3-9c96-4f8b-bfea-36e57b5115de",
+      "action": "upgrade",
+      "actorId": "d095652c-be12-4ace-b501-8fddb66de724",
+      "origin": {
+        "mode": "island_shared",
+        "version": 1,
+        "islandOwner": "d095652c-be12-4ace-b501-8fddb66de724",
+        "accountId": "90c5e8bd-bd4e-480e-8ad9-2527eda18a25",
+        "runEpoch": "1c2fb238-aa35-48b7-9e4c-3735cb0dee31"
+      },
+      "result": {
+        "spot": "wall_12",
+        "kind": "wall",
+        "level": 2,
+        "instanceId": "0a00d394-a1e0-4ae5-b1ef-f211cfdcd3d4",
+        "chargedCoins": "20",
+        "refundedCoins": "0",
+        "engineerCommitmentId": null,
+        "treasuryReceiptId": "e6ed7e17-ec54-4f2c-955d-d2401742beb1"
+      }
+    }
+  },
+  {
+    "spot": "wall_12",
+    "level": 3,
+    "request": {
+      "economy": {
+        "mode": "island_shared",
+        "version": 1,
+        "islandOwner": "d095652c-be12-4ace-b501-8fddb66de724",
+        "runEpoch": "1c2fb238-aa35-48b7-9e4c-3735cb0dee31"
+      },
+      "actionUid": "24b32894-76f4-4572-8393-9a54928bbda3",
+      "spot": "wall_12",
+      "kind": "wall",
+      "instanceId": "0a00d394-a1e0-4ae5-b1ef-f211cfdcd3d4",
+      "expectedLevel": 2,
+      "quotedCoins": "40"
+    },
+    "receipt": {
+      "receiptId": "d97237ad-95b8-4ec7-98d8-e0cec9314a6e",
+      "actionUid": "24b32894-76f4-4572-8393-9a54928bbda3",
+      "action": "upgrade",
+      "actorId": "d095652c-be12-4ace-b501-8fddb66de724",
+      "origin": {
+        "mode": "island_shared",
+        "version": 1,
+        "islandOwner": "d095652c-be12-4ace-b501-8fddb66de724",
+        "accountId": "90c5e8bd-bd4e-480e-8ad9-2527eda18a25",
+        "runEpoch": "1c2fb238-aa35-48b7-9e4c-3735cb0dee31"
+      },
+      "result": {
+        "spot": "wall_12",
+        "kind": "wall",
+        "level": 3,
+        "instanceId": "0a00d394-a1e0-4ae5-b1ef-f211cfdcd3d4",
+        "chargedCoins": "40",
+        "refundedCoins": "0",
+        "engineerCommitmentId": null,
+        "treasuryReceiptId": "c2649ab0-87b8-45fd-bb75-62756293c4e7"
+      }
+    }
+  }
+]
