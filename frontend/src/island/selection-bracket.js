@@ -43,16 +43,16 @@ export function makeSelectionBracket(root, {support = false} = {}) {
     const nextStructure = typeof anchor.kind === 'string' && anchor.kind !== 'wall';
     const size = nextStructure && Number.isFinite(anchor.size) && anchor.size > 0 ? anchor.size : 2;
     if (size !== lastSize) { group.scale.set(size / 2, size / 2, 1); lastSize = size; }
-    if (nextStructure !== structure) {
+    const nextHistorical = anchor.positionOnly === true;
+    if (nextStructure !== structure || nextHistorical !== historical) {
       structure = nextStructure;
+      historical = nextHistorical;
       // Deep foliage and the structure's own base still draw in front of its ground marker.
       meshes[0].renderOrder = structure && !support ? 69 : 94; meshes[0].material.opacity = structure ? .74 : .86;
-      meshes[1].renderOrder = structure && !support ? 70 : 95; meshes[1].material.opacity = structure ? .88 : .98;
-    }
-    if ((anchor.positionOnly === true) !== historical) {
-      historical = anchor.positionOnly === true;
+      meshes[1].renderOrder = structure && !support ? 70 : 95; meshes[1].material.opacity = structure ? .95 : .98;
       meshes[0].material.color.setHex(historical ? 0x164449 : support ? 0x163735 : 0x51351d);
-      meshes[1].material.color.setHex(historical ? 0xa5e2dc : support ? 0xb7f7d6 : 0xf9de95);
+      const normal = support ? 0xb7f7d6 : structure ? 0xfff3c8 : 0xf9de95;
+      meshes[1].material.color.setHex(historical ? 0xa5e2dc : normal);
     }
     group.userData.spotId = anchor.spotId;
     group.userData.level = Number.isSafeInteger(anchor.level) && anchor.level > 0 ? anchor.level : null;
