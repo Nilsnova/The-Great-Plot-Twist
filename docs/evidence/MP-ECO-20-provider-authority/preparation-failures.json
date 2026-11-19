@@ -1,0 +1,19 @@
+{
+  "boundary": "Failed harness expectations only; these attempts remain failed and are not counted as the final successful cases.",
+  "attempts": [
+    {
+      "attempt": "mp505-authority-run-1",
+      "result": "failed",
+      "completedGroups": 1,
+      "firstErrorLine": "AssertionError [ERR_ASSERTION]: Eligible research quote",
+      "scriptSha256": "a1c342d5e0e0abaff278fe07f58a2252b5c4cebbb284e27c69552a19fb9b0cce"
+    },
+    {
+      "attempt": "mp505-authority-run-2",
+      "result": "failed",
+      "completedGroups": 4,
+      "firstErrorLine": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:",
+      "scriptSha256": "83715026b34bb37623443edf52bb0556cc588174e58d252631b2300f50938dfe"
+    }
+  ]
+}

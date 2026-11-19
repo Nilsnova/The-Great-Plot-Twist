@@ -4,6 +4,7 @@ import base64
 import hashlib
 import hmac
 import json
+import re
 import secrets
 import time
 from pathlib import Path
@@ -26,8 +27,7 @@ IMAGES = {
         "sha256:25cf375b9b7cb71d90cdf6e04a1a30996e39a8df866ebd0525bba1d959edc8d6"
     ),
     "gateway": (
-        "caddy:2.10.2@"
-        "sha256:c3d7ee5d2b11f9dc54f947f68a734c84e9c9666c92c88a7f30b9cba5da182adb"
+        "caddy:2.10.2@sha256:c3d7ee5d2b11f9dc54f947f68a734c84e9c9666c92c88a7f30b9cba5da182adb"
     ),
 }
 PORTS = {
@@ -50,6 +50,8 @@ def validate(runtime: dict) -> dict:
     }
     if runtime.get("project") != "mp505" or runtime.get("ports") != PORTS:
         raise ValueError("Only the isolated mp505 project and fixed loopback ports are allowed")
+    if not re.fullmatch(r"[a-f0-9]{40}", runtime.get("expectedCommit", "")):
+        raise ValueError("An explicit full expected production commit is required")
     for field, address in expected.items():
         parsed = urlsplit(runtime[field])
         if (
@@ -91,18 +93,29 @@ def private_json(path: Path, value: dict) -> None:
     path.chmod(0o600)
 
 
-def create(directory: Path) -> dict:
+def create(directory: Path, expected_commit: str | None = None) -> dict:
     directory.mkdir(mode=0o700, parents=True, exist_ok=True)
     directory.chmod(0o700)
     location = directory / "runtime.json"
     if location.exists():
-        return load(location)
+        runtime = json.loads(location.read_text())
+        if expected_commit is not None:
+            if runtime.get("expectedCommit") not in (None, expected_commit):
+                raise ValueError("A different candidate requires a fresh private runtime directory")
+            runtime["expectedCommit"] = expected_commit
+        validate(runtime)
+        private_json(location, runtime)
+        private_json(directory / "compose.json", compose(runtime))
+        return runtime
+    if expected_commit is None or not re.fullmatch(r"[a-f0-9]{40}", expected_commit):
+        raise ValueError("Supply an explicit full expected production commit")
     secret, password = secrets.token_urlsafe(48), secrets.token_urlsafe(32)
     runtime = {
         "directory": str(directory),
         "ports": PORTS,
         "images": IMAGES,
         "project": "mp505",
+        "expectedCommit": expected_commit,
         "providerUrl": "https://localhost:54421",
         "caFile": str(directory / "provider-ca.crt"),
         "apiUrl": "http://127.0.0.1:58005",

@@ -7,6 +7,12 @@
 **Status:** canonical backend and coordinated client source are integrated. The
 documented backend regression, full frontend suite and standard build passed at
 their recorded sources. Authenticated scenario acceptance remains separate.
+The [current-candidate follow-up](../TEST-MAP.md#fifteen-row-accounting-for-candidate-64ee02b3)
+records additional bounded observations on production candidate
+`64ee02b360d68836b2de9247121ab47dc6a3ecbf` and its 108-migration local provider.
+Its SQL, API, headless-simulation and authenticated-browser layers stay separate;
+the complete required browser matrix remains open. Historical results below
+retain their original source and are not reported as rerun.
 The application and test source inventory is `9f107a6cbb57e0a9f01b1f4b8fb60da5d19dacad`.
 Merged dependencies
 provide the [contract #515](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/515),
@@ -28,7 +34,7 @@ and seed its underlying facts explicitly; they do not install a substitute. Nati
 SQL suites create controls, roster, assignments, journal state and holds through the
 actual production hooks, with their template/report/clock boundaries labeled.
 
-The current source contains 107 migrations, including the private
+The original source inventory contains 107 migrations, including the private
 [accepted-prefix freshness boundary](../../supabase/migrations/20261119014418_shared_revival_checkpoint_freshness.sql).
 The client includes the [native clock and incomplete-hold correction](../../specs/MP-ECO-11-canonical-client.md#native-clock-correction-and-incomplete-holds),
 [bounded idle polling](../../specs/MP-ECO-native-idle-wave-polling.md),

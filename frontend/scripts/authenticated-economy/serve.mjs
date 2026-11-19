@@ -3,6 +3,7 @@ import {fileURLToPath} from 'node:url';
 import {resolve} from 'node:path';
 import {createServer} from 'vite';
 import {loadRuntime} from './runtime.mjs';
+import {recordServingSource} from './source.mjs';
 
 const runtime=await loadRuntime(process.argv[2]);
 // The production preview-header builder intentionally accepts hosted domains only.
@@ -17,4 +18,5 @@ const server=await createServer({root,configFile:resolve(root,'vite.config.js'),
  server:{host:'127.0.0.1',port:runtime.ports.frontend,strictPort:true,hmr:false,
   watch:{ignored:['**/scripts/authenticated-economy/**']},proxy:{'/api':runtime.apiUrl}}});
 await server.listen();
+recordServingSource(runtime,'frontend');
 console.log(JSON.stringify({frontendUrl:runtime.frontendUrl,status:'listening'}));
