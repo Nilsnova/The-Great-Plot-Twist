@@ -72,8 +72,18 @@ export function pathMaterialMask(paths, width = 2.04, padding = 0) {
     for (const [x, z] of points) { result.moveTo(x + radius, z * .72); result.arc(x, z * .72, radius, 0, Math.PI * 2); }
   }
   for (const [x, z, clearing] of paths.clearings) {
-    const radius = clearing + padding;
-    result.moveTo(x + radius, z * .72); result.ellipse(x, z * .72, radius, radius * .72, 0, 0, Math.PI * 2);
+    const radius = clearing + padding, y = z * .72;
+    if (!paths.stoneAprons) {
+      result.moveTo(x + radius, y); result.ellipse(x, y, radius, radius * .72, 0, 0, Math.PI * 2);
+      continue;
+    }
+    // The dressed apron is an octagon inscribed in the original clearing.
+    for (let corner = 0; corner < 8; corner++) {
+      const angle = (corner + .5) * Math.PI / 4;
+      const px = x + Math.cos(angle) * radius, py = y + Math.sin(angle) * radius * .72;
+      if (corner) result.lineTo(px, py); else result.moveTo(px, py);
+    }
+    result.closePath();
   }
   return result;
 }

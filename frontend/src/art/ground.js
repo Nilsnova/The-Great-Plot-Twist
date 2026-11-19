@@ -179,7 +179,7 @@ export function paintGround(id, density = 28, materials = null) {
     for (const padding of [.16, .067, 0, -.105, -.21]) {
       c.fill(pathMaterialMask(paths, PATH_WIDTH, padding));
     }
-    const paving = {...paths, clearings: paths.clearings.map(([x, z, radius]) => [x, z, radius * .76])};
+    const paving = {...paths, stoneAprons: true, clearings: paths.clearings.map(([x, z, radius]) => [x, z, radius * .76])};
     // The low paver edge casts a short contact shadow into the existing worn shoulder.
     c.save();
     c.clip(pathMaterialMask(paths, PATH_WIDTH));
