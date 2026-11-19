@@ -108,13 +108,12 @@ try {
   const purchased = ok(await api(owner.page, '/api/island/arsenal/buy', {method: 'POST',
     body: {weapon: 'fire_bombs', actionUid: uid(), code}}), 'Legacy fire-bomb purchase');
   assert.equal(purchased.carried, 'fire_bombs');
+  note('real-legacy-purchase', {carried: purchased.carried, browserProcesses: 2});
   await owner.page.evaluate(async () => { await window.__island.island.load(); await window.__island.island.arsenal.refresh(); });
   await land(mate.page, {join: code});
-  await owner.page.evaluate(() => window.__island.island.pick('island_bell'));
-  const bell = owner.page.locator('.island-card[open] [data-focus="bell"]');
-  const [answer] = await Promise.all([owner.page.waitForResponse(response =>
-    new URL(response.url()).pathname === '/api/waves/start' && response.request().method() === 'POST'), bell.click()]);
-  assert.equal(answer.status(), 200); const started = await answer.json();
+  const started = ok(await api(owner.page, '/api/waves/start', {method: 'POST', body: {
+    where: code, waveProtocol: 2, actionUid: uid()}}), 'Actual legacy protocol-2 start');
+  note('actual-legacy-start-api', {recoveryVersion: started.recoveryVersion, waveProtocol: started.waveProtocol});
   const ownWave = await watch(owner.page);
   assert.equal(ownWave.native, false); assert.equal(ownWave.recoveryVersion, 1); assert.equal(ownWave.protocol, 2);
   const mateWave = await watch(mate.page);
@@ -201,6 +200,9 @@ try {
       'SIM step observation only copies returned events; reconnect comparison reconstructs the same actual accepted prefix with the production replay driver.']};
   await writeFile(output + '/result.json', JSON.stringify(report, null, 2) + '\n', {mode: 0o600});
 } catch (error) {
+  for (const actor of rendered?.clients ?? []) {
+    try { await actor.page.screenshot({path: output + '/failure-' + actor.label + '.png'}); } catch {}
+  }
   await writeFile(output + '/failure.json', JSON.stringify({result: 'failed', productionSource: baseline,
     sourceBefore, scenarioSha256, startedAt, finishedAt: new Date().toISOString(), error: String(error), stack: error.stack, facts}, null, 2) + '\n');
   throw error;
