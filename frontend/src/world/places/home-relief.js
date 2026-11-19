@@ -27,7 +27,7 @@ function joint(index, layer) {
   return .49 + Math.cos(phase * 11 + 1.1) * .089 + Math.sin(phase * 23) * .059;
 }
 
-export function homeCliffGeometry(rows = cliffProfile(surface)) {
+function homeCliffGeometry(rows = cliffProfile(surface)) {
   const positions = [], colors = [];
   const faceNormal = new THREE.Vector3(), edge = new THREE.Vector3(), out = new THREE.Vector3();
   function triangle(a, b, c, tint, brightness) {
