@@ -121,14 +121,16 @@
 .island-selection-stat-icon { min-width: 17px; text-align: center; color: #ffe3a8; font-size: 17px; line-height: 1; }
 .island-selection-stat dd { margin: 0; color: #ffedbc; font-weight: 800; font-variant-numeric: tabular-nums; }
 .island-selection-dock.is-defense .island-selection-actions {
-  display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 5px;
+  display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 5px;
 }
 .is-defense .island-selection-actions > button {
-  grid-column: span 2; min-width: 44px; min-height: 44px; padding: 6px 9px; font-size: 15px;
+  grid-column: span 4; min-width: 44px; min-height: 44px; padding: 6px 9px; font-size: 15px;
 }
 .is-defense .island-selection-actions > :is([data-focus="move"], [data-focus="upgrade"]) {
-  grid-column: span 3; font-size: 17px; font-weight: 800;
+  font-size: 17px; font-weight: 800;
 }
+.is-defense .island-selection-actions > [data-focus="move"] { grid-column: span 5; }
+.is-defense .island-selection-actions > [data-focus="upgrade"] { grid-column: span 7; }
 .is-defense [data-focus="move"]::before {
   content: ""; display: inline-block; width: .94em; height: .94em; margin-right: .38em; vertical-align: -.11em;
   background: #f8e7bf;
