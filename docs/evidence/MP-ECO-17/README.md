@@ -46,6 +46,11 @@ cases for closed personal claims, excess-copy returns and guest cleanup.
 `uv run --no-sync ruff check .` from `backend/` passed, as did `git diff --check`.
 The example command above produced an exact byte match with `synthetic-preview.json`
 (SHA-256 `38c2f5042a773dbd1eb7777348c095129b72098494eb65857e7f3d77351afcdc`).
+All 26 local links in the owned spec/evidence note resolved. The documented
+credential-pattern scan of committed changes found zero matches. The optional
+`detect-secrets` diff scan reported four reviewed high-entropy values: the public
+base commit and the synthetic report's manifest, policy and snapshot SHA digests.
+These are non-secret identifiers; no scanner exclusion or broad allowlist was added.
 
 Earlier failed fixture setups remain development diagnostics, not successful
 rehearsal evidence. No full backend/frontend or authenticated provider suite is claimed
