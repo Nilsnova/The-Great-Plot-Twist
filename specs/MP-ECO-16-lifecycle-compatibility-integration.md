@@ -8,12 +8,14 @@ model. Responsible teammate: Ianno Hollensteiner. Scope: #500/#505 compatibility
 ## Required behavior
 
 Owner reset is one transaction: validate the typed island code and original
-epoch, claim the existing global operation identity, close canonical reservations,
-dispose live island assets through their checked hooks and replace the treasury
+epoch, claim the existing global operation identity, require the canonical idle
+boundary, dispose live island assets through their checked hooks and replace the treasury
 through `island_economy_reset_treasury_locked`. Personal Captain progression stays
 personal. The replacement receives exactly the configured server starting grant;
 old cash, commitments, valid wagers and immutable receipts retain their original
 account and epoch. Exact historical retries do not replace the current run again.
+Countdown, active and expired-but-unsealed reservations block new reset claims;
+the canonical closure/settlement must commit first. Reset never abandons a wave.
 The public reset response always has `currentEconomy: null`: only a new canonical
 island GET may adopt the replacement. The private treasury helper retains its
 existing internal replacement projection; the public executor removes it.
@@ -25,6 +27,8 @@ owned island without succession or a new grant. Deleting a member preserves the
 continuing island, its stock, other Captains and saved-origin settlement history.
 The old one-argument deletion entry point must refuse shared-related deletion
 unless the complete transaction prepares the required disposition.
+Confirmed owner deletion requests canonical abandonment with deadline
+normalization before disposing the owned island; this differs from reset's guard.
 
 Discover every affected island before personal locks, acquire actor/island scope
 and account locks in their common order, and revalidate discovery before applying
@@ -146,3 +150,35 @@ releases its previous profile lock and waits on the newly discovered scope befor
 continuing. The tests assert actual `pg_blocking_pids` wait edges and independently
 probe profile locks, then commit both real operations. No domain helper or
 authority provider is replaced for these checks.
+
+## Existing membership compatibility boundary
+
+The existing service signatures `game_join(uuid, uuid, integer)` and
+`game_leave(uuid, uuid)` must also use the canonical lifecycle. A separate
+CLI-generated migration will preserve their original implementations privately.
+Shared calls acquire the provided captured scope/account plan and personal/domain
+rows before the established membership writer. Missing/deleted actors fail closed.
+An actual active-to-left transition withdraws only that island's frozen slots and
+held-copy tenure, rotates its topic and invokes canonical normalization in the
+same transaction. A host-leave refusal changes neither control nor topic. A new
+membership or rejoin rotates the topic once; a redundant active join preserves
+its topic generation. No second membership API or assignment store is added.
+
+## Reset phase correction and retained legacy behavior
+
+Review against the provided lifecycle foundation corrected an earlier integration
+assumption: owner reset must refuse reservations, while confirmed owner deletion
+may abandon them. Four negative boundary fixtures initially exposed the reset's
+attempt to invoke canonical closure. New claims now check both the recovery
+reservation and unclosed accounting before asset/control mutation; their refused
+root claims roll back. Idle reset records `wavesClosed: 0`. Original receipt replay
+still precedes a later run's reservation. These fixtures test fail-closed phase
+boundaries; native accepted bell/closure remains a separate integration check.
+
+The expanded lifecycle transaction file passed 21 checks in 9.30 seconds. It also
+proves current-wrapper mystery-crew handover/version increments once, explicit
+legacy-only checkpoint and unlinked recovery-history purge, private helper grants,
+and an actual saved-origin market wager settling once after reset and physical
+member/owner deletion. Market evidence and clock advancement are labelled test
+fixtures; authority remains the real persisted provider. The replacement account
+receives no portion of the old wager's payout.

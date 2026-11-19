@@ -263,7 +263,7 @@ begin
 end;
 $$;
 comment on function public.island_lifecycle_close_owned_locked(uuid,timestamptz) is
-  'Owner reset/delete canonical abandonment request with actual deadline normalization and complete close proof. Does not invent a missing reservation or accounting source.';
+  'Confirmed owner deletion canonical abandonment request with actual deadline normalization and complete close proof. Reset never invokes this helper. Does not invent a missing reservation or accounting source.';
 
 create or replace function public.island_lifecycle_reset_assets_locked(
   p_owner uuid,p_account uuid,p_epoch uuid,p_now timestamptz
@@ -306,18 +306,18 @@ begin
 end;
 $$;
 comment on function public.island_lifecycle_reset_assets_locked(uuid,uuid,uuid,timestamptz) is
-  'Clear current communal island assets after canonical close; preserve private progress and immutable old financial/wave/move history. Actual arsenal/session hooks precede treasury retirement.';
+  'Clear current communal island assets only at an already idle canonical boundary; preserve private progress and immutable old financial/wave/move history. Actual arsenal/session hooks precede treasury retirement.';
 
 -- A public result never adopts the replacement under the old receipt origin.
 create or replace function public.island_lifecycle_reset(
   p_actor_id uuid,p_island_owner uuid,p_run_epoch uuid,p_action_uid text,
   p_confirm_code text,p_starting_coins numeric,p_grant_policy_version text
 ) returns jsonb language plpgsql volatile security definer set search_path='' as $$
-declare v_owners uuid[]; v_players uuid[]; v_check uuid[]; v_retries integer:=0;
+declare v_owners uuid[]; v_players uuid[]; v_retries integer:=0;
   v_account public.island_economy_accounts; v_state public.island_economy_state;
   v_old public.island_economy_operations; v_claim jsonb; v_operation uuid;
   v_code text; v_typed text; v_fingerprint jsonb; v_effects jsonb; v_result jsonb;
-  v_closed integer; v_now timestamptz;
+  v_now timestamptz;
 begin
   if p_actor_id is null or p_island_owner is null or p_run_epoch is null
     or p_action_uid is null or p_action_uid !~ '^[A-Za-z0-9_-]{8,64}$'
@@ -367,10 +367,16 @@ begin
       perform public.shared_session_lock_plan_rows(jsonb_build_object(
         'owners',to_jsonb(v_owners),'players',to_jsonb(v_players)));
       if not public.shared_session_actor_active(p_actor_id) then raise exception 'actor_inactive'; end if;
+      -- Reset cannot abandon, expire or seal a reservation. Canonical closure
+      -- and accounting must already have committed before any live asset change.
+      perform public.island_economy_require_idle_locked(p_island_owner);
+      if exists(select 1 from public.island_wave_accounting a
+        where a.account_id=v_account.id and not exists(
+          select 1 from public.island_wave_closures c where c.wave_id=a.wave_id)) then
+        raise exception 'wave_running'; end if;
       v_now:=clock_timestamp();
-      v_closed:=public.island_lifecycle_close_owned_locked(p_island_owner,v_now);
       v_effects:=public.island_lifecycle_reset_assets_locked(
-        p_island_owner,v_account.id,p_run_epoch,v_now)||jsonb_build_object('wavesClosed',v_closed);
+        p_island_owner,v_account.id,p_run_epoch,v_now)||jsonb_build_object('wavesClosed',0);
       v_result:=public.island_economy_reset_treasury_locked(
         v_operation,p_starting_coins,p_grant_policy_version,v_effects);
       if v_result->>'status' is distinct from 'done' or not exists(
