@@ -1,9 +1,7 @@
-"""Research and respec only between waves, a respec priced under the lock: the LATEST definitions of
-island_research() and island_respec() (20261113010000_respec_and_wave_guards.sql) keep what the
-earlier migrations gave them and add the wave test island_demolish() uses.
+"""Reviewed historical wave/price guards and their exact later delegation boundaries.
 
 These are text checks of the migration files; the real behaviour is in
-island_sql/test_respec_and_wave_guards_sql.py.
+island_sql/test_respec_and_wave_guards_sql.py and the core legacy guard SQL tests.
 """
 
 import hashlib
@@ -17,6 +15,7 @@ RESEARCH = MIGRATIONS / "20261112100000_research_tiers.sql"
 TREE = MIGRATIONS / "20261112120000_captain_tree.sql"
 RECOVERY_MUTATIONS = MIGRATIONS / "20261117050000_structure_recovery_mutations.sql"
 PROGRESSION_GUARDS = MIGRATIONS / "20261118050501_island_progression_legacy_guards.sql"
+CORE_GUARDS = MIGRATIONS / "20261118050701_island_economy_legacy_guards.sql"
 
 WAVE_TEST = re.compile(
     r"from public\.wave_runs\s+where island_owner = (\w+) and finished_at is null\s+"
@@ -34,9 +33,27 @@ def latest_definition(name: str) -> tuple[str, str]:
     raise AssertionError(name)
 
 
+def historical_respec_definition() -> str:
+    """The complete reviewed priced-under-lock body, before its private alias is captured."""
+    pattern = r"create or replace function public\.island_respec_at_level\(.*?\n\$\$;"
+    return re.search(pattern, GUARDS.read_text(), re.S).group(0)
+
+
+def respec_definition_before_core() -> tuple[str, str]:
+    """The body available to the alias capture, without accepting an unexpected replacement."""
+    pattern = r"create (?:or replace )?function public\.island_respec_at_level\(.*?\n\$\$;"
+    for path in sorted(MIGRATIONS.glob("*.sql"), reverse=True):
+        if path.name >= CORE_GUARDS.name:
+            continue
+        found = re.search(pattern, path.read_text(), re.S)
+        if found:
+            return path.name, found.group(0)
+    raise AssertionError("Missing reviewed respec before core alias capture")
+
+
 def test_the_latest_definitions_are_in_the_guards_migration():
     assert latest_definition("island_research")[0] == PROGRESSION_GUARDS.name
-    assert latest_definition("island_respec_at_level")[0] == GUARDS.name
+    assert latest_definition("island_respec_at_level")[0] == CORE_GUARDS.name
 
 
 def test_both_use_the_wave_test_of_island_demolish():
@@ -114,11 +131,56 @@ def test_shared_research_wrapper_guards_before_delegating_to_the_preserved_alias
 
 
 def test_respec_is_priced_per_level_under_the_island_lock():
-    _, body = latest_definition("island_respec_at_level")
+    body = historical_respec_definition()
     assert "p_per_level   integer" in body and "p_price" not in body
     assert body.index("for update;", body.index("from public.islands")) < body.index(
         "p_per_level * v_island.captain_level"
     )
+
+
+def test_the_complete_reviewed_respec_body_is_unchanged_before_alias_capture():
+    body = historical_respec_definition()
+    assert hashlib.sha256(body.encode()).hexdigest() == (
+        "6dfc8e75c9b2c7076430d64ca350af81af089744ced636bbdf6e8d4b0b0dc457"
+    )
+    assert respec_definition_before_core() == (GUARDS.name, body)
+
+
+def test_the_latest_respec_is_only_the_exact_reviewed_core_guard_and_delegation():
+    path, body = latest_definition("island_respec_at_level")
+    assert path == CORE_GUARDS.name
+    expected = """create or replace function public.island_respec_at_level(
+      p_player_id uuid,p_action_uid text,p_per_level integer
+    ) returns jsonb language plpgsql volatile security definer set search_path = '' as $$
+    declare v_reason text;
+    begin
+      v_reason := public.island_economy_core_legacy_gate_locked(p_player_id);
+      if v_reason is not null then
+        return jsonb_build_object('status','refused','reason',v_reason); end if;
+    """
+    expected += (
+        "return public.island_respec_at_level_core_legacy_personal("
+        "p_player_id,p_action_uid,p_per_level); end; $$;"
+    )
+    assert " ".join(body.split()) == " ".join(expected.split())
+
+
+def test_respec_alias_capture_and_execute_rights_are_explicit_and_reapply_safe():
+    text = CORE_GUARDS.read_text()
+    capture = text.split("-- Actor-only entries", 1)[0]
+    assert "('island_respec_at_level','uuid,text,integer')" in capture
+    assert "if to_regprocedure(" in capture and "is null then" in capture
+    assert "pg_get_functiondef(to_regprocedure(" in capture
+    assert "position(v_item.name||'_core_legacy_personal' in v_definition)>0" in capture
+    assert "raise exception 'core_legacy_source_missing'" in capture
+    assert "'FUNCTION public.'||v_item.name||'_core_legacy_personal('" in capture
+    assert "v_item.name||'_core_legacy_personal',v_item.arguments" in capture
+    revoke = "from public,anon,authenticated,service_role"
+    assert revoke in capture
+    grants = text.split("-- Only the trusted server", 1)[1]
+    assert "('island_respec_at_level','uuid,text,integer')" in grants
+    assert revoke in grants
+    assert "grant execute on function public.%I(%s) to service_role" in grants
 
 
 def test_the_old_respec_is_dropped_and_the_applied_migration_is_untouched():
