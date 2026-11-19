@@ -53,7 +53,7 @@ export function createCamera(input) {
     zoom = value;
     if (Math.abs(value - camera.zoom) > 1e-6) { camera.zoom = value; camera.updateProjectionMatrix(); }
   }
-  return {camera, get yaw() { return 0; },
+  return {camera, get yaw() { return 0; }, get villageFit() { return village && villageFit; },
     setPlace(id, player) {
       placeId = id; village = false; fitVillage(); targetZoom = 1; const point = projectPoint(player.x, player.z);
       place(point.x, point.y + 3.1); zoom = 1;
