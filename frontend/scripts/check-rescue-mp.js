@@ -1,11 +1,11 @@
 // Release check for the flag rescue (task T38, decision D044, specs/T38-T39-minigames-rescue.md) with two captains
 // on one island, without live accounts: headless Chrome, one browser context, the fake server shared by both tabs
-// (?islands=fake&fakeworld=…, fake-api.js) with the flag on (&fakeflags=rescue: its wave answers then carry
-// rules: ['rescue'] as backend/server/island/wave_rules.py does, and it honours `rescued` as routes/waves.py does) and
+// (?islands=fake&fakeworld=…, fake-api.js), whose wave answers carry the rule rescue as backend/server/island/wave_rules.py
+// does (the flag is retired, always on), and which honours `rescued` as routes/waves.py does, and
 // the BroadcastChannel room. The island has no defenses but a wall and a house, so a wave is lost on its own (the
 // heart falls or every captain goes down). Every page wraps its sim's step() and records every event with its tick.
 // The scenarios, each reported PASS or FAIL with what was measured:
-//   R rules     the bell's answer for wave 6 carries rules ['rescue']; both pages' controllers start the wave with it
+//   R rules     the bell's answer for wave 6 carries the rule rescue; both pages' controllers start the wave with it
 //   A won       wave 6 is lost; both pages enter the rescue at the same tick with the same players and goal; the
 //               battle stands still (sim time, heart, boarders and ships unchanged, no battle events); both captains
 //               haul (real Space key events) and win; the same rescue events on both pages; each finish sends
@@ -15,8 +15,6 @@
 //   P point     Pirate Point wave 6 (a flagship wave, the answer still lists the rule): no rescue
 //   C drop      wave 6 again: both haul, the friend's tab closes in the middle of the haul; the host's rescue keeps
 //               its players and goal, is decided and finished; its outcome follows score ≥ goal
-//   F flag off  a new world without the flag: wave 6's answer has no rules and the lost wave ends at once (the same
-//               tick as the heart's last damage or the crew's fall), no rescue events, the next bell best − 2
 //   E           no browser errors
 // Exit code 1 when any scenario fails.
 //   node scripts/check-rescue-mp.js [folder]        (npm run test:rescue)
@@ -268,9 +266,9 @@ try {
     assert.equal(friendView, BEST, 'the friend reads the same best wave');
   });
 
-  await scenario('R', 'the wave answer carries rules [rescue]; both controllers start with it', async note => {
+  await scenario('R', 'the wave answer carries the rule rescue; both controllers start with it', async note => {
     assert.ok(waveA, 'the wave of scenario A');
-    assert.deepEqual(waveA.answer.rules, ['rescue'], 'the bell\'s answer lists the rule');
+    assert.ok(waveA.answer.rules?.includes('rescue'), 'the bell\'s answer lists the rule');
     for (const captain of [host, ben]) {
       const item = await recOf(captain, waveA.waveId);
       assert.equal(item.rules.rescue, true, `${captain.name}'s controller plays the rule`);
@@ -306,7 +304,7 @@ try {
     await setBest(host, 2);
     const wave = await playWave([host, ben], {haul: 'good'});
     assert.equal(wave.wave, 3);
-    assert.deepEqual(wave.answer.rules, ['rescue'], 'the rule is on for the wave');
+    assert.ok(wave.answer.rules?.includes('rescue'), 'the rule is on for the wave');
     for (const captain of [host, ben]) {
       const item = await recOf(captain, wave.waveId);
       assert.deepEqual(types(item), ['wave_ended'], `${captain.name}: no rescue event`);
@@ -375,39 +373,6 @@ try {
     assert.equal(after.nextWave, decided.type === 'rescue_won' ? BEST - 1 : BEST - 2);
     assert.equal(after.waveBest, BEST);
     pages = pages.filter(captain => captain !== ben);
-  });
-
-  await scenario('F', 'flag off: no rules on the answer; a lost wave 6 ends at once as before; next bell best − 2', async note => {
-    for (const captain of pages) await captain.page.close().catch(() => {});
-    pages = [];
-    const WORLD2 = `rescueoff${Date.now().toString(36)}`;
-    const h = await openCaptain('Nils', 'me', {world: WORLD2, flags: ''});
-    const b = await openCaptain('Ben', 'ben', {world: WORLD2, flags: '', join: 'k7q2m'});
-    for (const captain of [h, b]) {
-      await captain.page.waitForFunction(() => [...document.querySelectorAll('.island-card-lobby[open] .island-lobby-player.is-online')].length === 2, null, {timeout: 30000, polling: 250});
-    }
-    await h.page.locator('.island-card-lobby[open] .island-lobby-start').click();
-    for (const captain of [h, b]) await captain.page.waitForFunction(() => window.__island.island.ui.open !== 'lobby', null, {timeout: 15000, polling: 100});
-    await island(h, async (i, best) => { i.dev.setCoins(900); i.dev.setWaveBest(best); await i.load(); await i.build('wall_1', 'wall'); await i.build('house_1', 'house'); }, BEST);
-    const wave = await playWave([h, b], {haul: 'good'});
-    note(`wave ${wave.wave} (${wave.waveId}) took ${wave.seconds} s; answer keys ${Object.keys(wave.answer).sort().join(',')}`);
-    assert.equal(wave.wave, BEST + 1);
-    assert.equal('rules' in wave.answer, false, 'no rules on the wave answer');
-    const [x, y] = [await recOf(h, wave.waveId), await recOf(b, wave.waveId)];
-    for (const [captain, item] of [[h, x], [b, y]]) {
-      assert.equal(item.rules.rescue, false, `${captain.name}'s controller plays without the rule`);
-      assert.deepEqual(types(item), ['wave_ended'], `${captain.name}: no rescue event`);
-      assert.equal(item.ended.survived, false);
-      const at = item.ended.reason === 'island_lost' ? item.lastDamage?.tick : item.fell.at(-1)?.tick;
-      assert.equal(item.ended.tick, at, `${captain.name}: the wave ended at once`);
-      const sent = await finishesOf(captain, wave.waveId);
-      assert.equal(sent.length, 1); assert.equal('rescued' in sent[0], false);
-      note(`${captain.name}: ${item.ended.reason} at tick ${item.ended.tick} (last heart damage tick ${item.lastDamage?.tick}), finish ${JSON.stringify(sent[0])}`);
-    }
-    sameRun(x, y, note, `wave ${wave.wave} (flag off)`);
-    const after = await ownIsland(h);
-    note(`server: best ${after.waveBest}, nextWave ${after.nextWave}`);
-    assert.equal(after.nextWave, BEST - 2); assert.equal(after.waveBest, BEST);
   });
 
   const audio = env.errors.filter(text => /AudioContext|audio device/i.test(text));

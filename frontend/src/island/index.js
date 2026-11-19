@@ -78,16 +78,12 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   loadBoatScene = () => import('../pirates/boat/scene.js'),
   onCoins = () => {}, onCaptain = () => {}, onQuestIsland = () => {}, menu = addMenuExtras, settings = addSettingsSection, now, setTimer, clearTimer, openHarborStall = () => {},
   travel = () => travelAllowed({islandsMode: mode}), villageCamera = () => {},
-  // D039 (proposed): whether /api/config says the flag wall_recovery is on (lasting wall damage, Repair/Rebuild).
-  wallRecovery = () => false, structureRecoveryOn = () => false,
-  // T43 (D048 proposed): whether /api/config says the flag defenses_v2 is on (a tower spot then offers the culverin).
-  defensesV2On = () => false} = {}) {
+  structureRecoveryOn = () => false} = {}) {
   // The island's state, shared by its parts (island-*.js) as isl.own, isl.visiting, isl.ui, ...: every `let` of this
   // closure and the objects built below that the parts use; the options too.
   const isl = {container, emit, on, mode, getTransport, transport, search, focus, resetInput, reducedMotion,
     preferences, storage, visitStorage, loadCutscenes, loadBoatScene, onCoins, onCaptain, onQuestIsland, menu,
-    settings, now, setTimer, clearTimer, openHarborStall, travel, villageCamera, wallRecovery, structureRecoveryOn,
-    defensesV2On};
+    settings, now, setTimer, clearTimer, openHarborStall, travel, villageCamera, structureRecoveryOn};
   // The parts, each a closure over isl; they call each other through names linked once all exist. They only
   // define functions here: everything that runs at the start stays below, in its order.
   const parts = [createRecovery, createLoading, createGames, createCards, createActions].map(create => create(isl));

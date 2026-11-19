@@ -1,17 +1,13 @@
 // Release check for the wave rules tower_health (T33, D049) and pathing (T34/T35, D040) with two captains on one
 // island, without live accounts: headless Chrome, one browser context, the fake server shared by both tabs
-// (?islands=fake&fakeworld=…, fake-api.js) with both flags on (&fakeflags=tower_health,pathing), so every wave
-// answer carries rules: ['tower_health', 'pathing', 'tower_obstacles'] as the server's would, and the BroadcastChannel room.
+// (?islands=fake&fakeworld=…, fake-api.js), whose wave answers carry every sim rule as the server's do (the rule flags
+// are retired, always on), and the BroadcastChannel room.
 // The host moves three cannons next to the heart, where the boarders walk past them. Scenarios, each PASS or FAIL:
 //   1 rules    both tabs' controllers start the wave with towerHealth and pathing on; every cannon has hp
 //   2 E        a captain stands at a damaged tower and presses E: it is repaired (tower_repaired) in both tabs; a
 //              broken one is rebuilt with E once ready (tower_rebuilt) in both tabs
 //   3 lockstep both tabs' sims agree tick for tick (tower hp, every boarder's position and state, the heart) and
 //              have the same tower_damaged / tower_broken / tower_repaired / tower_rebuilt events
-//   4 flip     a flag switched while a wave runs (pathing off, tower_health stays on) does not change the wave's
-//              rules for a late joiner: join and current answer the kept set
-//   K known server limit (wave_rules.py), reported on its own and not failing the run: a wave that started with
-//              every rule flag off and a flag switched on mid-wave gives a late joiner rules the others do not play
 //   E no browser errors
 //   node scripts/check-rules-mp.js [folder]        (npm run test:rules)
 import assert from 'node:assert/strict';
@@ -27,7 +23,6 @@ const out = process.argv[2] ?? join(tmpdir(), 'tgpt-rules', stamp);
 await mkdir(out, {recursive: true});
 const WORLD = `rules${Date.now().toString(36)}`;
 const CODE = 'ISLE-K7Q2M';
-const FLAGS = 'tower_health,pathing,tower_obstacles';
 // Three cannons right by the heart (0, 2; its keep-out is 4 x 4), on the boarders' way in, and the shore walls.
 const BEST = 14; // wave 15 against four level-1 cannons: boarders reach the heart and hack the cannons by it
 const NEAR_HEART = {cannon_1: {x: 3, z: 2}, cannon_2: {x: -3, z: 2}, cannon_3: {x: 0, z: 6}};
@@ -44,7 +39,7 @@ async function openCaptain(name, playerId, {join = null} = {}) {
     page.on('console', message => { if (message.type() === 'error') env.errors.push(`${name}: ${message.text()}`); });
   }
   await page.setViewportSize({width: 960, height: 600});
-  await page.goto(`${env.url}/?islands=fake&fakeworld=${WORLD}&fakeplayer=${playerId}&fakename=${encodeURIComponent(name)}&fakeflags=${FLAGS}`);
+  await page.goto(`${env.url}/?islands=fake&fakeworld=${WORLD}&fakeplayer=${playerId}&fakename=${encodeURIComponent(name)}`);
   if (first) { await page.evaluate(() => { localStorage.clear(); sessionStorage.clear(); }); await page.reload(); }
   const captain = {name, page, playerId};
   pages.push(captain);
@@ -223,28 +218,6 @@ try {
     const boarders = JSON.parse(a[shared[Math.floor(shared.length / 2)]])[2].length;
     note(`${shared.length} ticks compared (${shared[0]}…${shared[shared.length - 1]}), all equal; tower events in both: damaged ${count('tower_damaged')}, broken ${count('tower_broken')}, repaired ${count('tower_repaired')}, rebuilt ${count('tower_rebuilt')}; ${boarders} boarders mid-wave`);
   });
-
-  await scenario('4', 'a flag switched mid-wave does not change the wave\'s rules for a late joiner', async note => {
-    const wave = await ring(host, ben);
-    await island(host, async i => { await i.dev.setFlag('pathing', false); });
-    const answers = await island(ben, async (i, waveId) => { const j = await i.api.joinWave({waveId}); const c = await i.api.currentWave({where: 'ISLE-K7Q2M'});
-      return {join: j.data?.rules ?? j.rules ?? null, current: c?.data?.rules ?? c?.rules ?? null, ok: j.ok}; }, wave.waveId);
-    note(`wave ${wave.wave} (${wave.waveId}) started with both flags; pathing switched off mid-wave; late join answers ${JSON.stringify(answers)}`);
-    assert.deepEqual(answers.join, ['tower_health', 'pathing', 'tower_obstacles'], 'join answers the kept set');
-    assert.deepEqual(answers.current, ['tower_health', 'pathing', 'tower_obstacles'], 'current answers the kept set');
-    await island(host, async i => { await i.dev.setFlag('pathing', true); });
-    await waveOver(wave.waveId);
-  });
-
-  await scenario('K', 'known server limit: a wave started with every rule flag off, a flag switched on mid-wave', async note => {
-    await island(host, async i => { await i.dev.setFlag('pathing', false); await i.dev.setFlag('tower_health', false); });
-    const wave = await ring(host, ben);
-    await island(host, async i => { await i.dev.setFlag('pathing', true); await i.dev.setFlag('tower_health', true); });
-    const answer = await island(ben, async (i, waveId) => { const j = await i.api.joinWave({waveId}); return j.data?.rules ?? j.rules ?? null; }, wave.waveId);
-    note(`wave ${wave.wave} started with no rules; flags switched on mid-wave; a late join answers rules ${JSON.stringify(answer)}`);
-    await waveOver(wave.waveId);
-    assert.equal(answer, null, 'the late joiner gets no rules (the wave started without any)');
-  }, {pending: true});
 
   const audio = env.errors.filter(text => /AudioContext|audio device/i.test(text));
   const errors = env.errors.filter(text => !/Failed to load resource/.test(text) && !audio.includes(text));

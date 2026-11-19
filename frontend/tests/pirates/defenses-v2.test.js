@@ -6,11 +6,12 @@ import {readFileSync} from 'node:fs';
 import {afterAll, beforeAll, describe, expect, it} from 'vitest';
 import {CONFIG} from '../../src/pirates/sim.js';
 import {DEFENSES_V2, DEFENSE_V2_KINDS} from '../../src/pirates/defenses-v2.js';
-import {CULVERIN_CARD, DEFENSES_V2_FLAG, defensesV2On, towerKinds} from '../../src/island/defenses-v2.js';
-import {POINT_TOWER_KINDS, SLOT_KINDS, readUnlocks} from '../../src/island/td-rules.js';
+import {CULVERIN_CARD, towerKinds} from '../../src/island/defenses-v2.js';
+import {POINT_TOWER_KINDS, readUnlocks} from '../../src/island/td-rules.js';
 import {buildCardModel} from '../../src/island/card-model.js';
 import {CULVERIN_ART, defensesV2Frames} from '../../src/art/defenses-v2.js';
 import {hasCartoon, islandFrame} from '../../src/art/registry.js';
+import {SIM_RULES} from '../../src/pirates/fake-rules.js';
 
 const file = JSON.parse(readFileSync(new URL('../../../backend/content/defenses_v2.json', import.meta.url), 'utf8'));
 const islands = JSON.parse(readFileSync(new URL('../../../backend/content/islands.json', import.meta.url), 'utf8'));
@@ -68,25 +69,10 @@ describe('the culverin on the cards and on the server', () => {
   });
 });
 
-describe('the flag defenses_v2 hides the culverin while it is off', () => {
-  it('is on only when the server says exactly true', () => {
-    expect(DEFENSES_V2_FLAG).toBe('defenses_v2');
-    for (const flags of [undefined, null, {}, {defenses_v2: false}, {defenses_v2: 'true'}, {defenses_v2: 1}]) expect(defensesV2On(flags)).toBe(false);
-    expect(defensesV2On({defenses_v2: true})).toBe(true);
-  });
-  it('offers the tower spot exactly what it offered before, unless the flag is on', () => {
-    expect(towerKinds()).toBe(SLOT_KINDS.tower);
-    expect(towerKinds({flags: {islands: true}})).toEqual(['cannon', 'mortar', 'harpoon', 'swivel']);
-    expect(towerKinds({flags: {defenses_v2: true}})).toEqual(['cannon', 'mortar', 'harpoon', 'swivel', 'culverin']);
-    // Pirate Point never gets it.
-    expect(towerKinds({flags: {defenses_v2: true}, point: true})).toBe(POINT_TOWER_KINDS);
-  });
-  it('keeps today\'s build card free of it, even when a server lists it on a spot', () => {
-    const spot = {id: 'cannon_5', kind: 'cannon', kinds: ['cannon', 'mortar', 'harpoon', 'culverin'], built: false, level: 0, cost: 30};
-    const unlocks = readUnlocks({unlocks: {wave: 30, unlocked: ['culverin:1', 'cannon:1', 'mortar:1', 'harpoon:1'], locked: {}}});
-    const card = buildCardModel({spotId: 'cannon_5', slot: 'tower', spot, coins: 5000, unlocks});
-    expect(card.mode).toBe('choose');
-    expect(card.choices.map(choice => choice.kind)).toEqual(['cannon', 'mortar', 'harpoon', 'swivel']);
+describe('the culverin is a tower choice on the island (the flag defenses_v2 is retired)', () => {
+  it('is offered on every island tower spot, never on Pirate Point', () => {
+    expect(towerKinds()).toEqual(['cannon', 'mortar', 'harpoon', 'swivel', 'culverin']);
+    expect(towerKinds({point: true})).toBe(POINT_TOWER_KINDS);
   });
 });
 
@@ -132,29 +118,28 @@ describe('the culverin drawings', () => {
 });
 
 // The integration step (specs/T43-new-defenses.md "Sim wiring note", item 12): the card, the island, the wave's
-// renderer and the dev fake know the culverin, and each shows it only where the flag (or the wave's rule) says so.
+// renderer and the dev fake know the culverin; the sim fights with it only where the wave's rule says so.
 describe('the culverin outside the sim', () => {
-  it('is a build choice of an island tower spot while the flag is on, locked until its wave', () => {
+  it('is a build choice of an island tower spot, locked until its wave', () => {
     const spot = {id: 'cannon_5', kind: 'cannon', kinds: ['cannon', 'mortar', 'harpoon', 'culverin'], built: false, level: 0, cost: 30};
-    const on = {defenses_v2: true};
-    const open = buildCardModel({spotId: 'cannon_5', slot: 'tower', spot, coins: 5000, flags: on,
+    const open = buildCardModel({spotId: 'cannon_5', slot: 'tower', spot, coins: 5000,
       unlocks: readUnlocks({unlocks: {wave: 30, unlocked: ['culverin:1', 'cannon:1', 'mortar:1', 'harpoon:1'], locked: {}}})});
     expect(open.choices.map(choice => choice.kind)).toEqual(['cannon', 'mortar', 'harpoon', 'swivel', 'culverin']);
     expect(open.choices[4]).toMatchObject({name: 'Culverin', line: CULVERIN_CARD.line, price: '🪙 80', disabled: false});
-    const early = buildCardModel({spotId: 'cannon_5', slot: 'tower', spot, coins: 5000, flags: on, unlocks: readUnlocks({waveBest: 3})});
+    const early = buildCardModel({spotId: 'cannon_5', slot: 'tower', spot, coins: 5000, unlocks: readUnlocks({waveBest: 3})});
     expect(early.choices[4]).toMatchObject({kind: 'culverin', disabled: true, locked: true});
     expect(early.choices[4].reason).toContain('15');
     // A visitor's card reads the friend's island by its best won wave alone (index.js islandUnlocks): the culverin
     // opens there with that island's waves too, as the server allows it.
-    const visit = wave => buildCardModel({spotId: 'cannon_5', slot: 'tower', spot, coins: 5000, flags: on, visitor: true, unlocks: readUnlocks({waveBest: wave})});
+    const visit = wave => buildCardModel({spotId: 'cannon_5', slot: 'tower', spot, coins: 5000, visitor: true, unlocks: readUnlocks({waveBest: wave})});
     expect(visit(14).choices[4]).toMatchObject({kind: 'culverin', disabled: true, reason: 'Opens after wave 15.'});
     expect(visit(15).choices[4]).toMatchObject({kind: 'culverin', disabled: false, reason: ''});
     expect([15, 20, 30].map(wave => readUnlocks({waveBest: wave}).levels.culverin)).toEqual([3, 4, 5]);
     // Pirate Point never offers it.
-    const point = buildCardModel({spotId: 'pp_tower_1', slot: 'tower', spot: {...spot, id: 'pp_tower_1'}, coins: 5000, flags: on, point: true});
+    const point = buildCardModel({spotId: 'pp_tower_1', slot: 'tower', spot: {...spot, id: 'pp_tower_1'}, coins: 5000, point: true});
     expect(point.choices.map(choice => choice.kind)).toEqual(['cannon', 'mortar']);
     // A built culverin shows its level, its stats and the next one.
-    const built = buildCardModel({spotId: 'cannon_5', slot: 'tower', spot: {...spot, kind: 'culverin', built: true, level: 1, upgradeCost: 160}, coins: 5000, flags: on,
+    const built = buildCardModel({spotId: 'cannon_5', slot: 'tower', spot: {...spot, kind: 'culverin', built: true, level: 1, upgradeCost: 160}, coins: 5000,
       unlocks: readUnlocks({unlocks: {wave: 30, unlocked: ['culverin:1', 'culverin:2'], locked: {}}})});
     expect(built).toMatchObject({mode: 'upgrade', title: 'Culverin', maxLevel: 5});
     expect(built.upgrade.stats).toBe('Damage 30 → 42 · Range 44 → 46');
@@ -175,7 +160,7 @@ describe('the culverin outside the sim', () => {
     expect(buildingArt('culverin', 4)).toBe('island-culverin-l4');
     expect(pipCount('culverin', 1)).toBe(1);
   });
-  it('keeps a saved culverin upgradeable with the catalogue flag off', () => {
+  it('keeps a saved culverin upgradeable', () => {
     const islandAnswer = {
       waveBest: 40,
       unlocks: {wave: 40, unlocked: ['culverin:1', 'culverin:2', 'culverin:3', 'culverin:4', 'culverin:5'], locked: {}},
@@ -189,7 +174,7 @@ describe('the culverin outside the sim', () => {
     });
     const card = state => buildCardModel({
       spotId: 'cannon_11', slot: 'tower', spot: islandAnswer.spots[0], coins: 5000,
-      flags: {defenses_v2: false}, unlocks: readUnlocks(islandAnswer),
+      unlocks: readUnlocks(islandAnswer),
       campaign: {wave: 40, open: new Set(), research: {done: new Set(), tiers: {}}},
       recoveryState: state, recoveryStatus: 'ready', recoveryVersion: 1,
     });
@@ -197,24 +182,16 @@ describe('the culverin outside the sim', () => {
     expect(card(recovery(1_000_000))).toMatchObject({mode: 'upgrade', disabled: false, upgrade: {label: 'Level 5 · 🪙 640'}});
     expect(card(recovery(500_000))).toMatchObject({disabled: true, reason: 'Repair to full before an upgrade.'});
     expect(card(recovery(1_000_000, 'reserved_wave'))).toMatchObject({disabled: true, reason: 'Upgrades are available between waves.'});
-    const empty = buildCardModel({spotId: 'cannon_7', slot: 'tower', spot: islandAnswer.spots[1], coins: 5000,
-      flags: {defenses_v2: false}, unlocks: readUnlocks(islandAnswer)});
-    expect(empty.choices.map(choice => choice.kind)).not.toContain('culverin');
   });
-  it('is in the dev fake only with ?fakeflags=defenses_v2, and its waves then carry the rule', async () => {
+  it('is in the dev fake on every island, and its waves carry the rule', async () => {
     const {createFakeIslandApi} = await import('../../src/pirates/fake-api.js');
-    const off = createFakeIslandApi(), on = createFakeIslandApi({flags: {defenses_v2: true}});
-    const before = await off.island();
-    expect(before.spots.find(item => item.id === 'cannon_1').kinds).toEqual(['cannon', 'mortar', 'harpoon', 'swivel']);
-    expect(before.prices.kinds).not.toHaveProperty('culverin');
-    expect(before.unlocks.unlocked.some(id => id.startsWith('culverin'))).toBe(false);
-    await expect(off.build({spot: 'cannon_1', kind: 'culverin', actionUid: 'c-off'})).rejects.toMatchObject({status: 422});
-    expect((await off.startWave({where: 'own', actionUid: 'w-off'})).rules).toBeUndefined();
-    const answer = await on.island();
+    const fake = createFakeIslandApi();
+    const answer = await fake.island();
     expect(answer.spots.find(item => item.id === 'cannon_1').kinds).toEqual(['cannon', 'mortar', 'harpoon', 'swivel', 'culverin']);
     expect(answer.prices.kinds.culverin).toEqual(CULVERIN_CARD.price);
-    const built = await on.build({spot: 'cannon_1', kind: 'culverin', actionUid: 'c-on'});
+    const built = await fake.build({spot: 'cannon_1', kind: 'culverin', actionUid: 'c-on'});
     expect(built.spots.find(item => item.id === 'cannon_1')).toMatchObject({kind: 'culverin', built: true, level: 1});
-    expect((await on.startWave({where: 'own', actionUid: 'w-on'})).rules).toEqual(['defenses_v2']);
+    expect((await fake.startWave({where: 'own', actionUid: 'w-on'})).rules).toEqual(SIM_RULES);
+    expect(SIM_RULES).toContain('defenses_v2');
   });
 });
