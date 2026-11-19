@@ -31,6 +31,26 @@ CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' --with pglast 
 
 The `--tb=no` bound prevents an unexpected story assertion from copying protected prose into output. This command uses disposable SQL and no production credentials. Check actual skips/results and the current package fixtures; a source-only parse is not a transactional/concurrency proof. This documentation task does not rerun the full application suite.
 
+The [19 November source manifest](economy/migration-candidate-20261119.json) pins every
+repository migration at `3bdd8eda` with MD5 and SHA-256; it contains no installed
+database inventory. Its ordinary regression rejects omitted, retroactively added
+or changed SQL within the pinned version range; later migrations remain allowed.
+The opt-in catch-up regression builds an intentionally incomplete synthetic schema,
+replays the complete chronological suffix (including interleaved legacy files),
+and compares saved data, function definitions, ownership, grants, RLS, policies and
+triggers with a full installation. It also exercises real legacy game creation and
+repeat-safe joining under `service_role`. Run these focused checks from `backend/`:
+
+```bash
+uv run pytest -q server/tests/test_migration_candidate_manifest.py
+CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q --tb=no server/tests/island_sql/test_migration_catchup_sql.py
+```
+
+This rehearsal uses no production records or credentials and makes no live calls.
+It does not prove an operator backup/restore, a chosen tool's transaction/cutover
+behavior, live schema readiness or authenticated browser Create/Join acceptance.
+Those remain release gates. Preparation is tracked in [#601](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/601).
+
 For each database file, the coordinator follows the standing protocol: an independent subagent reviews the file against read-only live state and the chain; scratch/tests pass; live history/counts/required ownership and privileges are read; one file is applied per call in timestamp order; exact stored-text MD5 and repository version are proven; expected counts and security-advisor findings are checked. Only then push code that reads the new objects. Report each application. `150000` is unused because G12 required no migration; do not fill a reserved timestamp for an unrelated fix.
 
 ## T55/T60 structure recovery release gate
