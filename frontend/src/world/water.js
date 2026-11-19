@@ -288,7 +288,8 @@ export function createWater(scene) {
       const backdrop = findBackdrop(group);
       try {
         if (!backdrop) throw new Error('no backdrop');
-        const field = readField(backdrop.material.map.image);
+        const texture = backdrop.material.map;
+        const field = readField(texture.userData.coastSource ?? texture.image);
         coastTexture.image.data.set(field);
         backdrop.updateWorldMatrix(true, false);
         outline(seaOutline(field, backdrop.matrixWorld));
