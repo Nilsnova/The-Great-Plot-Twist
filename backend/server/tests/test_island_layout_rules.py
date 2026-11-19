@@ -77,6 +77,18 @@ def test_new_defaults_step_aside_for_saved_cannon_and_wall_placements():
     assert layout.positions_of(RULES, {})["tower_1"] == (14, 3)
 
 
+def test_new_home_defaults_keep_an_older_wall_on_its_previously_settled_lane():
+    # This legacy row predates wall lanes. The old map displayed it at (2.5, 14.5),
+    # which is covered by the new house_1 default but clear of its previous anchor.
+    stored = {"wall_1": (5, 11), "wall_6": (-18.5, -3)}
+    placed = layout.positions_of(RULES, stored)
+    assert placed["wall_1"] == (2.5, 14.5)
+    assert placed["wall_6"] == stored["wall_6"]
+    assert placed["house_1"] == (7, -6)
+    assert stored["wall_1"] == (5, 11)
+    assert layout.route_open(RULES, placed)
+
+
 def test_the_layout_version_is_1_for_an_old_save_and_2_once_something_moved():
     assert layout.info_of(RULES, {}).version == 1
     assert layout.info_of(RULES, {"wall_1": (-17, -4)}).version == 2
