@@ -3,7 +3,9 @@ import assert from 'node:assert/strict';
 import {createHash,randomUUID} from 'node:crypto';
 import {readFile,mkdir,writeFile} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
-import {createClients,api,land} from './clients.mjs';
+import {chromium} from 'playwright-core';
+import {api,land} from './clients.mjs';
+import {loadRuntime} from './runtime.mjs';
 import {observe,install,admit} from './observer.mjs';
 import {sourceEvidence,servedSourceEvidence} from './source.mjs';
 const candidate='92e7c3b6d68a8636a638606a605efa534ea3fb83',production='64ee02b360d68836b2de9247121ab47dc6a3ecbf';
@@ -47,12 +49,24 @@ async function pointer(page,selector){const locator=typeof selector==='string'?p
   return {x,y,enabled:!node.disabled,hit:node===document.elementFromPoint(x,y)||node.contains(document.elementFromPoint(x,y))};});
  assert.ok(hit.enabled&&hit.hit,'A physical UI action must hit its current enabled control');await page.mouse.click(hit.x,hit.y);}
 try{
- env=await createClients({labels:['ship-legacy-owner'],runtimePath,expectedCommit:production});const actor=env.clients[0],page=actor.page;
+ const runtime=await loadRuntime(runtimePath),saved=JSON.parse(await readFile('/tmp/mp505-ship-legacy/host-client.json','utf8'));
+ const browser=await chromium.launch({executablePath:'/usr/bin/chromium',headless:true,args:['--no-sandbox','--disable-dev-shm-usage','--disable-gpu',
+  '--ignore-certificate-errors-spki-list='+runtime.certificateSpki]});
+ env={runtime,servedSources:servedSourceEvidence(runtime),close:()=>browser.close()};
+ const page=await browser.newPage({viewport:{width:1280,height:800}}),actor={actorId:saved.actorId,label:'ship-legacy-owner'};
  report.servedPrimaryBefore=env.servedSources;
- await page.context().addInitScript(session=>{if(location.origin==='http://127.0.0.1:55107'&&!sessionStorage.getItem('plot-twist-auth-v1'))sessionStorage.setItem('plot-twist-auth-v1',JSON.stringify(session));},actor.session);
  await page.goto('http://127.0.0.1:55107/?oneisland=0',{waitUntil:'domcontentloaded'});
+ await page.evaluate(async({key,session,id})=>{const {createAuthClient}=await import('/src/online/supabase-sdk.js');
+  const client=createAuthClient(location.origin+'/provider',key,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
+  const result=await client.auth.setSession({access_token:session.access_token,refresh_token:session.refresh_token});
+  if(result.error||result.data.user?.id!==id)throw Error('Actual provider SDK session restoration failed');
+  sessionStorage.setItem('plot-twist-auth-v1',JSON.stringify(result.data.session));client.auth.stopAutoRefresh();
+ },{key:runtime.anonKey,session:saved.session,id:actor.actorId});
+ await page.reload({waitUntil:'domcontentloaded'});
  await page.waitForFunction(async()=>{const {session}=await import('/src/online/session.js');return session.isSignedIn();});
- assert.equal(ok(await api(page,'/api/me')).id,actor.actorId);
+ let verified;for(let attempt=0;attempt<30;attempt++){verified=await api(page,'/api/me');
+  if(verified.status===200&&verified.data.id===actor.actorId)break;await page.waitForTimeout(100);}
+ assert.equal(ok(verified).id,actor.actorId);
  await land(page,{create:true});await finishEntry(page);
  const wallet=async()=>(await observe(`select balance::text as balance,(select count(*)::integer from public.wallet_transactions t where t.player_id=w.player_id) as entries
   from public.wallets w where player_id=$1::uuid`,[actor.actorId],{runtimePath}))[0];
@@ -132,7 +146,12 @@ try{
  const classCode=(await readFile('/tmp/mp505-ship-legacy/class-code','utf8')).trim();
  const anonymous=JSON.parse(await readFile('/tmp/mp505-ship-legacy/anonymous-session.json','utf8'));
  assert.equal(anonymous.user.is_anonymous,true);
- await page.evaluate(session=>{sessionStorage.clear();sessionStorage.setItem('plot-twist-auth-v1',JSON.stringify(session));},anonymous);
+ await page.evaluate(async({session,key})=>{const {createAuthClient}=await import('/src/online/supabase-sdk.js');
+  const client=createAuthClient(location.origin+'/provider',key,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
+  const result=await client.auth.setSession({access_token:session.access_token,refresh_token:session.refresh_token});
+  if(result.error||result.data.user?.id!==session.user.id)throw Error('Actual anonymous provider SDK restoration failed');
+  sessionStorage.clear();sessionStorage.setItem('plot-twist-auth-v1',JSON.stringify(result.data.session));client.auth.stopAutoRefresh();
+ },{session:anonymous,key:runtime.anonKey});
  const admittedResponse=page.waitForResponse(r=>new URL(r.url()).pathname==='/api/demo/join'&&r.request().method()==='POST',{timeout:30000});
  await page.goto('http://127.0.0.1:55107/?oneisland=0&join='+encodeURIComponent(classCode),{waitUntil:'domcontentloaded'});
  await page.locator('.join-form input[name="code"]').waitFor();

@@ -16,7 +16,8 @@ const server=await createServer({root,configFile:resolve(root,'vite.config.js'),
  define:{'import.meta.env.VITE_SUPABASE_URL':JSON.stringify(runtime.providerUrl),
   'import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY':JSON.stringify(runtime.anonKey)},
  server:{host:'127.0.0.1',port:55107,strictPort:true,hmr:false,
-  watch:{ignored:['**/scripts/authenticated-economy/**']},proxy:{'/api':'http://127.0.0.1:58007'}}});
+  watch:{ignored:['**/scripts/authenticated-economy/**']},proxy:{'/api':'http://127.0.0.1:58007',
+   '/provider':{target:runtime.providerUrl,changeOrigin:true,secure:true,ws:true,rewrite:path=>path.replace(/^\/provider(?=\/|$)/,'')}}}});
 await server.listen();await mkdir('/tmp/mp505-ship-legacy',{recursive:true,mode:0o700});
 await writeFile('/tmp/mp505-ship-legacy/front-source.json',JSON.stringify({processId:process.pid,
  expectedTestSource:own.expectedProductionBaseline,servedProductionCandidate:equivalent.expectedProductionBaseline,
