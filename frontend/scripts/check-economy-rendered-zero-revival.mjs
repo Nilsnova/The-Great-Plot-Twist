@@ -18,18 +18,18 @@ await mkdir(output,{recursive:false,mode:0o700});const startedAt=new Date().toIS
 const read=(sql,parameters=[])=>observe(sql,parameters,{runtimePath});
 function note(event,detail={}){facts.push({event,at:new Date().toISOString(),...detail});console.log(JSON.stringify({event,...detail}));}
 async function entry(page){
- const end=Date.now()+60000;
+ const end=Date.now()+60000;let readySince=null;
  while(Date.now()<end){const action=await page.evaluate(()=>{
   const lobby=document.querySelector('.island-card-lobby[open]');if(lobby){const b=[...lobby.querySelectorAll('button')].find(n=>['Look around first','Done'].includes(n.textContent.trim()));if(b){b.click();return 'done';}}
   for(const s of ['dialog.cutscene[open]','.goal-card[open]','.tutorial-card[open]','.shell-screen[open]']){const d=document.querySelector(s),b=d&&[...d.querySelectorAll('button')].find(n=>['Skip','Got it','Resume','Start playing'].includes(n.textContent.trim()));if(b){b.click();return 'continue';}}
-  return null;
- });if(action==='done')return;await page.waitForTimeout(100);}
+  const g=window.__island;return g?.world.current?.id==='home_islet'&&(g.island?.visiting??g.island?.island)&&!document.querySelector('dialog[open]')?'ready':null;
+ });if(action==='done')return;if(action==='ready'){readySince??=Date.now();if(Date.now()-readySince>1500)return;}else readySince=null;await page.waitForTimeout(100);}
  throw Error('Ordinary front door did not reach its final lobby acknowledgement');
 }
 async function enter(page,options={}){
  for(let attempt=0;attempt<4;attempt++){
   try{await land(page,options);await entry(page);return;}
-  catch(error){const skip=page.getByRole('button',{name:'Skip',exact:true}).first();
+  catch(error){if(error.name==='TimeoutError'&&await page.evaluate(()=>{const g=window.__island;return g?.world.current?.id==='home_islet'&&!!(g.island?.visiting??g.island?.island);})) {await entry(page);return;}const skip=page.getByRole('button',{name:'Skip',exact:true}).first();
    if(error.name!=='TimeoutError'||!await skip.isVisible().catch(()=>false))throw error;
    await skip.click();await page.waitForTimeout(150);
   }
