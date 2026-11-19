@@ -148,7 +148,7 @@ try{
  const guestWho=ok(await api(page,'/api/me'));assert.equal(guestWho.id,anonymous.user.id);
  const guestBefore=(await observe('select balance::text as balance from public.wallets where player_id=$1::uuid',[anonymous.user.id],{runtimePath}))[0];
  const guestMarket=ok(await api(page,'/api/market/calls'));
- assert.equal(String(guestMarket.coins),guestBefore.balance);
+ assert.equal(String(guestMarket.balance),guestBefore.balance);
  assert.equal(await page.locator('.hud-coins[data-economy="shared"]').count(),0);
  await pointer(page,'.hud-menu');await pointer(page,page.locator('.shell-screen[open]').getByRole('button',{name:'Harbor',exact:true}));
  await pointer(page,'dialog[open] [data-key="stall:market"]');
@@ -158,7 +158,7 @@ try{
  await page.locator('.market-modal[open]').screenshot({path:output+'/class-personal-market.png'});
  const bankAfterClass=await bank();assert.deepEqual(bankAfterClass,finalBank);assert.deepEqual(await wallet(),privateBeforeAdmission);
  await note('genuine anonymous class-code UI enters personal Harbor',{actualAnonymousProvider:true,admissionThroughVisibleJoin:true,
-  actualPlace:'saltreach_harbor',personalCoins:guestBefore.balance,marketCoins:String(guestMarket.coins),marketCard:classMarketCard,sharedBankUnchanged:true,
+  actualPlace:'saltreach_harbor',personalCoins:guestBefore.balance,marketCoins:String(guestMarket.balance),marketCard:classMarketCard,sharedBankUnchanged:true,
   hostSetup:'One real registered local host was explicitly allowlisted only on the side API; normal host code endpoint generated the disposable code.'});
  report.status='passed';
 }catch(error){report.status='failed';report.error={name:error.name,message:error.message};process.exitCode=1;}
