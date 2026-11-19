@@ -1,0 +1,392 @@
+{
+  "status": "partial",
+  "invocationStatus": "failed",
+  "measuredDriverCommit": "d92f953fef9c5fb7eba8bcd39477f0017ac99e74",
+  "baseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+  "startedAt": "2026-11-19T18:27:23.947Z",
+  "lastCompletedFactAt": "2026-11-19T18:29:00.053Z",
+  "scenarioSha256": "f1c9a9c1ddcbf11305b97249e36d578922cfc074777e27f378d113caa013e9d6",
+  "setup": "Real registered GoTrue pair and normal game entry; explicit fresh service admission with 5000 test coins and saved island unlock50. No naturally earned unlock, combat, clock, HP or outcome claim.",
+  "boundaries": [
+    "An explicit normal product refresh follows free role selection; run3 separately demonstrates the unrefreshed first-click stale construction quote on this unchanged product source.",
+    "Visible product mutations are distinguished from browser-authenticated fetch probes and read-only PostgreSQL observations.",
+    "Local actual-provider candidate only; no hosted application, full multiplayer matrix or combat acceptance claim."
+  ],
+  "facts": [
+    {
+      "event": "visible-free-personal-engineer-selection",
+      "at": "2026-11-19T18:28:34.792Z",
+      "layer": "rendered product",
+      "displayed": "Choose your role\n\ud83e\ude79\nMedic\n\ud83d\udd27\nEngineer\n\ud83d\udd2b\nGunner\n\nConstruction and building upgrades cost 10% less.\n\nBecome an Engineer",
+      "available": "5000",
+      "fixture": "Existing personal eligibility only"
+    },
+    {
+      "event": "visible-shared-bank-on-two-registered-clients",
+      "at": "2026-11-19T18:28:35.348Z",
+      "layer": "rendered product",
+      "available": "5000",
+      "committed": "0"
+    },
+    {
+      "event": "visible-invited-member-quoted-build",
+      "at": "2026-11-19T18:28:46.822Z",
+      "layer": "rendered product",
+      "quote": "9",
+      "available": "4991",
+      "cardText": "Wall\n\n\u00d7\n\nStops boarders until they break it; ships shell it.\n\nPaid from the island treasury\n\nBuild \u00b7 \ud83e\ude99 9\n\nIsland treasury \u00b7 \ud83e\ude99 5,000 available \u00b7 \ud83e\ude99 0 committed"
+    },
+    {
+      "event": "browser-originated-exact-retry-and-old-client-probes",
+      "at": "2026-11-19T18:28:48.780Z",
+      "layer": "authenticated fetch from actual browser",
+      "sameUid": 200,
+      "changedUidIntent": 409,
+      "oldClientRead": 409,
+      "noExtraDebit": true
+    },
+    {
+      "event": "visible-discount-commits-engineer-role",
+      "at": "2026-11-19T18:28:53.604Z",
+      "layer": "rendered product plus actual personal read",
+      "discountedBuild": "9",
+      "displayed": "\ud83d\udd27\nYour role: Engineer\n\ud83e\ude79\nMedic\n\ud83d\udd27\nEngineer\n\ud83d\udd2b\nGunner\n\nYour musket and weapon do 20% more damage and reload 15% faster.\n\nUnlocks Dead eye (top of Marksman).\n\nBecome a Gunner",
+      "commitmentState": "pending",
+      "roleSwitchDisabled": true
+    },
+    {
+      "event": "visible-member-research-cannon-1",
+      "at": "2026-11-19T18:29:00.053Z",
+      "layer": "rendered product",
+      "displayed": "\ud83d\udca3\nTower skills\nCannon \u00b7 tier 1\n\nCannon skills\n\nResearch \u00b7 \ud83e\ude99 180",
+      "intent": {
+        "branch": "cannon",
+        "tier": 1,
+        "choice": null,
+        "change": false,
+        "expected": {
+          "tier": 0,
+          "choice2": null,
+          "choice3": null,
+          "revision": "0"
+        },
+        "quotedCoins": "180",
+        "economy": {
+          "mode": "island_shared",
+          "version": 1,
+          "islandOwner": "fixture-identity-1",
+          "runEpoch": "fixture-identity-2"
+        },
+        "actionUid": "v8alht0r3d2lkgow",
+        "code": "ISLE-REDACTED"
+      },
+      "research": {
+        "tier": 1,
+        "choice2": null,
+        "choice3": null,
+        "revision": "1",
+        "branch": "cannon",
+        "coinsPaid": "180"
+      },
+      "available": "4811"
+    }
+  ],
+  "visibleRequests": [
+    {
+      "path": "/api/captain/role",
+      "status": 200,
+      "body": {
+        "progressionVersion": 1,
+        "expectedRevision": "0",
+        "actionUid": "osg6xzm0qxuk7ziu",
+        "role": "engineer"
+      },
+      "data": {
+        "captain": {
+          "role": "engineer",
+          "level": 5,
+          "revision": "1",
+          "canRespec": true,
+          "assignmentWaveId": null,
+          "personalBestWave": 20,
+          "roleLockedReason": null,
+          "engineerCommitment": null,
+          "progressionVersion": 1,
+          "respecBlockedReason": null
+        },
+        "skills": {
+          "role": "engineer",
+          "known": [],
+          "spent": 0,
+          "earned": 10,
+          "points": 10
+        }
+      }
+    },
+    {
+      "path": "/api/island/build",
+      "status": 200,
+      "body": {
+        "spot": "wall_1",
+        "kind": "wall",
+        "instanceId": null,
+        "expectedLevel": 0,
+        "quotedCoins": "9",
+        "economy": {
+          "mode": "island_shared",
+          "version": 1,
+          "islandOwner": "fixture-identity-1",
+          "runEpoch": "fixture-identity-2"
+        },
+        "actionUid": "5cm9ze243bn8b4pr",
+        "code": "ISLE-REDACTED"
+      },
+      "data": {
+        "status": "done",
+        "repeat": false,
+        "currentEconomy": {
+          "mode": "island_shared",
+          "version": 1,
+          "islandOwner": "fixture-identity-1",
+          "accountId": "fixture-identity-3",
+          "runEpoch": "fixture-identity-2",
+          "revision": "2",
+          "treasury": {
+            "balanceCoins": "4991",
+            "committedCoins": "0",
+            "availableCoins": "4991"
+          }
+        },
+        "receipt": {
+          "receiptId": "fixture-identity-4",
+          "actionUid": "5cm9ze243bn8b4pr",
+          "action": "build",
+          "actorId": "fixture-identity-5",
+          "origin": {
+            "mode": "island_shared",
+            "version": 1,
+            "islandOwner": "fixture-identity-1",
+            "accountId": "fixture-identity-3",
+            "runEpoch": "fixture-identity-2"
+          },
+          "result": {
+            "spot": "wall_1",
+            "kind": "wall",
+            "level": 1,
+            "instanceId": "fixture-identity-6",
+            "chargedCoins": "9",
+            "refundedCoins": "0",
+            "engineerCommitmentId": "fixture-identity-7",
+            "treasuryReceiptId": "fixture-identity-8"
+          }
+        }
+      }
+    },
+    {
+      "path": "/api/island/research",
+      "status": 200,
+      "body": {
+        "branch": "cannon",
+        "tier": 1,
+        "choice": null,
+        "change": false,
+        "expected": {
+          "tier": 0,
+          "choice2": null,
+          "choice3": null,
+          "revision": "0"
+        },
+        "quotedCoins": "180",
+        "economy": {
+          "mode": "island_shared",
+          "version": 1,
+          "islandOwner": "fixture-identity-1",
+          "runEpoch": "fixture-identity-2"
+        },
+        "actionUid": "v8alht0r3d2lkgow",
+        "code": "ISLE-REDACTED"
+      },
+      "data": {
+        "status": "done",
+        "repeat": false,
+        "currentEconomy": {
+          "mode": "island_shared",
+          "version": 1,
+          "islandOwner": "fixture-identity-1",
+          "accountId": "fixture-identity-3",
+          "runEpoch": "fixture-identity-2",
+          "revision": "3",
+          "treasury": {
+            "balanceCoins": "4811",
+            "committedCoins": "0",
+            "availableCoins": "4811"
+          }
+        },
+        "receipt": {
+          "receiptId": "fixture-identity-9",
+          "actorId": "fixture-identity-5",
+          "actionUid": "v8alht0r3d2lkgow",
+          "action": "research",
+          "origin": {
+            "mode": "island_shared",
+            "version": 1,
+            "islandOwner": "fixture-identity-1",
+            "accountId": "fixture-identity-3",
+            "runEpoch": "fixture-identity-2"
+          },
+          "result": {
+            "chargedCoins": "180",
+            "treasuryReceiptId": "fixture-identity-10",
+            "research": {
+              "tier": 1,
+              "choice2": null,
+              "choice3": null,
+              "revision": "1",
+              "branch": "cannon",
+              "coinsPaid": "180"
+            },
+            "building": null,
+            "wreckPaid": null
+          }
+        }
+      }
+    }
+  ],
+  "sourceBefore": {
+    "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+    "actualCheckoutHead": "d92f953fef9c5fb7eba8bcd39477f0017ac99e74",
+    "productionDiffFromBaseline": "empty",
+    "paths": [
+      "backend/server",
+      "backend/content",
+      "frontend/src",
+      "supabase/migrations",
+      "backend/uv.lock",
+      "backend/pyproject.toml",
+      "frontend/package-lock.json",
+      "frontend/package.json",
+      ":(exclude)backend/server/tests"
+    ]
+  },
+  "servedBefore": [
+    {
+      "service": "api",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "2de87a1c7a95423f93e83f7f254bff624f8b9eba",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    },
+    {
+      "service": "frontend",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "2de87a1c7a95423f93e83f7f254bff624f8b9eba",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    }
+  ],
+  "helpersBefore": {
+    "clients.mjs": "dfa176b33a56bc0f6c5a19a219d5c01ddb2c071fe66331d6d15cb181cf7ac6c0",
+    "observer.mjs": "40cb288da9f9a80e337fba5a39a12b1b23501ad1ff48a2a4614975492997f140",
+    "runtime.mjs": "d1387a35fd7243df58e8d9589586034b3a098489bb20e43bece9b6b45040865f",
+    "source.mjs": "56d138914dc5b4e15159162bb21db68c985b2c9083c2e5bac4b34a90502ea8d9",
+    "observe.py": "18707a8ed12d18c69a4c04de1a416089ccbe89619f5f6f6e9a270840df551839",
+    "config.py": "9c1ab2bc84f0e5da14748624064a8a68357a52a44d3d79473251302a46082b47"
+  },
+  "failure": {
+    "name": "Error",
+    "message": "locator.click: Error: strict mode violation: locator('.island-card-tech[open]').locator('[data-option=\"rapid_2\"]') resolved to 2 elements:\n    1) <button type=\"button\" data-state=\"open\" aria-pressed=\"false\" data-option=\"rapid_2\" data-focus=\"tech-rapid_2\" class=\"island-node island-research-option is-ready\" aria-label=\"Rapid II, Cannon skills tier 2, one of two, can research, undefined\">\u2026</button> aka getByRole('button', { name: 'Rapid II, Cannon skills tier' }).first()\n    2) <button type=\"button\" data-state=\"open\" aria-pressed=\"false\" data-option=\"rapid_2\" data-focus=\"tech-rapid_2\" class=\"island-node island-research-option is-ready\" aria-label=\"Rapid II, Cannon skills tier 2, one of two, can research, undefined\">\u2026</button> aka getByRole('button', { name: 'Rapid II, Cannon skills tier' }).nth(1)\n\nCall log:\n\u001b[2m  - waiting for locator('.island-card-tech[open]').locator('[data-option=\"rapid_2\"]')\u001b[22m\n",
+    "stack": "locator.click: Error: strict mode violation: locator('.island-card-tech[open]').locator('[data-option=\"rapid_2\"]') resolved to 2 elements:\n    1) <button type=\"button\" data-state=\"open\" aria-pressed=\"false\" data-option=\"rapid_2\" data-focus=\"tech-rapid_2\" class=\"island-node island-research-option is-ready\" aria-label=\"Rapid II, Cannon skills tier 2, one of two, can research, undefined\">\u2026</button> aka getByRole('button', { name: 'Rapid II, Cannon skills tier' }).first()\n    2) <button type=\"button\" data-state=\"open\" aria-pressed=\"false\" data-option=\"rapid_2\" data-focus=\"tech-rapid_2\" class=\"island-node island-research-option is-ready\" aria-label=\"Rapid II, Cannon skills tier 2, one of two, can research, undefined\">\u2026</button> aka getByRole('button', { name: 'Rapid II, Cannon skills tier' }).nth(1)\n\nCall log:\n\u001b[2m  - waiting for locator('.island-card-tech[open]').locator('[data-option=\"rapid_2\"]')\u001b[22m\n\n    at /workspace/mp-economy/next-505-idle-browser/frontend/scripts/check-economy-idle-browser-provider.mjs:159:58"
+  },
+  "postInterruptionQualification": {
+    "checkedAt": "2026-11-19T18:51:43.652Z",
+    "timing": "Post-interruption byte comparison; not a captured end-of-run fence or a provider rerun",
+    "scenarioSha256": "f1c9a9c1ddcbf11305b97249e36d578922cfc074777e27f378d113caa013e9d6",
+    "scenarioMatchesMeasured": true,
+    "helperHashes": {
+      "clients.mjs": "dfa176b33a56bc0f6c5a19a219d5c01ddb2c071fe66331d6d15cb181cf7ac6c0",
+      "observer.mjs": "40cb288da9f9a80e337fba5a39a12b1b23501ad1ff48a2a4614975492997f140",
+      "runtime.mjs": "d1387a35fd7243df58e8d9589586034b3a098489bb20e43bece9b6b45040865f",
+      "source.mjs": "56d138914dc5b4e15159162bb21db68c985b2c9083c2e5bac4b34a90502ea8d9",
+      "observe.py": "18707a8ed12d18c69a4c04de1a416089ccbe89619f5f6f6e9a270840df551839",
+      "config.py": "9c1ab2bc84f0e5da14748624064a8a68357a52a44d3d79473251302a46082b47"
+    },
+    "helpersMatchMeasuredStart": true,
+    "checkout": {
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "c6facf6db9892b557ff3f190922e4520c79e4347",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    },
+    "servedSources": [
+      {
+        "service": "api",
+        "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+        "actualCheckoutHead": "2de87a1c7a95423f93e83f7f254bff624f8b9eba",
+        "productionDiffFromBaseline": "empty",
+        "paths": [
+          "backend/server",
+          "backend/content",
+          "frontend/src",
+          "supabase/migrations",
+          "backend/uv.lock",
+          "backend/pyproject.toml",
+          "frontend/package-lock.json",
+          "frontend/package.json",
+          ":(exclude)backend/server/tests"
+        ]
+      },
+      {
+        "service": "frontend",
+        "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+        "actualCheckoutHead": "2de87a1c7a95423f93e83f7f254bff624f8b9eba",
+        "productionDiffFromBaseline": "empty",
+        "paths": [
+          "backend/server",
+          "backend/content",
+          "frontend/src",
+          "supabase/migrations",
+          "backend/uv.lock",
+          "backend/pyproject.toml",
+          "frontend/package-lock.json",
+          "frontend/package.json",
+          ":(exclude)backend/server/tests"
+        ]
+      }
+    ]
+  },
+  "limits": [
+    "Invocation stopped on duplicate rapid_2 selector before tier2 mutation. The pair was lost after interruption; no later step or single full CLI pass is claimed.",
+    "No captured end-of-run source/helper fence exists; the separately timestamped later unchanged-byte comparison is not relabeled as one.",
+    "Unrefreshed Engineer first click still failed on this product source in earlier run; separate fix/candidate evidence owns that correction."
+  ]
+}

@@ -3,6 +3,7 @@
 - Issue: [#505](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/505), under [#492](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/492).
 - Responsible teammate: Ianno Hollensteiner (`Iannomh123456`), assisted by Codex.
 - Scope: a bounded actual-provider browser bridge for idle economy and lifecycle controls. No product, schema or shared helper changes.
+- Evidence: [measured observations and exact boundaries](../docs/evidence/MP-ECO-22-visible-idle/README.md). The initial idle invocation is partial: six facts completed before a duplicate research selector stopped it. Intended rows below are not a claim that every row was executed.
 
 ## Candidate and setup
 
