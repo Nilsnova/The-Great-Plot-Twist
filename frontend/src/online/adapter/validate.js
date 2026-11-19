@@ -25,6 +25,7 @@ export function validateIntent(name, args) {
   const [first] = args;
   if (name === 'signIn' && first !== undefined && !validSignIn(first)) return invalid('invalid_request');
   if (name === 'deleteMyData' && first?.confirm !== true) return invalid('confirmation_required');
+  if (name === 'deleteMyData' && first.confirmOwnedIslandDeletion !== undefined && typeof first.confirmOwnedIslandDeletion !== 'boolean') return invalid('invalid_request');
   if (name === 'setEmote' && !['wave', 'cheer', 'point', 'lantern', 'shrug'].includes(first)) {
     return invalid('invalid_emote');
   }

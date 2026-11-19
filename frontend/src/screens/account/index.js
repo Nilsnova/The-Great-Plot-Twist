@@ -18,7 +18,7 @@ function stateLabel(value,labels){return labels[value]??(String(value??'').repla
 
 export function createAccountScreen({send}){
   const element=node('section','account-screen');element.setAttribute('aria-label','Account');
-  let view={},feedback='',busy=false,deleteArmed=false,buttons=[],lastIntent=null,disposed=false,request=0,expiryAttention=false;
+  let view={},feedback='',busy=false,deleteArmed=false,ownedDelete=false,buttons=[],lastIntent=null,disposed=false,request=0,expiryAttention=false;
   const connection=createConnectionBanner({inline:true,send:(...args)=>send?.(...args)});
   // Made once: each render moves the same form, so a typed address or code is kept.
   const email=createEmailCodeForm({send,focusPrefix:'account-email'});
@@ -32,7 +32,7 @@ export function createAccountScreen({send}){
   function clearButtons(){buttons.forEach(item=>item.dispose());buttons=[];}
   function render(){
     const account=accountOf(view),name=String(account.captainName??'Captain pending'),state=account.state??'signed_out';
-    if(state==='signed_out')deleteArmed=false;
+    if(state==='signed_out'){deleteArmed=false;ownedDelete=false;}
     clearButtons();element.replaceChildren(node('h3','','Account'));
     const named=account.captainName!=null||state==='signed_in';
     element.append(node('p','account-status',named?`${stateLabel(state,accountStates)}, ${name}`:stateLabel(state,accountStates)));
@@ -61,10 +61,10 @@ export function createAccountScreen({send}){
     if(state==='signed_in'||state==='expired'){
       if(deleteArmed){
         const confirm=node('section','account-delete-confirm');confirm.setAttribute('aria-labelledby','account-delete-title');
-        const heading=node('h4','','Delete all your player data?');heading.id='account-delete-title';
-        const description=node('p','','This removes your account data, captain name, coins, islet buildings and ledger history. This cannot be undone.');description.id='account-delete-description';confirm.append(heading,description);
-        const controls=node('div','account-actions');const confirmButton=action(controls,'Confirm deletion','deleteMyData',[{confirm:true}],'account-delete-confirm',busy);confirmButton.setAttribute('aria-describedby',description.id);
-        const cancel=createButton({label:'Keep my data',variant:'quiet',onClick:()=>{deleteArmed=false;feedback='';focusKey='account-delete';refresh();}});
+        const heading=node('h4','',ownedDelete?'Delete your account and owned island?':'Delete all your player data?');heading.id='account-delete-title';
+        const description=node('p','',ownedDelete?'Your shared island will also be deleted. It will not be transferred to another player. Other players keep their personal Captains and progress. This cannot be undone.':'This removes your account data, captain name, coins, islet buildings and ledger history. This cannot be undone.');description.id='account-delete-description';confirm.append(heading,description);
+        const controls=node('div','account-actions');const confirmButton=action(controls,ownedDelete?'Delete account and island':'Confirm deletion','deleteMyData',[{confirm:true,...(ownedDelete?{confirmOwnedIslandDeletion:true}:{})}],'account-delete-confirm',busy);confirmButton.setAttribute('aria-describedby',description.id);
+        const cancel=createButton({label:'Keep my data',variant:'quiet',onClick:()=>{deleteArmed=false;ownedDelete=false;lastIntent=null;call.clear();feedback='';focusKey='account-delete';refresh();}});
         cancel.element.dataset.focus='account-delete-cancel';buttons.push(cancel);controls.append(cancel.element);confirm.append(controls);element.append(confirm);
       }else action(actions,'Delete my data','armDelete',[],'account-delete',busy);
     }
@@ -85,13 +85,22 @@ export function createAccountScreen({send}){
     focusKey=null;
   }
   async function invoke(method,...args){
-    if(method==='armDelete'){deleteArmed=true;feedback='Review the full deletion notice and press Confirm deletion to continue.';focusKey='account-delete-confirm';refresh();return;}
+    if(method==='armDelete'){deleteArmed=true;ownedDelete=false;feedback='Review the full deletion notice and press Confirm deletion to continue.';focusKey='account-delete-confirm';refresh();return;}
     if(busy||disposed||(lastIntent?.[0]===method&&call.read().remaining>0))return;
     const source=document.activeElement;refusedFocus=source?.dataset.intent===method?source.dataset.focus:[...element.querySelectorAll('[data-intent]')].find(item=>item.dataset.intent===method)?.dataset.focus??refusedFocus;
     busy=true;const token=++request;feedback='';expiryAttention=false;lastIntent=[method,...args];call.loading();refresh();
-    try{const result=await send?.(method,...args);if(disposed||token!==request)return;if(result?.accepted)call.succeed({message:result.message});else call.fail(result??intentFailure());if(result?.accepted&&method==='deleteMyData')deleteArmed=false;}
+    try{const result=await send?.(method,...args);if(disposed||token!==request)return;
+      if(method==='deleteMyData' && result?.reason==='owned_island_confirmation_required'){
+        deleteArmed=true;ownedDelete=true;lastIntent=null;call.clear();feedback='Review the owned-island deletion notice and confirm separately.';focusKey='account-delete-confirm';
+      }else if(method==='deleteMyData' && result?.reason==='confirmation_required'){
+        deleteArmed=false;ownedDelete=false;lastIntent=null;call.clear();feedback=result.message;focusKey='account-delete';
+      }else{
+        if(result?.accepted)call.succeed({message:result.message});else call.fail(result??intentFailure());
+        if(result?.accepted&&method==='deleteMyData'){deleteArmed=false;ownedDelete=false;}
+      }
+    }
     catch(error){if(!disposed&&token===request)call.fail(intentFailure(error));}
-    finally{busy=false;if(!disposed)refresh();}
+    finally{if(token===request){busy=false;if(!disposed)refresh();}}
   }
   function refresh(){
     if(!focusKey&&element.contains(document.activeElement))focusKey=document.activeElement.dataset.focus??null;
@@ -103,11 +112,11 @@ export function createAccountScreen({send}){
   }
   function update(next){
     const previous=accountOf(view).state;view=next??{};const state=accountOf(view).state;
-    if(state==='signed_out')deleteArmed=false;
+    if(state==='signed_out'){deleteArmed=false;ownedDelete=false;if(previous!=='signed_out'){request++;busy=false;lastIntent=null;feedback='';call.clear();}}
     if(state==='expired'&&(previous!=='expired'||call.phase==='idle'))showExpiry();
     else if(state!=='expired'&&expiryAttention){expiryAttention=false;call.clear();}
     refresh();
   }
   refresh();
-  return {element,update,signIn:()=>invoke('signIn'),showExpiry(){showExpiry();refresh();},tick(){},close(){request++;expiryAttention=false;call.clear();},dispose(){disposed=true;call.dispose();connection.dispose();clearButtons();email.dispose();element.remove();}};
+  return {element,update,signIn:()=>invoke('signIn'),showExpiry(){showExpiry();refresh();},tick(){},close(){request++;busy=false;deleteArmed=false;ownedDelete=false;lastIntent=null;feedback='';expiryAttention=false;call.clear();},dispose(){disposed=true;call.dispose();connection.dispose();clearButtons();email.dispose();element.remove();}};
 }
