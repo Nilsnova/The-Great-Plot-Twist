@@ -2,6 +2,8 @@
 import * as THREE from 'three';
 import { createFrameState } from './frame-state.js';
 import {createHarborLife} from '../ambient/harbor-life.js';
+import {HOME_LANTERN_LIGHT} from '../../art/home-shore.js';
+import {animateLandmarkMaterial} from '../../island/landmark-motion.js';
 import { loadArt, placeArt } from '../art.js';
 import { paintedBlob } from '../primitives.js';
 import { swayMaterial, updateSway } from '../wind.js';
@@ -16,12 +18,15 @@ import { makeMooring } from './mooring.js';
 import {projectGround} from '../projection.js';
 import {createHomeRelief} from './home-relief.js';
 
+const HOME_PROP_ART = {bench: 'home-bench', barrel: 'home-barrel', lantern: 'home-lantern'};
+
 // Compose all art, colliders and cleanup under one place root for predictable travel disposal.
 export async function createSettlement(ctx) {
   const { id } = ctx;
   const data = places[id];
   const placements = [...(layouts[id] ?? []), ...(ctx.placements ?? [])];
   const home = id === 'home_islet';
+  const appearance = asset => home && Object.hasOwn(HOME_PROP_ART, asset) ? HOME_PROP_ART[asset] : asset;
   const mooring = home ? homeMooring : [];
   const trees = edgeTrees[id] ?? [];
   const extraArtIds = [
@@ -31,7 +36,7 @@ export async function createSettlement(ctx) {
       : []),
   ];
   const artIds = [...new Set([
-    ...placements.map(placement => placement.asset),
+    ...placements.map(placement => appearance(placement.asset)),
     ...mooring.map(placement => placement.asset),
     'oak', 'pine', 'birch', 'rock', 'flowers', 'grass-tuft',
     ...extraArtIds,
@@ -49,8 +54,11 @@ export async function createSettlement(ctx) {
         x: x + .52, z: z + .68, width: 1.52, depth: 1.32, opacity: .34, innerOpacity: .21,
       })));
     }
+    let lanternLight;
     placements.forEach(item => {
-      const mesh = placeArt(group, art, item.asset, item.x, item.z);
+      const asset = appearance(item.asset);
+      const mesh = placeArt(group, art, asset, item.x, item.z);
+      if (asset === 'home-lantern') lanternLight ??= animateLandmarkMaterial(mesh.material, {lights: [HOME_LANTERN_LIGHT], lightStrength: 2});
       if (item.asset === 'ferry-pier') mesh.renderOrder = 6;
       if (item.asset === 'fog-bank') mesh.renderOrder = 920;
     });
@@ -130,7 +138,8 @@ export async function createSettlement(ctx) {
           const time = home ? shoreTime : state.time;
           foliage.forEach(mesh => updateSway(mesh.material, time, home ? breeze : wind, still ? 0 : home ? 1.36 : 1));
           undergrowth.forEach(mesh => updateSway(mesh.material, time * 1.21, breeze, still ? 0 : .84));
-          shoreBoat?.update(time, wind, still);
+          shoreBoat?.update(time, wind, still, state.night);
+          lanternLight?.update({time, night: state.night, still});
         }
         if (windowGlow) windowGlow.material.opacity = state.night * .95;
         const brightness = state.night;
