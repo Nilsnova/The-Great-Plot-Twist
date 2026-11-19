@@ -111,53 +111,77 @@ function grassTuft(c, {w, h}) {
   }
 }
 function bench(c, {w, h}) {
-  const g = h - 3; shadow(c, w / 2, g, 20, 3);
-  const bracket = linear(c, 0, g - 20, 0, g, [[0, '#678199'], [.44, '#405a73'], [1, '#293b4f']]);
-  for (const x of [8, 36]) {
-    part(c, rect(x + .55, g - 18, 2.9, 7, .7), bracket, {width: .75, line: '#342d26'});
-    part(c, rect(x, g - 11, 4, 11, 1), bracket, {line: '#342d26'});
+  const g = h - 3, y = g - 12;
+  shadow(c, w / 2 + 1.5, g, 20, 2.55, .18);
+  const edge = {width: .64, line: '#503a2c', shade: false};
+  for (const x of [9, 36]) {
+    part(c, poly([[x + 1, g - 19], [x + 4, g - 18], [x + 2.8, g - 4.5], [x, g - 4.5]], .55), '#53667a', edge);
+    part(c, poly([[x, y + 1], [x + 4, y + 1], [x + 2.8, g], [x - .9, g]], .58),
+      linear(c, x - 1, 0, x + 4, 0, [[0, '#596878'], [.36, '#3f566e'], [1, '#293746']]), edge);
+    stroke(c, [[x + .3, y + 4], [x - .2, g - 1.6]], '#8999a4', .52);
   }
-  // Sun on the front edge of the top board, deeper varnish below it.
-  part(c, rect(4, g - 22, 40, 5, 2),
-    linear(c, 0, g - 22, 0, g - 17, [[0, '#dea36b'], [.5, '#b0794c'], [1, '#764d37']]),
-    {gloss: rect(7, g - 21.4, 29, .8, .4), light: '#efbd83'});
-  part(c, rect(3, g - 14, 42, 5, 2),
-    linear(c, 0, g - 14, 0, g - 9, [[0, '#e7ad6d'], [.43, '#ba7e49'], [.55, '#8e5939'], [1, '#714732']]),
-    {gloss: rect(6, g - 13.5, 32, .8, .4), light: '#f0c58a'});
-  for (const x of [9.8, 37.8]) part(c, ellipse(x, g - 19.5, .9), '#cfa064', {width: .4, shade: false});
+  // The backrest and seat each have a lit top edge and a darker, thicker front face.
+  part(c, poly([[5, g - 20], [7.8, g - 22.2], [41.4, g - 22.2], [44, g - 20]], .62), '#e4b47d', edge);
+  part(c, poly([[5, g - 20], [44, g - 20], [43.2, g - 15.1], [5.5, g - 15.1]], .69),
+    linear(c, 0, g - 20, 0, g - 15, [[0, '#ba8452'], [.37, '#a4673e'], [1, '#765036']]), edge);
+  part(c, poly([[3.9, y], [8.6, y - 4.8], [42.2, y - 4.8], [44.8, y]], .71),
+    linear(c, 0, y - 4.8, 0, y, [[0, '#bd8b5a'], [.34, '#dda971'], [1, '#f0c58c']]), edge);
+  part(c, poly([[3.9, y], [44.8, y], [43.5, y + 3.25], [4.4, y + 3.25]], .68),
+    linear(c, 0, y, 0, y + 3.25, [[0, '#d9a16a'], [.36, '#a46c42'], [1, '#6b4936']]), edge);
+  stroke(c, [[7, y - 2], [21, y - 2.2], [42.2, y - 2]], '#8b623f', .49, .8);
+  stroke(c, [[7.5, g - 21.2], [40, g - 21.2]], '#f3cd94', .63);
+  for (const x of [10.5, 37]) part(c, ellipse(x, g - 17.85, .68), '#ddb47c', {width: .35, line: '#704f34', shade: false});
 }
 function barrel(c, {w, h}) {
-  const g = h - 3, cx = w / 2; shadow(c, cx, g, 9, 2.6);
-  const body = new Path2D(); body.moveTo(cx - 7, g - 25); body.quadraticCurveTo(cx - 10.5, g - 13, cx - 7, g - 1); body.lineTo(cx + 7, g - 1);
-  body.quadraticCurveTo(cx + 10.5, g - 13, cx + 7, g - 25); body.closePath();
-  const oak = linear(c, cx - 8, 0, cx + 9, 0,
-    [[0, '#806348'], [.26, '#c68d54'], [.44, '#d7a064'], [.73, '#99623c'], [1, '#674333']]);
-  part(c, body, oak);
-  for (const x of [-4, 1, 5]) {
+  const g = h - 3, cx = w / 2, lid = g - 23.8;
+  shadow(c, cx + .8, g, 9.2, 2.55, .23);
+  const body = new Path2D();
+  body.moveTo(cx - 6.9, lid);
+  body.quadraticCurveTo(cx - 11, g - 13, cx - 6.85, g - 2.4);
+  body.bezierCurveTo(cx - 5, g + .4, cx + 5, g + .4, cx + 6.85, g - 2.4);
+  body.quadraticCurveTo(cx + 11, g - 13, cx + 6.9, lid);
+  body.closePath();
+  part(c, body, linear(c, cx - 9, lid + 1, cx + 9.5, g - 5, [
+    [0, '#9f6f47'], [.24, '#e2a969'], [.42, '#c78850'], [.71, '#995d38'], [1, '#624032'],
+  ]), {width: .72, line: '#51372a'});
+  for (const x of [-4.8, -1.6, 2.1, 5.1]) {
     const seam = new Path2D();
-    seam.moveTo(cx + x * .85, g - 23); seam.quadraticCurveTo(cx + x * 1.18, g - 13, cx + x * .85, g - 2);
-    stroke(c, seam, '#775034', .6);
+    seam.moveTo(cx + x * .84, lid + 1);
+    seam.quadraticCurveTo(cx + x * 1.19, g - 13, cx + x * .87, g - 1.7);
+    stroke(c, seam, '#644631', .61, .79);
+    c.save(); c.translate(-.44, 0); stroke(c, seam, '#e1ac76', .48, .45); c.restore();
   }
-  for (const y of [g - 20, g - 6]) {
-    const hoop = linear(c, 0, y, 0, y + 2.2, [[0, '#74879a'], [.42, '#4e6985'], [1, '#303c4d']]);
-    part(c, rect(cx - 8.6, y, 17.2, 2.2, 1), hoop, {width: .8});
-    part(c, ellipse(cx - 3.7, y + 1.15, .61), '#d6a76a', {line: false, shade: false});
+  for (const [y, radius] of [[g - 20.7, 8], [g - 7.4, 8.35]]) {
+    const hoop = new Path2D();
+    hoop.moveTo(cx - radius, y); hoop.quadraticCurveTo(cx, y + 5.45, cx + radius, y);
+    hoop.lineTo(cx + radius, y + 2.3); hoop.quadraticCurveTo(cx, y + 7.4, cx - radius, y + 2.3); hoop.closePath();
+    part(c, hoop, linear(c, cx - radius, y, cx + radius, y + 3.6,
+      [[0, '#8ea0ae'], [.3, '#638097'], [.64, '#435971'], [1, '#29394d']]), {width: .58, line: '#383733', shade: false});
+    const glint = new Path2D();
+    glint.moveTo(cx - radius + .7, y + .72); glint.quadraticCurveTo(cx - 3.2, y + 2.5, cx + .2, y + 3.15);
+    stroke(c, glint, '#bac7c6', .55, .84);
+    part(c, ellipse(cx - 3.7, y + 3.11, .6), '#dbab72', {width: .3, line: '#755836', shade: false});
   }
-  part(c, ellipse(cx, g - 25, 7, 2.4),
-    linear(c, 0, g - 27.4, 0, g - 22.6, [[0, '#a4724b'], [.6, '#e9b679'], [1, '#a36840']]));
-  stroke(c, [[cx - 4.2, g - 25.35], [cx + 3.4, g - 24.6]], '#8f6141', .65);
+  part(c, ellipse(cx, lid, 7.1, 3.45),
+    linear(c, cx - 6.8, lid - 3, cx + 6, lid + 3, [[0, '#eec48c'], [.40, '#d7a16a'], [1, '#99653e']]),
+    {width: .73, line: '#563d2d', shade: false});
+  stroke(c, ellipse(cx, lid, 5.5, 2.4), '#815736', .58, .72);
+  stroke(c, [[cx - 4.25, lid - .48], [cx + 3.9, lid + .45]], '#794e31', .58);
 }
 function lantern(c, {w, h}) {
   const g = h - 2, cx = w / 2;
-  part(c, rect(cx - 1, g - 22, 2, 22, .8), '#536c84', {width: .8, shade: '#283547'});
-  part(c, rect(cx - 4.5, g - 21, 9, 9, 2),
-    radial(c, cx - 1, g - 17, 5.5, [[0, '#fff2b4'], [.54, '#efbc67'], [1, '#b97837']]),
-    {width: 1.1, line: '#463629'});
-  stroke(c, [[cx + 1.6, g - 20], [cx + 1.6, g - 13.1]], '#94602f', .67);
-  stroke(c, [[cx - 3.2, g - 13], [cx + 3.1, g - 13]], '#d39b50', .75);
-  part(c, poly([[cx - 5.5, g - 21], [cx, g - 24.5], [cx + 5.5, g - 21]], .8), '#5b7898',
-    {width: .9, shade: '#304258'});
-  stroke(c, [[cx - 3.5, g - 21.1], [cx + 3.5, g - 21.1]], '#d6a660', .72);
+  const edge = {width: .65, line: '#523b2a', shade: false};
+  shadow(c, cx + .7, g + .25, 4.1, 1.16, .25);
+  part(c, ellipse(cx + .3, g - 1.05, 2.6, 1.1), '#927d66', edge);
+  part(c, rect(cx - 1.2, g - 13, 2.5, 12.3, .56),
+    linear(c, cx - 1.2, 0, cx + 1.3, 0, [[0, '#8d9eaa'], [.4, '#536f89'], [1, '#283c52']]), edge);
+  part(c, poly([[cx - 4.7, g - 19.4], [cx + 1.6, g - 18.3], [cx + 1.4, g - 11.6], [cx - 4.25, g - 12.6]], .55),
+    radial(c, cx - 1.6, g - 15.7, 5, [[0, '#fff3b4'], [.43, '#ffce70'], [1, '#ad6530']]), edge);
+  part(c, poly([[cx + 1.6, g - 18.3], [cx + 4.35, g - 19.7], [cx + 3.9, g - 13], [cx + 1.4, g - 11.6]], .51), '#bb753a', edge);
+  stroke(c, [[cx + 1.75, g - 17.9], [cx + 1.6, g - 12.3]], '#e8af61', .65);
+  part(c, poly([[cx - 5.35, g - 19.5], [cx - .5, g - 22.05], [cx + 4.4, g - 21.05], [cx + 5.15, g - 19.7],
+    [cx + 1.7, g - 18.1]], .51), '#57718a', edge);
+  stroke(c, [[cx - 4.55, g - 19.6], [cx + 1.7, g - 18.65], [cx + 4.4, g - 19.9]], '#dcb273', .67);
 }
 function crate(c, {w, h}) {
   const g = h - 3; shadow(c, w / 2, g, 10, 2.6);
