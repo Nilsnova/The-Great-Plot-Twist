@@ -25,10 +25,10 @@
     1.5
   ],
   "proofOrigins": {
-    "buildings": "eb157fc82bd7e1192f65d7cca439fc166bc2fed1",
+    "buildings": "92594b174dfe55d9edffe4104cc73eb82e528783",
     "houses": "71d11560a56e813067003fda18f6e8ed99301c29",
     "landmarks": "eb157fc82bd7e1192f65d7cca439fc166bc2fed1",
-    "services": "eb157fc82bd7e1192f65d7cca439fc166bc2fed1",
+    "services": "92594b174dfe55d9edffe4104cc73eb82e528783",
     "nature": "eb157fc82bd7e1192f65d7cca439fc166bc2fed1",
     "cannons": "eb157fc82bd7e1192f65d7cca439fc166bc2fed1",
     "walls": "15d8362f5e1d93699fcc96074450c2387d5f291b",
@@ -47,11 +47,11 @@
   "original": {
     "files": [
       {
-        "file": "village/buildings-hero-v1.png",
-        "bytes": 1624431,
-        "sha256": "b5fb1350f511718b901f8f8ecd2291e7e5ca7b13dce5b7376d1e1353ede1fc75",
-        "width": 1254,
-        "height": 1254
+        "file": "village/home-fixed-v2.png",
+        "bytes": 1585086,
+        "sha256": "ec6349ad26db4beefe3d539b6195c3609b749348da0c2cc16831b56386ee646a",
+        "width": 1774,
+        "height": 887
       },
       {
         "file": "village/houses-v2.png",
@@ -145,15 +145,15 @@
         "height": 1024
       }
     ],
-    "encodedBytes": 27124157,
-    "summedDecodedBytes": 88077316
+    "encodedBytes": 27084812,
+    "summedDecodedBytes": 88081404
   },
   "compiled": {
     "files": [
       {
-        "file": "village/compiled/buildings-4x-1-4cac98be2a82.png",
-        "bytes": 195710,
-        "sha256": "4cac98be2a8227dbc9e4bcccc5408e12c21ff8f858fc0fdc23ca91f4d0e7bf68",
+        "file": "village/compiled/buildings-4x-1-4d1d3b5b74a0.png",
+        "bytes": 195774,
+        "sha256": "4d1d3b5b74a02e1b5157dc1812f984ae3a8ec1fcf2a605bbc1767fee0b194ced",
         "width": 392,
         "height": 392
       },
@@ -172,9 +172,9 @@
         "height": 520
       },
       {
-        "file": "village/compiled/services-4x-1-6b01dd508dca.png",
-        "bytes": 330405,
-        "sha256": "6b01dd508dca1e32ab35b684a67d545dd999f8a0fcc1e3b3c93843edf5f032a2",
+        "file": "village/compiled/services-4x-1-3e1d3ce50a9a.png",
+        "bytes": 337190,
+        "sha256": "3e1d3ce50a9a77930096c6e418cf0f08010077ae25e39a3be34aebd84a115b83",
         "width": 656,
         "height": 360
       },
@@ -242,14 +242,14 @@
         "height": 1000
       }
     ],
-    "encodedBytes": 10281110,
+    "encodedBytes": 10287959,
     "summedDecodedBytes": 39311104,
     "peakSingleDecodedBytes": 5541888
   },
   "initialTransfer": {
     "unchangedTerrainBytes": 2683357,
-    "rawPlusTerrainBytes": 29807514,
-    "compiledPlusTerrainBytes": 12964467,
+    "rawPlusTerrainBytes": 29768169,
+    "compiledPlusTerrainBytes": 12971316,
     "targetBytes": 8388608,
     "targetMet": false
   },
@@ -263,19 +263,19 @@
     {
       "name": "buildings",
       "module": "src/art/village/buildings.js",
-      "sha256": "c0304fcaa21e835e382131a13521f4f0d2d76d3b577a80c069eff2662720c0d5",
+      "sha256": "e98a1f7b1394f64a7765a0939b2c4264189575bf40a71930710f9ee5983916bd",
       "frames": {
         "cabin": {
           "sheet": {
-            "file": "village/buildings-hero-v1.png",
-            "width": 1254,
-            "height": 1254
+            "file": "village/home-fixed-v2.png",
+            "width": 1774,
+            "height": 887
           },
           "rect": [
-            75,
-            39,
-            1108,
-            1103
+            52,
+            24,
+            774,
+            816
           ],
           "logical": [
             96,
@@ -283,14 +283,14 @@
             12
           ],
           "sourceFoot": [
-            552,
-            1085
+            387,
+            800
           ],
           "fitBounds": [
-            552,
-            1085,
-            556,
-            18
+            387,
+            800,
+            387,
+            16
           ]
         }
       }
@@ -676,7 +676,7 @@
     {
       "name": "services",
       "module": "src/art/village/services.js",
-      "sha256": "689a6a9845e02fa77d7036403382aa538b61d0b5bfd0bfff203a5a927c216dad",
+      "sha256": "5c03aff21e4c2153f22d4e1e6f39e26eeab18861260cb22867f6b930dd1f3897",
       "frames": {
         "island-techhub": {
           "sheet": {
@@ -708,15 +708,15 @@
         },
         "island-arsenal": {
           "sheet": {
-            "file": "village/services-v1.png",
-            "width": 1536,
-            "height": 1024
+            "file": "village/home-fixed-v2.png",
+            "width": 1774,
+            "height": 887
           },
           "rect": [
-            771,
-            225,
-            747,
-            680
+            928,
+            191,
+            808,
+            640
           ],
           "logical": [
             80,
@@ -724,14 +724,14 @@
             8
           ],
           "sourceFoot": [
-            365,
-            665
+            404,
+            624
           ],
           "fitBounds": [
-            365,
-            665,
-            382,
-            15
+            404,
+            624,
+            404,
+            16
           ]
         }
       }
@@ -4949,7 +4949,7 @@
       "name": "buildings",
       "pages": [
         {
-          "file": "village/compiled/buildings-4x-1-4cac98be2a82.png",
+          "file": "village/compiled/buildings-4x-1-4d1d3b5b74a0.png",
           "width": 392,
           "height": 392,
           "items": [
@@ -4967,7 +4967,7 @@
       ],
       "sheets": {
         "buildingsBaked1": {
-          "file": "village/compiled/buildings-4x-1-4cac98be2a82.png",
+          "file": "village/compiled/buildings-4x-1-4d1d3b5b74a0.png",
           "width": 392,
           "height": 392
         }
@@ -5390,7 +5390,7 @@
       "name": "services",
       "pages": [
         {
-          "file": "village/compiled/services-4x-1-6b01dd508dca.png",
+          "file": "village/compiled/services-4x-1-3e1d3ce50a9a.png",
           "width": 656,
           "height": 360,
           "items": [
@@ -5417,7 +5417,7 @@
       ],
       "sheets": {
         "servicesBaked1": {
-          "file": "village/compiled/services-4x-1-6b01dd508dca.png",
+          "file": "village/compiled/services-4x-1-3e1d3ce50a9a.png",
           "width": 656,
           "height": 360
         }
@@ -9632,7 +9632,7 @@
   "compilerMemory": [
     {
       "family": "buildings",
-      "peakSourceBytes": 6290064,
+      "peakSourceBytes": 6294152,
       "retainedDecodedAfterRelease": 0,
       "canvasBytes": 614656,
       "largestTemporaryCanvasBytes": 589824
@@ -9653,7 +9653,7 @@
     },
     {
       "family": "services",
-      "peakSourceBytes": 6291456,
+      "peakSourceBytes": 6294152,
       "retainedDecodedAfterRelease": 0,
       "canvasBytes": 944640,
       "largestTemporaryCanvasBytes": 450560
@@ -9730,7 +9730,7 @@
           "id": "cabin",
           "density": 4,
           "pixels": 147456,
-          "visiblePixels": 75207,
+          "visiblePixels": 70161,
           "differingPixels": 0,
           "maxVisibleDelta": 0,
           "maxAlphaDelta": 0,
@@ -9740,34 +9740,34 @@
           "id": "cabin",
           "density": 2.5,
           "pixels": 57600,
-          "visiblePixels": 29773,
-          "differingPixels": 28020,
+          "visiblePixels": 27626,
+          "differingPixels": 25134,
           "maxVisibleDelta": 255,
-          "maxAlphaDelta": 50,
-          "alphaWeightedMeanRgbDelta": 2.400989690669146
+          "maxAlphaDelta": 41,
+          "alphaWeightedMeanRgbDelta": 1.9510473107659139
         },
         {
           "id": "cabin",
           "density": 2,
           "pixels": 36864,
-          "visiblePixels": 19459,
-          "differingPixels": 18713,
+          "visiblePixels": 17426,
+          "differingPixels": 16524,
           "maxVisibleDelta": 255,
-          "maxAlphaDelta": 50,
-          "alphaWeightedMeanRgbDelta": 3.3316895164589235
+          "maxAlphaDelta": 53,
+          "alphaWeightedMeanRgbDelta": 3.3061628382217294
         },
         {
           "id": "cabin",
           "density": 1.5,
           "pixels": 20736,
-          "visiblePixels": 11051,
-          "differingPixels": 10798,
+          "visiblePixels": 9968,
+          "differingPixels": 9566,
           "maxVisibleDelta": 255,
-          "maxAlphaDelta": 65,
-          "alphaWeightedMeanRgbDelta": 4.121086974404331
+          "maxAlphaDelta": 49,
+          "alphaWeightedMeanRgbDelta": 3.2706186479695143
         }
       ],
-      "peakSourceBytes": 6290064,
+      "peakSourceBytes": 6294152,
       "retainedDecodedAfterRelease": 0
     },
     {
@@ -10311,7 +10311,7 @@
           "id": "island-techhub",
           "density": 4,
           "pixels": 112640,
-          "visiblePixels": 62009,
+          "visiblePixels": 61992,
           "differingPixels": 0,
           "maxVisibleDelta": 0,
           "maxAlphaDelta": 0,
@@ -10321,37 +10321,37 @@
           "id": "island-techhub",
           "density": 2.5,
           "pixels": 44000,
-          "visiblePixels": 24593,
-          "differingPixels": 22758,
+          "visiblePixels": 24623,
+          "differingPixels": 22765,
           "maxVisibleDelta": 255,
-          "maxAlphaDelta": 52,
-          "alphaWeightedMeanRgbDelta": 2.179738189736808
+          "maxAlphaDelta": 53,
+          "alphaWeightedMeanRgbDelta": 2.2826850981445688
         },
         {
           "id": "island-techhub",
           "density": 2,
           "pixels": 28160,
-          "visiblePixels": 15631,
-          "differingPixels": 14602,
+          "visiblePixels": 15647,
+          "differingPixels": 14480,
           "maxVisibleDelta": 255,
-          "maxAlphaDelta": 38,
-          "alphaWeightedMeanRgbDelta": 2.613571398623386
+          "maxAlphaDelta": 56,
+          "alphaWeightedMeanRgbDelta": 3.2781936567508123
         },
         {
           "id": "island-techhub",
           "density": 1.5,
           "pixels": 15840,
-          "visiblePixels": 9009,
-          "differingPixels": 8660,
+          "visiblePixels": 9019,
+          "differingPixels": 8614,
           "maxVisibleDelta": 255,
-          "maxAlphaDelta": 40,
-          "alphaWeightedMeanRgbDelta": 3.517568339743989
+          "maxAlphaDelta": 44,
+          "alphaWeightedMeanRgbDelta": 3.435476133384974
         },
         {
           "id": "island-arsenal",
           "density": 4,
           "pixels": 102400,
-          "visiblePixels": 64103,
+          "visiblePixels": 56893,
           "differingPixels": 0,
           "maxVisibleDelta": 0,
           "maxAlphaDelta": 0,
@@ -10361,34 +10361,34 @@
           "id": "island-arsenal",
           "density": 2.5,
           "pixels": 40000,
-          "visiblePixels": 25363,
-          "differingPixels": 23403,
+          "visiblePixels": 22402,
+          "differingPixels": 21456,
           "maxVisibleDelta": 255,
-          "maxAlphaDelta": 36,
-          "alphaWeightedMeanRgbDelta": 2.0499154858734125
+          "maxAlphaDelta": 59,
+          "alphaWeightedMeanRgbDelta": 3.386740840009201
         },
         {
           "id": "island-arsenal",
           "density": 2,
           "pixels": 25600,
-          "visiblePixels": 16128,
-          "differingPixels": 15040,
+          "visiblePixels": 14144,
+          "differingPixels": 13296,
           "maxVisibleDelta": 255,
-          "maxAlphaDelta": 34,
-          "alphaWeightedMeanRgbDelta": 2.575626428578144
+          "maxAlphaDelta": 46,
+          "alphaWeightedMeanRgbDelta": 3.1663327245760784
         },
         {
           "id": "island-arsenal",
           "density": 1.5,
           "pixels": 14400,
-          "visiblePixels": 9265,
-          "differingPixels": 8892,
+          "visiblePixels": 8097,
+          "differingPixels": 7718,
           "maxVisibleDelta": 255,
-          "maxAlphaDelta": 37,
-          "alphaWeightedMeanRgbDelta": 3.3113427604168235
+          "maxAlphaDelta": 47,
+          "alphaWeightedMeanRgbDelta": 3.2743635958150765
         }
       ],
-      "peakSourceBytes": 6291456,
+      "peakSourceBytes": 6294152,
       "retainedDecodedAfterRelease": 0
     },
     {
@@ -17217,6 +17217,36 @@
         "village/compiled/houses-4x-1-749130c563bf.png"
       ],
       "note": "The previous normalized PNG and its historical transport proof are retained. The new sheet has the same logical frames and fresh native raw-vs-baked proof."
+    },
+    {
+      "family": "buildings",
+      "sourceCommit": "92594b174dfe55d9edffe4104cc73eb82e528783",
+      "previousReportRevision": "1d2bd403f612e46670f7716efb42840b632d5966",
+      "previousReportSha256": "a7a429f1dd45768f1c42d2f091757fe88845b1c23826f9f5ba4875bf6a343d8b",
+      "compilerReport": "../VIS-05-hero/fixed-bake-v2.json",
+      "compilerReportSha256": "7e238a1a3fec5f950eb52738ac684d59256be28968bba32b4dbe741feb74386a",
+      "oldSheets": [
+        "village/compiled/buildings-4x-1-4cac98be2a82.png"
+      ],
+      "newSheets": [
+        "village/compiled/buildings-4x-1-4d1d3b5b74a0.png"
+      ],
+      "note": "Historical masters and their transport proof remain unchanged. Each current sheet passed native normalization at the original world size."
+    },
+    {
+      "family": "services",
+      "sourceCommit": "92594b174dfe55d9edffe4104cc73eb82e528783",
+      "previousReportRevision": "1d2bd403f612e46670f7716efb42840b632d5966",
+      "previousReportSha256": "a7a429f1dd45768f1c42d2f091757fe88845b1c23826f9f5ba4875bf6a343d8b",
+      "compilerReport": "../VIS-05-hero/fixed-bake-v2.json",
+      "compilerReportSha256": "7e238a1a3fec5f950eb52738ac684d59256be28968bba32b4dbe741feb74386a",
+      "oldSheets": [
+        "village/compiled/services-4x-1-6b01dd508dca.png"
+      ],
+      "newSheets": [
+        "village/compiled/services-4x-1-3e1d3ce50a9a.png"
+      ],
+      "note": "Historical masters and their transport proof remain unchanged. Each current sheet passed native normalization at the original world size."
     }
   ],
   "normalizerHistory": [

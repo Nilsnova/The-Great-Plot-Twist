@@ -77,3 +77,7 @@ evidence.
 No live migration, production activation, deployment or merge occurred. A
 different human reviews the current revision after Johannes practices the spec's
 explain-back questions.
+
+## 19 November Cabin and Arsenal revision
+
+The active [Cabin and Arsenal source](../../../frontend/public/village/home-fixed-v2.png) uses the 19 November Home Island concept for perspective, materials and lighting. The [source report](fixed-buildings-v2.json) records the exact OpenAI image generation prompt, checked alpha, measured crops and ground feet. The [compiler receipt](fixed-bake-v2.json) covers the unchanged Cabin, Arsenal and Tech Hub frame dimensions at 4×, 2× and 1.5×. The Tech Hub keeps its original authored source. The Home art ships through the two existing normalized WebP sheets.
