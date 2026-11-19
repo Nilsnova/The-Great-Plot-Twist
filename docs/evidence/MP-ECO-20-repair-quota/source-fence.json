@@ -1,0 +1,96 @@
+{
+  "at": "2026-11-19T17:45:00.895Z",
+  "productionSource": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+  "executedScenarioCommit": "a04acbccf571abd23ed27441f79526cb65354ad5",
+  "scenarioSha256Before": "52fab9c17ce94249eb0e235b692f75ddbccccc062f776732d5d73bc3013304ca",
+  "scenarioSha256After": "52fab9c17ce94249eb0e235b692f75ddbccccc062f776732d5d73bc3013304ca",
+  "entryFinisherLoadedSha256": "b9e270cd355a19f10333a2af739d3f16eaceab3ee38f20d33c3cb16b024b516f",
+  "entryFinisherMatchesCurrentSource": true,
+  "commonHelperHashesBefore": {
+    "frontend/scripts/authenticated-economy/clients.mjs": "dfa176b33a56bc0f6c5a19a219d5c01ddb2c071fe66331d6d15cb181cf7ac6c0",
+    "frontend/scripts/authenticated-economy/runtime.mjs": "d1387a35fd7243df58e8d9589586034b3a098489bb20e43bece9b6b45040865f",
+    "frontend/scripts/authenticated-economy/observer.mjs": "40cb288da9f9a80e337fba5a39a12b1b23501ad1ff48a2a4614975492997f140",
+    "frontend/scripts/authenticated-economy/source.mjs": "56d138914dc5b4e15159162bb21db68c985b2c9083c2e5bac4b34a90502ea8d9",
+    "backend/tools/authenticated_economy/config.py": "9c1ab2bc84f0e5da14748624064a8a68357a52a44d3d79473251302a46082b47",
+    "backend/tools/authenticated_economy/observe.py": "18707a8ed12d18c69a4c04de1a416089ccbe89619f5f6f6e9a270840df551839",
+    "backend/tools/authenticated_economy/application.py": "05effdff57cb2443ac691c1e0bf4741563bece314a476cfbc4d6ae0a13b6bd6e",
+    "backend/tools/authenticated_economy/stack.py": "6e3c9621f8f75c3bc2f15199973b4cb008c37f653f4de358109c5e9a8f3ad15a",
+    "backend/tools/authenticated_economy/__init__.py": "41a5fef9cd3d8dcc7a0ec2a5a63e7f7409bd5fb378b1ab76f75135c7d444deb9",
+    "backend/tools/authenticated_economy/provider_roles.sql": "10a3252ae1882aa715932a4657a02c47260389bd80489eac126979136cc81566"
+  },
+  "commonHelperHashesAfter": {
+    "frontend/scripts/authenticated-economy/clients.mjs": "dfa176b33a56bc0f6c5a19a219d5c01ddb2c071fe66331d6d15cb181cf7ac6c0",
+    "frontend/scripts/authenticated-economy/runtime.mjs": "d1387a35fd7243df58e8d9589586034b3a098489bb20e43bece9b6b45040865f",
+    "frontend/scripts/authenticated-economy/observer.mjs": "40cb288da9f9a80e337fba5a39a12b1b23501ad1ff48a2a4614975492997f140",
+    "frontend/scripts/authenticated-economy/source.mjs": "56d138914dc5b4e15159162bb21db68c985b2c9083c2e5bac4b34a90502ea8d9",
+    "backend/tools/authenticated_economy/config.py": "9c1ab2bc84f0e5da14748624064a8a68357a52a44d3d79473251302a46082b47",
+    "backend/tools/authenticated_economy/observe.py": "18707a8ed12d18c69a4c04de1a416089ccbe89619f5f6f6e9a270840df551839",
+    "backend/tools/authenticated_economy/application.py": "05effdff57cb2443ac691c1e0bf4741563bece314a476cfbc4d6ae0a13b6bd6e",
+    "backend/tools/authenticated_economy/stack.py": "6e3c9621f8f75c3bc2f15199973b4cb008c37f653f4de358109c5e9a8f3ad15a",
+    "backend/tools/authenticated_economy/__init__.py": "41a5fef9cd3d8dcc7a0ec2a5a63e7f7409bd5fb378b1ab76f75135c7d444deb9",
+    "backend/tools/authenticated_economy/provider_roles.sql": "10a3252ae1882aa715932a4657a02c47260389bd80489eac126979136cc81566"
+  },
+  "servedAfter": [
+    {
+      "service": "api",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "02905c8386323814bfef05462854bded278b6859",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    },
+    {
+      "service": "frontend",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "02905c8386323814bfef05462854bded278b6859",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    }
+  ],
+  "ownSourceAfter": {
+    "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+    "actualCheckoutHead": "a04acbccf571abd23ed27441f79526cb65354ad5",
+    "productionDiffFromBaseline": "empty",
+    "paths": [
+      "backend/server",
+      "backend/content",
+      "frontend/src",
+      "supabase/migrations",
+      "backend/uv.lock",
+      "backend/pyproject.toml",
+      "frontend/package-lock.json",
+      "frontend/package.json",
+      ":(exclude)backend/server/tests"
+    ]
+  },
+  "migrationManifestSha256": "31bbbac1f5f1b7efd970868970130a0a0495bb34681d351334a9e072a6285840",
+  "distinctBrowserObjects": true,
+  "actors": {
+    "owner": "d095652c-be12-4ace-b501-8fddb66de724",
+    "member": "68c675d1-052e-46cb-8d90-1c209a4041a6"
+  },
+  "boundaries": [
+    "Executed as staged exported-scenario calls in a persistent Node REPL on retained clients; interrupted driver reports are preserved as failures.",
+    "The earlier standalone driver supplied Auth, declared fixtures and purchases. Only its unchanged entry-finisher function is reused in the successful staged sequence. Its original whole-file hash remains a pre-run hash for that earlier failed driver invocation.",
+    "Common helpers were frozen for the interval; source snapshots and file/function hashes are compared, not continuously attested."
+  ]
+}

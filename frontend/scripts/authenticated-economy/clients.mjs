@@ -3,9 +3,11 @@ import {mkdir} from 'node:fs/promises';
 import {randomBytes} from 'node:crypto';
 import {chromium} from 'playwright-core';
 import {loadRuntime} from './runtime.mjs';
+import {servedSourceEvidence} from './source.mjs';
 export {loadRuntime} from './runtime.mjs';
 
 export async function api(page,path,{method='GET',body,headers={},capability='1'}={}) {
+ if(page.kind==='api-only')return page.request(path,{method,body,headers,capability});
  return page.evaluate(async({path,method,body,headers,capability})=>{
   const {session}=await import('/src/online/session.js');
   const token=session.getToken();
@@ -18,15 +20,20 @@ export async function api(page,path,{method='GET',body,headers={},capability='1'
  },{path,method,body,headers,capability});
 }
 
-export async function createClients({labels=['owner','member'],runtimePath,viewport={width:1280,height:800},verify=true}={}) {
+export async function createClients({labels=['owner','member'],runtimePath,expectedCommit,
+ viewport={width:1280,height:800},verify=true,independentBrowsers=true}={}) {
  const runtime=await loadRuntime(runtimePath);
+ if(expectedCommit!==undefined&&expectedCommit!==runtime.expectedCommit)throw Error('The requested candidate differs from the configured provider candidate');
+ const sources=servedSourceEvidence(runtime);
  if(!runtime.certificateSpki)throw Error('Provider certificate pin is missing');
- const browser=await chromium.launch({executablePath:'/usr/bin/chromium',headless:true,
+ const launch=()=>chromium.launch({executablePath:'/usr/bin/chromium',headless:true,
   args:['--no-sandbox','--disable-dev-shm-usage','--disable-gpu',
    '--ignore-certificate-errors-spki-list='+runtime.certificateSpki]});
- const clients=[];
+ const clients=[],browsers=[];
  try {
   for(const label of labels) {
+   const browser=independentBrowsers||browsers.length===0?await launch():browsers[0];
+   if(!browsers.includes(browser))browsers.push(browser);
    const context=await browser.newContext({viewport});
    const page=await context.newPage();
    const email=`${label}-${randomBytes(6).toString('hex')}@example.test`;
@@ -51,10 +58,10 @@ export async function createClients({labels=['owner','member'],runtimePath,viewp
     await page.waitForTimeout(100);
    }
    if(verify&&(me.status!==200||me.data.id!==result.actorId))throw Error('Production verifier did not accept actual provider identity: '+JSON.stringify(me));
-   clients.push({label,page,context,actorId:result.actorId,session:result.session,email,password});
+   clients.push({label,page,context,browser,actorId:result.actorId,session:result.session,email,password});
   }
-  return {runtime,clients,close:()=>browser.close()};
- } catch(error) {await browser.close();throw error;}
+  return {runtime,clients,servedSources:sources,close:()=>Promise.all(browsers.map(browser=>browser.close()))};
+ } catch(error) {await Promise.all(browsers.map(browser=>browser.close()));throw error;}
 }
 
 export async function land(page,{create=false,join=null}={}) {

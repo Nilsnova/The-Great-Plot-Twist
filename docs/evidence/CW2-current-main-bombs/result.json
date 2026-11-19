@@ -1,0 +1,164 @@
+{
+  "result": "passed",
+  "productionSource": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+  "sourceBefore": {
+    "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+    "actualCheckoutHead": "258b35d1f6ea4d64816946dd81b9d1f3833a1f53",
+    "productionDiffFromBaseline": "empty",
+    "paths": [
+      "backend/server",
+      "backend/content",
+      "frontend/src",
+      "supabase/migrations",
+      "backend/uv.lock",
+      "backend/pyproject.toml",
+      "frontend/package-lock.json",
+      "frontend/package.json",
+      ":(exclude)backend/server/tests"
+    ]
+  },
+  "sourceAfter": {
+    "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+    "actualCheckoutHead": "258b35d1f6ea4d64816946dd81b9d1f3833a1f53",
+    "productionDiffFromBaseline": "empty",
+    "paths": [
+      "backend/server",
+      "backend/content",
+      "frontend/src",
+      "supabase/migrations",
+      "backend/uv.lock",
+      "backend/pyproject.toml",
+      "frontend/package-lock.json",
+      "frontend/package.json",
+      ":(exclude)backend/server/tests"
+    ]
+  },
+  "serving": [
+    {
+      "service": "api",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "2de87a1c7a95423f93e83f7f254bff624f8b9eba",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    },
+    {
+      "service": "frontend",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "2de87a1c7a95423f93e83f7f254bff624f8b9eba",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    }
+  ],
+  "scenarioSha256": "22f9505d8db4e8a4d9b5b1e8316c36f025f10239a7d37adfc8b5b8a988d5b188",
+  "helpersBefore": {
+    "clients.mjs": "dfa176b33a56bc0f6c5a19a219d5c01ddb2c071fe66331d6d15cb181cf7ac6c0",
+    "api-clients.mjs": "a9369da75350b882ac6a312c20903965a362409978e86e108c256f9cc450a9f7",
+    "observer.mjs": "40cb288da9f9a80e337fba5a39a12b1b23501ad1ff48a2a4614975492997f140",
+    "runtime.mjs": "d1387a35fd7243df58e8d9589586034b3a098489bb20e43bece9b6b45040865f",
+    "source.mjs": "56d138914dc5b4e15159162bb21db68c985b2c9083c2e5bac4b34a90502ea8d9",
+    "observe.py": "18707a8ed12d18c69a4c04de1a416089ccbe89619f5f6f6e9a270840df551839",
+    "config.py": "9c1ab2bc84f0e5da14748624064a8a68357a52a44d3d79473251302a46082b47"
+  },
+  "helpersAfter": {
+    "clients.mjs": "dfa176b33a56bc0f6c5a19a219d5c01ddb2c071fe66331d6d15cb181cf7ac6c0",
+    "api-clients.mjs": "a9369da75350b882ac6a312c20903965a362409978e86e108c256f9cc450a9f7",
+    "observer.mjs": "40cb288da9f9a80e337fba5a39a12b1b23501ad1ff48a2a4614975492997f140",
+    "runtime.mjs": "d1387a35fd7243df58e8d9589586034b3a098489bb20e43bece9b6b45040865f",
+    "source.mjs": "56d138914dc5b4e15159162bb21db68c985b2c9083c2e5bac4b34a90502ea8d9",
+    "observe.py": "18707a8ed12d18c69a4c04de1a416089ccbe89619f5f6f6e9a270840df551839",
+    "config.py": "9c1ab2bc84f0e5da14748624064a8a68357a52a44d3d79473251302a46082b47"
+  },
+  "startedAt": "2026-11-19T17:57:54.349Z",
+  "finishedAt": "2026-11-19T17:59:10.397Z",
+  "facts": [
+    {
+      "event": "actual-registered-clients-ready",
+      "at": "2026-11-19T17:58:01.997Z",
+      "independentBrowserProcesses": 2
+    },
+    {
+      "event": "real-legacy-purchase",
+      "at": "2026-11-19T17:58:22.032Z",
+      "carried": "fire_bombs",
+      "browserProcesses": 2
+    },
+    {
+      "event": "actual-legacy-start-api",
+      "at": "2026-11-19T17:58:46.686Z",
+      "recoveryVersion": 1,
+      "waveProtocol": 2
+    },
+    {
+      "event": "legacy-area-blast-observed-on-both-real-clients",
+      "at": "2026-11-19T17:59:08.455Z",
+      "journalShots": 1,
+      "journalWeapon": "fire_bombs",
+      "fired": 1,
+      "blasts": 1,
+      "damageEvents": 2,
+      "damageAmounts": [
+        9,
+        9
+      ],
+      "identicalReplay": true
+    },
+    {
+      "event": "original-four-argument-recovery-producer",
+      "at": "2026-11-19T17:59:10.229Z",
+      "recoveryVersion": 1,
+      "protocol": 2,
+      "nativeShared": false,
+      "weaponFromActualPurchase": "fire_bombs",
+      "journalShots": 1,
+      "journalWeapon": "fire_bombs",
+      "fired": 1,
+      "blasts": 1,
+      "damageEvents": 2,
+      "damageAmounts": [
+        9,
+        9
+      ],
+      "teammateEqual": true,
+      "reconnectedReplayEqual": true,
+      "duplicatePageAddsNoDamage": true,
+      "liveAfterReconnect": {
+        "sameWave": true,
+        "sameParticipant": true,
+        "fired": 1,
+        "blasts": 1,
+        "damage": [
+          9,
+          9
+        ]
+      },
+      "reconnectKind": "Actual browser transport outage, not document reload"
+    }
+  ],
+  "limitations": [
+    "Local current-main acceptance, not a hosted/deployed release.",
+    "Wallet/shared budgets and saved unlock/repeat state are explicit setup; not natural progress.",
+    "Normal move/shot intents use production authenticated transports. No journal, damage, HP, clock or outcome is fabricated.",
+    "This covers the original four-argument legacy recovery producer; the different native shared-session producer is not claimed.",
+    "SIM step observation only copies returned events. A real transport reconnect preserves the actual wave/token and event counts, alongside identical production replay of the accepted prefix; full document reload is not claimed."
+  ]
+}
