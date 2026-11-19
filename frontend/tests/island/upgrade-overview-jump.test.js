@@ -69,8 +69,11 @@ it.each([
     expect(await overview.isVisible()).toBe(true);
     expect(await page.evaluate(() => window.__island.island.managing)).toBe(false);
     await page.evaluate(() => window.__island.island.setBattle(false));
-    await action.focus();
-    await page.evaluate(() => window.__island.island.refreshDefended());
+    // Request the read from the same browser task that focuses the current, mounted row.
+    await action.evaluate(button => {
+      button.focus({preventScroll: true});
+      return window.__island.island.refreshDefended();
+    });
     const actionState = await action.evaluate(button => ({
       focused: document.activeElement === button,
       height: button.getBoundingClientRect().height,
