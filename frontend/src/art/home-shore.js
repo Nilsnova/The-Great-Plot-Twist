@@ -74,6 +74,58 @@ function skiff(c) {
   part(c, rect(41.7, 15.3, 2.4, 1.23, .4), '#af8253', {line: '#674b38', width: .42, depth: .54});
 }
 
+function harborRowboat(c) {
+  shadow(c, 32, 32, 26.5, 4.8, .26);
+  const hull = svg('M5.7 18 Q12 7.4 40 5.5 Q50 6.4 58.6 13.2 L58.6 21 Q53 27.6 44.8 30.5 Q28.1 33.6 16 31.5 Q7.7 27.7 5.7 18 Z');
+  part(c, hull, linear(c, 18, 9, 36, 32,
+    [[0, '#ce9a5f'], [.36, '#a87543'], [.61, '#846044'], [1, '#374b58']]), {line: '#413132', width: 1});
+  const well = svg('M9.3 17.9 Q16.5 9.3 40.7 8.9 Q49.1 9.4 54.7 14.2 L53.6 19.5 Q47.3 25.7 40.5 26.8 Q29 30.5 18 27.8 Q10.9 24.9 9.3 17.9 Z');
+  part(c, well, linear(c, 16, 11, 24, 26, [[0, '#93623e'], [.48, '#644333'], [1, '#3c3d44']]),
+    {line: '#e2aa71', width: 1.3, shade: false});
+  for (const x of [23, 39]) {
+    part(c, poly([[x - 2, 12.7], [x + 2, 12.1], [x, 25.8], [x - 3.9, 26.5]], .5),
+      '#ca9a64', {line: '#604739', width: .65, depth: .75});
+    stroke(c, [[x - .5, 14.1], [x - 2.8, 24.7]], '#e5bd80', .62);
+  }
+  stroke(c, svg('M9.6 23.4 Q20.4 34.4 43 29 Q51 27 56 21.6'), '#e0a45e', .78);
+  stroke(c, svg('M16.6 9.5 L42.6 27.4 Q44.7 28.7 45.8 26.7 L18.1 8.2'), '#644731', 1.75);
+  stroke(c, [[17.4, 8.9], [44.6, 27.3]], '#dda968', .96);
+}
+
+function coastalSailboat(dark) {
+  return (c, {w}) => {
+    const mast = w / 2 - 8, bow = w - 10;
+    const linen = dark ? ['#84928b', '#617773', '#354c50'] : ['#fff1cc', '#e7cfa1', '#b69a71'];
+    const cloth = linear(c, mast - 19, 28, mast + 18, 81, [[0, linen[0]], [.52, linen[1]], [1, linen[2]]]);
+    shadow(c, w / 2, 102, w / 2 - 8, 4, .29);
+    stroke(c, [[mast, 14], [mast, 86]], '#574033', 3.4);
+    stroke(c, [[mast - .64, 15], [mast - .64, 83]], '#c2925a', .9);
+    const main = svg(`M${mast - 2} 19 Q${mast + 12} 48 ${bow - 6} 74 Q${mast + 16} 74 ${mast - 2} 79 Z`);
+    const jib = svg(`M${mast - 4} 19 Q${mast - 13} 48 16 76 Q${mast - 12} 76 ${mast - 4} 79 Z`);
+    for (const sail of [jib, main]) part(c, sail, cloth, {line: '#625141', width: .95, shade: false});
+    stroke(c, svg(`M${mast - 5} 35 Q${mast - 12} 57 20 74 M${mast + 2} 34 Q${mast + 16} 57 ${bow - 13} 73`),
+      linen[2], .92, .9);
+    if (dark) {
+      const fore = mast + 31;
+      stroke(c, [[fore, 25], [fore, 84]], '#504034', 2.2);
+      part(c, svg(`M${fore + 2} 29 Q${fore + 9} 52 ${w - 8} 73 L${fore + 2} 77 Z`), cloth,
+        {line: '#354349', width: .92, shade: false});
+    }
+    const flag = svg(`M${mast + 2} 14 Q${mast + 9} 14 ${mast + 16} 18 L${mast + 2} 22 Z`);
+    part(c, flag, dark ? '#8d473c' : '#315477', {line: '#524039', width: .7, shade: false});
+    stroke(c, [[mast + 4, 16], [mast + 10, 17.4]], '#e0ab5f', .75);
+    const hull = svg(`M7 86 Q${mast + 9} 85 ${bow} 82 Q${bow - 2} 95 ${bow - 13} 98 Q${bow - 22} 104 25 102 Q14 99 7 86 Z`);
+    part(c, hull, linear(c, 15, 83, 21, 103,
+      [[0, '#ca9159'], [.38, dark ? '#84563e' : '#a47247'], [.61, '#684533'], [1, '#30475a']]),
+      {line: '#433133', width: 1.2, shade: false});
+    stroke(c, svg(`M12 89 Q${mast + 9} 92 ${bow - 5} 86 M20 97 Q${mast + 14} 103 ${bow - 11} 93`),
+      '#4c3a36', 1.01);
+    stroke(c, svg(`M11 88 Q${mast + 9} 90 ${bow - 4} 85`), '#e5ad61', 1.28);
+    for (const x of [26, 34, w - 35, w - 27]) part(c, ellipse(x, 91.7, .8, .68),
+      '#d2a160', {line: '#654b37', width: .45, shade: false});
+  };
+}
+
 function bench(c) {
   shadow(c, 26, 29, 19, 2.5, .16);
   shadow(c, 14, 28.5, 6.8, 1.45, .24);
@@ -136,6 +188,9 @@ export function homeShoreFrames() {
   return {
     'home-mooring-bollard': [32, 27, 4, bollard, {outline: .55}],
     'home-mooring-skiff': [48, 27, 2.5, skiff, {outline: .55}],
+    boat: [64, 40, 8, harborRowboat, {outline: .45}],
+    sailboat: [96, 112, 10, coastalSailboat(false), {outline: .5}],
+    'dark-schooner': [128, 112, 10, coastalSailboat(true), {outline: .5}],
     'home-bench': [48, 32, 3, bench, {outline: .29}],
     'home-barrel': [24, 32, 3, barrel, {outline: .34}],
     'home-lantern': [16, 24, 2, lantern, {outline: .23}],
