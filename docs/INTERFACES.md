@@ -1948,3 +1948,38 @@ The internal treasury result can contain its originating account projection. A p
 must expose fresh economy/assets only if that origin is still the active current account/epoch and
 the actor is a current member. A departed or retired-origin retry may return its authorized immutable
 receipt, with current projections null/omitted. Never display an old receipt balance as current funds.
+
+## Shared wave accounting foundation (MP-ECO-03)
+
+[The additive migration](../supabase/migrations/20261118050200_wave_treasury_settlement.sql)
+defines immutable shared wave snapshots, participation confirmations, canonical closures and
+personal completion receipts. [The package spec](../specs/MP-ECO-03-wave-treasury-settlement.md)
+describes the transactional integration contract; [database rights](../supabase/README.md#shared-wave-accounting-foundation-mp-eco-03)
+remain explicit. Existing wave HTTP routes are not converted or activated by this foundation.
+
+| Private SQL hook | Required caller contract |
+|---|---|
+| `island_wave_accounting_freeze_locked(wave_id,account_id,run_epoch,roster,reward_basis)` | Same accepted-bell transaction; earlier scope/account/personal locks and checked personal assignments already exist. Freeze account/epoch, actual played wave, protocol, houses, allowed rewards and stable participant-slot/Engineer identities once. |
+| `island_wave_confirm_participation_locked(wave_id,player_id,controlling_session_id)` | Checked controlling-session acknowledgment after combat begins. Frozen slot, current global assignment, membership and timing must agree; the caller separately validates current controller generation/revocation. |
+| `island_wave_accounting_settle_locked(wave_id,outcome,earned_bonuses)` | Same canonical lifecycle transaction as final outcome, HP and session closure, after any rescue outcome. One origin-account credit plus immutable personal receipts and MP-ECO-07 effects commit or roll back together. |
+
+All write hooks are unavailable to `service_role`/browser direct execution; an enclosing
+security-definer lifecycle RPC must call them. `outcome` is `won`, `lost`, `abandoned` or
+`expired`; unresolved/client-selected results are not canonical authority. Exact retry returns
+the original terminal facts; a different outcome cannot replace them. `lootCoins` and the common
+`economy` envelope use exact decimal strings and the frozen originating account, including after
+that account retires. A new low-wave attempt has its own reward source and does not use island best.
+
+Personal receipt identity is `(player_id,wave_id)`, with a UUID receipt, played wave, canonical
+outcome, confirmed-participation flag, frozen Engineer commitment, original account/epoch and
+terminal fingerprint. `island_wave_completion_receipt(player_id,wave_id)` is a **service-only
+read** for the authenticated Captain; it requires no current island membership and performs no
+financial/profile mutation. `server.island.wave_economy.personal_completion` strictly checks
+that identity. Membership, spectating and countdown-only connection create no eligible win.
+
+A narrow insert trigger refuses legacy personal `pirate_loot` for an already frozen shared
+wave. It takes no new lock: freeze and legacy finish serialize on the wave row. Private personal
+anchors use `FOR NO KEY UPDATE` to remain compatible with unrelated legacy foreign-key checks.
+This guard does not replace future route context checks or full canonical lifecycle integration.
+Missing personal hooks/state fail closed; deletion dispositions and continuing-island closure
+must be explicitly integrated before affected account deletion is admitted.
