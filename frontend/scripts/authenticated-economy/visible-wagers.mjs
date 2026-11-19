@@ -11,6 +11,8 @@ import {observe} from './observer.mjs';
 
 const directory=resolve(process.argv[2]),output=resolve(process.argv[3]),root=resolve(new URL('../../../',import.meta.url).pathname);
 const runtime=await loadRuntime(),prepared=JSON.parse(await readFile(join(directory,'private-clients.json'),'utf8'));
+const priorPath=process.argv[4],prior=priorPath?JSON.parse(await readFile(resolve(priorPath),'utf8')):null;
+if(prior){assert.equal(prior.scenario,'visible-unrestricted-wagers');assert.equal(prior.hashesUnchanged,true);assert.equal(prior.steps[1]?.requests?.length,3);}
 const files=['frontend/scripts/authenticated-economy/visible-wagers.mjs','frontend/scripts/authenticated-economy/serve-visible-wagers.mjs',
  'frontend/scripts/authenticated-economy/prepare-visible-wagers.mjs','frontend/scripts/authenticated-economy/api-clients.mjs','frontend/scripts/authenticated-economy/clients.mjs',
  'frontend/scripts/authenticated-economy/source.mjs','frontend/scripts/authenticated-economy/runtime.mjs','frontend/scripts/authenticated-economy/observer.mjs',
@@ -40,7 +42,7 @@ const browsers=[],clients=[];
 async function pointFor(locator){return locator.evaluate(element=>{element.scrollIntoView({block:'center',inline:'nearest',behavior:'instant'});const b=element.getBoundingClientRect(),x=b.x+b.width/2,y=b.y+b.height/2,hit=document.elementFromPoint(x,y);
  return !element.disabled&&b.width>0&&b.height>0&&(hit===element||element.contains(hit))?{x,y}:null;});}
 async function dismissKnown(page){
- const candidates=[page.locator('.goal-card[open]').getByRole('button',{name:'Got it',exact:true}),page.locator('.island-card-lobby[open] [data-focus="done"]'),page.locator('dialog.cutscene[open],.tutorial-card[open]').getByRole('button',{name:'Skip',exact:true})];
+ const candidates=[page.locator('.unlock-card[open]').getByRole('button',{name:/^Skip all /}),page.locator('.unlock-card[open]').getByRole('button',{name:'Got it',exact:true}),page.locator('.goal-card[open]').getByRole('button',{name:'Got it',exact:true}),page.locator('.island-card-lobby[open] [data-focus="done"]'),page.locator('dialog.cutscene[open],.tutorial-card[open]').getByRole('button',{name:'Skip',exact:true})];
  for(const candidate of candidates){for(let i=0;i<await candidate.count();i++){try{const point=await pointFor(candidate.nth(i));if(point){await page.mouse.click(point.x,point.y);await page.waitForTimeout(150);return true;}}catch(error){if(!/detach|resolve|attached/i.test(error.message))throw error;}}}return false;
 }
 async function pointer(page,locator){
@@ -88,7 +90,7 @@ async function settle(opened){const deadline=Math.max(...opened.map(o=>Date.pars
  while(Date.now()<deadline)await new Promise(resolve=>setTimeout(resolve,Math.min(5000,deadline-Date.now())));
  const token=(await readFile(join(directory,'cron-token'),'utf8')).trim();const response=await fetch('http://127.0.0.1:58006/api/internal/island-wagers/settle',{method:'POST',redirect:'error',headers:{Authorization:'Bearer '+token}});assert.equal(response.status,200);report.waitingFor=null;return {elapsedWaitSeconds:Math.round((Date.now()-start)/10)/100,scheduler:await response.json()};}
 try{
- report.hashesBefore=await hashes();report.sourcesBefore=await sources();
+ report.hashesBefore=await hashes();report.sourcesBefore=await sources();if(prior){assert.equal(prior.hashesAfter[files[1]],report.hashesBefore[files[1]]);assert.equal(prior.hashesAfter[files[8]],report.hashesBefore[files[8]]);report.priorOpening={reportSha256:await digest(resolve(priorPath)),status:prior.status,failure:prior.failure,hashesUnchanged:prior.hashesUnchanged,originalSteps:prior.steps};}
  for(const saved of prepared.clients){
   const browser=await chromium.launch({executablePath:'/usr/bin/chromium',headless:true,args:['--no-sandbox','--disable-dev-shm-usage','--disable-gpu','--ignore-certificate-errors-spki-list='+runtime.certificateSpki]});browsers.push(browser);
   const page=await browser.newPage({viewport:{width:1280,height:900}});page.setDefaultTimeout(15000);await page.goto('http://127.0.0.1:55106',{waitUntil:'domcontentloaded'});
@@ -101,14 +103,16 @@ try{
   clients.push({label:saved.label,actorId:saved.actorId,page});
  }
  const [owner,member]=clients;
- for(const client of clients){await land(client.page,client===member?{join:prepared.code}:{});await client.page.waitForFunction(owner=>window.__island?.island.economy?.islandOwner===owner&&window.__island.island.economy.mode==='island_shared',owner.actorId,{timeout:45000});await openMarket(client.page);await cardBank(client.page,'200','0');}
+ const initialMoney=prior?await money(prepared.economy.accountId):{balance:'200',held:'0'};const initialAvailable=(BigInt(initialMoney.balance)-BigInt(initialMoney.held)).toString();
+ for(const client of clients){await land(client.page,client===member?{join:prepared.code}:{});await client.page.waitForFunction(owner=>window.__island?.island.economy?.islandOwner===owner&&window.__island.island.economy.mode==='island_shared',owner.actorId,{timeout:45000});await openMarket(client.page);await cardBank(client.page,initialAvailable,initialMoney.held);}
  const privateBefore=await wallets();const account=prepared.economy.accountId;
- await check('two actual SDK-restored independent rendered clients show one shared bank',{browserProcesses:2,bankTexts:await Promise.all(clients.map(c=>cardBank(c.page,'200','0')))});
- const one=await place(member,'1','up');await Promise.all(clients.map(c=>cardBank(c.page,'199','1')));
- const second=await place(owner,'1','down');await Promise.all(clients.map(c=>cardBank(c.page,'198','2')));
- const all=await place(member,'198','up',{all:true});await Promise.all(clients.map(c=>cardBank(c.page,'0','200')));
+ await check('two actual SDK-restored independent rendered clients show one shared bank',{browserProcesses:2,bankTexts:await Promise.all(clients.map(c=>cardBank(c.page,initialAvailable,initialMoney.held)))});
+ let one,second,all;if(prior){[one,second,all]=prior.steps[1].requests;await check('staged browser continuation adopts the exact earlier visible opening receipts',{priorReportSha256:report.priorOpening.reportSha256,requests:[one,second,all],bankTexts:await Promise.all(clients.map(c=>cardBank(c.page,initialAvailable,initialMoney.held)))});}else{
+ one=await place(member,'1','up');await Promise.all(clients.map(c=>cardBank(c.page,'199','1')));
+ second=await place(owner,'1','down');await Promise.all(clients.map(c=>cardBank(c.page,'198','2')));
+ all=await place(member,'198','up',{all:true});await Promise.all(clients.map(c=>cardBank(c.page,'0','200')));
  assert.equal(new Set([one,second,all].map(r=>r.receipt.result.wager.id)).size,3);await screenshot(owner.page,'owner-all-funds-held');await screenshot(member.page,'member-all-funds-held');
- await check('visible one-coin, separate same-event and All in controls reserve exactly the island budget',{requests:[one,second,all],bankTexts:await Promise.all(clients.map(c=>cardBank(c.page,'0','200'))),account:await money(account)});
+ await check('visible one-coin, separate same-event and All in controls reserve exactly the island budget',{requests:[one,second,all],bankTexts:await Promise.all(clients.map(c=>cardBank(c.page,'0','200'))),account:await money(account)});}
  const memberSettings=await settings(member.page);assert.match(await memberSettings.innerText(),/Only the host can reset/);assert.equal(await memberSettings.locator('input.island-reset-code').count(),0);await screenshot(member.page,'member-reset-owner-only','.island-reset');
  await closePanels(member.page);await member.page.reload({waitUntil:'domcontentloaded'});await land(member.page,{join:prepared.code});await member.page.waitForFunction(owner=>window.__island?.island.economy?.islandOwner===owner,owner.actorId,{timeout:45000});await openMarket(member.page);await cardBank(member.page,'0','200');
  assert.equal((await api(member.page,'/api/me')).data.id,member.actorId);await screenshot(member.page,'member-real-reload-pending-stakes');
