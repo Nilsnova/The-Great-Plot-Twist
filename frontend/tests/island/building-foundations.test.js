@@ -23,6 +23,7 @@ it.each(['cannon_1', 'cannon_2', 'cannon_3', 'cannon_4'])('provides a solid perc
   expect(points.some(({height}) => height > .1)).toBe(true);
   expect(toes.length).toBeGreaterThan(0);
   expect(toes.every(({x, z}) => surfaceClass('home_islet', x, z) > 0)).toBe(true);
+  expect(Math.max(...toes.map(({x}) => x)) - Math.min(...toes.map(({x}) => x))).toBeGreaterThan(1.55);
 });
 
 it('keeps the ordinary shallow pad on an inland slot', () => {
