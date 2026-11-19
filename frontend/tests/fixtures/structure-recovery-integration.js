@@ -73,7 +73,7 @@ const canonicalState = () => ({serverNow: new Date().toISOString(), islandEpoch:
   remainingPaidUses: phase === 'between_waves' ? null : remainingPaidUses,
   structures: rows.map(row => ({...row, estimatedFreeSeconds: phase === 'between_waves' ? row.estimatedFreeSeconds : null}))});
 const ok = data => ({ok: true, status: 200, data});
-const base = createFakeIslandTransport({coins: balance, version: 2, unlocking: false, flags: {defenses_v2: true, more_tower_spots: true}});
+const base = createFakeIslandTransport({coins: balance, version: 2, unlocking: false});
 const extraSpots = ['cannon_8', 'cannon_9', 'cannon_10', 'cannon_11'];
 function withExtraSpots(answer) {
   if (!answer?.ok || !Array.isArray(answer.data?.spots)) return answer;
