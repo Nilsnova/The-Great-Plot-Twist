@@ -47,7 +47,7 @@ export async function createSettlement(ctx) {
     const ground = backdrop(group, await (ctx.loadBackdrop ?? loadBackdrop)(`places/${id}.png`));
     if (id === 'home_islet') {
       createHomeRelief(group, ground.material.map);
-      createHomeRearRim(group);
+      createHomeRearRim(group, art);
       createGroundShadows(group, trees.map(([x, z]) => {
         const scale = x === -13 && z === -12 ? .64 : 1;
         return {x: x + .55 * scale, z: z + .7 * scale, width: 1.6 * scale, depth: 1.4 * scale,

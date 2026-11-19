@@ -1,20 +1,30 @@
 import * as THREE from 'three';
 import {cliffProfile} from '../../art/coast-cliffs.js';
+import {placeArt} from '../art.js';
 import {projectGround} from '../projection.js';
 import {surfaces} from './surfaces.js';
 
 const START = 212, STEP = 4;
 // Open water at 248–292° leaves room for the Smugglers' occasional north approach.
 const HEIGHTS = [
-  0, .20, .65, .95, 1.15, 1.18, 1.18, .87, .34, 0,
+  0, .20, .64, 1.16, 1.55, 1.84, 1.74, 1.33, .45, 0,
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  .35, .88, 1.18, 1.24, 1.16, .80, .52, .30, .16, 0,
+  .45, 1.18, 1.61, 1.83, 1.81, 1.47, .83, .46, .18, 0,
 ];
-const STONE_TOP = ['#d2ad82', '#c9a27a', '#d0a67c', '#d5af84'];
-const STONE_FACE = ['#b7936c', '#af8a67', '#b88d67', '#bd956d'];
-const STONE_FOOT = '#8b6c53';
-const GRASS = ['#9abb4c', '#a3be49', '#a6c04d', '#9bb94c'];
-const GRASS_LIP = '#86a440', GRASS_EDGE = '#6e8733';
+const STONE_TOP = ['#e1b886', '#d7ab7a', '#dfb283', '#e4bd90'];
+const STONE_FACE = ['#be9365', '#b48a61', '#bd8f65', '#c79a6d'];
+const STONE_FOOT = '#83604a';
+const GRASS = ['#a4c54e', '#acc752', '#a8c54d', '#9ab64a'];
+const GRASS_LIP = '#89aa40', GRASS_EDGE = '#6d8532';
+const TERRACE_PLANTS = [
+  {section: 4, along: .44, depth: .51, asset: 'birch', size: .75},
+  {section: 5, along: .58, depth: .78, asset: 'rock', size: .51},
+  {section: 6, along: .73, depth: .39, asset: 'shrub', size: .61},
+  {section: 22, along: .8, depth: .51, asset: 'rock', size: .57},
+  {section: 24, along: .61, depth: .60, asset: 'oak', size: .62},
+  {section: 25, along: .74, depth: .38, asset: 'flowers', size: .72},
+  {section: 27, along: .4, depth: .51, asset: 'shrub', size: .59},
+];
 // The small sea rocks sit between the three beach approaches, beyond the playable coast.
 const SEA_ROCKS = [
   {bearing: 48, distance: 2.9, width: 1.05, height: 1.45},
@@ -30,7 +40,7 @@ function crossSections(coast) {
   return HEIGHTS.map((lift, index) => {
     const bearing = START + index * STEP;
     const {x, z} = coast[bearing / 2], length = Math.hypot(x, z);
-    const width = .24 + Math.sqrt(lift) * 2.82;
+    const width = .24 + Math.sqrt(lift) * 3.04;
     const point = (share, elevation) => {
       const out = .085 + width * share;
       return [x + x / length * out, elevation, z + z / length * out];
@@ -70,7 +80,7 @@ function surfaceGrain() {
 }
 
 /** One Home painter layer between ocean and backdrop, owned by the settlement's lifetime. */
-export function createHomeRearRim(group) {
+export function createHomeRearRim(group, art) {
   const shore = cliffProfile(surfaces.home_islet);
   const positions = [], colors = [], uvs = [], sections = crossSections(shore);
   const tint = new THREE.Color();
@@ -183,5 +193,14 @@ export function createHomeRearRim(group) {
   rim.renderOrder = 3;
   rim.raycast = () => {};
   group.add(rim);
+  for (const {section, along, depth, asset, size} of TERRACE_PLANTS) {
+    if (!art?.[asset]) continue;
+    const a = sections[section], b = sections[section + 1];
+    const [x, y, z] = mixPoint(mixPoint(a.upperCap, b.upperCap, along), mixPoint(a.crest, b.crest, along), depth);
+    const plant = placeArt(group, art, asset, x, z, size);
+    plant.position.y += y;
+    plant.renderOrder = 4;
+    plant.raycast = () => {};
+  }
   return rim;
 }
