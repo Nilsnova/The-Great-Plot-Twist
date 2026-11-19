@@ -93,9 +93,9 @@
   }
   .hud-play.hud-home:not(.hud-wide-balance) .hud-wave:not([hidden]) {
     position:absolute; top:0; left:calc(50vw - 12px); transform:translateX(-50%);
-    box-sizing:border-box; min-height:44px; max-width:126px; padding:6px 10px; gap:5px;
+    box-sizing:border-box; min-height:44px; max-width:calc(100vw - 225px); padding:6px 7px; gap:4px;
     border:0; border-radius:var(--u-radius-sm); box-shadow:var(--u-frame);
-    background:var(--u-sea); font-size:14px; pointer-events:none;
+    background:var(--u-sea); font-size:13px; pointer-events:none;
   }
   .hud-play.hud-home:not(.hud-wide-balance) .hud-wave-value { min-width:0; overflow:hidden; text-overflow:ellipsis; }
   .hud-play.hud-home:not(.hud-wide-balance) .hud-menu { padding-inline:10px; gap:7px; }
