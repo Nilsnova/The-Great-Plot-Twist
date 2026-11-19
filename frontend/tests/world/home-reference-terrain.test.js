@@ -21,15 +21,17 @@ it('keeps the illustrated backdrop opaque along the playable shore and transpare
     const dry = Math.min(...shore.flatMap(({x, z}) => [.35, .65, .95, .98].map(r => alpha(x * r, z * r))));
     const openSea = [[0, -31], [-29, 0], [29, 0], [0, 31]].map(([x, z]) => alpha(x, z));
     const northLanding = [-5.8, -4.82, -3.5].map(x => alpha(x, -23.71));
+    const northApproaches = shore.slice(124, 147).map(({x, z}) => alpha(x * 1.037, z * 1.037));
     // First dry steps from the standard Wave 11 approaches on the matching offline seed.
     const beaches = [[20.08, 1.85], [-18.5, 2.72], [-1.51, 21.07], [-4.58, -22.52]].map(([x, z]) => pixel(x, z));
     texture.dispose();
-    return {reference: texture.userData.homeReference, dry, openSea, northLanding, beaches};
+    return {reference: texture.userData.homeReference, dry, openSea, northLanding, northApproaches, beaches};
   });
   expect(terrain.reference).toBe(true);
   expect(terrain.dry).toBeGreaterThanOrEqual(240);
   expect(terrain.openSea).toEqual([0, 0, 0, 0]);
   expect(Math.max(...terrain.northLanding)).toBeLessThan(20);
+  expect(Math.max(...terrain.northApproaches)).toBeLessThan(20);
   for (const [r, g, b, opacity] of terrain.beaches) {
     expect(opacity).toBeGreaterThanOrEqual(230);
     expect(r - g).toBeGreaterThan(4);
