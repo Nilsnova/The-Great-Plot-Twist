@@ -248,3 +248,15 @@ with the spoiler guard clean (257 text files, 12 protected lines) and whitespace
 The actual Settings reset section was captured at 375 × 812 and visually inspected under
 `docs/evidence/MP-ECO-shared-reset/`. These component checks do not claim authenticated reset or
 concurrent native gameplay acceptance.
+
+## Frozen weather decoding
+
+The native producer freezes numerical weather in initialSnapshot.weather and the canonical kind
+in initialSnapshot.createWave.weatherKind. Validate outer kind against that frozen kind, ships/fog
+against frozen numerical weather and label against weatherLabel. An optional snapshot weather.kind
+must agree when present; its absence is valid. Preserve strict provenance and all other DTO checks.
+The server-to-client producer roundtrip is a separate cross-language regression.
+
+The focused weather regression first rejected both calm/storm producer shapes, then passed all
+21 tests across the actual three-file shapes/transport/native-controller selection. Contradictory
+frozen kind, optional kind, ships, fog and label remain rejected. Whitespace review passed.
