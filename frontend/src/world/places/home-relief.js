@@ -256,7 +256,8 @@ function homeCliffGeometry(rows = cliffProfile(surface)) {
               for (let side = 0; side < across.length - 1; side++) {
                 const tone = [-.13, .08, -.18][side] + .08 * lean;
                 panel(cap[level][side], cap[level][side + 1], cap[level + 1][side + 1], cap[level + 1][side],
-                  grass ? TURF : faceStone, baseTone + tone, baseTone + tone - .085, level, level + 1, .9, grass ? 3 : 2);
+                  grass ? TURF : faceStone, baseTone + tone, baseTone + tone - .085, level, level + 1, .9, grass ? 3 : 2,
+                  grass ? [across[side], across[side + 1]] : undefined);
               }
             }
           }
@@ -359,8 +360,17 @@ export function createHomeRelief(group, coastArt) {
           float weather = sandstoneGrain(logical * vec2(2.8, 4.0)).x - .5;
           if (vShoreRelief.z > 2.5) {
             float green = smoothstep(1.13, 1.44, (rock.g + .01) / (rock.r + .01));
-            // Fine fringe and the scene's own grass grain keep the cap attached to the meadow.
-            gl_FragColor = vec4(mix(vStone, rock.rgb, green * .57) * (1.01 + pore * .09 + weather * .14), opacity);
+            // Paint the shoulder into the existing lawn at both ends and along its inward slope.
+            // The closed cap and its original alpha still cover the same pixels.
+            float across = vShoreCut.x;
+            float ends = smoothstep(.0, .27, across) * (1.0 - smoothstep(.73, 1.0, across));
+            float inner = smoothstep(3.10, 5.65, vShoreRelief.y);
+            float crest = 1.0 - smoothstep(2.95, 4.68, vShoreRelief.y);
+            vec3 turf = mix(vStone, rock.rgb, green * .68);
+            turf = mix(turf, rock.rgb * (1.0 + crest * .16), green * .67);
+            turf *= 1.01 + pore * .09 + weather * .14;
+            float seam = green * (1.0 - ends * (1.0 - inner));
+            gl_FragColor = vec4(mix(turf, rock.rgb, seam), opacity);
           } else {
             vec3 shoulder = cutSandstone(vStone * (.95 + weather * .24), layers, vec2(.5), 0.0);
             gl_FragColor = vec4(shoulder, opacity);
