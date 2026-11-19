@@ -38,8 +38,8 @@ function geometryOf(foundations) {
   for (const {x, z, slot, ruin} of foundations) {
     const {width, depth, rear} = FORMS[slot], scale = ruin ? .72 : 1;
     appendGroundShadow((gx, gz, alpha) => vertex(gx, gz, 0, SHADOW, alpha), indices, {
-      x: x + .25, z: z - rear + .51, width: (width + .54) * scale, depth: (depth + .82) * scale,
-      opacity: ruin ? .24 : .49, innerOpacity: ruin ? .15 : .33,
+      x: x + .48, z: z - rear + .65, width: (width + .83) * scale, depth: (depth + 1.1) * scale,
+      opacity: ruin ? .24 : .53, innerOpacity: ruin ? .15 : .36,
     });
   }
   for (const {x, z, slot} of foundations) {
