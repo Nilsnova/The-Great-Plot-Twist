@@ -106,7 +106,8 @@ try{
  const ownB=await ok(engineer,'/api/games',{method:'POST',body:{actionUid:uid()}});
  const admittedB=await admit(engineer.actorId,{coins:200,runtimePath}),economyB=context(admittedB.currentEconomy);
  for(const actor of [offline,spectator])await leave(actor,proofs.get(actor));
- await ok(owner,'/api/island/session/settings',{method:'POST',body:{...proofs.get(owner),actionUid:uid(),countdownSeconds:10}});
+ for(const actor of [owner,engineer,countdown])await heartbeat(actor,proofs.get(actor));
+ await ok(owner,'/api/island/session/settings',{method:'POST',body:{...proofs.get(owner),actionUid:uid(),countdownSeconds:10,autoNext:false}});
  const wave=await ok(owner,'/api/waves/start',{method:'POST',body:{...proofs.get(owner),where:'own',actionUid:uid(),waveProtocol:2}});
  assert.equal(wave.wave,2);assert.equal(wave.initialSnapshot.participants.length,3);
  await heartbeat(owner,proofs.get(owner));await heartbeat(countdown,proofs.get(countdown));
@@ -124,7 +125,7 @@ try{
  const proofB=await attach(engineer,economyB);await build(engineer,'/api/island',proofB,'wall_1');
  const c2=(await profile(engineer)).captain.engineerCommitment.id;assert.notEqual(c2,c1);
  note('confirmed-withdrawal-new-engineer-generation',{participation:2,oldGeneration:c1,newGeneration:c2});
- const terminal=await naturalFinish(owner,proofs.get(owner),wave);assert.equal(terminal.finished.outcome,'won');
+ const terminal=await naturalFinish(owner,proofs.get(owner),wave,{otherHeartbeats:[[engineer,proofB]]});assert.equal(terminal.finished.outcome,'won');
  assert.equal((await profile(engineer)).captain.engineerCommitment.id,c2);
  const ownerProgress=await profile(owner);assert.equal(ownerProgress.captain.personalBestWave,2);assert.equal(ownerProgress.skills.earned,1);
  const engineerProgress=await profile(engineer);assert.equal(engineerProgress.captain.personalBestWave,2);assert.equal(engineerProgress.skills.earned,1);
@@ -141,7 +142,8 @@ try{
  const afterClaims=await profile(engineer);assert.equal(afterClaims.captain.engineerCommitment.id,c2);assert.equal(afterClaims.skills.earned,1);
  const effects=await read('select count(*)::int as count from public.personal_captain_completion_effects where player_id=$1::uuid and wave_id=$2::uuid',[engineer.actorId,wave.waveId]);assert.equal(effects[0].count,1);
  note('personal-receipt-survives-departure-reset-and-retries',{outcome:'won',playedWave:2,ownerEarnedPoints:1,engineerEarnedPoints:1,unconfirmedActorsEarnedPoints:0,completionEffects:1,successorGenerationRetained:true});
- await ok(engineer,'/api/island/session/settings',{method:'POST',body:{...proofB,actionUid:uid(),countdownSeconds:0}});
+ await heartbeat(engineer,proofB);
+ await ok(engineer,'/api/island/session/settings',{method:'POST',body:{...proofB,actionUid:uid(),countdownSeconds:0,autoNext:false}});
  const waveB=await ok(engineer,'/api/waves/start',{method:'POST',body:{...proofB,where:'own',actionUid:uid(),waveProtocol:2}});
  await heartbeat(engineer,proofB);
  const terminalB=await naturalFinish(engineer,proofB,waveB);assert.equal(terminalB.finished.completion.confirmedParticipation,true);
