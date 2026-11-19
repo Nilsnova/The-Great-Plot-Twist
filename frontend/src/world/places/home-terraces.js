@@ -136,7 +136,7 @@ function addTerraceFoliage(root, art, plantings) {
 }
 
 export function createHomeTerraces(root, coastArt, art) {
-  const coast = cliffProfile(COAST), positions = [], colors = [], materials = [], stoneDetails = [];
+  const coast = cliffProfile(COAST), positions = [], colors = [], materials = [], surfaceDetails = [];
   const plantings = new Map();
   const normal = new THREE.Vector3(), edge = new THREE.Vector3();
   function sunlight(a, b, d) {
@@ -144,18 +144,20 @@ export function createHomeTerraces(root, coastArt, art) {
     if (normal.y < 0) normal.negate();
     return .81 + .34 * Math.max(-.64, normal.dot(SUN));
   }
-  function vertex(p, tint, light, grass, opacity, cut, underTurf = false) {
+  function vertex(p, tint, light, grass, opacity, detail, recessed = false) {
     const ground = projectGround(p.x, p.z);
     positions.push(ground.x, ground.y + p.y, p.z * .03 + p.y * .09);
     colors.push(tint.r * light, tint.g * light, tint.b * light);
     materials.push(p.x, p.z, grass, opacity);
-    if (cut) stoneDetails.push(cut[0], cut[1], underTurf ? 2 : 1);
-    else stoneDetails.push(0, 0, 0);
+    // XY holds either a stone's cut coordinates or a tread's cross-slope and end fade.
+    // The third component marks the shaded course or the lower tread below the next step.
+    if (detail) surfaceDetails.push(detail[0], detail[1], recessed ? 2 : 1);
+    else surfaceDetails.push(0, 0, 0);
   }
-  function face(a, b, c, d, tint, lightA, lightB, grass = 0, opacity = [1, 1, 1, 1], cut, underTurf) {
+  function face(a, b, c, d, tint, lightA, lightB, grass = 0, opacity = [1, 1, 1, 1], detail, recessed) {
     const sun = (sunlight(a, b, c) + sunlight(a, c, d)) * .5;
     for (const [p, corner] of [[a, 0], [b, 1], [c, 2], [a, 0], [c, 2], [d, 3]]) {
-      vertex(p, tint, sun + (corner < 2 ? lightA : lightB), grass, opacity[corner], cut?.[corner], underTurf);
+      vertex(p, tint, sun + (corner < 2 ? lightA : lightB), grass, opacity[corner], detail?.[corner], recessed);
     }
   }
   function stone(point, color, worn, underTurf) {
@@ -193,6 +195,19 @@ export function createHomeTerraces(root, coastArt, art) {
         elevation * (1 + taper * Math.sin(sample * 1.11 + radius * 3) * .027));
     }
     const sodRings = profile.flatMap((entry, ring) => entry[3] === LIP ? [ring] : []);
+    // Map the existing treads from the sod rim to the base of the next rise. The surface
+    // shade can roll across the full shoulder while the authored shape and plant feet stay fixed.
+    const treads = new Map();
+    for (const [tier, sodRing] of sodRings.entries()) {
+      const from = sodRing + 1;
+      let to = from;
+      while (to < profile.length - 1 && profile[to][3] === TURF) to++;
+      const outer = profile[from][0], inner = profile[to][0];
+      const across = ring => (profile[ring][0] - outer) / (inner - outer);
+      for (let ring = from; ring < to; ring++) {
+        treads.set(ring, {from: across(ring), to: across(ring + 1), recessed: tier === 0});
+      }
+    }
     const rows = [];
     for (let sample = start; sample <= finish; sample += STEP) {
       const point = samplePoint(sample);
@@ -205,7 +220,8 @@ export function createHomeTerraces(root, coastArt, art) {
           point(THREE.MathUtils.lerp(from - overhang, to, across + curl), THREE.MathUtils.lerp(low, high, rise))),
         shape[ring + 1]]];
       }));
-      rows.push({sample, point, shape, sod});
+      const endFade = THREE.MathUtils.smoothstep(Math.min(sample - start, finish - sample), 0, 1.8);
+      rows.push({sample, point, shape, sod, endFade});
     }
     function heightAt(radius) {
       const next = profile.findIndex(([r]) => r >= radius);
@@ -295,12 +311,14 @@ export function createHomeTerraces(root, coastArt, art) {
       for (let ring = layer; ring >= bottom; ring--) {
         const [, , innerTone] = profile[ring], [, , outerTone] = profile[ring + 1];
         const lastSlope = profile.length - 2;
-        const capInner = ring === lastSlope ? .57 : 1;
-        const capOuter = ring === lastSlope ? 0 : ring === lastSlope - 1 ? .57 : 1;
+        const capInner = ring === lastSlope ? .74 : 1;
+        const capOuter = ring === lastSlope ? 0 : ring === lastSlope - 1 ? .74 : 1;
         const tint = band === STONE ? MORTAR : band;
         const turf = Number(band === TURF);
+        const tread = treads.get(ring);
         for (let i = 0; i < rows.length - 1; i++) {
-          const {shape: left, sample, sod: leftSod} = rows[i], {shape: right, sod: rightSod} = rows[i + 1];
+          const {shape: left, sample, sod: leftSod, endFade: fadeLeft} = rows[i];
+          const {shape: right, sod: rightSod, endFade: fadeRight} = rows[i + 1];
           const variation = .026 * Math.sin(sample * .89);
           if (band === LIP) {
             const a = leftSod[ring], b = rightSod[ring];
@@ -312,8 +330,9 @@ export function createHomeTerraces(root, coastArt, art) {
             }
             continue;
           }
+          const treadDetail = tread && [[tread.from, fadeLeft], [tread.from, fadeRight], [tread.to, fadeRight], [tread.to, fadeLeft]];
           face(left[ring], right[ring], right[ring + 1], left[ring + 1], tint,
-            innerTone + variation, outerTone + variation, turf, [capInner, capInner, capOuter, capOuter]);
+            innerTone + variation, outerTone + variation, turf, [capInner, capInner, capOuter, capOuter], treadDetail, tread?.recessed);
         }
       }
       if (band === STONE) rockCourse(bottom, layer + 1, layer > 5);
@@ -326,22 +345,22 @@ export function createHomeTerraces(root, coastArt, art) {
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
   geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
   geometry.setAttribute('terraceMaterial', new THREE.Float32BufferAttribute(materials, 4));
-  geometry.setAttribute('stoneDetail', new THREE.Float32BufferAttribute(stoneDetails, 3));
+  geometry.setAttribute('surfaceDetail', new THREE.Float32BufferAttribute(surfaceDetails, 3));
   const material = new THREE.ShaderMaterial({
     uniforms: {uCoastArt: {value: coastArt}}, vertexColors: true, side: THREE.DoubleSide,
     forceSinglePass: true, transparent: true, depthWrite: false, depthTest: false, toneMapped: false,
     vertexShader: /* glsl */`
       attribute vec4 terraceMaterial;
-      attribute vec3 stoneDetail;
+      attribute vec3 surfaceDetail;
       varying vec4 vTerrace;
       varying vec3 vTone;
       varying vec2 vTerrain;
-      varying vec3 vCut;
+      varying vec3 vSurface;
       void main() {
         vTerrace = terraceMaterial;
         vTone = color;
         vTerrain = position.xy;
-        vCut = stoneDetail;
+        vSurface = surfaceDetail;
         gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
       }`,
     fragmentShader: /* glsl */`
@@ -351,7 +370,7 @@ export function createHomeTerraces(root, coastArt, art) {
       varying vec4 vTerrace;
       varying vec3 vTone;
       varying vec2 vTerrain;
-      varying vec3 vCut;
+      varying vec3 vSurface;
       float hash2(vec2 p) {
         return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
       }
@@ -372,20 +391,30 @@ export function createHomeTerraces(root, coastArt, art) {
         float grain = smoothstep(.11, .43, dot(source, vec3(.27, .62, .11)));
         float height = vTerrain.y - projectGround(vTerrace.xy).y;
         float grainBreak = noise2(vec2(vTerrain.x * 4.8, height * 8.2));
+        vec2 floorUv = vec2(floorPoint.x / 64.0, -floorPoint.y * ${LEGACY_DEPTH} / 48.0) + .5;
+        if (vTerrace.z < -.5) {
+          // The existing contact band is grass up to the shaded roots at the foot of the stone.
+          vec3 meadow = texture2D(uCoastArt, floorUv).rgb;
+          float rootContact = smoothstep(.28, .54, vTerrace.w);
+          float apron = smoothstep(0.0, .17, vTerrace.w) * (1.0 - smoothstep(.22, .43, vTerrace.w));
+          float lawn = smoothstep(-.015, .093, meadow.g - meadow.r);
+          vec3 ground = meadow * (1.0 + (.24 + .1 * grainBreak) * apron * lawn);
+          gl_FragColor = vec4(mix(ground, vTone, rootContact), vTerrace.w);
+          #include <colorspace_fragment>
+          return;
+        }
         if (vTerrace.z < .5) {
           vec3 stone = vTone * mix(.91, 1.10, grain);
-          if (vTerrace.z > -.5) {
-            vec2 layers = vec2(vTerrace.x + vTerrace.y * .36, height + vTerrace.y * .13);
-            float cut = min(vCut.z, 1.0);
-            stone = cutSandstone(stone, layers, vCut.xy, cut);
-            // Tight earth contact grounds the lower stone bevel and the uncut mortar.
-            float rootShadow = (1.0 - smoothstep(.015, .21, height)) * .25;
-            float patina = smoothstep(.50, .83, grainBreak) * (1.0 - smoothstep(.08, .37, vCut.y));
-            float sodShade = step(1.5, vCut.z) * smoothstep(.68, .98, vCut.y);
-            stone = mix(stone, stone * vec3(.70, .78, .65), sodShade * (.48 + grainBreak * .22));
-            stone = mix(stone, stone * vec3(.82, .94, .72), .48 * patina * cut);
-            stone *= 1.0 - rootShadow;
-          }
+          vec2 layers = vec2(vTerrace.x + vTerrace.y * .36, height + vTerrace.y * .13);
+          float cut = min(vSurface.z, 1.0);
+          stone = cutSandstone(stone, layers, vSurface.xy, cut);
+          // Tight earth contact grounds the lower stone bevel and the uncut mortar.
+          float rootShadow = (1.0 - smoothstep(.015, .21, height)) * .25;
+          float patina = smoothstep(.50, .83, grainBreak) * (1.0 - smoothstep(.08, .37, vSurface.y));
+          float sodShade = step(1.5, vSurface.z) * smoothstep(.68, .98, vSurface.y);
+          stone = mix(stone, stone * vec3(.70, .78, .65), sodShade * (.48 + grainBreak * .22));
+          stone = mix(stone, stone * vec3(.82, .94, .72), .48 * patina * cut);
+          stone *= 1.0 - rootShadow;
           gl_FragColor = vec4(stone, vTerrace.w);
           #include <colorspace_fragment>
           return;
@@ -401,10 +430,18 @@ export function createHomeTerraces(root, coastArt, art) {
         vec3 turfColor = mix(vTone, source, .27 - underside * .12);
         turfColor = mix(turfColor, vec3(.37, .46, .081), lip * (.12 + moss * .13) * (1.0 - underside));
         turfColor = mix(turfColor, vec3(.115, .136, .041), underside * (.39 + tufts * .18));
+        // Broad smooth shoulders catch light up front. At the base of the next rise a
+        // broken band of moss and short grass makes the lower shelf read as a separate step.
+        float wobble = noise2(vTerrace.xy * .92) - .5;
+        float across = vSurface.x + wobble * .18 + (patches - .5) * .06;
+        float shoulder = smoothstep(-.13, .13, across) * (1.0 - smoothstep(.47, .91, across)) * vSurface.y;
+        float recess = step(1.5, vSurface.z) * smoothstep(.58, 1.0, across);
+        turfColor = mix(turfColor, vec3(.425, .553, .105), shoulder * .43);
+        turfColor = mix(turfColor, vec3(.125, .204, .047), recess * (.28 + .13 * moss));
         float meadowGrain = (tips - .5) * .12 + (tufts - .5) * .18 + (patches - .5) * .19;
         float leafLight = lip * (1.0 - underside) * smoothstep(.56, .87, tufts * .59 + tips * .41) * .16;
-        vec3 turf = turfColor * (mix(.89, 1.12, grain) + meadowGrain + leafLight);
-        vec2 floorUv = vec2(floorPoint.x / 64.0, -floorPoint.y * ${LEGACY_DEPTH} / 48.0) + .5;
+        float shoulderLight = shoulder * (.25 + (tufts - .5) * .13) - recess * (.22 + moss * .08);
+        vec3 turf = turfColor * (mix(.89, 1.12, grain) + meadowGrain + leafLight + shoulderLight);
         vec3 meadow = texture2D(uCoastArt, floorUv).rgb;
         float seamBlend = (1.0 - smoothstep(.12, .83, vTerrace.w)) * smoothstep(-.02, .12, meadow.g - meadow.r);
         turf = mix(turf, meadow, seamBlend * .88);
