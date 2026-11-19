@@ -72,3 +72,7 @@ interactions, world/phase appearance and 1280×720 / 375×812 game captures rema
 coordinated gates. A generated sheet does not establish gameplay, physical-device
 performance, Safari, production deployment or final human visual acceptance. No
 live migration, production flag, deployment or merge occurred.
+
+## 19 November Harbor and wreck revision
+
+The active [transparent Harbor and hull source](../../../frontend/public/village/home-harbor-v2.png) depicts a trading counter with a navy gable, a split hull and a matching repaired boat. The [source report](home-harbor-asset-v2.json) records the original Home Island concept, the two OpenAI image generation prompts, measured feet and comparable hull widths. The [native compiler receipt](home-harbor-bake-v2.json) binds the five service frames to the existing 4×, 2× and 1.5× normalization. The authored source stays out of the production build.
