@@ -47,7 +47,7 @@ function perimeterSpots(rows) {
   return rows.map(row => {
     if (!emptyWall(row)) return row;
     const cell = assigned.get(row.id);
-    return {...row, x: cell?.x, z: cell?.z};
+    return {...row, x: cell?.x ?? null, z: cell?.z ?? null};
   });
 }
 
