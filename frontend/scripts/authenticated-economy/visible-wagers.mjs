@@ -91,7 +91,8 @@ try{
    const result=await client.auth.setSession({access_token:session.access_token,refresh_token:session.refresh_token});if(result.error||!result.data.session||result.data.user?.id!==actorId)throw Error('Actual provider SDK session restoration failed: '+(result.error?.status??'identity'));sessionStorage.setItem('plot-twist-auth-v1',JSON.stringify(result.data.session));client.auth.stopAutoRefresh();
   },{url:'http://127.0.0.1:55106/provider',key:runtime.anonKey,session:saved.session,actorId:saved.actorId});
   await page.reload({waitUntil:'domcontentloaded'});await page.waitForFunction(async()=>{const {session}=await import('/src/online/session.js');return session.isSignedIn();},null,{timeout:30000});
-  const me=await api(page,'/api/me');assert.equal(me.status,200);assert.equal(me.data.id,saved.actorId);
+  let me;for(let attempt=0;attempt<60;attempt++){me=await api(page,'/api/me');if(me.status===200&&me.data.id===saved.actorId)break;await page.waitForTimeout(100);}
+  assert.equal(me.status,200,'Normal asynchronous Auth restore must reach production /api/me200');assert.equal(me.data.id,saved.actorId);
   clients.push({label:saved.label,actorId:saved.actorId,page});
  }
  const [owner,member]=clients;
