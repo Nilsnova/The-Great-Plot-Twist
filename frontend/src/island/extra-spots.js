@@ -8,7 +8,7 @@
 //   cannon_8   south-west, between the cabin and the south-west corner gun    after wave 10
 //   cannon_9   north-east, between the east gun and the Tech hub              after wave 20
 //   cannon_10  south of the heart, east of the main path, above the bench     after wave 30
-//   cannon_11  north-west, by the main path between the west house and the hill after wave 40
+//   cannon_11  north-west, off the central path                              after wave 40
 export const EXTRA_SPOT_TABLE = Object.freeze([
   ['cannon_8', -8.5, 12, 10], ['cannon_9', 11.5, -8.5, 20], ['cannon_10', 5, 10, 30], ['cannon_11', -3.5, -7.5, 40],
 ].map(row => Object.freeze(row)));

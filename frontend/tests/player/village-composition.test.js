@@ -2,6 +2,7 @@
 import {describe,expect,it} from 'vitest';
 import * as THREE from 'three';
 import {createCamera,villageFrame} from '../../src/player/camera.js';
+import {spotById} from '../../src/island/spots.js';
 import {worldViewport} from '../../src/pixel/display.js';
 import {projectPoint} from '../../src/world/art.js';
 import {unprojectGround} from '../../src/world/projection.js';
@@ -33,8 +34,8 @@ describe('approved village working composition',()=>{
       const heart=screen(t,{x:0,z:2});
       expect(heart.x).toBeGreaterThan(width/2);
       expect(heart.x).toBeLessThan(width*.82);
-      const watchtower=screen(t,{x:0,z:-14,lift:6});
-      expect(watchtower.y).toBeGreaterThan(t.viewport.top);
+      const northPath=screen(t,{x:0,z:-14});
+      expect(northPath.y).toBeGreaterThan(t.viewport.top);
       expect(screen(t,cabin).y).toBeLessThan(height-t.viewport.bottom);
     }
     expect(screen(t,{x:1.5,z:0}).x-screen(t,{x:-1.5,z:0}).x).toBeGreaterThanOrEqual(minimumCannon);
@@ -62,7 +63,8 @@ describe('approved village working composition',()=>{
   });
   it.each([[1280,720],[375,812]])('makes remote logical anchors reachable without moving them or refocusing visible anchors at %s×%s', (width,height)=>{
     const t=setup(width,height);t.viewport.bottom=335;t.view.setVillageView(true,t.viewport);t.view.update(.05,captain);
-    for(const anchor of [{x:-8,z:6,lift:2.6},{x:13,z:-15,lift:2},{x:15.5,z:14,lift:2},{x:-18.5,z:2,lift:1},{x:0,z:-14,lift:4.6}]){
+    const {x: towerX, z: towerZ}=spotById('tower_1');
+    for(const anchor of [{x:-8,z:6,lift:2.6},{x:13,z:-15,lift:2},{x:15.5,z:14,lift:2},{x:-18.5,z:2,lift:1},{x:towerX,z:towerZ,lift:4.6}]){
       const original={...anchor};t.view.focusVillage(anchor);t.view.update(.05,captain);const p=screen(t,anchor);
       expect(p.x).toBeGreaterThan(0);expect(p.x).toBeLessThan(width);expect(p.y).toBeGreaterThan(t.viewport.top);expect(p.y).toBeLessThan(height-t.viewport.bottom);
       const foot=screen(t,{x:anchor.x,z:anchor.z}),picked=new THREE.Vector3(foot.x/width*2-1,1-foot.y/height*2,0).unproject(t.view.camera);

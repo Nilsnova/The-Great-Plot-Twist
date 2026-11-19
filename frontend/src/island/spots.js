@@ -78,15 +78,15 @@ export const BELL = Object.freeze({id: 'island_bell', x: 8.5, z: 12});
 // The campaign's buildings (docs/GAME-V3.md §4 and §5): they stand from the start as a building site with a
 // sign "opens after wave N" and become the building once the island has won that wave. item: the campaign id
 // that opens it (src/campaign/campaign.json); art: its cartoon frame (src/art/campaign.js), mended: the frame
-// once the wreck is repaired. Places on free ground: the Harbor east of the bell's beach, the Tech hub north-east
-// between the watchtower hill and the corner cannon, the wreck on the west beach.
+// once the wreck is repaired. The Harbor stands in the east, the Tech hub in the north-east,
+// and the wreck on the west beach.
 export const CAMPAIGN_BUILDINGS = Object.freeze([
   Object.freeze({id: 'island_harbor', item: 'harbor', name: 'The Harbor', x: 13, z: 7.5, art: 'island-harbor', w: 4.4, h: 4.2}),
   Object.freeze({id: 'island_techhub', item: 'tech_hub', name: 'Tech hub', x: 8.5, z: -12.5, art: 'island-techhub', w: 4.4, h: 5.4}),
   Object.freeze({id: 'island_wreck', item: 'wreck', name: 'The wreck', x: -16.5, z: 5, art: 'island-wreck', mended: 'island-wreck-mended', w: 5.2, h: 3.6}),
 ]);
-// The arsenal (T41, D042): the crew's shared weapon rack, free ground north-west of the heart between the
-// watchtower hill and the west house (no build spot, path or tree there). It stands from the start, costs
+// The arsenal (T41, D042): the crew's shared weapon rack on open ground north-west of the Heart.
+// It stands from the start, costs
 // nothing to build and takes no damage (the waves never target it); shown only while the flag "arsenal" is on.
 export const ARSENAL = Object.freeze({id: 'island_arsenal', name: 'Arsenal', x: -5.5, z: -11.5, art: 'island-arsenal', w: 5, h: 5});
 export const campaignBuilding = id => CAMPAIGN_BUILDINGS.find(item => item.id === id) ?? null;
