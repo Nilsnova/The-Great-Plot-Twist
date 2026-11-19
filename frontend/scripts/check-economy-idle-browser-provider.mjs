@@ -36,6 +36,8 @@ const clean = code => String(code ?? '').replace(/^ISLE-/i, '').toUpperCase();
 async function finishEntry(page, options = {}) {
   try { await land(page, options); } catch (error) { if (error.name !== 'TimeoutError') throw error; }
   for (let attempt = 0; attempt < 20; attempt++) {
+    const skipAll = page.getByRole('button', {name: /^Skip all/}).first();
+    if (await skipAll.isVisible().catch(() => false)) await skipAll.click({noWaitAfter: true});
     for (const name of ['Skip', 'Got it']) {
       const button = page.getByRole('button', {name, exact: true}).first();
       if (await button.isVisible().catch(() => false)) await button.click({noWaitAfter: true, timeout: 3000});
@@ -50,6 +52,13 @@ async function finishEntry(page, options = {}) {
   if (options.join) assert.equal(clean(current.code), clean(options.join));
 }
 async function closeCards(page) {
+  for (let attempt = 0; attempt < 10; attempt++) {
+    const skipAll = page.getByRole('button', {name: /^Skip all/}).first();
+    if (await skipAll.isVisible().catch(() => false)) await skipAll.click({noWaitAfter: true});
+    const gotIt = page.locator('.unlock-card[open]').getByRole('button', {name: 'Got it', exact: true});
+    if (await gotIt.isVisible().catch(() => false)) await gotIt.click({noWaitAfter: true});
+    await page.waitForTimeout(100);
+  }
   for (let attempt = 0; attempt < 4 && await page.locator('dialog[open]').count(); attempt++) {
     await page.keyboard.press('Escape'); await page.waitForTimeout(150);
   }
@@ -194,8 +203,10 @@ try {
   assert.deepEqual((await api(member.page, '/api/captain')).data, captainBefore.data);
   note('visible-owner-reset-and-peer-read-clears-old-selection', {layer: 'rendered Settings mutation plus normal product refresh', startingCoins: '200', newEpoch: true, peerSelectionClosed: true, peerBankUpdated: true, personalCaptainUnchanged: true, displayed: resetText});
   await capture(member.page, output, 'peer-after-owner-reset');
-  const accounting = await read('select id,state,balance_coins,committed_coins,(select coalesce(sum(balance_delta),0) from public.island_treasury_transactions t where t.account_id=a.id) ledger_balance,(select count(*) from public.island_treasury_transactions t where t.account_id=a.id and t.reason in (\'starting_grant\',\'island_starting_grant\')) grants from public.island_economy_accounts a where island_owner=$1::uuid order by created_at', [owner.actorId]);
-  for (const row of accounting) assert.equal(row.balance_coins, row.ledger_balance);
+  const accounting = await read('select id,state,balance_coins,committed_coins,(select coalesce(sum(balance_delta),0) from public.island_treasury_transactions t where t.account_id=a.id) ledger_balance,(select count(*) from public.island_treasury_transactions t where t.account_id=a.id and t.reason=\'starting_coins\') grants from public.island_economy_accounts a where island_owner=$1::uuid order by created_at', [owner.actorId]);
+  assert.equal(accounting.length, 2);
+  for (const row of accounting) { assert.equal(row.balance_coins, row.ledger_balance); assert.equal(row.grants, 1); }
+  assert.deepEqual(accounting.map(row => row.state), ['retired', 'active']);
   const walletsAfter = await read('select player_id,balance from public.wallets where player_id=any($1::uuid[]) order by player_id', [[owner.actorId, member.actorId]]);
   assert.deepEqual(walletsAfter, walletsBefore);
   note('independent-reset-account-ledger-and-wallet-conservation', {layer: 'read-only PostgreSQL', accounts: accounting, walletsUnchanged: true});
