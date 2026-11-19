@@ -18,25 +18,25 @@ const PATHS = {
 const seeded = seed => () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
 
 const PAVERS = [
-  ['#cbb998', '#a39175', '#e5d4aa'], ['#d4c19e', '#ad9b79', '#e9d7af'],
-  ['#ccbea6', '#a1947e', '#e8d9be'], ['#bfae92', '#9f8e72', '#dccaaa'],
-  ['#d5c2a3', '#ad987a', '#ebd9b6'], ['#c8b69d', '#a38e75', '#e4d2b5'],
+  ['#c9ba9c', '#b1a085', '#d9c9a9'], ['#cfbea0', '#b6a487', '#dfcdae'],
+  ['#c8baa2', '#b2a28b', '#d9cbb4'], ['#c3b398', '#ad9e83', '#d3c3a6'],
+  ['#d0bfaa', '#b7a68e', '#dfceb7'], ['#c8b79c', '#b09f84', '#d8c7a8'],
 ];
 
-/** World-anchored, staggered limestone blocks recessed into the existing path and clearing mask. */
+/** World-anchored limestone setts with shallow bevels and narrow, subdued joints. */
 function paintPavers(c, paths, materials) {
   const bounds = {left: -SIZE.width / 2, top: -SIZE.height / 2, right: SIZE.width / 2, bottom: SIZE.height / 2};
   const random = seeded(18281), faces = new Path2D();
   c.save();
   c.clip(pathMaterialMask(paths));
-  c.fillStyle = '#a0947b';
+  c.fillStyle = '#b0a288';
   c.fillRect(bounds.left, bounds.top, SIZE.width, SIZE.height);
   for (let row = bounds.top; row < bounds.bottom;) {
-    const depth = .42 + random() * .24;
+    const depth = .43 + random() * .12;
     let left = bounds.left - random();
     while (left < bounds.right) {
-      const width = .67 + random() * .7, trim = .013 + random() * .016;
-      const chip = .03 + random() * .115, drift = (random() - .5) * .061;
+      const width = .47 + random() * .17, trim = .008 + random() * .008;
+      const chip = .02 + random() * .038, drift = (random() - .5) * .028;
       const [face, bevel, gleam] = PAVERS[Math.floor(random() * PAVERS.length)];
       const x = left + trim, y = row + trim + drift;
       const right = left + width - trim, bottom = row + depth - trim + drift;
@@ -44,13 +44,13 @@ function paintPavers(c, paths, materials) {
       const centerZ = (y + bottom) / (2 * LEGACY_DEPTH);
       if (!nearPath(paths, (x + right) / 2, centerZ, 2.4)) continue;
       c.fillStyle = bevel;
-      c.fill(poly([[x + chip, y], [right - .07, y + .013], [right, y + .065],
-        [right - .029, bottom - .032], [right - .092, bottom], [x + .059, bottom],
-        [x, bottom - .067], [x, y + .071]], .012));
-      const top = poly([[x + chip, y + .014], [right - .083, y + .021], [right - .028, y + .072],
-        [right - .049, bottom - .066], [right - .108, bottom - .075], [x + .071, bottom - .067],
-        [x + .023, bottom - .103], [x + .02, y + .076]], .014);
-      c.fillStyle = linear(c, x, y, x + width * .3, bottom, [[0, gleam], [.24, face], [.78, face], [1, bevel]]);
+      c.fill(poly([[x + chip, y], [right - .03, y + .006], [right, y + .033],
+        [right - .017, bottom - .023], [right - .049, bottom], [x + .037, bottom],
+        [x, bottom - .039], [x, y + .036]], .009));
+      const top = poly([[x + chip, y + .009], [right - .035, y + .013], [right - .015, y + .038],
+        [right - .026, bottom - .038], [right - .055, bottom - .044], [x + .045, bottom - .037],
+        [x + .014, bottom - .059], [x + .012, y + .042]], .009);
+      c.fillStyle = linear(c, x, y, x + width * .32, bottom, [[0, gleam], [.27, face], [.84, face], [1, bevel]]);
       c.fill(top);
       faces.addPath(top);
     }
@@ -59,7 +59,7 @@ function paintPavers(c, paths, materials) {
   // Reuse the atlas's original limestone grain inside each face. The carved joints stay distinct.
   c.clip(faces);
   c.globalCompositeOperation = 'soft-light';
-  paintMaterial(c, materials, 'path', {alpha: .15});
+  paintMaterial(c, materials, 'path', {alpha: .08});
   c.restore();
 }
 
