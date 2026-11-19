@@ -79,9 +79,18 @@ async function naturalRepairTarget(page,spots,previous=null){
   return found.jsonValue();
 }
 
+async function acceptedNaturalDamage(page,spot){
+  await page.waitForFunction(spot=>window.__island?.waves?.island.recoveryCombatState?.structures
+    .some(row=>row.spot===spot && row.hpUnits<1000000),spot,{timeout:90000});
+  const checkpoint=await page.evaluate(()=>window.__island.waves.island.checkpointBeforeRepair());
+  assert.equal(checkpoint.ok,true,`Actual natural checkpoint refused: ${JSON.stringify(checkpoint)}`);
+  const read=await recovery(page),row=read.structures.find(item=>item.spot===spot);
+  assert.ok(row && row.hpUnits<1000000);return {read,row};
+}
+
 /** Full actual-provider quota journey. Defense/unlock/budget setup is declared by the caller. */
 export async function runFullRepairQuotaAcceptance({ownerPage,memberPage,observe,api,outputDir,
-  reconnectMember,spots,sourceCommit,setup}) {
+  reconnectMember,spots,sourceCommit,setup,expectedPlayedWave=1}) {
   const report={sourceCommit,scenario:'actual-provider-three-shared-repairs',status:'running',setup,steps:[],limits:[
     'Real local provider identities, production sessions and natural simulation; no HP, outcome, clock or journal fixture.',
     'Intro acknowledgements activate actual DOM controls as setup; the bell uses a physical pointer. Repair purchases use normal authenticated HTTP from each real browser session.',
@@ -101,6 +110,8 @@ export async function runFullRepairQuotaAcceptance({ownerPage,memberPage,observe
     await ownerPage.waitForFunction(prior=>{const wave=window.__island?.waves?.island.wave;
       return !!wave && !wave.done && wave.info.waveId!==prior;},priorWave,{timeout:20000});
     const wave=await ownerPage.evaluate(()=>window.__island.waves.island.wave.info.waveId);
+    const playedWave=await ownerPage.evaluate(()=>window.__island.waves.island.wave.info.wave);
+    assert.equal(playedWave,expectedPlayedWave,'the accepted wave must match the declared saved-state fixture');
     await memberPage.waitForFunction(wave=>window.__island?.waves?.island.wave?.info.waveId===wave,wave,{timeout:20000});
     const preparing=await recovery(ownerPage),intactRow=preparing.structures.find(row=>row.spot===spots[0]);
     assert.equal(preparing.displayPhase,'preparing');assert.equal(preparing.remainingPaidUses,3);assert.equal(intactRow.hpUnits,1000000);
@@ -108,7 +119,7 @@ export async function runFullRepairQuotaAcceptance({ownerPage,memberPage,observe
     const intact=await api(ownerPage,REPAIR,{method:'POST',body:repairBody(preparing,intactRow,origin)});
     assert.equal(intact.status,409);assert.equal(intact.data.error.code,'intact');
     assert.deepEqual(await accounting(observe,origin.accountId,wave),before);
-    await record('accepted real countdown shares three uses; intact request has no financial/quota effect',{waveId:wave,preparing,before,intact});
+    await record('accepted real countdown shares three uses; intact request has no financial/quota effect',{waveId:wave,playedWave,preparing,before,intact});
     const beforeControl=await memberPage.evaluate(()=>{
       const proof=window.__island.island.session.proof(),info=window.__island.waves.island.wave.info;
       return {actorId:proof.actorId,sessionId:proof.sessionId,connectionGeneration:proof.connectionGeneration,participantToken:info.participantToken};
@@ -128,7 +139,7 @@ export async function runFullRepairQuotaAcceptance({ownerPage,memberPage,observe
     await record('ordinary member reconnect retains frozen participant and shared untouched allowance',{beforeControl,restored,accounting:await accounting(observe,origin.accountId,wave)});
     const damaged=await ownerPage.waitForFunction(spots=>window.__island?.waves?.island.recoveryCombatState?.structures
       .find(row=>spots.includes(row.spot) && row.hpUnits>0 && row.hpUnits<1000000)?.spot??null,spots,{timeout:90000});
-    const spot=await damaged.jsonValue(),damage=await damagedCard(ownerPage,spot),staleBody=repairBody(damage.read,damage.row,origin);
+    const spot=await damaged.jsonValue(),damage=await acceptedNaturalDamage(ownerPage,spot),staleBody=repairBody(damage.read,damage.row,origin);
     staleBody.quotedPrice++;
     const stale=await api(ownerPage,REPAIR,{method:'POST',body:staleBody});
     assert.equal(stale.status,409);assert.equal(stale.data.error.code,'stale_recovery_quote');
@@ -141,7 +152,7 @@ export async function runFullRepairQuotaAcceptance({ownerPage,memberPage,observe
     assert.equal(first.data.receipt.result.chargedPrice,String(damage.row.fixedPrice));
     await Promise.all([repairApplied(ownerPage,first.data.receipt),repairApplied(memberPage,first.data.receipt)]);
     await record('owner buys shared repair one through authenticated browser transport',{request:first.body,receipt:first.data.receipt});
-    const later=await damagedCard(ownerPage,spot),prior=await accounting(observe,origin.accountId,wave);
+    const later=await acceptedNaturalDamage(ownerPage,spot),prior=await accounting(observe,origin.accountId,wave);
     const retry=await api(ownerPage,REPAIR,{method:'POST',body:first.body});
     assert.equal(retry.status,200);assert.equal(retry.data.repeat,true);assert.deepEqual(retry.data.receipt,first.data.receipt);
     assert.deepEqual(await accounting(observe,origin.accountId,wave),prior);
@@ -151,7 +162,7 @@ export async function runFullRepairQuotaAcceptance({ownerPage,memberPage,observe
     let previousSpot=spot;
     for(const [ordinal,page,actor] of [[2,memberPage,restored.actorId],[3,ownerPage,origin.islandOwner]]) {
       const target=await naturalRepairTarget(page,spots,previousSpot);
-      await damagedCard(page,target);const paid=await quotedRepairTransport(page,target,origin,api),receipt=paid.data.receipt;
+      await acceptedNaturalDamage(page,target);const paid=await quotedRepairTransport(page,target,origin,api),receipt=paid.data.receipt;
       assert.equal(receipt.actorId,actor);assert.equal(receipt.origin.accountId,origin.accountId);
       assert.equal(receipt.result.useOrdinal,ordinal);assert.equal(receipt.result.chargedPrice,String(damage.row.fixedPrice));
       receipts.push(receipt);await Promise.all([repairApplied(ownerPage,receipt),repairApplied(memberPage,receipt)]);
