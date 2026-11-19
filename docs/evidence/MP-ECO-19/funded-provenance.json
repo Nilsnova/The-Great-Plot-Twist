@@ -1,0 +1,1218 @@
+{
+  "artifacts": [
+    {
+      "allRecordedSourcesMatchCommit": true,
+      "artifact": "funded-calm.json.gz",
+      "captureBoundary": "post_run_capture; no retained pre_run receipt",
+      "sourceCommit": "a05346fb17bdbe787f01d4eba2fda3290ebe8f96",
+      "sourceCount": 307,
+      "uncompressedSha256": "ae9b06a24065d4e9a39d58dd5a954b99c452fa39f4151e7fd5aacc412280ee5b"
+    },
+    {
+      "allRecordedSourcesMatchCommit": true,
+      "artifact": "funded-storm.json.gz",
+      "captureBoundary": "post_run_capture; no retained pre_run receipt",
+      "sourceCommit": "a05346fb17bdbe787f01d4eba2fda3290ebe8f96",
+      "sourceCount": 307,
+      "uncompressedSha256": "941d7bdbed2aab02f62b58e9484bd36efae9ee5f29bf76f6df6cd279c38ba38b"
+    },
+    {
+      "allRecordedSourcesMatchCommit": true,
+      "artifact": "funded-sql-farming.json.gz",
+      "captureBoundary": "before_and_after_asserted_by_SQL_runner",
+      "sourceCommit": "a05346fb17bdbe787f01d4eba2fda3290ebe8f96",
+      "sourceCount": 307,
+      "uncompressedSha256": "98835d728a0ca4d80b695192bea16b20b9ede19fa0afba0d7efaba700dabf8a1"
+    },
+    {
+      "allRecordedSourcesMatchCommit": true,
+      "artifact": "funded-sql-ten.json.gz",
+      "captureBoundary": "before_and_after_asserted_by_SQL_runner",
+      "sourceCommit": "a05346fb17bdbe787f01d4eba2fda3290ebe8f96",
+      "sourceCount": 307,
+      "uncompressedSha256": "efd6ba01b31969ce73c6ea405b1b6922ce1dadfdd0c9113a479cdcce2f25c40f"
+    },
+    {
+      "allRecordedSourcesMatchCommit": true,
+      "artifact": "funded-sql.json.gz",
+      "captureBoundary": "before_and_after_asserted_by_SQL_runner",
+      "sourceCommit": "a05346fb17bdbe787f01d4eba2fda3290ebe8f96",
+      "sourceCount": 307,
+      "uncompressedSha256": "f70f8d4f54d72982aba51a40985e06a331f31bca7a9d18d2b196405670be51b1"
+    }
+  ],
+  "baseCommit": "3bdd8eda16470795fdedd68c42fffab54e5f2ced",
+  "correctedHeadlessProjections": [
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1912.2,
+      "captains": 1,
+      "observedSimSeconds": 1200.2,
+      "policy": "novice",
+      "priority": "defense",
+      "profileCohort": "fresh",
+      "seed": 7919,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1876.45,
+      "captains": 1,
+      "observedSimSeconds": 1164.45,
+      "policy": "novice",
+      "priority": "defense",
+      "profileCohort": "fresh",
+      "seed": 15401,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 455.05,
+      "captains": 1,
+      "observedSimSeconds": 335.05,
+      "policy": "novice",
+      "priority": "income",
+      "profileCohort": "fresh",
+      "seed": 7919,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 501.7,
+      "captains": 1,
+      "observedSimSeconds": 381.7,
+      "policy": "novice",
+      "priority": "income",
+      "profileCohort": "fresh",
+      "seed": 15401,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1911.6,
+      "captains": 1,
+      "observedSimSeconds": 1199.6,
+      "policy": "novice",
+      "priority": "adaptive",
+      "profileCohort": "fresh",
+      "seed": 7919,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1878.0,
+      "captains": 1,
+      "observedSimSeconds": 1166.0,
+      "policy": "novice",
+      "priority": "adaptive",
+      "profileCohort": "fresh",
+      "seed": 15401,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1805.15,
+      "captains": 1,
+      "observedSimSeconds": 1093.15,
+      "policy": "mixed",
+      "priority": "defense",
+      "profileCohort": "fresh",
+      "seed": 7919,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1775.65,
+      "captains": 1,
+      "observedSimSeconds": 1063.65,
+      "policy": "mixed",
+      "priority": "defense",
+      "profileCohort": "fresh",
+      "seed": 15401,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 480.0,
+      "captains": 1,
+      "observedSimSeconds": 324.0,
+      "policy": "mixed",
+      "priority": "income",
+      "profileCohort": "fresh",
+      "seed": 7919,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 2174.0,
+      "captains": 1,
+      "observedSimSeconds": 1370.0,
+      "policy": "mixed",
+      "priority": "income",
+      "profileCohort": "fresh",
+      "seed": 15401,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1831.05,
+      "captains": 1,
+      "observedSimSeconds": 1119.05,
+      "policy": "mixed",
+      "priority": "adaptive",
+      "profileCohort": "fresh",
+      "seed": 7919,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1774.7,
+      "captains": 1,
+      "observedSimSeconds": 1062.7,
+      "policy": "mixed",
+      "priority": "adaptive",
+      "profileCohort": "fresh",
+      "seed": 15401,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1805.15,
+      "captains": 1,
+      "observedSimSeconds": 1093.15,
+      "policy": "veteran",
+      "priority": "defense",
+      "profileCohort": "fresh",
+      "seed": 7919,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1775.65,
+      "captains": 1,
+      "observedSimSeconds": 1063.65,
+      "policy": "veteran",
+      "priority": "defense",
+      "profileCohort": "fresh",
+      "seed": 15401,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 480.0,
+      "captains": 1,
+      "observedSimSeconds": 324.0,
+      "policy": "veteran",
+      "priority": "income",
+      "profileCohort": "fresh",
+      "seed": 7919,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 2174.0,
+      "captains": 1,
+      "observedSimSeconds": 1370.0,
+      "policy": "veteran",
+      "priority": "income",
+      "profileCohort": "fresh",
+      "seed": 15401,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1831.05,
+      "captains": 1,
+      "observedSimSeconds": 1119.05,
+      "policy": "veteran",
+      "priority": "adaptive",
+      "profileCohort": "fresh",
+      "seed": 7919,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1774.7,
+      "captains": 1,
+      "observedSimSeconds": 1062.7,
+      "policy": "veteran",
+      "priority": "adaptive",
+      "profileCohort": "fresh",
+      "seed": 15401,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1889.95,
+      "captains": 2,
+      "observedSimSeconds": 1177.95,
+      "policy": "novice",
+      "priority": "defense",
+      "profileCohort": "fresh",
+      "seed": 7919,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1851.35,
+      "captains": 2,
+      "observedSimSeconds": 1139.35,
+      "policy": "novice",
+      "priority": "defense",
+      "profileCohort": "fresh",
+      "seed": 15401,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 455.05,
+      "captains": 2,
+      "observedSimSeconds": 335.05,
+      "policy": "novice",
+      "priority": "income",
+      "profileCohort": "fresh",
+      "seed": 7919,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 501.7,
+      "captains": 2,
+      "observedSimSeconds": 381.7,
+      "policy": "novice",
+      "priority": "income",
+      "profileCohort": "fresh",
+      "seed": 15401,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1890.3,
+      "captains": 2,
+      "observedSimSeconds": 1178.3,
+      "policy": "novice",
+      "priority": "adaptive",
+      "profileCohort": "fresh",
+      "seed": 7919,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1851.5,
+      "captains": 2,
+      "observedSimSeconds": 1139.5,
+      "policy": "novice",
+      "priority": "adaptive",
+      "profileCohort": "fresh",
+      "seed": 15401,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1774.35,
+      "captains": 2,
+      "observedSimSeconds": 1062.35,
+      "policy": "mixed",
+      "priority": "defense",
+      "profileCohort": "fresh",
+      "seed": 7919,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1747.65,
+      "captains": 2,
+      "observedSimSeconds": 1035.65,
+      "policy": "mixed",
+      "priority": "defense",
+      "profileCohort": "fresh",
+      "seed": 15401,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1823.0,
+      "captains": 2,
+      "observedSimSeconds": 1111.0,
+      "policy": "mixed",
+      "priority": "income",
+      "profileCohort": "fresh",
+      "seed": 7919,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1772.95,
+      "captains": 2,
+      "observedSimSeconds": 1060.95,
+      "policy": "mixed",
+      "priority": "income",
+      "profileCohort": "fresh",
+      "seed": 15401,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1787.75,
+      "captains": 2,
+      "observedSimSeconds": 1075.75,
+      "policy": "mixed",
+      "priority": "adaptive",
+      "profileCohort": "fresh",
+      "seed": 7919,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1751.75,
+      "captains": 2,
+      "observedSimSeconds": 1039.75,
+      "policy": "mixed",
+      "priority": "adaptive",
+      "profileCohort": "fresh",
+      "seed": 15401,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1746.55,
+      "captains": 2,
+      "observedSimSeconds": 1034.55,
+      "policy": "veteran",
+      "priority": "defense",
+      "profileCohort": "fresh",
+      "seed": 7919,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1706.8,
+      "captains": 2,
+      "observedSimSeconds": 994.8,
+      "policy": "veteran",
+      "priority": "defense",
+      "profileCohort": "fresh",
+      "seed": 15401,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1774.95,
+      "captains": 2,
+      "observedSimSeconds": 1062.95,
+      "policy": "veteran",
+      "priority": "income",
+      "profileCohort": "fresh",
+      "seed": 7919,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1720.8,
+      "captains": 2,
+      "observedSimSeconds": 1008.8,
+      "policy": "veteran",
+      "priority": "income",
+      "profileCohort": "fresh",
+      "seed": 15401,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1741.65,
+      "captains": 2,
+      "observedSimSeconds": 1029.65,
+      "policy": "veteran",
+      "priority": "adaptive",
+      "profileCohort": "fresh",
+      "seed": 7919,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1704.05,
+      "captains": 2,
+      "observedSimSeconds": 992.05,
+      "policy": "veteran",
+      "priority": "adaptive",
+      "profileCohort": "fresh",
+      "seed": 15401,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1841.9,
+      "captains": 4,
+      "observedSimSeconds": 1129.9,
+      "policy": "novice",
+      "priority": "defense",
+      "profileCohort": "fresh",
+      "seed": 7919,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1813.9,
+      "captains": 4,
+      "observedSimSeconds": 1101.9,
+      "policy": "novice",
+      "priority": "defense",
+      "profileCohort": "fresh",
+      "seed": 15401,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 467.05,
+      "captains": 4,
+      "observedSimSeconds": 347.05,
+      "policy": "novice",
+      "priority": "income",
+      "profileCohort": "fresh",
+      "seed": 7919,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 513.05,
+      "captains": 4,
+      "observedSimSeconds": 393.05,
+      "policy": "novice",
+      "priority": "income",
+      "profileCohort": "fresh",
+      "seed": 15401,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1829.6,
+      "captains": 4,
+      "observedSimSeconds": 1117.6,
+      "policy": "novice",
+      "priority": "adaptive",
+      "profileCohort": "fresh",
+      "seed": 7919,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1807.7,
+      "captains": 4,
+      "observedSimSeconds": 1095.7,
+      "policy": "novice",
+      "priority": "adaptive",
+      "profileCohort": "fresh",
+      "seed": 15401,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1719.85,
+      "captains": 4,
+      "observedSimSeconds": 1007.85,
+      "policy": "mixed",
+      "priority": "defense",
+      "profileCohort": "fresh",
+      "seed": 7919,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1696.55,
+      "captains": 4,
+      "observedSimSeconds": 984.55,
+      "policy": "mixed",
+      "priority": "defense",
+      "profileCohort": "fresh",
+      "seed": 15401,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1739.45,
+      "captains": 4,
+      "observedSimSeconds": 1027.45,
+      "policy": "mixed",
+      "priority": "income",
+      "profileCohort": "fresh",
+      "seed": 7919,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1711.2,
+      "captains": 4,
+      "observedSimSeconds": 999.2,
+      "policy": "mixed",
+      "priority": "income",
+      "profileCohort": "fresh",
+      "seed": 15401,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1719.0,
+      "captains": 4,
+      "observedSimSeconds": 1007.0,
+      "policy": "mixed",
+      "priority": "adaptive",
+      "profileCohort": "fresh",
+      "seed": 7919,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1694.75,
+      "captains": 4,
+      "observedSimSeconds": 982.75,
+      "policy": "mixed",
+      "priority": "adaptive",
+      "profileCohort": "fresh",
+      "seed": 15401,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1680.15,
+      "captains": 4,
+      "observedSimSeconds": 968.15,
+      "policy": "veteran",
+      "priority": "defense",
+      "profileCohort": "fresh",
+      "seed": 7919,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1661.8,
+      "captains": 4,
+      "observedSimSeconds": 949.8,
+      "policy": "veteran",
+      "priority": "defense",
+      "profileCohort": "fresh",
+      "seed": 15401,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1689.5,
+      "captains": 4,
+      "observedSimSeconds": 977.5,
+      "policy": "veteran",
+      "priority": "income",
+      "profileCohort": "fresh",
+      "seed": 7919,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1831.2,
+      "captains": 4,
+      "observedSimSeconds": 1073.2,
+      "policy": "veteran",
+      "priority": "income",
+      "profileCohort": "fresh",
+      "seed": 15401,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1671.85,
+      "captains": 4,
+      "observedSimSeconds": 959.85,
+      "policy": "veteran",
+      "priority": "adaptive",
+      "profileCohort": "fresh",
+      "seed": 7919,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1661.65,
+      "captains": 4,
+      "observedSimSeconds": 949.65,
+      "policy": "veteran",
+      "priority": "adaptive",
+      "profileCohort": "fresh",
+      "seed": 15401,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1771.15,
+      "captains": 10,
+      "observedSimSeconds": 1059.15,
+      "policy": "novice",
+      "priority": "defense",
+      "profileCohort": "fresh",
+      "seed": 7919,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1754.15,
+      "captains": 10,
+      "observedSimSeconds": 1042.15,
+      "policy": "novice",
+      "priority": "defense",
+      "profileCohort": "fresh",
+      "seed": 15401,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 468.55,
+      "captains": 10,
+      "observedSimSeconds": 348.55,
+      "policy": "novice",
+      "priority": "income",
+      "profileCohort": "fresh",
+      "seed": 7919,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 516.7,
+      "captains": 10,
+      "observedSimSeconds": 396.7,
+      "policy": "novice",
+      "priority": "income",
+      "profileCohort": "fresh",
+      "seed": 15401,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1766.15,
+      "captains": 10,
+      "observedSimSeconds": 1054.15,
+      "policy": "novice",
+      "priority": "adaptive",
+      "profileCohort": "fresh",
+      "seed": 7919,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1753.0,
+      "captains": 10,
+      "observedSimSeconds": 1041.0,
+      "policy": "novice",
+      "priority": "adaptive",
+      "profileCohort": "fresh",
+      "seed": 15401,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1665.8,
+      "captains": 10,
+      "observedSimSeconds": 953.8,
+      "policy": "mixed",
+      "priority": "defense",
+      "profileCohort": "fresh",
+      "seed": 7919,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1651.4,
+      "captains": 10,
+      "observedSimSeconds": 939.4,
+      "policy": "mixed",
+      "priority": "defense",
+      "profileCohort": "fresh",
+      "seed": 15401,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1681.95,
+      "captains": 10,
+      "observedSimSeconds": 969.95,
+      "policy": "mixed",
+      "priority": "income",
+      "profileCohort": "fresh",
+      "seed": 7919,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1653.6,
+      "captains": 10,
+      "observedSimSeconds": 941.6,
+      "policy": "mixed",
+      "priority": "income",
+      "profileCohort": "fresh",
+      "seed": 15401,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1661.25,
+      "captains": 10,
+      "observedSimSeconds": 949.25,
+      "policy": "mixed",
+      "priority": "adaptive",
+      "profileCohort": "fresh",
+      "seed": 7919,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1648.9,
+      "captains": 10,
+      "observedSimSeconds": 936.9,
+      "policy": "mixed",
+      "priority": "adaptive",
+      "profileCohort": "fresh",
+      "seed": 15401,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1650.55,
+      "captains": 10,
+      "observedSimSeconds": 938.55,
+      "policy": "veteran",
+      "priority": "defense",
+      "profileCohort": "fresh",
+      "seed": 7919,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1633.55,
+      "captains": 10,
+      "observedSimSeconds": 921.55,
+      "policy": "veteran",
+      "priority": "defense",
+      "profileCohort": "fresh",
+      "seed": 15401,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1674.95,
+      "captains": 10,
+      "observedSimSeconds": 962.95,
+      "policy": "veteran",
+      "priority": "income",
+      "profileCohort": "fresh",
+      "seed": 7919,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1637.05,
+      "captains": 10,
+      "observedSimSeconds": 925.05,
+      "policy": "veteran",
+      "priority": "income",
+      "profileCohort": "fresh",
+      "seed": 15401,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1646.3,
+      "captains": 10,
+      "observedSimSeconds": 934.3,
+      "policy": "veteran",
+      "priority": "adaptive",
+      "profileCohort": "fresh",
+      "seed": 7919,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1636.0,
+      "captains": 10,
+      "observedSimSeconds": 924.0,
+      "policy": "veteran",
+      "priority": "adaptive",
+      "profileCohort": "fresh",
+      "seed": 15401,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1770.55,
+      "captains": 1,
+      "observedSimSeconds": 1058.55,
+      "policy": "veteran",
+      "priority": "defense",
+      "profileCohort": "earned_veterans",
+      "seed": 7919,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1770.55,
+      "captains": 1,
+      "observedSimSeconds": 1058.55,
+      "policy": "mixed",
+      "priority": "defense",
+      "profileCohort": "earned_veterans_and_new_captains",
+      "seed": 7919,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1759.35,
+      "captains": 1,
+      "observedSimSeconds": 1047.35,
+      "policy": "veteran",
+      "priority": "defense",
+      "profileCohort": "earned_veterans",
+      "seed": 15401,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1759.35,
+      "captains": 1,
+      "observedSimSeconds": 1047.35,
+      "policy": "mixed",
+      "priority": "defense",
+      "profileCohort": "earned_veterans_and_new_captains",
+      "seed": 15401,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1701.25,
+      "captains": 2,
+      "observedSimSeconds": 989.25,
+      "policy": "veteran",
+      "priority": "defense",
+      "profileCohort": "earned_veterans",
+      "seed": 7919,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1738.3,
+      "captains": 2,
+      "observedSimSeconds": 1026.3,
+      "policy": "mixed",
+      "priority": "defense",
+      "profileCohort": "earned_veterans_and_new_captains",
+      "seed": 7919,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1668.65,
+      "captains": 2,
+      "observedSimSeconds": 956.65,
+      "policy": "veteran",
+      "priority": "defense",
+      "profileCohort": "earned_veterans",
+      "seed": 15401,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1731.6,
+      "captains": 2,
+      "observedSimSeconds": 1019.6,
+      "policy": "mixed",
+      "priority": "defense",
+      "profileCohort": "earned_veterans_and_new_captains",
+      "seed": 15401,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1648.55,
+      "captains": 4,
+      "observedSimSeconds": 936.55,
+      "policy": "veteran",
+      "priority": "defense",
+      "profileCohort": "earned_veterans",
+      "seed": 7919,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1688.15,
+      "captains": 4,
+      "observedSimSeconds": 976.15,
+      "policy": "mixed",
+      "priority": "defense",
+      "profileCohort": "earned_veterans_and_new_captains",
+      "seed": 7919,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1639.1,
+      "captains": 4,
+      "observedSimSeconds": 927.1,
+      "policy": "veteran",
+      "priority": "defense",
+      "profileCohort": "earned_veterans",
+      "seed": 15401,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1661.6,
+      "captains": 4,
+      "observedSimSeconds": 949.6,
+      "policy": "mixed",
+      "priority": "defense",
+      "profileCohort": "earned_veterans_and_new_captains",
+      "seed": 15401,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1628.3,
+      "captains": 10,
+      "observedSimSeconds": 916.3,
+      "policy": "veteran",
+      "priority": "defense",
+      "profileCohort": "earned_veterans",
+      "seed": 7919,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1639.75,
+      "captains": 10,
+      "observedSimSeconds": 927.75,
+      "policy": "mixed",
+      "priority": "defense",
+      "profileCohort": "earned_veterans_and_new_captains",
+      "seed": 7919,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1609.85,
+      "captains": 10,
+      "observedSimSeconds": 897.85,
+      "policy": "veteran",
+      "priority": "defense",
+      "profileCohort": "earned_veterans",
+      "seed": 15401,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1621.75,
+      "captains": 10,
+      "observedSimSeconds": 909.75,
+      "policy": "mixed",
+      "priority": "defense",
+      "profileCohort": "earned_veterans_and_new_captains",
+      "seed": 15401,
+      "weather": "calm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 2387.7,
+      "captains": 1,
+      "observedSimSeconds": 1629.7,
+      "policy": "novice",
+      "priority": "defense",
+      "profileCohort": "fresh",
+      "seed": 7919,
+      "weather": "storm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 2398.3,
+      "captains": 1,
+      "observedSimSeconds": 1612.3,
+      "policy": "novice",
+      "priority": "defense",
+      "profileCohort": "fresh",
+      "seed": 15401,
+      "weather": "storm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 2454.1,
+      "captains": 1,
+      "observedSimSeconds": 1696.1,
+      "policy": "novice",
+      "priority": "adaptive",
+      "profileCohort": "fresh",
+      "seed": 7919,
+      "weather": "storm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 2375.3,
+      "captains": 1,
+      "observedSimSeconds": 1607.3,
+      "policy": "novice",
+      "priority": "adaptive",
+      "profileCohort": "fresh",
+      "seed": 15401,
+      "weather": "storm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 2257.45,
+      "captains": 1,
+      "observedSimSeconds": 1499.45,
+      "policy": "veteran",
+      "priority": "defense",
+      "profileCohort": "fresh",
+      "seed": 7919,
+      "weather": "storm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 2012.95,
+      "captains": 1,
+      "observedSimSeconds": 1300.95,
+      "policy": "veteran",
+      "priority": "defense",
+      "profileCohort": "fresh",
+      "seed": 15401,
+      "weather": "storm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 2246.7,
+      "captains": 1,
+      "observedSimSeconds": 1488.7,
+      "policy": "veteran",
+      "priority": "adaptive",
+      "profileCohort": "fresh",
+      "seed": 7919,
+      "weather": "storm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 2017.4,
+      "captains": 1,
+      "observedSimSeconds": 1305.4,
+      "policy": "veteran",
+      "priority": "adaptive",
+      "profileCohort": "fresh",
+      "seed": 15401,
+      "weather": "storm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 2150.05,
+      "captains": 4,
+      "observedSimSeconds": 1438.05,
+      "policy": "novice",
+      "priority": "defense",
+      "profileCohort": "fresh",
+      "seed": 7919,
+      "weather": "storm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 2057.1,
+      "captains": 4,
+      "observedSimSeconds": 1345.1,
+      "policy": "novice",
+      "priority": "defense",
+      "profileCohort": "fresh",
+      "seed": 15401,
+      "weather": "storm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 2132.95,
+      "captains": 4,
+      "observedSimSeconds": 1420.95,
+      "policy": "novice",
+      "priority": "adaptive",
+      "profileCohort": "fresh",
+      "seed": 7919,
+      "weather": "storm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 2063.65,
+      "captains": 4,
+      "observedSimSeconds": 1351.65,
+      "policy": "novice",
+      "priority": "adaptive",
+      "profileCohort": "fresh",
+      "seed": 15401,
+      "weather": "storm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1949.35,
+      "captains": 4,
+      "observedSimSeconds": 1237.35,
+      "policy": "veteran",
+      "priority": "defense",
+      "profileCohort": "fresh",
+      "seed": 7919,
+      "weather": "storm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1901.55,
+      "captains": 4,
+      "observedSimSeconds": 1189.55,
+      "policy": "veteran",
+      "priority": "defense",
+      "profileCohort": "fresh",
+      "seed": 15401,
+      "weather": "storm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1949.85,
+      "captains": 4,
+      "observedSimSeconds": 1237.85,
+      "policy": "veteran",
+      "priority": "adaptive",
+      "profileCohort": "fresh",
+      "seed": 7919,
+      "weather": "storm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1909.45,
+      "captains": 4,
+      "observedSimSeconds": 1197.45,
+      "policy": "veteran",
+      "priority": "adaptive",
+      "profileCohort": "fresh",
+      "seed": 15401,
+      "weather": "storm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 2062.15,
+      "captains": 10,
+      "observedSimSeconds": 1350.15,
+      "policy": "novice",
+      "priority": "defense",
+      "profileCohort": "fresh",
+      "seed": 7919,
+      "weather": "storm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1998.1,
+      "captains": 10,
+      "observedSimSeconds": 1286.1,
+      "policy": "novice",
+      "priority": "defense",
+      "profileCohort": "fresh",
+      "seed": 15401,
+      "weather": "storm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 2064.6,
+      "captains": 10,
+      "observedSimSeconds": 1352.6,
+      "policy": "novice",
+      "priority": "adaptive",
+      "profileCohort": "fresh",
+      "seed": 7919,
+      "weather": "storm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 2002.15,
+      "captains": 10,
+      "observedSimSeconds": 1290.15,
+      "policy": "novice",
+      "priority": "adaptive",
+      "profileCohort": "fresh",
+      "seed": 15401,
+      "weather": "storm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1926.1,
+      "captains": 10,
+      "observedSimSeconds": 1214.1,
+      "policy": "veteran",
+      "priority": "defense",
+      "profileCohort": "fresh",
+      "seed": 7919,
+      "weather": "storm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1873.15,
+      "captains": 10,
+      "observedSimSeconds": 1161.15,
+      "policy": "veteran",
+      "priority": "defense",
+      "profileCohort": "fresh",
+      "seed": 15401,
+      "weather": "storm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1926.15,
+      "captains": 10,
+      "observedSimSeconds": 1214.15,
+      "policy": "veteran",
+      "priority": "adaptive",
+      "profileCohort": "fresh",
+      "seed": 7919,
+      "weather": "storm"
+    },
+    {
+      "calculatedSharedDefaultProtocolFloorSeconds": 1876.4,
+      "captains": 10,
+      "observedSimSeconds": 1164.4,
+      "policy": "veteran",
+      "priority": "adaptive",
+      "profileCohort": "fresh",
+      "seed": 15401,
+      "weather": "storm"
+    }
+  ],
+  "formatVersion": 1,
+  "historicalManifests": {
+    "count": 307,
+    "excludedImportedPlanner": "backend/tools/economy/island_balance_plans.py",
+    "headlessBoundary": "post-run hashes only; no retained pre-run receipt exists",
+    "sqlBoundary": "runner captures before and asserts equal after execution"
+  },
+  "measuredSourceCommit": "a05346fb17bdbe787f01d4eba2fda3290ebe8f96",
+  "projectionCorrection": {
+    "actualDefaultSharedCountdownSeconds": 10,
+    "countdownSources": [
+      "supabase/migrations/20261118223055_canonical_wave_sessions.sql:13",
+      "supabase/migrations/20261119002149_shared_session_pacing.sql:207"
+    ],
+    "formula": "sum(max(simSeconds,10)+10)+8 per nonfinal won attempt",
+    "minimumSeconds": 10,
+    "observed": false,
+    "qualification": "Raw reports are preserved. Only this derived projection is corrected; combat outcomes, simulation times and money are unchanged. SQL experiments explicitly selected countdown0 and minimum0. Their old productionTimingBeforeExplicitHeadlessOverride field records catalogue timing, not the shared default.",
+    "rawReportCatalogueCountdownSeconds": 5,
+    "wonBreakSeconds": 8
+  },
+  "supplementalInheritedInput": {
+    "byteIdenticalToBase": true,
+    "path": "backend/tools/economy/island_balance_plans.py",
+    "qualification": "Supplemental post-run comparison, not retroactively included in the307-path manifest or a new measured run.",
+    "sha256": "3ecbb16980b9349c41486b0d3e6f4ca3279f51b30fdf966e6bfa0eaeff8f8ee5"
+  },
+  "updatedRunnerSmokes": [
+    {
+      "allRecordedSourcesMatchCommit": true,
+      "artifact": "funded-smoke-v2.json.gz",
+      "captureBoundary": "before_and_after_asserted_by_runner",
+      "playedWaves": 4,
+      "scope": "bounded smoke only; original full campaigns and real wager deadlines were not rerun",
+      "sourceCommit": "b2e7a92db7cb18ec252c061aca721e6ce57e08f5",
+      "sourceCount": 308,
+      "sourceManifestVersion": 2,
+      "uncompressedSha256": "ba477a3dcccf404cac3af82d9314c1f2cf354e6a4269a5f35f3a222d642f1787"
+    },
+    {
+      "allRecordedSourcesMatchCommit": true,
+      "artifact": "funded-sql-smoke-v2.json.gz",
+      "captureBoundary": "before_and_after_asserted_by_runner",
+      "playedWaves": 4,
+      "scope": "bounded smoke only; original full campaigns and real wager deadlines were not rerun",
+      "sourceCommit": "b2e7a92db7cb18ec252c061aca721e6ce57e08f5",
+      "sourceCount": 308,
+      "sourceManifestVersion": 2,
+      "uncompressedSha256": "ff09747580073038bcb901cf1f96d832f342e6483843240ad4c040be172cdc36"
+    }
+  ]
+}

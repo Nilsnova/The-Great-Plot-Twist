@@ -123,6 +123,14 @@ All invited members may wager any positive whole-coin amount fitting currently a
 - In the defense-first queue, wave 1 starts with 20 cash after the 180 build. Later research/weapon spending or escrow can consume a combat repair opportunity. Measure this interaction; do not insert a hidden repair reserve.
 - A reset retires the old treasury and gives the new epoch one 200 grant. Harbor eligibility currently requires record 4, so a reset-grant wagering experiment must actually traverse those waves. With just the initial 180 build and no further purchases/bonuses, four assumed wins earn 200, leaving 220 cash. A **conditional, fee-free 2× total-return example** yields 440 on a win or 0 on a loss. It is a payoff sensitivity, not a supported-product claim or expected return. The owner could reset after losses and replay for another grant; the repeated victories and elapsed time are real work to measure. Old-epoch settlements cannot fund the replacement run, and resetting after a win leaves that balance in the retired account too. Do not add a reset cost or wagering cap to this assessment.
 
+## Funded combat follow-up
+
+The [production-combat measurement](funded-play.md) replaces assumed victories
+for its declared campaigns with actual deterministic outcomes and adds actual
+disposable-domain financial composition. It preserves separate headless, SQL,
+fixture-price and authenticated-provider evidence boundaries. It does not change
+prices, create extra recovery income or complete the human/runtime matrix below.
+
 ## Measurements still required
 
 The arithmetic does not select a new starting grant, price or player-count multiplier. Carpenter and repair-only offers are retired under recovery v1 without replacement effects. Obtain the following integrated evidence before tuning or claiming balance acceptance:

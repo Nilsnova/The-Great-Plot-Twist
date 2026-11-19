@@ -4,8 +4,8 @@
 >
 > **Who uses it:** the economy reviewer and the teammate preparing integrated multiplayer balance playtests.
 
-- **Status:** numerical baseline measured; integrated gameplay acceptance remains open
-- **Branch:** `docs/mp-eco-19-balance`
+- **Status:** numerical baseline and funded production-combat follow-up; human/runtime acceptance remains qualified
+- **Branch:** `test/mp-eco-funded-balance` (follow-up to `docs/mp-eco-19-balance`)
 - **Issue:** [#512](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/512), part of [#492](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/492)
 
 ## Why
@@ -66,6 +66,35 @@ Current-main refresh through `1350c2ba` removes the obsolete flag adapter from t
 Tests first failed on the missing tool module. An early checkpoint expectation was corrected after manually verifying that waves 1–5 earn 425 and the separate 200 grant makes 625; the tool was not changed to double-count the grant. Both purchase queues conserve coins and purchase only current unlocked levels. No runtime rules or dependencies were changed, so the full backend, browser and PostgreSQL suites were not rerun for this offline assessment.
 
 No integrated shared-mode play, browser interaction, live database or external wagering service was used. Canonical lifecycle/treasury/UI integration, actual combat outcomes and durations, mixed/veteran crews, supported wager returns and human review remain open. New Carpenter and repair-only offers are retired under recovery v1 without replacement effects or compensation. The [report's experiment matrix](../docs/evidence/MP-ECO-19/README.md#measurements-still-required) defines the next evidence; this numerical baseline does not complete gameplay acceptance or choose new balance values.
+
+## Funded production-combat follow-up
+
+The [funded measurement method](../docs/evidence/MP-ECO-19/funded-play.md) adds
+actual production-simulator outcomes to the earlier assumed-victory arithmetic.
+Fresh 1/2/4/10-Captain campaigns use two fixed seeds, three declared control
+policies and defense/income/adaptive funded priorities. Separate reset cohorts
+retain only progress earned by their preceding campaign, including genuinely
+new Captains alongside retained veterans. No price or scaling value changes.
+
+`tools.economy.funded_sql` composes a funded campaign with the real disposable
+SQL authority, quotes, purchases, accepted bell, personal effects and native
+finish transactions. `--choices` then measures research reversals, actual-cost
+refunds, full-budget wager loss/win/reinvestment and owner resets on that earned
+island. Wager deadlines elapse naturally; prices are explicit test inputs.
+The SQL headless configuration has zero countdown/minimum wait and does not
+establish rendered input/journal/checkpoint or real-provider authentication.
+
+Meaningful runner checks reject assumed defeat income, unavailable house income,
+unearned skills, cross-Captain milestone inheritance, skipped levels/kind changes,
+member-multiplied loot and water/wall traversal. Disposable composition checks
+verify actual first-wave receipts and reset-preserved earned progression.
+Exact final commands/results, data and source boundaries are recorded in the
+linked evidence. Earlier unrestricted-position diagnostics are superseded after
+the movement correction and are not claimed as accepted balance results.
+
+Human gameplay, remaining opportunity-cost/ship measurements and the full
+authenticated matrix remain explicit; this increment does not assert complete
+balance acceptance or authorize release.
 
 ## Owner and reviewer
 
