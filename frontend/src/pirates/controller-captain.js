@@ -225,10 +225,19 @@ export function createCaptainActions(ctl) {
   }
 
   // The break after a won wave.
-  function setAuto(value) { ctl.auto = value === true; saveAuto(ctl.auto); }
-  const held = () => { try { return holdBreak?.() ?? null; } catch { return null; } };
+  function setAuto(value) {
+    const current=ctl.wave;
+    if(current?.info.nativeShared){
+      if(!ctl.controls(current) || ctl.getSessionSettings()?.canManage!==true)return;
+      void ctl.setSessionSettings({autoNext:value===true}).then(answer=>{if(ctl.wave===current && current.pause && !answer.ok)current.pause.note=answer.message??'Confirm the previous settings change.';});
+      return;
+    }
+    ctl.auto = value === true; saveAuto(ctl.auto);
+  }
+  const held = () => { if(ctl.wave?.info.nativeShared)return null;try { return holdBreak?.() ?? null; } catch { return null; } };
   function next() {
     const current = ctl.wave;
+    if(current?.info.nativeShared && (!ctl.controls(current) || ctl.getSessionSettings()?.canManage!==true))return false;
     if (current?.recoveryReplay && !current.recoveryFinishAnswered && !current.recoveryFinishFailed) return false;
     if (!current?.pause || !current.pause.ready || current.pause.requested || !startNextWave) return false;
     if (held()?.paused) return false; // the room paused the break: Resume first

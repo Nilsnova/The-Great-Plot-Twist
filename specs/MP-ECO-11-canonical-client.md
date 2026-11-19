@@ -211,5 +211,40 @@ Native standing bodies and health bars use retained journal positions rather tha
 Presence loss cannot make a retained Captain invisible, and duplicate matched presence bodies are
 hidden. An explicit unknown presence room suppresses reporting instead of falling back to a static
 world room. Actual simultaneous controllers with realistic latency and native gameplay falls remain
-an acceptance gate. Separate report/start/complete round trips keep the strict source freshness
-requirement; source-side atomic composition is required if that test demonstrates starvation.
+an acceptance gate. Separate report/start/complete round trips preserve the server proof contract.
+The original reader-dependent exact-current-seal gate reproduced starvation at realistic latency;
+the revised source contract accepts only a recently accepted complete prefix within two seconds,
+with monotonic basis/CAS checks. The browser adds no clock/HP authority or poll suppression.
+
+## Shared settings and owner reset
+
+Session settings use the actual proof-qualified endpoint and a durable original settings request.
+An unresolved change retains its original UID/body through unknown/401 and reload. Current settings
+come only from a separate fresh session read after confirmation. Native auto-next is server driven;
+the browser switch submits a setting and never simulates an automatic bell click. The bell displays
+waiting/spectator state and the server countdown instead of promising a local fixed duration.
+
+Shared owner reset uses the existing fresh-start endpoint with the negotiated four-field economy,
+typed own code and one actor/code-scoped original UID retained across a newly observed epoch.
+Validate the exact common reset receipt, retired money conservation and replacement identities;
+currentEconomy must remain null. Only a fresh canonical island GET adopts replacement context.
+Reset clears island assets/control, while each player's personal Captain and progression are kept.
+Unknown context, a visited island and unavailable reset capability do not select a legacy reset.
+Only a fully validated personal Captain v1 profile changes the explicit legacy reset disclosure to
+say personal level/skills are preserved; an unavailable personal read cannot infer that state.
+
+Confirmed reset retires only matching original local session descriptors. A newer lock/proof and
+unknown attachment archives survive. A member's definitive 409 economy_epoch_mismatch can retire
+known old departure only when a fresh same-owner replacement has both a different account and run
+epoch. Cross-owner movement, reconnect_required, unknown outcomes and 401 do not qualify. New
+control still requires attach plus fresh read. Historical reset confirmation after replacement was
+already read does not clear newer assets/flow or start another run.
+
+The settings/reset increment passed 102 tests in fifteen focused files, covering durable settings,
+cloned-tab control, same-source retirement, original reset retry after a new epoch, corrupt storage,
+unknown/401 outcomes and failed post-reset reads. A final four-file reset/copy selection passed
+23 tests after the validated personal-Captain disclosure adjustment. Build passed in 2.81 seconds,
+with the spoiler guard clean (257 text files, 12 protected lines) and whitespace review clean.
+The actual Settings reset section was captured at 375 × 812 and visually inspected under
+`docs/evidence/MP-ECO-shared-reset/`. These component checks do not claim authenticated reset or
+concurrent native gameplay acceptance.

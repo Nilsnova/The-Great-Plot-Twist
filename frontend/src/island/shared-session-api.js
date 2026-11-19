@@ -38,7 +38,6 @@ export function createSharedSessionApi({transport,getEconomy,getActorId}={}){
   if(!validSessionProof(record) || !owns(record) || !sessionUid(record.actionUid))return failed('economy_context_required','Read the current controlling session.');
   const body={...proofBody(record),actionUid:record.actionUid};
   if(kind==='settings'){
-   if(!current(record))return failed('economy_context_required','Read the selected session.');
    const keys=['breakPaused','autoNext','countdownSeconds'].filter(key=>record[key]!==undefined);
    if(!keys.length || keys.some(key=>key==='countdownSeconds'? !Number.isInteger(record[key]) || record[key]<0 || record[key]>60 : typeof record[key]!=='boolean'))
     return failed('validation_error','Choose valid session settings.',422);

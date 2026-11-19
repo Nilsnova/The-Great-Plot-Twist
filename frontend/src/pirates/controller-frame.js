@@ -304,6 +304,14 @@ export function createFrame(ctl) {
 
   function updatePause(current) {
     const pause = current.pause, hold = held();
+    if(current.info.nativeShared){
+      const settings=ctl.getSessionSettings(),manages=ctl.controls(current) && settings?.canManage===true,ready=current.answer!==undefined && manages;
+      pause.ready=ready;
+      current.hud?.pause?.({title:`Wave ${current.info.wave} won!`,line:pause.note??(settings?.breakPaused?'The next wave is paused.':settings?.autoNext?'Waiting for the next wave.':'Ring the bell when you are ready.'),
+        seconds:0,auto:settings?.autoNext===true,autoEnabled:manages,ready:ready && !pause.requested && !settings.breakPaused,paused:settings?.breakPaused===true,
+        hold:{label:settings?.breakPaused?'Resume':'Pause',enabled:manages}});
+      return;
+    }
     // Paused by the room: the break keeps its full length until Resume.
     if (hold?.paused) pause.until = Math.max(pause.until, now() + breakSeconds * 1000);
     const left = Math.max(0, Math.ceil((pause.until - now()) / 1000 - 1e-9));
