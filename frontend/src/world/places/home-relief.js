@@ -15,6 +15,59 @@ const TERRACE_ARCS = [[25, 34], [55, 67]];
 const surface = surfaces.home_islet;
 const SUN = new THREE.Vector3(-.61, .71, -.32).normalize();
 
+// Height and tangent slopes from the same world-space grain. The slope lighting
+// stays on the stone as the camera changes scale, with no extra texture or light.
+export const sandstoneFinishGlsl = /* glsl */`
+  float sandstoneHash(vec2 point) {
+    vec3 seed = fract(vec3(point.xyx) * .1031);
+    seed += dot(seed, seed.yzx + 33.33);
+    return fract((seed.x + seed.y) * seed.z);
+  }
+  vec3 sandstoneGrain(vec2 point) {
+    vec2 cell = floor(point), p = fract(point);
+    vec2 weight = p * p * (3.0 - 2.0 * p);
+    vec2 steepness = 6.0 * p * (1.0 - p);
+    float a = sandstoneHash(cell), b = sandstoneHash(cell + vec2(1.0, 0.0));
+    float c = sandstoneHash(cell + vec2(0.0, 1.0)), d = sandstoneHash(cell + vec2(1.0, 1.0));
+    return vec3(mix(mix(a, b, weight.x), mix(c, d, weight.x), weight.y),
+      steepness.x * mix(b - a, d - c, weight.y),
+      steepness.y * mix(c - a, d - b, weight.x));
+  }
+  vec3 cutSandstone(vec3 base, vec2 point, vec2 cut, float laidFace) {
+    vec3 slab = sandstoneGrain(point * vec2(1.9, 3.2));
+    vec3 chip = sandstoneGrain(point * vec2(4.2, 7.4) + vec2(.58, 1.83));
+    float grainLight = clamp(dot(slab.yz, vec2(-.16, .23)) + dot(chip.yz, vec2(-.075, .105)), -.32, .40);
+    float deposit = smoothstep(.23, .78, slab.x * .79 + chip.x * .21);
+    vec3 coarse = base * ((.85 + deposit * .27) * (1.0 + grainLight));
+
+    // Weathered layers catch the sun along their broken upper edge.
+    float phase = point.y * 1.71 + point.x * .19 + slab.x * .43;
+    float separation = fract(phase);
+    float aa = min(.10, fwidth(phase));
+    float fractured = smoothstep(.45, .74, slab.x * .80 + chip.x * .20);
+    float split = 1.0 - smoothstep(.050, .139 + aa, abs(separation - .52));
+    float crest = 1.0 - smoothstep(.021, .069 + aa, abs(separation - .66));
+    coarse *= 1.0 + fractured * (.21 * crest - .20 * split);
+
+    // Lower joints are occluded. The two exposed shoulders roll into the cut.
+    vec2 eroded = cut + (vec2(slab.x, chip.x) - .5) * vec2(.10, .10);
+    float undercut = 1.0 - smoothstep(.018, .28, eroded.y);
+    float heel = smoothstep(.69, 1.02, eroded.x);
+    float shoulder = smoothstep(.06, .22, eroded.x) * (1.0 - smoothstep(.24, .46, eroded.x));
+    float topLip = smoothstep(.62, .87, eroded.y) * (1.0 - smoothstep(.89, 1.0, eroded.y));
+    // A broken planar change across the laid face, with a small bright rim above the cut.
+    float cutAngle = mix(-.24, .22, chip.x);
+    float ledge = eroded.y + (eroded.x - .5) * cutAngle - mix(.40, .59, slab.x);
+    float ledgeLight = smoothstep(.006, .052, ledge) * (1.0 - smoothstep(.080, .23, ledge));
+    float ledgeShade = smoothstep(-.18, -.065, ledge) * (1.0 - smoothstep(-.051, .008, ledge));
+    float exposed = smoothstep(.11, .47, eroded.x) * (1.0 - smoothstep(.57, .91, eroded.x));
+    float relief = .21 * shoulder + .23 * topLip - .20 * heel - .31 * undercut;
+    relief += exposed * (.29 * ledgeLight - .22 * ledgeShade);
+    coarse *= 1.0 + laidFace * relief;
+    return coarse;
+  }
+`;
+
 function stoneVertex(rows, index, fraction, inset) {
   const first = Math.floor(index), mix = index - first;
   const a = rows[first], b = rows[Math.min(first + 1, rows.length - 1)];
@@ -25,7 +78,7 @@ function stoneVertex(rows, index, fraction, inset) {
 }
 
 function homeCliffGeometry(rows = cliffProfile(surface)) {
-  const positions = [], colors = [], relief = [];
+  const positions = [], colors = [], relief = [], cuts = [];
   const faceNormal = new THREE.Vector3(), edge = new THREE.Vector3(), exterior = new THREE.Vector3();
   function sunlight(a, b, c) {
     faceNormal.subVectors(b, a).cross(edge.subVectors(c, a)).normalize();
@@ -33,19 +86,23 @@ function homeCliffGeometry(rows = cliffProfile(surface)) {
     if (faceNormal.dot(exterior) < 0) faceNormal.negate();
     return Math.max(-.43, faceNormal.dot(SUN)) * .57;
   }
-  function triangle(a, b, c, tint, tones, bias, fractions, region, sun = sunlight(a, b, c)) {
+  function triangle(a, b, c, tint, tones, bias, fractions, region, sun = sunlight(a, b, c), cut) {
     for (const [i, vertex] of [a, b, c].entries()) {
       const light = THREE.MathUtils.clamp(.77 + sun + tones[i], .24, 1.44);
       const display = projectGround(vertex.x, vertex.z - vertex.y / LEGACY_DEPTH);
       positions.push(display.x, display.y, vertex.z + vertex.y * .6 + bias);
       colors.push(tint.r * light, tint.g * light, tint.b * light);
       relief.push(-vertex.y, fractions[i], region);
+      cuts.push(cut?.[i] ?? 0, cut ? 1 : 0);
     }
   }
-  function panel(a, b, c, d, tint, upper, lower, from, to, bias = 0, region = 0) {
+  function panel(a, b, c, d, tint, upper, lower, from, to, bias = 0, region = 0, cut) {
     const sun = (sunlight(a, b, c) + sunlight(a, c, d)) / 2;
-    triangle(a, b, c, tint, [upper, upper, lower], bias, [from, from, to], region, sun);
-    triangle(a, c, d, tint, [upper, lower, lower], bias, [from, to, to], region, sun);
+    const [left, right] = cut ?? [];
+    triangle(a, b, c, tint, [upper, upper, lower], bias, [from, from, to], region, sun,
+      cut && [left, right, right]);
+    triangle(a, c, d, tint, [upper, lower, lower], bias, [from, to, to], region, sun,
+      cut && [left, right, left]);
   }
 
   // A continuous dark bed shows only where separate columns taper away from one another.
@@ -83,7 +140,7 @@ function homeCliffGeometry(rows = cliffProfile(surface)) {
         for (let side = 0; side < across.length - 1; side++) {
           const tone = [-.04, .045, -.17][side];
           panel(point(level, side), point(level, side + 1), point(level + 1, side + 1), point(level + 1, side),
-            pigment, upper + tone, lower + tone, from, to);
+            pigment, upper + tone, lower + tone, from, to, 0, 0, [across[side], across[side + 1]]);
         }
       }
 
@@ -183,6 +240,7 @@ function homeCliffGeometry(rows = cliffProfile(surface)) {
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
   geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
   geometry.setAttribute('shoreRelief', new THREE.Float32BufferAttribute(relief, 3));
+  geometry.setAttribute('shoreCut', new THREE.Float32BufferAttribute(cuts, 2));
   return geometry;
 }
 
@@ -192,37 +250,32 @@ export function createHomeRelief(group, coastArt) {
     vertexColors: true, side: THREE.DoubleSide, forceSinglePass: true, transparent: true, depthTest: true, depthWrite: true, toneMapped: false,
     vertexShader: /* glsl */`
       attribute vec3 shoreRelief;
+      attribute vec2 shoreCut;
       varying vec2 vReliefPoint;
       varying vec3 vStone;
       varying vec3 vShoreRelief;
+      varying vec2 vShoreCut;
       void main() {
         vReliefPoint = position.xy;
         vStone = color;
         vShoreRelief = shoreRelief;
+        vShoreCut = shoreCut;
         gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
       }`,
     fragmentShader: /* glsl */`
       ${groundProjectionGlsl}
+      ${sandstoneFinishGlsl}
       uniform sampler2D uCoastArt;
       varying vec2 vReliefPoint;
       varying vec3 vStone;
       varying vec3 vShoreRelief;
-      float stoneHash(vec2 point) {
-        vec3 seed = fract(vec3(point.xyx) * .1031);
-        seed += dot(seed, seed.yzx + 33.33);
-        return fract((seed.x + seed.y) * seed.z);
-      }
-      float stoneGrain(vec2 point) {
-        vec2 cell = floor(point);
-        vec2 blend = smoothstep(0.0, 1.0, fract(point));
-        return mix(mix(stoneHash(cell), stoneHash(cell + vec2(1.0, 0.0)), blend.x),
-          mix(stoneHash(cell + vec2(0.0, 1.0)), stoneHash(cell + vec2(1.0, 1.0)), blend.x), blend.y);
-      }
+      varying vec2 vShoreCut;
       void main() {
         vec2 logical = unprojectGround(vReliefPoint);
         vec2 shore = logical / vec2(${surface.rx.toFixed(1)}, ${surface.rz.toFixed(1)});
         float angle = atan(shore.y, shore.x);
         float rim = 1.0 + .055 * sin(angle * 5.0 + ${surface.seed.toFixed(1)}) + .035 * cos(angle * 7.0);
+        vec2 layers = vec2(logical.x + logical.y * .26, -vShoreRelief.x + logical.y * .12);
         // Preserve all of the visible, playable upper beach, including the existing shallow coves.
         vec4 rock = texture2D(uCoastArt, vec2(logical.x / 64.0, -logical.y * ${LEGACY_DEPTH} / 48.0) + .5);
         if (vShoreRelief.z > 1.5) {
@@ -230,14 +283,15 @@ export function createHomeRelief(group, coastArt) {
           float height = -vShoreRelief.x;
           float opacity = smoothstep(.015, .24, height);
           if (opacity < .02) discard;
-          float pore = stoneGrain(logical * vec2(14.0, 17.0)) - .5;
-          float weather = stoneGrain(logical * vec2(2.8, 4.0)) - .5;
+          float pore = sandstoneGrain(logical * vec2(14.0, 17.0)).x - .5;
+          float weather = sandstoneGrain(logical * vec2(2.8, 4.0)).x - .5;
           if (vShoreRelief.z > 2.5) {
             float green = smoothstep(1.13, 1.44, (rock.g + .01) / (rock.r + .01));
             // Fine fringe and the scene's own grass grain keep the cap attached to the meadow.
             gl_FragColor = vec4(mix(vStone, rock.rgb, green * .57) * (1.01 + pore * .09 + weather * .14), opacity);
           } else {
-            gl_FragColor = vec4(vStone * (.95 + pore * .11 + weather * .24), opacity);
+            vec3 shoulder = cutSandstone(vStone * (.95 + weather * .24), layers, vec2(.5), 0.0);
+            gl_FragColor = vec4(shoulder, opacity);
           }
           #include <colorspace_fragment>
           return;
@@ -259,18 +313,21 @@ export function createHomeRelief(group, coastArt) {
         float grain = dot(rock.rgb, vec3(.30, .59, .11));
         float rockGrain = smoothstep(.06, .46, grain);
         float depth = vShoreRelief.y;
-        float pores = stoneGrain(logical * vec2(13.0, 16.5)) - .5;
-        float strata = stoneGrain(vec2(logical.x * 1.8 + depth * 2.3, logical.y * 6.1)) - .5;
         float grainBreak = sin(logical.x * 1.74 + logical.y * .83) * .14
           + cos(logical.x * 4.23 - logical.y * 3.23) * .07;
         float damp = smoothstep(.53, 1.0, depth + grainBreak) * smoothstep(.45, 1.7, vShoreRelief.x);
-        vec3 stone = vStone * (mix(.82, 1.13, rockGrain) + pores * .09 + grainBreak * .15 + strata * .14);
+        vec3 stone = vStone * (mix(.86, 1.13, rockGrain) + grainBreak * .13);
+        stone = cutSandstone(stone, layers, vec2(vShoreCut.x, 1.0 - depth), vShoreCut.y);
         float cap = (1.0 - smoothstep(.07, .28, depth)) * smoothstep(.11, .51, dot(vStone, vec3(.30, .58, .12)));
         stone = mix(stone, stone * vec3(1.19, 1.09, 1.02), cap);
+        float overhang = (1.0 - smoothstep(.001, .082, depth)) * vShoreCut.y;
+        stone *= 1.0 - overhang * .28;
         float moss = smoothstep(.62, .84, rockGrain + grainBreak * .7)
           * (1.0 - smoothstep(.04, .26, depth)) * .52;
         stone = mix(stone, stone * vec3(.82, 1.05, .67), moss);
         stone = mix(stone, stone * vec3(.48, .65, .74) + vec3(.007, .025, .039), damp * .82);
+        float tide = smoothstep(.67, .84, depth + grainBreak) * (1.0 - smoothstep(.85, .99, depth)) * damp;
+        stone += tide * vec3(.006, .020, .023);
         gl_FragColor = vec4(mix(stone, rock.rgb, .10), 1.0);
         #include <colorspace_fragment>
       }`,
