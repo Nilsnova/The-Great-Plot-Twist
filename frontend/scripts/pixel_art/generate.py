@@ -5,7 +5,7 @@ from nature import tree, rock, shrub, flowers, undergrowth
 from buildings import cottage, boathouse, lighthouse
 from people import person
 from props import prop
-from ground import ground
+from ground import ground, lighthouse_materials
 from destinations import office, beacon, signal, pier, ship
 from nautical import item
 from settlements import assets as settlement_assets
@@ -35,12 +35,12 @@ for name in ['jetty','boat','crate','barrel','rope-coil','lantern','bench','buoy
     assets[name]=prop(name)
 assets.update({'harbour-office':office(),'harbour-beacon':beacon(),'signal-station':signal(),'ferry-pier':pier(),'sailboat':ship(),'dark-schooner':ship(True)})
 for name in ['sealed-letter','torn-page','logbook','compass','brass-star','beacon-fire']:assets[name]=item(name)
-assets.update(settlement_assets());assets.update(case_assets());assets.update(crew_assets());assets.update(story_assets());assets.update(relighting_assets());assets.update(emote_assets());assets.update(islet_assets())
+assets.update(settlement_assets(ROOT));assets.update(case_assets());assets.update(crew_assets());assets.update(story_assets());assets.update(relighting_assets());assets.update(emote_assets());assets.update(islet_assets())
 assets.update(festival_assets())
 assets.update(pirate_assets())
 for name,image in assets.items():save(image,name,FOLDER)
 terrain=ground(ROOT)
-save(terrain,'ground',FOLDER)
+save(lighthouse_materials(terrain, ROOT),'ground',FOLDER)
 places=ROOT/'public'/'places';places.mkdir(exist_ok=True)
 for id in PATHS:save(place_ground(ROOT,id),id,places)
 save(chart(),'chart',places);save(chart(True),'chart-relit',places)

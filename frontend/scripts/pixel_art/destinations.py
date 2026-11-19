@@ -1,7 +1,54 @@
 """Staged harbour structures and boats in the approved native pixel language."""
 from common import canvas, shadow, poly
 from buildings import cottage
-from PIL import ImageDraw
+from PIL import ImageColor, ImageDraw
+
+def office_materials(image):
+    """Material pass over the original office drawing, keeping its clock, doors and window shapes."""
+    def tones(palette):
+        return {ImageColor.getrgb(base): (ImageColor.getrgb(light), ImageColor.getrgb(dark))
+                for base, (light, dark) in palette.items()}
+
+    clay = tones({
+        '#966048': ('#c98158', '#8d4938'),
+        '#bd8052': ('#e0a374', '#a75d43'),
+        '#734834': ('#aa6649', '#613d30'),
+        '#784d37': ('#b06d4e', '#694334'),
+        '#ba7950': ('#d99a6c', '#9b553c'),
+    })
+    masonry = tones({
+        '#b5ad87': ('#ead1a6', '#a7916e'),
+        '#d2c294': ('#f2d9ae', '#b69a72'),
+        '#c0b084': ('#d9c097', '#a48763'),
+        '#b5a578': ('#d8be94', '#9e845d'),
+        '#99865e': ('#b29877', '#806c58'),
+        '#887c67': ('#ae9c83', '#766556'),
+    })
+    pixels = image.load()
+    for y in range(image.height):
+        for x in range(image.width):
+            r, g, b, alpha = pixels[x, y]
+            color = (r, g, b)
+            if 0 < alpha < 255:
+                # Preserve the footprint of the original ground oval and taper its rim.
+                distance = ((x - 66) / 55) ** 2 + ((y - 146) / 9) ** 2
+                opacity = max(2, round(alpha * (1 - min(1, distance)) ** .75))
+                pixels[x, y] = (24, 35, 30, opacity)
+                continue
+            if color in clay:
+                lit, shaded = clay[color]
+                value = (x - 24) / 195 + (y - 58) / 79
+            elif color in masonry:
+                lit, shaded = masonry[color]
+                value = (x - 22) / 170 + max(0, y - 108) / 150
+                # The strip just under the eave is shaded by the roof overhang.
+                if 97 <= y <= 101:
+                    value += .23
+            else:
+                continue
+            value = min(1, max(0, value))
+            rgb = tuple(round(a + (b - a) * value) for a, b in zip(lit, shaded))
+            pixels[x, y] = (*rgb, alpha)
 
 def office():
     im,d=canvas(128,160);ink='#393b2e'
@@ -12,6 +59,7 @@ def office():
     house=cottage();im.alpha_composite(house,(0,32));d=ImageDraw.Draw(im)
     d.rectangle((27,100,45,105),fill='#3c665d');d.line([(29,102),(42,102)],fill='#b8bd85')
     d.rectangle((105,95,112,119),fill='#476a58');poly(d,[(111,95),(119,100),(111,105)],'#b58951')
+    office_materials(im)
     return im
 
 def beacon():

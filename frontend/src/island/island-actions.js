@@ -2,7 +2,7 @@
 // tree tier, Move mode and Village mode, research, give to the wreck, hire crew, and the captain's level,
 // skills, role and respec. Each calls the server and lands its answer. A closure over the island's state `isl`.
 
-import {KINDS, isPointSpot, spotById, ppSpotById} from './spots.js';
+import {KINDS, isPointSpot, placedSpot, spotById, ppSpotById} from './spots.js';
 import {coinText, refundToast} from './card-model.js';
 import {previewHouseSupport} from './house-support-model.js';
 import {isOpen, waveOf} from '../campaign/index.js';
@@ -22,35 +22,51 @@ export function createActions(isl) {
     placeOf, tookCoins, reloadVisit, reloadOwn, refreshDefended, took, refused, lobby, colours, bellAction,
     demolishHandlers, demolishCardModel, readBoat, bell, refreshCard, refreshCardIfBuild;
   const onWhere = place => (place === 'point' ? ' for Pirate Point' : place === 'visit' ? ` on ${isl.visiting?.ownerName ? `${isl.visiting.ownerName}'s` : 'this'} island` : '');
-  function invalidateWallFeedback() {
-    isl.wallFeedbackGeneration++;
-    isl.world?.clearWallFeedback();
+  function invalidatePurchaseFeedback() {
+    isl.purchaseFeedbackGeneration++;
+    isl.world?.clearPurchaseFeedback();
+    isl.ui.clearBuildingFeedback();
   }
-  function wallFeedbackScope() {
+  function purchaseFeedbackScope() {
     const code = islandCode(target()?.code ?? '');
-    return code && (!isl.visitCode || code === isl.visitCode) ? `${code}:${isl.wallFeedbackGeneration}` : null;
+    return code && (!isl.visitCode || code === isl.visitCode) ? `${code}:${isl.purchaseFeedbackGeneration}` : null;
   }
-  function wallPurchaseAt(spot, upgrading) {
-    if (!isl.world || isl.battle || spot?.slot !== 'wall') return null;
-    const scope = wallFeedbackScope();
-    const before = target()?.spots.find(item => item.id === spot.id);
-    if (!scope || !before || before.built !== upgrading || (upgrading && before.kind !== 'wall')) return null;
-    return {scope, world: isl.world, spotId: spot.id, level: upgrading ? before.level + 1 : 1};
+  const ownPurchaseView = () => !isl.visiting && !isl.visitCode && !isl.moving.active;
+  function purchaseAt(spot, upgrading, kind = null) {
+    if (!isl.world || isl.battle || !spot) return null;
+    const scope = purchaseFeedbackScope();
+    const spots = target()?.spots;
+    const before = spots?.find(item => item.id === spot.id);
+    if (!scope || !before || before.built !== upgrading) return null;
+    const chosen = upgrading ? before.kind : kind;
+    const level = upgrading ? before.level + 1 : 1;
+    if (spot.slot === 'wall') {
+      return chosen === 'wall' ? {scope, world: isl.world, spotId: spot.id, kind: chosen, level} : null;
+    }
+    if (!Object.hasOwn(KINDS, chosen) || chosen === 'wall' || !ownPurchaseView()
+        || !Number.isSafeInteger(level) || level < 1) return null;
+    const {x, z} = placedSpot(spot.id, spots);
+    return {scope, world: isl.world, spotId: spot.id, kind: chosen, level, x, z};
   }
-  function showWallPurchase(action, answer, receipt = '') {
-    if (!action || !answer.ok || answer.reconciled || action.world !== isl.world || action.scope !== wallFeedbackScope()
+  function showPurchase(action, answer, wallReceipt = '') {
+    if (!action || !answer.ok || answer.reconciled || action.world !== isl.world || action.scope !== purchaseFeedbackScope()
         || islandCode(answer.data.code ?? '') !== islandCode(target()?.code ?? '')) return;
     const confirmed = answer.data.spots.find(spot => spot.id === action.spotId);
-    if (confirmed?.built === true && confirmed.kind === 'wall' && confirmed.level === action.level) {
+    if (confirmed?.built !== true || confirmed.kind !== action.kind || confirmed.level !== action.level) return;
+    if (action.kind === 'wall') {
       isl.world.showWallFeedback(action.spotId, action.level);
-      return receipt && isl.ui.showWallReceipt(action.spotId, receipt, reducedMotion());
+      return wallReceipt && isl.ui.showWallReceipt(action.spotId, wallReceipt, reducedMotion());
     }
+    const at = placedSpot(action.spotId, answer.data.spots);
+    if (!ownPurchaseView() || at?.x !== action.x || at?.z !== action.z) return;
+    if (isl.world.showBuildingFeedback(action) && action.level > 1)
+      isl.ui.showBuildingFeedback(action.spotId, action.kind, reducedMotion());
   }
   async function build(spotId, kind) {
     const place = placeOf(spotId), spot = place === 'point' ? ppSpotById(spotId) : spotById(spotId);
     const choice = kind ?? spot?.kind;
     if (!spot || isl.busySpot || !BUILDINGS[choice]) return;
-    const action = choice === 'wall' && place !== 'point' ? wallPurchaseAt(spot, false) : null;
+    const action = place !== 'point' ? purchaseAt(spot, false, choice) : null;
     isl.busySpot = spotId; isl.busyKind = choice; isl.cardMessage = ''; refreshCard();
     const answer = place === 'point' ? await isl.api.pointBuild({spot: spotId, kind: choice})
       : await isl.api.build({spot: spotId, kind: choice, ...(place === 'visit' ? {code: isl.visiting.code} : {})});
@@ -63,10 +79,11 @@ export function createActions(isl) {
       emit({type: SPOTS_CHANGED, place, spot: spotId});
       // Close the card so the new building and the toast can be seen.
       if (isl.ui.open === 'build' && isl.openSpot === spotId) { isl.ui.close(); isl.openSpot = null; }
-      isl.ui.toast(`${BUILDINGS[choice].name} built${onWhere(place)} · ${coinText(isl.own?.coins)}`, 'success');
+      const context = place === 'own' && choice === 'cannon' ? 'guided-cannon-build' : null;
+      isl.ui.toast(`${BUILDINGS[choice].name} built${onWhere(place)} · ${coinText(isl.own?.coins)}`, 'success', '', context);
     } else await refused(answer, place, spotId);
     refreshCard();
-    showWallPurchase(action, answer);
+    showPurchase(action, answer);
   }
   // D039: the walls' health of the island on screen (the flag wall_recovery is retired, always on).
   async function readWalls() {
@@ -102,7 +119,7 @@ export function createActions(isl) {
   async function upgrade(spotId) {
     const place = placeOf(spotId);
     if (isl.busySpot) return;
-    const action = wallPurchaseAt(spotById(spotId), true);
+    const action = place !== 'point' ? purchaseAt(spotById(spotId), true) : null;
     let wallReceipt = '';
     isl.busySpot = spotId; isl.busyKind = 'upgrade'; isl.cardMessage = ''; refreshCard();
     const answer = place === 'point' ? await isl.api.pointUpgrade({spot: spotId})
@@ -118,12 +135,12 @@ export function createActions(isl) {
       if (place === 'own') emit({type: ISLAND_UPGRADED, kind: now?.kind, spot: spotId, level: now?.level});
       emit({type: SPOTS_CHANGED, place, spot: spotId});
       const receipt = `${name} level ${now?.level ?? '?'}${onWhere(place)} · ${coinText(isl.own?.coins)}`;
-      if (action) wallReceipt = receipt;
+      if (action?.kind === 'wall') wallReceipt = receipt;
       else isl.ui.toast(receipt, 'success');
       if (recoveryControlsOn()) void readStructureRecovery(spotId);
     } else await refused(answer, place, spotId);
     refreshCard();
-    if (!showWallPurchase(action, answer, wallReceipt) && wallReceipt) isl.ui.toast(wallReceipt, 'success');
+    if (!showPurchase(action, answer, wallReceipt) && wallReceipt) isl.ui.toast(wallReceipt, 'success');
   }
   // GAME-V3.md §4.2: Tear down asks the server who gets what back, then the confirmation card; Tear down there
   // takes the building down (between waves), every payer gets half of what they paid, and the room hears it.
@@ -375,7 +392,7 @@ export function createActions(isl) {
       placeOf, tookCoins, reloadVisit, reloadOwn, refreshDefended, took, refused, lobby, colours, bellAction,
       demolishHandlers, demolishCardModel, readBoat, bell, refreshCard, refreshCardIfBuild} = isl);
   }
-  return {invalidateWallFeedback, wallFeedbackScope, build, readWalls, repairWall, upgrade, askDemolish,
+  return {invalidatePurchaseFeedback, purchaseFeedbackScope, build, readWalls, repairWall, upgrade, askDemolish,
     confirmDemolish, heardDemolish, placeCode, specialise, buyTree, toggleVillage, startMove, moved, inspectHouse, activeHouseSupport,
     research, giveWreck, hire, upgradeCaptain, learnSkill, takeRole, respecCaptain, link};
 }

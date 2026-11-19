@@ -5,21 +5,25 @@ INK = '#263a32'
 
 def empty_plot():
     im, d = canvas(56, 64); shadow(d, 28, 58, 20, 4)
-    d.rectangle((26, 25, 29, 58), fill=INK); d.rectangle((27, 28, 28, 56), fill='#8f805a')
-    poly(d, [(10, 7), (38, 7), (46, 18), (38, 29), (10, 29), (3, 18)], '#596f4c', INK)
-    d.rectangle((12, 11, 36, 25), fill='#d2c49b'); d.rectangle((17, 14, 31, 16), fill='#75866a')
-    d.rectangle((17, 19, 31, 21), fill='#9b8c67')
+    d.rectangle((25, 29, 30, 58), fill='#524938'); d.line((27, 32, 27, 55), fill='#ab8a58')
+    poly(d, [(12, 9), (43, 9), (49, 15), (49, 33), (10, 33), (6, 27), (6, 16)], '#796040', INK)
+    poly(d, [(12, 12), (42, 12), (46, 16), (46, 29), (12, 29), (9, 26), (9, 17)], '#c3a573')
+    d.line((13, 13, 41, 13), fill='#dfbb82'); d.line((13, 28, 44, 28), fill='#9e794e')
+    d.line((21, 21, 35, 21), fill='#4b5942', width=3)
+    d.line((28, 14, 28, 27), fill='#4b5942', width=3)
+    for x in (12,43):d.point((x,20),fill='#f5d199')
     return im
 
 def locked_plot():
     im, d = canvas(64, 72); shadow(d, 32, 66, 22, 4)
-    d.rectangle((30, 28, 33, 65), fill=INK); d.rectangle((31, 31, 32, 63), fill='#8f805a')
-    poly(d, [(8, 6), (50, 6), (56, 12), (56, 42), (8, 42)], '#755b43', INK)
-    d.rectangle((12, 10, 52, 38), fill='#dbc99a'); d.line((16, 34, 48, 34), fill='#987b4d', width=2)
-    # A closed gate is a clear lock symbol without small, inaccessible lettering.
-    d.arc((24, 17, 40, 34), 180, 360, fill='#4d624b', width=3)
-    d.rounded_rectangle((25, 25, 39, 35), radius=2, fill='#4d624b')
-    d.rectangle((31, 28, 33, 32), fill='#e5d59f')
+    d.rectangle((29, 33, 34, 65), fill='#524938'); d.line((31, 34, 31, 62), fill='#ab8a58')
+    poly(d, [(11, 10), (50, 10), (54, 14), (54, 40), (10, 40), (10, 12)], '#5a6656', INK)
+    d.rectangle((14, 14, 50, 36), fill='#67765e'); d.line((15, 14, 49, 14), fill='#899179')
+    d.line((15, 35, 49, 35), fill='#505f50')
+    d.arc((25, 17, 39, 33), 180, 360, fill='#ebd7a5', width=3)
+    d.rounded_rectangle((24, 24, 40, 34), radius=2, fill='#ead9a9')
+    d.rectangle((31, 26, 33, 31), fill='#425443')
+    for x in (17,47):d.point((x,23),fill='#aaa88b')
     return im
 
 def signal_station(lit=False):

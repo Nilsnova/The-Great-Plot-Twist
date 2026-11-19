@@ -110,7 +110,7 @@ try {
   await tap('KeyE');
   await panelReady();
   check((await page.locator('.islet-spot h3').allInnerTexts()).join() === 'Cabin,Workshop,Windmill,Greenhouse,Signal station', 'E at the workshop plot opens the panel with five cards in file order');
-  check(await wallet() === 'You have 1,000 coins and 20 timber.', 'A new player sees 1,000 coins and 20 timber');
+  check(await wallet() === 'You have 🪙 1,000 and 20 timber.', 'A new player sees 1,000 coins and 20 timber');
   const opened = await focused();
   check(opened.inPanel && opened.plot === 'plot_2' && opened.tag === 'BUTTON', 'Focus lands on the Build button of the plot that was used');
 
@@ -139,12 +139,12 @@ try {
   await page.waitForFunction(() => window.__isletLocal);
   await page.evaluate(() => window.__isletLocal.dev.setCoins(100));
   await refreshButton.click();
-  await waitForWallet('You have 100 coins and 20 timber.');
+  await waitForWallet('You have 🪙 100 and 20 timber.');
   check(await buildButton('plot_2').isDisabled() && await buildButton('islet_signal_station').isDisabled(), 'With 100 coins the Build buttons are off');
-  check((await card('islet_signal_station').innerText()).includes('You need 200 more coins'), 'The station card says it needs 200 more coins');
+  check((await card('islet_signal_station').innerText()).includes('You need 🪙 200 more'), 'The station card says it needs 200 more coins');
   await page.evaluate(() => window.__isletLocal.dev.reset());
   await refreshButton.click();
-  await waitForWallet('You have 1,000 coins and 20 timber.');
+  await waitForWallet('You have 🪙 1,000 and 20 timber.');
   check(await buildButton('plot_2').isEnabled() && await buildButton('islet_signal_station').isEnabled(), 'With 1,000 coins the Build buttons are on again');
   const names = await Promise.all(['plot_2', 'islet_signal_station'].map(plot => buildButton(plot).innerText()));
   check(new Set(names).size === 2 && names.every(name => name.startsWith('Build the ')), 'Each Build button names its building');
@@ -152,7 +152,7 @@ try {
   // Building the station by click leaves 700 coins and 10 timber.
   await buildButton('islet_signal_station').click();
   await waitForStatus('Signal station built.');
-  check(await status() === 'Signal station built. You have 700 coins and 10 timber left.' && await wallet() === 'You have 700 coins and 10 timber.', 'Building the station leaves 700 coins and 10 timber');
+  check(await status() === 'Signal station built. You have 🪙 700 and 10 timber left.' && await wallet() === 'You have 🪙 700 and 10 timber.', 'Building the station leaves 700 coins and 10 timber');
   check((await card('islet_signal_station').innerText()).includes('Standing') && await buildButton('islet_signal_station').isHidden(), 'The station card shows Standing and has no button');
   check(await page.evaluate(() => JSON.stringify(window.__changes.at(-1))) === '{"type":"islet_changed","built":["plot_1","islet_signal_station"],"signalStationBuilt":true}', 'The world is told that the station stands');
 
@@ -162,7 +162,7 @@ try {
   check((await focused()).plot === 'plot_2', 'The D-pad moves focus to the workshop button');
   await pressPad(page, PAD.A);
   await waitForStatus('Workshop built.');
-  check(await wallet() === 'You have 400 coins and 0 timber.', 'A builds the workshop: 400 coins and 0 timber are left');
+  check(await wallet() === 'You have 🪙 400 and 0 timber.', 'A builds the workshop: 400 coins and 0 timber are left');
   await pressPad(page, PAD.B);
   check(await closes() && !await pauseOpen(), 'B closes the panel and opens no Pause menu');
   check((await focused()).onCanvas, 'After B, focus is back on the canvas');

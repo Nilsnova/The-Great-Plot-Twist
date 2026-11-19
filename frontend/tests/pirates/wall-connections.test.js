@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import {makeCombatWallConnections, standingCombatWalls} from '../../src/pirates/wall-connections.js';
 import {createWaveRenderer, packAtlas} from '../../src/pirates/render.js';
 import {createWave} from '../../src/pirates/sim.js';
+import {projectGround} from '../../src/world/projection.js';
 
 const post = (id, x, z, level = 2) => ({id, kind: 'wall', x, z, level});
 const hp = (id, amount = 120) => ({id, hp: amount, maxHp: 120});
@@ -46,7 +47,18 @@ describe('live combat wall connections', () => {
     const wave = createWave({seed: 7, wave: 1, defenses, recoveryVersion: 1, waveProtocol: 2});
     const scene = new THREE.Scene(), renderer = createWaveRenderer({scene, atlas: atlas(), defenses, recoveryV1: true, fx: () => null});
     const count = () => meshes(renderer.root.getObjectByName('pirates:wall-connections')).length;
+    const air = renderer.root.getObjectByName('pirates:air').geometry;
+    const badge = () => {
+      if (!air.instanceCount) return null;
+      const position = air.getAttribute('iPos'), size = air.getAttribute('iSize');
+      return [position.getX(0), position.getY(0), size.getX(0), size.getY(0)];
+    };
     renderer.update({state: wave.state()}); expect(count()).toBe(0);
+    const foot = projectGround(2, 0), ruin = badge();
+    expect(ruin).not.toBeNull();
+    expect(ruin[0]).toBeCloseTo(foot.x);
+    expect(ruin[1]).toBeCloseTo(foot.y + 3.2);
+    expect(ruin.slice(2)).toEqual([2, .625]);
     renderer.events([{type: 'wall_repaired', wallId: 'wall_2', x: 2, z: 0, hp: 120}]);
     renderer.update({state: wave.state()}); expect(count()).toBe(0);
     const event = {serverSeq: 1, effectiveTick: 0, type: 'structure_repaired', payload: {
@@ -54,8 +66,10 @@ describe('live combat wall connections', () => {
     }};
     expect(wave.applyRecoveryEvent({...event, payload: {...event.payload, instanceId: 'old-instance'}})).toBe(false);
     renderer.update({state: wave.state()}); expect(count()).toBe(0);
+    expect(badge()).toEqual(ruin);
     expect(wave.applyRecoveryEvent(event)).toBe(true);
     renderer.update({state: wave.state()}); expect(count()).toBe(1);
+    expect(badge()).toBeNull();
     const geometry = meshes(renderer.root.getObjectByName('pirates:wall-connections'))[0].geometry;
     expect(wave.applyRecoveryEvent(event)).toBe(false);
     renderer.update({state: wave.state()});

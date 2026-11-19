@@ -98,7 +98,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     openLobby, setPresence, resetState, resetIsland, playArrival, visit, leaveGame, enterGame, sailHome,
     interruptBoat, refreshCard, refreshCardIfBuild, openHarbor, openTechHub, openWreck, selectedAnchor, openCrew,
     openOverview, openCaptain, openLeaderboard, openCaptains, openInvite, pick, defenseReportIdentity,
-    canFocusDefenseReport, resolveDefenseReport, focusDefenseReport, invalidateWallFeedback, build, readWalls,
+    canFocusDefenseReport, resolveDefenseReport, focusDefenseReport, invalidatePurchaseFeedback, build, readWalls,
     upgrade, askDemolish, confirmDemolish, heardDemolish, specialise, buyTree, toggleVillage, startMove, moved,
     inspectHouse, activeHouseSupport, research, giveWreck, hire, upgradeCaptain, learnSkill, takeRole, respecCaptain} = isl;
   // ownRetry: your own island's read failed for a passing reason, so the next reread (the wave wiring's
@@ -107,7 +107,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   isl.pendingWallet = null; isl.walletGeneration = 0;
   isl.world = null; isl.cutscene = null; isl.openSpot = null; isl.loadTicket = 0; isl.battle = false;
   isl.housePlayer = null; isl.selectedHouse = null; isl.movingHouse = null;
-  isl.wallFeedbackGeneration = 0;
+  isl.purchaseFeedbackGeneration = 0;
   isl.coreState = createCoreState();
   isl.coreWorld = null; isl.coreContextKey = null; isl.coreTravelGeneration = 0; isl.coreRejoin = null;
   isl.pointBattle = false;
@@ -258,7 +258,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   const stopTravel = on('travel', event => {
     interruptBoat();
     isl.village.leave();
-    invalidateWallFeedback();
+    invalidatePurchaseFeedback();
     isl.coreTravelGeneration++; syncCoreContext();
     isl.ui.close(); isl.flow.reset(); isl.openSpot = null; isl.moving.cancel();
     if (isl.visiting && event.to !== ISLAND_PLACE) endVisit();
@@ -322,7 +322,11 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     },
     owns: isIslandZone,
     label(zone) {
-      if (zone === BELL.id) return isl.flow.current && !isl.flow.current.joined ? 'Join the defense' : 'Ring the harbor bell';
+      if (zone === BELL.id) {
+        const wave = isl.flow.current;
+        if (!wave) return 'Ring the harbor bell';
+        return wave.joined ? 'View wave status' : 'Join the defense';
+      }
       if (zone === CABIN.id) return 'Players and invite';
       if (zone === ARSENAL.id) return 'Open the arsenal';
       const building = campaignBuilding(zone);
@@ -417,7 +421,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     // The island's wave controller stopped this wave (src/pirates/game-wiring.js): a bell still holding it goes.
     waveStopped(waveId) { if (!isl.disposed && typeof waveId === 'string') isl.flow.release(waveId); },
     setBattle(value) {
-      if (value === true && !isl.battle) invalidateWallFeedback();
+      if (value === true && !isl.battle) invalidatePurchaseFeedback();
       isl.battle = value === true;
       if (isl.battle) {
         isl.village.leave(); isl.waveOver = false; isl.moving.cancel(); interruptBoat(true);

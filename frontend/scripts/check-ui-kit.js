@@ -8,7 +8,7 @@ const report = { checked:new Date().toISOString(), production, checks:[] };
 const check = (ok,label) => { assert.ok(ok,label); report.checks.push(label); };
 try {
   await page.goto(env.url+'/ui-kit.html'); await page.locator('.kit-dialogue').waitFor();
-  check(await page.locator('.kit-panel').count() === 15,'Gallery shows nine component groups and six request states');
+  check(await page.locator('#kit-gallery .kit-gallery-grid > .kit-panel').count() === 14,'Gallery shows eight component groups and six request states');
   await page.getByRole('button',{name:'Open a panel',exact:true}).click();
   await page.getByRole('dialog').waitFor({state:'visible'}); await page.keyboard.press('Escape');
   await page.getByRole('dialog').waitFor({state:'hidden'});
@@ -19,7 +19,10 @@ try {
   check(await page.locator('.kit-choice:disabled').count() === 0,'Skip reveals the full line and enables choices');
   await page.keyboard.press('2'); await page.locator('.kit-dialogue').getByRole('button',{name:'Show full text'}).click();
   check((await page.locator('.kit-dialogue-text').textContent()).includes('You turn the notebook'),'Numbered keyboard choice updates the dialogue once');
-  check(await page.locator('.kit-clue-card[data-state=new]').count() === 1 && await page.locator('.kit-clue-card[data-state=pinned]').count() === 1 && await page.locator('.kit-clue-card[data-state=used]').count() === 1,'Clue states are presented without board logic');
+  await page.locator('#kit-gallery .server-call[data-state="loading"]').waitFor();
+  const states = await page.locator('#kit-gallery .kit-panel > .kit-panel-body > .server-call')
+    .evaluateAll(samples => samples.map(sample => sample.dataset.state));
+  check(states.length === 6 && ['loading','empty','error','offline','expired','rate_limited'].every(phase => states.includes(phase)), `Gallery presents all six request states (${states.join(', ')})`);
   check(await page.locator('.kit-mini-chart[data-halted=true] .kit-badge').textContent() === 'Trading halted','Halted sparkline has a readable status');
   check(await page.locator('progress').evaluate(el=>el.value===.6),'Native progress exposes the supplied ratio');
   check(await page.locator('.kit-hud-bar').textContent().then(text=>text.includes('🪙 1,240')&&text.includes('NPC partner')),'HUD formats supplied balance and distinguishes NPC seats');

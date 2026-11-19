@@ -7,7 +7,7 @@ import { paintedBlob } from '../primitives.js';
 import { swayMaterial, updateSway } from '../wind.js';
 import { createBeam } from '../beam.js';
 import { places } from './registry.js';
-import { layouts, edgeTrees, homeMooring } from './layouts.js';
+import { layouts, edgeTrees, homeMooring, homeUndergrowth } from './layouts.js';
 import { placeGround } from './surfaces.js';
 import { backdrop, createLifetime, loadBackdrop } from './resources.js';
 import { makeSelectedCanopy } from './selected-canopy.js';
@@ -20,6 +20,7 @@ export async function createSettlement(ctx) {
   const data = places[id];
   const placements = [...(layouts[id] ?? []), ...(ctx.placements ?? [])];
   const mooring = id === 'home_islet' ? homeMooring : [];
+  const undergrowth = id === 'home_islet' ? homeUndergrowth : [];
   const trees = edgeTrees[id] ?? [];
   const extraArtIds = [
     ...(id === 'saltreach_harbor' ? ['harbour-office-glow'] : []),
@@ -30,6 +31,7 @@ export async function createSettlement(ctx) {
   const artIds = [...new Set([
     ...placements.map(placement => placement.asset),
     ...mooring.map(placement => placement.asset),
+    ...undergrowth.map(([asset]) => asset),
     'oak', 'pine', 'birch', 'rock', 'flowers', 'grass-tuft',
     ...extraArtIds,
   ])];
@@ -69,10 +71,18 @@ export async function createSettlement(ctx) {
       // Each tree already owns its wind material. Selection and captain occlusion share one opacity writer.
       mesh.material.opacity = selectedCanopy?.has(mesh) ? .24 : playerBehind ? .3 : 1;
     }
-    trees.forEach(([x, z], i) => {
-      placeArt(group, art, 'grass-tuft', x + 2, z + 1);
-      if (i % 2 === 0) placeArt(group, art, 'flowers', x - 1.6, z + 1);
-    });
+    if (undergrowth.length) {
+      for (const [asset, x, z, scale] of undergrowth) {
+        const mesh = placeArt(group, art, asset, x, z, scale);
+        mesh.renderOrder = 30;
+        mesh.raycast = () => {};
+      }
+    } else {
+      trees.forEach(([x, z], i) => {
+        placeArt(group, art, 'grass-tuft', x + 2, z + 1);
+        if (i % 2 === 0) placeArt(group, art, 'flowers', x - 1.6, z + 1);
+      });
+    }
     const lights = data.lights.map(light => {
       const { x, y } = light.beamOrigin;
       const isSignalStation = light.id === 'islet_signal_station';

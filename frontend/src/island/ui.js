@@ -26,9 +26,18 @@ import {createSelectionDock} from './selection-dock.js';
 // hub is a big centred tree card like the captain's skills (skill-tree.js), so it is not docked.
 export const DOCKED = new Set(['build', 'wreck', 'harbor', 'arsenal']);
 const WALL_RECEIPT_PULSE = 'island-wall-level-receipt';
+const BUILDING_PULSE = 'island-building-level-feedback';
 
-function cancelWallReceiptPulse(header) {
-  header.getAnimations().find(animation => animation.id === WALL_RECEIPT_PULSE)?.cancel();
+function cancelPurchasePulse(header, id) {
+  header?.getAnimations().find(animation => animation.id === id)?.cancel();
+}
+
+function pulsePurchaseHeader(header, id, reduced) {
+  cancelPurchasePulse(header, id);
+  const styles = getComputedStyle(header);
+  const glow = {boxShadow: styles.getPropertyValue('--island-purchase-glow').trim()};
+  header.animate([glow, {boxShadow: styles.boxShadow}],
+    {id, duration: reduced ? 520 : 620, easing: reduced ? 'steps(1, end)' : 'ease-out'});
 }
 
 function button(label, onClick, quiet = false) {
@@ -118,6 +127,7 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
   function buildCard(model, handlers, {dock = false, details = false} = {}) {
     if (disposed) return;
     const on = typeof handlers === 'function' ? {build: handlers} : handlers ?? {};
+    if (selectionModel?.spotId !== model.spotId || selectionModel?.kind !== model.kind) clearBuildingFeedback();
     if (selectionModel?.spotId !== model.spotId) returnToDock = null;
     selectionModel = model; selectionHandlers = on;
     if (!dock && !details) returnToDock = null;
@@ -597,7 +607,7 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
     let receipt = header.querySelector('.island-wall-purchase-receipt');
     if (model.kind !== 'wall') {
       if (receipt) {
-        cancelWallReceiptPulse(header);
+        cancelPurchasePulse(header, WALL_RECEIPT_PULSE);
         const group = receipt.parentElement;
         group.before(heading);
         group.remove();
@@ -612,7 +622,7 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
       group.append(heading, receipt);
     }
     if (receipt.dataset.spot !== model.spotId) {
-      if (receipt.textContent) cancelWallReceiptPulse(header);
+      if (receipt.textContent) cancelPurchasePulse(header, WALL_RECEIPT_PULSE);
       receipt.dataset.spot = model.spotId;
       receipt.textContent = '';
     }
@@ -623,12 +633,15 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
     const receipt = header.querySelector('.island-wall-purchase-receipt');
     if (!receipt) return false;
     receipt.textContent = message;
-    cancelWallReceiptPulse(header);
-    const styles = getComputedStyle(header);
-    const glow = {boxShadow: styles.getPropertyValue('--wall-receipt-glow').trim()};
-    header.animate([glow, {boxShadow: styles.boxShadow}],
-      {id: WALL_RECEIPT_PULSE, duration: reduced ? 520 : 620, easing: reduced ? 'steps(1, end)' : 'ease-out'});
+    pulsePurchaseHeader(header, WALL_RECEIPT_PULSE, reduced);
     return true;
+  }
+  function showBuildingFeedback(spotId, building, reduced) {
+    if (kind !== 'build' || !modal?.element.open || selectionModel?.spotId !== spotId || selectionModel.kind !== building) return;
+    pulsePurchaseHeader(modal.element.querySelector('.kit-modal-header'), BUILDING_PULSE, reduced);
+  }
+  function clearBuildingFeedback() {
+    if (kind === 'build') cancelPurchasePulse(modal?.element.querySelector('.kit-modal-header'), BUILDING_PULSE);
   }
   return {
     overviewCard, leaderboardCard, buildCard, bellCard, inviteCard, lobbyCard, crewCard, captainCard, captainsCard, harborCard, techCard, wreckCard, arsenalCard, demolishCard, close, copyLink,
@@ -640,7 +653,7 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
     // Re-draw the open card from fresh models (the island controller calls this on every change).
     get open() { return kind; },
     get active() { return !!modal; },
-    showWallReceipt,
+    showWallReceipt, showBuildingFeedback, clearBuildingFeedback,
     banner(text) { bannerText.textContent = text ?? ''; banner.hidden = !text; },
     // The chip of the game on screen ({text, label} from one-island.js visitChip), or null to hide it.
     visit(chip, onAction) {

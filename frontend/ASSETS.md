@@ -43,13 +43,13 @@ Every row is a distinct original PNG in `public/pixel/`. Dimensions and anchors 
 | `workshop` | 112 × 112 | Home workshop and crossed tools; settlements.py |
 | `windmill` | 112 × 160 | Static native-pixel sails, home plot; settlements.py |
 | `greenhouse` | 112 × 96 | Glass panels and planted pots; settlements.py |
-| `build-plot` | 144 × 96 | Ground parcel and low corner posts; settlements.py |
+| `build-plot` | 144 × 96 | Shared village sand, low sandstone edging and cedar stakes; settlements.py |
 | `back-room` | 96 × 96 | Cove outbuilding; case_places.py, original boathouse source reused |
 | `low-tide-cave` | 112 × 96 | Stone cave entrance; case_places.py |
 | `arena-gate` | 112 × 96 | Stone arch with timber gate; case_places.py |
 | `raid-arch` | 112 × 112 | Tall stone arch and neutral pennants; case_places.py |
 | `watchtower-ruin` | 80 × 144 | Broken masonry tower, future beam origin; case_places.py |
-| `reef` | 96 × 64 | Angular shoreline rocks and water contact; case_places.py |
+| `reef` | 96 × 64 | Weathered slate slabs and grass contact on The Teeth; case_places.py |
 | `salvage-yard` | 144 × 112 | Timber hull, shelter and salvage crates; case_places.py |
 | `fog-bank` | 192 × 96 | Translucent clustered fog bands; case_places.py |
 
@@ -69,6 +69,8 @@ Every row is a distinct original PNG in `public/pixel/`. Dimensions and anchors 
 | `places/chart-relit.png` | 448 × 256 | Chart revealed by the external Relighting gate; chart.py |
 
 ## Edit, reproduce and inspect
+
+Lighthouse Isle (Pirate Point), Saltreach Harbor, Smugglers’ Cove, Wreck Point and The Teeth use the original Home Islet grass, sand and paving from `public/village/terrain-materials-v1.png`. `scripts/pixel_art/place_materials.py` tones the materials for each location and bakes them onto the existing ground and path pixels. The indexed PNGs preserve the original 1024 × 768 dimensions and transparency, with no additional runtime textures. The Lighthouse keeps the winding path sandy and applies the treatment to the world backdrop, while the title background still uses its original colour treatment.
 
 From `frontend/`, run `python3 scripts/pixel_art/generate.py`. Pillow is an offline authoring dependency; playing, building and JS testing require no Python. Sources live in `scripts/pixel_art/`: common.py, nature.py, buildings.py, people.py, props.py, ground.py, destinations.py, nautical.py, settlements.py, case_places.py, place_ground.py, chart.py and generate.py. The Node helpers export canonical land masks from terrain.js and places/surfaces.js; visual shorelines and walkability use the same functions.
 
@@ -237,8 +239,8 @@ Four original additions in `scripts/pixel_art/islet.py`, registered in `src/pixe
 
 | Sprite id | Native pixels | Purpose |
 | --- | --- | --- |
-| `islet-empty-plot` | 56 × 64 | Timber parcel marker, without miniature text |
-| `islet-locked-sign` | 64 × 72 | Closed padlock sign for plots coming later |
+| `islet-empty-plot` | 56 × 64 | Amber timber sign with a build symbol |
+| `islet-locked-sign` | 64 × 72 | Muted timber sign with a closed padlock |
 | `islet-signal-station` | 80 × 128 | Small stone station and cedar signal mast, unlit |
 | `islet-signal-station-lit` | 80 × 128 | Matching station with a steady gold lens at night |
 

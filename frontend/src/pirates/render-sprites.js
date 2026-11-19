@@ -8,6 +8,7 @@ import { pirateFrames, pirateLevels, crewArt, pirateDimensions, TIER_ART, FIRE_A
   SWIVEL_ART, fireArt, levelArt } from '../pixel/pirate-catalog.js';
 // T33 (D049, proposed): the damaged and broken tower drawings, used only while the wave has tower health.
 import { TOWER_KINDS, towerStateFrame } from '../art/tower-states.js';
+import { RECOVERY_BADGE, paintRecoveryBadge } from '../art/structure-health-badge.js';
 import { MARK_IDS } from '../art/path-marks.js';
 import { WALL_ATLAS_IDS } from '../art/village/walls.js';
 import { wallAtlasView } from '../art/wall-atlas.js';
@@ -16,6 +17,7 @@ import { toScreen, pixelGlsl } from '../world/pixel-glsl.js';
 export const UNIT = 16;
 export const facingTo = item => projectGroundVector(item.toX - item.x, (item.toZ ?? item.z ?? 0) - (item.z ?? 0)).x < 0 ? -1 : 1;
 export const WHITE = 'white';
+export const HEALTH_BADGE = 'recovery-health-badge', RUIN_BADGE = 'recovery-ruin-badge';
 export const ATLAS_IDS = [...pirateFrames.sloop, ...pirateFrames.brig, ...pirateFrames.flagship, ...pirateFrames.warship,
   ...pirateFrames.splash, ...pirateFrames.wall, ...pirateFrames.cannon, ...pirateFrames.mortar,
   ...pirateLevels.wall.slice(1), ...pirateLevels.cannon.slice(1), ...pirateLevels.mortar.slice(1), ...Object.values(crewArt),
@@ -149,9 +151,22 @@ export async function loadAtlas({ quality = 'high', colour = 0, towerStates = fa
   const ids = [...new Set([...ATLAS_IDS.filter(id => !PIXEL_ONLY_IDS.includes(id)), ...CARTOON_EXTRA_IDS, ...TIER_IDS, ...WALL_ATLAS_IDS, ...FIRE_LEVEL_IDS, ...HARPOON_IDS, ...GUNBOAT_IDS,
     ...(towerStates ? TOWER_STATE_IDS : []), ...(culverins ? CULVERIN_IDS : []), ...(culverins && towerStates ? CULVERIN_STATE_IDS : []),
     ...(swivels ? SWIVEL_IDS : []), ...(swivels && towerStates ? SWIVEL_STATE_IDS : []), ...MARK_ATLAS_IDS])];
-  const atlas = await cartoonAtlas(ids, { quality, extra: [[WHITE, 8, 8]] });
+  const extra = [[WHITE, 8, 8]];
+  if (towerStates) extra.push([HEALTH_BADGE, RECOVERY_BADGE.width, RECOVERY_BADGE.height],
+    [RUIN_BADGE, RECOVERY_BADGE.width, RECOVERY_BADGE.height]);
+  const atlas = await cartoonAtlas(ids, { quality, extra });
   const white = atlas.rects[WHITE], context = atlas.image.getContext('2d');
   context.fillStyle = '#fff'; context.fillRect(white.x * atlas.density, white.y * atlas.density, white.w * atlas.density, white.h * atlas.density);
+  if (towerStates) {
+    for (const id of [HEALTH_BADGE, RUIN_BADGE]) {
+      const { x, y } = atlas.rects[id];
+      context.save();
+      context.translate(x * atlas.density, y * atlas.density);
+      context.scale(atlas.density, atlas.density);
+      paintRecoveryBadge(context, id === RUIN_BADGE);
+      context.restore();
+    }
+  }
   const result = {texture: smoothTexture(atlas.image), width: atlas.image.width / atlas.density, height: atlas.image.height / atlas.density,
     rects: atlas.rects, density: atlas.density};
   result.wallArt = wallAtlasView(result); return result;
@@ -246,6 +261,10 @@ export function pool() {
 }
 
 export const colour = hex => { const c = new THREE.Color(hex); return { r: c.r, g: c.g, b: c.b }; };
+export const RECOVERY_TINT = {
+  green: colour(RECOVERY_BADGE.green), gold: colour(RECOVERY_BADGE.gold), red: colour(RECOVERY_BADGE.red),
+  light: colour(RECOVERY_BADGE.light),
+};
 export const GOLD = colour('#ffd77a'), RED = colour('#d8553f'), GREEN = colour('#9fd26a'), DARK = colour('#1f2622'), BEAM = colour('#ffe9a8');
 export const BRASS = colour('#e0b04a'), TEAL = colour('#4fc3c9');
 export const CANNONBALL_LOOK = {
