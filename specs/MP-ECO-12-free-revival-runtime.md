@@ -91,6 +91,30 @@ canonical hooks or malformed facts fail closed. The new router is registered by 
 runtime integration; existing wave route dispatch and client wiring stay with that integration.
 Explicit legacy paid revival and historical reconciliation retain their already guarded behavior.
 
+`POST /api/island/revive` requires `X-Island-Economy-Version: 1` and exactly:
+
+```json
+{
+  "economy": {"mode": "island_shared", "version": 1, "islandOwner": "uuid", "runEpoch": "uuid"},
+  "actionUid": "player_action_uid",
+  "waveId": "uuid",
+  "targetToken": "uuid",
+  "fallId": "uuid",
+  "holdId": "uuid",
+  "sessionId": "uuid",
+  "connectionGeneration": "1"
+}
+```
+
+Success contains only `status: "done"`, `repeat` and the immutable common `wave_revive`
+receipt. Its result has `waveId`, `targetToken`, `fallId`, original `holdId`, `downAtTick`,
+`eventSeq`, equal `reviveSeq` and `restoredHPUnits`. Those are original effect facts, not current
+HP or funds. Network, server and reauthentication uncertainty retains the exact durable body
+and UID. `health_sync_required` requires reading/replaying the actual fixed journal prefix and
+submitting the complete accepted Captain report before retrying the same completion UID.
+Definitive hold refusals roll back the new root; replacement hold/session fences may refresh
+without retargeting the wave, target or fall. Client timers only display progress.
+
 ## Test-first acceptance
 
 Before implementation, add strict body/receipt/route projection tests. Disposable PostgreSQL
