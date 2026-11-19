@@ -48,7 +48,8 @@ def test_the_island_shows_levels_crew_captain_prices_unlocks_and_the_next_wave()
 
     spot = next(spot for spot in body["spots"] if spot["id"] == "cannon_1")
     assert spot == {
-        "id": "cannon_1", "kind": "mortar", "kinds": ["cannon", "mortar", "harpoon", "swivel"],
+        "id": "cannon_1", "kind": "mortar",
+        "kinds": ["cannon", "mortar", "harpoon", "swivel", "culverin"],
         "built": True,
         "level": 2, "cost": 60, "upgradeCost": 240, "spec": None,
         "x": -12.5, "z": -14.5, "tree": {"a": 0, "b": 0},
@@ -139,14 +140,15 @@ def test_a_harpoon_tower_opens_after_wave_twelve_on_the_tower_spots_only():
         refused = later.build(spot=spot, kind="harpoon", actionUid="click-0002")
         assert_error(refused, 422, "wrong_kind")
     shown = next(spot for spot in later.island().json()["spots"] if spot["id"] == "cannon_5")
-    assert shown["kinds"] == ["cannon", "mortar", "harpoon", "swivel"]
+    assert shown["kinds"] == ["cannon", "mortar", "harpoon", "swivel", "culverin"]
 
 
 def test_a_tower_spot_says_what_can_stand_on_it_in_plain_words():
     refused = world_at(12).build(spot="cannon_1", kind="wall")
     assert (
         refused.json()["error"]["message"]
-        == "Only a cannon, a mortar, a harpoon tower or a swivel-gun nest can stand on this spot."
+        == "Only a cannon, a mortar, a harpoon tower, a swivel-gun nest or a culverin can stand on "
+        "this spot."
     )
 
 

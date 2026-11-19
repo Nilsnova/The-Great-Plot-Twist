@@ -88,20 +88,6 @@ def test_the_wave_walls_are_the_health_at_the_start_of_the_wave():
 # --- the flag ---
 
 
-def test_with_the_flag_off_the_routes_are_hidden_and_the_waves_unchanged():
-    world = World()
-    world.database.walls[PLAYER_ID] = [wall_row(0, 1)]
-
-    assert_error(world.client.get("/api/island/walls", headers=PLAYER), 404, "feature_off")
-    assert_error(world.post("/api/island/repair", spot="wall_1"), 404, "feature_off")
-    started = world.start()
-    assert started.status_code == 200 and "walls" not in started.json()
-    assert world.finish(walls={"wall_1": 0}).status_code == 200
-    assert world.database.calls("island_walls_record") == []
-    # The new columns are never read, so the app works before the migration is applied.
-    assert all("wall_health" not in str(request.url) for request in world.database.requests)
-
-
 # --- the routes with the flag on ---
 
 

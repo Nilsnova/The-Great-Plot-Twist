@@ -3,8 +3,8 @@
 The rules are in backend/server/island/layout.py (pure) and placement.py (the flow), the grid and
 the fixed spots in backend/content/island_layout.json, the database part in
 supabase/migrations/20261114110000_island_layout.sql. Like every island route it needs a signed-in
-player and the flag "islands", and the flag "placement" (404 feature_off while either is off;
-without "placement" every island answer shows the fixed spots and layout.movable false).
+player and the flag "islands" (404 feature_off while it is off). The flag "placement" is retired
+(always on; the name stays accepted in FEATURE_FLAGS and changes nothing).
 Answers carry `Cache-Control: private, no-store`.
 
 POST /api/island/move  {"spot": "cannon_1", "x": -10, "z": -10.5, "code"?: "ISLE-K7Q2M"}
