@@ -15,6 +15,7 @@ psycopg = pytest.importorskip("psycopg")
 from server.app import create_app  # noqa: E402
 from server.auth import PlayerVerifier  # noqa: E402
 from server.flags import parse_flags  # noqa: E402
+from server.island.catalogue import load_island  # noqa: E402
 from server.tests.helpers import CONFIGURED_SETTINGS, FakeClock  # noqa: E402
 from server.tests.island_helpers import CALM, FakeWeather  # noqa: E402
 from server.tests.island_sql.test_structure_repair_sql import (  # noqa: E402
@@ -572,7 +573,22 @@ def test_accepted_bell_member_join_and_paid_repair_match_committed_state(databas
     ).fetchone() == (instance(database),)
 
 
-def test_saved_v1_extra_spots_and_culverin_start_with_retired_flags_omitted(database):
+@pytest.mark.parametrize("catalogue_mode", ["runtime", "narrower"])
+def test_saved_v1_extra_spots_and_culverin_remain_usable(database, catalogue_mode):
+    expected = {
+        "runtime": {
+            "culverin_offered": True,
+            "plot_status": 409,
+            "plot_error": "spot_taken",
+            "kind_spot": "wall_1",
+        },
+        "narrower": {
+            "culverin_offered": False,
+            "plot_status": 404,
+            "plot_error": "no_such_spot",
+            "kind_spot": "cannon_7",
+        },
+    }[catalogue_mode]
     epoch, _ = seed_recovery(
         database,
         (
@@ -601,6 +617,11 @@ def test_saved_v1_extra_spots_and_culverin_start_with_retired_flags_omitted(data
     )
     admin = ScratchRecoveryAdmin(database)
     app = create_app(settings, verifier, admin, weather_source=FakeWeather(CALM))
+    # Retired flags cannot disable normal offers. Also exercise a deliberately narrower
+    # synthetic catalogue so saved defenses remain usable after future offer changes.
+    assert app.state.island.more_tower_spots is True
+    assert any(kind.kind == "culverin" for kind in app.state.island.kinds)
+    app.state.island = {"runtime": app.state.island, "narrower": load_island()}[catalogue_mode]
     owner_balance = balance(database, OWNER)
 
     with TestClient(app) as client:
@@ -641,7 +662,7 @@ def test_saved_v1_extra_spots_and_culverin_start_with_retired_flags_omitted(data
             "cannon_11",
         }
         assert island_spots["cannon_11"]["kind"] == "culverin"
-        assert "culverin" in island_spots["cannon_7"]["kinds"]
+        assert ("culverin" in island_spots["cannon_7"]["kinds"]) is expected["culverin_offered"]
         assert island_response.json()["unlocks"]["unlocked"]
         assert "culverin:5" in island_response.json()["unlocks"]["unlocked"]
         assert island_spots["cannon_11"]["upgradeCost"] == 160
@@ -678,21 +699,25 @@ def test_saved_v1_extra_spots_and_culverin_start_with_retired_flags_omitted(data
         )
         assert repaired_culverin["hpUnits"] == 1_000_000
 
-        occupied_plot_build = client.post(
+        existing_plot_build = client.post(
             "/api/island/build",
             headers=HEADERS["owner"],
             json={"spot": "cannon_9", "kind": "cannon", "actionUid": "gated-new-spot-01"},
         )
-        wrong_slot_build = client.post(
+        unavailable_kind_build = client.post(
             "/api/island/build",
             headers=HEADERS["owner"],
-            json={"spot": "wall_1", "kind": "culverin", "actionUid": "wrong-slot-kind-01"},
+            json={
+                "spot": expected["kind_spot"],
+                "kind": "culverin",
+                "actionUid": "wrong-slot-kind-01",
+            },
         )
 
-    assert occupied_plot_build.status_code == 409, occupied_plot_build.text
-    assert occupied_plot_build.json()["error"]["code"] == "spot_taken"
-    assert wrong_slot_build.status_code == 422, wrong_slot_build.text
-    assert wrong_slot_build.json()["error"]["code"] == "wrong_kind"
+    assert existing_plot_build.status_code == expected["plot_status"], existing_plot_build.text
+    assert existing_plot_build.json()["error"]["code"] == expected["plot_error"]
+    assert unavailable_kind_build.status_code == 422, unavailable_kind_build.text
+    assert unavailable_kind_build.json()["error"]["code"] == "wrong_kind"
     assert balance(database, OWNER) == owner_balance
     assert database.execute(
         "select count(*) from public.islet_buildings where player_id=%s", (OWNER,)
@@ -712,7 +737,32 @@ def test_saved_v1_extra_spots_and_culverin_start_with_retired_flags_omitted(data
     assert {item["id"] for item in snapshot["createWave"]["defenses"]} >= set(by_spot)
 
 
-def test_saved_v1_culverin_between_wave_repair_and_empty_plot_remain_compatible(database):
+@pytest.mark.parametrize("catalogue_mode", ["runtime", "narrower"])
+def test_saved_v1_culverin_repair_and_new_plot_follow_current_offers(database, catalogue_mode):
+    expected = {
+        "runtime": {
+            "plot_offered": True,
+            "new_kinds": {"cannon", "culverin"},
+            "build_status": 200,
+            "owner_cost": 30,
+            "response_culverin": "culverin",
+            "response_cannon": "cannon",
+            "response_built": True,
+            "buildings": [("cannon_8", "culverin"), ("cannon_9", "cannon")],
+            "ledger": (1, -30),
+        },
+        "narrower": {
+            "plot_offered": False,
+            "new_kinds": set(),
+            "build_status": 404,
+            "owner_cost": 0,
+            "response_culverin": None,
+            "response_cannon": None,
+            "response_built": None,
+            "buildings": [("cannon_8", "culverin")],
+            "ledger": (0, None),
+        },
+    }[catalogue_mode]
     epoch, _ = seed_recovery(database, (("cannon_8", "culverin"),))
     as_server(database)
     database.execute("update public.islands set wave_best=40 where player_id=%s", (OWNER,))
@@ -729,6 +779,10 @@ def test_saved_v1_culverin_between_wave_repair_and_empty_plot_remain_compatible(
     verifier = PlayerVerifier(settings, transport=httpx.MockTransport(login), clock=FakeClock())
     admin = ScratchRecoveryAdmin(database)
     app = create_app(settings, verifier, admin, weather_source=FakeWeather(CALM))
+    # Check the default always-on catalogue before selecting the synthetic compatibility case.
+    assert app.state.island.more_tower_spots is True
+    assert any(kind.kind == "culverin" for kind in app.state.island.kinds)
+    app.state.island = {"runtime": app.state.island, "narrower": load_island()}[catalogue_mode]
     owner_balance = balance(database, OWNER)
     member_balance = balance(database, MEMBER)
 
@@ -737,9 +791,11 @@ def test_saved_v1_culverin_between_wave_repair_and_empty_plot_remain_compatible(
         assert island_response.status_code == 200, island_response.text
         spots = {item["id"]: item for item in island_response.json()["spots"]}
         assert spots["cannon_8"]["kind"] == "culverin"
-        assert spots["cannon_9"]["built"] is False
-        assert "cannon" in spots["cannon_9"]["kinds"]
-        assert "culverin" in spots["cannon_9"]["kinds"]
+        assert ("cannon_9" in spots) is expected["plot_offered"]
+        assert {"cannon", "culverin"} & set(spots.get("cannon_9", {}).get("kinds", [])) == expected[
+            "new_kinds"
+        ]
+        assert spots.get("cannon_9", {}).get("built", False) is False
         assert "culverin:1" in island_response.json()["unlocks"]["unlocked"]
 
         state_response = client.get(
@@ -771,30 +827,38 @@ def test_saved_v1_culverin_between_wave_repair_and_empty_plot_remain_compatible(
             headers=HEADERS["owner"],
             json={"spot": "cannon_9", "kind": "cannon", "actionUid": "empty-gated-plot-01"},
         )
-        assert empty_plot_build.status_code == 200, empty_plot_build.text
+        assert empty_plot_build.status_code == expected["build_status"], empty_plot_build.text
         repeated_build = client.post(
             "/api/island/build",
             headers=HEADERS["owner"],
             json={"spot": "cannon_9", "kind": "cannon", "actionUid": "empty-gated-plot-01"},
         )
-        assert repeated_build.status_code == 200, repeated_build.text
+        assert repeated_build.status_code == expected["build_status"], repeated_build.text
 
-    for answer in (empty_plot_build, repeated_build):
-        by_spot = {item["id"]: item for item in answer.json()["spots"]}
-        assert by_spot["cannon_8"]["kind"] == "culverin"
-        assert by_spot["cannon_9"]["kind"] == "cannon"
-        assert by_spot["cannon_9"]["built"] is True
-    assert balance(database, OWNER) == owner_balance - 30
+    assert repeated_build.json() == empty_plot_build.json()
+    by_spot = {item["id"]: item for item in empty_plot_build.json().get("spots", [])}
+    assert by_spot.get("cannon_8", {}).get("kind") == expected["response_culverin"]
+    assert by_spot.get("cannon_9", {}).get("kind") == expected["response_cannon"]
+    assert by_spot.get("cannon_9", {}).get("built") is expected["response_built"]
+    assert balance(database, OWNER) == owner_balance - expected["owner_cost"]
     assert balance(database, MEMBER) == member_balance - 80
-    assert database.execute(
-        "select plot,building_type from public.islet_buildings where player_id=%s order by plot",
-        (OWNER,),
-    ).fetchall() == [("cannon_8", "culverin"), ("cannon_9", "cannon")]
-    assert database.execute(
-        "select count(*),sum(delta) from public.wallet_transactions "
-        "where player_id=%s and reason='building_purchase' and ref='island:empty-gated-plot-01'",
-        (OWNER,),
-    ).fetchone() == (1, -30)
+    assert (
+        database.execute(
+            "select plot,building_type from public.islet_buildings "
+            "where player_id=%s order by plot",
+            (OWNER,),
+        ).fetchall()
+        == expected["buildings"]
+    )
+    assert (
+        database.execute(
+            "select count(*),sum(delta) from public.wallet_transactions "
+            "where player_id=%s and reason='building_purchase' "
+            "and ref='island:empty-gated-plot-01'",
+            (OWNER,),
+        ).fetchone()
+        == expected["ledger"]
+    )
 
 
 def test_saved_v1_gated_plot_demolition_retry_uses_receipt_without_refund_repeat(database):
