@@ -70,11 +70,12 @@ it.each([
     expect(await page.evaluate(() => window.__island.island.managing)).toBe(false);
     await page.evaluate(() => window.__island.island.setBattle(false));
     // Request the read from the same browser task that focuses the current, mounted row.
-    await action.evaluate(button => {
+    const focused = await action.elementHandle();
+    await focused.evaluate(button => {
       button.focus({preventScroll: true});
       return window.__island.island.refreshDefended();
     });
-    const actionState = await action.evaluate(button => ({
+    const actionState = await focused.evaluate(button => ({
       focused: document.activeElement === button,
       height: button.getBoundingClientRect().height,
     }));

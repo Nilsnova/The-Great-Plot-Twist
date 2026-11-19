@@ -51,7 +51,7 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
   let selection = null, selectionModel = null, selectionHandlers = null, returnToDock = null;
   // The Tech hub tile the player tapped (kept while the page lives); the tree shows its detail.
   let techPicked = null, techFindSpot = null;
-  let overviewKind = 'all', overviewState = 'all';
+  let overviewKind = 'all', overviewState = 'all', overviewKey = null;
   const banner = node('div', 'island-banner'); banner.setAttribute('role', 'status'); banner.setAttribute('aria-live', 'polite'); banner.hidden = true;
   const bannerEyebrow = node('span', 'island-banner-eyebrow', 'Harbor bell'), bannerText = node('strong', 'island-banner-text');
   bannerEyebrow.setAttribute('aria-hidden', 'true');
@@ -595,10 +595,14 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
       return model.start.show && !model.start.disabled ? go : model.url ? copy : done;
     });
   }
-  function overviewCard(model, {find = null} = {}) {
+  function overviewCard(model, {find = null, scope = null} = {}) {
     if (overviewKind !== 'all' && !model.kinds.some(item => item.id === overviewKind)) overviewKind = 'all';
+    const key = JSON.stringify([scope, Boolean(find), overviewKind, overviewState, model]);
+    // An unchanged background read must leave the focused or pressed Find button attached.
+    if (scope !== null && kind === 'overview' && modal?.element.open && overviewKey === key) return;
+    overviewKey = key;
     open('overview', model.title, body => drawUpgradeOverview(body, model, {kind: overviewKind, state: overviewState, find,
-      choose: (kind, state) => { overviewKind = kind; overviewState = state; overviewCard(model, {find}); }}));
+      choose: (kind, state) => { overviewKind = kind; overviewState = state; overviewCard(model, {find, scope}); }}));
   }
   // Keep the live receipt in the stable header when a wall details sheet redraws its body.
   function prepareWallReceipt(model) {

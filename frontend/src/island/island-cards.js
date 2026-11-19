@@ -358,6 +358,7 @@ export function createCards(isl) {
   function showOverview(message = isl.ownMessage) {
     const find = canFindBuilding(), scope = buildingFindScope();
     isl.ui.overviewCard(upgradeOverviewModel({island: isl.own, battle: isl.battle && !isl.waveOver, find, message}), {
+      scope,
       find: find ? id => {
         if (findOwnedBuilding(id, 'overview', scope) === false) showOverview('This building is no longer on your island.');
       } : null,
