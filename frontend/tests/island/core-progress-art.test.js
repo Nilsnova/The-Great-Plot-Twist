@@ -6,11 +6,12 @@ import * as progress from '../../src/art/village/progress.js';
 import {collectRasterFrames, normalizeRasterFrame} from '../../src/art/village-raster.js';
 
 const frames = collectRasterFrames([core, progress]);
+const source = JSON.parse(readFileSync(new URL('../../../docs/evidence/VIS-05-hero/heart-v4.json', import.meta.url)));
 describe('core and progress native source contract', () => {
   it.each([
-    ['core-v1.png', 1254, 1254, 1078155, 'add2139b0c727713130ef46a61babfa73be43ab8b71a7b6c1db3fef9236f4f54'],
+    [core.sheets.core.file.split('/').at(-1), ...source.nativeSize, source.bytes, source.sha256],
     ['progress-v1.png', 1774, 887, 1200780, 'e1bb8a1679dd6e0d53ff50b515f6e849f6f2cb93637d775827b4ebe023183636'],
-  ])('ships the unchanged documented RGBA source %s', (file, width, height, bytes, digest) => {
+  ])('uses the documented RGBA source %s', (file, width, height, bytes, digest) => {
     const png = readFileSync(new URL(`../../public/village/${file}`, import.meta.url));
     expect(png.length).toBe(bytes); expect(png.readUInt32BE(16)).toBe(width); expect(png.readUInt32BE(20)).toBe(height);
     expect(png[25]).toBe(6); // PNG color type: RGBA.
@@ -22,6 +23,9 @@ describe('core and progress native source contract', () => {
     try {
       for (const id of ['island_core', 'island_core_damaged', 'island_core_broken']) {
         const f = frames[id]; normalizeRasterFrame({}, f, 2);
+        expect(f.rect).toEqual(source.cells[id].rect);
+        expect(f.sourceFoot).toEqual(source.cells[id].sourceFoot);
+        if (source.cells[id].frontOpening) expect(source.cells[id].frontOpening.alphaBelow16Fraction).toBeGreaterThan(.92);
         const args = calls.at(-1), scale = args[7] / f.rect[2];
         expect(args[5] + f.sourceFoot[0] * scale).toBeCloseTo(64);
         expect(args[6] + f.sourceFoot[1] * scale).toBeCloseTo(116);
