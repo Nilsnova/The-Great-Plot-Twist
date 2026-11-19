@@ -296,8 +296,19 @@ try {
     + 'from public.shared_session_controls where player_id=any($1::uuid[]) order by player_id',
   [[owner.actorId, challenger.actorId]]);
   assert.deepEqual(disconnectAfter, disconnectBefore);
+  const inGrace = await copies(owner.actorId);
+  for (const actor of [owner, challenger]) {
+    const heldCopy = inGrace.find(copy => copy.holder === actor.actorId);
+    const beforeCopy = expectedLoadouts.get(actor.actorId);
+    assert.equal(heldCopy.id, beforeCopy.id, 'Grace must retain the original copy');
+    assert.equal(heldCopy.holder_generation, beforeCopy.holderGeneration);
+    assert.equal(heldCopy.pending_return_wave_id, null);
+    assert.equal(heldCopy.disconnected_until,
+      disconnectAfter.find(row => row.player_id === actor.actorId).grace_until);
+  }
   note('all-clients-stopped-with-fixed-real-grace', {remainingControllers: 2,
-    repeatedDisconnectDidNotExtendDeadline: true, browserProcesses: 0,
+    repeatedDisconnectDidNotExtendDeadline: true, originalCopiesRetainedUntilDeadline: true,
+    browserProcesses: 0,
     observation: 'No player API or arsenal read occurs during the following real grace wait.'});
   // The common independently running production worker owns deadline normalization/closure.
   // This driver neither invokes a closure nor changes a clock, outcome, HP or journal.
