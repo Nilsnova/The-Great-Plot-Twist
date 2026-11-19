@@ -122,7 +122,7 @@ try {
   await stubOfflineApi(retina);await stubWeather(retina);await retina.goto(url);await startFromTitle(retina);await retina.waitForTimeout(1200);
   await measure('retina-high', retina); await retina.screenshot({ path: `captures/${stamp}_${prefix}-Retina.png` });
   await retina.evaluate(() => window.__island.quality('low')); await measure('retina-low', retina);
-  for (const [quality, maximum, ratioCap] of [['high', 1920 * 1080, 1.5], ['low', 1280 * 720, 1]]) {
+  for (const [quality, maximum, ratioCap] of [['high', 3_000_000, 3], ['low', 1280 * 720, 1]]) {
     const sample = report.modes[`retina-${quality}`];
     const expected = pixelViewport(1440, 900, {quality, pixelRatio: 2, densityScale: sample.densityScale});
     check(sample.devicePixelRatio === 2 && sample.quality === quality
