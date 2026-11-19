@@ -39,7 +39,7 @@ export function moveModel({spotId, spots, verdict, busy, message}) {
   const portrait = actual?.built === true && Object.hasOwn(BUILDINGS, actual.kind) && Number.isSafeInteger(actual.level) && actual.level >= 1 && actual.level <= 5
     ? {kind: actual.kind, level: actual.level, spec: actual.spec ?? null} : null;
   const line = isWall(spotId) ? 'Tap a highlighted spot on the grass edge, or use the arrows.' : 'Tap the island where it should stand, or use the arrows.';
-  return {title: moveTitle(spotId, spots), line, portrait,
+  return {title: moveTitle(spotId, spots), line, portrait, wall: isWall(spotId),
     status: message || (verdict.ok ? 'This square is free.' : verdict.message), ok, refused: !verdict.ok || !!message,
     busy, placeLabel: busy ? 'Placing…' : 'Place here'};
 }

@@ -330,12 +330,13 @@ export function decorateIsland(place, ctx = {}) {
   const footprint = makeFootprint(root), selectionBracket = makeSelectionBracket(root);
   const wallFeedback = homeWalls ? makeWallFeedback(root) : null;
   const buildingFeedback = homeWalls ? makeBuildingFeedback(root) : null;
-  // D056: while a wall is moved, the cells where a wall stops pirates glow (home island only).
+  // While a wall is moved, free spots along the Home Island grass edge glow.
   const wallPerimeter = homeWalls ? makeWallPerimeter(root) : null;
   // Where a spot stands now: the cell of a move under way, the answer's x/z, else its fixed spot (Pirate Point's stay).
   const whereOf = spot => {
     if (preview?.spotId === spot.id) return {x: preview.x, z: preview.z};
-    return layout.zones === islandZones ? placedSpot(spot.id, state.spots) ?? spot : spot;
+    if (!homeWalls) return spot;
+    return placedSpot(spot.id, state.spots) ?? (ISLAND_SPOTS.some(item => item.id === spot.id) ? null : spot);
   };
   function builtWallAnchor(id, level) {
     const row = state.spots.find(item => item.id === id);
@@ -469,7 +470,11 @@ export function decorateIsland(place, ctx = {}) {
       const answer = spots.find(item => item.id === spot.id), built = answer?.built === true, where = whereOf(spot);
       const marker = markers.get(spot.id);
       // D060: an extra tower spot stands only while the answer lists it (the server's flag more_tower_spots).
-      if (isExtraSpot(spot.id) && !answer) { marker.visible = false; marker.locked = false; clear(spot.id); for (const kind of kindsOf(spot)) buildings.get(`${spot.id}:${kind}`).visible = false; continue; }
+      if (!where || (isExtraSpot(spot.id) && !answer)) {
+        marker.visible = false; marker.locked = false; clear(spot.id);
+        for (const kind of kindsOf(spot)) buildings.get(`${spot.id}:${kind}`).visible = false;
+        continue;
+      }
       if (marker) {
         for (const mesh of [marker.ring, marker.badge, marker.lock, marker.lockRing]) moveSprite(mesh, where.x, where.z);
         marker.x = where.x; marker.z = where.z;
@@ -580,7 +585,9 @@ export function decorateIsland(place, ctx = {}) {
     if (front) return front;
     const candidates = [...SPOTS.filter(spot => !isExtraSpot(spot.id) || state.spots.some(item => item.id === spot.id))
         .flatMap(spot => {
-          const where = whereOf(spot), view = viewOf(spot.id, where);
+          const where = whereOf(spot);
+          if (!where) return [];
+          const view = viewOf(spot.id, where);
           const bounds = {id: spot.id, ...where, w: 2.4, h: spot.kind === 'watchtower' ? 5 : 3};
           return view === where ? [bounds] : [bounds, {...bounds, ...view}];
         }),

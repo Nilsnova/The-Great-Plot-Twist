@@ -14,7 +14,7 @@ import {towerTreeModel} from './tree-model.js';
 import {nextWaveNumber} from './preparation-model.js';
 import {buildStructureRecoveryView} from './structure-recovery-model.js';
 import {isRetiredCaptainSkill, recoveryTechLine} from '../campaign/captain-repair-policy.js';
-import {defenses, spotById} from './spots.js';
+import {defenses, spotById, wallSpaceUnavailable} from './spots.js';
 import {TOWER_TREES} from '../pirates/tower-trees.js';
 
 // Coins always read "🪙 120" through formatCoins (BUILD-PLAN 3.2); an unknown amount reads "🪙 ?".
@@ -82,6 +82,10 @@ export function buildCardModel({spotId, kind, slot = null, spot = null, coins = 
     model.locked = true; model.soon = `${opensText(spotNeeds)}.`;
     model.purpose = spotNeeds === waveOf('ring_walls') ? 'Extend the wall row along the grass edge.'
       : isExtraSpot(spotId) ? 'A new tower spot: any tower can stand here once it opens.' : model.purpose;
+    return model;
+  }
+  if (wallSpaceUnavailable(spot)) {
+    model.reason = 'The grass edge has no free wall space.';
     return model;
   }
   // T36: any spot of your island (built or empty) may move to another cell of the build grid, between waves.

@@ -34,6 +34,12 @@ describe('wall positions', () => {
     const rows = [{id: 'wall_7', built: true}, {id: 'wall_8', built: true, x: 0.5, z: 9.5}, {id: 'wall_9', built: false}];
     expect(positionsOf(rows)).toMatchObject({wall_7: {x: 8.5, z: 2}, wall_8: {x: .5, z: 9.5}, wall_9: WALL_PERIMETER_DEFAULTS.wall_9});
   });
+  it('omits an empty wall whose answer says there is no available footing', () => {
+    const unassigned = [{id: 'wall_1', built: false, x: null, z: null}];
+    expect(positionsOf(unassigned)).not.toHaveProperty('wall_1');
+    expect(placedSpot('wall_1', unassigned)).toBeNull();
+    expect(islandZones({spots: unassigned}).some(zone => zone.id === 'wall_1')).toBe(false);
+  });
   it('places an empty island’s wall plots on valid edge centres', () => {
     const placed = positionsOf();
     for (const [id, where] of Object.entries(placed)) {

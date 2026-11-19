@@ -121,6 +121,12 @@ describe('the Move button and the api', () => {
     expect(buildCardModel({spotId: 'wall_1', slot: 'wall', spot, coins: 50, movable: true, battle: true}).move).toMatchObject({disabled: true});
     expect(buildCardModel({spotId: 'pp_wall_1', slot: 'wall', spot, coins: 50, movable: true, point: true}).move).toBe(null);
   });
+  it('keeps both Buy and Move unavailable when the grass edge has no free footing', () => {
+    const empty = {id: 'wall_1', built: false, kind: 'wall', x: null, z: null};
+    const model = buildCardModel({spotId: empty.id, slot: 'wall', spot: empty, coins: 100, movable: true});
+    expect(model).toMatchObject({button: '', move: null, disabled: true, reason: 'The grass edge has no free wall space.'});
+    expect(createMoveMode({spots: () => [empty]}).start(empty.id)).toBe(false);
+  });
   it('refuses a position off the grid before asking the server', async () => {
     const transport = {get: vi.fn(), post: vi.fn()};
     const answer = await createIslandApi({transport}).move({spot: 'wall_1', x: 1.25, z: 0});
