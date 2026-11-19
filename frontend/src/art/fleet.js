@@ -22,10 +22,13 @@ const BOB = [0, -1, .6], BILLOW = [1, 1.08, .95];
 // Give each existing sail a broad windward fold and a stitched edge inside its silhouette.
 function cloth(c, path, left, right, top, bottom, colour, billow, edgeWidth) {
   const span = right - left, drop = bottom - top;
-  const light = mix(colour, '#fff0cb', .29), shade = mix(colour, '#382c43', .37);
+  const light = mix(colour, '#fff0cb', .38), shade = mix(colour, '#382c43', .41);
+  const boundSeam = linear(c, left, top, right, bottom, [
+    [0, mix(colour, '#5f4538', .48)], [.5, mix(colour, '#66504b', .62)], [1, mix(colour, '#3b2d39', .8)],
+  ]);
   part(c, path, linear(c, left, top, right, bottom,
-    [[0, light], [.45, colour], [.74, mix(colour, shade, .6)], [1, shade]]),
-    {width: edgeWidth, shade: false});
+    [[0, light], [.38, mix(colour, light, .3)], [.68, colour], [1, shade]]),
+    {line: boundSeam, width: edgeWidth, shade: false});
   c.save(); c.clip(path);
   const fold = new Path2D(), crest = span * .1 * billow;
   fold.moveTo(left + span * .29, top);
@@ -71,10 +74,12 @@ function sail(c, kind, x, top, bottom, half, billow, spec, skull) {
 // A warm upper rail, curved plank seams and cooler timbers where the hull meets the water.
 function plankHull(c, path, x0, x1, deck, wl, wood, stripe, stripeTop, stripeHeight, edgeWidth) {
   const length = x1 - x0, planks = mix(wood, '#211a26', .39);
-  const light = mix(wood, '#eca969', .31), wet = mix(planks, '#39585a', .21);
+  const light = mix(wood, '#efb175', .46), wet = mix(planks, '#39585a', .26);
+  const timberEdge = linear(c, x0, deck - 2, x0 + length * .2, wl,
+    [[0, mix(wood, '#665044', .5)], [.55, mix(wood, '#463632', .76)], [1, '#344752']]);
   part(c, path, linear(c, x0, deck - 2, x0 + length * .2, wl,
-    [[0, light], [.34, mix(wood, light, .47)], [.56, wood], [.82, planks], [1, wet]]),
-    {width: edgeWidth, shade: false});
+    [[0, light], [.34, mix(wood, light, .68)], [.56, wood], [.82, planks], [1, wet]]),
+    {line: timberEdge, width: edgeWidth, shade: false});
   c.save(); c.clip(path);
   for (let y = deck + 3.6; y < wl; y += 3.9) {
     const seam = new Path2D();
@@ -130,10 +135,11 @@ function hull(c, spec, wl) {
     }
     part(c, rect(x0, deck - 7.4 - ch, len * .22, 2, .8), spec.stripe, {width: .8, shade: false});
   }
-  stroke(c, line([[x0 + len * .2, deck - 2.4], [x1 - len * .12, deck - 2.4]]), INK, 1.1);
-  for (let x = x0 + len * .22; x < x1 - len * .12; x += 5) stroke(c, line([[x, deck - 2.4], [x, deck]]), INK, .7);
+  const rail = mix(spec.wood, '#433635', .58);
+  stroke(c, line([[x0 + len * .2, deck - 2.4], [x1 - len * .12, deck - 2.4]]), rail, 1.1);
+  for (let x = x0 + len * .22; x < x1 - len * .12; x += 5) stroke(c, line([[x, deck - 2.4], [x, deck]]), rail, .7);
   // The bowsprit and a figure-head bead.
-  stroke(c, line([[x1 - 4, deck - 3], [x1 + Math.min(10, len * .14), deck - 8]]), INK, 2.4); stroke(c, line([[x1 - 4, deck - 3], [x1 + Math.min(10, len * .14), deck - 8]]), mix(spec.wood, '#ffffff', .2), 1);
+  stroke(c, line([[x1 - 4, deck - 3], [x1 + Math.min(10, len * .14), deck - 8]]), rail, 2.4); stroke(c, line([[x1 - 4, deck - 3], [x1 + Math.min(10, len * .14), deck - 8]]), mix(spec.wood, '#ffffff', .2), 1);
   part(c, ellipse(x1 - 1, deck - 3.2, 1.6), GOLD, {width: .7, shade: false});
 }
 function waterline(c, x0, x1, wl, frame, bow) {
@@ -165,7 +171,7 @@ function ship(kind, frame) {
       const x = x0 + len * mast.x, top = mast.top;
       part(c, rect(x - 1.3, top, 2.6, deck - top + 2, 1),
         linear(c, x - 1.3, top, x + 1.3, top, [[0, '#c58f56'], [.55, '#966139'], [1, '#5e4533']]),
-        {width: 1, shade: false});
+        {line: '#634834', width: 1, shade: false});
       const rows = mast.sails.length, span = (deck - 6 - top - 6) / rows;
       mast.sails.forEach((kindOf, i) => {
         const t = top + 6 + i * span, b = t + span - 2, half = (kind === 'sloop' ? 13 : (len / (spec.masts.length * 2.4))) * (1 - (rows - 1 - i) * -.06) * (i === 0 && rows > 1 ? .78 : 1);
@@ -175,7 +181,7 @@ function ship(kind, frame) {
       if (m === Math.floor(spec.masts.length / 2) || spec.masts.length === 1) {
         const wave = frame === 1 ? 1.4 : frame === 2 ? -1 : 0, fw = kind === 'sloop' ? 9 : 12;
         const flag = new Path2D(); flag.moveTo(x + 1, top); flag.quadraticCurveTo(x + fw * .5, top - 1 + wave, x + fw, top + 1); flag.lineTo(x + fw - 1, top + 5 + wave * .5); flag.quadraticCurveTo(x + fw * .5, top + 6 - wave, x + 1, top + 5); flag.closePath();
-        part(c, flag, spec.flag, {width: 1, shade: false});
+        part(c, flag, spec.flag, {line: mix(spec.flag, '#554243', .5), width: 1, shade: false});
         part(c, ellipse(x + fw * .55, top + 2.6, 1.3, 1.2), '#f4ece0', {line: false, shade: false});
         part(c, ellipse(x, top - 1, 1.4), GOLD, {width: .7, shade: false});
       }
