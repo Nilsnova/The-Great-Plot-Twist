@@ -124,7 +124,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   const world = createWorld({ emit, isBlocked:worldBlocked, disposeVisuals(){harbor?.dispose();mapTouch?.dispose();perf?.dispose();experience?.dispose();marketUi?.dispose();sportsUi.dispose();shortcuts.dispose();tutorial.dispose();isletState.dispose();stopIslet?.();stopActualIslet?.();}, transition: (id, options) => sailing.start(id, options),
     cancelTransition: sailing.end, finishTransition() { sailing.end(); graphics.renderer.domElement.focus(); }, createPlace: id => createPlace({ id, isletState, island, reducedMotion, canvas: graphics.renderer.domElement, camera: view.camera,
       battleTowers: () => (id === 'home_islet' ? waves?.island : waves?.point?.controller)?.state?.towers,
-      isActive: () => active && !outsideBlocked() && !isCaptainDown() && !currentWaveAction(), player: () => controller.player.position, onFar: id => { farHint = { id, until: performance.now() + HINT_MS }; } }), attach(place) { scene.add(place.group); water.setCoast(place.group); lightPools.setPlace(place.group); controller.setPlace(place); view.setPlace(place.id, controller.player.position); } });
+      isActive: () => active && !outsideBlocked() && !isCaptainDown() && !currentWaveAction(), player: () => controller.player.position, onFar: id => { farHint = { id, until: performance.now() + HINT_MS }; } }), attach(place) { homePortrait.update(null); scene.add(place.group); water.setCoast(place.group); lightPools.setPlace(place.group); controller.setPlace(place); view.setPlace(place.id, controller.player.position); } });
   async function travel(id, options) {
     mapTouch?.cancel();
     try { await world.goTo(id, options); }
@@ -347,7 +347,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   }});
   function applyPreferences(value){quality(value.quality);if(active&&!shell.blocked)view.start(reducedMotion());}
   const stopPreferences=onPreferences(applyPreferences),stopMotion=watchSystemMotion();applyPreferences(getPreferences());graphics.resize(view.camera);
-  const resize = () => graphics.resize(view.camera); window.addEventListener('resize', resize);
+  const resize = () => { homePortrait.update(null); graphics.resize(view.camera); }; window.addEventListener('resize', resize);
   let framePoses=null;
   function combatAfterMove(delta){
     waves?.update?.(delta);
