@@ -480,7 +480,9 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   function onEvent(event) {
     // Follow the rendered gun for projectiles and hit effects; the simulation event is untouched.
     const isShipShot = event.type === 'gunboat_fired' || (event.type === 'ship_fired' && event.target === 'tower');
-    const origin = displayAnchors.get(event.cannonId ?? event.towerId);
+    const gunId = event.cannonId ?? event.towerId, view = displayAnchors.get(gunId);
+    const post = view ? posts.find(item => item.id === gunId) : null;
+    const origin = post ? {x: event.x + view.x - post.x, z: (event.z ?? 0) + view.z - post.z} : null;
     const hit = isShipShot ? displayAnchors.get(event.targetId) : null;
     if (origin || hit) event = {...event, ...origin, ...(hit ? {toX: hit.x, toZ: hit.z} : {})};
     const {x, y} = projectGround(event.x, event.z ?? 0);
