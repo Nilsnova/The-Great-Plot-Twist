@@ -22,7 +22,7 @@ async function sources(){
  const frontend=JSON.parse(await readFile(join(directory,'side-frontend-source.json'),'utf8'));
  process.kill(side.processId,0);process.kill(frontend.processId,0);
  assert.equal(side.productionCandidate,runtime.expectedCommit);assert.equal(side.factorySha256,await digest(join(root,files[8])));
- assert.equal(frontend.expectedProductionBaseline,runtime.expectedCommit);assert.equal(frontend.frontendUrl,'http://127.0.0.1:55106');assert.equal(frontend.apiProxy,'http://127.0.0.1:58006');
+ assert.equal(frontend.privateViteCache,true);assert.equal(frontend.expectedProductionBaseline,runtime.expectedCommit);assert.equal(frontend.frontendUrl,'http://127.0.0.1:55106');assert.equal(frontend.apiProxy,'http://127.0.0.1:58006');
  assert.equal(frontend.wrapperSha256,await digest(join(root,files[1])));assert.equal(frontend.viteConfigSha256,await digest(join(root,'frontend/vite.config.js')));
  assert.equal(frontend.packageLockSha256,await digest(join(root,'frontend/package-lock.json')));
  return {side,frontend,protectedSource:sourceEvidence(runtime.expectedCommit),primary:servedSourceEvidence(runtime)};
@@ -67,6 +67,7 @@ async function place(client,stake,direction,{all=false}={}){
  await pointer(page,box.getByRole('button',{name:'Place island stake',exact:true}));const settled=await pending;if(settled.error)throw settled.error;
  const reply=settled.reply,data=await reply.json();assert.equal(reply.status(),200,JSON.stringify(data));const body=reply.request().postDataJSON();
  assert.equal(body.stake,stake);assert.equal(body.direction,direction);assert.equal(data.receipt.result.wager.stake,stake);
+ assert.equal(data.receipt.actorId,client.actorId);assert.equal(data.receipt.origin.accountId,prepared.economy.accountId);assert.equal(data.receipt.origin.runEpoch,prepared.economy.runEpoch);
  return {label:client.label,body,receipt:data.receipt};
 }
 async function settings(page){await closePanels(page);await guides(page);await pointer(page,page.getByRole('button',{name:'Menu',exact:true}));
