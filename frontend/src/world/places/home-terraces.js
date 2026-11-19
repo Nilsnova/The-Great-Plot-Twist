@@ -40,7 +40,7 @@ const ROCK_GARDENS = {
   25: [.60, .72],
   55: [.63, .73],
 };
-const SHADOW = new THREE.Color('#3e4a2d');
+const SHADOW = new THREE.Color('#344032');
 const SUN = new THREE.Vector3(-.6, .71, .43).normalize();
 const STEP = .5;
 const BLOCK_WIDTHS = [1.34, 1.96, 1.66, 1.50, 1.79, 1.23];
@@ -128,7 +128,7 @@ function addTerraceFoliage(root, art, plantings) {
 }
 
 export function createHomeTerraces(root, coastArt, art) {
-  const coast = cliffProfile(COAST), positions = [], colors = [], materials = [];
+  const coast = cliffProfile(COAST), positions = [], colors = [], materials = [], stoneDetails = [];
   const plantings = new Map();
   const normal = new THREE.Vector3(), edge = new THREE.Vector3();
   function sunlight(a, b, d) {
@@ -136,31 +136,35 @@ export function createHomeTerraces(root, coastArt, art) {
     if (normal.y < 0) normal.negate();
     return .81 + .34 * Math.max(-.64, normal.dot(SUN));
   }
-  function vertex(p, tint, light, grass, opacity) {
+  function vertex(p, tint, light, grass, opacity, cut) {
     const ground = projectGround(p.x, p.z);
     positions.push(ground.x, ground.y + p.y, p.z * .03 + p.y * .09);
     colors.push(tint.r * light, tint.g * light, tint.b * light);
     materials.push(p.x, p.z, grass, opacity);
+    if (cut) stoneDetails.push(cut[0], cut[1], 1);
+    else stoneDetails.push(0, 0, 0);
   }
-  function face(a, b, c, d, tint, lightA, lightB, grass = 0, opacity = [1, 1, 1, 1]) {
+  function face(a, b, c, d, tint, lightA, lightB, grass = 0, opacity = [1, 1, 1, 1], cut) {
     const sun = sunlight(a, b, d);
     for (const [p, corner] of [[a, 0], [b, 1], [c, 2], [a, 0], [c, 2], [d, 3]]) {
-      vertex(p, tint, sun + (corner < 2 ? lightA : lightB), grass, opacity[corner]);
+      vertex(p, tint, sun + (corner < 2 ? lightA : lightB), grass, opacity[corner], cut?.[corner]);
     }
   }
   function stone(point, color, worn) {
     // A proud center and cut corners give every stone a lit top bevel and a shaded lower lip.
     const outer = BLOCK_BEVEL.map(([u, v]) => point(u, v, 0));
-    const inner = BLOCK_BEVEL.map(([u, v]) => point(.10 + u * .8, .13 + v * .73, .019 + worn * .006));
+    const innerCut = BLOCK_BEVEL.map(([u, v]) => [.10 + u * .8, .13 + v * .73]);
+    const inner = innerCut.map(([u, v]) => point(u, v, .019 + worn * .006));
     const center = point(.5, .5, .025 + worn * .008);
     for (let i = 0; i < outer.length; i++) {
       const next = (i + 1) % outer.length;
       const lip = BEVEL_LIGHT[i] + worn * .04;
-      face(outer[i], outer[next], inner[next], inner[i], color, lip - .04, lip + .045);
+      face(outer[i], outer[next], inner[next], inner[i], color, lip - .04, lip + .045,
+        0, undefined, [BLOCK_BEVEL[i], BLOCK_BEVEL[next], innerCut[next], innerCut[i]]);
       const light = sunlight(center, inner[i], inner[next]) + .02 + worn * .057;
-      vertex(center, color, light, 0, 1);
-      vertex(inner[i], color, light + BLOCK_BEVEL[i][1] * .11, 0, 1);
-      vertex(inner[next], color, light + BLOCK_BEVEL[next][1] * .11, 0, 1);
+      vertex(center, color, light, 0, 1, [.5, .5]);
+      vertex(inner[i], color, light + BLOCK_BEVEL[i][1] * .11, 0, 1, innerCut[i]);
+      vertex(inner[next], color, light + BLOCK_BEVEL[next][1] * .11, 0, 1, innerCut[next]);
     }
   }
 
@@ -210,7 +214,7 @@ export function createHomeTerraces(root, coastArt, art) {
     for (let i = 0; i < rows.length - 1; i++) {
       const a = rows[i].point, b = rows[i + 1].point;
       face(a(-.26, 0), b(-.26, 0), b(.10, 0), a(.10, 0),
-        SHADOW, 0, 0, -1, [0, 0, .44, .44]);
+        SHADOW, 0, 0, -1, [0, 0, .58, .58]);
     }
     for (const [side, row] of [rows[0], rows.at(-1)].entries()) {
       // Return the stone courses around the exposed ends. The backs dissolve into the meadow.
@@ -223,7 +227,7 @@ export function createHomeTerraces(root, coastArt, art) {
       const direction = side ? 1 : -1;
       const shadowRim = samplePoint(row.sample + direction * .37);
       face(row.point(.08, 0), row.point(.83, 0), shadowRim(.83, 0), shadowRim(.08, 0),
-        SHADOW, 0, 0, -1, [.29, .24, 0, 0]);
+        SHADOW, 0, 0, -1, [.43, .31, 0, 0]);
       for (let course = 1; course >= 0; course--) {
         const rowOffset = course ? .15 : 0;
         const lower = course ? .49 : .07, upper = course ? .94 : .46;
@@ -297,18 +301,22 @@ export function createHomeTerraces(root, coastArt, art) {
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
   geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
   geometry.setAttribute('terraceMaterial', new THREE.Float32BufferAttribute(materials, 4));
+  geometry.setAttribute('stoneDetail', new THREE.Float32BufferAttribute(stoneDetails, 3));
   const material = new THREE.ShaderMaterial({
     uniforms: {uCoastArt: {value: coastArt}}, vertexColors: true, side: THREE.DoubleSide,
     forceSinglePass: true, transparent: true, depthWrite: false, depthTest: false, toneMapped: false,
     vertexShader: /* glsl */`
       attribute vec4 terraceMaterial;
+      attribute vec3 stoneDetail;
       varying vec4 vTerrace;
       varying vec3 vTone;
       varying vec2 vTerrain;
+      varying vec3 vCut;
       void main() {
         vTerrace = terraceMaterial;
         vTone = color;
         vTerrain = position.xy;
+        vCut = stoneDetail;
         gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
       }`,
     fragmentShader: /* glsl */`
@@ -317,6 +325,7 @@ export function createHomeTerraces(root, coastArt, art) {
       varying vec4 vTerrace;
       varying vec3 vTone;
       varying vec2 vTerrain;
+      varying vec3 vCut;
       float hash2(vec2 p) {
         return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
       }
@@ -327,7 +336,8 @@ export function createHomeTerraces(root, coastArt, art) {
           mix(hash2(cell + vec2(0, 1)), hash2(cell + vec2(1, 1)), fade.x), fade.y);
       }
       void main() {
-        vec2 shore = unprojectGround(vTerrain) / vec2(${COAST.rx.toFixed(1)}, ${COAST.rz.toFixed(1)});
+        vec2 floorPoint = unprojectGround(vTerrain);
+        vec2 shore = floorPoint / vec2(${COAST.rx.toFixed(1)}, ${COAST.rz.toFixed(1)});
         float angle = atan(shore.y, shore.x);
         float rim = 1.0 + .055 * sin(angle * 5.0 + ${COAST.seed.toFixed(1)}) + .035 * cos(angle * 7.0);
         if (length(shore) >= rim * .994) discard;
@@ -343,13 +353,26 @@ export function createHomeTerraces(root, coastArt, art) {
         float sediment = smoothstep(.66, .985, seam + (grainBreak - .5) * .56);
         vec3 stone = vTone * (mix(.90, 1.10, grain) + (crystal - .5) * .12 + (grainBreak - .5) * .13);
         stone = mix(stone, stone * vec3(.86, .83, .8), sediment * .22);
+        // Warm upper bevels and cooler recessed feet give each laid stone a distinct face.
+        float rollingEdge = smoothstep(.43, .94, vCut.y - vCut.x * .10 + (grainBreak - .5) * .16);
+        float underside = 1.0 - smoothstep(.04, .32, vCut.y);
+        float joint = 1.0 - smoothstep(.025, .18, min(vCut.x, 1.0 - vCut.x));
+        vec3 cutLight = mix(vec3(.89, .94, 1.00), vec3(1.23, 1.14, .99), rollingEdge);
+        cutLight *= 1.0 - .23 * underside - .13 * joint;
+        float patina = smoothstep(.48, .84, grainBreak) * (1.0 - smoothstep(.06, .35, vCut.y));
+        cutLight = mix(cutLight, cutLight * vec3(.84, .96, .79), patina * .61);
+        stone *= mix(vec3(1.0), cutLight, vCut.z);
         // Golden leaf tips and moss pockets give the turf a softly planted edge.
         float lip = smoothstep(1.0, 2.0, vTerrace.z);
         float tufts = noise2(vec2(vTerrace.x * 29.0, vTerrace.y * 23.0));
         float moss = smoothstep(.35, .67, grainBreak);
         vec3 turfColor = mix(vTone, source, .23);
-        turfColor = mix(turfColor, vec3(.49, .62, .14), lip * (.10 + moss * .15));
-        vec3 turf = turfColor * (mix(.90, 1.12, grain) + (tufts - .5) * .19 + lip * .06);
+        turfColor = mix(turfColor, vec3(.45, .58, .115), lip * (.13 + moss * .22));
+        vec3 turf = turfColor * (mix(.88, 1.14, grain) + (tufts - .5) * .24 + lip * .08);
+        vec2 floorUv = vec2(floorPoint.x / 64.0, -floorPoint.y * ${LEGACY_DEPTH} / 48.0) + .5;
+        vec3 meadow = texture2D(uCoastArt, floorUv).rgb;
+        float seamBlend = (1.0 - smoothstep(.12, .83, vTerrace.w)) * smoothstep(-.02, .12, meadow.g - meadow.r);
+        turf = mix(turf, meadow, seamBlend * .88);
         gl_FragColor = vec4(mix(stone, turf, clamp(vTerrace.z, 0.0, 1.0)), vTerrace.w);
         #include <colorspace_fragment>
       }`,
