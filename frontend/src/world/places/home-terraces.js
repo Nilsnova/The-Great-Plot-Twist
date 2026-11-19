@@ -21,6 +21,7 @@ const STONE = ['#bf9367', '#c69d72', '#b48762', '#cbab7e', '#c09b70'].map(hex =>
 const MORTAR = new THREE.Color('#8d6d4e'), RECESS = new THREE.Color('#785d43');
 const ENDS = [new THREE.Color('#9c7952'), new THREE.Color('#b08c61')];
 const TURF = new THREE.Color('#8da936'), LIP = new THREE.Color('#a9bf4b'), ROOTS = new THREE.Color('#78a336');
+const GRASS_CREST = TURF.clone().lerp(LIP, .56);
 const FOLIAGE = {
   101: [['birch', .56, .70, .49], ['shrub', .19, .64, .64], ['shrub', .74, .31, .49], ['flowers', .41, .31, .52]],
   116: [['shrub', .21, .73, .65], ['shrub', .27, .68, .51], ['grass-tuft', .56, .74, .56], ['shrub', .81, .71, .62],
@@ -49,6 +50,12 @@ const BLOCK_BEVEL = [
   [.12, 0], [.86, 0], [1, .18], [1, .79], [.85, 1], [.14, 1], [0, .83], [0, .18],
 ];
 const BEVEL_LIGHT = [-.22, -.19, -.08, .02, .28, .24, .09, -.07];
+// A narrow turn under the turf gives the grass a soil edge. The last point rejoins
+// the original tread exactly, including the elevation used by the existing plantings.
+const SOD_PROFILE = [
+  [0, 0, -.22], [-.15, .23, -.20], [.05, .59, .12], [.39, .89, .23], [1, 1, .09],
+];
+const SOD_MATERIAL = [[2.9, ROOTS], [2.6, ROOTS], [2.0, GRASS_CREST], [1.48, TURF]];
 // Each stop starts a band. The two faces have deep bases, lit shoulders and grass lips.
 // A short incline at the back of the upper tread hides where it joins the old meadow.
 const REAR_PROFILE = [
@@ -137,35 +144,35 @@ export function createHomeTerraces(root, coastArt, art) {
     if (normal.y < 0) normal.negate();
     return .81 + .34 * Math.max(-.64, normal.dot(SUN));
   }
-  function vertex(p, tint, light, grass, opacity, cut) {
+  function vertex(p, tint, light, grass, opacity, cut, underTurf = false) {
     const ground = projectGround(p.x, p.z);
     positions.push(ground.x, ground.y + p.y, p.z * .03 + p.y * .09);
     colors.push(tint.r * light, tint.g * light, tint.b * light);
     materials.push(p.x, p.z, grass, opacity);
-    if (cut) stoneDetails.push(cut[0], cut[1], 1);
+    if (cut) stoneDetails.push(cut[0], cut[1], underTurf ? 2 : 1);
     else stoneDetails.push(0, 0, 0);
   }
-  function face(a, b, c, d, tint, lightA, lightB, grass = 0, opacity = [1, 1, 1, 1], cut) {
-    const sun = sunlight(a, b, d);
+  function face(a, b, c, d, tint, lightA, lightB, grass = 0, opacity = [1, 1, 1, 1], cut, underTurf) {
+    const sun = (sunlight(a, b, c) + sunlight(a, c, d)) * .5;
     for (const [p, corner] of [[a, 0], [b, 1], [c, 2], [a, 0], [c, 2], [d, 3]]) {
-      vertex(p, tint, sun + (corner < 2 ? lightA : lightB), grass, opacity[corner], cut?.[corner]);
+      vertex(p, tint, sun + (corner < 2 ? lightA : lightB), grass, opacity[corner], cut?.[corner], underTurf);
     }
   }
-  function stone(point, color, worn) {
+  function stone(point, color, worn, underTurf) {
     // A proud center and cut corners give every stone a lit top bevel and a shaded lower lip.
     const outer = BLOCK_BEVEL.map(([u, v]) => point(u, v, 0));
     const innerCut = BLOCK_BEVEL.map(([u, v]) => [.10 + u * .8, .13 + v * .73]);
-    const inner = innerCut.map(([u, v]) => point(u, v, .019 + worn * .006));
-    const center = point(.5, .5, .025 + worn * .008);
+    const inner = innerCut.map(([u, v]) => point(u, v, .024 + worn * .008));
+    const center = point(.5, .5, .039 + worn * .011);
     for (let i = 0; i < outer.length; i++) {
       const next = (i + 1) % outer.length;
       const lip = BEVEL_LIGHT[i] + worn * .04;
       face(outer[i], outer[next], inner[next], inner[i], color, lip - .04, lip + .045,
-        0, undefined, [BLOCK_BEVEL[i], BLOCK_BEVEL[next], innerCut[next], innerCut[i]]);
+        0, undefined, [BLOCK_BEVEL[i], BLOCK_BEVEL[next], innerCut[next], innerCut[i]], underTurf);
       const light = sunlight(center, inner[i], inner[next]) + .02 + worn * .057;
-      vertex(center, color, light, 0, 1, [.5, .5]);
-      vertex(inner[i], color, light + BLOCK_BEVEL[i][1] * .11, 0, 1, innerCut[i]);
-      vertex(inner[next], color, light + BLOCK_BEVEL[next][1] * .11, 0, 1, innerCut[next]);
+      vertex(center, color, light, 0, 1, [.5, .5], underTurf);
+      vertex(inner[i], color, light + BLOCK_BEVEL[i][1] * .11, 0, 1, innerCut[i], underTurf);
+      vertex(inner[next], color, light + BLOCK_BEVEL[next][1] * .11, 0, 1, innerCut[next], underTurf);
     }
   }
 
@@ -185,13 +192,20 @@ export function createHomeTerraces(root, coastArt, art) {
       return (radius, elevation) => shelfPoint(row, foot + breadth, back + breadth * .31, taper, rise, radius,
         elevation * (1 + taper * Math.sin(sample * 1.11 + radius * 3) * .027));
     }
+    const sodRings = profile.flatMap((entry, ring) => entry[3] === LIP ? [ring] : []);
     const rows = [];
     for (let sample = start; sample <= finish; sample += STEP) {
       const point = samplePoint(sample);
-      // The first edge of the sod hangs slightly over the top stone below.
-      const shape = profile.map(([radius, elevation, , material]) =>
-        point(radius - (material === LIP ? .031 + .006 * Math.sin(sample * 2.3) : 0), elevation));
-      rows.push({sample, point, shape});
+      const overhang = .031 + .006 * Math.sin(sample * 2.3);
+      const shape = profile.map(([radius, elevation, , material]) => point(radius - (material === LIP ? overhang : 0), elevation));
+      const sod = Object.fromEntries(sodRings.map(ring => {
+        const [from, low] = profile[ring], [to, high] = profile[ring + 1];
+        const curl = .025 * Math.sin(sample * 3.4 + ring) + .014 * Math.cos(sample * 6.7);
+        return [ring, [shape[ring], ...SOD_PROFILE.slice(1, -1).map(([across, rise]) =>
+          point(THREE.MathUtils.lerp(from - overhang, to, across + curl), THREE.MathUtils.lerp(low, high, rise))),
+        shape[ring + 1]]];
+      }));
+      rows.push({sample, point, shape, sod});
     }
     function heightAt(radius) {
       const next = profile.findIndex(([r]) => r >= radius);
@@ -268,7 +282,7 @@ export function createHomeTerraces(root, coastArt, art) {
             const groutRipple = .022 * worn;
             const point = (u, v, bulge) => across(THREE.MathUtils.lerp(left, right, u),
               THREE.MathUtils.lerp(bottom, top, v) + (1 - 2 * u) * groutRipple, bulge);
-            stone(point, STONE[(column + course * 3 + from) % STONE.length], worn);
+            stone(point, STONE[(column + course * 3 + from) % STONE.length], worn, course === 1);
           }
           next += width;
         }
@@ -283,11 +297,21 @@ export function createHomeTerraces(root, coastArt, art) {
         const lastSlope = profile.length - 2;
         const capInner = ring === lastSlope ? .57 : 1;
         const capOuter = ring === lastSlope ? 0 : ring === lastSlope - 1 ? .57 : 1;
-        const tint = band === STONE ? MORTAR : band === LIP ? ROOTS : band;
-        const turf = band === LIP ? 2 : Number(band === TURF);
+        const tint = band === STONE ? MORTAR : band;
+        const turf = Number(band === TURF);
         for (let i = 0; i < rows.length - 1; i++) {
-          const {shape: left, sample} = rows[i], {shape: right} = rows[i + 1];
+          const {shape: left, sample, sod: leftSod} = rows[i], {shape: right, sod: rightSod} = rows[i + 1];
           const variation = .026 * Math.sin(sample * .89);
+          if (band === LIP) {
+            const a = leftSod[ring], b = rightSod[ring];
+            for (let strip = SOD_MATERIAL.length - 1; strip >= 0; strip--) {
+              const [sodMaterial, sodTint] = SOD_MATERIAL[strip];
+              const shade = SOD_PROFILE[strip][2] + variation;
+              const light = SOD_PROFILE[strip + 1][2] + variation;
+              face(a[strip], b[strip], b[strip + 1], a[strip + 1], sodTint, shade, light, sodMaterial);
+            }
+            continue;
+          }
           face(left[ring], right[ring], right[ring + 1], left[ring + 1], tint,
             innerTone + variation, outerTone + variation, turf, [capInner, capInner, capOuter, capOuter]);
         }
@@ -352,24 +376,34 @@ export function createHomeTerraces(root, coastArt, art) {
           vec3 stone = vTone * mix(.91, 1.10, grain);
           if (vTerrace.z > -.5) {
             vec2 layers = vec2(vTerrace.x + vTerrace.y * .36, height + vTerrace.y * .13);
-            stone = cutSandstone(stone, layers, vCut.xy, vCut.z);
+            float cut = min(vCut.z, 1.0);
+            stone = cutSandstone(stone, layers, vCut.xy, cut);
             // Tight earth contact grounds the lower stone bevel and the uncut mortar.
             float rootShadow = (1.0 - smoothstep(.015, .21, height)) * .25;
             float patina = smoothstep(.50, .83, grainBreak) * (1.0 - smoothstep(.08, .37, vCut.y));
-            stone = mix(stone, stone * vec3(.82, .94, .72), .48 * patina * vCut.z);
+            float sodShade = step(1.5, vCut.z) * smoothstep(.68, .98, vCut.y);
+            stone = mix(stone, stone * vec3(.70, .78, .65), sodShade * (.48 + grainBreak * .22));
+            stone = mix(stone, stone * vec3(.82, .94, .72), .48 * patina * cut);
             stone *= 1.0 - rootShadow;
           }
           gl_FragColor = vec4(stone, vTerrace.w);
           #include <colorspace_fragment>
           return;
         }
-        // Golden leaf tips and moss pockets give the turf a softly planted edge.
+        // Low grass clumps follow the tread while the sculpted lip casts a dark, rooted overhang.
         float lip = smoothstep(1.0, 2.0, vTerrace.z);
-        float tufts = noise2(vec2(vTerrace.x * 29.0, vTerrace.y * 23.0));
+        float underside = smoothstep(2.28, 2.88, vTerrace.z);
+        vec2 sward = vTerrace.xy * vec2(4.2, 5.3);
+        float patches = noise2(sward * .43);
+        float tufts = noise2(sward * 3.8 + vec2(patches));
+        float tips = noise2(vTerrace.xy * vec2(23.0, 32.0) + vec2(height * 3.6));
         float moss = smoothstep(.35, .67, grainBreak);
-        vec3 turfColor = mix(vTone, source, .23);
-        turfColor = mix(turfColor, vec3(.45, .58, .115), lip * (.13 + moss * .22));
-        vec3 turf = turfColor * (mix(.88, 1.14, grain) + (tufts - .5) * .24 + lip * .08);
+        vec3 turfColor = mix(vTone, source, .27 - underside * .12);
+        turfColor = mix(turfColor, vec3(.37, .46, .081), lip * (.12 + moss * .13) * (1.0 - underside));
+        turfColor = mix(turfColor, vec3(.115, .136, .041), underside * (.39 + tufts * .18));
+        float meadowGrain = (tips - .5) * .12 + (tufts - .5) * .18 + (patches - .5) * .19;
+        float leafLight = lip * (1.0 - underside) * smoothstep(.56, .87, tufts * .59 + tips * .41) * .16;
+        vec3 turf = turfColor * (mix(.89, 1.12, grain) + meadowGrain + leafLight);
         vec2 floorUv = vec2(floorPoint.x / 64.0, -floorPoint.y * ${LEGACY_DEPTH} / 48.0) + .5;
         vec3 meadow = texture2D(uCoastArt, floorUv).rgb;
         float seamBlend = (1.0 - smoothstep(.12, .83, vTerrace.w)) * smoothstep(-.02, .12, meadow.g - meadow.r);
