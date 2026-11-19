@@ -8,13 +8,13 @@ import {INK, ellipse, line, linear, mix, part, poly, radial, rect, stroke} from 
 const GOLD = '#f2c14e', SEA_FOAM = '#f2fbff';
 // Ship specs: hull length and height above water, colours, masts [x, height, sails] in hull units.
 const SHIPS = {
-  sloop: {w: 64, h: 64, anchor: 10, hull: [6, 52, 11], wood: '#8a4f2e', stripe: '#d9a35a', sail: '#f4ead2', patch: '#e2d2ae', flag: '#2b2430',
+  sloop: {w: 64, h: 64, anchor: 10, hull: [6, 52, 11], wood: '#9a603d', stripe: '#cda15d', sail: '#efe0b8', flag: '#202c41',
     masts: [{x: .5, top: 6, sails: ['lateen']}], ports: 0, castle: 0},
-  brig: {w: 96, h: 80, anchor: 11, hull: [8, 82, 15], wood: '#7a3f2c', stripe: '#c8423b', sail: '#f4ead2', patch: '#ddcba4', flag: '#2b2430',
+  brig: {w: 96, h: 80, anchor: 11, hull: [8, 82, 15], wood: '#89583d', stripe: '#b95743', sail: '#ebd7ae', flag: '#252b3a',
     masts: [{x: .32, top: 10, sails: ['square', 'square']}, {x: .66, top: 6, sails: ['square', 'square']}], ports: 3, castle: 1},
-  flagship: {w: 128, h: 112, anchor: 13, hull: [8, 112, 20], wood: '#4a2f3e', stripe: GOLD, sail: '#b8323a', patch: '#9a2630', flag: '#1a1420',
+  flagship: {w: 128, h: 112, anchor: 13, hull: [8, 112, 20], wood: '#653f39', stripe: GOLD, sail: '#aa3b38', flag: '#341b2c',
     masts: [{x: .25, top: 18, sails: ['square', 'square']}, {x: .52, top: 8, sails: ['square', 'square', 'square']}, {x: .78, top: 16, sails: ['square', 'square']}], ports: 4, castle: 2},
-  warship: {w: 160, h: 128, anchor: 14, hull: [8, 146, 26], wood: '#2f3446', stripe: GOLD, sail: '#2b2733', patch: '#3a3644', flag: '#1a1420',
+  warship: {w: 160, h: 128, anchor: 14, hull: [8, 146, 26], wood: '#333e54', stripe: GOLD, sail: '#384659', flag: '#222438',
     masts: [{x: .22, top: 18, sails: ['square', 'square']}, {x: .5, top: 6, sails: ['square', 'square', 'square']}, {x: .78, top: 14, sails: ['square', 'square']}], ports: 6, castle: 2, decks: 2},
 };
 const BOB = [0, -1, .6], BILLOW = [1, 1.08, .95];
@@ -22,7 +22,7 @@ const BOB = [0, -1, .6], BILLOW = [1, 1.08, .95];
 // Give each existing sail a broad windward fold and a stitched edge inside its silhouette.
 function cloth(c, path, left, right, top, bottom, colour, billow, edgeWidth) {
   const span = right - left, drop = bottom - top;
-  const light = mix(colour, '#fff0cb', .26), shade = mix(colour, '#37253f', .31);
+  const light = mix(colour, '#fff0cb', .29), shade = mix(colour, '#382c43', .37);
   part(c, path, linear(c, left, top, right, bottom,
     [[0, light], [.45, colour], [.74, mix(colour, shade, .6)], [1, shade]]),
     {width: edgeWidth, shade: false});
@@ -37,6 +37,12 @@ function cloth(c, path, left, right, top, bottom, colour, billow, edgeWidth) {
   seam.moveTo(left + span * .67, top + 1);
   seam.quadraticCurveTo(left + span * .68 + crest, top + drop * .45, left + span * .64, bottom - 1);
   stroke(c, seam, shade, .68, .68);
+  const foot = new Path2D();
+  foot.moveTo(left + .5, bottom - 2);
+  foot.quadraticCurveTo(left + span * .53, bottom + 1.4 * billow, right + .8, bottom - 2.5);
+  stroke(c, foot, shade, .7, .73);
+  stroke(c, line([[left + span * .33, bottom - 2], [left + span * .49, bottom - 1.15]]),
+    light, .6, .84);
   c.restore();
 }
 
@@ -79,6 +85,12 @@ function plankHull(c, path, x0, x1, deck, wl, wood, stripe, stripeTop, stripeHei
   c.fillStyle = linear(c, x0, stripeTop, x0 + length * .24, stripeTop + stripeHeight,
     [[0, mix(stripe, '#fff0c4', .25)], [.48, stripe], [1, mix(stripe, '#7e442b', .22)]]);
   c.fillRect(x0, stripeTop, length, stripeHeight);
+  stroke(c, line([[x0 + length * .08, stripeTop + .4], [x1 - 3, stripeTop + .4]]),
+    mix(stripe, '#fff0c4', .52), .66, .84);
+  const railY = deck + length * .008;
+  for (let x = x0 + length * .23; x < x1 - length * .15; x += length < 60 ? 7.8 : 9.6) {
+    stroke(c, line([[x, railY + 1.2], [x + 1.5, railY + 1.2]]), light, .47, .78);
+  }
   stroke(c, line([[x0 + length * .22, deck + 1.1], [x0 + length * .75, deck + .9], [x1 - 4, deck - 1]]), light, .82, .82);
   stroke(c, line([[x0 + length * .16, wl - .6], [x0 + length * .6, wl - .5], [x1 - 8, wl - 2.1]]),
     mix(wet, '#72a5a5', .48), .8, .57);
@@ -98,8 +110,10 @@ function hull(c, spec, wl) {
   const rows = spec.decks === 2 ? [deck + height * .5, deck + height * .76] : [deck + height * .56];
   for (const y of rows) for (let i = 0; i < spec.ports; i++) {
     const x = x0 + len * (.26 + i * (.56 / Math.max(1, spec.ports - 1)));
-    part(c, rect(x - 2, y - 1.8, 4, 3.6, 1), '#1a1218', {width: .8, shade: false});
-    part(c, rect(x - 2.4, y - 3.4, 4.8, 1.4, .6), mix(spec.wood, '#e5b786', .35), {width: .6, shade: false});
+    part(c, rect(x - 2, y - 1.8, 4, 3.6, 1), '#201a23', {width: .8, shade: false});
+    part(c, rect(x - 2.4, y - 3.4, 4.8, 1.4, .6), mix(spec.wood, '#e5b786', .48), {width: .6, shade: false});
+    stroke(c, [[x - 1.25, y + 1.28], [x + 1.23, y + 1.28]], mix(spec.wood, '#d5b597', .43), .52);
+    part(c, ellipse(x + 2.1, y - 2.6, .44), GOLD, {line: false, shade: false});
   }
   // The stern castle with lit windows; a rail along the deck.
   if (spec.castle) {
@@ -107,7 +121,13 @@ function hull(c, spec, wl) {
     part(c, rect(x0 + 1, deck - 6 - ch, len * .2, ch + 1, 1.4),
       linear(c, x0, deck - 6 - ch, x0 + len * .15, deck - 5, [[0, mix(spec.wood, '#eab97d', .28)], [1, spec.wood]]),
       {width: 1.2, shade: false});
-    for (let i = 0; i < spec.castle + 1; i++) part(c, rect(x0 + 3 + i * 5, deck - 4 - ch, 3, 3.4, .8), '#ffd166', {width: .7, shade: false});
+    for (let i = 0; i < spec.castle + 1; i++) {
+      const x = x0 + 3 + i * 5, y = deck - 4 - ch;
+      part(c, rect(x, y, 3, 3.4, .8),
+        linear(c, x, y, x + 1.8, y + 3.4, [[0, '#fff1ae'], [.56, '#ffd166'], [1, '#d68a3e']]),
+        {width: .7, shade: false});
+      stroke(c, [[x + 1.5, y + .32], [x + 1.5, y + 3.02]], '#995e42', .49);
+    }
     part(c, rect(x0, deck - 7.4 - ch, len * .22, 2, .8), spec.stripe, {width: .8, shade: false});
   }
   stroke(c, line([[x0 + len * .2, deck - 2.4], [x1 - len * .12, deck - 2.4]]), INK, 1.1);
@@ -143,7 +163,9 @@ function ship(kind, frame) {
     // Masts and sails behind the hull rail; the main mast flies the flag.
     spec.masts.forEach((mast, m) => {
       const x = x0 + len * mast.x, top = mast.top;
-      part(c, rect(x - 1.3, top, 2.6, deck - top + 2, 1), '#6b4a2e', {width: 1, shade: false});
+      part(c, rect(x - 1.3, top, 2.6, deck - top + 2, 1),
+        linear(c, x - 1.3, top, x + 1.3, top, [[0, '#c58f56'], [.55, '#966139'], [1, '#5e4533']]),
+        {width: 1, shade: false});
       const rows = mast.sails.length, span = (deck - 6 - top - 6) / rows;
       mast.sails.forEach((kindOf, i) => {
         const t = top + 6 + i * span, b = t + span - 2, half = (kind === 'sloop' ? 13 : (len / (spec.masts.length * 2.4))) * (1 - (rows - 1 - i) * -.06) * (i === 0 && rows > 1 ? .78 : 1);
@@ -171,13 +193,13 @@ function ship(kind, frame) {
 const GUNBOAT = {w: 56, h: 44, anchor: 8};
 function gunboat(frame) {
   return (c, {h}) => {
-    const wl = h - GUNBOAT.anchor, x0 = 4, x1 = 50, deck = wl - 12, wood = '#2f343e', red = '#d8352a';
+    const wl = h - GUNBOAT.anchor, x0 = 4, x1 = 50, deck = wl - 12, wood = '#3d4656', red = '#b94d37';
     c.save(); c.globalAlpha = .3; c.fillStyle = '#0d3a5a'; c.fill(ellipse(27, wl + 1.6, 26, 3)); c.restore();
     c.save(); c.translate(0, BOB[frame]);
     // Mast, a patched jib and the red pennant.
     part(c, rect(18.2, 5, 2.4, deck - 3, 1), '#6b4a2e', {width: 1, shade: false});
     const jib = new Path2D(); jib.moveTo(20.6, 8); jib.quadraticCurveTo(29 * BILLOW[frame], 17, 33, deck - 2.6); jib.lineTo(20.6, deck - 2.6); jib.closePath();
-    cloth(c, jib, 20.6, 33, 8, deck - 2.6, '#d9d0bc', BILLOW[frame], 1);
+    cloth(c, jib, 20.6, 33, 8, deck - 2.6, '#e3d2af', BILLOW[frame], 1);
     part(c, poly([[22.4, 15], [26.2, 15], [26.2, 18.4], [22.4, 18.4]], .5), '#b8aa8c', {line: false, shade: false});
     const wave = frame === 1 ? 1.2 : frame === 2 ? -1 : 0, pen = new Path2D();
     pen.moveTo(19.4, 4.4); pen.quadraticCurveTo(8, 3 + wave, 2.4, 6 + wave * 1.4); pen.quadraticCurveTo(8, 7.2 - wave * .6, 19.4, 8.4); pen.closePath();
