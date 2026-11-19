@@ -199,3 +199,11 @@ migration chain was executed twice by the disposable runner. Whole-backend Ruff,
 99-file SQL parsing, unique migration versions and whitespace checks passed.
 Native reserved-slot leave and active owner-delete closure checks remain separate
 until the supplied accepted-bell/canonical-close implementation is committed.
+
+The committed-race file now also runs simultaneous identical/distinct reset UIDs
+and duplicate deletion requests through the actual public lifecycle executors.
+Both reset races create one replacement and one immutable receipt; a new
+connection with changed grant configuration recovers the original successful
+UID. Concurrent deletion commits one disposition and the other attempt observes
+`not_found`. Together with the three legacy-writer cases, **six checks passed in
+8.47 seconds**; no extra schema or runtime behavior changed in this increment.

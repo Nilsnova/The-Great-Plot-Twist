@@ -7,7 +7,7 @@ graphs; the cluster is removed by the existing scratch fixture after the session
 
 from concurrent.futures import ThreadPoolExecutor
 from queue import Queue
-from threading import Event
+from threading import Barrier, Event
 from time import monotonic
 from uuid import uuid4
 
@@ -26,6 +26,7 @@ from server.tests.island_sql.test_islands_and_waves_sql import (  # noqa: E402
 from server.tests.island_sql.test_shared_lifecycle_transactions_sql import (  # noqa: E402
     delete,
     prepare,
+    reset,
 )
 
 
@@ -196,3 +197,68 @@ def test_new_earlier_stock_scope_retries_whole_batch_before_domain_effects(scrat
         assert observer.execute(
             "select count(*) from public.arsenal_copies where id=%s", (copy,)
         ).fetchone() == (0,)
+
+
+@pytest.mark.parametrize("same_uid", [False, True])
+def test_concurrent_public_reset_claims_create_only_one_replacement(scratch_server, same_uid):
+    started, barrier = Queue(), Barrier(2)
+    with psycopg.connect(scratch_server.get_uri()) as seed:
+        owner, _, _, treasury, code = prepare(seed)
+    uids = ["reset-race-001", "reset-race-001" if same_uid else "reset-race-002"]
+
+    def attempt(connection, uid):
+        barrier.wait(timeout=5)
+        return reset(connection, owner, treasury, code, uid=uid)
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        futures = [
+            pool.submit(worker, scratch_server, started, lambda c, uid=uid: attempt(c, uid))
+            for uid in uids
+        ]
+        results = [future.result(timeout=15) for future in futures]
+    successful = [result for result in results if result["status"] == "done"]
+    if same_uid:
+        assert len(successful) == 2
+        assert sorted(result["repeat"] for result in results) == [False, True]
+        assert results[0]["receipt"] == results[1]["receipt"]
+    else:
+        assert len(successful) == 1
+        assert [r for r in results if r["status"] == "refused"] == [
+            {"status": "refused", "reason": "epoch_mismatch"}
+        ]
+    with psycopg.connect(scratch_server.get_uri()) as observer:
+        assert observer.execute(
+            "select count(*) from public.island_economy_accounts where island_owner=%s", (owner,)
+        ).fetchone() == (2,)
+        assert observer.execute(
+            "select count(*) from public.island_economy_reset_receipts where actor_id=%s", (owner,)
+        ).fetchone() == (1,)
+        assert observer.execute(
+            "select count(*) from public.island_economy_operations where actor_id=%s "
+            "and domain_action='lifecycle:reset'", (owner,)
+        ).fetchone() == (1,)
+        winning = successful[0]["receipt"]
+        # A fresh connection with changed server configuration represents a lost
+        # HTTP response/restart: the original saved UID still resolves its effect.
+        replay = reset(observer, owner, treasury, code, uid=winning["actionUid"], starting=999)
+        assert replay["receipt"] == winning and replay["currentEconomy"] is None
+
+
+def test_concurrent_same_actor_deletion_retries_commit_one_physical_disposition(scratch_server):
+    started, barrier = Queue(), Barrier(2)
+    with psycopg.connect(scratch_server.get_uri()) as seed:
+        _, actor, _, _, _ = prepare(seed)
+
+    def attempt(connection):
+        barrier.wait(timeout=5)
+        return delete(connection, actor)
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        futures = [pool.submit(worker, scratch_server, started, attempt) for _ in range(2)]
+        results = [future.result(timeout=15) for future in futures]
+    assert sorted(result["status"] for result in results) == ["deleted", "not_found"]
+    with psycopg.connect(scratch_server.get_uri()) as observer:
+        assert observer.execute(
+            "select count(*) from public.island_deleted_player_dispositions where player_id=%s",
+            (actor,),
+        ).fetchone() == (1,)
