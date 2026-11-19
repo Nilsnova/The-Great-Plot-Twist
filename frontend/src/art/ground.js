@@ -3,7 +3,7 @@
 // spots and the cabin stand (TOWER-DEFENSE.md §2), flowers and grass strokes. It covers the same
 // 64 x 48 world units as the backdrop. Alpha is the decorative cliff-base/foam silhouette; walking
 // and placement retain the separate analytic top in surfaces.js (D062).
-import {surfaces} from '../world/places/surfaces.js';
+import {surfaceClass, surfaces} from '../world/places/surfaces.js';
 import {LEGACY_DEPTH} from '../world/projection.js';
 import {canvas, ellipse, linear, poly, radial, stroke} from './paint.js';
 import {cliffProfile, paintCliffFaces, paintGrassRim} from './coast-cliffs.js';
@@ -75,51 +75,78 @@ function paintTurfBevel(c, coast, meadow, grassRadius) {
 }
 
 const PAVERS = [
-  ['#ddc29a', '#bda584', '#ebd2aa'], ['#d6bc98', '#b19c7b', '#e6cda7'],
-  ['#d1b491', '#ad9274', '#e2c49c'], ['#ccad87', '#aa8d70', '#dfbd96'],
-  ['#dfc6a1', '#b9a07f', '#edd5b1'], ['#cdb18c', '#ae9578', '#dfc3a0'],
+  ['#d5be96', '#a9906e', '#efdab3'], ['#dbc7a0', '#b9a183', '#f3dfba'],
+  ['#c7ad87', '#9b825f', '#e3c79e'], ['#d6b58b', '#a98c66', '#edcea3'],
+  ['#d8c4a3', '#afa087', '#ebd9b8'], ['#cbb899', '#9e8e73', '#e3d0ad'],
 ];
 
-/** World-anchored limestone setts with shallow bevels and narrow, subdued joints. */
+/** Dressed limestone blocks on the original paths and building clearings. */
 function paintPavers(c, paths, materials) {
   const bounds = {left: -SIZE.width / 2, top: -SIZE.height / 2, right: SIZE.width / 2, bottom: SIZE.height / 2};
   const random = seeded(18281), faces = new Path2D();
   c.save();
   c.clip(pathMaterialMask(paths, PAVING_WIDTH));
-  c.fillStyle = '#b39d7d';
+  c.fillStyle = '#aa906c';
   c.fillRect(bounds.left, bounds.top, SIZE.width, SIZE.height);
   for (let row = bounds.top; row < bounds.bottom;) {
-    const depth = .43 + random() * .12;
+    // Canvas rows are compressed in depth, so these read as nearly square slabs in the world.
+    const depth = .53 + random() * .11;
     let left = bounds.left - random();
     while (left < bounds.right) {
-      const width = .53 + random() * .17, trim = .008 + random() * .008;
-      const chip = .02 + random() * .038, drift = (random() - .5) * .028;
-      const [face, bevel, gleam] = PAVERS[Math.floor(random() * PAVERS.length)];
-      const x = left + trim, y = row + trim + drift;
-      const right = left + width - trim, bottom = row + depth - trim + drift;
+      const width = .72 + random() * .19, joint = .012 + random() * .013;
+      const chip = .046 + random() * .076, drift = (random() - .5) * .037;
+      const [face, edge, sun] = PAVERS[Math.floor(random() * PAVERS.length)];
+      const x = left + joint, y = row + joint + drift;
+      const right = left + width - joint, bottom = row + depth - joint + drift;
       left += width;
-      const centerZ = (y + bottom) / (2 * LEGACY_DEPTH);
-      if (!nearPath(paths, (x + right) / 2, centerZ, 2.4)) continue;
-      c.fillStyle = bevel;
-      c.fill(poly([[x + chip, y], [right - .03, y + .006], [right, y + .033],
-        [right - .017, bottom - .023], [right - .049, bottom], [x + .037, bottom],
-        [x, bottom - .039], [x, y + .036]], .009));
-      const top = poly([[x + chip, y + .009], [right - .035, y + .013], [right - .015, y + .038],
-        [right - .026, bottom - .038], [right - .055, bottom - .044], [x + .045, bottom - .037],
-        [x + .014, bottom - .059], [x + .012, y + .042]], .009);
-      c.fillStyle = linear(c, x, y, x + width * .32, bottom, [[0, gleam], [.27, face], [.84, face], [1, bevel]]);
+      if (!nearPath(paths, (x + right) / 2, (y + bottom) / (2 * LEGACY_DEPTH), 2.55)) continue;
+
+      c.fillStyle = edge;
+      c.fill(poly([[x + chip, y], [right - .062, y + .009], [right, y + .056],
+        [right - .018, bottom - .042], [right - .065, bottom], [x + .062, bottom - .005],
+        [x, bottom - .061], [x + .012, y + .057]], .019));
+      const top = poly([[x + chip, y + .014], [right - .083, y + .022], [right - .031, y + .069],
+        [right - .048, bottom - .058], [right - .092, bottom - .073], [x + .071, bottom - .063],
+        [x + .025, bottom - .092], [x + .031, y + .063]], .018);
+      c.fillStyle = linear(c, x + .034, y, x + width * .61, bottom,
+        [[0, sun], [.29, face], [.83, face], [1, edge]]);
       c.fill(top);
       faces.addPath(top);
+      if (chip > .104) {
+        stroke(c, [[x + chip * .67, y + .046], [x + chip, y + .052], [x + chip * 1.26, y + .036]],
+          '#a58a653e', .012);
+      }
     }
     row += depth;
   }
-  // Reuse the atlas's original limestone grain inside each face. The carved joints stay distinct.
+  // Limestone grain stays on the cut faces, leaving the worn joints legible around them.
   if (materials) {
     c.clip(faces);
     c.globalCompositeOperation = 'soft-light';
-    paintMaterial(c, materials, 'path', {alpha: .08});
+    paintMaterial(c, materials, 'path', {alpha: .14});
   }
   c.restore();
+}
+
+function paintPlantedEdges(c, id, paths) {
+  const random = seeded(7391), lanes = {...paths, clearings: []};
+  for (const [cx, cz, radius] of paths.clearings) {
+    // Small groups hug the old paving apron, like the low planting around the reference buildings.
+    for (const start of [1.15, 4.14]) {
+      for (let i = 0; i < 8; i++) {
+        const angle = start + (random() - .5) * .45;
+        const reach = radius * .83 + .29 + random() * .15;
+        const x = cx + Math.cos(angle) * reach, z = cz + Math.sin(angle) * reach;
+        if (surfaceClass(id, x, z) !== 2 || nearPath(lanes, x, z, 1.05)) continue;
+        const y = z * LEGACY_DEPTH, width = .10 + random() * .12, ly = .09 + random() * .10;
+        c.fillStyle = '#3a602e6c';
+        c.fill(ellipse(x + .045, y + .026, width * .87, ly * .50));
+        c.fillStyle = linear(c, x - .08, y - ly, x + .06, y + .02,
+          [[0, '#b8d364'], [.49, '#6f9e37'], [1, '#477431']]);
+        c.fill(ellipse(x, y - ly * .39, width * .67, ly * .62, angle - 1.1));
+      }
+    }
+  }
 }
 
 /** True when the place has a painted ground. */
@@ -163,6 +190,7 @@ export function paintGround(id, density = 28, materials = null) {
     c.fillStyle = '#5c513e43';
     c.fill(pathMaterialMask(paving, PAVING_WIDTH, .057));
     c.restore();
+    paintPlantedEdges(c, id, paths);
     paintPavers(c, paving, materials);
     c.clip(pathMaterialMask(paths, PATH_WIDTH));
     c.globalAlpha = materials ? .25 : 1;
