@@ -62,6 +62,24 @@ dialog::backdrop{background:#152d27ba}.sea-chart header,.sea-chart footer{displa
 }
 .sea-chart input { accent-color: var(--u-gold); }
 
+.sailing {
+  color: var(--u-ink); background: var(--u-panel-surface) var(--u-sea);
+  border-color: var(--u-brass); border-radius: var(--u-radius); box-shadow: var(--u-frame);
+}
+.sailing::backdrop { background: #081f25bd; }
+.sailing h2 { color: var(--u-gold); }
+.sailing canvas {
+  border-radius: var(--u-radius-xs);
+  box-shadow: 0 0 0 1px var(--u-line), 0 0 0 3px var(--u-deep);
+}
+.sailing-status { color: var(--u-mute); }
+.sailing button {
+  color: var(--u-ink); background: var(--u-quiet-surface) var(--u-card);
+  border-color: var(--u-line); border-radius: var(--u-radius-xs); box-shadow: var(--u-bevel-quiet);
+}
+.sailing button:focus-visible { outline: 3px solid var(--u-gold); outline-offset: 3px; }
+.sailing button kbd { color: var(--u-ink); background: var(--u-deep); border-color: var(--u-line); }
+
 .chart-illustration { position: relative; height: 100%; }
 .chart-destinations { display: contents; }
 .chart-current-marker { display: none; }
