@@ -280,6 +280,44 @@ export function paintGround(id, density = 28, materials = null) {
   c.restore();
   return art;
 }
+
+// Projected centres and radii of the turf shoulders under the raised banks.
+const LAWN_SHOULDERS = [
+  [-13.2, -7.8, 5.6, 3.4, .96], [-6.6, -11.5, 6.3, 3.3, 1.06],
+  [7.3, -12.2, 5.9, 3.7, 1.10], [14.0, -7.2, 4.5, 3.4, .89],
+  [-12.6, 8.1, 4.9, 3.5, .86], [12.1, 8.9, 4.5, 3.5, .82],
+];
+
+function paintLawnRelief(c) {
+  const lightField = canvas(192, 144), ctx = lightField.getContext('2d');
+  const {width, height} = lightField, image = ctx.createImageData(width, height);
+  const left = -SIZE.width / 2, top = -SIZE.height / 2;
+  for (let row = 0; row < height; row++) {
+    const y = top + (row + .5) * SIZE.height / height;
+    for (let col = 0; col < width; col++) {
+      const x = left + (col + .5) * SIZE.width / width;
+      let slopeX = 0, slopeY = 0;
+      for (const [cx, cy, rx, ry, rise] of LAWN_SHOULDERS) {
+        const u = (x - cx) / rx, v = (y - cy) / ry, shape = 1 - u * u - v * v;
+        if (shape <= 0) continue;
+        // The derivative of this rounded profile eases to zero at the edge of each shoulder.
+        const grade = -6 * rise * shape * shape;
+        slopeX += grade * u / rx;
+        slopeY += grade * v / ry;
+      }
+      const light = (.60 * slopeX + .43 * slopeY + .67) / Math.hypot(slopeX, slopeY, 1) - .67;
+      const offset = (row * width + col) * 4;
+      const lit = light > 0;
+      image.data[offset] = lit ? 231 : 48;
+      image.data[offset + 1] = lit ? 219 : 79;
+      image.data[offset + 2] = lit ? 123 : 40;
+      image.data[offset + 3] = 255 * Math.min(lit ? .36 : .43, Math.abs(light) * 1.7);
+    }
+  }
+  ctx.putImageData(image, 0, 0);
+  c.drawImage(lightField, left, top, SIZE.width, SIZE.height);
+}
+
 function paintTerrain(c, s, coast, random, materials) {
   const rim = cliffProfile(s);
   paintCliffFaces(c, rim, materials);
@@ -327,6 +365,7 @@ function paintTerrain(c, s, coast, random, materials) {
     c.fillStyle = radial(c, x, y, width, [[0, `${colour}4b`], [.43, `${colour}23`], [1, `${colour}00`]]);
     c.fill(ellipse(x, y, width, depth));
   }
+  paintLawnRelief(c);
   c.restore();
   paintTurfBevel(c, coast, meadow, grassRadius);
   stroke(c, meadow, '#486e39', .145, .9);
