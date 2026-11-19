@@ -36,6 +36,7 @@ import {wallFrame, WALL_POST_IDS} from '../art/village/walls.js';
 import {createArtworkTasks, createStaticVillageArt} from './static-village-art.js';
 import {createVillageArtNotice} from '../ui/village-art-notice.js';
 import {portraitSpriteSize} from '../player/home-portrait.js';
+import {makeSelectedCanopy} from '../world/places/selected-canopy.js';
 
 const UNIT = 16;
 const FULL_HP_UNITS = 1_000_000;
@@ -416,7 +417,47 @@ export function decorateIsland(place, ctx = {}) {
   // The real art once it has loaded (null until then: the drawn sprites stand in), and what each spot shows.
   let art = null;
   const shown = new Map(); // spot id (or 'crew') -> {key, meshes}
-  const clear = id => { const item = shown.get(id); if (!item) return; for (const mesh of item.meshes) { root.remove(mesh); mesh.geometry.dispose(); } shown.delete(id); };
+  let watchtowerOcclusion = null, fadedWatchtower = [];
+  function restoreWatchtower() {
+    for (const {mesh, material, faded} of fadedWatchtower) {
+      mesh.material = material;
+      faded.dispose();
+    }
+    fadedWatchtower.length = 0;
+  }
+  function revealBehindWatchtower(target, depth, emphasis) {
+    const meshes = homeWalls ? shown.get('tower_1')?.meshes : null;
+    const tower = meshes?.[0];
+    if (!target || !tower?.visible || target === tower) {
+      restoreWatchtower();
+      return;
+    }
+    if (watchtowerOcclusion?.tower !== tower) watchtowerOcclusion = {tower, mask: makeSelectedCanopy([tower])};
+    const {mask} = watchtowerOcclusion;
+    mask.show(target, depth, emphasis);
+    if (!mask.has(tower)) {
+      restoreWatchtower();
+      return;
+    }
+    if (fadedWatchtower.length) return;
+    // The atlas materials are shared. Fade only the tower and its marks in this village view.
+    fadedWatchtower = meshes.map(mesh => {
+      const material = mesh.material, faded = material.clone();
+      faded.opacity = Math.min(material.opacity, .24);
+      mesh.material = faded;
+      return {mesh, material, faded};
+    });
+  }
+  const clear = id => {
+    const item = shown.get(id);
+    if (!item) return;
+    if (id === 'tower_1') {
+      restoreWatchtower();
+      watchtowerOcclusion = null;
+    }
+    for (const mesh of item.meshes) { root.remove(mesh); mesh.geometry.dispose(); }
+    shown.delete(id);
+  };
   const releaseStandin = mesh => {
     mesh.visible = false; root.remove(mesh);
     if (mesh.userData.standinReleased) return;
@@ -484,6 +525,7 @@ export function decorateIsland(place, ctx = {}) {
     if (battle || visitor) {
       defenseRange?.show(null);
       place.setSelectedCanopy?.(null);
+      restoreWatchtower();
     }
     const pulse = wallFeedback?.current;
     if (pulse) {
@@ -707,6 +749,7 @@ export function decorateIsland(place, ctx = {}) {
         wallConnections.select(null);
         defenseRange?.show(null);
         place.setSelectedCanopy?.(null);
+        restoreWatchtower();
         clearPurchaseFeedback();
       }
       footprint.show(preview);
@@ -746,7 +789,9 @@ export function decorateIsland(place, ctx = {}) {
           ? wallConnections.selectedCanopyTarget
           : shown.get(selection.spotId)?.meshes[0] ?? null;
       }
-      place.setSelectedCanopy?.(canopyTarget, portraitDepth, ctx.camera?.userData?.homeOverviewEmphasis);
+      const emphasis = ctx.camera?.userData?.homeOverviewEmphasis;
+      place.setSelectedCanopy?.(canopyTarget, portraitDepth, emphasis);
+      revealBehindWatchtower(canopyTarget, portraitDepth, emphasis);
       recoveryIndicators.update();
       const still = reduced();
       const coverage = selection && !state.battle && !state.visitor ? ctx.defenseRange?.() : null;
