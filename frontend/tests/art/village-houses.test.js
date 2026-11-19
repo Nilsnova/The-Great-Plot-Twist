@@ -7,8 +7,8 @@ import {buildingArt} from '../../src/island/world.js';
 import {ROLE_IDS} from '../../src/campaign/houses.js';
 import {islandFrame} from '../../src/art/registry.js';
 
-const source = readFileSync(new URL('../../public/village/houses-v1.png', import.meta.url));
-const report = JSON.parse(readFileSync(new URL('../../../docs/evidence/VIS-06-houses/asset-report.json', import.meta.url)));
+const source = readFileSync(new URL(`../../public/${sheets.villageHouses.file}`, import.meta.url));
+const report = JSON.parse(readFileSync(new URL('../../../docs/evidence/VIS-06-houses/asset-report-v2.json', import.meta.url)));
 
 describe('approved house family source', () => {
   it('uses the inspected RGBA sheet and exact declared dimensions', () => {
