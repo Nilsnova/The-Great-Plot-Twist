@@ -170,8 +170,14 @@ try {
   const one = await replay(owner.page, ownWave.snapshot, accepted.events, accepted.seal, ownWave.token);
   const two = await replay(mate.page, ownWave.snapshot, accepted.events, accepted.seal, ownWave.token);
   checkBomb(one); assert.deepEqual(two, one);
+  note('legacy-area-blast-observed-on-both-real-clients', {journalShots: shots.length,
+    journalWeapon: shots[0].payload.captain.weapon, fired: one.fired.length,
+    blasts: one.blasts.length, damageEvents: one.damage.length,
+    damageAmounts: one.damage.map(row => row.damage), identicalReplay: true});
   await owner.page.screenshot({path: output + '/legacy-after-area-blast.png'});
-  await mate.page.reload({waitUntil: 'domcontentloaded'}); await enter(mate.page); await watch(mate.page);
+  await mate.page.reload({waitUntil: 'domcontentloaded'}); await enter(mate.page);
+  await mate.page.evaluate(() => window.__island.island.joinRunningWave());
+  await watch(mate.page);
   const replayed = await replay(mate.page, ownWave.snapshot, accepted.events, accepted.seal, ownWave.token);
   checkBomb(replayed); assert.deepEqual(replayed, one);
   note('original-four-argument-recovery-producer', {recoveryVersion: 1, protocol: 2, nativeShared: false,
