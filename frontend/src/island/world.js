@@ -408,7 +408,13 @@ export function decorateIsland(place, ctx = {}) {
     const key = places.map(item => `${item.kind}@${item.x},${item.z}`).join('|');
     if (shown.get('crew')?.key === key) return;
     clear('crew');
-    shown.set('crew', {key, meshes: places.map(item => { const mesh = put(crewArt[item.kind], item.x, item.z, 0, .02); mesh.name = `island-crew:${item.kind}:${item.at}`; return mesh; })});
+    const meshes = places.map(({kind, at, x, z}) => {
+      const mesh = put(crewArt[kind], x, z, 0, .02);
+      mesh.name = `island-crew:${kind}:${at}`;
+      if (homeWalls) mesh.userData.idle = {phase: x * .57 + z * .93, lean: kind === 'lookout' ? .038 : .021};
+      return mesh;
+    });
+    shown.set('crew', {key, meshes});
   }
 
   // battle: a wave is on screen; its renderer (src/pirates/render.js) draws the walls and cannons with
@@ -708,6 +714,14 @@ export function decorateIsland(place, ctx = {}) {
         const motion = {time: landmarkClock, wind: frame?.weather?.wind ?? frame?.wind, night: frame?.night,
           ring: .23 * ring ** 1.45 * Math.sin((BELL_RING_SECONDS - ringing) * 16), still};
         for (const detail of landmarkMotion.values()) detail.update(motion);
+        // Crew sprites pivot at their ground feet. The combat renderer takes over during waves.
+        for (const mesh of shown.get('crew')?.meshes ?? []) {
+          const idle = mesh.userData.idle;
+          if (!idle) continue;
+          const phase = landmarkClock * 1.7 + idle.phase;
+          mesh.rotation.z = still ? 0 : idle.lean * Math.sin(phase);
+          mesh.scale.y = still ? 1 : 1 + .027 * Math.sin(phase * .5) ** 2;
+        }
       }
     },
     get root() { return root; },

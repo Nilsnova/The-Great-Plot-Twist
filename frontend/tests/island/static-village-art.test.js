@@ -85,6 +85,31 @@ it('adds service detail motion as the actual campaign frames become visible', as
   drawing.dispose();
 });
 
+it('shifts hired crew at their station, holds during pause, and restores the still pose', async () => {
+  let reducedMotion = false;
+  const load = async names => Object.fromEntries(names.map(id => [id, material()]));
+  const {drawing} = start(load, {reducedMotion: () => reducedMotion});
+  const village = {spots: [{id: 'cannon_1', kind: 'cannon', built: true, level: 1}], crew: {gunner: 1, lookout: 1}};
+  drawing.apply(village); await flush();
+  const gunner = drawing.root.getObjectByName('island-crew:gunner:cannon_1');
+  const foot = gunner.position.clone();
+  drawing.update(.1);
+  const first = gunner.rotation.z;
+  drawing.update(.1);
+  const second = gunner.rotation.z;
+  expect(second).not.toBe(first);
+  expect(gunner.position.equals(foot)).toBe(true);
+  drawing.update(.1, 0, true);
+  expect(gunner.rotation.z).toBe(second);
+  reducedMotion = true;
+  drawing.update(.1, 0, true);
+  expect(gunner.rotation.z).toBe(0);
+  expect(gunner.scale.y).toBe(1);
+  drawing.apply({...village, battle: true});
+  expect(drawing.root.getObjectByName('island-crew:gunner:cannon_1')).toBeUndefined();
+  drawing.dispose();
+});
+
 it('reports main artwork failure, coalesces actual retries and clears the failure only after success', async () => {
   let fail = true; const errors = [], views = [], next = deferred();
   const load = vi.fn(async ids => {
