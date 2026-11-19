@@ -51,6 +51,14 @@ export function createSharedSessionClient({api,getEconomy,getActorId,getAuthGene
   if(mine!==ticket || !current(captured)){lock?.release();return failed('session_context_changed','The session selection changed.',0);}
   held=lock;
   if(!lock)return refresh(captured,mine,null);
+  try{
+   const saved=intents.read(captured.actorId);
+   if(intents.departure(captured.actorId) || saved?.phase==='known' && !sameEconomyScope(saved.origin,captured.origin)){
+    const answer=await depart(captured.actorId);
+    if(mine!==ticket || !current(captured) || !lock.current)return abandon(lock,mine);
+    if(!answer.ok){demote('waiting','Confirming departure from your previous session. Retry shortly.');schedule(captured);return answer;}
+   }
+  }catch(error){demote('unavailable',error.message);return failed('session_retry_unavailable',error.message,503);}
   let record;
   try{record=intents.begin(captured.actorId,captured.origin);}catch(error){demote('unavailable',error.message);return failed('session_retry_unavailable',error.message,503);}
   const answer=await api.attach(record);
@@ -90,11 +98,28 @@ export function createSharedSessionClient({api,getEconomy,getActorId,getAuthGene
   const pending=sendHeartbeat();
   const finished=pending.finally(()=>{if(pingFlight===finished)pingFlight=null;});pingFlight=finished;return finished;
  }
+ async function depart(actor){
+  const record=intents.depart(actor);if(!record)return {ok:true,data:null};
+  let answer;try{answer=await api.leave(record);}catch{return failed('network_error','The departure did not finish. Retry it.',0);}
+  if(answer.ok)intents.departed(record);
+  return answer;
+ }
+ async function leave(){
+  const captured=scope,owned=held?.current;
+  // Allocate departure only while this document owns the original known session.
+  let record;
+  try{if(owned && captured)record=intents.depart(captured.actorId);}catch(error){
+   await disconnect();return failed('session_retry_unavailable',error.message,503);
+  }
+  ticket++;cancelTimer();flight=null;pingFlight=null;demote('idle','');scope=null;
+  if(!record)return {ok:true,data:null};
+  try{return await depart(record.actorId);}catch(error){return failed('session_retry_unavailable',error.message,503);}
+ }
  async function disconnect(){
   const record=active;ticket++;cancelTimer();flight=null;pingFlight=null;demote('idle','');scope=null;
   return record?api.disconnect(record):{ok:true,data:null};
  }
- return {open,heartbeat,disconnect,proof,
+ return {open,heartbeat,disconnect,leave,proof,
   roomPlace:()=>snapshot && current(scope)?snapshot.session.place:null,
   get state(){return {...state};},
   get metadata(){return snapshot && current(scope)?clone(snapshot):null;},
