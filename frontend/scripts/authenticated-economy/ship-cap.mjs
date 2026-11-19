@@ -62,8 +62,8 @@ export async function runShipCap({clients,observe,install,admit,sourceEvidence,h
  try {
   const primary=await prepare(clients[0],clients.slice(1,10),30);
   const foreign=await prepare(clients[10],[clients[1]],35);
-  const walletsBefore=await walletFacts();
-  const members=await observe('select count(*)::integer as count from public.island_members where island_owner=$1::uuid and left_at is null',[primary.owner.actorId]);
+  const walletsBefore=await walletFacts();assert.equal(walletsBefore.length,11);
+  const members=await observe('select count(*)::integer as count from public.island_members where island_owner=$1::uuid and player_id<>$1::uuid and left_at is null',[primary.owner.actorId]);
   assert.equal(members[0].count,9);
   for(const member of primary.members){
    const status=checked(await member.request(gamePath+'?code='+encodeURIComponent(primary.code)));
