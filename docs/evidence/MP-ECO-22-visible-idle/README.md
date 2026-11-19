@@ -12,6 +12,14 @@ The invocation stopped before a tier2 mutation because its `rapid_2` locator mat
 
 The run uses an explicit normal island refresh after Engineer selection. An earlier actual first-click attempt on this unchanged application source displayed9 but received `stale_construction_quote`, leaving the visible bank5000. Its correction and new-candidate proof belong to the separate Engineer quote fix; these historical results are not relabeled as that correction.
 
+## Admission and crew: four completed observations
+
+[`partial-transition.json`](partial-transition.json) records driver `a4b5990f` with SHA256 `707b526450163808a9f5d102dc953db78b42925b1e12d00fb47d9280dbf50c85`, executed 18:55:20–18:59:35 UTC. Its six helper files and protected checkout/actual serving sources match before and after. One Chromium process holds two separately registered contexts; no simultaneous movement claim is made.
+
+After explicit fresh admission of the legacy game, ordinary Menu › Return to title and Continue/Join discover the accepted shared metadata. The member's product session selects the canonical place and its own passive WebSocket observations show a sent join followed by a successful reply on that topic. No SDK topic is chosen manually and no `island.load()` is invoked. This establishes the observed member's product reaction after normal UI discovery, not zero-interaction hot discovery, both actors' joins or a retained join-reference correlation.
+
+The invited member then visibly buys Gunner for40 and Guard for60. Immutable receipts and the independently read ledger match the 4900-coin bank. [The unaltered crew card](member-crew.png) shows both acquired counts, their normal prices and new Carpenter hires unavailable. The invocation subsequently fails because its test asks for an Arsenal Menu button; Arsenal is a world inspection target. No arsenal, departure or grace-restoration pass is inferred from that failed later step.
+
 ## Setup and boundaries
 
 The fresh service admission supplies 5000 disposable test coins. Saved island unlock50 and a pre-existing level5/personal-best20/earned10 profile fixture make the controls reachable. They do not establish naturally earned progression, conversion or economy balance. All actual role/build/research mutations use the real UI and API. No journal, HP, outcome or clock is replaced.
