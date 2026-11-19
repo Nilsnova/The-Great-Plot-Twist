@@ -154,6 +154,13 @@ void main(){
   float shoreLight=mix(1.0,mix(.65,.92,1.0-smoothstep(-13.0,-6.0,p.y)),uHomeCoast);
   colour=mix(colour,uShallow,shallow*.85*shoreLight);
   colour=mix(colour,uShallow2,(1.0-smoothstep(.0,1.3,d))*.9*shoreLight);
+  if(uHomeCoast>.5){
+    // The sand shelf is broad and translucent at the beach, with deeper pockets along the rock.
+    float shelf=(1.0-smoothstep(.4,5.7,d))*smoothstep(.24,.75,far);
+    colour=mix(colour,uShallow,shelf*.38);
+    float contact=(1.0-smoothstep(.05,.62,d))*(1.0-shoreLight)*.58;
+    colour=mix(colour,uDeep,contact);
+  }
   // Curled noise contours break up highlights without two crossing families of periodic lines.
   // The entire extra material branch is disabled by the existing low-quality uniform.
   if(uDetail>.5){
@@ -175,15 +182,24 @@ void main(){
     float caustic=(1.0-band(abs(cells-.6),.02))*smoothstep(.6,1.2,d)*(1.0-smoothstep(1.5,3.0,d));
     colour=mix(colour,uShallow2,caustic*.12);
     if(uHomeCoast>.5){
-      // Broad troughs and short turquoise crests give the open sea a visible rolling surface.
-      vec2 q=p*vec2(.38,.70);
-      float roll=sin(q.y+q.x*.46+sin(q.x*.54-t*.16)*1.15-t*.64);
-      float chop=pxNoise(q*vec2(.39,.8)+vec2(t*.045,-t*.027));
-      float wave=smoothstep(.45,.94,roll)*smoothstep(.23,.77,chop);
-      colour=mix(colour,uDeep,smoothstep(.14,.89,-roll)*.12*offshore);
-      colour=mix(colour,uLight,wave*.16*offshore);
-      float streak=1.0-band(abs(roll-.87),.05);
-      colour=mix(colour,uStroke,streak*smoothstep(.49,.89,chop)*.15*offshore);
+      // Cross the rolling ocean with shorter, less regular strokes. The old coastline still
+      // supplies every break and depth ramp. Glints follow crest slopes, not the terrain grid.
+      vec2 current=vec2(.29*p.x-.13*p.y, .77*p.y+.17*p.x);
+      float swellPhase=current.y+curl*1.32+sin(current.x-t*.18)*.65-t*.43;
+      float front=sin(swellPhase), back=cos(swellPhase);
+      float patch=smoothstep(.27,.71,coarse+curl*.13);
+      float lifting=smoothstep(.12,.86,front)*patch;
+      float down=smoothstep(.04,.96,-front)*patch;
+      colour=mix(colour,uDeep,down*.19*offshore);
+      colour=mix(colour,uLight,lifting*.23*offshore);
+      float crestLine=(1.0-band(abs(front-.73),.048))*smoothstep(.28,.86,back);
+      float whiteGlint=crestLine*patch*smoothstep(.48,.79,ripple);
+      float capStrength=mix(.34,.12,smoothstep(1.5,13.0,d));
+      colour=mix(colour,mix(uStroke,uFoam,.34),whiteGlint*capStrength*offshore);
+      // Soft aqua lace under the near water, visible through the shelf rather than on the grass.
+      float lace=(1.0-band(abs(cells-.66),.034))*smoothstep(.51,.76,coarse);
+      float litShelf=smoothstep(.33,1.1,d)*(1.0-smoothstep(2.4,5.2,d));
+      colour=mix(colour,uShallow2,lace*litShelf*.24);
     }
   }
   // The close edge is still in low quality; its extra movement and broken surf are high-only.
@@ -192,8 +208,15 @@ void main(){
   float edge=.18+sin(p.x*2.1+p.y*1.3+foamTime*1.2)*.045;
   float surf=.55+run*(.6+uWind*.5);
   if(uDetail>.5){
-    float broken=smoothstep(.25,.7,pxNoise(p*1.4+vec2(foamTime*.08,-foamTime*.03)));
-    colour=mix(colour,uFoam,(1.0-band(abs(d-surf),.06))*.8*broken*smoothstep(.0,.25,run)*shoreLight);
+    float grain=pxNoise(p*1.4+vec2(foamTime*.08,-foamTime*.03));
+    float broken=smoothstep(.25,.7,grain);
+    float width=mix(.06,.088,uHomeCoast);
+    colour=mix(colour,uFoam,(1.0-band(abs(d-surf),width))*.8*broken*smoothstep(.0,.25,run)*shoreLight);
+    if(uHomeCoast>.5){
+      // A thin interrupted wash runs ahead of the breaker. Leave dark gaps between sections.
+      float wash=(1.0-band(abs(d-surf-.23-grain*.35),.051))*smoothstep(.40,.73,grain);
+      colour=mix(colour,uShallow2,wash*.40*shoreLight);
+    }
   }
   colour=mix(colour,uFoam,(1.0-band(d,edge))*shoreLight);
   // Whitecaps on crests once the wind picks up.
@@ -224,7 +247,8 @@ void main(){
 
 export function createWater(scene) {
   const colours = { uDeep: '#07566e', uMid: '#087f96', uLight: '#3dbdc9', uShallow: '#38c9b5', uShallow2: '#8be2c5', uFoam: '#f4fffa', uGlint: '#e6fff5', uStroke: '#63cfd6' };
-  const homeColours = {...colours, uDeep: '#07667e', uMid: '#0b94a5', uLight: '#45c8cf', uShallow: '#3dcbb8', uShallow2: '#8cebd1'};
+  const homeColours = {...colours, uDeep: '#065a75', uMid: '#0a8fa0', uLight: '#42c5d0',
+    uShallow: '#36c6ab', uShallow2: '#a4e3ce', uFoam: '#f3fff6', uStroke: '#86e1ea'};
   const uniforms = { ...seaUniforms, uHomeCoast: {value: 0} };
   for (const [key, value] of Object.entries(colours)) uniforms[key] = { value: new THREE.Color(value) };
   const material = new THREE.ShaderMaterial({ uniforms, vertexShader: worldVertex, fragmentShader: fragment,
