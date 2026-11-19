@@ -1,0 +1,503 @@
+{
+  "scope": "offline normalized PNG source compilation; runtime activation/build exclusion and actual-game acceptance remain separate",
+  "sourceCommit": "bee25ebfbe0138662b7afe155b1f3273a1ab4326",
+  "compilerDirtyPaths": "M src/art/village/baked.js\n?? public/village/compiled/landmarks-4x-1-4198ec1a6975.png",
+  "browser": "157.0.8103.79",
+  "families": [
+    "landmarks"
+  ],
+  "proofDensities": [
+    4,
+    2.5,
+    2,
+    1.5
+  ],
+  "proofOrigins": {
+    "landmarks": "bee25ebfbe0138662b7afe155b1f3273a1ab4326"
+  },
+  "reusedReportSha256": null,
+  "normalizerHashes": {
+    "src/art/village-raster.js": "4db5ffa86253a7ece821804586518e2fabea33b33d0c59c4f3223df80d969e3f",
+    "src/art/village-decode.js": "1d55341b2c947e3bcfc019c0e8bb8722591f0a2312cd7a8a0585a873cd8fa537"
+  },
+  "transportHistory": [],
+  "original": {
+    "files": [
+      {
+        "file": "village/home-bell-v3.png",
+        "bytes": 1329950,
+        "sha256": "865856e3ec8fa62afbc4085083764d7ca726e33598718d1d7a3d9e20a3425d3d",
+        "width": 1312,
+        "height": 1199
+      },
+      {
+        "file": "village/landmarks-v2.png",
+        "bytes": 1158120,
+        "sha256": "6ba0599eefd11cd4bf13b36613ed952334d6eb60a19dcf2b759361b0e3dd4ac4",
+        "width": 1254,
+        "height": 1254
+      }
+    ],
+    "encodedBytes": 2488070,
+    "summedDecodedBytes": 12582416
+  },
+  "compiled": {
+    "files": [
+      {
+        "file": "village/compiled/landmarks-4x-1-4198ec1a6975.png",
+        "bytes": 642949,
+        "sha256": "4198ec1a6975df77221fd3bfe10f98213a2d00cb4737f3982348a7454a811211",
+        "width": 1024,
+        "height": 520
+      }
+    ],
+    "encodedBytes": 642949,
+    "summedDecodedBytes": 2129920,
+    "peakSingleDecodedBytes": 2129920
+  },
+  "initialTransfer": {
+    "unchangedTerrainBytes": 2683357,
+    "rawPlusTerrainBytes": 5171427,
+    "compiledPlusTerrainBytes": 3326306,
+    "targetBytes": 8388608,
+    "targetMet": true
+  },
+  "budgets": {
+    "decodedPoolBytes": 12582912,
+    "combatAtlasHighBytes": 41943040,
+    "combatAtlasLowBytes": 12582912,
+    "note": "unchanged final logical frame/density means no renderer-pass or final GPU-texture saving is claimed"
+  },
+  "inputs": [
+    {
+      "name": "landmarks",
+      "module": "src/art/village/landmarks.js",
+      "sha256": "03e002f9c884ab0cb3621594f3a857f63740c2d2ffd014ca5ff10884b7805f93",
+      "frames": {
+        "island-bell": {
+          "sheet": {
+            "file": "village/home-bell-v3.png",
+            "width": 1312,
+            "height": 1199
+          },
+          "rect": [
+            710,
+            644,
+            535,
+            513
+          ],
+          "logical": [
+            56,
+            72,
+            8
+          ],
+          "sourceFoot": [
+            267,
+            497
+          ],
+          "fitBounds": [
+            267,
+            497,
+            268,
+            16
+          ]
+        },
+        "island-watchtower": {
+          "sheet": {
+            "file": "village/landmarks-v2.png",
+            "width": 1254,
+            "height": 1254
+          },
+          "rect": [
+            760,
+            8,
+            325,
+            558
+          ],
+          "logical": [
+            64,
+            128,
+            8
+          ],
+          "sourceFoot": [
+            161,
+            543
+          ],
+          "fitBounds": [
+            161,
+            543,
+            164,
+            15
+          ]
+        },
+        "island-watchtower-l4": {
+          "sheet": {
+            "file": "village/landmarks-v2.png",
+            "width": 1254,
+            "height": 1254
+          },
+          "rect": [
+            168,
+            582,
+            332,
+            611
+          ],
+          "logical": [
+            64,
+            128,
+            8
+          ],
+          "sourceFoot": [
+            164,
+            596
+          ],
+          "fitBounds": [
+            164,
+            596,
+            168,
+            15
+          ]
+        },
+        "island-watchtower-l5": {
+          "sheet": {
+            "file": "village/landmarks-v2.png",
+            "width": 1254,
+            "height": 1254
+          },
+          "rect": [
+            742,
+            575,
+            357,
+            624
+          ],
+          "logical": [
+            64,
+            128,
+            8
+          ],
+          "sourceFoot": [
+            174,
+            609
+          ],
+          "fitBounds": [
+            174,
+            609,
+            183,
+            15
+          ]
+        }
+      }
+    }
+  ],
+  "plans": [
+    {
+      "name": "landmarks",
+      "pages": [
+        {
+          "file": "village/compiled/landmarks-4x-1-4198ec1a6975.png",
+          "width": 1024,
+          "height": 520,
+          "items": [
+            {
+              "id": "island-watchtower",
+              "rect": [
+                4,
+                4,
+                256,
+                512
+              ]
+            },
+            {
+              "id": "island-watchtower-l4",
+              "rect": [
+                268,
+                4,
+                256,
+                512
+              ]
+            },
+            {
+              "id": "island-watchtower-l5",
+              "rect": [
+                532,
+                4,
+                256,
+                512
+              ]
+            },
+            {
+              "id": "island-bell",
+              "rect": [
+                796,
+                4,
+                224,
+                288
+              ]
+            }
+          ]
+        }
+      ],
+      "sheets": {
+        "landmarksBaked1": {
+          "file": "village/compiled/landmarks-4x-1-4198ec1a6975.png",
+          "width": 1024,
+          "height": 520
+        }
+      },
+      "frames": {
+        "island-bell": {
+          "sheet": "landmarksBaked1",
+          "rect": [
+            796,
+            4,
+            224,
+            288
+          ],
+          "logical": [
+            56,
+            72,
+            8
+          ],
+          "sourceFoot": [
+            112,
+            256
+          ]
+        },
+        "island-watchtower": {
+          "sheet": "landmarksBaked1",
+          "rect": [
+            4,
+            4,
+            256,
+            512
+          ],
+          "logical": [
+            64,
+            128,
+            8
+          ],
+          "sourceFoot": [
+            128,
+            480
+          ]
+        },
+        "island-watchtower-l4": {
+          "sheet": "landmarksBaked1",
+          "rect": [
+            268,
+            4,
+            256,
+            512
+          ],
+          "logical": [
+            64,
+            128,
+            8
+          ],
+          "sourceFoot": [
+            128,
+            480
+          ]
+        },
+        "island-watchtower-l5": {
+          "sheet": "landmarksBaked1",
+          "rect": [
+            532,
+            4,
+            256,
+            512
+          ],
+          "logical": [
+            64,
+            128,
+            8
+          ],
+          "sourceFoot": [
+            128,
+            480
+          ]
+        }
+      }
+    }
+  ],
+  "compilerMemory": [
+    {
+      "family": "landmarks",
+      "peakSourceBytes": 6292352,
+      "retainedDecodedAfterRelease": 0,
+      "canvasBytes": 2129920,
+      "largestTemporaryCanvasBytes": 524288
+    }
+  ],
+  "verification": [
+    {
+      "family": "landmarks",
+      "results": [
+        {
+          "id": "island-bell",
+          "density": 4,
+          "pixels": 64512,
+          "visiblePixels": 28053,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-bell",
+          "density": 2.5,
+          "pixels": 25200,
+          "visiblePixels": 11174,
+          "differingPixels": 10185,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 39,
+          "alphaWeightedMeanRgbDelta": 2.5650512067690756
+        },
+        {
+          "id": "island-bell",
+          "density": 2,
+          "pixels": 16128,
+          "visiblePixels": 7029,
+          "differingPixels": 6646,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 56,
+          "alphaWeightedMeanRgbDelta": 4.059811575297248
+        },
+        {
+          "id": "island-bell",
+          "density": 1.5,
+          "pixels": 9072,
+          "visiblePixels": 4110,
+          "differingPixels": 3977,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 48,
+          "alphaWeightedMeanRgbDelta": 4.038973118816126
+        },
+        {
+          "id": "island-watchtower",
+          "density": 4,
+          "pixels": 131072,
+          "visiblePixels": 67801,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-watchtower",
+          "density": 2.5,
+          "pixels": 51200,
+          "visiblePixels": 26602,
+          "differingPixels": 24777,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 57,
+          "alphaWeightedMeanRgbDelta": 2.718295213425645
+        },
+        {
+          "id": "island-watchtower",
+          "density": 2,
+          "pixels": 32768,
+          "visiblePixels": 16732,
+          "differingPixels": 14657,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 36,
+          "alphaWeightedMeanRgbDelta": 2.151225019575261
+        },
+        {
+          "id": "island-watchtower",
+          "density": 1.5,
+          "pixels": 18432,
+          "visiblePixels": 9620,
+          "differingPixels": 8979,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 40,
+          "alphaWeightedMeanRgbDelta": 2.597941450673589
+        },
+        {
+          "id": "island-watchtower-l4",
+          "density": 4,
+          "pixels": 131072,
+          "visiblePixels": 72464,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-watchtower-l4",
+          "density": 2.5,
+          "pixels": 51200,
+          "visiblePixels": 28447,
+          "differingPixels": 26021,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 45,
+          "alphaWeightedMeanRgbDelta": 2.457392036348898
+        },
+        {
+          "id": "island-watchtower-l4",
+          "density": 2,
+          "pixels": 32768,
+          "visiblePixels": 17965,
+          "differingPixels": 15507,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 36,
+          "alphaWeightedMeanRgbDelta": 1.957100872887187
+        },
+        {
+          "id": "island-watchtower-l4",
+          "density": 1.5,
+          "pixels": 18432,
+          "visiblePixels": 10311,
+          "differingPixels": 9641,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 39,
+          "alphaWeightedMeanRgbDelta": 2.5462525939024108
+        },
+        {
+          "id": "island-watchtower-l5",
+          "density": 4,
+          "pixels": 131072,
+          "visiblePixels": 66211,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-watchtower-l5",
+          "density": 2.5,
+          "pixels": 51200,
+          "visiblePixels": 25988,
+          "differingPixels": 24006,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 39,
+          "alphaWeightedMeanRgbDelta": 2.5059701535226697
+        },
+        {
+          "id": "island-watchtower-l5",
+          "density": 2,
+          "pixels": 32768,
+          "visiblePixels": 16420,
+          "differingPixels": 14578,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 33,
+          "alphaWeightedMeanRgbDelta": 2.063441771366465
+        },
+        {
+          "id": "island-watchtower-l5",
+          "density": 1.5,
+          "pixels": 18432,
+          "visiblePixels": 9389,
+          "differingPixels": 8933,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 38,
+          "alphaWeightedMeanRgbDelta": 3.301472499470906
+        }
+      ],
+      "peakSourceBytes": 6292352,
+      "retainedDecodedAfterRelease": 0
+    }
+  ],
+  "errors": [],
+  "externalRequests": []
+}
