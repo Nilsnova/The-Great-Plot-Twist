@@ -32,3 +32,9 @@ it('retries completion after strict health sync with the same immutable fall and
  await vi.waitFor(()=>expect(f.complete).toHaveBeenCalledOnce());f.setNow(3501);f.revival.update(f.current,f.target,true);await vi.waitFor(()=>expect(f.complete).toHaveBeenCalledTimes(2));
  expect(f.complete.mock.calls[1][0]).toEqual(f.complete.mock.calls[0][0]);expect(f.target.hp).toBe(0);
 });
+it.each(['hold_invalidated','hold_missing'])('starts a new ordered interval after definitive %s',async code=>{
+ const f=fixture();f.complete.mockResolvedValueOnce({ok:false,status:409,code});
+ f.revival.update(f.current,f.target,true);await vi.waitFor(()=>expect(f.current.revive?.stage).toBe('holding'));f.setNow(3001);f.revival.update(f.current,f.target,true);
+ await vi.waitFor(()=>expect(f.complete).toHaveBeenCalledOnce());expect(f.current.revive.stage).toBe('starting');expect(f.current.revive.holdId).toBeNull();expect(f.current.revive.share).toBe(0);
+ f.setNow(3501);f.revival.update(f.current,f.target,true);await vi.waitFor(()=>expect(f.send).toHaveBeenCalledTimes(2));expect(f.send.mock.calls[1][0]).toEqual(f.send.mock.calls[0][0]);expect(f.target.hp).toBe(0);
+});
