@@ -18,6 +18,11 @@ const PATHS = {
 const seeded = seed => () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
 const PATH_WIDTH = 2.2;
 const PAVING_WIDTH = 1.5;
+// Short paved approaches meet the existing arsenal and tech hub doorways.
+const SERVICE_WALKS = [
+  [[-5.16, -10.75], [-5.16, -5.48]],
+  [[8.14, -11.62], [9.26, -8.12], [9.26, -5.5]],
+];
 
 function meadowEdge(angle) {
   // The north Smugglers beach widens between the terrace shelves, like the three naval beaches.
@@ -179,10 +184,15 @@ export function paintGround(id, density = 28, materials = null) {
     for (const padding of [.16, .067, 0, -.105, -.21]) {
       c.fill(pathMaterialMask(paths, PATH_WIDTH, padding));
     }
-    const paving = {...paths, stoneAprons: true, clearings: paths.clearings.map(([x, z, radius]) => [x, z, radius * .76])};
-    // The low paver edge casts a short contact shadow into the existing worn shoulder.
+    const paving = {
+      lines: [...paths.lines, ...SERVICE_WALKS],
+      widths: [...paths.lines.map(() => PAVING_WIDTH), .96, .91],
+      stoneAprons: true,
+      clearings: paths.clearings.map(([x, z, radius]) => [x, z, radius * .76]),
+    };
+    // The low paver edge casts a short contact shadow onto the lawn.
     c.save();
-    c.clip(pathMaterialMask(paths, PATH_WIDTH));
+    c.clip(pathMaterialMask(paving, PAVING_WIDTH, .38));
     c.translate(.046, .085);
     c.fillStyle = '#69583f20';
     c.fill(pathMaterialMask(paving, PAVING_WIDTH, .115));
@@ -199,10 +209,11 @@ export function paintGround(id, density = 28, materials = null) {
     c.restore();
   }
   // Grass strokes and little flowers across the meadow (never on a path).
+  const serviceWalks = {lines: SERVICE_WALKS, clearings: []};
   c.save(); c.clip(coast(.82));
   for (let i = 0; i < 420; i++) {
     const x = (random() - .5) * s.rx * 1.7, z = (random() - .5) * s.rz * 1.7, [px, py] = at(x, z);
-    if (paths && nearPath(paths, x, z, 1.6)) continue;
+    if (paths && (nearPath(paths, x, z, 1.6) || nearPath(serviceWalks, x, z, .78))) continue;
     if (i % 14 === 0) { const colour = ['#ffffff', '#ffd166', '#ff8fab'][i % 3];
       for (let k = 0; k < 5; k++) { const a = k / 5 * Math.PI * 2; c.fillStyle = colour; c.fill(ellipse(px + Math.cos(a) * .09, py + Math.sin(a) * .07, .07, .06)); }
       c.fillStyle = '#f29e38'; c.fill(ellipse(px, py, .04, .035)); continue; }
