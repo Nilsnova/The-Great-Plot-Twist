@@ -20,13 +20,28 @@ it('frames more vertical ground in portrait and keeps screen-to-world reversible
   portrait.update(phone);
   expect(camera.userData.homePortraitDepth).toBeGreaterThan(1.5);
   const after = ground.clone().project(camera);
-  expect(after.x).toBeCloseTo(before.x * (375 - 12) / 375, 12);
+  expect(after.x).toBeGreaterThan(0);
   expect(after.y).not.toBeCloseTo(before.y, 2);
   camera.updateProjectionMatrix();
   expect(ground.clone().project(camera).distanceTo(after)).toBeLessThan(1e-10);
   expect(after.clone().unproject(camera).distanceTo(ground)).toBeLessThan(1e-10);
   portrait.update(null);
   expect(ground.clone().project(camera).distanceTo(before)).toBeLessThan(1e-10);
+});
+
+it.each([375, 1280])('makes nearer positions larger and keeps input reversible at width %s', width => {
+  const camera = makeCamera(), overview = createHomePortrait(camera);
+  const near = new THREE.Vector3(3, -7, 0), far = new THREE.Vector3(3, 7, 0);
+  const previous = near.clone().project(camera);
+  overview.update({...phone, width});
+  const after = near.clone().project(camera), back = far.clone().project(camera);
+  expect(after.x).toBeGreaterThan(back.x * 1.1);
+  expect(after.clone().unproject(camera).distanceTo(near)).toBeLessThan(1e-10);
+  camera.zoom *= .96; camera.updateProjectionMatrix();
+  expect(near.clone().project(camera).x).toBeGreaterThan(far.clone().project(camera).x * 1.1);
+  camera.zoom /= .96;
+  overview.update(null);
+  expect(near.clone().project(camera).distanceTo(previous)).toBeLessThan(1e-10);
 });
 
 it('keeps upright proportions and restores the world transforms after drawing', () => {

@@ -11,7 +11,7 @@ export function decorateCore(place, {prepare = paintIds, density = screenDensity
   const point = projectPoint(HEART.x, HEART.z);
   mesh.name = 'island-core'; mesh.position.set(point.x, point.y, 0);
   mesh.renderOrder = 100 + HEART.z; mesh.frustumCulled = false; mesh.visible = false;
-  mesh.userData.ground = {...HEART}; mesh.userData.portraitSize = 1.45; place.group.add(mesh);
+  mesh.userData.ground = {...HEART}; mesh.userData.portraitSize = 1.58; place.group.add(mesh);
   let state = null, disposed = false, pending = null, materials = null;
   const release = pool => { for (const material of Object.values(pool ?? {})) { material.map?.dispose(); material.dispose(); } };
   function show() {
