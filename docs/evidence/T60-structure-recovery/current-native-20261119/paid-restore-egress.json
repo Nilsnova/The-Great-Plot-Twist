@@ -24,5 +24,7 @@
   ],
   "independentReplaysAgree": true,
   "bothRestoredTowersFired": true,
-  "limit": "Production replay/simulation with a synthetic sealed paid event; no provider/browser payment claim."
+  "limit": "Production replay/simulation with a synthetic sealed paid event; no provider/browser payment claim.",
+  "measurementSourceDirty": true,
+  "executedDiagnosticPinnedBySelfFileSha256": true
 }

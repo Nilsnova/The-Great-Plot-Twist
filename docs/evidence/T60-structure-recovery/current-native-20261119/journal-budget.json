@@ -30,5 +30,7 @@
     "Retain canonical/accounting history; no automatic deletion policy selected."
   ],
   "measurementCommit": "c16f2aaee279837ed20f0a70cbc1e704bb94db5b",
-  "productionSourceMatchesBaseline": true
+  "productionSourceMatchesBaseline": true,
+  "measurementSourceDirty": true,
+  "executedDiagnosticPinnedBySelfFileSha256": true
 }

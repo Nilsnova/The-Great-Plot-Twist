@@ -41,6 +41,11 @@ passed again (1 in 5.02 seconds), and the changed egress case passed again
 (1 in 716 ms). Those are separate follow-up runs, not repeated 13/12-case suites.
 Writing either diagnostic now requires production source identical to the pinned
 baseline, records the measurement commit and refuses untracked production files.
+Here `measurementCommit` means the worktree HEAD at measurement time, not the
+committed test blob: the source-guard edits were then uncommitted relative to
+`c16f2aae`. The recorded self-file SHA-256 values pin the actually executed
+diagnostics (now committed in this branch). Production source was unchanged and
+matched `3bdd8eda`; do not attribute the revised test code to `c16f2aae` itself.
 
 Exact commands, from `backend/` unless stated otherwise:
 
