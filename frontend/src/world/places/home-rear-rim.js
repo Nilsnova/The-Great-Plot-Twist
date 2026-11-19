@@ -10,17 +10,16 @@ const STONE_LIGHT = '#c5a681', STONE = '#ab8b68', STONE_DARK = '#8b7053';
 const MOSS = ['#718f3e', '#7d9844', '#839c49'];
 // The small sea rocks sit between the three beach approaches, beyond the playable coast.
 const SEA_ROCKS = [
-  {bearing: 38, distance: 2.9, width: 1.05, height: 1.45},
-  {bearing: 46, distance: 3.95, width: .72, height: .82},
-  {bearing: 136, distance: 3.7, width: 1.09, height: 1.57},
+  {bearing: 48, distance: 2.9, width: 1.05, height: 1.45},
+  {bearing: 56, distance: 3.95, width: .72, height: .82},
+  {bearing: 128, distance: 3.7, width: 1.09, height: 1.57},
   {bearing: 146, distance: 3.65, width: .76, height: .85},
 ];
 const mixPoint = (a, b, share) => a.map((value, index) => value + (b[index] - value) * share);
 
 // The shared silhouette supplies the exact coast. Every row is outboard of it, and the
 // narrow crest has no level top or new walking surface. Height only affects the drawing.
-function crossSections() {
-  const coast = cliffProfile(surfaces.home_islet);
+function crossSections(coast) {
   const sections = [];
   for (const [index, lift] of HEIGHTS.entries()) {
     const bearing = START + index * STEP;
@@ -59,7 +58,8 @@ function surfaceGrain() {
 
 /** One Home painter layer between ocean and backdrop, owned by the settlement's lifetime. */
 export function createHomeRearRim(group) {
-  const positions = [], colors = [], uvs = [], sections = crossSections();
+  const shore = cliffProfile(surfaces.home_islet);
+  const positions = [], colors = [], uvs = [], sections = crossSections(shore);
   const tint = new THREE.Color();
   function triangle(a, b, c, first, second = first, third = first, opacity = [1, 1, 1]) {
     for (const [[x, elevation, z], style, alpha] of [[a, first, opacity[0]], [b, second, opacity[1]], [c, third, opacity[2]]]) {
@@ -132,7 +132,6 @@ export function createHomeRearRim(group) {
       triangle(left, right, sprig, moss, moss, '#a1ad56');
     }
   }
-  const shore = cliffProfile(surfaces.home_islet);
   for (const rock of SEA_ROCKS) addSeaRock(rock, shore);
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
