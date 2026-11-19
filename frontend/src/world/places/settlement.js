@@ -123,8 +123,8 @@ export async function createSettlement(ctx) {
         ...placements.filter(placement => placement.collider).map(placement => placement.collider),
         ...trees.map(([x, z]) => ({ x, z, radius: .48 })),
       ],
-      setSelectedCanopy(building, depth) {
-        if (selectedCanopy?.show(building, depth)) foliage.forEach(updateCanopyOpacity);
+      setSelectedCanopy(building, depth, emphasis) {
+        if (selectedCanopy?.show(building, depth, emphasis)) foliage.forEach(updateCanopyOpacity);
       },
       update(dt, state) {
         state = frameState(dt, state);

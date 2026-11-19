@@ -122,7 +122,7 @@ function drawn(name) {
   const [width, height, anchor] = getRasterFrame(name)?.logical ?? islandFrame(name);
   return {texture: smoothTexture(frameCanvas(name)), size: [width, height], anchor};
 }
-const overviewSize = kind => kind === 'house' ? 1.46 : kind === 'wall' ? 1 : 1.26;
+const overviewSize = kind => kind === 'house' ? 1.62 : kind === 'wall' ? 1 : 1.36;
 // How near (world units) the captain stands for a build marker to glow at full strength; farther ones fade to MARKER_FAR.
 export const MARKER_NEAR = 9, MARKER_FAR = .4;
 function sprite(group, {texture, size: [width, height], anchor = 0}, x, z, name) {
@@ -277,7 +277,7 @@ export function decorateIsland(place, ctx = {}) {
   }
   const bell = layout.bell === false ? null : sprite(root, textures.bell, BELL.x, BELL.z, 'island-bell');
   if (bell) {
-    bell.userData.portraitSize = 1.4;
+    bell.userData.portraitSize = 1.5;
     staticArt.track(bell, 'island-bell');
   }
   // The campaign's buildings (home island only): one mesh per frame they can show, the right one visible.
@@ -290,7 +290,7 @@ export function decorateIsland(place, ctx = {}) {
       const texture = campaignTextures.get(name) ?? drawn(name); campaignTextures.set(name, texture);
       const mesh = sprite(root, texture, building.x, building.z, `island-campaign:${building.id}:${name}`);
       mesh.visible = false; mesh.userData.campaign = building.id; meshes[name] = mesh;
-      if (name === building.art && building.id !== 'wreck') mesh.userData.portraitSize = 1.3;
+      if (name === building.art && building.id !== 'island_wreck') mesh.userData.portraitSize = 1.43;
       staticArt.track(mesh, name);
     }
     campaignMeshes.set(building.id, meshes);
@@ -301,7 +301,7 @@ export function decorateIsland(place, ctx = {}) {
   const showArsenal = on => {
     if (on && !arsenalMesh && layout.bell !== false) {
       arsenalMesh = sprite(root, drawn(ARSENAL.art), ARSENAL.x, ARSENAL.z, 'island-arsenal');
-      arsenalMesh.userData.portraitSize = 1.36;
+      arsenalMesh.userData.portraitSize = 1.49;
       staticArt.track(arsenalMesh, ARSENAL.art);
     }
     return arsenalMesh;
@@ -309,7 +309,7 @@ export function decorateIsland(place, ctx = {}) {
   const cabin = layout.cabin !== false && ctx.art?.cabin ? placeArt(root, ctx.art, 'cabin', CABIN.x, CABIN.z) : null;
   if (cabin) {
     cabin.name = 'island-cabin';
-    cabin.userData.portraitSize = 1.45;
+    cabin.userData.portraitSize = 1.55;
   }
   // The reach of a house's role while its card is open (GAME-V3.md "Houses"): a soft disc with a bright rim on
   // the ground, in the role's colour. ctx.range() says which ({x, z, radius, role} or null), read every frame.
@@ -568,7 +568,7 @@ export function decorateIsland(place, ctx = {}) {
   // The nearest pickable thing to a ground point (a tap), or null.
   // Built sprites can overlap legally. In village mode, give the opaque foreground art priority over
   // the old nearest-foot box. The box still serves markers, service buildings and loading stand-ins.
-  function frontBuildingAt(tap, portraitDepth) {
+  function frontBuildingAt(tap, portraitDepth, emphasis) {
     let front = null;
     for (const [id, item] of shown) {
       if (!ctx.canPickRemote?.(id)) continue;
@@ -576,7 +576,7 @@ export function decorateIsland(place, ctx = {}) {
       if (!mesh?.visible || !mesh.userData.art || mesh.name.startsWith('island-wall:')
         || (front && mesh.renderOrder < front.order)) continue;
       const [width, height, anchor] = artSizes[mesh.userData.art], image = mesh.material.map?.image;
-      const size = portraitSpriteSize(mesh, portraitDepth);
+      const size = portraitSpriteSize(mesh, portraitDepth, emphasis);
       const u = .5 + (tap.x - mesh.position.x) / (width * size);
       const v = 1 - anchor - (tap.y - mesh.position.y) * portraitDepth / (height * size);
       if (u < 0 || u >= 1 || v < 0 || v >= 1 || !image?.getContext) continue;
@@ -592,7 +592,7 @@ export function decorateIsland(place, ctx = {}) {
   }
   function pickAt(x, z) {
     const portraitDepth = ctx.camera?.userData?.homePortraitDepth ?? 1;
-    const tap = projectPoint(x, z), front = frontBuildingAt(tap, portraitDepth);
+    const tap = projectPoint(x, z), front = frontBuildingAt(tap, portraitDepth, ctx.camera?.userData?.homeOverviewEmphasis);
     if (front) return front;
     const candidates = [...SPOTS.filter(spot => !isExtraSpot(spot.id) || state.spots.some(item => item.id === spot.id))
         .map(spot => ({id: spot.id, ...whereOf(spot), w: 2.4, h: spot.kind === 'watchtower' ? 5 : 3})),
@@ -705,7 +705,7 @@ export function decorateIsland(place, ctx = {}) {
           ? wallConnections.selectedCanopyTarget
           : shown.get(selection.spotId)?.meshes[0] ?? null;
       }
-      place.setSelectedCanopy?.(canopyTarget, portraitDepth);
+      place.setSelectedCanopy?.(canopyTarget, portraitDepth, ctx.camera?.userData?.homeOverviewEmphasis);
       recoveryIndicators.update();
       const still = reduced();
       const coverage = selection && !state.battle && !state.visitor ? ctx.defenseRange?.() : null;

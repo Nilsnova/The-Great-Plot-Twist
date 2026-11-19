@@ -21,8 +21,8 @@ export function portraitIslandFrame(camera, viewport) {
   return {width, height, offset: (1 + top - bottom) * (1 - height) / 2};
 }
 
-export function portraitSpriteSize(mesh, depth) {
-  return depth > 1 ? mesh.userData.portraitSize ?? 1 : 1;
+export function portraitSpriteSize(mesh, depth, emphasis = depth > 1 ? 1 : 0) {
+  return 1 + ((mesh.userData.portraitSize ?? 1) - 1) * emphasis;
 }
 
 function overviewFrame(camera, viewport) {
@@ -33,7 +33,7 @@ function overviewFrame(camera, viewport) {
   const portrait = portraitIslandFrame(camera, viewport);
   const pivot = (viewport.bottom - viewport.top) / viewport.height;
   const strength = (portrait ? .24 : .18) * Math.min(1, free / .6);
-  return {portrait, pivot, strength, limit: free * .84, widthGain: portrait ? .91 : .95};
+  return {portrait, pivot, strength, limit: free * .84, widthGain: portrait ? .94 : .95};
 }
 
 // Compose the fixed ground map toward a vanishing point. The near shore grows relative to the
@@ -70,21 +70,22 @@ export function createHomePortrait(camera) {
       if (lens) camera.setViewOffset(1, 1, (1 - lens.width) / 2, lens.offset, lens.width, lens.height);
       else camera.clearViewOffset();
       camera.userData.homePortraitDepth = lens ? lens.width / lens.height : 1;
+      camera.userData.homeOverviewEmphasis = lens ? 1 : frame ? .39 : 0;
     },
     draw(scene, render) {
-      if (!frame?.portrait) return render();
-      const depth = camera.userData.homePortraitDepth;
+      if (!frame) return render();
+      const {homePortraitDepth: depth, homeOverviewEmphasis: emphasis} = camera.userData;
       try {
         scene.traverseVisible(object => {
           if (!object.isMesh || !object.userData.ground) return;
           const {scale, position, userData} = object;
+          const size = portraitSpriteSize(object, depth, emphasis), base = userData.portraitFollows;
+          if (size === 1 && depth === 1 && !base) return;
           restored.push(object, scale.x, scale.y, position.x, position.y);
-          const size = portraitSpriteSize(object, depth);
           scale.x *= size;
           scale.y *= size / depth;
-          const base = userData.portraitFollows;
           if (base) {
-            const reach = portraitSpriteSize(base, depth);
+            const reach = portraitSpriteSize(base, depth, emphasis);
             position.x = base.position.x + (position.x - base.position.x) * reach;
             position.y = base.position.y + (position.y - base.position.y) * reach / depth;
           }

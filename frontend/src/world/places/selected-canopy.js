@@ -4,12 +4,13 @@ import {projectGround} from '../projection.js';
 
 const MASK_SIZE = 64, GRID_SIZE = 16, SOLID_ALPHA = 48, MIN_OVERLAP = 4;
 
-function spriteBounds(mesh, depth) {
+function spriteBounds(mesh, depth, emphasis) {
   if (!mesh.geometry.boundingBox) mesh.geometry.computeBoundingBox();
   mesh.updateWorldMatrix(true, false);
   const box = new Box3().copy(mesh.geometry.boundingBox).applyMatrix4(mesh.matrixWorld);
-  if (depth > 1 && mesh.userData.ground) {
-    const foot = new Vector3().setFromMatrixPosition(mesh.matrixWorld), size = portraitSpriteSize(mesh, depth);
+  const size = portraitSpriteSize(mesh, depth, emphasis);
+  if ((depth > 1 || size > 1) && mesh.userData.ground) {
+    const foot = new Vector3().setFromMatrixPosition(mesh.matrixWorld);
     for (const corner of [box.min, box.max]) {
       corner.x = foot.x + (corner.x - foot.x) * size;
       corner.y = foot.y + (corner.y - foot.y) * size / depth;
@@ -69,7 +70,7 @@ function overlapsBody(tree, treeBox, treeMask, building, bodyBox, bodyMask) {
 
 export function makeSelectedCanopy(trees) {
   const masks = new WeakMap(), occluding = new Set();
-  let context, selected = null, treeScale, portraitDepth = 1;
+  let context, selected = null, treeScale, portraitDepth = 1, overviewEmphasis = 0;
 
   function maskFor(texture, crop) {
     const image = texture?.image;
@@ -103,20 +104,21 @@ export function makeSelectedCanopy(trees) {
 
   return {
     has(tree) { return occluding.has(tree); },
-    show(target, depth = 1) {
+    show(target, depth = 1, emphasis = depth > 1 ? 1 : 0) {
       // House growth multiplies every home tree's base scale by the same value.
       const scale = target ? trees[0]?.scale.x : undefined;
-      if (target === selected && scale === treeScale && depth === portraitDepth) return false;
+      if (target === selected && scale === treeScale && depth === portraitDepth && emphasis === overviewEmphasis) return false;
       selected = target;
       treeScale = scale;
       portraitDepth = depth;
+      overviewEmphasis = emphasis;
       occluding.clear();
       const building = target?.mesh ?? target;
       if (!building?.visible) return true;
-      const {box: bodyBox, crop} = target.mesh ? wallPost(target, depth) : {box: spriteBounds(building, depth)};
+      const {box: bodyBox, crop} = target.mesh ? wallPost(target, depth) : {box: spriteBounds(building, depth, emphasis)};
       for (const tree of trees) {
         if (!tree.visible || !drawsInFront(tree, building)) continue;
-        const treeBox = spriteBounds(tree, depth);
+        const treeBox = spriteBounds(tree, depth, emphasis);
         if (!treeBox.intersectsBox(bodyBox)) continue;
         const bodyMask = maskFor(building.material.map, crop), treeMask = maskFor(tree.material.map);
         if (bodyMask && treeMask && overlapsBody(tree, treeBox, treeMask, building, bodyBox, bodyMask)) occluding.add(tree);
