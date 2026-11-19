@@ -94,7 +94,7 @@ export function waveGapMs(players) {
   const wanted = (1000 * count * (count - 1)) / WAVE_ROOM_BUDGET;
   return Math.max(WAVE_GAP_MS, Math.ceil(wanted / GAP_STEP_MS) * GAP_STEP_MS);
 }
-const ISLAND_ROOM_PLACE = /^isle_[abcdefghjkmnpqrstuvwxyz23456789]{5}$/;
+const ISLAND_ROOM_PLACE = /^isle_[abcdefghjkmnpqrstuvwxyz23456789]{5}(?:_[0-9a-f]{24})?$/;
 export const EXTRA_GAP_MS = 1000; // we send at most one extra this often
 export const MIN_EXTRA_GAP_MS = 800; // and accept one per captain and kind this often
 export const MAX_EXTRA_DATA_BYTES = 512;
