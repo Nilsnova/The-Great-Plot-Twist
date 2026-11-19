@@ -307,14 +307,14 @@ export function createLoading(isl) {
     if (isl.own) isl.own.coins = coins;
     tellCoins(coins);
   };
-  async function reloadVisit() {
+  async function reloadVisit({guard=()=>true}={}) {
     if (!isl.visiting) return;
     const code = isl.visiting.code, current = reading('visit'), fresh = await isl.api.visit(code);
-    if (!isl.disposed && fresh.ok && isl.visiting?.code === code && current() && isl.funding.acceptRead(fresh.data)) { isl.visiting = {...isl.visiting, ...fresh.data, code: islandCode(fresh.data.code)}; noteCampaign(isl.visiting); }
+    if (!isl.disposed && guard() && fresh.ok && isl.visiting?.code === code && current() && isl.funding.acceptRead(fresh.data)) { isl.visiting = {...isl.visiting, ...fresh.data, code: islandCode(fresh.data.code)}; noteCampaign(isl.visiting); }
   }
-  async function reloadOwn() {
+  async function reloadOwn({guard=()=>true}={}) {
     const current = reading('own'), mine = await readOwn();
-    if (isl.disposed || !current()) return;
+    if (isl.disposed || !guard() || !current()) return;
     if (mine.ok) { isl.ownRetry = false; isl.ownMessage = ''; setOwnRead(mine.data, mine.personalReadState); } else if (!isl.own) { isl.ownMessage = mine.message; isl.ownRetry = mayPass(mine); }
   }
   // The island being defended, read again: after a friend built or upgraded there (island_changed in

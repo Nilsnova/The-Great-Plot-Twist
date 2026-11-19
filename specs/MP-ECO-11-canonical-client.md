@@ -260,3 +260,21 @@ The server-to-client producer roundtrip is a separate cross-language regression.
 The focused weather regression first rejected both calm/storm producer shapes, then passed all
 21 tests across the actual three-file shapes/transport/native-controller selection. Contradictory
 frozen kind, optional kind, ships, fog and label remain rejected. Whitespace review passed.
+
+## Confirmed attachment hydration
+
+After an attachment is independently confirmed by a fresh controlling session GET, reread personal
+Captain progress and the defended island once for that confirmed attachment. A visited island also
+requires the actor's own personal snapshot: visitor quote state must not substitute for the personal
+profile used by Captain cards and loadout. Heartbeats do not repeat these domain reads. Capture
+actor, authentication generation, original economy and selected visit before the reads, and reject
+late application after any changes. A failed domain read supplies no default profile or authority;
+normal guarded reload remains available. Frozen wave construction and first-bell preparation stay
+unchanged.
+
+The attachment hydration regression first failed for both owner and visitor profiles and for the
+fresh-confirmation hook. The final focused session, real Chromium assembly, wallet ordering,
+shared-core and rejoin selection passed 75 tests across six files in 40.00 seconds. It covers
+immediate owner/visitor profile and quote refresh, no heartbeat reread, delayed actor/selection
+rejection and obsolete lock release. Build and spoiler guard passed (257 text files, 12 protected
+lines); whitespace review passed.
