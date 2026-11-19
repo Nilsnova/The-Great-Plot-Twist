@@ -197,3 +197,21 @@ in 8.89 seconds**; full backend Ruff passed. Existing valid upgrades, actual-cos
 zero-refund demolition, replay, reservation, membership and grant-ordering checks remain
 part of those selections. Live operations and complete shared gameplay acceptance remain
 outside this bounded transaction component.
+
+### Current runtime catalogue compatibility
+
+Main `1350c2ba` retires the `defenses_v2` and `more_tower_spots` switches and
+replaces `catalogue_for_flags` with `runtime_catalogue`. Construction manifest
+checks now use that current runtime catalogue and require the culverin and the
+four extra tower spots. The removed switches and catalogue API are not restored.
+
+The saved-structure SQL cases still deliberately supply a restrictive trusted
+catalogue to the adapter. They verify that a stored instance may be managed
+without granting a new or replacement structure omitted by that catalogue;
+this is an explicit input-boundary check, not a retired feature-flag setting.
+Construction pricing, Engineer commitments, financial proof and actual-cost
+refund behavior are unchanged.
+
+Before this compatibility correction, the affected Python selection failed
+during collection because it imported the removed catalogue function. The
+corrected construction rule/store selection passed **40 tests in 1.99 seconds**.
