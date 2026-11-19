@@ -186,4 +186,3 @@ def static_template(
         "configVersion": RECOVERY_MANIFEST.recovery_version,
         "supportedStructureKinds": list(SUPPORTED_KINDS),
     }
-
