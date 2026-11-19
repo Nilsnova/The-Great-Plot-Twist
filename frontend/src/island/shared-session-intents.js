@@ -1,11 +1,12 @@
 // Persist original attach identity before sending; storage contains no token or permission grant.
-import {sessionOrigin,sessionAssertion,sessionUid,positiveGeneration} from './shared-session-shapes.js';
+import {sessionOrigin,sessionAssertion,sessionUid,positiveGeneration,validSessionProof} from './shared-session-shapes.js';
 import {sameEconomyScope} from './economy-view.js';
 import {uuid,decimal} from './shared-quotes.js';
 const prefix='plot_twist_canonical_session_v1:';
 const clone=value=>JSON.parse(JSON.stringify(value));
 export function createSessionIntents({storage,makeUid,makeSessionId}={}){
  const key=actor=>`${prefix}${actor}`;
+ const leaveKey=actor=>`${prefix}leave:${actor}`;
  const inertKey=(actor,origin)=>`${prefix}inert:${actor}:${origin.islandOwner}:${origin.accountId}:${origin.runEpoch}`;
  function readAt(actor,name){
   if(!storage || !uuid(actor))throw new Error('Session retry storage is unavailable.');
@@ -18,12 +19,37 @@ export function createSessionIntents({storage,makeUid,makeSessionId}={}){
  }
  const read=actor=>readAt(actor,key(actor));
  const save=record=>{storage.setItem(key(record.actorId),JSON.stringify(record));return clone(record);};
+ function departure(actor){
+  if(!storage || !uuid(actor))throw new Error('Session retry storage is unavailable.');
+  const raw=storage.getItem(leaveKey(actor));if(raw===null)return null;
+  const saved=JSON.parse(raw);
+  if(!validSessionProof(saved) || saved.actorId!==actor || !sessionUid(saved.actionUid))throw new Error('The original departure could not be read.');
+  return saved;
+ }
  function attachRecord(saved){return {actorId:saved.actorId,origin:sessionOrigin(saved.origin),body:{
   economy:sessionAssertion(saved.origin),sessionId:saved.sessionId,expectedGeneration:saved.expectedGeneration,actionUid:saved.actionUid,
  }};}
  return {
   read,
+  departure,
+  depart(actor){
+   const pending=departure(actor);if(pending)return clone(pending);
+   const saved=read(actor);if(saved?.phase!=='known')return null;
+   const {phase:_,...proof}=saved,record={...proof,actionUid:makeUid()};
+   if(!validSessionProof(record) || !sessionUid(record.actionUid))throw new Error('The departure could not be saved.');
+   storage.setItem(leaveKey(actor),JSON.stringify(record));return clone(record);
+  },
+  departed(record){
+   const pending=departure(record.actorId);
+   if(!pending || pending.actionUid!==record.actionUid || pending.sessionId!==record.sessionId
+    || pending.connectionGeneration!==record.connectionGeneration || !sameEconomyScope(pending.origin,record.origin))throw new Error('The original departure changed.');
+   const saved=read(record.actorId);
+   if(saved?.phase==='known' && saved.sessionId===record.sessionId && saved.connectionGeneration===record.connectionGeneration
+    && sameEconomyScope(saved.origin,record.origin))storage.removeItem(key(record.actorId));
+   storage.removeItem(leaveKey(record.actorId));
+  },
   begin(actorId,origin){
+   if(departure(actorId))throw new Error('Confirm the original departure before attaching.');
    let previous=read(actorId);
    if(!sessionOrigin(origin))throw new Error('Read the selected session origin.');
    if(previous && !sameEconomyScope(previous.origin,origin)){

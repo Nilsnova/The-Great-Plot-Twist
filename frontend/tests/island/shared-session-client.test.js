@@ -1,7 +1,7 @@
 // Durable attach retries and fresh controller reads before any proof leaves the owning document.
 import {afterEach,it,expect,vi} from 'vitest';
 import {createSharedSessionClient} from '../../src/island/shared-session-client.js';
-import {actorId,economy,metadata,sessionId} from './shared-session-fixture.js';
+import {actorId,economy,metadata,sessionId,controlReceipt} from './shared-session-fixture.js';
 let fixtureNumber=0;
 const storage=()=>{const rows=new Map();return {getItem:key=>rows.get(key)??null,setItem:(key,value)=>rows.set(key,value),removeItem:key=>rows.delete(key),rows};};
 function locks(){const held=new Set();return {async request(name,_options,run){if(held.has(name))return run(null);held.add(name);try{return await run({name});}finally{held.delete(name);}}};}
@@ -10,7 +10,8 @@ function setup(extra={}){
  const fixture=++fixtureNumber;let actor=actorId,selected=economy(),uids=0;const states=[],timers=[],saved=extra.storage??storage(),provider=extra.locks??locks();
  const api={attach:vi.fn(async record=>{const data=metadata();if(record.body.expectedGeneration!=='0')data.session.connectionGeneration=String(BigInt(record.body.expectedGeneration)+1n);return {ok:true,data};}),
   read:vi.fn(async proof=>{const data=metadata(!!proof);if(proof)data.session.connectionGeneration=proof.connectionGeneration;return {ok:true,data};}),
-  heartbeat:vi.fn(async proof=>{const data=metadata();data.session.connectionGeneration=proof.connectionGeneration;return {ok:true,data};}),disconnect:vi.fn(async()=>({ok:true,data:metadata(false)}))};
+  heartbeat:vi.fn(async proof=>{const data=metadata();data.session.connectionGeneration=proof.connectionGeneration;return {ok:true,data};}),disconnect:vi.fn(async()=>({ok:true,data:metadata(false)})),
+  leave:vi.fn(async record=>({ok:true,data:controlReceipt('session_leave',record)}))};
  const client=createSharedSessionClient({api,getActorId:()=>actor,getEconomy:()=>selected,storage:saved,locks:provider,
   makeUid:()=>`session_uid_${fixture}_${++uids}`,makeSessionId:extra.makeSessionId??(()=>sessionId),setTimer:run=>{timers.push(run);return timers.length;},clearTimer(){},onState:value=>states.push(value)});
  clients.push(client);return {client,api,saved,states,timers,provider,setActor:value=>{actor=value;},setEconomy:value=>{selected=value;},allocated:()=>uids};
@@ -114,4 +115,20 @@ it('keeps an unknown late attachment inert after navigation and retries only the
  expect(f.api.attach.mock.calls[2][0]).toEqual(next);expect(f.api.attach.mock.calls.filter(call=>call[0].origin.islandOwner===actorId)).toHaveLength(1);
  expect([...f.saved.rows.values()].some(value=>value.includes(original.body.actionUid))).toBe(true);
  expect(f.client.state.phase).toBe('waiting');expect(f.api.heartbeat).not.toHaveBeenCalled();
+});
+it('withdraws known control before a destination attachment and retains the exact leave through unknown and401',async()=>{
+ const f=setup();await f.client.open();f.api.leave.mockResolvedValueOnce({ok:false,status:0}).mockResolvedValueOnce({ok:false,status:401});
+ f.setEconomy({...economy(),runEpoch:'88888888-8888-4888-8888-888888888888'});
+ await f.client.leave();expect(f.client.proof()).toBeNull();const original=structuredClone(f.api.leave.mock.calls[0][0]);
+ await f.client.open();expect(f.api.leave.mock.calls[1][0]).toEqual(original);expect(f.api.attach).toHaveBeenCalledOnce();
+ f.api.attach.mockResolvedValue({ok:false,status:409,code:'controller_held'});await f.client.open();
+ expect(f.api.leave.mock.calls[2][0]).toEqual(original);expect(f.api.attach).toHaveBeenCalledTimes(2);
+ expect(f.api.attach.mock.calls[1][0].origin.runEpoch).toBe('88888888-8888-4888-8888-888888888888');
+});
+it('resolves saved known departure under the exclusive tab lock before attaching a new origin after reload',async()=>{
+ const first=setup();await first.client.open();await first.client.dispose();
+ const second=setup({storage:first.saved,locks:first.provider});second.setEconomy({...economy(),runEpoch:'88888888-8888-4888-8888-888888888888'});
+ second.api.attach.mockResolvedValue({ok:false,status:409,code:'controller_held'});await second.client.open();
+ expect(second.api.leave).toHaveBeenCalledOnce();expect(second.api.attach).toHaveBeenCalledOnce();
+ expect(second.api.leave.mock.invocationCallOrder[0]).toBeLessThan(second.api.attach.mock.invocationCallOrder[0]);
 });

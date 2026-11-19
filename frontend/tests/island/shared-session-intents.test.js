@@ -24,3 +24,14 @@ it('never resurrects a resolved archived attachment after a later definitive con
  f.intents.confirm(old,metadata());const reconnect=f.intents.begin(actorId,origin());f.intents.refuse(reconnect);
  expect(f.intents.begin(actorId,origin()).body.actionUid).not.toBe(old.body.actionUid);
 });
+it('persists a known departure exactly through retries and removes only its original descriptor',()=>{
+ const f=setup(),opening=f.intents.begin(actorId,origin());f.intents.confirm(opening,metadata());
+ const old=f.intents.depart(actorId);expect(f.intents.depart(actorId)).toEqual(old);
+ expect(old).toMatchObject({actionUid:'original_uid_2',connectionGeneration:'9007199254740993',origin:origin()});
+ expect(()=>f.intents.begin(actorId,elsewhere())).toThrow();
+ f.intents.departed(old);expect(f.intents.read(actorId)).toBeNull();expect(f.intents.departure(actorId)).toBeNull();
+ expect(f.intents.begin(actorId,elsewhere()).origin).toEqual(elsewhere());
+});
+it('never invents departure proof for an uncertain attachment',()=>{
+ const f=setup();f.intents.begin(actorId,origin());expect(f.intents.depart(actorId)).toBeNull();expect(f.count()).toBe(1);
+});

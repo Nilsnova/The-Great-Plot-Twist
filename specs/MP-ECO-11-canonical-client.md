@@ -134,3 +134,13 @@ retries preserve only their own captured UID/body. A late old success starts no 
 or control, and its original intent is retained. A resolved archived intent cannot be resurrected
 after a later stale-controller refusal. Six session files passed 50 tests, including the real
 cloned-tab and authenticated HTTP journeys, with scoped whitespace review clean.
+
+## Known session departure
+
+Navigation withdraws a known original session immediately. Persist the original leave UID,
+actor, immutable origin and generation before sending, and release local control immediately.
+Unknown outcomes and reauthentication retain that exact request. A destination attachment waits
+until the old leave is confirmed; a historical leave receipt never supplies current control.
+On reload, only an exclusive actor tab lock permits using a saved known generation for departure.
+An unknown attachment has no known proof and follows the inert-retention policy above.
+Late confirmations remove only their matching saved session, never a newer session descriptor.
