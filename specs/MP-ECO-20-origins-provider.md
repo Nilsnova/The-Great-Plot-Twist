@@ -40,5 +40,4 @@ transport statuses, fixture purposes, due times and before/after account facts.
 Evidence establishes these bounded observations only; the complete fifteen-scenario
 matrix and natural-provider market outcomes need their own evidence.
 
-No push, pull request, merge, hosted migration, deployment or public activation is
-included in this contribution.
+No hosted migration, deployment or public activation is included in this contribution.
