@@ -13,6 +13,7 @@ import httpx
 import pytest
 
 from server.flags import parse_flags
+from server.island import layout
 from server.tests import island_helpers
 from server.tests.helpers import assert_error
 from server.tests.island_helpers import (
@@ -76,10 +77,11 @@ def test_a_new_player_sees_the_code_the_coins_and_sixteen_empty_spots():
         0,
     )
     assert [spot["id"] for spot in body["spots"]] == SPOT_IDS
+    x, z = layout.island_layout().wall_defaults["wall_1"]
     assert body["spots"][0] == {
         "id": "wall_1", "kind": "wall", "kinds": ["wall"], "built": False,
         "level": 0, "cost": 10, "upgradeCost": None, "spec": None,
-        "x": -18.5, "z": -1.0, "tree": None,
+        "x": x, "z": z, "tree": None,
     }  # fmt: skip
     assert body["nextWave"] == 1
     assert body["recoveryVersion"] == 0

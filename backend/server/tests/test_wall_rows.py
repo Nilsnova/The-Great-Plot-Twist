@@ -1,6 +1,7 @@
 """Shared geometric boundaries and real HTTP refusal before the existing Move CAS."""
 
 import json
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -32,7 +33,9 @@ def test_original_twelve_reserved_sites_have_two_rows_per_approach() -> None:
     assert wall_row_counts(walls, rules.heart) == {"east": 2, "south": 2, "west": 2}
 
 
-def test_move_http_rejects_fourth_row_before_storage_without_payment() -> None:
+def test_move_http_rejects_fourth_legacy_row_before_storage_without_payment(monkeypatch) -> None:
+    legacy = replace(layout.island_layout(), wall_perimeter=frozenset(), wall_defaults={})
+    monkeypatch.setattr(layout, "island_layout", lambda more=False: legacy)
     world = World()
     assert move(world, spot="wall_6", x=-12, z=-1).status_code == 200
     before = world.island().json()

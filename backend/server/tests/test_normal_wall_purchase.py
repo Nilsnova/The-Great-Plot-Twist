@@ -6,11 +6,22 @@ import httpx
 import pytest
 
 from server.flags import parse_flags
+from server.island import layout
 from server.tests.island_helpers import FRIEND_ID, ISLAND_SETTINGS, PLAYER_ID, World
 from server.tests.test_island_routes import friend_island
 
 UID = "build-wall-0001"
 RPC = "island_build_checked_wall"
+
+
+@pytest.fixture(autouse=True)
+def legacy_wall_lanes(monkeypatch):
+    legacy = replace(layout.load_layout(), wall_perimeter=frozenset(), wall_defaults={})
+    monkeypatch.setattr(
+        layout,
+        "island_layout",
+        lambda more=False: layout.with_extra_spots(legacy) if more else legacy,
+    )
 
 
 def game_at(member, recovery_version, x, z, *, settings=ISLAND_SETTINGS):
