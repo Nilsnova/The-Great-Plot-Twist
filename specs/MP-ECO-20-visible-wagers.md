@@ -17,6 +17,8 @@ A same-origin `/provider` prefix forwards to the genuine existing provider with
 trusted TLS, exact prefix rewrite and WebSocket forwarding. This local transport
 fixture accommodates the isolated gateway’s fixed primary-origin CORS header;
 issuer, JWTs, Auth responses and API verification remain real and unchanged.
+Only the initial harness SDK restoration uses that transparent proxy; product
+configuration keeps the original valid HTTPS provider root.
 Primary services are untouched. Initial saved Harbor record 4 and one normal 200
 admission grant are labeled eligibility/setup fixtures, not earned progression.
 

@@ -22,7 +22,7 @@ async function sources(){
  const frontend=JSON.parse(await readFile(join(directory,'side-frontend-source.json'),'utf8'));
  process.kill(side.processId,0);process.kill(frontend.processId,0);
  assert.equal(side.productionCandidate,runtime.expectedCommit);assert.equal(side.factorySha256,await digest(join(root,files[8])));
- assert.equal(frontend.privateViteCache,true);assert.equal(frontend.providerProxy,'http://127.0.0.1:55106/provider');assert.equal(frontend.providerTarget,runtime.providerUrl);assert.equal(frontend.providerTlsValidation,true);assert.equal(frontend.expectedProductionBaseline,runtime.expectedCommit);assert.equal(frontend.frontendUrl,'http://127.0.0.1:55106');assert.equal(frontend.apiProxy,'http://127.0.0.1:58006');
+ assert.equal(frontend.privateViteCache,true);assert.equal(frontend.productProviderUrl,runtime.providerUrl);assert.equal(frontend.providerProxy,'http://127.0.0.1:55106/provider');assert.equal(frontend.providerTarget,runtime.providerUrl);assert.equal(frontend.providerTlsValidation,true);assert.equal(frontend.expectedProductionBaseline,runtime.expectedCommit);assert.equal(frontend.frontendUrl,'http://127.0.0.1:55106');assert.equal(frontend.apiProxy,'http://127.0.0.1:58006');
  assert.equal(frontend.wrapperSha256,await digest(join(root,files[1])));assert.equal(frontend.viteConfigSha256,await digest(join(root,'frontend/vite.config.js')));
  assert.equal(frontend.packageLockSha256,await digest(join(root,'frontend/package-lock.json')));
  return {side,frontend,protectedSource:sourceEvidence(runtime.expectedCommit),primary:servedSourceEvidence(runtime)};
