@@ -37,12 +37,19 @@ export function createLoading(isl) {
     return true;
   }
   // Legacy islands show personal coins; a persisted shared island pins its own available treasury.
+  let reportedFunding = null;
+  const fundingStamp = (source, coins) => JSON.stringify([source.shared, source.key, source.shared ? source.economy : coins]);
   const tellCoins = (coins, options = {}) => {
     if (isl.disposed) return;
     const source = currentFunds();
     try {
-      if (source.shared) onCoins(source.coins, {...options, economy: source.economy, shared: true, fundingKey: source.key});
-      else if (Number.isSafeInteger(coins)) onCoins(coins, {...options, legacyIsland: true});
+      if (source.shared) {
+        onCoins(source.coins, {...options, economy: source.economy, shared: true, fundingKey: source.key});
+        reportedFunding = fundingStamp(source, source.coins);
+      } else if (Number.isSafeInteger(coins)) {
+        onCoins(coins, {...options, legacyIsland: true});
+        reportedFunding = fundingStamp(source, coins);
+      }
     } catch { /* The HUD cannot stop the island. */ }
   };
   // The campaign of the island on screen (GAME-V3.md §4): the best won wave seen per island code on this page.
@@ -137,7 +144,8 @@ export function createLoading(isl) {
   const where = () => (isl.visiting ? displayIslandCode(isl.visiting.code) : 'own');
   function applyWorld() {
     syncCoreContext();
-    tellCoins(isl.own?.coins);
+    // World-only refreshes do not repeat a wallet event; scope and full shared money changes still do.
+    if (fundingStamp(currentFunds(), isl.own?.coins) !== reportedFunding) tellCoins(isl.own?.coins);
     const spots = target()?.spots ?? [];
     isl.villageBar.setBuildings(spots);
     isl.world?.apply({spots, visitor: !!isl.visiting, battle: isl.battle, unlocks: islandUnlocks(), crew: target()?.crew ?? null, campaign: campaign(),
