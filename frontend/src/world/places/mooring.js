@@ -1,4 +1,4 @@
-import {BufferAttribute, BufferGeometry, DoubleSide, DynamicDrawUsage, Group, Mesh, MeshBasicMaterial, Vector2} from 'three';
+import {BufferAttribute, BufferGeometry, DoubleSide, DynamicDrawUsage, Group, Mesh, MeshBasicMaterial, PlaneGeometry, ShaderMaterial, Vector2} from 'three';
 import {MOORING_EYES} from '../../art/home-shore.js';
 import {artSizes} from '../art.js';
 
@@ -27,9 +27,49 @@ function strand(rope, color, order, opacity) {
   return position;
 }
 
+function hullRipples(root, x, waterline) {
+  const uniforms = {uWakePhase: {value: 0}, uWakeNight: {value: 0}};
+  const material = new ShaderMaterial({uniforms, transparent: true, depthTest: false, depthWrite: false, toneMapped: false,
+    vertexShader: /* glsl */`
+      varying vec2 vWaterUv;
+      void main() {
+        vWaterUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }`,
+    fragmentShader: /* glsl */`
+      varying vec2 vWaterUv;
+      uniform float uWakePhase, uWakeNight;
+
+      float crest(float age) {
+        float across = abs(vWaterUv.x - .5);
+        float reach = .28 + .19 * age;
+        float y = .65 - .35 * age - .24 * (1.0 - across * across * 4.0);
+        float edge = 1.0 - smoothstep(reach - .13, reach, across);
+        float line = 1.0 - smoothstep(.012, .052, abs(vWaterUv.y - y));
+        float fade = smoothstep(0.0, .17, age) * (1.0 - smoothstep(.36, 1.0, age));
+        return edge * line * fade;
+      }
+
+      void main() {
+        float foam = max(crest(fract(uWakePhase)), .64 * crest(fract(uWakePhase + .5)));
+        vec3 waterTint = mix(vec3(.52, .91, .81), vec3(.08, .29, .35), uWakeNight);
+        gl_FragColor = vec4(waterTint, foam * .46);
+        #include <colorspace_fragment>
+      }`,
+  });
+  const mesh = new Mesh(new PlaneGeometry(3.7, .92), material);
+  mesh.name = 'home-mooring-water';
+  mesh.position.set(x, waterline - .14, 0);
+  mesh.renderOrder = 14.9;
+  mesh.raycast = () => {};
+  root.add(mesh);
+  return mesh;
+}
+
 export function makeMooring(root, bollard, skiff) {
   const {x: restX, y: restY} = skiff.position;
   const from = localEye(bollard).add(bollard.position), cleat = localEye(skiff);
+  const contact = hullRipples(root, restX, restY);
   const rope = new Group();
   rope.name = 'home-mooring-rope';
   const shadow = strand(rope, '#6d5141', 15, .92), light = strand(rope, '#cbb084', 15.1, .86);
@@ -57,8 +97,10 @@ export function makeMooring(root, bollard, skiff) {
   drawRope();
   let resting = true;
   return {
-    setBattle(active) { skiff.visible = rope.visible = !active; },
-    update(time, wind, still) {
+    setBattle(active) { skiff.visible = rope.visible = contact.visible = !active; },
+    update(time, wind, still, night = 0) {
+      contact.material.uniforms.uWakeNight.value = night;
+      contact.material.uniforms.uWakePhase.value = still ? 0 : time * .56;
       if (still) {
         if (resting) return;
         skiff.position.x = restX;
