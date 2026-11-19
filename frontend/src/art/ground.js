@@ -73,9 +73,9 @@ function paintTurfBevel(c, coast, meadow, grassRadius) {
 }
 
 const PAVERS = [
-  ['#d6bd94', '#b9a280', '#e6cca6'], ['#d4c2a4', '#b2a382', '#e6d2b2'],
-  ['#c9b99c', '#af9a7f', '#d8c8a6'], ['#c6ab87', '#a88d70', '#d6bd9b'],
-  ['#d9c6a6', '#b6a386', '#e8d6b8'], ['#c8b292', '#a9957c', '#d8c5a8'],
+  ['#ddc29a', '#bda584', '#ebd2aa'], ['#d6bc98', '#b19c7b', '#e6cda7'],
+  ['#d1b491', '#ad9274', '#e2c49c'], ['#ccad87', '#aa8d70', '#dfbd96'],
+  ['#dfc6a1', '#b9a07f', '#edd5b1'], ['#cdb18c', '#ae9578', '#dfc3a0'],
 ];
 
 /** World-anchored limestone setts with shallow bevels and narrow, subdued joints. */
@@ -84,7 +84,7 @@ function paintPavers(c, paths, materials) {
   const random = seeded(18281), faces = new Path2D();
   c.save();
   c.clip(pathMaterialMask(paths, PAVING_WIDTH));
-  c.fillStyle = '#b0a288';
+  c.fillStyle = '#b39d7d';
   c.fillRect(bounds.left, bounds.top, SIZE.width, SIZE.height);
   for (let row = bounds.top; row < bounds.bottom;) {
     const depth = .43 + random() * .12;
@@ -198,8 +198,11 @@ function paintTerrain(c, s, coast, random, materials) {
   c.save(); c.clip(beach); c.translate(.08, .33); c.fillStyle = '#9b7f56'; c.fill(meadow); c.restore();
   c.fillStyle = '#73b64d'; c.fill(meadow);
   c.save(); c.clip(meadow);
-  const glow = c.createRadialGradient(-7, -8, 2, 1, 0, s.rx + 1.5);
-  glow.addColorStop(0, '#a8d66c'); glow.addColorStop(.54, '#82bd4b'); glow.addColorStop(1, '#5f9f46');
+  // The warm light on the terraces also passes over the paved lanes and the open meadow.
+  const glow = c.createRadialGradient(-9, -9, 2, 3, 1, s.rx + 2);
+  glow.addColorStop(0, '#b3d970');
+  glow.addColorStop(.49, '#87bd4c');
+  glow.addColorStop(1, '#589746');
   c.fillStyle = glow; c.fill(meadow);
   if (materials) paintMaterial(c, materials, 'grass', {alpha: .34});
   for (let i = 0; i < 26; i++) {

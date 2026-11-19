@@ -183,7 +183,7 @@ void main(){
     colour=mix(colour,uDeep,(1.0-broad)*.09);
     colour=mix(colour,uLight,sheen*.05);
     // Reserve the brightest surface strokes for the shallows. Broad swells still show offshore depth.
-    colour=mix(colour,uStroke,crest*mix(.16,.10,depth)*mix(1.0,.67,uHomeCoast));
+    colour=mix(colour,uStroke,crest*mix(.16,.10,depth)*mix(1.0,.46,uHomeCoast));
     vec2 q=p*2.2+vec2(broad,pxNoise(p*.65-drift))*.8;
     float cells=pxNoise(q+drift)+pxNoise(q*1.95-drift)*.2;
     float caustic=(1.0-band(abs(cells-.6),.02))*smoothstep(.6,1.2,d)*(1.0-smoothstep(1.5,3.0,d));
@@ -201,7 +201,7 @@ void main(){
       colour=mix(colour,uLight,lifting*.23*offshore);
       float crestLine=(1.0-band(abs(front-.73),.048))*smoothstep(.28,.86,back);
       float whiteGlint=crestLine*swellCoverage*smoothstep(.48,.79,ripple);
-      float capStrength=mix(.34,.12,smoothstep(1.5,13.0,d));
+      float capStrength=mix(.39,.14,smoothstep(1.5,13.0,d));
       colour=mix(colour,mix(uStroke,uFoam,.34),whiteGlint*capStrength*offshore);
       // Soft aqua lace under the near water, visible through the shelf rather than on the grass.
       float lace=(1.0-band(abs(cells-.66),.034))*smoothstep(.51,.76,coarse);
