@@ -729,7 +729,7 @@ begin
   return public.recovery_wave_report_health_locked(p_actor_id,p_wave_id,
     (p_report->>'islandEpoch')::uuid,p_report->>'checkpointUid',(p_report->>'throughTick')::integer,
     (p_report->>'inputHeadSeq')::bigint,(p_report->>'lastRepairSeq')::bigint,
-    p_report->'basisRepairSeq',p_report->'hpUnits');
+    p_report->'basisRepairSeq',p_report->'hpUnits',v_now);
 exception when raise_exception then
   get stacked diagnostics v_reason=message_text;
   if v_reason=any(array['not_member','not_controller','not_in_wave','epoch_mismatch','wave_over']) then
