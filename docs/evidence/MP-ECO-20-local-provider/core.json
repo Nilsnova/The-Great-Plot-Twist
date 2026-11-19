@@ -1,0 +1,343 @@
+{
+  "sourceCommit": "3bdd8eda16470795fdedd68c42fffab54e5f2ced",
+  "harnessSha256": "a271f58fe7c7985656bd86c1241e925ced45af5fb98fc5eba55406d98e27adc1",
+  "helperHashesBefore": {
+    "frontend/scripts/authenticated-economy/core.mjs": "a271f58fe7c7985656bd86c1241e925ced45af5fb98fc5eba55406d98e27adc1",
+    "frontend/scripts/authenticated-economy/clients.mjs": "641ae6018386213ac78efcab217167c44c80d91ac63d301922f66575892127f8",
+    "frontend/scripts/authenticated-economy/runtime.mjs": "489a4d89302c6eda6618a20fe9beb4165942b108c01a42f265b18d0c9e558e37",
+    "frontend/scripts/authenticated-economy/observer.mjs": "40cb288da9f9a80e337fba5a39a12b1b23501ad1ff48a2a4614975492997f140",
+    "frontend/scripts/authenticated-economy/private-realtime.mjs": "5b7a0968d39ff1acaa0ac2e30c61f0fa373d4cf51ddc3b6ec8a5450ac41de198",
+    "frontend/scripts/authenticated-economy/source.mjs": "e1f2b4d9a9652285e2c9cb26e4fe96e92119f78583768b5b4fc957e65b273952",
+    "backend/tools/authenticated_economy/observe.py": "18707a8ed12d18c69a4c04de1a416089ccbe89619f5f6f6e9a270840df551839",
+    "backend/tools/authenticated_economy/config.py": "f066a3e3e1d1a0643ce3ba6da9d28a42f23dbe4f5b3358319aa13345e2aabb92"
+  },
+  "sourceBefore": {
+    "expectedProductionBaseline": "3bdd8eda16470795fdedd68c42fffab54e5f2ced",
+    "actualCheckoutHead": "71f5374b68a0d1ad5cea282903a9cd69567adc2f",
+    "productionDiffFromBaseline": "empty",
+    "paths": [
+      "backend/server",
+      "backend/content",
+      "frontend/src",
+      "supabase/migrations",
+      "backend/uv.lock",
+      "backend/pyproject.toml",
+      "frontend/package-lock.json",
+      "frontend/package.json",
+      ":(exclude)backend/server/tests"
+    ]
+  },
+  "setup": "Fresh real GoTrue accounts; production game creation/join and session attachment; explicit service-only fresh admission with a 30-coin last-funds fixture instead of the configured 200. No later balance/damage/time/outcome overrides.",
+  "provider": "Official GoTrue, PostgREST and Realtime with PostgreSQL 17 Alpine; no hosted operations.",
+  "assertions": [
+    {
+      "name": "actual-authenticated-pair-and-shared-entry",
+      "layer": "authenticated transport setup",
+      "actors": [
+        {
+          "label": "core-owner",
+          "actorId": "31c5ae75-2ee3-46ef-a3f5-c3dd996ff929"
+        },
+        {
+          "label": "core-member",
+          "actorId": "7fbda980-151e-4a12-bc4a-b2b4a168110c"
+        },
+        {
+          "label": "core-outsider",
+          "actorId": "b05fbf1e-3437-4f3b-b460-18df2fe77cd5"
+        }
+      ],
+      "code": "ISLE-WS9WR"
+    },
+    {
+      "name": "real-private-realtime-membership-and-broadcast",
+      "layer": "actual provider SDK/WebSocket",
+      "topic": "live:place:isle_ws9wr_fea6325413d84c18abe51546:2",
+      "statuses": [
+        {
+          "status": "SUBSCRIBED",
+          "error": ""
+        },
+        {
+          "status": "SUBSCRIBED",
+          "error": ""
+        },
+        {
+          "status": "CHANNEL_ERROR",
+          "error": "Unauthorized: You do not have permissions to read from this Channel topic: live:place:isle_ws9wr_fea6325413d84c18abe51546:2"
+        }
+      ],
+      "broadcastAck": "ok",
+      "memberReceived": true,
+      "outsiderMessages": 0,
+      "boundary": "Fresh-channel membership authorization and actual delivery only; cached-channel revocation is established by canonical lifecycle checks separately."
+    },
+    {
+      "name": "old-client-and-forged-member-boundaries",
+      "layer": "authenticated transport",
+      "statuses": {
+        "oldRead": 409,
+        "unsupportedRead": 409,
+        "oldWrite": 409,
+        "missingEpoch": 422,
+        "outsider": 403,
+        "forgedActor": 422
+      }
+    },
+    {
+      "name": "invited-member-exact-quoted-build",
+      "layer": "authenticated transport",
+      "request": {
+        "economy": {
+          "mode": "island_shared",
+          "version": 1,
+          "islandOwner": "31c5ae75-2ee3-46ef-a3f5-c3dd996ff929",
+          "runEpoch": "d217e770-af5d-4a75-8914-1a989eb7eded"
+        },
+        "actionUid": "8e94e156d6fd4ffe8268f2d2d9e54bc4",
+        "spot": "wall_1",
+        "kind": "wall",
+        "instanceId": null,
+        "expectedLevel": 0,
+        "quotedCoins": "10"
+      },
+      "availableCoins": "20",
+      "cardText": null
+    },
+    {
+      "name": "exact-request-retry-and-changed-replay",
+      "layer": "authenticated transport",
+      "statuses": {
+        "same": 200,
+        "changed": 409
+      },
+      "availableCoins": "20"
+    },
+    {
+      "name": "free-personal-respec",
+      "layer": "authenticated transport",
+      "profile": {
+        "captain": {
+          "role": null,
+          "level": 1,
+          "revision": "1",
+          "canRespec": true,
+          "assignmentWaveId": null,
+          "personalBestWave": 0,
+          "roleLockedReason": null,
+          "engineerCommitment": null,
+          "progressionVersion": 1,
+          "respecBlockedReason": null
+        },
+        "skills": {
+          "role": null,
+          "known": [],
+          "spent": 0,
+          "earned": 0,
+          "points": 0
+        }
+      },
+      "availableCoins": "20"
+    },
+    {
+      "name": "carpenter-new-purchase-retired",
+      "layer": "authenticated transport",
+      "status": 409,
+      "error": {
+        "error": {
+          "code": "crew_unavailable",
+          "message": "Reload this island's crew before trying again."
+        }
+      }
+    },
+    {
+      "name": "concurrent-last-coins-across-two-real-members",
+      "layer": "authenticated transport",
+      "statuses": [
+        200,
+        409,
+        200
+      ],
+      "availableCoins": "0",
+      "limit": "Construction-versus-construction only; purchase/wager/repair cross-domain race remains separate."
+    },
+    {
+      "name": "independent-committed-ledger-and-wallet-conservation",
+      "layer": "read-only real PostgreSQL observer",
+      "accountId": "b893739b-f332-48fe-b52b-d67d392c7c20",
+      "ledger": {
+        "balance_coins": "0",
+        "committed_coins": "0",
+        "revision": "4",
+        "summed_balance_delta": "0",
+        "summed_committed_delta": "0"
+      },
+      "initialWallets": [
+        {
+          "player_id": "31c5ae75-2ee3-46ef-a3f5-c3dd996ff929",
+          "balance": 200
+        },
+        {
+          "player_id": "7fbda980-151e-4a12-bc4a-b2b4a168110c",
+          "balance": 0
+        },
+        {
+          "player_id": "b05fbf1e-3437-4f3b-b460-18df2fe77cd5",
+          "balance": 0
+        }
+      ],
+      "finalWallets": [
+        {
+          "player_id": "31c5ae75-2ee3-46ef-a3f5-c3dd996ff929",
+          "balance": 200
+        },
+        {
+          "player_id": "7fbda980-151e-4a12-bc4a-b2b4a168110c",
+          "balance": 0
+        },
+        {
+          "player_id": "b05fbf1e-3437-4f3b-b460-18df2fe77cd5",
+          "balance": 0
+        }
+      ]
+    }
+  ],
+  "boundaries": [
+    "Transport assertions are identified separately from rendered product actions. This bounded run does not complete the fifteen-scenario matrix."
+  ],
+  "initialSnapshot": {
+    "code": "ISLE-WS9WR",
+    "economy": {
+      "mode": "island_shared",
+      "version": 1,
+      "islandOwner": "31c5ae75-2ee3-46ef-a3f5-c3dd996ff929",
+      "accountId": "b893739b-f332-48fe-b52b-d67d392c7c20",
+      "runEpoch": "d217e770-af5d-4a75-8914-1a989eb7eded",
+      "revision": "1",
+      "treasury": {
+        "balanceCoins": "30",
+        "committedCoins": "0",
+        "availableCoins": "30"
+      }
+    },
+    "admissionState": "active",
+    "personalCaptain": {
+      "captain": {
+        "progressionVersion": 1,
+        "level": 1,
+        "personalBestWave": 0,
+        "role": null,
+        "revision": "0",
+        "assignmentWaveId": null,
+        "engineerCommitment": null,
+        "canRespec": true,
+        "respecBlockedReason": null,
+        "roleLockedReason": null
+      },
+      "skills": {
+        "points": 0,
+        "earned": 0,
+        "spent": 0,
+        "known": [],
+        "role": null
+      }
+    },
+    "recoveryVersion": 0,
+    "waveProtocol": 1,
+    "constructionQuotes": [
+      {
+        "target": {
+          "spot": "wall_1",
+          "kind": "wall"
+        },
+        "intent": {
+          "spot": "wall_1",
+          "kind": "wall",
+          "instanceId": null,
+          "expectedLevel": 0,
+          "quotedCoins": "10"
+        },
+        "available": true,
+        "reason": null
+      },
+      {
+        "target": {
+          "spot": "wall_2",
+          "kind": "wall"
+        },
+        "intent": {
+          "spot": "wall_2",
+          "kind": "wall",
+          "instanceId": null,
+          "expectedLevel": 0,
+          "quotedCoins": "10"
+        },
+        "available": true,
+        "reason": null
+      },
+      {
+        "target": {
+          "spot": "wall_3",
+          "kind": "wall"
+        },
+        "intent": {
+          "spot": "wall_3",
+          "kind": "wall",
+          "instanceId": null,
+          "expectedLevel": 0,
+          "quotedCoins": "10"
+        },
+        "available": true,
+        "reason": null
+      },
+      {
+        "target": {
+          "spot": "wall_4",
+          "kind": "wall"
+        },
+        "intent": {
+          "spot": "wall_4",
+          "kind": "wall",
+          "instanceId": null,
+          "expectedLevel": 0,
+          "quotedCoins": "10"
+        },
+        "available": true,
+        "reason": null
+      }
+    ]
+  },
+  "status": "passed",
+  "helperHashesAfter": {
+    "frontend/scripts/authenticated-economy/core.mjs": "a271f58fe7c7985656bd86c1241e925ced45af5fb98fc5eba55406d98e27adc1",
+    "frontend/scripts/authenticated-economy/clients.mjs": "641ae6018386213ac78efcab217167c44c80d91ac63d301922f66575892127f8",
+    "frontend/scripts/authenticated-economy/runtime.mjs": "489a4d89302c6eda6618a20fe9beb4165942b108c01a42f265b18d0c9e558e37",
+    "frontend/scripts/authenticated-economy/observer.mjs": "40cb288da9f9a80e337fba5a39a12b1b23501ad1ff48a2a4614975492997f140",
+    "frontend/scripts/authenticated-economy/private-realtime.mjs": "5b7a0968d39ff1acaa0ac2e30c61f0fa373d4cf51ddc3b6ec8a5450ac41de198",
+    "frontend/scripts/authenticated-economy/source.mjs": "e1f2b4d9a9652285e2c9cb26e4fe96e92119f78583768b5b4fc957e65b273952",
+    "backend/tools/authenticated_economy/observe.py": "18707a8ed12d18c69a4c04de1a416089ccbe89619f5f6f6e9a270840df551839",
+    "backend/tools/authenticated_economy/config.py": "f066a3e3e1d1a0643ce3ba6da9d28a42f23dbe4f5b3358319aa13345e2aabb92"
+  },
+  "helpersUnchanged": true,
+  "sourceAfter": {
+    "expectedProductionBaseline": "3bdd8eda16470795fdedd68c42fffab54e5f2ced",
+    "actualCheckoutHead": "61f244873bb0dc59831e1b09313ff05fdce07b87",
+    "productionDiffFromBaseline": "empty",
+    "paths": [
+      "backend/server",
+      "backend/content",
+      "frontend/src",
+      "supabase/migrations",
+      "backend/uv.lock",
+      "backend/pyproject.toml",
+      "frontend/package-lock.json",
+      "frontend/package.json",
+      ":(exclude)backend/server/tests"
+    ]
+  },
+  "evidenceReduction": {
+    "omitted": "Unrelated catalogue quote groups and empty structure rows only; all scenario assertions, source/helper proofs and financial observations retained.",
+    "originalReportSha256": "190a3a3c8124426f55a56519e355893f4b56a947257d89c9b494c4e65e1cbf61",
+    "originalReportBytes": 78687
+  }
+}
