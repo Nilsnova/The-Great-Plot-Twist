@@ -2,14 +2,14 @@ import {expect, it} from 'vitest';
 import {Group} from 'three';
 import {makeBuildingFoundations} from '../../src/island/building-foundations.js';
 import {defenseDisplayAnchors, TOWER_PAD, padCorners} from '../../src/island/defense-display.js';
-import {placedSpot} from '../../src/island/spots.js';
-import {checkMove, positionsOf} from '../../src/island/placement.js';
+import {ARSENAL, CAMPAIGN_BUILDINGS, placedSpot} from '../../src/island/spots.js';
+import {HEART, checkMove, positionsOf} from '../../src/island/placement.js';
 import {surfaceClass} from '../../src/world/places/surfaces.js';
 import {unprojectGround} from '../../src/world/projection.js';
 
-function readFoundation(id, at = placedSpot(id)) {
+function readFoundation(id, at = placedSpot(id), slot = 'tower') {
   const root = new Group(), foundations = makeBuildingFoundations(root);
-  foundations.show([{slot: 'tower', ...at}]);
+  foundations.show([{slot, ...at}]);
   const vertices = root.children[0].geometry.getAttribute('position');
   const points = Array.from({length: vertices.count}, (_, i) => {
     const height = vertices.getZ(i);
@@ -18,6 +18,22 @@ function readFoundation(id, at = placedSpot(id)) {
   foundations.dispose();
   return points;
 }
+
+it.each([ARSENAL, ...CAMPAIGN_BUILDINGS.filter(item => ['island_harbor', 'island_techhub'].includes(item.id))])(
+  'keeps the low apron at $id on the original dry ground',
+  building => {
+    const tread = readFoundation(building.id, building, building.id).filter(point => point.height > 0);
+    expect(tread.length).toBeGreaterThan(0);
+    expect(tread.every(({x, z, height}) => surfaceClass('home_islet', x, z) > 0 && height < .08)).toBe(true);
+  },
+);
+
+it.each([['heart', HEART], ['house', placedSpot('house_1')]])(
+  'leaves the original path beneath the %s visible',
+  (slot, at) => {
+    expect(readFoundation(slot, at, slot).every(point => point.height === 0)).toBe(true);
+  },
+);
 
 it.each(['cannon_1', 'cannon_2', 'cannon_3', 'cannon_4'])('provides a solid perch at the original coastal slot %s', id => {
   const points = readFoundation(id), toes = points.filter(({height}) => height < -.9);

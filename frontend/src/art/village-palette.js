@@ -2,6 +2,7 @@
 // The alpha channel, original painted shading and normalized frame stay intact.
 const VILLAGE_BUILDING = /^(?:cabin|island_core(?:_(?:damaged|broken))?|island-(?:house|watchtower|bell|arsenal|techhub|harbor|cannon|mortar|harpoon|culverin|swivel)(?:-|$))/;
 const HOME_LANDMARK = /^(?:(?:cabin|island_core(?:_damaged)?)$|island-(?:house|watchtower|bell|arsenal|techhub|harbor)(?:-|$))/;
+const WEAPON = /^island-(?:cannon|mortar|harpoon|culverin|swivel)(?:-|$)/;
 const unit = value => Math.max(0, Math.min(value, 1));
 const lumaOf = (red, green, blue) => (red * 53 + green * 184 + blue * 19) / 256;
 const bend = value => {
@@ -9,7 +10,7 @@ const bend = value => {
   return t * t * (3 - 2 * t);
 };
 
-function paintPalette(pixels) {
+function paintPalette(pixels, weapon) {
   for (let i = 0; i < pixels.length; i += 4) {
     if (pixels[i + 3] === 0) continue;
     const red = pixels[i], green = pixels[i + 1], blue = pixels[i + 2];
@@ -17,11 +18,17 @@ function paintPalette(pixels) {
     const glaze = unit((blue - red - 4) / 44) * unit((blue - green + 5) / 33);
     const timber = unit((red - blue - 19) / 72) * unit((red - green + 7) / 55);
     const timberLight = unit((luma - 23) / 72) * unit((245 - luma) / 83);
-    const metal = 1 - unit((Math.max(red, green, blue) - Math.min(red, green, blue) - 2) / 35);
+    const chroma = Math.max(red, green, blue) - Math.min(red, green, blue);
+    const metal = 1 - unit((chroma - 2) / 35);
     const reflected = metal * unit((149 - luma) / 112) * unit((luma - 7) / 30);
-    pixels[i] = red - 2 * glaze + 13 * timber * timberLight - 3 * reflected;
-    pixels[i + 1] = green + 12 * glaze + 7 * timber * timberLight + 3 * reflected;
-    pixels[i + 2] = blue + 17 * glaze - 4 * timber * timberLight + 7 * reflected;
+    // Keep the cast barrels distinct from the warm carriage and the limestone below.
+    const position = weapon ? i / pixels.length : 0;
+    const barrel = weapon ? 1 - bend((position - .50) / .24) : 0;
+    const steel = barrel * (1 - bend((chroma - 5) / 49)) * bend((luma - 18) / 41) * bend((210 - luma) / 72);
+    const edge = steel * bend((luma - 61) / 89);
+    pixels[i] = red - 2 * glaze + 13 * timber * timberLight - 3 * reflected - 13 * steel + 19 * edge;
+    pixels[i + 1] = green + 12 * glaze + 7 * timber * timberLight + 3 * reflected + 6 * steel + 20 * edge;
+    pixels[i + 2] = blue + 17 * glaze - 4 * timber * timberLight + 7 * reflected + 27 * steel + 18 * edge;
   }
 }
 
@@ -93,7 +100,7 @@ export function applyVillagePalette(id, canvas) {
   const context = canvas.getContext('2d');
   if (!context.getImageData || !context.putImageData) return;
   const image = context.getImageData(0, 0, canvas.width, canvas.height);
-  paintPalette(image.data);
+  paintPalette(image.data, WEAPON.test(id) && !id.endsWith('-broken'));
   if (HOME_LANDMARK.test(id)) lightLandmark(image.data, canvas.width, canvas.height);
   context.putImageData(image, 0, 0);
 }

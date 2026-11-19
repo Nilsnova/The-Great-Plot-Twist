@@ -37,3 +37,17 @@ it('lights the same roof material from the upper left and preserves every alpha 
   expect(ruins[6]).toBe(ruins[ruins.length - 2]);
   expect(roof.filter((_channel, index) => index % 4 === 3)).toEqual(barrel.filter((_channel, index) => index % 4 === 3));
 });
+
+it('keeps blue gunmetal above the limestone without changing ruined art or frame alpha', () => {
+  const paint = id => {
+    const data = new Uint8ClampedArray(16 * 4);
+    for (let i = 0; i < data.length; i += 4) data.set([106, 104, 101, 241], i);
+    const context = {getImageData: () => ({data}), putImageData() {}};
+    applyVillagePalette(id, {width: 4, height: 4, getContext: () => context});
+    return data;
+  };
+  const cannon = paint('island-cannon-fire-l2'), ruin = paint('island-cannon-l2-broken');
+  expect(cannon[2] - ruin[2]).toBeGreaterThan(20);
+  expect(cannon.slice(-4)).toEqual(ruin.slice(-4));
+  expect(cannon.filter((_channel, index) => index % 4 === 3)).toEqual(ruin.filter((_channel, index) => index % 4 === 3));
+});
