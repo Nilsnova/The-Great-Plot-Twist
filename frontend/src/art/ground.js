@@ -5,44 +5,26 @@
 // and placement retain the separate analytic top in surfaces.js (D062).
 import {surfaces} from '../world/places/surfaces.js';
 import {LEGACY_DEPTH} from '../world/projection.js';
-import {canvas, ellipse, line, linear, poly, stroke} from './paint.js';
+import {canvas, ellipse, linear, poly} from './paint.js';
 import {cliffProfile, paintCliffFaces, paintGrassRim} from './coast-cliffs.js';
+import {paintHomeTerraces} from './home-terraces.js';
 import {meadowScale, paintMaterial, pathMaterialMask} from './village/terrain-materials.js';
-import {HOME_COTTAGES, SOUTH_BELL} from '../island/home-plan.js';
 
 const SIZE = {width: 64, height: 48};
 // Paths of each island (logical x/z, a polyline each) and small clearings [x, z, radius].
 const PATHS = {
-  home_islet: {
-    lines: [
-      [[0, -14], [0, -5.2], [0, 7.7], [.6, 14], [1.6, 21]],
-      [[-8, -6], [-5.5, -5.2], [4.8, -5.2], [7, -6]],
-      [[-8, 6.6], [-4, 7.7], [7.6, 7.7], [12.6, 7.5]],
-      [[.3, 11], [4.4, 12.5], [8.5, 12.5]],
-      [[0, -12], [-2.8, -10.8], [-5.5, -11.5]],
-      [[0, -12], [4.1, -10.6], [8.5, -12.5]],
-    ],
-    widths: [1.48, 1.04, 1.18, .94, .91, .98],
-    clearings: [[0, -14, 2.33], [-8, 6.6, 2.65], [8.5, 12.4, 1.57], [7, -6, 1.53], [-8, -6, 1.53],
-      [0, 2, 2.28], [8.5, -12.5, 2.02], [-5.5, -11.5, 1.89], [12.6, 7.5, 1.75]],
-  },
-};
-const [westCottage, eastCottage] = HOME_COTTAGES;
-const MOCKUP_PATHS = {
-  lines: [
-    [[0, -12.2], [0, 7.4], [-.1, 12.3], [SOUTH_BELL.x, SOUTH_BELL.z], [-1.8, 19.3], [1.1, 19.3]],
-    [[westCottage.x, westCottage.z + .7], [westCottage.x, -12.2], [eastCottage.x, -12.2], [eastCottage.x, eastCottage.z + .7]],
-    [[-5.5, -11.5], [-4.7, -9.4], [0, -8.1], [6.5, -8.1], [8.5, -12.5]],
-    [[0, 4.9], [8.1, 4.9], [14, 4], [14, 3]],
-    [[-8, 6.6], [-5.3, 7.4], [0, 7.4], [7.7, 8.1], [12.6, 7.5]],
-    [[-5.5, 11], [-5.5, 13.1], [2.5, 13.1], [2.5, 12.5]],
-  ],
-  widths: [1.42, 1.01, 1.07, 1, 1.15, 1],
-  clearings: [[westCottage.x, westCottage.z, 1.38], [eastCottage.x, eastCottage.z, 1.38], [0, 2, 2.28],
-    [-8, 6.6, 2.65], [SOUTH_BELL.x, SOUTH_BELL.z, 1.48], [2.5, 12.5, 1.42], [-5.5, 11, 1.46],
-    [14, 3, 1.56], [8.5, -12.5, 2.02], [-5.5, -11.5, 1.89], [12.6, 7.5, 1.75]],
+  home_islet: {lines: [[[0, -15], [0, -5.5], [0, 7.5], [.6, 14], [1.6, 21]], [[-13, -5.5], [13, -5.5]], [[-11, 7.5], [12, 7.5]], [[0, 11], [8.5, 12.6]]],
+    clearings: [[0, -14, 3.2], [-8, 6.6, 3.4], [8.5, 12.4, 2.4], [7, -6, 2.6], [-8, -6, 2.6]]},
 };
 const seeded = seed => () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+const PATH_WIDTH = 2.2;
+
+function meadowEdge(angle) {
+  // The north Smugglers beach widens between the terrace shelves, like the three naval beaches.
+  const north = Math.abs(angle - Math.PI * 1.5);
+  const inward = Math.max(0, Math.min(1, (north - Math.PI / 9) / (Math.PI / 12)));
+  return Math.min(meadowScale(angle), .865 + .12 * inward * inward * (3 - 2 * inward));
+}
 
 const PAVERS = [
   ['#d6bd94', '#b9a280', '#e6cca6'], ['#d4c2a4', '#b2a382', '#e6d2b2'],
@@ -51,18 +33,18 @@ const PAVERS = [
 ];
 
 /** World-anchored limestone setts with shallow bevels and narrow, subdued joints. */
-function paintPavers(c, paths, materials, reference) {
+function paintPavers(c, paths, materials) {
   const bounds = {left: -SIZE.width / 2, top: -SIZE.height / 2, right: SIZE.width / 2, bottom: SIZE.height / 2};
   const random = seeded(18281), faces = new Path2D();
   c.save();
-  c.clip(pathMaterialMask(paths));
-  c.fillStyle = reference ? '#b09e71' : '#b0a288';
+  c.clip(pathMaterialMask(paths, PATH_WIDTH));
+  c.fillStyle = '#b0a288';
   c.fillRect(bounds.left, bounds.top, SIZE.width, SIZE.height);
   for (let row = bounds.top; row < bounds.bottom;) {
-    const depth = reference ? .51 + random() * .06 : .43 + random() * .12;
+    const depth = .43 + random() * .12;
     let left = bounds.left - random();
     while (left < bounds.right) {
-      const width = (reference ? .78 + random() * .16 : .47 + random() * .17), trim = .008 + random() * .008;
+      const width = .53 + random() * .17, trim = .008 + random() * .008;
       const chip = .02 + random() * .038, drift = (random() - .5) * .028;
       const [face, bevel, gleam] = PAVERS[Math.floor(random() * PAVERS.length)];
       const x = left + trim, y = row + trim + drift;
@@ -96,8 +78,8 @@ function paintPavers(c, paths, materials, reference) {
 export const hasGround = id => Object.hasOwn(PATHS, id) && Object.hasOwn(surfaces, id);
 
 /** Paints the ground of a place at density texels per world unit; returns the canvas. */
-export function paintGround(id, density = 28, materials = null, reference = null, referencePlan = false) {
-  const s = surfaces[id], paths = id === 'home_islet' && referencePlan ? MOCKUP_PATHS : PATHS[id];
+export function paintGround(id, density = 28, materials = null) {
+  const s = surfaces[id], paths = PATHS[id];
   const art = canvas(Math.round(SIZE.width * density), Math.round(SIZE.height * density)), c = art.getContext('2d');
   // World x/z to the canvas: x across, the drawn y = -z * 0.72 down from the top edge.
   c.setTransform(density, 0, 0, density, SIZE.width / 2 * density, SIZE.height / 2 * density);
@@ -114,27 +96,21 @@ export function paintGround(id, density = 28, materials = null, reference = null
     p.closePath(); return p;
   };
   const random = seeded(s.seed * 7919 + 17);
-  if (reference) {
-    // This plate has already been fit to the 64 × 48 world-art grid.
-    c.drawImage(reference, -SIZE.width / 2, -SIZE.height / 2, SIZE.width, SIZE.height);
-  } else {
-    paintLegacyTerrain(c, s, coast, random, materials);
-  }
+  paintTerrain(c, s, coast, random, materials);
   // Stone village footpaths retain a thin bank of warm sand against the grass.
   if (paths) {
     c.save(); c.clip(coast(.99));
     for (const [padding, colour] of [[.16, '#a88c62'], [.067, '#e5c691'], [0, '#efd7a0']]) {
       c.fillStyle = colour;
-      c.fill(pathMaterialMask(paths, 2.04, padding));
+      c.fill(pathMaterialMask(paths, PATH_WIDTH, padding));
     }
-    if (materials || reference) paintPavers(c, paths, materials, reference);
-    c.clip(pathMaterialMask(paths));
+    paintPavers(c, paths, materials);
+    c.clip(pathMaterialMask(paths, PATH_WIDTH));
     c.globalAlpha = materials ? .25 : 1;
     c.fillStyle = '#d7b273'; for (let i = 0; i < 120; i++) { const points = paths.lines[Math.floor(random() * paths.lines.length)], t = random(), j = Math.floor(t * (points.length - 1)), f = t * (points.length - 1) - j;
       const [x0, z0] = points[j], [x1, z1] = points[Math.min(points.length - 1, j + 1)]; c.fill(ellipse(...at(x0 + (x1 - x0) * f + (random() - .5) * 1.4, z0 + (z1 - z0) * f + (random() - .5) * 1.4), .09, .06)); }
     c.restore();
   }
-  if (reference) return art;
   // Grass strokes and little flowers across the meadow (never on a path).
   c.save(); c.clip(coast(.82));
   for (let i = 0; i < 420; i++) {
@@ -154,7 +130,7 @@ export function paintGround(id, density = 28, materials = null, reference = null
   c.restore();
   return art;
 }
-function paintLegacyTerrain(c, s, coast, random, materials) {
+function paintTerrain(c, s, coast, random, materials) {
   const rim = cliffProfile(s);
   paintCliffFaces(c, rim, materials);
   // Wet sand fading into the shallows (translucent, so the sea still reads it as water).
@@ -163,26 +139,32 @@ function paintLegacyTerrain(c, s, coast, random, materials) {
   const beach = coast(1);
   c.fillStyle = '#f2d595'; c.fill(beach);
   if (materials) { c.save(); c.clip(beach); paintMaterial(c, materials, 'sand', {alpha: .9}); c.restore(); }
-  c.save(); c.clip(beach); c.lineWidth = .9; c.strokeStyle = '#ddb877'; c.stroke(beach); c.lineWidth = .3; c.strokeStyle = '#c99f5e'; c.stroke(beach);
+  c.save(); c.clip(beach);
+  c.fillStyle = linear(c, -16, -15, 15, 16, [[0, '#fff0b841'], [.47, '#ffebbc18'], [1, '#a2674737']]);
+  c.fill(beach);
+  c.lineWidth = .84; c.strokeStyle = '#e4bc83'; c.stroke(beach);
+  c.lineWidth = .25; c.strokeStyle = '#c89d66'; c.stroke(beach);
   c.fillStyle = '#e2bf7e'; for (let i = 0; i < 260; i++) { const a = random() * Math.PI * 2, k = .86 + random() * .13; c.fill(ellipse(Math.cos(a) * s.rx * k, Math.sin(a) * s.rz * k * .72, .07 + random() * .08, .05)); }
   c.restore();
   if (!materials) paintGrassRim(c, rim, beach);
   // The meadow: a soft edge, a darker rim and a lighter heart.
-  const meadow = coast(materials ? meadowScale : .85, .012, 3);
-  c.save(); c.translate(.05, .3); c.fillStyle = '#c9ab6a'; c.fill(meadow); c.restore();
-  c.fillStyle = '#6fc155'; c.fill(meadow);
+  const meadow = coast(materials ? meadowEdge : .85, .012, 3);
+  c.save(); c.clip(beach); c.translate(.07, .29); c.fillStyle = '#b49760'; c.fill(meadow); c.restore();
+  c.fillStyle = '#75bd54'; c.fill(meadow);
   c.save(); c.clip(meadow);
-  const glow = c.createRadialGradient(-4, -6, 2, 0, 0, s.rx); glow.addColorStop(0, '#93d968'); glow.addColorStop(.6, '#7cc95a'); glow.addColorStop(1, '#5fb24c');
+  const glow = c.createRadialGradient(-5, -7, 2, 0, 0, s.rx + 1.5);
+  glow.addColorStop(0, '#a6d768'); glow.addColorStop(.63, '#84c35a'); glow.addColorStop(1, '#62a94c');
   c.fillStyle = glow; c.fill(meadow);
   // Let the broad green light lead; fine grass detail should not compete with the buildings.
-  if (materials) paintMaterial(c, materials, 'grass', {alpha: .6});
-  c.lineWidth = .7; c.strokeStyle = '#4f9c41'; c.stroke(meadow);
+  if (materials) paintMaterial(c, materials, 'grass', {alpha: .49});
+  c.lineWidth = .62; c.strokeStyle = '#559445'; c.stroke(meadow);
   // Soft patches of darker and lighter grass.
   c.globalAlpha = materials ? .3 : 1;
   for (let i = 0; i < 26; i++) { const x = (random() - .5) * s.rx * 1.6, z = (random() - .5) * s.rz * 1.6; c.fillStyle = random() > .5 ? '#86cf5e66' : '#63b34f55'; c.fill(ellipse(x, z * .72, 1.2 + random() * 2.2, .7 + random() * 1.2)); }
   c.restore();
   c.lineWidth = .16; c.strokeStyle = '#3d7f36'; c.stroke(meadow);
-  if (materials) { c.save(); c.clip(beach); c.lineWidth = .055; c.strokeStyle = '#d2e58b'; c.stroke(meadow); c.restore(); }
+  if (materials) { c.save(); c.clip(beach); c.lineWidth = .08; c.strokeStyle = '#d6e592'; c.stroke(meadow); c.restore(); }
+  paintHomeTerraces(c, rim, beach, materials);
 }
 function nearPath(paths, x, z, reach) {
   for (const points of paths.lines) for (let i = 1; i < points.length; i++) {

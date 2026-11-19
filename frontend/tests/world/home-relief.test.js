@@ -1,27 +1,27 @@
 import * as THREE from 'three';
 import {expect, it} from 'vitest';
-import {createHomeRearRim} from '../../src/world/places/home-rear-rim.js';
-import {createLifetime} from '../../src/world/places/resources.js';
-import {surfaceClass} from '../../src/world/places/surfaces.js';
-import {GROUND_PROJECTION} from '../../src/world/projection.js';
+import {cliffProfile} from '../../src/art/coast-cliffs.js';
+import {createHomeRelief} from '../../src/world/places/home-relief.js';
+import {backdrop, createLifetime} from '../../src/world/places/resources.js';
+import {surfaces} from '../../src/world/places/surfaces.js';
+import {projectedCoastBounds} from '../../src/world/projection.js';
 
-it('keeps the ridge and its surf outside walkable land and releases it with Home', () => {
-  const root = new THREE.Group(), rim = createHomeRearRim(root);
-  const position = rim.geometry.getAttribute('position');
-  const {xScale, zShear} = GROUND_PROJECTION;
-  for (let i = 0; i < position.count; i += 3) {
-    const logical = [i, i + 1, i + 2].map(index => {
-      // The fixed-view relief stores one tenth of logical z in the depth buffer coordinate.
-      const z = position.getZ(index) * 10;
-      return [(position.getX(index) - zShear * z) / xScale, z];
-    });
-    const expectedWater = [...logical, [0, 1].map(axis => logical.reduce((sum, point) => sum + point[axis] / 3, 0))];
-    for (const [x, z] of expectedWater) expect(surfaceClass('home_islet', x, z)).toBe(0);
-  }
-  expect(new THREE.Raycaster().intersectObject(rim)).toEqual([]);
+it('keeps the sandstone geometry within the original facade and releases it with Home', () => {
+  const root = new THREE.Group(), shore = new THREE.Texture();
+  backdrop(root, shore);
+  const cliff = createHomeRelief(root, shore);
+  cliff.geometry.computeBoundingBox();
+  const {min, max} = cliff.geometry.boundingBox;
+  const bounds = projectedCoastBounds(cliffProfile(surfaces.home_islet));
+  expect(min.x).toBeGreaterThanOrEqual(bounds.minX - .001);
+  expect(max.x).toBeLessThanOrEqual(bounds.maxX + .001);
+  expect(min.y).toBeGreaterThanOrEqual(bounds.minY - .001);
+  expect(max.y).toBeLessThanOrEqual(bounds.maxY + .001);
+  expect(cliff.material.uniforms.uCoastArt.value).toBe(shore);
+  expect(new THREE.Raycaster().intersectObject(cliff)).toEqual([]);
 
   const released = [];
-  for (const resource of [rim.geometry, rim.material, rim.material.map]) resource.addEventListener('dispose', () => released.push(resource));
+  for (const resource of [cliff.geometry, cliff.material, shore]) resource.addEventListener('dispose', () => released.push(resource));
   const dispose = createLifetime(root);
   dispose(); dispose();
   expect(new Set(released).size).toBe(3);
