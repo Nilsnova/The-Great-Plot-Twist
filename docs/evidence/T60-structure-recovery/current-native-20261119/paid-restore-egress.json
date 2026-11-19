@@ -1,0 +1,30 @@
+{
+  "sourceCommit": "3bdd8eda16470795fdedd68c42fffab54e5f2ced",
+  "measurementCommit": "c16f2aaee279837ed20f0a70cbc1e704bb94db5b",
+  "productionSourceMatchesBaseline": true,
+  "testSha256": "0e4278c1e725cb17b4b436c7804f7b604861a7587dfa166d1546c2fdb6c75269",
+  "restoreTick": 388,
+  "firstEscape": [
+    {
+      "tick": 393,
+      "boarderId": "boarder_2",
+      "x": -1.06,
+      "z": 3.41,
+      "standingTowerHP": 80,
+      "edgeDistance": 0.06000000000000005
+    },
+    {
+      "tick": 393,
+      "boarderId": "boarder_2",
+      "x": -1.06,
+      "z": 3.41,
+      "standingTowerHP": 80,
+      "edgeDistance": 0.06000000000000005
+    }
+  ],
+  "independentReplaysAgree": true,
+  "bothRestoredTowersFired": true,
+  "limit": "Production replay/simulation with a synthetic sealed paid event; no provider/browser payment claim.",
+  "measurementSourceDirty": true,
+  "executedDiagnosticPinnedBySelfFileSha256": true
+}

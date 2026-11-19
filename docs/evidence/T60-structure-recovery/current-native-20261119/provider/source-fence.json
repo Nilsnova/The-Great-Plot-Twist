@@ -1,0 +1,28 @@
+{
+  "frontendRuntimeCommit": "494334a13aa7285815aa951e24f12dfe490c8782",
+  "backendProductionBaseline": "3bdd8eda16470795fdedd68c42fffab54e5f2ced",
+  "frontendSourceTree": "567661b923cd8ad3d67407ca7b00c7a57745e2a1",
+  "backendIslandTree": "345f3ae55a28b05cc5900f7a33423800fca5f25b",
+  "migrationTree": "b9c6d099f008f4a84228dfa4b2f88701b4bf1863",
+  "harnessCommit": "e1e3a649240a6a56288269adedbb6454d2482e45",
+  "scenarioSha256": "f15e7b6b567aac611465761d9c7c2b9ab83019863752001fbfb1176da13e75ad",
+  "helperFileSha256": {
+    "frontend/scripts/authenticated-economy/clients.mjs": "641ae6018386213ac78efcab217167c44c80d91ac63d301922f66575892127f8",
+    "frontend/scripts/authenticated-economy/observer.mjs": "40cb288da9f9a80e337fba5a39a12b1b23501ad1ff48a2a4614975492997f140",
+    "frontend/scripts/authenticated-economy/runtime.mjs": "489a4d89302c6eda6618a20fe9beb4165942b108c01a42f265b18d0c9e558e37",
+    "backend/tools/authenticated_economy/__init__.py": "41a5fef9cd3d8dcc7a0ec2a5a63e7f7409bd5fb378b1ab76f75135c7d444deb9",
+    "backend/tools/authenticated_economy/application.py": "480d067d62fa5fadfdc695865295e0daa80ec073ec4df3220ac052d4604419b1",
+    "backend/tools/authenticated_economy/config.py": "f066a3e3e1d1a0643ce3ba6da9d28a42f23dbe4f5b3358319aa13345e2aabb92",
+    "backend/tools/authenticated_economy/observe.py": "18707a8ed12d18c69a4c04de1a416089ccbe89619f5f6f6e9a270840df551839",
+    "backend/tools/authenticated_economy/stack.py": "edbb87c8a0c7a6696efa72056683ab2e4b6810d6f1788c8099a0955d87d57c44"
+  },
+  "localFrontendLauncherSha256": "2ccf478d7c0052c5e13e7fb578729453b1d29513bd7b3283c15f53cfef3d7ab4",
+  "boundaries": [
+    "The frontend was explicitly served from this branch, restarted at the final guard commit. No HMR or response interception.",
+    "Backend production and migration bytes matched the stated baseline; only test and isolated-provider tooling differ.",
+    "Fresh independent Chromium processes used the frozen real GoTrue authentication, restored product sessions and normal game entry.",
+    "The source fence is a post-run component comparison plus the frozen launcher/helper hashes; it is not a continuous process attestation.",
+    "Setup: service-only admission of a fresh test-owned 200-coin treasury; six actual fresh-quote authenticated HTTP wall purchases; actual DOM intro acknowledgements. No damage, clock or outcome fixture.",
+    "The passed provider case proves one reconnected-member repair. Failed/partial full three-use scenarios are retained separately."
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "sourceCommit": "3bdd8eda16470795fdedd68c42fffab54e5f2ced",
+  "measurementSha256": "f52d8f1573343a7bded49c662db8f2ee05617bbbbffb64332abd30aae13cf347",
+  "journalEvents": 2000,
+  "allocatedBytes": 1376256,
+  "payloadBytes": 596000,
+  "eventTupleBytes": 872000,
+  "sample": {
+    "actors": 2,
+    "commandsPerActor": 1000,
+    "batchLimit": 32,
+    "fixedHeadPages": 8,
+    "maxEncodedPageBytes": 95320,
+    "capturedHead": 2000,
+    "prefixSha256": "f4c2574885a836af09f1d3d9a9c363822fda0dfc39144dda69d02601d29c381d"
+  },
+  "timing": {
+    "meanInputBatchMs": 25.788,
+    "maximumPageMs": 7.161
+  },
+  "retention": {
+    "closedJournalRowsRetained": 2000,
+    "canonicalClosureRowsRetained": 1,
+    "destructiveOperations": 0
+  },
+  "limits": [
+    "Disposable Unix-socket PostgreSQL; seeded Auth identities, not provider sign-in.",
+    "Native SQL bypasses HTTP token buckets; no cross-worker capacity guarantee.",
+    "Allocation is the scratch relation plus indexes, not isolated per-wave attribution.",
+    "Retain canonical/accounting history; no automatic deletion policy selected."
+  ],
+  "measurementCommit": "c16f2aaee279837ed20f0a70cbc1e704bb94db5b",
+  "productionSourceMatchesBaseline": true,
+  "measurementSourceDirty": true,
+  "executedDiagnosticPinnedBySelfFileSha256": true
+}

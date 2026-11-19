@@ -1,0 +1,69 @@
+{
+  "sourceCommit": "3bdd8eda16470795fdedd68c42fffab54e5f2ced",
+  "status": "failed",
+  "scenario": "actual-provider-paid-repair",
+  "steps": [
+    {
+      "name": "first genuine card repair",
+      "waveId": "21651dad-884c-4924-b308-2ab90b245491",
+      "receipt": {
+        "receiptId": "818be9f1-bbd7-4e12-8f98-e0bcdd21e7dd",
+        "actionUid": "zsufk5w8pt6gta90",
+        "action": "structure_repair",
+        "actorId": "66a2e3d1-3861-45e7-b018-81716f740220",
+        "origin": {
+          "mode": "island_shared",
+          "version": 1,
+          "islandOwner": "66a2e3d1-3861-45e7-b018-81716f740220",
+          "runEpoch": "232f7890-57e6-43fc-85ab-5bb2515001d5",
+          "accountId": "2e067a23-7cb9-4759-9192-bc59cc6cd472"
+        },
+        "result": {
+          "recoveryEpoch": "b09e1a52-749f-4fa0-968b-4583fdbf064d",
+          "spot": "wall_1",
+          "instanceId": "f708c974-807c-495d-a952-f538b859b0aa",
+          "kind": "wall",
+          "level": 1,
+          "chargedPrice": "10",
+          "waveId": "21651dad-884c-4924-b308-2ab90b245491",
+          "useOrdinal": 1,
+          "eventSeq": 7,
+          "repairSeq": 1,
+          "financialReceipt": {
+            "id": "3a4cd8bb-9ea9-48d9-8842-3eafe62f9bc3",
+            "accountId": "2e067a23-7cb9-4759-9192-bc59cc6cd472",
+            "runEpoch": "232f7890-57e6-43fc-85ab-5bb2515001d5",
+            "actorId": "66a2e3d1-3861-45e7-b018-81716f740220",
+            "actionUid": "fx_818be9f1bbd74e128f98e0bcdd21e7dd_repair",
+            "kind": "spend",
+            "reason": "structure_repair",
+            "reference": "repair:818be9f1-bbd7-4e12-8f98-e0bcdd21e7dd",
+            "balanceDelta": "-10",
+            "committedDelta": "0",
+            "balanceAtCommit": "120",
+            "committedAtCommit": "0",
+            "revisionAtCommit": "9",
+            "sourceReservationId": null
+          }
+        }
+      }
+    },
+    {
+      "name": "immutable transport retry after later natural damage",
+      "accounting": {
+        "balance": "120",
+        "committed": "0",
+        "receipts": 2,
+        "used": 1
+      }
+    }
+  ],
+  "limits": [
+    "Temporary local provider accounts; no hosted service or deployment.",
+    "Natural simulation checkpoints retain the existing accepted-combat-report trust model.",
+    "Same-UID and refused fourth requests use actual authenticated transport, not a UI click.",
+    "Existing development inspection selects cards; actions use hit-tested physical pointer controls."
+  ],
+  "scenarioSha256": "236b70d6ab24b441fbf7a1c57539d29c4c4d6e513ad814b0a12a29d2717c4cdb",
+  "error": "the actual simulation must commit its accepted damage prefix\n\nfalse !== true\n"
+}

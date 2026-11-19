@@ -5,6 +5,7 @@
 // true (the fake server, or ?wavedebug=1), so the loop can be tried end to end.
 import {WAVE_STARTED, WAVE_FINISHED, hasWaveRenderer as defaultHasRenderer, setWaveFinisher} from './wave-hooks.js';
 import {coinText, countdownText, lootText, secondsUntil} from './card-model.js';
+import {sameFrozenNativeWave} from './shared-wave-shapes.js';
 
 export const PLACEHOLDER_SECONDS = 20;
 const HERE_SECONDS = 3;
@@ -51,9 +52,9 @@ export function createWaveFlow({api, emit, notify = () => {}, banner = () => {},
     }
   }
   // A wave we are in: remember it, tell the game, count down.
-  function begin(wave, where, {fresh = false} = {}) {
+  function begin(wave, where, {fresh = false, controlRefresh = false} = {}) {
     lookupGeneration++;
-    if (current?.wave.waveId === wave.waveId && current.joined) return;
+    if (current?.wave.waveId === wave.waveId && current.joined && !controlRefresh) return;
     stopTimers();
     current = {wave, where, joined: true, finished: false, startAt: now()};
     emit({type: WAVE_STARTED, waveId: wave.waveId, wave: wave.wave, seed: wave.seed, startsAt: wave.startsAt,
@@ -122,6 +123,20 @@ export function createWaveFlow({api, emit, notify = () => {}, banner = () => {},
     return answer;
   }
   const join = (where = 'own') => run(() => joinNow(where));
+  // A restored document may have opened the replay before its controlling session
+  // attached. Only a fresh validated server projection can promote that replay.
+  async function refreshControl(where = 'own',{guard=()=>true}={}) {
+    const before=current;
+    if(!guard() || !before || before.where!==where || before.wave.session?.isController===true
+      || !before.wave.initialSnapshot?.economy)return null;
+    const generation=contextFor(where),lookup=++lookupGeneration;
+    const answer=await api.currentWave({where});
+    if(!guard() || disposed || generation!==contextGeneration || lookup!==lookupGeneration || current!==before)return {...answer,ignored:true};
+    if(answer.ok && answer.data?.session?.isController===true && sameFrozenNativeWave(before.wave,answer.data)) {
+      begin(answer.data,where,{controlRefresh:true});
+    }
+    return answer;
+  }
   // A friend sailing in (or a page reload) asks whether a wave runs there; it is shown, not joined.
   async function look(where = 'own') {
     const generation = contextFor(where), lookup = ++lookupGeneration;
@@ -174,7 +189,7 @@ export function createWaveFlow({api, emit, notify = () => {}, banner = () => {},
   }
   const stopFinisher = setWaveFinisher(args => finish(args, {retry: false}));
   return {
-    ring, join, look, finish, ended,
+    ring, join, look, refreshControl, finish, ended,
     get busy() { return activeOperation !== null; },
     get current() { return current ? {...current} : null; },
     secondsLeft: () => (current ? Math.max(0, Math.ceil((current.startAt - now()) / 1000)) : null),
