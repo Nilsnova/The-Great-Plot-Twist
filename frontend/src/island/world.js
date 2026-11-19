@@ -210,7 +210,7 @@ export function campaignArt(building, campaign) {
   if (building.mended && campaign.wreck && campaign.wreck.paid >= campaign.wreck.goal) return building.mended;
   return building.art;
 }
-// A spot the campaign opens later (the inner wall ring after wave 5) shows a lock badge instead of the build badge.
+// A spot the campaign opens later shows a lock badge instead of the build badge.
 export const spotLocked = (spot, campaign) => !!campaign && spotWave(spot.id) > (campaign.wave ?? 0);
 // The first wave any of the spot's kinds opens after (the house after 1, the watchtower after 3), or null.
 export function lockWave(kinds, unlocks) {
