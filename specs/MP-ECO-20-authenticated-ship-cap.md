@@ -32,3 +32,14 @@ devices, natural ship scoring or the complete #505 matrix.
 
 No production source, migration, hosted operation, deployment or activation is
 changed. Local commits only; publication and merge remain separately reviewed.
+
+## Recorded verification
+
+The [source-qualified report](../docs/evidence/MP-ECO-20-ship-cap/README.md)
+records a passing actual-provider CLI run with seven assertion groups, both
+36-coin shared game caps, immutable retries, foreign-island fencing, actual owner
+reset, old-origin isolation and independent private-wallet/ledger reconciliation.
+It retains saved-unlock and trusted-score fixture limits. Four focused
+source-scope counterexamples and Node syntax/diff/documentation checks pass.
+The scenario adds no production route, migration or gameplay change and does not
+claim completion of the other #505 scenarios.
