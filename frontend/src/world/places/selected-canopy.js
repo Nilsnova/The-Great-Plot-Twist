@@ -1,5 +1,6 @@
 import {Box3, Vector3} from 'three';
 import {projectGround} from '../projection.js';
+import {portraitStructureScale} from '../../player/home-portrait.js';
 
 const MASK_SIZE = 64, GRID_SIZE = 16, SOLID_ALPHA = 48, MIN_OVERLAP = 4;
 
@@ -9,8 +10,11 @@ function spriteBounds(mesh, depth) {
   const box = new Box3().copy(mesh.geometry.boundingBox).applyMatrix4(mesh.matrixWorld);
   if (depth > 1 && mesh.userData.ground) {
     const foot = new Vector3().setFromMatrixPosition(mesh.matrixWorld);
-    box.min.y = foot.y + (box.min.y - foot.y) / depth;
-    box.max.y = foot.y + (box.max.y - foot.y) / depth;
+    const scale = mesh.userData.portraitStructure ? portraitStructureScale(depth) : 1;
+    for (const corner of [box.min, box.max]) {
+      corner.x = foot.x + (corner.x - foot.x) * scale;
+      corner.y = foot.y + (corner.y - foot.y) * scale / depth;
+    }
   }
   return box;
 }
