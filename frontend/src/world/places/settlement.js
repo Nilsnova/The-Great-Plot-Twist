@@ -33,7 +33,7 @@ export async function createSettlement(ctx) {
   const extraArtIds = [
     ...(id === 'saltreach_harbor' ? ['harbour-office-glow'] : []),
     ...(id === 'home_islet'
-      ? ['build-plot', 'islet-empty-plot', 'islet-locked-sign', 'islet-signal-station', 'islet-signal-station-lit', 'cabin', 'workshop', 'windmill', 'greenhouse']
+      ? ['shrub', 'build-plot', 'islet-empty-plot', 'islet-locked-sign', 'islet-signal-station', 'islet-signal-station-lit', 'cabin', 'workshop', 'windmill', 'greenhouse']
       : []),
   ];
   const artIds = [...new Set([
@@ -51,7 +51,7 @@ export async function createSettlement(ctx) {
     const ground = backdrop(group, await (ctx.loadBackdrop ?? loadBackdrop)(`places/${id}.png`));
     if (id === 'home_islet') {
       createHomeRelief(group, ground.material.map);
-      createHomeTerraces(group, ground.material.map);
+      createHomeTerraces(group, ground.material.map, art);
       createGroundShadows(group, trees.map(([x, z]) => ({
         x: x + .52, z: z + .68, width: 1.52, depth: 1.32, opacity: .34, innerOpacity: .21,
       })));
@@ -154,7 +154,7 @@ export async function createSettlement(ctx) {
         if (stormFlag) stormFlag.visible = stormFlagShouldShow(state);
       }, dispose,
     };
-    // The southwest wave approach crosses the skiff; the beach post stays on the sand.
+    // Keep the southwest approach clear of the floating mooring during battle.
     if (shoreBoat) place.setMooringBattle = shoreBoat.setBattle;
     ctx.decorate?.(place, art, cleanups);
     if (id === 'home_islet' || id === 'saltreach_harbor') {

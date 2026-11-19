@@ -1,6 +1,7 @@
-import {BufferAttribute, BufferGeometry, DoubleSide, DynamicDrawUsage, Group, Mesh, MeshBasicMaterial, PlaneGeometry, ShaderMaterial, Vector2} from 'three';
+import {BufferAttribute, BufferGeometry, DoubleSide, DynamicDrawUsage, Group, Mesh, MeshBasicMaterial, PlaneGeometry, ShaderMaterial, Vector3} from 'three';
 import {MOORING_EYES} from '../../art/home-shore.js';
 import {artSizes} from '../art.js';
+import {createHomeLanding} from './home-landing.js';
 
 const SEGMENTS = 12;
 const INDICES = [];
@@ -9,7 +10,7 @@ for (let i = 0; i < SEGMENTS * 2; i += 2) INDICES.push(i, i + 1, i + 2, i + 1, i
 function localEye(mesh) {
   const asset = mesh.userData.asset;
   const [width, height, foot] = artSizes[asset], [x, y] = MOORING_EYES[asset];
-  return new Vector2(x / 16 - width / 2, (1 - foot) * height - y / 16);
+  return new Vector3(x / 16 - width / 2, (1 - foot) * height - y / 16, 0);
 }
 
 function strand(rope, color, order, opacity) {
@@ -68,7 +69,10 @@ function hullRipples(root, x, waterline) {
 
 export function makeMooring(root, bollard, skiff) {
   const {x: restX, y: restY} = skiff.position;
-  const from = localEye(bollard).add(bollard.position), cleat = localEye(skiff);
+  const shoreEye = localEye(bollard), cleat = localEye(skiff);
+  const from = new Vector3(), to = new Vector3();
+  const lastFrom = new Vector3(Infinity), lastTo = new Vector3(Infinity);
+  const stage = createHomeLanding(root);
   const contact = hullRipples(root, restX, restY);
   const rope = new Group();
   rope.name = 'home-mooring-rope';
@@ -77,9 +81,14 @@ export function makeMooring(root, bollard, skiff) {
 
   // The boat pivots on its waterline. Rebuild the two tiny strips in place so the rope follows the cleat.
   function drawRope() {
-    const c = Math.cos(skiff.rotation.z), s = Math.sin(skiff.rotation.z);
-    const toX = skiff.position.x + cleat.x * c - cleat.y * s;
-    const toY = skiff.position.y + cleat.x * s + cleat.y * c;
+    bollard.updateMatrix();
+    skiff.updateMatrix();
+    from.copy(shoreEye).applyMatrix4(bollard.matrix);
+    to.copy(cleat).applyMatrix4(skiff.matrix);
+    if (from.equals(lastFrom) && to.equals(lastTo)) return;
+    lastFrom.copy(from);
+    lastTo.copy(to);
+    const {x: toX, y: toY} = to;
     const bendX = from.x + (toX - from.x) * .54 - .28, bendY = from.y + (toY - from.y) * .54 - .22;
     for (let i = 0; i <= SEGMENTS; i++) {
       const t = i / SEGMENTS, u = 1 - t, vertex = i * 2;
@@ -94,10 +103,12 @@ export function makeMooring(root, bollard, skiff) {
     }
     shadow.needsUpdate = light.needsUpdate = true;
   }
+  // Portrait composition updates the sprite scales immediately before rendering.
+  rope.children[0].onBeforeRender = drawRope;
   drawRope();
   let resting = true;
   return {
-    setBattle(active) { skiff.visible = rope.visible = contact.visible = !active; },
+    setBattle(active) { skiff.visible = rope.visible = contact.visible = stage.visible = !active; },
     update(time, wind, still, night = 0) {
       contact.material.uniforms.uWakeNight.value = night;
       contact.material.uniforms.uWakePhase.value = still ? 0 : time * .56;
