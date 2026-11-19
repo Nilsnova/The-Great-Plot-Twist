@@ -551,7 +551,7 @@ export function decorateIsland(place, ctx = {}) {
   // The nearest pickable thing to a ground point (a tap), or null.
   // Built sprites can overlap legally. In village mode, give the opaque foreground art priority over
   // the old nearest-foot box. The box still serves markers, service buildings and loading stand-ins.
-  function frontBuildingAt(tap) {
+  function frontBuildingAt(tap, portraitDepth) {
     let front = null;
     for (const [id, item] of shown) {
       if (!ctx.canPickRemote?.(id)) continue;
@@ -560,7 +560,6 @@ export function decorateIsland(place, ctx = {}) {
         || (front && mesh.renderOrder < front.order)) continue;
       const [width, height, anchor] = artSizes[mesh.userData.art], image = mesh.material.map?.image;
       const u = .5 + (tap.x - mesh.position.x) / width;
-      const portraitDepth = ctx.camera?.userData.homePortraitDepth ?? 1;
       const v = 1 - anchor - (tap.y - mesh.position.y) * portraitDepth / height;
       if (u < 0 || u >= 1 || v < 0 || v >= 1 || !image?.getContext) continue;
       try {
@@ -574,7 +573,8 @@ export function decorateIsland(place, ctx = {}) {
     return front?.id ?? null;
   }
   function pickAt(x, z) {
-    const tap = projectPoint(x, z), front = frontBuildingAt(tap);
+    const portraitDepth = ctx.camera?.userData?.homePortraitDepth ?? 1;
+    const tap = projectPoint(x, z), front = frontBuildingAt(tap, portraitDepth);
     if (front) return front;
     const candidates = [...SPOTS.filter(spot => !isExtraSpot(spot.id) || state.spots.some(item => item.id === spot.id))
         .map(spot => ({id: spot.id, ...whereOf(spot), w: 2.4, h: spot.kind === 'watchtower' ? 5 : 3})),
@@ -583,12 +583,11 @@ export function decorateIsland(place, ctx = {}) {
       ...(campaignMeshes.size ? CAMPAIGN_BUILDINGS.map(item => ({id: item.id, x: item.x, z: item.z, w: item.w, h: item.h})) : []),
       ...(state.visitor || layout.cabin === false ? [] : [{id: CABIN.id, x: CABIN.x, z: CABIN.z, w: 3, h: 6}])];
     let best = null, bestScore = Infinity;
-    const portraitDepth = ctx.camera?.userData.homePortraitDepth ?? 1;
     for (const item of candidates) {
       const foot = projectPoint(item.x, item.z);
       const vertical = (tap.y - foot.y) * portraitDepth;
       if (Math.abs(foot.x - tap.x) > item.w || vertical > item.h || vertical < -.54) continue;
-      const score = Math.hypot(foot.x - tap.x, foot.y - tap.y);
+      const score = Math.hypot(foot.x - tap.x, vertical);
       if (score < bestScore) { best = item.id; bestScore = score; }
     }
     return best;
