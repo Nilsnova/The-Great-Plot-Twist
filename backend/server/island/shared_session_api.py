@@ -16,6 +16,8 @@ from server.island import personal_captain_store, shared_wave_template, wave_rec
 from server.island.catalogue import IslandCatalogue, Weather
 from server.island.economy_operations import root_action_uid
 from server.island.shared_session_models import (
+    CaptainReport,
+    CaptainResult,
     FinishReport,
     NativeFinish,
     NativeWave,
@@ -23,6 +25,7 @@ from server.island.shared_session_models import (
     SessionReply,
 )
 from server.island.treasury import identifier, resolve_economy_context
+from server.island.treasury_models import decimal_integer, decimal_string
 from server.supabase_admin import SupabaseAdmin, SupabaseRejected
 
 REFUSALS = {
@@ -40,6 +43,10 @@ REFUSALS = {
     "path_unavailable": (409, "economy_path_unavailable"),
     "wave_running": (409, "wave_running"),
     "wave_over": (409, "wave_over"),
+    "no_such_wave": (404, "no_such_wave"),
+    "input_tick_ahead": (409, "input_tick_ahead"),
+    "page_watermark_invalid": (409, "page_watermark_invalid"),
+    "page_incomplete": (409, "page_incomplete"),
     "action_conflict": (409, "idempotency_conflict"),
     "input_conflict": (409, "input_conflict"),
     "counter_gap": (409, "input_counter_conflict"),
@@ -49,6 +56,8 @@ REFUSALS = {
     "checkpoint_stale": (409, "checkpoint_stale"),
     "checkpoint_divergence": (409, "checkpoint_divergence"),
     "stale_fall": (409, "fall_mismatch"),
+    "captain_hp_increase": (409, "captain_hp_increase"),
+    "captain_down": (409, "captain_down"),
     "target_not_fallen": (409, "target_unavailable"),
     "out_of_reach": (409, "out_of_range"),
     "invalid_change": (422, "invalid_transaction"),
@@ -59,6 +68,16 @@ REFUSALS = {
 def checked(value: object) -> dict:
     if isinstance(value, dict) and value.get("status") == "refused":
         reason = value.get("reason")
+        if reason == "too_early" and set(value) == {"status", "reason", "waitSeconds"}:
+            wait = value["waitSeconds"]
+            if type(wait) is not int or not 1 <= wait <= 86400:
+                raise SupabaseRejected("The database sent an invalid finish delay.")
+            raise ApiError(
+                409,
+                "wave_too_early",
+                "The wave has not reached its minimum duration.",
+                headers={"Retry-After": str(wait)},
+            )
         if reason in REFUSALS and set(value) == {"status", "reason"}:
             raise ApiError(*REFUSALS[reason], "Refresh the shared session and retry this action.")
     if not isinstance(value, dict) or value.get("status") == "refused":
@@ -281,6 +300,8 @@ def native_command(command: object) -> dict:
         if set(command) != {"type"}:
             raise ApiError(422, "validation_error", "A cancel command has no extra fields.")
         return {"type": kind}
+    if kind == "captain_move" and "away" in command:
+        raise ApiError(422, "validation_error", "Use the canonical disconnect action.")
     if kind not in {
         "fire",
         "captain_shot",
@@ -499,11 +520,10 @@ async def session_call(
     if command not in {"attach", "heartbeat", "disconnect", "leave", "settings"}:
         raise ValueError("Unknown session command.")
     result = await admin.call_function(f"shared_session_{command}", values)
-    if (
-        command == "attach"
-        and isinstance(result, dict)
-        and result.get("reason") == "captain_context_required"
-    ):
+    if command == "attach" and result == {
+        "status": "refused",
+        "reason": "captain_context_required",
+    }:
         if catalogue is None:
             raise ValueError("Explicit Captain adoption requires the server catalogue.")
         resolved = await resolve_economy_context(
@@ -521,7 +541,7 @@ async def session_call(
             raise ValueError("Wrong session origin.")
         if row.session is not None and row.session.isController:
             expected = (
-                str(int(data["expectedGeneration"]) + 1)
+                decimal_string(decimal_integer(data["expectedGeneration"]) + 1)
                 if command == "attach"
                 else data["connectionGeneration"]
             )
@@ -540,11 +560,19 @@ async def session_call(
                 str(receipt.origin.runEpoch),
             ) != (identity(actor_id), f"session_{command}", data["actionUid"], owner, epoch):
                 raise ValueError("Wrong session receipt.")
+            if row.economy is not None and row.economy.accountId != receipt.origin.accountId:
+                raise ValueError("Wrong fresh receipt account.")
             if (
                 command == "leave"
                 and receipt.result.connectionGeneration != data["connectionGeneration"]
             ):
                 raise ValueError("Wrong released tenure.")
+            if command == "settings" and any(
+                getattr(receipt.result, key) != data[key]
+                for key in ("breakPaused", "autoNext", "countdownSeconds")
+                if key in data
+            ):
+                raise ValueError("Wrong requested settings effect.")
         elif row.receipt is not None or row.repeat is not None or row.economy is None:
             raise ValueError("Wrong metadata result.")
         return row.model_dump(mode="json", exclude_unset=True)
@@ -588,3 +616,61 @@ async def read_session(
         return row.model_dump(mode="json", exclude_unset=True)
     except (ValidationError, ValueError, TypeError) as error:
         raise SupabaseRejected("The database sent an unreadable session projection.") from error
+
+
+async def report_captains(
+    admin: SupabaseAdmin,
+    actor_id: str,
+    wave_id: str | UUID,
+    island_owner: str,
+    run_epoch: str,
+    session_id: str,
+    connection_generation: str,
+    report: CaptainReport,
+) -> dict:
+    """Bind a bounded Captain checkpoint to the real sealed journal and server fall nonce."""
+    values = proof(actor_id, island_owner, run_epoch, session_id, connection_generation)
+    if (
+        str(report.economy.islandOwner),
+        str(report.economy.runEpoch),
+        str(report.sessionId),
+        report.connectionGeneration,
+    ) != (identity(island_owner), identity(run_epoch), identity(session_id), connection_generation):
+        raise ApiError(
+            422, "validation_error", "The Captain report uses another controller source."
+        )
+    values.update(
+        p_wave_id=identity(wave_id),
+        p_report=report.model_dump(
+            mode="json",
+            exclude={
+                "economy",
+                "sessionId",
+                "connectionGeneration",
+                "waveProtocol",
+            },
+        ),
+    )
+    try:
+        row = CaptainResult.model_validate(
+            checked(await admin.call_function("shared_session_wave_captains", values))
+        )
+        if (
+            type(row.accepted) is not bool
+            or row.throughTick != report.throughTick
+            or row.inputHeadSeq != report.inputHeadSeq
+        ):
+            raise ValueError("Wrong Captain checkpoint prefix.")
+        if not set(row.captains) <= set(report.captains) or any(
+            (fact.hpUnits, fact.downAtTick, fact.reviveBasisSeq)
+            != (
+                report.captains[token].hpUnits,
+                report.captains[token].downAtTick,
+                report.captains[token].reviveBasisSeq,
+            )
+            for token, fact in row.captains.items()
+        ):
+            raise ValueError("Wrong accepted Captain vector.")
+        return row.model_dump(mode="json")
+    except (ValidationError, ValueError, TypeError) as error:
+        raise SupabaseRejected("The database sent an unreadable Captain checkpoint.") from error

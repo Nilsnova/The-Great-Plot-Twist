@@ -143,3 +143,43 @@ def test_shared_session_mutations_use_existing_per_actor_budget():
     result = world.client.post("/api/island/session/heartbeat", json=PROOF, headers=HEADERS)
     assert_error(result, 429, "too_many_requests")
     assert len(database.calls) == before
+
+
+@pytest.mark.parametrize("query", [dict(sessionId=SESSION), dict(connectionGeneration="1")])
+def test_partial_session_proof_refuses_before_lifecycle_or_metadata_database(query):
+    world, database = setup()
+    result = world.client.get(
+        "/api/island/session",
+        params={"islandOwner": OWNER, "runEpoch": EPOCH, **query},
+        headers=HEADERS,
+    )
+    assert_error(result, 422, "validation_error")
+    assert database.calls == []
+
+
+@pytest.mark.parametrize("prefix", ["fx_", "sys_"])
+@pytest.mark.parametrize("action", ["attach", "leave", "settings"])
+def test_reserved_root_action_namespace_refuses_before_lifecycle_or_sql(prefix, action):
+    world, database = setup()
+    body = dict(ATTACH if action == "attach" else PROOF)
+    body["actionUid"] = prefix + "reserved_001"
+    if action == "settings":
+        body["autoNext"] = True
+    result = world.client.post(f"/api/island/session/{action}", json=body, headers=HEADERS)
+    assert_error(result, 422, "validation_error")
+    assert database.calls == []
+
+
+def test_captain_checkpoint_route_uses_authenticated_actor_and_strict_no_store_transport():
+    from server.tests.test_shared_session_api import TOKEN, WAVE, captain_reply, captain_report
+
+    world, database = setup(result=captain_reply())
+    result = world.client.post(
+        f"/api/waves/{WAVE}/captains",
+        json=captain_report().model_dump(mode="json"),
+        headers=HEADERS,
+    )
+    assert result.status_code == 200, result.text
+    assert result.headers["cache-control"] == "private, no-store"
+    assert result.json()["captains"][TOKEN]["fallId"] == SESSION
+    assert database.calls[-1][1]["p_actor_id"] == PLAYER_ID
