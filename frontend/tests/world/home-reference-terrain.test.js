@@ -18,10 +18,12 @@ it('keeps the illustrated backdrop opaque along the playable shore and transpare
     const shore = cliffProfile(surfaces.home_islet);
     const dry = Math.min(...shore.flatMap(({x, z}) => [.35, .65, .95, .98].map(r => alpha(x * r, z * r))));
     const openSea = [[0, -31], [-29, 0], [29, 0], [0, 31]].map(([x, z]) => alpha(x, z));
+    const northLanding = [-5.8, -4.82, -3.5].map(x => alpha(x, -23.71));
     texture.dispose();
-    return {reference: texture.userData.homeReference, dry, openSea};
+    return {reference: texture.userData.homeReference, dry, openSea, northLanding};
   });
   expect(terrain.reference).toBe(true);
   expect(terrain.dry).toBeGreaterThanOrEqual(240);
   expect(terrain.openSea).toEqual([0, 0, 0, 0]);
+  expect(Math.max(...terrain.northLanding)).toBeLessThan(20);
 });
