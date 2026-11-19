@@ -41,6 +41,7 @@ from pydantic import AwareDatetime, BaseModel, StrictBool, StrictInt, StrictStr,
 from server.errors import ApiError
 from server.game.islet_store import player_not_set_up
 from server.island.codes import CODE_FORMAT, new_code
+from server.island.legacy_wave_errors import control_refusal
 from server.island.rules import Built, ResearchTier
 from server.supabase_admin import SupabaseAdmin, SupabaseRejected
 
@@ -288,6 +289,13 @@ async def open_island_made(
         status = reply.get("status") if isinstance(reply, dict) else None
         if status == "missing":
             raise player_not_set_up()
+        if status == "refused":
+            refused = read_model(RefusedRow, reply)
+            error = control_refusal(refused.reason)
+            if error is not None:
+                raise error
+            if refused.reason == "captain_context_required":
+                raise ApiError(409, "captain_context_required", "Open your current Captain first.")
         if status != "code_taken":
             row = read_model(OpenRow, reply)
             return Island(player_id, checked_code(row.code), row.waveBest, row.flags), row.created
