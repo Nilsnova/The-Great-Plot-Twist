@@ -218,19 +218,24 @@ void main(){
   float run=.5+.5*sin(foamTime*(.8+uWind*.5)+p.x*.21+p.y*.37);
   float edge=.18+sin(p.x*2.1+p.y*1.3+foamTime*1.2)*.045;
   float surf=.55+run*(.6+uWind*.5);
+  float waterlineLight=1.0;
   if(uDetail>.5){
     float grain=pxNoise(p*1.4+vec2(foamTime*.08,-foamTime*.03));
     float broken=smoothstep(.25,.7,grain);
     float width=mix(.06,.088,uHomeCoast);
     colour=mix(colour,uFoam,(1.0-band(abs(d-surf),width))*.8*broken*smoothstep(.0,.25,run)*shoreLight);
-    if(uHomeCoast>.5){
-      // Wash runs far up the sand and breaks more tightly where rock reaches the water.
+    if(uHomeCoast>.5&&d<3.2){
+      // Coves have a long wash. Broken foam collects in short patches around the stone feet.
       float washAdvance=mix(.49,.16,rockShore);
       float wash=(1.0-band(abs(d-surf-washAdvance-grain*.31),.061))*smoothstep(.41,.76,grain);
       colour=mix(colour,uShallow2,wash*mix(.35,.25,rockShore)*shoreLight);
+      float rockFoam=smoothstep(.43,.74,grain+.12*run);
+      float backwash=1.0-band(abs(d-.30-grain*.24),.067);
+      colour=mix(colour,uFoam,backwash*rockFoam*rockShore*.47*shoreLight);
+      waterlineLight=mix(1.0,mix(.42,1.0,rockFoam),rockShore);
     }
   }
-  colour=mix(colour,uFoam,(1.0-band(d,edge))*shoreLight);
+  colour=mix(colour,uFoam,(1.0-band(d,edge))*shoreLight*waterlineLight);
   // Whitecaps on crests once the wind picks up.
   if(uDetail>.5&&uWind>.45){
     vec2 cell=floor(p/vec2(3.4,1.6));float cap=pxHash(cell+vec2(floor(t*.5),0.0));
