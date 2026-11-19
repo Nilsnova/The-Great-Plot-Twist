@@ -69,7 +69,12 @@ it('keeps pressed range and eligible upgrade distinct on the short phone', async
     await page.evaluate(() => window.shortSelection.house(1000));
     const upgrade = page.getByRole('button', {name: 'Upgrade · 🪙 100', exact: true});
     expect(await upgrade.isEnabled()).toBe(true);
+    await page.mouse.move(1, 1);
     const offered = await surface(upgrade);
+    await upgrade.hover();
+    const hovered = await surface(upgrade);
+    expect(hovered[1]).toContain('linear-gradient');
+    expect(hovered).not.toEqual(offered);
     await page.evaluate(() => window.shortSelection.house(0));
     expect(await upgrade.isDisabled()).toBe(true);
     expect(await surface(upgrade)).not.toEqual(offered);
