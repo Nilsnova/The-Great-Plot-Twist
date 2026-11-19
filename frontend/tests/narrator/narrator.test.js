@@ -35,9 +35,9 @@ function bus() {
   };
 }
 function storage() { const map = new Map(); return {getItem: key => map.get(key) ?? null, setItem: (key, value) => map.set(key, String(value))}; }
-function fakeCard() {
+function fakeCard(keepReading = false) {
   const card = {shown: [], line: null, visible: false, show(line) { card.line = line.id; card.visible = true; card.shown.push(line.id); },
-    hide() { card.line = null; card.visible = false; }, dispose() { card.disposed = true; }};
+    hide(options) { if (options?.keepReading && keepReading) return; card.line = null; card.visible = false; }, dispose() { card.disposed = true; }};
   return card;
 }
 
@@ -45,16 +45,31 @@ describe('the narrator on the bus', () => {
   let game, card, prefs, audioCalls, store;
   beforeEach(() => { vi.useFakeTimers(); game = {code: 'ISLE-K7Q2M', waveBest: 0}; prefs = {narrator: true, captions: true, master: .7, voice: .8}; audioCalls = []; store = storage(); });
   afterEach(() => vi.useRealTimers());
-  function make({audio = null, fetchManifest = manifest, held = () => false} = {}) {
+  function make({audio = null, fetchManifest = manifest, held = () => false, keepReading = false} = {}) {
     const events = bus();
     let watcher = null;
     const narrator = createNarrator({on: events.on, lines: LINES, storage: store, getGame: () => game, preferences: () => prefs,
       onPreferences: listener => { watcher = listener; return () => { watcher = null; }; },
       fetchImpl: async url => (fetchManifest ? {ok: true, json: async () => fetchManifest, url} : {ok: false}), audio, held,
-      createCard: () => (card = fakeCard())});
+      createCard: () => (card = fakeCard(keepReading))});
     return {narrator, events, setPrefs(next) { prefs = {...prefs, ...next}; watcher?.(prefs); }};
   }
   const flush = ms => vi.advanceTimersByTimeAsync(ms);
+
+  it('keeps a retained Standard caption through unrelated preference changes', async () => {
+    prefs.subtitleSize = 'normal';
+    const {narrator, setPrefs} = make({keepReading: true});
+    narrator.say('boarders_ashore');
+    await flush(10000);
+    expect(narrator.speaking).toBeNull();
+    expect(card.line).toBe('boarders_ashore');
+    setPrefs({reducedMotion: true});
+    expect(card.line).toBe('boarders_ashore');
+    setPrefs({subtitleSize: 'large'});
+    setPrefs({subtitleSize: 'normal'});
+    expect(card.visible).toBe(false);
+    narrator.dispose();
+  });
 
   it('reads only the narrator entries of the voice manifest', () => {
     expect(narratorVoices(manifest)).toEqual({opening_1: {file: 'narrator-opening_1.mp3', seconds: 2}});

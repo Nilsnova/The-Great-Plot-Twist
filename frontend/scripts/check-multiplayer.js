@@ -671,14 +671,20 @@ try {
   await sized('02e-teardown-confirm', [host]);
   await host.page.locator('.island-card-demolish[open] [data-focus="confirm"]').click();
   const tornAt = Date.now();
-  await ben.page.waitForFunction(() => window.__island.island.visiting?.spots?.find(spot => spot.id === 'wall_2')?.built === false, null, {timeout: 2000, polling: 50});
-  const emptyAfter = Date.now() - tornAt;
+  const emptyMap = captain => captain.page.waitForFunction(() => {
+    const wall = window.__mpMap(window.__island.scene, 'wall_2');
+    return wall.level === 0 && wall.pips === 0 && wall.mode === 'none';
+  }, null, {timeout: 2000, polling: 50});
+  const [emptyAfter, drawnAfter] = await Promise.all([
+    ben.page.waitForFunction(() => window.__island.island.visiting?.spots?.find(spot => spot.id === 'wall_2')?.built === false, null, {timeout: 2000, polling: 50}).then(() => Date.now() - tornAt),
+    emptyMap(ben).then(() => Date.now() - tornAt), emptyMap(host),
+  ]);
   await ben.page.waitForFunction(() => /^Nils tore down the Wall\. You got back 🪙 25\.$/.test(window.__island.island.ui.toastText), null, {timeout: 3000, polling: 50});
   const benToast = await ben.page.evaluate(() => window.__island.island.ui.toastText);
   await ben.page.waitForFunction(before => window.__island.island.island?.coins === before + 25, benBefore, {timeout: 3000, polling: 100});
   assert.deepEqual(await mapOf(ben, 'wall_2'), {level: 0, pips: 0, mode: 'none'}, "the friend's map shows no wall on wall_2");
   assert.deepEqual(await mapOf(host, 'wall_2'), {level: 0, pips: 0, mode: 'none'}, "the owner's map shows no wall on wall_2");
-  results.push(`tear down: the owner's confirmation "${confirmation.question}" ${confirmation.lines.join(' ')}; the friend's island showed the empty spot after ${emptyAfter} ms, his toast "${benToast}", his coins ${benBefore} → ${benBefore + 25}`);
+  results.push(`tear down: the owner's confirmation "${confirmation.question}" ${confirmation.lines.join(' ')}; the friend's island read the empty spot after ${emptyAfter} ms and drew it after ${drawnAfter} ms, his toast "${benToast}", his coins ${benBefore} → ${benBefore + 25}`);
   await sized('02f-teardown-after', [host, ben]);
   await island(host, async i => { await i.build('wall_2', 'wall'); await i.upgrade('wall_2'); await i.upgrade('wall_2'); });
   await shows(ben, 'wall_2', 3, 'the wall built up again');

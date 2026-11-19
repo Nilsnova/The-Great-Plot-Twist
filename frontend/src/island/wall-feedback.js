@@ -1,4 +1,4 @@
-// Short, tile-anchored dust and brass glints for a confirmed wall purchase.
+// Short, tile-anchored dust and brass glints for confirmed construction.
 import * as THREE from 'three';
 import {projectGround} from '../world/projection.js';
 
@@ -21,10 +21,10 @@ const MOTES = [
   foot: projectGround(x, z), delay, drift, rise, width, length,
 }));
 
-function dustGeometry() {
+function dustGeometry(front) {
   const positions = [], colors = [], indices = [];
   function vertex(x, z, alpha) {
-    const point = projectGround(x, z);
+    const point = projectGround(x, z + front);
     positions.push(point.x, point.y, 0);
     colors.push(DUST_COLOR.r, DUST_COLOR.g, DUST_COLOR.b, alpha);
   }
@@ -68,7 +68,7 @@ function moteGeometry() {
   return geometry;
 }
 
-function paintMotes(geometry, elapsed) {
+function paintMotes(geometry, elapsed, glintSize) {
   const positions = geometry.getAttribute('position'), colors = geometry.getAttribute('color');
   MOTES.forEach(({foot, delay, drift, rise, width, length}, n) => {
     const time = (elapsed - delay) / MOTE_SECONDS;
@@ -78,10 +78,10 @@ function paintMotes(geometry, elapsed) {
     const alpha = Math.min(1, progress / .12) * (1 - progress) ** 1.45;
     const center = n * 5;
     positions.setXYZ(center, x, y, 0);
-    positions.setXYZ(center + 1, x - drift * .3, y - length, 0);
-    positions.setXYZ(center + 2, x + width, y - .035, 0);
-    positions.setXYZ(center + 3, x + drift * .12, y + .13, 0);
-    positions.setXYZ(center + 4, x - width, y - .035, 0);
+    positions.setXYZ(center + 1, x - drift * .3, y - length * glintSize, 0);
+    positions.setXYZ(center + 2, x + width * glintSize, y - .035, 0);
+    positions.setXYZ(center + 3, x + drift * .12, y + .13 * glintSize, 0);
+    positions.setXYZ(center + 4, x - width * glintSize, y - .035, 0);
     colors.setXYZW(center, MOTE_COLOR.r, MOTE_COLOR.g, MOTE_COLOR.b, alpha);
   });
   positions.needsUpdate = colors.needsUpdate = true;
@@ -99,8 +99,8 @@ function feedbackMesh(root, geometry, name) {
   return mesh;
 }
 
-export function makeWallFeedback(root) {
-  let dust = null, motes = null, current = null, elapsed = 0, light = 0;
+function makePurchaseFeedback(root, name, {dustFront = 0, dustDepth = 1, stillOpacity = .36, glintSize = 1} = {}) {
+  let dust = null, motes = null, current = null, elapsed = 0, light = 0, spread = 1;
 
   function clear() {
     current = null;
@@ -117,29 +117,31 @@ export function makeWallFeedback(root) {
     if (elapsed >= duration) { clear(); return; }
     const progress = elapsed / duration;
     const scale = reduced ? 1 : .90 + .28 * (1 - (1 - progress) ** 2);
-    dust.scale.set(scale, scale, 1);
-    dust.material.opacity = reduced ? .36 : .92 * (1 - progress) ** 1.2;
+    dust.scale.set(scale * spread, scale * dustDepth, 1);
+    dust.material.opacity = reduced ? stillOpacity : .92 * (1 - progress) ** 1.2;
     light = reduced ? .24 : Math.max(0, 1 - elapsed / LIGHT_SECONDS) ** 1.5;
     motes.visible = !reduced && elapsed < LAST_MOTE;
-    if (motes.visible) paintMotes(motes.geometry, elapsed);
+    if (motes.visible) paintMotes(motes.geometry, elapsed, glintSize);
   }
 
   return {
     get current() { return current; },
     get light() { return light; },
-    show(spotId, level, {x, z}, reduced) {
+    show(spotId, level, {x, z, kind}, reduced, width = 1) {
       if (!dust) {
-        dust = feedbackMesh(root, dustGeometry(), 'island-wall-feedback');
+        dust = feedbackMesh(root, dustGeometry(dustFront), name);
         // Airborne glints interleave with upright sprites while the dust stays under them.
         dust.renderOrder = 60;
-        motes = feedbackMesh(root, moteGeometry(), 'island-wall-feedback-motes');
+        motes = feedbackMesh(root, moteGeometry(), `${name}-motes`);
         motes.material.blending = THREE.AdditiveBlending;
       }
       const point = projectGround(x, z);
       dust.position.set(point.x, point.y, 0);
       motes.position.copy(dust.position);
       motes.renderOrder = 100 + z + .05;
-      current = {spotId, level, x, z};
+      spread = width;
+      motes.scale.x = spread;
+      current = {spotId, level, x, z, ...(kind ? {kind} : {})};
       elapsed = 0;
       update(0, false, reduced);
     },
@@ -156,3 +158,8 @@ export function makeWallFeedback(root) {
     },
   };
 }
+
+export const makeWallFeedback = root => makePurchaseFeedback(root, 'island-wall-feedback');
+// Larger bases still leave open ground in front for the dust to read.
+export const makeBuildingFeedback = root => makePurchaseFeedback(root, 'island-building-feedback',
+  {dustFront: .38, dustDepth: 1.35, stillOpacity: .46, glintSize: 1.28});

@@ -1,7 +1,7 @@
 // Exercise the actual island load/travel authority with only its DOM presentation replaced.
 import {afterEach, describe, expect, it, vi} from 'vitest';
 vi.mock('../../src/island/ui.js', () => ({createIslandUi: () => ({open: null, active: false,
-  close() {}, dispose() {}, toast() {}, banner() {}, visit() {}})}));
+  close() {}, dispose() {}, toast() {}, banner() {}, visit() {}, clearBuildingFeedback() {}})}));
 vi.mock('../../src/island/move-bar.js', () => ({createMoveBar: () => ({render() {}, dispose() {}})}));
 vi.mock('../../src/island/village-bar.js', () => ({createVillageBar: () => ({render() {}, focusBuildings() { return false; }, setBuildings() {}, dispose() {}})}));
 vi.mock('../../src/island/wall-builder-bar.js', () => ({createWallBuilderBar: () => ({render() {}, dispose() {}})}));

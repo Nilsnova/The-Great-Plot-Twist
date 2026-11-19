@@ -5,11 +5,12 @@
 // ring. A closure over the renderer's layers and pools, passed in by render.js.
 import { projectGround, projectGroundVector, projectLegacyGround } from '../world/projection.js';
 import { HARPOON_ART, pirateFrames, CULVERIN_ART, SWIVEL_ART } from '../pixel/pirate-catalog.js';
+import { RECOVERY_BADGE, recoveryBadgeFill, recoveryBadgeLift, recoveryBadgeTone } from '../art/structure-health-badge.js';
 import { FRAMES, SHIP_VARIANTS, SHIP_SIZE, SHIP_DRAWN_SIZE, SHIP_DRAWN, WHITE, opt, damageInto, RGB, SMOKE, ARMOURED,
   RED, GREEN, GOLD, tinted, DARK, bandOf, BOARDER_ART, BRUTE_LOOK, MILITIA_IDS, TEAL, FALL_SECONDS, SPRAY,
   SHOT_TRAIL, SPARK_TRAIL, SHOT, CANNONBALL_LOOK, CANNONBALL_TAIL, BOMB_TRAIL, FIRE_BALL, BOMB_BURST, BURST_SECONDS,
-  EXPLOSION_FRAMES, MUSKET, lookOf, facingTo, SWEEP_SECONDS, STAR, BRASS, TOWER_BAR_LIFT, DOWN_IDS, TRACER,
-  FLASH_SECONDS } from './render-sprites.js';
+  EXPLOSION_FRAMES, MUSKET, lookOf, facingTo, SWEEP_SECONDS, STAR, BRASS, DOWN_IDS, TRACER,
+  FLASH_SECONDS, HEALTH_BADGE, RUIN_BADGE, RECOVERY_TINT } from './render-sprites.js';
 
 // The arguments in this order (render.js passes them so; positional, so the minifier shortens them).
 export function createDraw(rect, layers, bands, posts, ships, crew, guards, splashes, wallFlash, K, still, low,
@@ -364,20 +365,23 @@ export function createDraw(rect, layers, bands, posts, ships, crew, guards, spla
     layers.air.push(rect[WHITE], x - w / 2 - .0625, top - .0625, w + .125, .3125, 0, 0, tinted(DARK, .8));
     layers.air.push(rect[WHITE], x - w / 2, top, w * share, .1875, 0, 0, opt(1, share > .5 ? GREEN : share > .25 ? GOLD : RED));
   }
-  function drawRecoveryHealthBar(item) {
-    const { z, hp, maxHp } = item, x = drawnX(item.x, z);
+  function drawRecoveryHealthBar({hp, maxHp}, position, kind) {
+    if (!position) return;
+    const {z} = position, x = drawnX(position.x, z);
     if (!Number.isFinite(x) || !Number.isFinite(z) || !Number.isFinite(hp) || !(maxHp > 0) || hp >= maxHp) return;
-    const w = 1.3, top = drawnY(z) + TOWER_BAR_LIFT * K();
-    layers.air.push(rect[WHITE], x - w / 2 - .0625, top - .0625, w + .125, .3125, 0, 0, tinted(DARK, .8));
-    if (hp <= 0) {
-      // A ruin needs a positive visual signal; a zero-width red bar disappears against its dark track.
-      layers.air.push(rect[WHITE], x - .055, top + .015, .11, .17, .5, 0, tinted(RED, 1));
-      layers.air.push(rect[WHITE], x - .055, top + .22, .11, .08, .5, 0, tinted(RED, 1));
-      return;
+    const { width, height, units, fillInset, fillHeight } = RECOVERY_BADGE;
+    const destroyed = hp <= 0, badge = rect[destroyed ? RUIN_BADGE : HEALTH_BADGE];
+    const center = drawnY(z) + recoveryBadgeLift(kind), left = x - width / (2 * units), bottom = center - height / (2 * units);
+    layers.air.push(badge ?? rect[WHITE], x, center, width / units, height / units, .5, height / (2 * units),
+      badge ? undefined : opt(1, DARK));
+    if (destroyed && !badge) {
+      layers.air.push(rect[WHITE], left + 26 / units, bottom + 5 / units, 2 / units, 3 / units, 0, 0, opt(1, RECOVERY_TINT.light));
+      layers.air.push(rect[WHITE], left + 26 / units, bottom + 2 / units, 2 / units, 2 / units, 0, 0, opt(1, RECOVERY_TINT.light));
     }
-    const share = Math.max(.08, Math.min(1, hp / maxHp)); // Keep a 1-unit positive structure visible at a pixel scale.
-    layers.air.push(rect[WHITE], x - w / 2, top, w * share, .1875, 0, 0,
-      opt(1, share > .5 ? GREEN : share > .25 ? GOLD : RED));
+    if (destroyed) return;
+    const share = hp / maxHp;
+    layers.air.push(rect[WHITE], left + fillInset / units, bottom + fillInset / units,
+      recoveryBadgeFill(share) / units, fillHeight / units, 0, 0, opt(1, RECOVERY_TINT[recoveryBadgeTone(share)]));
   }
   function drawDown(hero, x, z, reviving) {
     x = drawnX(x, z);

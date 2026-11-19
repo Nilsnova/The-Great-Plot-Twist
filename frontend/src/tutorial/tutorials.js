@@ -225,7 +225,7 @@ export function createTutorials({container = globalThis.document?.body, on, stor
     // Hidden while a card or a cutscene covers the game; the strip keeps the step.
     if (p.dialog || p.cutscene) { coach.hide(); return; }
     const index = guide.step + 1;
-    coach.show({step: `Step ${index} of ${GUIDE_STEPS.length}`, title: step.label, caption: guideCaption(guide, step), keys: step.keys ?? ''});
+    coach.show({step: `Step ${index} of ${GUIDE_STEPS.length}`, title: step.label, caption: guideCaption(guide, step), keys: step.keys ?? '', inCombat: p.waveRunning});
     if (!target || t - targetAt > 500) {
       targetAt = t;
       target = step.target === 'spot' ? spotTarget() : step.target;

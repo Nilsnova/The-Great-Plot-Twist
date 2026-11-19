@@ -1,7 +1,7 @@
 // Personal balance reconciliation survives overlapping real island reads without replacing island/rejoin identity.
 import {afterEach, describe, expect, it, vi} from 'vitest';
 vi.mock('../../src/island/ui.js', () => ({createIslandUi: () => ({open: null, active: false,
-  close() {}, dispose() {}, toast() {}, banner() {}, visit() {}, captainCard() {}, overviewCard() {}})}));
+  close() {}, dispose() {}, toast() {}, banner() {}, visit() {}, captainCard() {}, overviewCard() {}, clearBuildingFeedback() {}})}));
 vi.mock('../../src/island/move-bar.js', () => ({createMoveBar: () => ({render() {}, dispose() {}})}));
 vi.mock('../../src/island/village-bar.js', () => ({createVillageBar: () => ({render() {}, setBuildings() {}, dispose() {}})}));
 vi.mock('../../src/island/wall-builder-bar.js', () => ({createWallBuilderBar: () => ({render() {}, dispose() {}})}));

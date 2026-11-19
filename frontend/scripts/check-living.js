@@ -20,7 +20,14 @@ try{
   await page.keyboard.press('Escape');await page.locator('.account-modal').waitFor({state:'hidden'});
   await page.getByRole('button',{name:'Back',exact:true}).click();await startFromTitle(page);
   check(true,'Play lands in Saltreach Harbor without any API');
-  await page.evaluate(async()=>{const {initialPresenceState}=await import('/src/adapter/fake/presence.js');window.__plotTwist.adapter.dev.setPresence(initialPresenceState({count:30}));});
+  await page.evaluate(async()=>{
+    const {initialPresenceState}=await import('/src/adapter/fake/presence.js');
+    const nearby=initialPresenceState({count:30}), game=window.__island;
+    const {x,z}=game.player.position, place=game.world.current.id;
+    // The fake simulator starts at Lighthouse Isle. Place the same crowd near the actual arrival.
+    for(const peer of nearby.peers){peer.place=place;peer.x+=x-nearby.x;peer.y+=z-nearby.y;}
+    window.__plotTwist.adapter.dev.setPresence({...nearby,place,x,y:z});
+  });
   await page.waitForFunction(()=>window.__island.experience.stats.drawn===8);
   check(await page.evaluate(()=>window.__island.experience.stats.hidden===22),'Thirty nearby captains draw at most eight and keep an overflow count');
   report.performance=await measure(page);check(report.performance.calls<150,'Eight live captains and effects meet the draw-call budget');await capture('Presence');
@@ -41,10 +48,11 @@ try{
   check(await page.evaluate(prior=>window.__reports.length>prior,prior),'Hiding other captains keeps this captain’s movement reports live');
   await openSettingsFromMenu(page);await page.locator('[data-preference=showCaptains] input[value=everyone]').check();await closeSettings(page);
   await page.waitForFunction(()=>window.__island.experience.stats.drawn>0&&window.__island.experience.stats.drawn<=8);
-  await page.locator('.presence-hud').getByRole('button',{name:'Emotes',exact:true}).click();
-  await page.getByRole('button',{name:'Emote wave',exact:true}).click();
+  const emote=await page.evaluate(()=>window.__plotTwist.adapter.setEmote('wave'));
+  check(emote.accepted,'The local world adapter accepts an emote');
   await page.waitForFunction(()=>window.__island.scene.getObjectByName('local-captain-emote')?.visible);
-  check(await page.locator('[data-focus=presence-wave]').isDisabled(),'A speech-bubble emote appears and its cooldown comes from the adapter');
+  const repeat=await page.evaluate(()=>window.__plotTwist.adapter.setEmote('wave'));
+  check(!repeat.accepted&&repeat.reason==='emote_cooldown','A speech-bubble emote appears and its cooldown comes from the adapter');
   await page.evaluate(()=>window.__plotTwist.adapter.dev.setAccount({state:'expired'}));
   await page.locator('.account-modal[open] .account-banner').waitFor();check(await page.locator('.account-banner').textContent().then(text=>text.includes('Sign in again')),'Expired session asks to sign in again');
   await page.getByRole('button',{name:'Sign in again with GitHub',exact:true}).click();await page.waitForFunction(()=>window.__plotTwist.adapter.read().account.state==='signed_in');
