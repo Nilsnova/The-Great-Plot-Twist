@@ -20,9 +20,9 @@ export function createHomeLanding(group) {
       colors.push(color.r, color.g, color.b);
     }
   }
-  function timber(left, right, from, to, bottom, top, tint, side = longGrain) {
+  function timber(left, right, from, to, bottom, top, tint, side = longGrain, at = center) {
     const section = z => {
-      const x = center(z), low = bottom(z), high = top(z);
+      const x = at(z), low = bottom(z), high = top(z);
       return {bl: [x + left, low, z], br: [x + right, low, z], tl: [x + left, high, z], tr: [x + right, high, z]};
     };
     const a = section(from), b = section(to);
@@ -86,15 +86,45 @@ export function createHomeLanding(group) {
   }
   for (const side of [-1, 1]) rail(side, START + .31, far - .23);
 
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-  geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-  const material = new THREE.MeshBasicMaterial({vertexColors: true, side: THREE.DoubleSide,
-    transparent: true, forceSinglePass: true, depthTest: true, depthWrite: true, toneMapped: false});
-  const mesh = new THREE.Mesh(geometry, material);
-  mesh.name = 'home-timber-landing';
-  mesh.renderOrder = 6;
-  mesh.raycast = () => {};
-  group.add(mesh);
-  return mesh;
+  // A slack rope at the end of the dry landing makes the floating stage read as mooring scenery.
+  const gate = far - .23;
+  const knot = (fraction, offset) => [
+    center(gate) + THREE.MathUtils.lerp(-.74, .74, fraction),
+    height(gate) + .55 - Math.sin(Math.PI * fraction) * .15 + offset, gate,
+  ];
+  for (let i = 0; i < 5; i++) {
+    quad(knot(i / 5, 0), knot((i + 1) / 5, 0), knot((i + 1) / 5, .067), knot(i / 5, .067), '#c7a776');
+  }
+
+  function mount(name, order) {
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+    geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+    const material = new THREE.MeshBasicMaterial({vertexColors: true, side: THREE.DoubleSide,
+      transparent: true, forceSinglePass: true, depthTest: true, depthWrite: true, toneMapped: false});
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.name = name; mesh.renderOrder = order; mesh.raycast = () => {};
+    group.add(mesh);
+    vertices.length = colors.length = 0;
+    return mesh;
+  }
+  mount('home-timber-landing', 6);
+
+  const stageStart = far + .11, stageEnd = stageStart + STEP * 10;
+  const stageCenter = z => center(far) + (z - stageStart) * .17;
+  const deckTop = () => .18, deckBottom = () => -.025;
+  for (const offset of [-.66, .66]) {
+    timber(offset - .08, offset + .08, stageStart, stageEnd + .02, () => -.18, deckBottom,
+      longGrain, endGrain, stageCenter);
+  }
+  for (let i = 0; i < 10; i++) {
+    const from = stageStart + STEP * i, to = from + STEP - .018;
+    const left = i > 6 ? -1.78 + (i - 7) * .09 : -.88;
+    const right = .86 + (i % 3) * .032;
+    timber(left, right, from, to, deckBottom, deckTop, boards[(i + 2) % boards.length], longGrain, stageCenter);
+  }
+  for (const [offset, z] of [[-.74, stageStart + .24], [.74, stageStart + .24], [-1.56, stageEnd - .29], [.71, stageEnd - .29]]) {
+    pile(stageCenter(z) + offset, z, .85);
+  }
+  return mount('home-mooring-stage', 7);
 }
