@@ -116,7 +116,7 @@ try{
  await finishEntry(page,{join:hostCode});
  const blank=await context.newPage();await blank.bringToFront();await page.bringToFront();await blank.close();
  await page.waitForFunction(()=>!!window.__island.island.session.proof(),null,{timeout:30000});
- const before=await state(),oldTopic='realtime:live:place:'+before.metadata.session.place+':'+before.metadata.session.topicGeneration;
+ const before=await state(),oldTopic='realtime:live:place:'+before.metadata.session.place+':'+'1';
  for(let n=0;n<40&&!frames.some(f=>f.direction==='sent'&&f.topic===oldTopic&&f.kind==='phx_join');n++)await page.waitForTimeout(250);
  const join=frames.find(f=>f.direction==='sent'&&f.topic===oldTopic&&f.kind==='phx_join');assert.ok(join);
  for(let n=0;n<40&&!frames.some(f=>f.direction==='received'&&f.topic===oldTopic&&f.kind==='phx_reply'&&f.ref===join.ref&&f.status==='ok');n++)await page.waitForTimeout(250);
