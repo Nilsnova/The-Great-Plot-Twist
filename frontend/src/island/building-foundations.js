@@ -112,8 +112,8 @@ function geometryOf(foundations) {
   for (const {x, z, slot, ruin} of foundations) {
     const {width, depth, rear, reach} = FORMS[slot], scale = ruin ? .72 : 1;
     const footZ = z - rear + .13, halfWidth = (width + .08) * scale, halfDepth = (depth + .24) * scale;
-    appendGroundShadow((gx, gz, tint, alpha) => vertex(gx, gz, 0, tint, alpha, 1,
-      [(gx - x) / halfWidth, (gz - footZ) / halfDepth, FOOTING.shadow]), indices, {
+    appendGroundShadow((gx, gz, tint, alpha, contact) => vertex(gx, gz, 0, tint, alpha, 1,
+      [(gx - x) / halfWidth, (gz - footZ) / halfDepth, contact ? FOOTING.contact : FOOTING.shadow]), indices, {
       x, z: footZ, width: halfWidth, depth: halfDepth,
       reach: reach * (ruin ? .32 : 1), opacity: ruin ? .51 : 1,
     });

@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import {sandstoneFinishGlsl} from '../world/places/home-relief.js';
 import {groundProjectionGlsl} from '../world/projection.js';
 
-export const FOOTING = {shadow: 0, tread: 1, riser: 2, retaining: 3, joint: 4};
+export const FOOTING = {contact: -1, shadow: 0, tread: 1, riser: 2, retaining: 3, joint: 4};
 
 export function foundationMaterial() {
   return new THREE.ShaderMaterial({
@@ -28,13 +28,17 @@ export function foundationMaterial() {
 
       vec4 finish(vec3 local, vec3 ground, vec4 tint) {
         if (local.z < ${FOOTING.tread - .5}) {
-          // Strong contact at the foot and a lighter falloff across the walkable ground.
-          vec2 foot = local.xy * vec2(.96, 1.13);
-          float contact = 1.0 - smoothstep(.055, .88, dot(foot, foot));
-          float weight = mix(.76, 1.17, contact);
-          float alpha = tint.a * (weight + .14 * contact * smoothstep(.21, .44, tint.a));
-          vec3 shade = tint.rgb * mix(vec3(1.08, 1.15, 1.06), vec3(.85, .78, .75), contact);
-          return vec4(shade, alpha);
+          if (local.z < ${FOOTING.shadow - .5}) {
+            // Keep the ambient occlusion close to the stone and a little deeper on its lee side.
+            vec2 foot = (local.xy - vec2(.09, .10)) * vec2(.93, 1.09);
+            float contact = 1.0 - smoothstep(.27, .98, dot(foot, foot));
+            float lee = smoothstep(-.45, .60, dot(local.xy, vec2(.39, .61)));
+            float alpha = min(.85, tint.a * (.76 + contact * (.59 + .26 * lee)));
+            return vec4(tint.rgb * mix(vec3(.96, .92, .83), vec3(.62, .57, .49), contact), alpha);
+          }
+          // Soft scattered light makes the longer roof cast a cooler, quieter shadow on the paving.
+          float spread = smoothstep(.08, .50, tint.a);
+          return vec4(tint.rgb * vec3(1.06, 1.15, 1.09), tint.a * mix(.67, .92, spread));
         }
 
         vec2 uv = local.xy;

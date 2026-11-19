@@ -12,8 +12,8 @@ const onShadowGround = (x, z) => surfaceClass('home_islet', x * 1.015, z * 1.015
 
 export function appendGroundShadow(vertex, indices, {x, z, width, depth, reach, canopy = false, opacity = 1}) {
   if (!onShadowGround(x, z)) return;
-  function dryVertex(gx, gz, tint, alpha) {
-    if (onShadowGround(gx, gz)) return vertex(gx, gz, tint, opacity * alpha);
+  function dryVertex(gx, gz, tint, alpha, contact) {
+    if (onShadowGround(gx, gz)) return vertex(gx, gz, tint, opacity * alpha, contact);
     // Fade a clipped end to zero instead of drawing the silhouette over the cove or cliff face.
     let from = 0, to = 1;
     for (let i = 0; i < 8; i++) {
@@ -21,14 +21,14 @@ export function appendGroundShadow(vertex, indices, {x, z, width, depth, reach, 
       if (onShadowGround(x + (gx - x) * middle, z + (gz - z) * middle)) from = middle;
       else to = middle;
     }
-    return vertex(x + (gx - x) * from, z + (gz - z) * from, tint, 0);
+    return vertex(x + (gx - x) * from, z + (gz - z) * from, tint, 0, contact);
   }
-  function gradient(cx, cz, tint, core, penumbra, softEdge, outline) {
-    const center = dryVertex(cx, cz, tint, core), inner = [], outer = [];
+  function gradient(cx, cz, tint, core, penumbra, softEdge, outline, contact = false) {
+    const center = dryVertex(cx, cz, tint, core, contact), inner = [], outer = [];
     for (const angle of OUTLINE) {
       const [dx, dz] = outline(angle);
-      inner.push(dryVertex(cx + dx * softEdge, cz + dz * softEdge, tint, penumbra));
-      outer.push(dryVertex(cx + dx, cz + dz, tint, 0));
+      inner.push(dryVertex(cx + dx * softEdge, cz + dz * softEdge, tint, penumbra, contact));
+      outer.push(dryVertex(cx + dx, cz + dz, tint, 0, contact));
     }
     for (let index = 0; index < OUTLINE.length; index++) {
       const next = (index + 1) % OUTLINE.length;
@@ -45,7 +45,7 @@ export function appendGroundShadow(vertex, indices, {x, z, width, depth, reach, 
     const across = breadth * (canopy ? v * (.85 + .14 * u) : roundedCorner(v)) * crown;
     return [CAST_X * along - CAST_Z * across, CAST_Z * along + CAST_X * across];
   });
-  gradient(x, z, CONTACT_SHADE, .57, .39, .69, angle => [width * Math.cos(angle), depth * Math.sin(angle)]);
+  gradient(x, z, CONTACT_SHADE, .57, .39, .69, angle => [width * Math.cos(angle), depth * Math.sin(angle)], true);
 }
 
 export function createGroundShadows(group, shadows) {
