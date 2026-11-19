@@ -281,6 +281,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
       if(disposed)return null;
       const fakeTransport=fake?fake.createFakeIslandTransport():null;
       island=module.createIsland({container,emit,on,mode:islandsMode,transport:fakeTransport,
+        isOnIsland:()=>world.current?.id==='home_islet',
         getActorId:()=>findPanelServices(session)?.getActorId()??null,
         getTransport:()=>findPanelServices(session)?.request,authGeneration:()=>session.getScope?.()??session,
         onAuthGenerationChange:listener=>session.onChange(listener),resetInput:resetControls,reducedMotion,preferences:getPreferences,

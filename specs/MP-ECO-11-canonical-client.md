@@ -144,3 +144,15 @@ until the old leave is confirmed; a historical leave receipt never supplies curr
 On reload, only an exclusive actor tab lock permits using a saved known generation for departure.
 An unknown attachment has no known proof and follows the inert-retention policy above.
 Late confirmations remove only their matching saved session, never a newer session descriptor.
+A definitive stale_controller refusal retires only that exact obsolete departure and saved proof:
+another document already rotated the generation. It supplies no successful leave fact or current
+control. The next attachment and fresh read must establish any new authority. Unknown/401 remains held.
+
+## Running-island session binding
+
+Construct session transport after the island's authenticated transport exists. Acquire control only
+after a canonical selected island advertises session availability and that island is physically on
+screen. Use the fresh server nonce place verbatim for room/presence selection. Unknown shared
+context yields no legacy room. Travel, selection and identity changes revoke local control and
+withdraw known proof; blur/hidden documents disconnect into the server's fixed grace. Focus may
+resume only through the persisted attachment and fresh read. No browser deadline withdraws a Captain.

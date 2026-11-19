@@ -132,3 +132,9 @@ it('resolves saved known departure under the exclusive tab lock before attaching
  expect(second.api.leave).toHaveBeenCalledOnce();expect(second.api.attach).toHaveBeenCalledOnce();
  expect(second.api.leave.mock.invocationCallOrder[0]).toBeLessThan(second.api.attach.mock.invocationCallOrder[0]);
 });
+it('retires only a definitively stale departure after another document rotated that generation',async()=>{
+ const f=setup();await f.client.open();f.api.leave.mockResolvedValue({ok:false,status:409,code:'stale_controller'});
+ await f.client.leave();f.api.attach.mockResolvedValue({ok:false,status:409,code:'controller_held'});await f.client.open();
+ expect(f.api.leave).toHaveBeenCalledOnce();expect(f.api.attach).toHaveBeenCalledTimes(2);
+ expect(f.api.attach.mock.calls[1][0].body.expectedGeneration).toBe('0');expect(f.client.proof()).toBeNull();
+});

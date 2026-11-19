@@ -71,13 +71,15 @@ import {createActions} from './island-actions.js';
 import {createIslandEconomy} from './island-economy.js';
 import {createSharedBoatApi} from './shared-boat-api.js';
 import {createBoatRoundSession} from './shared-boat-session.js';
+import {createIslandSession} from './island-session.js';
+import {readLegacyEconomy} from './economy-view.js';
 
 export {ARRIVAL_KEY, SPOTS_CHANGED, NEWS_KEY, CAMPAIGN_UNLOCKED, TOWER_SPECIALISED, TOWER_TREE_BOUGHT,
   HOUSE_ROLE_PICKED, VISIT_NAMED, ISLAND_RESET, CHART_NAMES, ALL_REPAIRED} from './island-shared.js';
 
 export function createIsland({container, emit, on, mode = 'live', getTransport = () => null, transport = null,
   search = globalThis.location?.search ?? '', focus = () => {}, resetInput = () => {}, reducedMotion = () => false,
-  preferences = () => ({}), storage = safeLocal(), visitStorage = undefined, getActorId = () => null,
+  preferences = () => ({}), storage = safeLocal(), visitStorage = undefined, getActorId = () => null, isOnIsland = () => true,
   authGeneration = () => transport, onAuthGenerationChange = () => () => {},
   loadCutscenes = () => import('../cutscenes/player.js'),
   loadBoatScene = () => import('../pirates/boat/scene.js'),
@@ -90,7 +92,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   // The island's state, shared by its parts (island-*.js) as isl.own, isl.visiting, isl.ui, ...: every `let` of this
   // closure and the objects built below that the parts use; the options too.
   const isl = {container, emit, on, mode, getTransport, transport, search, focus, resetInput, reducedMotion,
-    preferences, storage, visitStorage, getActorId, authGeneration, onAuthGenerationChange, loadCutscenes, loadBoatScene, onCoins, onCaptain, onQuestIsland, menu,
+    preferences, storage, visitStorage, getActorId, isOnIsland, authGeneration, onAuthGenerationChange, loadCutscenes, loadBoatScene, onCoins, onCaptain, onQuestIsland, menu,
     settings, now, setTimer, clearTimer, openHarborStall, travel, villageCamera, wallRecovery, structureRecoveryOn,
     defensesV2On};
   Object.assign(isl, createIslandEconomy(isl));
@@ -153,6 +155,9 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     waveProtocol: where => where === 'pirate_point' ? 1 : 2});
   isl.recoveryTransport = Object.freeze({get: (path, ...options) => isl.islandTransport.get(path, ...options),
     post: (path, body, ...options) => isl.islandTransport.post(path, body, ...options)});
+  isl.session = createIslandSession(isl);
+  const roomPlace = () => mode === 'fake' || readLegacyEconomy(isl.getEconomy())
+    ? islandRoom(isl.visiting?.code ?? isl.visitCode ?? isl.own?.code ?? '') || null : isl.session.roomPlace();
   isl.ui = createIslandUi({container, focus, resetInput,
     onSelection: active => isl.villageBar.render(isl.village.active && !active && !isl.moving.active)});
   // T36, flexible placement: Move mode (move-mode.js) with its bar (move-bar.js) and the preview on the island.
@@ -230,6 +235,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   const stopPoint = on('arrived', event => { if (event.place === POINT_PLACE) void loadPoint(); });
   // Leaving the island closes its card and ends a visit (the next landing is your own island).
   const stopTravel = on('travel', event => {
+    void isl.session.leave();
     interruptBoat();
     isl.village.leave();
     invalidateWallFeedback();
@@ -321,7 +327,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     },
     presencePlace(place) {
       if (place !== ISLAND_PLACE) return null;
-      return islandRoom(isl.visiting?.code ?? isl.visitCode ?? isl.own?.code ?? '');
+      return roomPlace();
     },
     load, loadPoint, playArrival, visit, sailHome, resetIsland, pick, build, upgrade, hire, upgradeCaptain, learnSkill, takeRole, respecCaptain, setPresence,
     setRecoveryCombatState, setRecoveryCheckpointHandler, setCoreCombatState,
@@ -366,7 +372,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     resetWalletRecovery() { isl.pendingWallet = null; isl.walletGeneration++; wrote('own'); },
     get recoveryTransport() { return isl.recoveryTransport; },
     get recoveryVersion() { return recoveryModelVersion(); },
-    roomPlace: () => islandRoom(isl.visiting?.code ?? isl.visitCode ?? isl.own?.code ?? '') || null,
+    roomPlace,
+    get session() { return isl.session; },
     // A recovery wave ended on screen (controller.js): free the bell and the village, and with its close
     // answer ({survived, loot, coins, waveBest, flags}) tell the island like a finish answer.
     recoveryWaveEnded(waveId, data = null) { if (!isl.disposed && typeof waveId === 'string') isl.flow.ended(waveId, data); },
@@ -440,6 +447,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     dispose() {
       stopEconomyIdentity?.();
       if (isl.disposed) return; isl.disposed = true;
+      isl.session.dispose();
       isl.village.dispose(); isl.villageBar.dispose();
       stopRecoveryPoll(); isl.recoveryReadId++;
       stopFinished(); stopStarted(); stopArrived(); stopPoint(); stopInteract(); stopTravel(); stopMenu?.(); stopSettings?.(); stopStartedGame(); isl.stopGame(); clearTimeout(isl.syncSoon);

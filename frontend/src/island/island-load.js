@@ -173,6 +173,7 @@ export function createLoading(isl) {
     }
   }
   function endVisit(invalidateLoad = true) {
+    void isl.session?.leave();
     invalidateWallFeedback();
     isl.selectionGeneration++; if (invalidateLoad) isl.loadTicket++;
     isl.moving.cancel(); isl.demolishSpot = null; isl.demolishQuote = null;
@@ -253,6 +254,8 @@ export function createLoading(isl) {
     void syncGame();
     void isl.arsenal.refresh();
     if (target()) {
+      await isl.session?.ensure();
+      if(!currentLoad())return {ok:false};
       const context = syncCoreContext();
       const answer = await isl.flow.look(where());
       // A retained controller may resume only after this landing confirms its actual server wave.

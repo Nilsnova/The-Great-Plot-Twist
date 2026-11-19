@@ -37,6 +37,7 @@ export function createIslandEconomy(isl) {
       const next = isl.authGeneration();
       if (isl.disposed || Object.is(next, accepted)) return;
       accepted = next;
+      void isl.session?.leave();
       isl.selectionGeneration++; isl.loadTicket++; isl.resetGeneration++; isl.coreTravelGeneration++;
       isl.own = null; isl.visiting = null; isl.point = null; isl.lobbyAnswer = null; isl.gameCode = null; isl.here = new Map();
       isl.funding = createIslandFunding();

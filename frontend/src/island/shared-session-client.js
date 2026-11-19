@@ -101,7 +101,9 @@ export function createSharedSessionClient({api,getEconomy,getActorId,getAuthGene
  async function depart(actor){
   const record=intents.depart(actor);if(!record)return {ok:true,data:null};
   let answer;try{answer=await api.leave(record);}catch{return failed('network_error','The departure did not finish. Retry it.',0);}
-  if(answer.ok)intents.departed(record);
+  const stale=answer.status===409 && answer.code==='stale_controller';
+  if(answer.ok || stale)intents.departed(record);
+  if(stale)return {ok:true,data:null,retired:true}; // The obsolete generation grants no present control.
   return answer;
  }
  async function leave(){
