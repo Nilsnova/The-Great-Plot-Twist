@@ -31,6 +31,15 @@ const FOLIAGE = {
   25: [['shrub', .23, .72, .58], ['shrub', .35, .75, .42], ['grass-tuft', .71, .72, .62], ['flowers', .78, .33, .52]],
   55: [['grass-tuft', .25, .69, .62], ['shrub', .46, .72, .55], ['shrub', .63, .77, .64], ['flowers', .78, .32, .55]],
 };
+// Each garden is tucked into an existing end of a bank or onto the exposed turf.
+const ROCK_GARDENS = {
+  101: [.25, .78],
+  116: [.82, -.16],
+  140: [.15, -.19],
+  162: [.28, .80],
+  25: [.60, .72],
+  55: [.63, .73],
+};
 const SHADOW = new THREE.Color('#3e4a2d');
 const SUN = new THREE.Vector3(-.6, .71, .43).normalize();
 const STEP = .5;
@@ -80,10 +89,12 @@ function addTerraceFoliage(root, art, plantings) {
   for (const [name, plants] of plantings) {
     if (!art[name]) continue;
     const [width, height, foot] = artSizes[name];
-    const positions = [], uv = [], indices = [];
+    const positions = [], uv = [], indices = [], feet = [];
     for (const [plant, scale] of plants.sort(([a], [b]) => a.z - b.z)) {
       const projected = projectGround(plant.x, plant.z);
-      const half = width * scale * .5, bottom = projected.y + plant.y - height * scale * foot;
+      const footY = projected.y + plant.y;
+      feet.push(footY);
+      const half = width * scale * .5, bottom = footY - height * scale * foot;
       const top = bottom + height * scale, base = positions.length / 3;
       positions.push(projected.x - half, bottom, 0, projected.x + half, bottom, 0,
         projected.x + half, top, 0, projected.x - half, top, 0);
@@ -91,13 +102,26 @@ function addTerraceFoliage(root, art, plantings) {
       indices.push(base, base + 1, base + 2, base, base + 2, base + 3);
     }
     const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    const displayPosition = new THREE.Float32BufferAttribute(positions, 3).setUsage(THREE.DynamicDrawUsage);
+    geometry.setAttribute('position', displayPosition);
     geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
     geometry.setIndex(indices);
     const mesh = new THREE.Mesh(geometry, art[name]);
-    const order = {'birch': 0, shrub: 1, 'grass-tuft': 2, flowers: 3};
+    const order = {birch: 0, rock: 1, shrub: 2, 'grass-tuft': 3, flowers: 4};
     mesh.name = `home-terrace-${name}`;
     mesh.renderOrder = 4.8 + order[name] * .01;
+    let previousDepth = 1;
+    mesh.onBeforeRender = (_, _scene, camera) => {
+      const depth = camera.userData.homePortraitDepth ?? 1;
+      if (depth === previousDepth) return;
+      // The portrait lens extends the ground. Keep upright sprite proportions around each foot.
+      for (let i = 0; i < displayPosition.count; i++) {
+        const footY = feet[Math.floor(i / 4)];
+        displayPosition.setY(i, footY + (positions[i * 3 + 1] - footY) / depth);
+      }
+      displayPosition.needsUpdate = true;
+      previousDepth = depth;
+    };
     mesh.raycast = () => {};
     root.add(mesh);
   }
@@ -164,23 +188,29 @@ export function createHomeTerraces(root, coastArt, art) {
         point(radius - (material === LIP ? .031 + .006 * Math.sin(sample * 2.3) : 0), elevation));
       rows.push({sample, point, shape});
     }
-    if (art) for (const [name, along, across, scale] of FOLIAGE[first]) {
-      const sample = THREE.MathUtils.lerp(start, finish, along);
-      const high = across > .50;
-      const elevation = high ? (front ? .99 : 1) : (front ? .572 : .517);
-      const plant = samplePoint(sample)(across, elevation);
-      if (!plantings.has(name)) plantings.set(name, []);
-      plantings.get(name).push([plant, scale]);
+    function heightAt(radius) {
+      const next = profile.findIndex(([r]) => r >= radius);
+      const [r0, h0] = profile[Math.max(0, next - 1)], [r1, h1] = profile[next];
+      return THREE.MathUtils.lerp(h0, h1, r0 === r1 ? 0 : (radius - r0) / (r1 - r0));
+    }
+    if (art) {
+      const addPlant = (name, along, across, scale) => {
+        const sample = THREE.MathUtils.lerp(start, finish, along);
+        const plant = samplePoint(sample)(across, heightAt(across));
+        if (!plantings.has(name)) plantings.set(name, []);
+        plantings.get(name).push([plant, scale]);
+      };
+      FOLIAGE[first].forEach(entry => addPlant(...entry));
+      const [along, across] = ROCK_GARDENS[first];
+      // Contrast the warm courses with gray stones and tucked foliage, like a natural rock garden.
+      addPlant('rock', along, across, front ? .65 : .82);
+      addPlant('rock', along + .08, across - .074, .40);
+      addPlant('grass-tuft', along - .035, across - .106, .54);
     }
     for (let i = 0; i < rows.length - 1; i++) {
       const a = rows[i].point, b = rows[i + 1].point;
       face(a(-.26, 0), b(-.26, 0), b(.10, 0), a(.10, 0),
         SHADOW, 0, 0, -1, [0, 0, .44, .44]);
-    }
-    function heightAt(radius) {
-      const next = profile.findIndex(([r]) => r >= radius);
-      const [r0, h0] = profile[Math.max(0, next - 1)], [r1, h1] = profile[next];
-      return THREE.MathUtils.lerp(h0, h1, r0 === r1 ? 0 : (radius - r0) / (r1 - r0));
     }
     for (const [side, row] of [rows[0], rows.at(-1)].entries()) {
       // Return the stone courses around the exposed ends. The backs dissolve into the meadow.
