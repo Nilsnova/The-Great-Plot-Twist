@@ -28,4 +28,16 @@ describe('placement camera intent', () => {
     focus({...location, positionOnly: false});
     expect(view.focusVillage).toHaveBeenCalledTimes(1);
   });
+
+  it('rechecks the selected anchor when an overlay changes the visible viewport', () => {
+    const view = {focusVillage: vi.fn()}, focus = createVillagePlacementFocus(view);
+    const selection = {spotId: 'cannon_1', x: -12.5, z: -14.5, keepFit: true};
+    const viewport = {width: 320, height: 568, top: 96, bottom: 160};
+    focus(selection, viewport);
+    focus({...selection}, {...viewport});
+    expect(view.focusVillage).toHaveBeenCalledTimes(1);
+    focus(selection, {...viewport, bottom: 280});
+    expect(view.focusVillage.mock.lastCall).toEqual([{x: -12.5, z: -14.5, lift: 1, keepFit: true}]);
+    expect(view.focusVillage).toHaveBeenCalledTimes(2);
+  });
 });
