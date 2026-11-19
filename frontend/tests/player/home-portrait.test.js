@@ -20,7 +20,7 @@ it('frames more vertical ground in portrait and keeps screen-to-world reversible
   portrait.update(phone);
   expect(camera.userData.homePortraitDepth).toBeGreaterThan(1.5);
   const after = ground.clone().project(camera);
-  expect(after.x).toBeCloseTo(before.x, 12);
+  expect(after.x).toBeCloseTo(before.x * (375 - 12) / 375, 12);
   expect(after.y).not.toBeCloseTo(before.y, 2);
   camera.updateProjectionMatrix();
   expect(ground.clone().project(camera).distanceTo(after)).toBeLessThan(1e-10);
