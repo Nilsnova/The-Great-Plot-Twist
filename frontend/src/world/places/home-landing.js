@@ -73,7 +73,7 @@ function shadeTimber(material) {
         diffuseColor.rgb = finishWood(diffuseColor.rgb);
         if (vTimber.w > 2.5 && vTimber.w < 3.5) {
           float depth = vTimber.z * (255.0 / 127.0) - .4;
-          diffuseColor.a *= smoothstep(-.4, -.095, depth);
+          diffuseColor.a *= smoothstep(-.4, -.23, depth);
           if (diffuseColor.a < .025) discard;
         }`);
   };
@@ -197,8 +197,8 @@ export function createHomeLanding(group) {
       longGrain, endGrain, stageCenter);
   }
   // A deeper headstock ties the two seaward piles together beneath the landing.
-  timber(-1.68, 1.01, stageEnd - .107, stageEnd + .008, () => -.17, () => .147,
-    '#a96d44', '#6c4630', stageCenter);
+  timber(-1.68, 1.01, stageEnd - .094, stageEnd + .002, () => -.065, () => .147,
+    '#b4794e', '#724b34', stageCenter);
   for (let i = 0; i < stageSteps; i++) {
     const from = stageStart + STEP * i, to = from + STEP - .028;
     const left = i > 7 ? -1.84 + (i - 8) * .045 : -1.02;
