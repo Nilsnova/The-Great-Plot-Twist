@@ -122,7 +122,11 @@ export function createHomeLanding(group) {
 
   const stageStart = far + .02, stageStep = .32, stagePlanks = 18;
   const stageEnd = stageStart + stageStep * stagePlanks;
-  const stageCenter = z => center(far) - (z - stageStart) * .51;
+  const stageCenter = z => {
+    const along = z - stageStart;
+    // Swing clear of the tender, then follow its berth toward the water.
+    return center(far) - Math.min(along, 2.9) * 1.41 - Math.max(0, along - 2.9) * .23;
+  };
   const deckTop = () => .275, deckBottom = () => .045;
   // A short right berth projects beside the gangway. The main deck runs along the skiff.
   for (const offset of [-1.14, .91]) {
@@ -132,7 +136,7 @@ export function createHomeLanding(group) {
   for (let i = 0; i < stagePlanks; i++) {
     const from = stageStart + stageStep * i, to = from + stageStep - .022;
     const left = -1.34 - (i % 5) * .025;
-    const berth = i >= 2 && i <= 6;
+    const berth = i >= 1 && i <= 3;
     const right = (berth ? 3.23 : 1.24) + (i % 3) * .046;
     timber(left, right, from, to, deckBottom, deckTop, boards[(i + 2) % boards.length], longGrain, stageCenter);
     const grain = (across, z, lift) => [stageCenter(z) + across, deckTop() + lift, z];
@@ -142,7 +146,7 @@ export function createHomeLanding(group) {
     quad(grain(b + .22, from + .188, .008), grain(right - .15, from + .173, .008),
       grain(right - .26, from + .208, .008), grain(b + .28, from + .213, .008), darkGrain);
   }
-  const berthStart = stageStart + stageStep * 2, berthEnd = stageStart + stageStep * 7;
+  const berthStart = stageStart + stageStep, berthEnd = stageStart + stageStep * 4;
   timber(2.85, 3.05, berthStart - .02, berthEnd + .02, () => -.20, deckBottom,
     longGrain, endGrain, stageCenter);
   for (const [offset, z, top] of [
