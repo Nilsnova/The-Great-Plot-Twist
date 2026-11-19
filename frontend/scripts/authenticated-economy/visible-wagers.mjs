@@ -37,17 +37,22 @@ const report={scenario:'visible-unrestricted-wagers',status:'running',startedAt:
 await mkdir(output,{recursive:true});const persist=()=>writeFile(join(output,'report.json'),JSON.stringify(report,null,2)+'\n');
 const check=async(name,facts={})=>{report.steps.push({name,at:new Date().toISOString(),...facts});await persist();console.log(name);};
 const browsers=[],clients=[];
+async function pointFor(locator){return locator.evaluate(element=>{element.scrollIntoView({block:'center',inline:'nearest',behavior:'instant'});const b=element.getBoundingClientRect(),x=b.x+b.width/2,y=b.y+b.height/2,hit=document.elementFromPoint(x,y);
+ return !element.disabled&&b.width>0&&b.height>0&&(hit===element||element.contains(hit))?{x,y}:null;});}
+async function dismissKnown(page){
+ const candidates=[page.locator('.goal-card[open]').getByRole('button',{name:'Got it',exact:true}),page.locator('.island-card-lobby[open] [data-focus="done"]'),page.locator('dialog.cutscene[open],.tutorial-card[open]').getByRole('button',{name:'Skip',exact:true})];
+ for(const candidate of candidates){for(let i=0;i<await candidate.count();i++){try{const point=await pointFor(candidate.nth(i));if(point){await page.mouse.click(point.x,point.y);await page.waitForTimeout(150);return true;}}catch(error){if(!/detach|resolve|attached/i.test(error.message))throw error;}}}return false;
+}
 async function pointer(page,locator){
  await locator.waitFor({state:'visible',timeout:15000});let point;
  for(let i=0;i<60&&!point;i++){
-  try{point=await locator.evaluate(element=>{element.scrollIntoView({block:'center',inline:'nearest',behavior:'instant'});const b=element.getBoundingClientRect(),x=b.x+b.width/2,y=b.y+b.height/2,hit=document.elementFromPoint(x,y);
-   return !element.disabled&&b.width>0&&b.height>0&&(hit===element||element.contains(hit))?{x,y}:null;});}catch(error){if(!/detach|resolve|attached/i.test(error.message))throw error;}
-  if(!point)await page.waitForTimeout(100);
+  try{point=await pointFor(locator);}catch(error){if(!/detach|resolve|attached/i.test(error.message))throw error;}
+  if(!point){await dismissKnown(page);await page.waitForTimeout(100);}
  }
  assert.ok(point,'A visible enabled product button must own the actual pointer');await page.mouse.click(point.x,point.y);
 }
-async function guides(page){for(let i=0;i<12;i++){if(!await page.locator('dialog.cutscene[open],.goal-card[open],.tutorial-card[open]').count())return;await page.keyboard.press('Escape');await page.waitForTimeout(100);}throw Error('Ordinary guide dismissal did not settle');}
-async function closePanels(page){for(let i=0;i<5;i++){if(!await page.locator('dialog[open]').count())return;await page.keyboard.press('Escape');await page.waitForTimeout(150);}}
+async function guides(page){for(let i=0;i<12;i++){if(!await dismissKnown(page))return;}throw Error('Ordinary guide dismissal did not settle');}
+async function closePanels(page){for(let i=0;i<8;i++){if(await dismissKnown(page))continue;const buttons=page.locator('dialog[open] > header').getByRole('button',{name:'Close dialog',exact:true});let closed=false;for(let n=await buttons.count()-1;n>=0;n--){try{const p=await pointFor(buttons.nth(n));if(p){await page.mouse.click(p.x,p.y);closed=true;break;}}catch(error){if(!/detach|resolve|attached/i.test(error.message))throw error;}}if(!closed)return;await page.waitForTimeout(150);}}
 async function openMarket(page){await closePanels(page);await guides(page);await page.evaluate(()=>{const island=window.__island.island;island.ui.close();island.pick('island_harbor');});
  await pointer(page,page.locator('.island-card[open] [data-focus="stall-market"]'));await page.locator('.shared-harbor[open] [data-event="harbor-trust"] select').waitFor({timeout:30000});}
 async function cardBank(page,available,held){await page.waitForFunction(({available,held})=>{
