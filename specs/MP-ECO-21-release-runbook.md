@@ -4,10 +4,10 @@
 >
 > **Who uses it:** the responsible release operator, reviewers and maintainers investigating a failed rollout.
 
-- **Status:** specification and runbook preparation only; all operational steps below are pending.
+- **Status:** executable service-only offer controls and an isolated populated backup/restore rehearsal are implemented; hosted release actions below remain pending.
 - **Responsible teammate:** Ianno Hollensteiner (`Iannomh123456`), assisted by Codex.
 - **Issue:** [#513](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/513), under [epic #492](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/492).
-- **Branch:** `docs/mp-eco-21-release`.
+- **Branch:** `feat/mp-eco-recovery-rehearsal` (the earlier runbook preparation was `docs/mp-eco-21-release`).
 - **Prerequisites:** MP-ECO-20 integrated acceptance, its MP-ECO-01–19/22 dependencies and the separately authorized release action. Source inspection and isolated foundation tests are not that acceptance.
 - **Related procedures:** [release checklist](../docs/RELEASE-CHECKLIST.md), [reliability runbook](../docs/RUNBOOK.md), [database procedure](../supabase/README.md#apply-before-you-merge), [engineering checks](../docs/ENGINEERING.md#3-commands) and [agreed economy rules](../docs/DECISIONS.md#shared-island-economy-2026-11-18).
 
@@ -106,7 +106,7 @@ Personal `progressionVersion: 1` is global, independent of the visited island's 
 
 ## Pause an admitted economy safely
 
-The release record must supply a tested operator control for each step; none is an implemented command in this spec.
+The service-only controls and local rehearsal below implement exact-origin offer pause/resume. A release record must separately name its admission stop, hosted invocation and recovery environment; the supplied CLI deliberately refuses hosted targets.
 
 1. Stop **new admission** first, without deleting admitted state. Stop new personal conversion/init work as part of that boundary. A global switch selects offers/admission, never a player's saved economic version.
 2. Persist `admission_state = paused` for the affected admitted islands through the reviewed ordered transaction. Preserve account IDs, epochs, balances, holds, operation receipts and the current shared pointer. Verify every **new discretionary island intent** checks this state atomically, including free island changes and bells. An exact retry of a committed intent can return its original receipt without reapplying its effects; saved-origin completion/settlement remains allowed as described below. A new UID is a new intent; altered reuse of an existing UID remains an idempotency conflict. Hiding a button or changing config on one process is insufficient. Independent personal configuration remains subject to step 4.
@@ -133,7 +133,7 @@ Resume by correcting the fault, rerunning the affected negative/concurrency and 
 
 ## Verification to perform and evidence to retain
 
-This preparation changes documentation only. Link/content/whitespace checks apply now; no application test, migration execution, backup/restore, live read, provider call, deployment or activation has been performed for this task.
+The original preparation was documentation only. Its historical checks below do not imply an executed rollout. The later local operator/recovery implementation has the separately recorded focused evidence below; no hosted read, migration application, deployment or activation is included.
 
 Preparation checks on 18 Nov 2026: all five relative documentation links and anchors resolve; code fences and content checks pass; the complete specification was read against the current release, transport, feature and economy contracts; whitespace checks pass. The two GitHub issue links are supplied references, not remotely fetched evidence.
 
@@ -162,6 +162,122 @@ Use the existing signed-out smoke only after a separately authorized deployment 
 
 ## Remaining delivery
 
-Finalize the exact migration/artifact/control manifest after integrated dependencies and decisions are complete; pin the reviewed registry correction and prove its actual tool cutover; implement and rehearse conversion/deletion/pause controls; complete MP-ECO-19/20 evidence and the protected restore rehearsal. Then update the canonical release/reliability documents, INTERFACES, policy matrix, TEST-MAP, WALKTHROUGH and shipped player/privacy guidance with verified results. This spec does not mark MP-ECO-21 release acceptance complete.
+The exact-origin offer controls and local populated restore rehearsal below complete this bounded implementation. A hosted release still needs its actual artifact/control manifest, provider/tool qualification and protected backup coverage, completed conversion and MP-ECO-19/20 acceptance, independent human review and separate operational authorization. The local proof does not mark production release acceptance complete.
 
-Last updated: 2026-11-18.
+Last updated: 2026-11-19.
+
+
+## Executable controls and isolated rehearsal
+
+The additive CLI-generated migration `20261119144620_island_economy_operator_recovery.sql`
+adds a private immutable operator receipt table and two service-only RPCs. Their
+[interface](../docs/INTERFACES.md#operator-pause-and-recovery-mp-eco-21) and
+[grant/lock policy](../supabase/README.md#operator-pause-and-recovery-mp-eco-21) are canonical.
+No player or island owner receives maintenance authority; all invited members retain the agreed
+gameplay permissions. No route, automatic admission, conversion or deployment is added.
+
+A control names one exact owner/account/epoch, expected admission state and expected **control**
+revision. That revision is separate from financial revision: legitimate old settlement can
+advance money while offers remain paused. A successful switch creates one immutable receipt and
+increments only control revision. New-UID stale preflight is refused even after pause → resume
+returns to the earlier state. Identical UID replay returns the original effect before mutable
+preflight, plus a separately fresh context; an old pause replay cannot pause again after resume.
+Changed input reuse, unknown/retired/mismatched origin and wrong state are refused atomically.
+Existing new-spend checks consume paused state; already frozen canonical close and original
+reservation settlement remain allowed. None of these controls creates grants or personal progress.
+
+### Local operator boundary
+
+`backend/tools/economy/recovery.py` accepts no database URL or password argument. Its manifest
+pins an absolute single Unix socket, database/user, actual PostgreSQL data directory/system
+identity, exact account/epoch and ordered migration filename/content hashes. Manifest parsing
+and export validate allowed connection keys and refuse TCP/multi-host targets, expanded
+connection strings, `service`/`hostaddr`/`options`/password overrides and ambient `PG*` settings
+before connecting. The cluster identity is rechecked on connection. These are local rehearsal
+guards; they are not a hosted authentication system or permission grant.
+
+The `context`, `pause` and `resume` commands run the same service-only RPCs, in their own bounded
+transactions, after the manifest guard. A pause/resume command requires an original UID and
+explicit expected control revision. The rehearsal invokes these actual subprocess commands
+while its clusters are running. It then removes all disposable PostgreSQL data; the generated
+manifests are evidence of those targets, not a persistent running service. A future hosted
+operator adapter requires its own reviewed credential/authorization/target binding and separate
+release authorization; this tool cannot be pointed at production.
+
+### Populated snapshot and recovery protocol
+
+Run from `backend/`, choosing a new private directory outside the repository:
+
+```sh
+uv run --with pgserver --with 'psycopg[binary]' python -m tools.economy.recovery \
+  rehearse --output /tmp/shared-economy-recovery-example
+```
+
+The command creates three new isolated clusters, applies the complete actual migration chain,
+and populates synthetic users, two independent admitted islands, personal Captain state, a
+quoted shared construction and an unresolved financial reserve. Auth/Realtime are explicitly
+SQL stand-ins; no live credentials, provider accounts, external jobs or natural feed are used.
+
+The source is otherwise quiescent. After a real CLI pause, the complete corrected registry and
+operator migrations are reapplied on populated state as whole-file `READ COMMITTED`
+transactions using psycopg. All table/function fingerprints stay identical. A real PostgreSQL
+restart retains shared mode, account/epoch, paused state and control generation.
+
+Each backup exports a PostgreSQL consistent snapshot and passes its exact snapshot token to
+`pg_dump --format=custom`. The report distinguishes transaction start, snapshot observation and
+backup completion times and retains the transaction snapshot identity and backup hashes. It does
+not substitute export-end time for the recoverable point. Every non-system user table has a
+count and canonical row-text SHA256; function definitions also have a combined digest. Exact
+money/revision sums and unresolved principal are independently reconciled in PostgreSQL.
+
+An original reservation then settles against its original source while paused. The source
+resumes; replaying the old pause UID returns history without pausing again. A later pause and
+fresh checkpoint include those committed effects. The earlier backup is restored **only into a
+separate fresh target** and refused against the later reconciliation manifest. The fresh
+checkpoint is restored with `pg_restore --single-transaction` into another fresh target; all
+snapshot/function hashes and service-only grants/RLS match before offers resume. Original
+settlement, starting-grant and control UIDs replay without a second effect, shared legacy-wave
+entry remains refused, personal wallets/progress/assets and the other island remain unchanged.
+
+This is tested snapshot recovery through the fresh captured point. It does not claim WAL/PITR,
+recovery of post-checkpoint commits or external side effects. Pausing new offers does not itself
+stop legitimate old settlements; a non-quiescent hosted source needs an approved current
+snapshot/WAL/reconciliation mechanism. Provider Auth identity, storage and configuration backup
+coverage remain explicit future release requirements. Backups/manifests stay outside Git with
+private permissions; database data directories are deleted after the rehearsal.
+
+### Focused verification
+
+The focused local checks cover service-role-only execution and forged role refusal, immutable
+UID conflict/replay, stale control generation after a state cycle, concurrent identical and
+competing controls, pause versus funds races, receipt-fault rollback, retired/mismatched origins,
+legacy payout refusal and a previously frozen canonical wave closing while offers are paused.
+The guard tests refuse hosted/overriding connections before any network call. The system test
+executes the complete actual CLI/backup/restart/restore path and checks private artifact modes
+and cleanup.
+
+Commands from `backend/`:
+
+```sh
+CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' --with pglast python -m pytest -q \
+  server/tests/test_economy_recovery.py \
+  server/tests/test_economy_recovery_rehearsal.py \
+  server/tests/island_sql/test_economy_operator_recovery_sql.py \
+  server/tests/island_sql/test_economy_operations_cutover_sql.py
+uv run ruff check .
+```
+
+Recorded results on 19 Nov 2026: 30 PostgreSQL control/cutover cases passed in the mixed focused
+selection. Its one malformed-URI diagnostic produced an unstructured libpq parser error before
+connection; it was corrected to a bounded refusal, the unsafe-options URI was properly encoded,
+and all 23 guard tests subsequently passed. The complete populated recovery system test passed
+separately. Initial missing-private-schema and intermediate formatting diagnostics remain retained
+with their real failed outcomes; no old broad backend/frontend result is called a new run.
+
+The Supabase CLI local security-advisor command was attempted but could not connect to its
+expected local-stack TCP port; that stack is not the Unix-only disposable server. No hosted
+advisory query or Docker stack start was substituted. Real database role/RLS/immutable-receipt
+checks, populated migration execution/reapply, parse/unique-version checks and exact restore
+verification provide the bounded local evidence. No frontend/build rerun is needed for this
+backend-only tool/migration change; full application, authenticated pilot and production release
+acceptance remain separate.
