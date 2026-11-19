@@ -5,7 +5,7 @@
 import {readFileSync} from 'node:fs';
 import {describe, expect, it} from 'vitest';
 import {FOOTPRINTS, GRID, HEART, KEEP_OUT, checkMove, positionsOf, routeOpen, snap} from '../../src/island/placement.js';
-import {LEGACY_HOME_DEFAULTS, SPOT_TABLE, defenses, islandZones, placedSpot} from '../../src/island/spots.js';
+import {SPOT_TABLE, defenses, islandZones, placedSpot} from '../../src/island/spots.js';
 
 const server = JSON.parse(readFileSync(new URL('../../../backend/content/island_layout.json', import.meta.url), 'utf8'));
 
@@ -18,7 +18,6 @@ describe('the build grid is the server\'s', () => {
   });
   it('has the fixed spots of island_layout.json, in order', () => {
     expect(SPOT_TABLE.map(([id, slot, x, z]) => [id, slot, x, z])).toEqual(server.spots);
-    expect(LEGACY_HOME_DEFAULTS).toEqual(server.legacyDefaults);
   });
 });
 
@@ -30,14 +29,6 @@ describe('an old save', () => {
       expect(Number.isInteger(x / GRID) && Number.isInteger(z / GRID)).toBe(true);
       expect(checkMove(id, x, z, placed)).toEqual({ok: true});
     }
-    expect(routeOpen(placed)).toBe(true);
-  });
-
-  it('preserves saved cells when the refreshed defaults would overlap them', () => {
-    const placed = positionsOf([{id: 'cannon_1', x: 2.5, z: 12.5}, {id: 'wall_1', x: 14.5, z: 2.5},
-      {id: 'house_2', x: -10, z: -9}]);
-    expect(placed).toMatchObject({cannon_1: {x: 2.5, z: 12.5}, wall_1: {x: 14.5, z: 2.5},
-      tower_1: {x: 0, z: -14}, house_1: {x: 7, z: -6}, house_2: {x: -10, z: -9}});
     expect(routeOpen(placed)).toBe(true);
   });
 });

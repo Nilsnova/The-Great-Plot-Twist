@@ -43,9 +43,9 @@ def test_the_slot_of_every_spot_matches_the_kinds_islands_json_allows():
 def test_an_old_save_with_no_stored_positions_stands_on_the_fixed_spots():
     placed = layout.positions_of(RULES, {})
     assert placed["wall_1"] == (-18.5, -1)
-    assert placed["tower_1"] == (14, 3)
-    assert placed["house_1"] == (2.5, 12.5)
-    assert placed["house_2"] == (-5.5, 11)
+    assert placed["tower_1"] == (0, -14)
+    assert placed["house_1"] == (7, -6)
+    assert placed["house_2"] == (-8, -6)
     assert len(placed) == 22
 
 
@@ -67,19 +67,8 @@ def test_a_stored_position_replaces_the_fixed_spot_and_unknown_plots_are_ignored
     assert "pp_tower_1" not in placed
 
 
-def test_new_defaults_step_aside_for_saved_cannon_and_wall_placements():
-    stored = {"cannon_1": (2.5, 12.5), "wall_1": (14.5, 2.5), "house_2": (-10, -9)}
-    placed = layout.positions_of(RULES, stored)
-    assert {spot: placed[spot] for spot in stored} == stored
-    assert placed["tower_1"] == (0, -14)
-    assert placed["house_1"] == (7, -6)
-    assert layout.route_open(RULES, placed)
-    assert layout.positions_of(RULES, {})["tower_1"] == (14, 3)
-
-
-def test_new_home_defaults_keep_an_older_wall_on_its_previously_settled_lane():
-    # This legacy row predates wall lanes. The old map displayed it at (2.5, 14.5),
-    # which is covered by the new house_1 default but clear of its previous anchor.
+def test_old_wall_settlement_keeps_legal_saved_cells():
+    # This first stored cell predates wall lanes. The second already fits.
     stored = {"wall_1": (5, 11), "wall_6": (-18.5, -3)}
     placed = layout.positions_of(RULES, stored)
     assert placed["wall_1"] == (2.5, 14.5)

@@ -8,7 +8,6 @@ import { SKILLS, skillNeeds, ROLES, readSkills, isRole, pointsSpent, pointsEarne
 import { spotWave } from '../campaign/index.js';
 import { createFakeArsenal } from '../island/arsenal-fake.js';
 import { positionsOf, wallSceneryConflict } from '../island/placement.js';
-import { spotById } from '../island/spots.js';
 import { createFakeWorld, ISLAND_RULES, readIslandCode, CODE_ALPHABET, spotView, refuse, MAX_MEMBERS, GAME_FULL,
   unlocksAt, PRICES_V2, campaignAt, layoutOf, invalid, slotOfSpot, kindsOfSpot, kindOfSpot, lockedMessage,
   WALL_RECOVERY_MS, iso, restorePrice, rebuildPrice, SIM_RULES, isBoss, FakeApiError } from './fake-rules.js';
@@ -39,16 +38,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     }
     return player;
   };
-  const spots = island => {
-    const views = islandSpots.map(id => spotView(island, id, true));
-    const placed = positionsOf(views);
-    return views.map(spot => {
-      const point = placed[spot.id], fallback = spotById(spot.id);
-      // Untouched fake spots historically omit coordinates. Send an explicit anchor only if
-      // a saved move is present or a legacy overlap displaces a relocated default.
-      return point.x === fallback.x && point.z === fallback.z ? spot : {...spot, ...point};
-    });
-  };
+  const spots = island => islandSpots.map(id => spotView(island, id, true));
   // --- the games (GAME-V3.md §2): the SQL rules of game_join and game_leave, in memory ---
   const membersOf = code => {
     if (!(world.members instanceof Map)) world.members = new Map();

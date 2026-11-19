@@ -264,7 +264,7 @@ def test_snapshot_template_captures_server_sim_inputs_and_exact_hp_rate(monkeypa
     assert snapshot["createWave"]["defenses"][1]["spec"] == "workshop"
     assert snapshot["createWave"]["defenses"][2]["kind"] == "watchtower"
     assert snapshot["defaultPositions"]["tower_1"] == {"x": 0.0, "z": -14.0}
-    assert snapshot["defaultPositions"]["house_1"] == {"x": 10.0, "z": 0.0}
+    assert snapshot["defaultPositions"]["house_1"] == {"x": 7.0, "z": -6.0}
     assert snapshot["createWave"]["pathing"] is True
     assert snapshot["createWave"]["towerHealth"] is False
     assert snapshot["structureConfigBySpot"]["wall_1"] == {

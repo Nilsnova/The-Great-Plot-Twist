@@ -44,15 +44,15 @@ describe('island spots', () => {
       expect(Math.abs(item.z)).toBeLessThan(rz);
     }
   });
-  it('keeps wall lanes and corner towers around the eastern watchtower and the southern cottage plots', () => {
+  it('keeps the original inland house plots, north watchtower and surrounding defenses', () => {
     for (const wall of SPOTS.filter(spot => spot.slot === 'wall')) expect(onWallLane(wall.x, wall.z), wall.id).toBe(true);
     const corners = SPOTS.filter(spot => spot.edge === 'corner').map(spot => [Math.sign(spot.x), Math.sign(spot.z)].join());
     expect(new Set(corners).size).toBe(4);
     for (const spot of SPOTS.filter(spot => ['house', 'watchtower'].includes(spot.kind))) expect(surfaceClass('home_islet', spot.x, spot.z)).toBe(2);
-    expect(spotById('tower_1')).toMatchObject({edge: 'side', x: 14, z: 3});
-    expect(spotById('house_1').x).toBeGreaterThan(0);
-    expect(spotById('house_2').x).toBeLessThan(0);
-    for (const house of SPOTS.filter(spot => spot.slot === 'house')) expect(house.z).toBeGreaterThan(10);
+    expect(spotById('tower_1')).toMatchObject({edge: 'hill', x: 0, z: -14});
+    expect(spotById('house_1')).toMatchObject({x: 7, z: -6});
+    expect(spotById('house_2')).toMatchObject({x: -8, z: -6});
+    expect(BELL).toMatchObject({x: 8.5, z: 12});
   });
   it('keeps spots apart from each other, the trees and the landing', () => {
     const placed = positionsOf();

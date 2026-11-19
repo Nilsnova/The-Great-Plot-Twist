@@ -42,7 +42,7 @@ def move_calls(world: World) -> list[dict]:
 
 def test_an_old_save_shows_its_fixed_spots_as_grid_cells_and_may_move(world):
     answer = world.island().json()
-    assert (spot(answer, "tower_1")["x"], spot(answer, "tower_1")["z"]) == (14.0, 3.0)
+    assert (spot(answer, "tower_1")["x"], spot(answer, "tower_1")["z"]) == (0.0, -14.0)
     assert answer["layout"] == {"version": 1, "grid": 0.5, "movable": True}
 
 

@@ -11,12 +11,11 @@
     ["cannon_1", "tower", -12.5, -14.5], ["cannon_2", "tower", 13, -15], ["cannon_3", "tower", 15.5, 14],
     ["cannon_4", "tower", -15.5, 14.5], ["cannon_5", "tower", -15, -6], ["cannon_6", "tower", 14.5, -3],
     ["cannon_7", "tower", 4.5, 16.5],
-    ["tower_1", "watchtower", 14, 3],
-    ["house_1", "house", 2.5, 12.5], ["house_2", "house", -5.5, 11],
+    ["tower_1", "watchtower", 0, -14],
+    ["house_1", "house", 7, -6], ["house_2", "house", -8, -6],
     ["wall_7", "wall", 8.5, 2], ["wall_8", "wall", 0.5, 9.5], ["wall_9", "wall", -1.5, 9.5],
     ["wall_10", "wall", -9.5, -1], ["wall_11", "wall", -9.5, 1], ["wall_12", "wall", 8.5, 0]
   ],
-  "legacyDefaults": {"tower_1": [0, -14], "house_1": [7, -6], "house_2": [-8, -6]},
   "extraSpots": {"about": "D060: where the extra tower spots of islands.json extraTowerSpots stand. They join 'spots' only while the server flag more_tower_spots is on. Inland grass, off every wall lane and path, clear of the other spots, the trees, the bench, the wave sign and the campaign buildings (frontend/src/island/spots.js EXTRA_SPOT_TABLE repeats them).", "rows": [
     ["cannon_8", "tower", -8.5, 12], ["cannon_9", "tower", 11.5, -8.5],
     ["cannon_10", "tower", 5, 10], ["cannon_11", "tower", -3.5, -7.5]
@@ -83,7 +82,7 @@
     {"id": "tree_7", "name": "a tree", "x": 16, "z": 2, "radius": 0.48},
     {"id": "tree_8", "name": "a tree", "x": 14, "z": 11, "radius": 0.48},
     {"id": "tree_9", "name": "a tree", "x": -12, "z": 13, "radius": 0.48},
-    {"id": "bench", "name": "the bench", "x": 8.75, "z": 14, "w": 2.5, "d": 0.75},
+    {"id": "bench", "name": "the bench", "x": 4, "z": 13, "w": 2.5, "d": 0.75},
     {"id": "barrel", "name": "the barrel", "x": -12, "z": 7, "w": 1.25, "d": 0.75},
     {"id": "lantern", "name": "the lantern", "x": -3, "z": 12, "w": 0.5, "d": 0.5},
     {"id": "record", "name": "the record board", "x": -3.5, "z": 2.5, "w": 1.5, "d": 0.75},

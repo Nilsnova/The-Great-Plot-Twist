@@ -32,8 +32,8 @@ export const KINDS = Object.freeze({
 //           two across each lane (east wall_7 + wall_12, south wall_8 + wall_9, west wall_10 + wall_11). Before
 //           16 Nov wall_2, wall_4, wall_5, wall_6, wall_8, wall_9, wall_11 and wall_12 stood where no pirate walked.
 //   towers  cannon_1…cannon_7 (a cannon, a mortar or a harpoon tower): the four corners, west, east and the south beach
-//   tower   the watchtower on the east side overlooking the approach
-//   houses  the two southern cottage plots
+//   tower   the watchtower on the hill at the north end of the main path
+//   houses  inland, at the ends of the north cross path
 export const SPOT_TABLE = Object.freeze([
   ['wall_1', 'wall', -18.5, -1, 'shore'], ['wall_2', 'wall', 19, 1, 'shore'],
   ['wall_3', 'wall', 19, -1, 'shore'], ['wall_4', 'wall', -1, 17, 'shore'],
@@ -41,15 +41,11 @@ export const SPOT_TABLE = Object.freeze([
   ['cannon_1', 'tower', -12.5, -14.5, 'corner'], ['cannon_2', 'tower', 13, -15, 'corner'],
   ['cannon_3', 'tower', 15.5, 14, 'corner'], ['cannon_4', 'tower', -15.5, 14.5, 'corner'],
   ['cannon_5', 'tower', -15, -6, 'side'], ['cannon_6', 'tower', 14.5, -3, 'side'], ['cannon_7', 'tower', 4.5, 16.5, 'side'],
-  ['tower_1', 'watchtower', 14, 3, 'side'],
-  ['house_1', 'house', 2.5, 12.5, 'inland'], ['house_2', 'house', -5.5, 11, 'inland'],
+  ['tower_1', 'watchtower', 0, -14, 'hill'],
+  ['house_1', 'house', 7, -6, 'inland'], ['house_2', 'house', -8, -6, 'inland'],
   ['wall_7', 'wall', 8.5, 2, 'ring'], ['wall_8', 'wall', 0.5, 9.5, 'ring'], ['wall_9', 'wall', -1.5, 9.5, 'ring'],
   ['wall_10', 'wall', -9.5, -1, 'ring'], ['wall_11', 'wall', -9.5, 1, 'ring'], ['wall_12', 'wall', 8.5, 0, 'ring'],
 ].map(row => Object.freeze(row)));
-// An older save may have a moved spot on one of the new defaults. Its saved coordinates win.
-export const LEGACY_HOME_DEFAULTS = Object.freeze({
-  tower_1: Object.freeze([0, -14]), house_1: Object.freeze([7, -6]), house_2: Object.freeze([-8, -6]),
-});
 // Other names an answer may use for the same spots (old drafts of §2). The backend's ids need none.
 export const SPOT_ALIASES = Object.freeze(Object.fromEntries([1, 2, 3, 4, 5, 6, 7].map(n => [`tower_s${n}`, `cannon_${n}`])));
 export const localSpotId = id => SPOT_ALIASES[id] ?? id;
@@ -78,15 +74,15 @@ export const BELL = Object.freeze({id: 'island_bell', x: 8.5, z: 12});
 // The campaign's buildings (docs/GAME-V3.md §4 and §5): they stand from the start as a building site with a
 // sign "opens after wave N" and become the building once the island has won that wave. item: the campaign id
 // that opens it (src/campaign/campaign.json); art: its cartoon frame (src/art/campaign.js), mended: the frame
-// once the wreck is repaired. The Harbor stands in the east, the Tech hub in the north-east,
-// and the wreck on the west beach.
+// once the wreck is repaired. Places on free ground: the Harbor east of the bell's beach, the Tech hub north-east
+// between the watchtower hill and the corner cannon, the wreck on the west beach.
 export const CAMPAIGN_BUILDINGS = Object.freeze([
   Object.freeze({id: 'island_harbor', item: 'harbor', name: 'The Harbor', x: 13, z: 7.5, art: 'island-harbor', w: 4.4, h: 4.2}),
   Object.freeze({id: 'island_techhub', item: 'tech_hub', name: 'Tech hub', x: 8.5, z: -12.5, art: 'island-techhub', w: 4.4, h: 5.4}),
   Object.freeze({id: 'island_wreck', item: 'wreck', name: 'The wreck', x: -16.5, z: 5, art: 'island-wreck', mended: 'island-wreck-mended', w: 5.2, h: 3.6}),
 ]);
-// The arsenal (T41, D042): the crew's shared weapon rack on open ground north-west of the Heart.
-// It stands from the start, costs
+// The arsenal (T41, D042): the crew's shared weapon rack, free ground north-west of the heart between the
+// watchtower hill and the west house (no build spot, path or tree there). It stands from the start, costs
 // nothing to build and takes no damage (the waves never target it); shown only while the flag "arsenal" is on.
 export const ARSENAL = Object.freeze({id: 'island_arsenal', name: 'Arsenal', x: -5.5, z: -11.5, art: 'island-arsenal', w: 5, h: 5});
 export const campaignBuilding = id => CAMPAIGN_BUILDINGS.find(item => item.id === id) ?? null;
@@ -118,11 +114,11 @@ export function placedSpot(id, spots = []) {
 }
 // The interaction zones of the island, in the shape of registry.js: walk up and press E (or tap Inspect).
 // spots: the answer's spots, so a moved building is reached where it stands now.
-export function islandZones({visitor = false, spots = [], arsenal = false, bell = BELL} = {}) {
+export function islandZones({visitor = false, spots = [], arsenal = false} = {}) {
   const zone = (id, name, x, z, radius) => ({id, name, x, z, y: ZONE_Y, radius});
   return [
     ...offeredSpots(spots).map(item => { const [x, z] = landward(placedSpot(item.id, spots)); return zone(item.id, slotName(item.slot), x, z, SPOT_RADIUS); }),
-    zone(BELL.id, 'Harbor bell', bell.x, bell.z + (bell === BELL ? .8 : -.8), ROUND_RADIUS),
+    zone(BELL.id, 'Harbor bell', BELL.x, BELL.z + .8, ROUND_RADIUS),
     ...CAMPAIGN_BUILDINGS.map(item => { const [x, z] = landward(item, 1.6); return zone(item.id, item.name, x, z + .6, BIG_REACH); }),
     ...(visitor ? [] : [zone(CABIN.id, 'Your cabin', CABIN.x + 2.5, CABIN.z + 1.2, ROUND_RADIUS)]),
     ...(arsenal ? [zone(ARSENAL.id, ARSENAL.name, ...landward(ARSENAL, 1.6), BIG_REACH)].map(item => ({...item, z: item.z + .6})) : []),

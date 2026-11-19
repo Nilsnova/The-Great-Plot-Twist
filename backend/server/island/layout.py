@@ -19,7 +19,7 @@ The browser repeats these rules for its preview in frontend/src/island/placement
 import json
 import math
 from collections import deque
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, replace
 from functools import cache
 from pathlib import Path
 
@@ -48,7 +48,7 @@ class MoveRefused(ApiError):
 class LayoutSpot:
     spot: str
     slot: str
-    x: float  # the layout's default when the player has not moved this spot
+    x: float  # the fixed spot of before (an old save stands here)
     z: float
 
 
@@ -93,8 +93,6 @@ class LayoutRules:
     # D060: the extra tower spots ("extraSpots"); part of `spots` only in island_layout(more=True).
     extra_spots: tuple[LayoutSpot, ...] = ()
     wall_obstacles: tuple[WallObstacle, ...] = ()
-    # Previous anchors for defaults relocated by the illustrated Home layout.
-    legacy_defaults: dict[str, Position] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -128,11 +126,6 @@ def load_layout(path: Path = CONTENT_FILE) -> LayoutRules:
     """Read and check the layout file. Raises LayoutFileError on any mistake."""
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
-        if not isinstance(data, dict):
-            raise TypeError("the layout must be an object")
-        legacy = data.get("legacyDefaults", {})
-        if not isinstance(legacy, dict):
-            raise TypeError("legacyDefaults must map spot ids to cells")
         rules = LayoutRules(
             version=int(data["version"]),
             grid=float(data["grid"]),
@@ -146,7 +139,6 @@ def load_layout(path: Path = CONTENT_FILE) -> LayoutRules:
             wall_lanes=read_lanes(data["wallLanes"]["rows"]),
             extra_spots=tuple(read_spot(row) for row in data.get("extraSpots", {}).get("rows", [])),
             wall_obstacles=tuple(WallObstacle(**row) for row in data["wallObstacles"]),
-            legacy_defaults={spot: (float(x), float(z)) for spot, (x, z) in legacy.items()},
         )
     except (OSError, ValueError, KeyError, TypeError) as error:
         raise LayoutFileError(f"{path.name} cannot be read: {error}") from error
@@ -163,9 +155,6 @@ def check_file(rules: LayoutRules, path: Path) -> None:
             raise LayoutFileError(f"{path.name}: {spot.spot} has the unknown slot {spot.slot}.")
         if not (on_grid(rules, spot.x) and on_grid(rules, spot.z)):
             raise LayoutFileError(f"{path.name}: {spot.spot} is not on the grid.")
-    for spot, (x, z) in rules.legacy_defaults.items():
-        if spot not in ids or not (on_grid(rules, x) and on_grid(rules, z)):
-            raise LayoutFileError(f"{path.name}: invalid previous anchor for {spot}.")
 
 
 @cache
@@ -192,39 +181,12 @@ def spot_named(rules: LayoutRules, spot_id: str) -> LayoutSpot | None:
 
 
 def positions_of(rules: LayoutRules, stored: dict[str, Position]) -> dict[str, Position]:
-    """Use the saved cells ahead of the Home defaults, then settle off-path walls (D056)."""
-    placed = {spot.spot: stored.get(spot.spot, (spot.x, spot.z)) for spot in rules.spots}
-    saved_cells = {spot: where for spot, where in stored.items() if spot in placed}
-    if rules.legacy_defaults:
-        older_walls = [
-            spot.spot
-            for spot in rules.spots
-            if spot.slot == WALL_SLOT
-            and spot.spot in saved_cells
-            and not on_wall_lane(rules, *saved_cells[spot.spot])
-        ]
-        if older_walls:
-            # A pre-lane wall may already have been displayed on a different cell.
-            # Resolve it against the earlier map before deciding whether a new default fits.
-            previous = {
-                **placed,
-                **{
-                    spot: where
-                    for spot, where in rules.legacy_defaults.items()
-                    if spot in placed and spot not in saved_cells
-                },
-            }
-            settled = settle_walls(rules, previous, stored)
-            for spot in older_walls:
-                saved_cells[spot] = placed[spot] = settled[spot]
-    # A legal older move can occupy a new default. Before, that move had to leave the
-    # old default clear, which gives the untouched slot a compatible anchor without a write.
-    saved = [box_of(rules, spot, where) for spot, where in saved_cells.items()]
-    for spot, previous in rules.legacy_defaults.items():
-        if spot in placed and spot not in stored:
-            candidate = box_of(rules, spot, placed[spot])
-            if any(overlaps(candidate, box) for box in saved):
-                placed[spot] = previous
+    """Every spot's place: the stored one if any, else its fixed spot. An old save stores
+    nothing, so it is converted to the grid as it was (every fixed spot is a grid cell).
+    Then settle_walls() puts a wall that stands on no pirate path (D056) on a lane."""
+    placed = {}
+    for spot in rules.spots:
+        placed[spot.spot] = stored.get(spot.spot, (spot.x, spot.z))
     return settle_walls(rules, placed, stored)
 
 
