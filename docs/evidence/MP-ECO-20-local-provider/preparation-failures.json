@@ -1,0 +1,75 @@
+{
+  "boundary": "Historical failed or partial preparation attempts only. Original helper closures were not all frozen; these entries are not promoted to successful current scenario evidence.",
+  "attempts": [
+    {
+      "attemptId": "attempt-1",
+      "status": "failed",
+      "completedAssertions": 1,
+      "entryScriptSha256": "3fc6260944b4dded2a9b8be3f7a8c17e323c9c9468e07cb0b68c474f77c2827e",
+      "failureFirstLine": "The expression evaluated to a falsy value:"
+    },
+    {
+      "attemptId": "attempt-2",
+      "status": "failed",
+      "completedAssertions": 1,
+      "entryScriptSha256": "6f8af3ea26df1f5360b43fe9c491cd99a1534ffebc02e8455b8ff4c0c2bdce8c",
+      "failureFirstLine": "The expression evaluated to a falsy value:"
+    },
+    {
+      "attemptId": "attempt-3",
+      "status": "failed",
+      "completedAssertions": 1,
+      "entryScriptSha256": "5fc8f9035ca9bb81ce6971b4ac4d9cd0ff37e51a64686837c2110ac954c90233",
+      "failureFirstLine": "Expected values to be strictly equal:"
+    },
+    {
+      "attemptId": "attempt-4",
+      "status": "failed",
+      "completedAssertions": 0,
+      "entryScriptSha256": "5fc8f9035ca9bb81ce6971b4ac4d9cd0ff37e51a64686837c2110ac954c90233",
+      "failureFirstLine": "locator.fill: Timeout 30000ms exceeded."
+    },
+    {
+      "attemptId": "attempt-5",
+      "status": "failed",
+      "completedAssertions": 0,
+      "entryScriptSha256": "5fc8f9035ca9bb81ce6971b4ac4d9cd0ff37e51a64686837c2110ac954c90233",
+      "failureFirstLine": "locator.click: Timeout 2000ms exceeded."
+    },
+    {
+      "attemptId": "attempt-6",
+      "status": "failed",
+      "completedAssertions": 0,
+      "entryScriptSha256": "5fc8f9035ca9bb81ce6971b4ac4d9cd0ff37e51a64686837c2110ac954c90233",
+      "failureFirstLine": "locator.click: Timeout 5000ms exceeded."
+    },
+    {
+      "attemptId": "attempt-7",
+      "status": "failed",
+      "completedAssertions": 1,
+      "entryScriptSha256": "5fc8f9035ca9bb81ce6971b4ac4d9cd0ff37e51a64686837c2110ac954c90233",
+      "failureFirstLine": "Expected values to be strictly equal:"
+    },
+    {
+      "attemptId": "attempt-8-before-canonical-topic",
+      "status": "partial",
+      "completedAssertions": 8,
+      "entryScriptSha256": "cbc34bae48706e4a581abd912c518e173a7b1960155ef927e53a06b8e2eb6943",
+      "failureFirstLine": "[{\"status\":\"CHANNEL_ERROR\",\"error\":\"Unauthorized: You do not have permissions to read from this Channel topic: live:place:isle_jchj6:1\"},{\"status\":\"CHANNEL_ERROR\",\"error\":\"Unauthorized: You do not have permissions to read from this Channel topic: live:place:isle_jchj6:1\"},{\"status\":\"CHANNEL_ERROR\",\"error\":\"Unauthorized: You do not have permissions to read from this Channel topic: live:place:isle_jchj6:1\"}]"
+    },
+    {
+      "attemptId": "attempt-8-transport-partial",
+      "status": "partial",
+      "completedAssertions": 8,
+      "entryScriptSha256": "cbc34bae48706e4a581abd912c518e173a7b1960155ef927e53a06b8e2eb6943",
+      "failureFirstLine": "[{\"status\":\"CHANNEL_ERROR\",\"error\":\"Unauthorized: You do not have permissions to read from this Channel topic: live:place:isle_jchj6:1\"},{\"status\":\"CHANNEL_ERROR\",\"error\":\"Unauthorized: You do not have permissions to read from this Channel topic: live:place:isle_jchj6:1\"},{\"status\":\"CHANNEL_ERROR\",\"error\":\"Unauthorized: You do not have permissions to read from this Channel topic: live:place:isle_jchj6:1\"}]"
+    },
+    {
+      "attemptId": "attempt-9-canonical-topic-partial",
+      "status": "partial",
+      "completedAssertions": 8,
+      "entryScriptSha256": "3f57606c2f6b42f1acbd1eeb5d4f584205f981536798f9d24a6932ddc6a8c2ba",
+      "failureFirstLine": "[{\"status\":\"CHANNEL_ERROR\",\"error\":\"Unauthorized: You do not have permissions to read from this Channel topic: live:place:isle_ajtuc_dc5dd8868cdd48fd83aadf38:2\"},{\"status\":\"CHANNEL_ERROR\",\"error\":\"Unauthorized: You do not have permissions to read from this Channel topic: live:place:isle_ajtuc_dc5dd8868cdd48fd83aadf38:2\"},{\"status\":\"CHANNEL_ERROR\",\"error\":\"Unauthorized: You do not have permissions to read from this Channel topic: live:place:isle_ajtuc_dc5dd8868cdd48fd83aadf38:2\"}]"
+    }
+  ]
+}

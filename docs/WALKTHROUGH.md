@@ -1378,6 +1378,26 @@ historical failures. The full scenario matrix retains its separate status. Physi
 devices, prolonged natural-provider observations and every-hit combat verification
 are not inferred from any of these layers.
 
+### Current local provider acceptance
+
+The [reproducible harness](../specs/MP-ECO-20-authenticated-provider-harness.md)
+starts official local Auth, PostgREST and private Realtime with a disposable
+PostgreSQL database. It runs the production API, SDK and browser source, uses real
+ephemeral registered accounts, and observes committed financial state independently.
+Provider image digests, local TLS trust, readiness and the smaller PostgreSQL
+image's extension/hosting boundaries are explicit. Test-island admission is an
+installer action, and saved milestone/market fixtures remain labeled.
+
+The [per-scenario table](TEST-MAP.md#reproducible-local-provider-follow-up) accounts
+for all 15 required rows and preserves incomplete combinations. New observations
+pin production source `3bdd8eda16470795fdedd68c42fffab54e5f2ced`; retained
+`b239bdf0` revival/reset/deletion/pacing observations remain separate historical
+runs. Current zero-funds acceptance includes a real five-minute all-in loss,
+ordinary member bell at zero, natural defeat and owner-only reset/replay with one
+new grant. Its advanced saved island and trusted market prices were explicit
+fixtures; it is not a natural market-feed, earned-unlock or complete-matrix claim.
+Offline boundary tests verify only the harness's local configuration guards.
+
 ### Q3. What happens if an external API is unavailable?
 The game keeps working. Every provider sits behind one server adapter with a cache and a timeout (3 seconds, 5 for football), and only the server calls it ([adapters/base.py](../backend/server/adapters/base.py)). Weather falls back to the last good answer, then a recorded real answer, and a new wave takes the default place's weather, else calm: the weather never stops a wave ([island/wave_weather.py](../backend/server/island/wave_weather.py)). Prices stay visible but marked stale, and the market stall closes that asset, so nobody profits from old prices ([D034](DECISIONS.md)). Football answers `503 sports_unavailable` and the board says so. The Keeper's Lock switches to a riddle. The tower defense itself needs no outside API. The narrator's voice comes from ElevenLabs only at build time: the audio files are committed, so a dead service changes nothing for players ([part 26](#26-the-narrator-lines-the-voice-pipeline-and-captions)). Full table in [part 6](#6-external-data-and-what-happens-when-a-provider-is-down).
 
