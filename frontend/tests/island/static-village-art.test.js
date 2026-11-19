@@ -110,6 +110,31 @@ it('shifts hired crew at their station, holds during pause, and restores the sti
   drawing.dispose();
 });
 
+it('lights the intact defense artwork without moving its base and suspends the idle light during pause or Reduced Motion', async () => {
+  let reducedMotion = false;
+  const cannon = material();
+  cannon.map.userData.villageArt = {source: 'png'};
+  const load = async ids => Object.fromEntries(ids.map(id => [id, id === 'island-cannon-l2' ? cannon : material()]));
+  const {drawing} = start(load, {reducedMotion: () => reducedMotion});
+  drawing.apply({spots: [{id: 'cannon_1', kind: 'cannon', built: true, level: 2}]});
+  await drawing.retryArt();
+  const post = drawing.root.getObjectByName('island-cannon:cannon_1'), foot = post.position.clone();
+  const shader = {uniforms: {}, vertexShader: '#include <begin_vertex>', fragmentShader: '#include <map_fragment>'};
+  cannon.onBeforeCompile(shader);
+  const {uLandmarkMetal: metal, uLandmarkClock: clock, uLandmarkFlicker: flicker} = shader.uniforms;
+  expect(metal.value).toEqual([.43, .10, .86, .47]);
+  drawing.update(.08);
+  expect(clock.value).toBe(.08);
+  expect(flicker.value).toBeGreaterThan(0);
+  drawing.update(.1, 1, true);
+  expect(clock.value).toBe(.08);
+  expect(post.position.equals(foot)).toBe(true);
+  reducedMotion = true;
+  drawing.update(.1, 1.1, true);
+  expect(flicker.value).toBe(0);
+  drawing.dispose();
+});
+
 it('reports main artwork failure, coalesces actual retries and clears the failure only after success', async () => {
   let fail = true; const errors = [], views = [], next = deferred();
   const load = vi.fn(async ids => {
