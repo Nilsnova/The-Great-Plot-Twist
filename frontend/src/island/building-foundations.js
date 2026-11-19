@@ -7,17 +7,16 @@ import {ISLAND_PLACE} from './spots.js';
 import {padCorners as corners, TOWER_PAD} from './defense-display.js';
 
 const FORMS = {
-  house: {width: 1.36, depth: .86, rear: .46},
-  watchtower: {width: 1.17, depth: .90, rear: .52},
-  tower: TOWER_PAD,
-  heart: {width: 2.03, depth: 1.20, rear: .59},
-  island_cabin: {width: 1.55, depth: .98, rear: .52},
-  island_bell: {width: .96, depth: .66, rear: .31},
-  island_arsenal: {width: 1.56, depth: .94, rear: .50},
-  island_harbor: {width: 1.52, depth: .95, rear: .48},
-  island_techhub: {width: 1.72, depth: 1.16, rear: .58},
+  house: {width: 1.36, depth: .86, rear: .46, reach: 1.7},
+  watchtower: {width: 1.17, depth: .90, rear: .52, reach: 2.6},
+  tower: {...TOWER_PAD, reach: .92},
+  heart: {width: 2.03, depth: 1.20, rear: .59, reach: 2.38},
+  island_cabin: {width: 1.55, depth: .98, rear: .52, reach: 1.82},
+  island_bell: {width: .96, depth: .66, rear: .31, reach: 1.24},
+  island_arsenal: {width: 1.56, depth: .94, rear: .50, reach: 1.79},
+  island_harbor: {width: 1.52, depth: .95, rear: .48, reach: 1.72},
+  island_techhub: {width: 1.72, depth: 1.16, rear: .58, reach: 2.04},
 };
-const SHADOW = new THREE.Color(0x313d25), CONTACT = new THREE.Color(0x25291c);
 const RETAINING_STONE = [0xc3a47b, 0xb0916b, 0x9a7f61, 0x80694f, 0x726049].map(hex => new THREE.Color(hex));
 const [SHOULDER, RETAINING_FRONT, RETAINING_SIDE, RETAINING_JOINT, EMBEDDED_STONE] = RETAINING_STONE;
 const LIMESTONE = [0xcebea0, 0xdbcaac, 0xbeb094, 0xceb89b, 0xd5c3a5].map(hex => new THREE.Color(hex));
@@ -84,14 +83,10 @@ function geometryOf(foundations) {
 
   // Ground shadows all go first, so a nearby occupied footing keeps its own highlights.
   for (const {x, z, slot, ruin} of foundations) {
-    const {width, depth, rear} = FORMS[slot], scale = ruin ? .72 : 1;
-    appendGroundShadow((gx, gz, alpha) => vertex(gx, gz, 0, SHADOW, slot === 'tower' && !onLand(gx, gz) ? 0 : alpha), indices, {
-      x: x + .48, z: z - rear + .65, width: (width + .83) * scale, depth: (depth + 1.1) * scale,
-      opacity: ruin ? .22 : .40, innerOpacity: ruin ? .12 : .26,
-    });
-    appendGroundShadow((gx, gz, alpha) => vertex(gx, gz, 0, CONTACT, slot === 'tower' && !onLand(gx, gz) ? 0 : alpha), indices, {
-      x, z: z - rear + .15, width: (width + .11) * scale, depth: (depth + .26) * scale,
-      opacity: ruin ? .20 : .50, innerOpacity: ruin ? .11 : .35,
+    const {width, depth, rear, reach} = FORMS[slot], scale = ruin ? .72 : 1;
+    appendGroundShadow((gx, gz, tint, alpha) => vertex(gx, gz, 0, tint, alpha), indices, {
+      x, z: z - rear + .13, width: (width + .08) * scale, depth: (depth + .24) * scale,
+      reach: reach * (ruin ? .32 : 1), opacity: ruin ? .51 : 1,
     });
   }
   for (const {x, z, slot} of foundations) {

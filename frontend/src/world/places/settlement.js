@@ -58,8 +58,9 @@ export async function createSettlement(ctx) {
     if (id === 'home_islet') {
       createHomeRelief(group, ground.material.map);
       createHomeTerraces(group, ground.material.map, art);
-      createGroundShadows(group, trees.map(([x, z]) => ({
-        x: x + .52, z: z + .68, width: 1.52, depth: 1.32, opacity: .34, innerOpacity: .21,
+      createGroundShadows(group, trees.map(([x, z], i) => ({
+        x, z: z + .12, width: [.93, .85, .88][i % 3], depth: .68,
+        reach: [2.04, 2.32, 1.88][i % 3], canopy: true, opacity: .87,
       })));
     }
     let lanternLight;
