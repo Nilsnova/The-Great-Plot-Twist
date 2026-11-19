@@ -19,11 +19,11 @@ function readFoundation(id) {
 }
 
 it.each(['cannon_1', 'cannon_2', 'cannon_3', 'cannon_4'])('provides a solid perch at the original coastal slot %s', id => {
-  const points = readFoundation(id), toes = points.filter(({height}) => height < -.67);
-  expect(points.some(({height}) => height > .1)).toBe(true);
+  const points = readFoundation(id), toes = points.filter(({height}) => height < -.9);
+  const cap = points.filter(({height}) => height > .1).map(({x}) => x);
+  expect(Math.max(...cap) - Math.min(...cap)).toBeGreaterThan(1.7);
   expect(toes.length).toBeGreaterThan(0);
   expect(toes.every(({x, z}) => surfaceClass('home_islet', x, z) > 0)).toBe(true);
-  expect(Math.max(...toes.map(({x}) => x)) - Math.min(...toes.map(({x}) => x))).toBeGreaterThan(1.55);
 });
 
 it('keeps the ordinary shallow pad on an inland slot', () => {
