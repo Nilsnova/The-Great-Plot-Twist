@@ -332,3 +332,30 @@ single construction submission and refreshed treasury revision/balance assertion
 passed in 1.06 seconds, spoiler guard passed (257 text files, 12 protected lines), and whitespace
 review was clean. This is transport-stub component evidence; real provider pointer acceptance is
 still a separate check.
+
+## Native clock correction and incomplete holds
+
+Apply the existing timed/clockOffset policy to accepted native start, current and join delegates,
+just as for personal legacy waves. Preserve its existing arrival-time measurement, slack and
+one-day limit; add no independent clock authority or DTO fields. The existing flow event then
+carries clockOffsetMs to the actual controller.
+
+A definitive hold_incomplete means the original ordered interval is still valid but too young.
+Keep its hold ID/start time and retry completion after the existing backoff with the same fall
+intent/UID and current proof. Only hold_invalidated or hold_missing starts a new ordered interval.
+Unknown/401 completion retention and authoritative journal-only HP restoration remain unchanged.
+Verify a six-second fast browser through the native API/flow/controller chain, plus a controlled
+clock-drift retry using the production revival orchestrator and durable completion adapter against
+a synthetic server that requires the original two seconds. A new start UID really cancels/restarts
+the prior hold in the existing server source, so repeated start must not be used to wait out age.
+These component checks do not establish actual provider gameplay or server-time acceptance.
+
+The native-clock regression first failed five cases: missing offsets on all three delegates,
+zero offset in the actual API/flow/controller chain, and six ordered hold starts without completion
+within 2.25 server seconds under a six-second fast client clock. After the bounded correction,
+36 cases across seven focused native/legacy clock, controller, flow and revival files passed in
+6.54 seconds. The strengthened six-case clock selection passed in 2.46 seconds and checks the
+original start timestamp, at least 400 ms between completion attempts, identical completion
+body/UID/proof and no local HP restore. Normal build passed in 3.05 seconds, spoiler guard passed
+(257 text files, 12 protected lines), and whitespace review was clean. Synthetic clock/transport
+results remain distinct from actual rendered provider acceptance.

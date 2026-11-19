@@ -44,7 +44,7 @@ export function createNativeRevival(ctl,{sync,send,complete}={}){
    const answer=await complete({origin:current.info.initialSnapshot.economy,waveId:current.info.waveId,targetToken:state.targetId,fallId:state.fallId,holdId:state.holdId});
    if(!active(current,state))return;
    if(answer.ok){state.stage='waiting_journal';state.note='Waiting for confirmed revival…';return;}
-   state.stage=['hold_incomplete','hold_invalidated','hold_missing'].includes(answer.code)?'starting':'holding';
+   state.stage=['hold_invalidated','hold_missing'].includes(answer.code)?'starting':'holding';
    if(state.stage==='starting'){state.holdId=null;state.share=0;}
    mark(state,answer.code);
   })().catch(()=>{state.stage='holding';mark(state,'network_error');}).finally(()=>{
