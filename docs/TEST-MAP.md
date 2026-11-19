@@ -27,12 +27,15 @@ remain separate; the existing fake-room `test:mp` check does not establish them.
 
 ## Shared economy integration checkpoint — 19 November 2026
 
-Source inventory: `5f1cfa7c34b7610234ffaef7b76ac66c143516e2`. Canonical
+Source inventory: `6584610a6a37b63ffc5df4beb951de0f115f5d16`. Canonical
 authority, native sessions/journal/closure worker, personal Captain progression,
-domain transactions and reset/deletion are present. The rows below locate checks;
-they do not declare the final authenticated scenario matrix complete. The shared
-snapshot still disables the domain/session capabilities consumed by the real UI;
-coordinated client enablement remains an integration gate at this source.
+domain transactions, reset/deletion and coordinated clients are present. The shared
+snapshot advertises arsenal/session/repair/reset/market/match; move remains unavailable.
+The source contains 107 migrations, including the
+[accepted-prefix freshness boundary](../supabase/migrations/20261119014418_shared_revival_checkpoint_freshness.sql),
+and the client includes the [native clock and incomplete-hold correction](../specs/MP-ECO-11-canonical-client.md#native-clock-correction-and-incomplete-holds).
+These source facts and the rows below locate checks; they do not report a final
+regression pass or complete the authenticated rendered scenario matrix.
 
 | Layer / area | Checks | Boundary |
 |---|---|---|

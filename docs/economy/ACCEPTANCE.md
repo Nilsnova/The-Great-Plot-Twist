@@ -4,9 +4,9 @@
 >
 > **Who uses it:** teammates validating the shared economy before release.
 
-**Status:** canonical backend source is integrated; coordinated client capabilities
-and final authenticated acceptance are incomplete.
-This inventory was reviewed at `5f1cfa7c34b7610234ffaef7b76ac66c143516e2`.
+**Status:** canonical backend and coordinated client source are integrated;
+final frozen-source regressions and authenticated scenario acceptance remain pending.
+This source inventory is `6584610a6a37b63ffc5df4beb951de0f115f5d16`.
 Published dependencies
 provide the [contract #515](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/515),
 [permission policy #516](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/516) and
@@ -27,6 +27,11 @@ and seed its underlying facts explicitly; they do not install a substitute. Nati
 SQL suites create controls, roster, assignments, journal state and holds through the
 actual production hooks, with their template/report/clock boundaries labeled.
 
+The current source contains 107 migrations, including the private
+[accepted-prefix freshness boundary](../../supabase/migrations/20261119014418_shared_revival_checkpoint_freshness.sql).
+The client includes the [native clock and incomplete-hold correction](../../specs/MP-ECO-11-canonical-client.md#native-clock-correction-and-incomplete-holds).
+These are implementation facts, not new acceptance results.
+
 A fresh local stack installed all 106 migrations in canonical timestamp order from
 `a6de304bbeb5f45983e18d043c848c71a4566609`. A limited probe used three real
 registered Auth users in distinct Chromium processes, the production SDK/API and
@@ -36,8 +41,10 @@ current-topic isolation across admission/departure and terminal state after the 
 withdrawal. Fresh-island service-only treasury admission was explicit installer
 setup. This was an SDK/API primitive probe, not rendered gameplay or public
 legacy-save conversion. Honest channels manually followed current metadata; automatic
-product topic changes remain unverified. Application/migration bytes are unchanged
-between that source and the inventory source; the intervening change is a test.
+product topic changes remain unverified. Application/migration bytes were unchanged
+between that source and the original `5f1cfa7c34b7610234ffaef7b76ac66c143516e2`
+inventory; the intervening change was a test. That equivalence does not apply to
+the current 107-migration source inventory.
 
 The [test map](../TEST-MAP.md#shared-economy-integration-checkpoint--19-november-2026)
 records source-qualified checkpoints. In particular, the historical `799242b4`
@@ -48,7 +55,7 @@ source. They do not establish a final full-backend pass.
 | Pending acceptance gate | Required next observation |
 |---|---|
 | Final common source | Freeze the reviewed API/frontend/migrations together; rerun backend regressions with disposable SQL and matching frontend Node dependencies, affected client suites/build and migration checks. Retain exact failures/skips and source hashes. |
-| Coordinated client capabilities | At the inventory source, `shared_snapshot.py` still declares session/arsenal/move/repair/reset/market/match unavailable. The real island client gates those controls on the snapshot. Complete the reviewed capability/client integration before treating direct SDK calls as reachable game actions. |
+| Coordinated client behavior | The integrated snapshot advertises arsenal/session/repair/reset/market/match; move remains unavailable. Verify their reachable controls and current source/authority fences through the rendered game. An available capability does not grant membership, ownership or action permission, and direct SDK success alone does not establish product behavior. |
 | Rendered two-player journey | Actual provider sessions use ordinary game UI, coherent shared quotes, session attachment, native journal/input/checkpoints and terminal handling. Capture visible scoped funds, accepted actions and committed database effects; no fake adapters or response replacement. |
 | Product Realtime transitions | Honest rendered clients automatically follow new topic metadata across admission, membership leave, reset and deletion. Retained malicious sockets cannot receive new protected data or inject accepted gameplay. Manual SDK topic changes alone do not close this gate. |
 | Session and participation | Actual duplicate tabs/cross-island assignment, countdown/spectator exclusion, reconnect before and after real grace, succession, frozen difficulty/loadouts, pause/auto-next and no-browser worker closure agree with persisted receipts. |
