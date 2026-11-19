@@ -3,6 +3,41 @@ import {expect, it} from 'vitest';
 import {browserHarness} from '../g20-browser.js';
 const evaluate = browserHarness();
 
+it('publishes shared commitment and scope changes even when available coins stay equal', async () => {
+  const result = await evaluate(async () => {
+    const {createIsland} = await window.g20Import('/src/island/index.js');
+    const {createFakeIslandTransport} = await window.g20Import('/src/pirates/fake-api.js');
+    const {sharedEconomy, sharedIsland} = await window.g20Import('/tests/island/economy-fixture.js');
+    const {on, emit} = await window.g20Import('/src/core/events.js');
+    const base = createFakeIslandTransport(); base.dev.setCoins(9000); base.dev.setWaveBest(9);
+    let economy = sharedEconomy();
+    const transport = {get: async (...args) => {
+      const answer = await base.get(...args);
+      return answer.ok && args[0].startsWith('/api/island/visit/')
+        ? {...answer, data: sharedIsland({code: answer.data.code, economy, waveBest: 9})} : answer;
+    }, post: (...args) => base.post(...args)};
+    const reports = [];
+    const island = createIsland({container: document.body, emit, on, mode: 'fake', transport, storage: null, visitStorage: null,
+      menu: () => () => {}, settings: () => () => {}, onCoins: (coins, options) => reports.push({coins,
+        shared: options?.shared === true, revision: options?.economy?.revision,
+        committed: options?.economy?.treasury.committedCoins, key: options?.fundingKey ?? null})});
+    try {
+      island.visit('ISLE-FR3ND'); await island.load();
+      economy = sharedEconomy({revision: '2', treasury: {balanceCoins: '125', committedCoins: '50', availableCoins: '75'}});
+      await island.refreshDefended(); const revised = reports.at(-1);
+      economy = sharedEconomy({accountId: '44444444-4444-4444-8444-444444444444', runEpoch: '55555555-5555-4555-8555-555555555555',
+        treasury: {balanceCoins: '75', committedCoins: '0', availableCoins: '75'}});
+      await island.refreshDefended(); const replaced = reports.at(-1);
+      await island.sailHome();
+      return {revised, replaced, home: reports.at(-1)};
+    } finally { island.dispose(); }
+  });
+  expect(result.revised).toMatchObject({coins: '75', shared: true, revision: '2', committed: '50'});
+  expect(result.replaced).toMatchObject({coins: '75', shared: true, revision: '1', committed: '0'});
+  expect(result.replaced.key).not.toBe(result.revised.key);
+  expect(result.home).toMatchObject({coins: 9000, shared: false});
+});
+
 it.each(['own', 'visit'])('adopts another member reset from the current %s GET and ignores an older GET and hire reply', async place => {
   const result = await evaluate(async place => {
     const {createIsland} = await window.g20Import('/src/island/index.js');

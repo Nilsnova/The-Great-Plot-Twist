@@ -9,7 +9,7 @@
 - **Branch:** `feat/mp-eco-18-treasury-ui`.
 - **Issue:** [MP-ECO-18 #498](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/498), under [epic #492](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/492).
 - **Coding assistance:** Codex; the responsible teammate reviews and explains the change.
-- **Reviewer:** another human teammate, not yet assigned.
+- **Reviewer:** a different human teammate; current-change approval remains pending.
 
 ## Why
 
@@ -237,3 +237,74 @@ env -u TEST_URL npm run test:mp -- /tmp/mp18-final-reviewed-multiplayer
 ```
 
 These remain local synthetic/fake compatibility checks. They do not verify authenticated shared quotes/receipts, remaining economic card groups, the canonical multiplayer lifecycle, deployed schema or feature admission. Current-head review by a different human teammate remains required.
+
+### Integration after always-on flag retirement
+
+Main `1350c2ba` is integrated. The nine retired flags retain main's always-on behavior; their old runtime arguments and accessors are not restored. The separately versioned structure-recovery admission remains unchanged. Main's extracted fake-server route groups and rendering modules are preserved byte-for-byte, while shared funding, personal snapshots and selection/reset guards remain in the island modules.
+
+The broadened integration selection exposed a legacy observer regression: world-only repaints repeatedly emitted the same wallet value through `onCoins`, although the displayed balance and purchase result were correct. Main's unchanged real-DOM assertion expected one 100-coin read followed by one 70-coin purchase, but the uncorrected projection emitted additional copies. The original assertion was retained. Repaints now compare an immutable publication signature; explicit read/write callbacks and their options still emit normally. The signature contains the funding mode, complete account/epoch scope, revision and all normalized shared money fields, so equal available coins cannot hide changed commitments, a new run or unavailable shared state.
+
+A new positive real-DOM case preserves publication when the available amount stays 75 but committed funds/revision change, then when a new account/epoch also has 75 available, followed by a return to the legacy home. The unchanged legacy observer counterexample failed before correction. The focused observer, ordering and wallet-watermark selection then passed **3 files, 26 tests in 15.15 s**.
+
+Verification at frozen runtime `f6353484`:
+
+- The complete affected selection passed **45 files, 465 tests in 215.94 s**. It includes the prior economy/ordering/reset cases, all test files changed by main's flag retirement and fake/render split, and the deterministic simulation fingerprint. The first integration diagnostic was **463 passed, one failed** before the observer correction. No assertion, timeout or test was weakened.
+- A fresh `npm run build` and spoiler guard passed: **251 text files, 12 protected lines**.
+- The complete fake multiplayer harness passed with **four pages in 450.74 s**, including co-op construction, both upgrade directions, research, revival, pause/resume, sampled four-player synchronization and the wave-5 boss finisher. All four pages reported the same `finisher_failed` result, 195/224; completion and synchronization are verified, not a finisher victory. The frontend tree stayed unchanged throughout the run.
+- The earlier synthetic crew/phone/Engineer images remain the recorded fixture evidence. Their styles and fixture layouts are unchanged; no fresh screenshot-capture result is claimed for this refresh. Current DOM checks cover the relevant content and layout assertions.
+
+The multiplayer journey uses the local fake server and existing legacy money rules. It does not establish authenticated shared quotes/receipts, canonical shared roster and lifecycle authority, free-v1 revival or original-account settlement. Those integration gates remain open under #518 and the relevant economy tasks.
+
+Run from `frontend/`:
+
+```sh
+npm test -- --maxWorkers=1 \
+  tests/island/economy-view.test.js \
+  tests/island/economy-cards.test.js \
+  tests/island/economy-api.test.js \
+  tests/island/economy-http.test.js \
+  tests/island/card-model.test.js \
+  tests/island/api.test.js \
+  tests/island/tower-tree.test.js \
+  tests/online-api.test.js \
+  tests/island/economy-dom.test.js \
+  tests/island/economy-captain-dom.test.js \
+  tests/island/economy-ordering-dom.test.js \
+  tests/ui/hud.test.js \
+  tests/island/first-read-retry.test.js \
+  tests/island/visit-and-mode.test.js \
+  tests/island/fresh-start-dom.test.js \
+  tests/island/demolish-dom.test.js \
+  tests/island/core-rejoin-load.test.js \
+  tests/island/arsenal-context.test.js \
+  tests/island/arsenal-dom.test.js \
+  tests/island/arsenal.test.js \
+  tests/island/captain-card.test.js \
+  tests/island/weapon-comparison-dom.test.js \
+  tests/pirates/poses.test.js \
+  tests/pirates/render.test.js \
+  tests/pirates/live-attack-feedback.test.js \
+  tests/pirates/scattershot-latency.test.js \
+  tests/redesign-movement.test.js \
+  tests/island/structure-recovery-policy.test.js \
+  tests/island/selection-dock.test.js \
+  tests/island/structure-recovery-upgrade-dom.test.js \
+  tests/island/wallet-watermark.test.js \
+  tests/island/wall-feedback-dom.test.js \
+  tests/island/quest-progress.test.js \
+  tests/island/boat-transition.test.js \
+  tests/pirates/sim-fingerprint.test.js \
+  tests/island/dom.test.js \
+  tests/island/extra-spots.test.js \
+  tests/island/preparation-dom.test.js \
+  tests/island/wave-flow.test.js \
+  tests/pirates/defenses-v2.test.js \
+  tests/pirates/fake-api.test.js \
+  tests/pirates/rescue-finish.test.js \
+  tests/pirates/td-flow.test.js \
+  tests/tutorial/tutorials.test.js \
+  tests/tutorial/unlock-cards.test.js
+npm run build
+# Unset TEST_URL and choose a new capture directory for the complete fake journey.
+env -u TEST_URL npm run test:mp -- /tmp/mp18-main1350-multiplayer
+```
