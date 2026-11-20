@@ -677,8 +677,13 @@ try {
   await ben.page.waitForFunction(() => /^Nils tore down the Wall\. You got back 🪙 25\.$/.test(window.__island.island.ui.toastText), null, {timeout: 3000, polling: 50});
   const benToast = await ben.page.evaluate(() => window.__island.island.ui.toastText);
   await ben.page.waitForFunction(before => window.__island.island.island?.coins === before + 25, benBefore, {timeout: 3000, polling: 100});
-  assert.deepEqual(await mapOf(ben, 'wall_2'), {level: 0, pips: 0, mode: 'none'}, "the friend's map shows no wall on wall_2");
-  assert.deepEqual(await mapOf(host, 'wall_2'), {level: 0, pips: 0, mode: 'none'}, "the owner's map shows no wall on wall_2");
+  // The map is redrawn on the page's next frame after the island answer, so wait for it as shows() does (at most 2 s).
+  const emptied = async (captain, whose) => {
+    const began = Date.now(); let map = await mapOf(captain, 'wall_2');
+    while (map.mode !== 'none' && Date.now() - began < 2000) { await captain.page.waitForTimeout(100); map = await mapOf(captain, 'wall_2'); }
+    assert.deepEqual(map, {level: 0, pips: 0, mode: 'none'}, `${whose} map shows no wall on wall_2`);
+  };
+  await emptied(ben, "the friend's"); await emptied(host, "the owner's");
   results.push(`tear down: the owner's confirmation "${confirmation.question}" ${confirmation.lines.join(' ')}; the friend's island showed the empty spot after ${emptyAfter} ms, his toast "${benToast}", his coins ${benBefore} → ${benBefore + 25}`);
   await sized('02f-teardown-after', [host, ben]);
   await island(host, async i => { await i.build('wall_2', 'wall'); await i.upgrade('wall_2'); await i.upgrade('wall_2'); });
