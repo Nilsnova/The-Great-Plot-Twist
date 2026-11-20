@@ -491,6 +491,24 @@ export function createHomeRelief(group, coastArt) {
         vec3 faceLight = vec3(.38, .29, .17) * sunlitLedge + vec3(.20, .14, .08) * warmShoulder;
         faceLight -= vec3(.24, .20, .14) * coldSide + vec3(.29, .24, .18) * bedShade;
         stone *= 1.0 + faceLight * vShoreCut.z;
+        // Coarse mineral flakes catch light along their chipped edges. Fade the smallest edges as
+        // the camera pulls back so seams stay visible without crawling across the screen.
+        vec2 strata = vec2(layers.x * 4.8 + layers.y * 1.64, layers.y * 6.1);
+        vec3 flakes = sandstoneGrain(strata);
+        vec2 footprint = fwidth(strata);
+        float detail = 1.0 - smoothstep(.24, .72, max(footprint.x, footprint.y));
+        float grainSeed = sandstoneHash(floor(strata));
+        vec2 flake = fract(strata) - vec2(.5, .34 + grainSeed * .31);
+        float split = flake.y + flake.x * (grainSeed - .42) * 1.6;
+        float taper = (1.0 - smoothstep(.12, .36, abs(flake.x))) * smoothstep(.41, .76, grainSeed);
+        float antialias = min(.11, fwidth(split));
+        float pore = (1.0 - smoothstep(.010, .046 + antialias, abs(split))) * taper;
+        float chip = smoothstep(.012, .046, split) * (1.0 - smoothstep(.061, .134, split)) * taper;
+        float rake = clamp(dot(flakes.yz, vec2(-.065, .082)), -.13, .17);
+        float minerals = smoothstep(.31, .69, flakes.x);
+        vec3 mineralLight = mix(vec3(.91, .95, 1.04), vec3(1.09, 1.07, 1.03), minerals);
+        mineralLight *= 1.0 + detail * (rake + .16 * chip - .16 * pore);
+        stone *= mix(vec3(1.0), mineralLight, mix(.57, 1.0, vShoreCut.z));
         float cap = (1.0 - smoothstep(.07, .28, depth)) * smoothstep(.11, .51, dot(vStone, vec3(.30, .58, .12)));
         stone = mix(stone, stone * vec3(1.19, 1.09, 1.02), cap);
         float overhang = (1.0 - smoothstep(.001, .082, depth)) * vShoreCut.z;
@@ -499,13 +517,14 @@ export function createHomeRelief(group, coastArt) {
         float reflected = smoothstep(.055, .23, depth) * (1.0 - smoothstep(.72, .96, depth));
         float recess = 1.0 - smoothstep(.11, .35, dot(vStone, vec3(.30, .58, .12)));
         float dust = reflected * recess * (.83 + .19 * rockGrain + .27 * grainBreak);
-        stone += dust * vec3(.127, .080, .046);
+        stone += dust * vec3(.143, .101, .068) * (1.0 + .17 * chip * detail);
         float moss = smoothstep(.62, .84, rockGrain + grainBreak * .7)
           * (1.0 - smoothstep(.04, .26, depth)) * .52;
         stone = mix(stone, stone * vec3(.82, 1.05, .67), moss);
         stone = mix(stone, stone * vec3(.49, .63, .71) + vec3(.014, .029, .034), damp * .78);
-        float tide = smoothstep(.67, .84, depth + grainBreak) * (1.0 - smoothstep(.85, .99, depth)) * damp;
-        stone += tide * vec3(.009, .027, .032);
+        float tidemark = depth + grainBreak + (flakes.x - .5) * .065;
+        float tide = smoothstep(.68, .82, tidemark) * (1.0 - smoothstep(.86, .99, tidemark)) * damp;
+        stone += tide * vec3(.009, .029, .035) * (1.0 + .65 * chip * detail);
         float settledSand = sandPigment * (1.0 - smoothstep(.15, .78, vShoreRelief.x + grainBreak));
         gl_FragColor = vec4(mix(stone, rock.rgb, .10 + .59 * settledSand), 1.0);
         #include <colorspace_fragment>
