@@ -31,14 +31,14 @@ export function foundationMaterial() {
           if (local.z < ${FOOTING.shadow - .5}) {
             // Keep the ambient occlusion close to the stone and a little deeper on its lee side.
             vec2 foot = (local.xy - vec2(.09, .10)) * vec2(.93, 1.09);
-            float contact = 1.0 - smoothstep(.27, .98, dot(foot, foot));
+            float contact = 1.0 - smoothstep(.21, .85, dot(foot, foot));
             float lee = smoothstep(-.45, .60, dot(local.xy, vec2(.39, .61)));
-            float alpha = min(.85, tint.a * (.76 + contact * (.59 + .26 * lee)));
+            float alpha = min(.90, tint.a * (.80 + contact * (.77 + .29 * lee)));
             return vec4(tint.rgb * mix(vec3(.96, .92, .83), vec3(.62, .57, .49), contact), alpha);
           }
           // Soft scattered light makes the longer roof cast a cooler, quieter shadow on the paving.
           float spread = smoothstep(.08, .50, tint.a);
-          return vec4(tint.rgb * vec3(1.06, 1.15, 1.09), tint.a * mix(.67, .92, spread));
+          return vec4(tint.rgb * vec3(1.12, 1.13, 1.05), tint.a * mix(.53, .87, spread));
         }
 
         vec2 uv = local.xy;
@@ -49,7 +49,8 @@ export function foundationMaterial() {
           float slope = clamp(dot(grain.yz, vec2(-.19, -.13)), -.17, .21);
           float glint = 1.0 - smoothstep(.02, .21, min(uv.x, uv.y));
           float bevel = smoothstep(.72, .99, max(uv.x, uv.y));
-          vec3 stone = tint.rgb * (.96 + (grain.x - .5) * .28 + slope * detail + .19 * glint - .25 * bevel);
+          vec3 stone = tint.rgb * (.98 + (grain.x - .5) * .28 + slope * detail + .21 * glint - .27 * bevel);
+          stone += tint.rgb * vec3(.06, .037, .012) * glint;
           return vec4(stone, tint.a);
         }
 
@@ -59,7 +60,7 @@ export function foundationMaterial() {
           vec3 stone = cutSandstone(tint.rgb, course, uv, .6);
           float foot = 1.0 - smoothstep(.035, .42, uv.y);
           float crown = smoothstep(.55, .92, uv.y);
-          stone *= .89 + .18 * crown - .23 * foot;
+          stone *= .89 + .22 * crown - .26 * foot;
           if (local.z > ${FOOTING.retaining - .5}) {
             float damp = 1.0 - smoothstep(.02, .68, uv.y);
             stone = mix(stone, stone * vec3(.65, .82, .82), damp * .72);

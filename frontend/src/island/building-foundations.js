@@ -8,15 +8,15 @@ import {padCorners as corners, TOWER_PAD} from './defense-display.js';
 import {foundationMaterial, FOOTING} from './foundation-finish.js';
 
 const FORMS = {
-  house: {width: 1.36, depth: .86, rear: .46, reach: 2.9, roof: 'gable'},
-  watchtower: {width: 1.17, depth: .90, rear: .52, reach: 4.1, roof: 'tower'},
+  house: {width: 1.36, depth: .86, rear: .46, reach: 1.95, roof: 'gable'},
+  watchtower: {width: 1.17, depth: .90, rear: .52, reach: 2.85, roof: 'tower'},
   tower: {...TOWER_PAD, reach: .92, plinth: .145},
-  heart: {width: 2.03, depth: 1.20, rear: .59, reach: 4.35, roof: 'gable'},
-  island_cabin: {width: 1.55, depth: .98, rear: .52, reach: 3.55, roof: 'gable'},
-  island_bell: {width: .96, depth: .66, rear: .31, reach: 2.25, roof: 'gable'},
-  island_arsenal: {width: 1.56, depth: .94, rear: .50, reach: 3.65, roof: 'gable', plinth: .054, cornerInset: .17},
-  island_harbor: {width: 1.52, depth: .95, rear: .48, reach: 3.20, roof: 'gable', plinth: .048, cornerInset: .15},
-  island_techhub: {width: 1.72, depth: 1.16, rear: .58, reach: 3.85, roof: 'hip', plinth: .051, cornerInset: .38},
+  heart: {width: 2.03, depth: 1.20, rear: .59, reach: 2.90, roof: 'gable'},
+  island_cabin: {width: 1.55, depth: .98, rear: .52, reach: 2.30, roof: 'gable'},
+  island_bell: {width: .96, depth: .66, rear: .31, reach: 1.52, roof: 'gable'},
+  island_arsenal: {width: 1.56, depth: .94, rear: .50, reach: 2.50, roof: 'gable', plinth: .054, cornerInset: .17},
+  island_harbor: {width: 1.52, depth: .95, rear: .48, reach: 2.18, roof: 'gable', plinth: .048, cornerInset: .15},
+  island_techhub: {width: 1.72, depth: 1.16, rear: .58, reach: 2.68, roof: 'hip', plinth: .051, cornerInset: .38},
 };
 const RETAINING_STONE = [0xc3a47b, 0xb0916b, 0x9a7f61, 0x80694f, 0x726049].map(hex => new THREE.Color(hex));
 const [SHOULDER, RETAINING_FRONT, RETAINING_SIDE, RETAINING_JOINT, EMBEDDED_STONE] = RETAINING_STONE;
@@ -31,7 +31,7 @@ const APRON_BED = new THREE.Color(0x91876c);
 const HEART_SHADE = new THREE.Color(0x354d42);
 // A soft shadow follows the existing pavers through the open arch.
 const HEART_SHADE_ROWS = [
-  [-2.95, .97, 0], [-2.21, 1.07, .41], [-1.12, 1.14, .55], [-.1, .96, .42], [.57, .84, 0],
+  [-2.95, .97, 0], [-2.21, 1.07, .33], [-1.12, 1.14, .46], [-.1, .96, .35], [.57, .84, 0],
 ];
 
 function clippedCorners(x, z, width, depth, trim) {
