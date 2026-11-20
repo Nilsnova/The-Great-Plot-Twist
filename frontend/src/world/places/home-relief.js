@@ -36,7 +36,7 @@ const REAR_STONE = 4, REAR_TURF = 5;
 const REAR_HEADLANDS = [
   {from: 119.6, to: 123.7, reach: 1.48, height: 1.04, lean: .17, stone: 3, grass: false},
   {from: 121.7, to: 127.2, reach: 2.05, height: 1.82, lean: -.15, stone: 5, grass: true},
-  {from: 145.95, to: 151.75, reach: 1.02, height: 1.76, footTurn: .33, lean: -.14, stone: 2, grass: true},
+  {from: 145.95, to: 151.75, reach: 1.02, height: 1.76, footTurn: .33, landingCut: .66, lean: -.14, stone: 2, grass: true},
   {from: 148.8, to: 152.55, reach: 1.41, height: 1.03, lean: -.18, stone: 5, grass: false},
 ];
 const REAR_OUTLINE = [[0, .39], [.19, .064], [.55, 0], [.85, .16], [1, .49], [.88, .85], [.59, 1], [.16, .82]];
@@ -300,7 +300,7 @@ function homeCliffGeometry(rows = cliffProfile(surface)) {
     }
   }
 
-  function carveRearHeadland({from, to, reach, height, lean, stone, grass, footTurn = 0}) {
+  function carveRearHeadland({from, to, reach, height, lean, stone, grass, footTurn = 0, landingCut = 0}) {
     const color = STONES[stone].clone().lerp(OUTCROP, .65).lerp(BEDROCK, .12);
     const center = stoneVertex(rows, (from + to) * .5, 0, reach * .49);
     center.y = height * .42;
@@ -310,18 +310,23 @@ function homeCliffGeometry(rows = cliffProfile(surface)) {
     ];
     const point = (along, across, rise, grade) => {
       const sample = THREE.MathUtils.lerp(from, to, THREE.MathUtils.clamp(along, 0, 1));
-      const vertex = stoneVertex(rows, sample, 0, .10 + across * reach);
+      // The eastern toe tapers towards the wall sockets while its seaward heel
+      // supports the whole rock face above the saddle.
+      const taper = landingCut * (1 - THREE.MathUtils.smoothstep(along, .38, .60));
+      const vertex = stoneVertex(rows, sample, 0, .10 + across * reach * (1 - taper));
       const shoulder = 1 - THREE.MathUtils.smoothstep(Math.abs(along - .50 - lean), .05, .48);
       vertex.y = height * rise * (.42 + .58 * shoulder) * (1 + .12 * Math.sin(along * 9.2 + lean));
       return {vertex, grade, cut: [along, rise]};
     };
     const rings = tiers.map(([length, width, rise, grade]) => {
-      const foot = footTurn * (1 - rise) ** 2;
-      return REAR_OUTLINE.map(([u, v], i) => point(
-        .5 + (u - .5) * length * (1 - foot) + foot * .5 + lean * rise * rise + .04 * rise * Math.sin(i * 3.1 + rise * 7),
-        .47 + (v - .47) * width + rise * (.052 * v + .084 * Math.cos(i * 2.9 + rise * 5)),
-        rise * (1 + .115 * Math.sin(v * 7.2 + u * 4 + lean)), grade,
-      ));
+      return REAR_OUTLINE.map(([u, v], i) => {
+        const foot = footTurn * (1 - rise) ** 2 * THREE.MathUtils.smoothstep(v, .34, .82);
+        return point(
+          .5 + (u - .5) * length * (1 - foot) + foot * .5 + lean * rise * rise + .04 * rise * Math.sin(i * 3.1 + rise * 7),
+          .47 + (v - .47) * width + rise * (.052 * v + .084 * Math.cos(i * 2.9 + rise * 5)),
+          rise * (1 + .115 * Math.sin(v * 7.2 + u * 4 + lean)), grade,
+        );
+      });
     });
     const facets = [];
     for (let ring = 0; ring < rings.length - 1; ring++) {
@@ -561,7 +566,11 @@ export function createHomeRelief(group, coastArt) {
             color *= mix(vec3(.83, .89, .69), vec3(1.08, 1.04, .89), rooted);
             color *= .91 + grain * .15 + surfaceGrain * .10;
           } else {
-            color = weatheredSandstone(color, layers, vShoreCut.xy, .63);
+            color = weatheredSandstone(color, layers, vShoreCut.xy, .76);
+            vec3 fracture = sandstoneGrain(layers * vec2(2.8, 4.1));
+            float unevenLight = clamp(dot(fracture.yz, vec2(-.092, .13)), -.10, .16);
+            float side = smoothstep(.30, .69, vShoreCut.x);
+            color *= mix(vec3(1.13, 1.081, 1.03), vec3(.96, 1.0, 1.034), side) * (1.0 + unevenLight);
             float topLight = smoothstep(.54, .94, vShoreCut.y);
             float contact = 1.0 - smoothstep(.04, .35, height);
             color *= .90 + .17 * grain + .11 * topLight - .34 * contact;
