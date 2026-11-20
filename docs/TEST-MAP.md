@@ -537,11 +537,18 @@ and [results, screenshots and manual checkpoints](evidence/T28/README.md).
 
 COC-39 ownership follow-up: `frontend/tests/pirates/defense-report-ownership.test.js` uses the actual running game with a local fake island and standard-mapped gamepad. Window-level keyboard state and analog input cannot move the captain while `waves.reportActive` owns both global overlay guards; closing restores motion. Isolated result:1 passed /14.34s. The report still does not pause canonical wave ticking.
 
+## BASE-40 — Battle report to village
+
+- `frontend/tests/pirates/defense-report.test.js` verifies that an observed wall break wins over ordinary hits and keeps the accepted wave position.
+- `frontend/tests/pirates/defense-report-dom.test.js` checks desktop and phone layouts, current payout updates, keyboard focus, incomplete reports and canceling a pending location search when a new wave begins.
+- `frontend/tests/island/report-site-game.test.js` uses the real village controller and controlled recovery reads to check existing and replacement instances, epoch mismatch, an active reservation, travel cancellation and zero purchase calls.
+
 ## COC-31 — Johannes: base overview
 
 | What / where | Evidence | Coverage and limits |
 |---|---|---|
 | Read-only model and actual menu/card integration; `src/island/upgrade-overview*.js` | `tests/island/upgrade-overview.test.js`, `upgrade-overview-dom.test.js`; [capture report](evidence/COC-31-base-overview/README.md) | Extra offered plots, duplicate/unknown entries, server prices, affordability, loading/locks/roles, filters, accepted refresh, focus, 375px overflow and zero overview POST writes. Local fake transport + Chromium; no live backend, Safari or physical phone proof. Focused four-file run: 40 tests passed; broader parent checks reported separately. |
+| Find a building by its accepted plot | [Desktop and touch game test](../frontend/tests/island/upgrade-overview-jump.test.js) | A moved extra tower with the same name as another tower opens its own card. Focus survives a refresh and transfers to the selection. A wave reservation blocks a stale action. The fake transport records no build, upgrade or Move calls after setup. |
 
 ## COC-49 — Johannes Franz Lang — Village management
 
@@ -561,6 +568,10 @@ not offer a Manage action; after a reservation the full-game test checks both
 Manage and Exit Menu entries are absent. Existing islet-boundary tests preserve
 the outside-overlay/StopPlots assertions through the captain-blocking wrapper.
 
+## Building inspection and support
+
+The [upgrade comparison tests](../frontend/tests/pirates/defense-upgrade-comparison.test.js) compare both levels against real wave acquisition, attack events and reload. They cover Gunner reassignment, spatial bonuses and unknown or stale inputs. The [Village Mode journeys](../frontend/tests/island/village-game.test.js) exercise the comparison from **Details** and check the saved levels and wallet. The [house model](../frontend/tests/island/house-support-model.test.js) covers role policy, distance boundaries and valid or refused drafts. The [scene test](../frontend/tests/island/house-support-markers.test.js) covers marker reuse, cancellation and disposal. The checks cover nominal attack values and support geometry. Hit rate, damage totals, live party forecasts and server purchases use their existing checks.
+
 ## COC-02 — village overview camera (Johannes)
 
 `frontend/tests/player/village-camera.test.js`: eight tests cover real current-land and overlay-inset fit at both required viewport sizes, captain/zoom restoration, battle/tutorial precedence, resize/travel, motion preferences and invalid/paused updates. Run `cd frontend && npx vitest run tests/player/village-camera.test.js --maxWorkers=1`. Final focused result: 1 file / 8 tests passed, 516 ms. This does not prove production, Safari, expanded land or integrated UI; [evidence](evidence/COC-02/README.md) records later checks.
@@ -577,3 +588,9 @@ See the [T58 evidence README](evidence/T58-captain-repair/README.md) for fixture
 ## CF1 captain range and danger feedback (18 Nov 2026)
 
 [Task #453](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/453), [spec](../specs/CF1-captain-combat-feedback.md) and [evidence/limits](evidence/CF1-captain-combat-feedback/README.md). Pure range/danger tests cover intent lifetime, weapon/skill reach, priority, expiry and once-per-episode sound. Audio regressions cover sustained/critical warnings, priority switches, independently clearing threats, menus, mute/unmute and wave reset. The visual revision checks sparse arc gaps, exact projected direction, the absence of damage labels, and preserved firing/impact events. Controller/native component tests cover refusal, reload, hit truth, keyboard focus, announcements and cleanup; overlay tests check projection and disposal. `node scripts/check-captain-feedback.js` runs the actual local fake game at desktop/phone sizes with native F and captures before/after state. No live multiplayer, physical touch or screen-reader speech proof is claimed.
+
+## Village approach coverage (BASE-16)
+
+[Issue #157](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/157) · [Coverage contract](../specs/COC-coverage-model.md) · [Desktop and phone evidence](evidence/COC-16/README.md)
+
+The focused model tests cover target eligibility, minimum range, conditional shots, saved health, and valid and refused Move previews. The battle-guide tests check the actual route samples, marker shapes, WebGL transparency and stable buffers. The local browser journey checks the Village Mode switch, the same paid defenses across screen sizes, and cleanup on travel and wave entry.

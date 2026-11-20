@@ -92,14 +92,13 @@ export function wireWaves(ctx) {
   // Host and visitors must feed the sim the same island, so both read the defended island's answer (a
   // visitor's comes from the visit route and needs its levels and crew too).
   const own = () => island?.island ?? null, defended = () => island?.visiting ?? own();
-  if (island) defenseReport = mountDefenseReport({on, container: ctx.container, context: () => defended()?.code ?? null,
-    defenses: () => withLevels(island.defenses() ?? [], defended()), focus: () => ctx.canvas?.focus?.({preventScroll: true}), resetInput: () => ctx.input?.reset?.()});
   // The game's room state: Start, Pause and who is online, on the island's room (game_hello, game_state).
   const game = island ? createGameRoom({room: islandRoom, emit: ctx.emit ?? (() => {}), later, every, onChange: () => island.refreshLobby?.()}) : null;
   if (game) island.attachGame?.(game);
   let publishCore = () => {};
   const pirates = mountPirates({...ctx, getDefenses: () => withLevels(island?.defenses() ?? [], defended()), finishWave, api, openRoom, notify,
     getManaging: () => island?.managing === true,
+    getApproachCoverage: () => island?.approachCoverage?.() ?? null,
     inspectDefenses: !!island,
     onIslandEvents: events => { noteReport(() => defenseReport?.events(events)); noteReport(publishCore); },
     recoveryTransport,

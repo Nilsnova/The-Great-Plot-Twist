@@ -75,7 +75,7 @@ export function createLoading(isl) {
       campaignTold.add(key);
       const line = answer?.recoveryVersion === 1 && step.ids.includes('crew:carpenter')
         ? 'Raise walls around the heart. All walls and towers fully recover when the wave ends.' : step.line;
-      isl.ui.toast(step.title, 'success', firstTime(`campaign_${step.wave}`) ? line : '');
+      isl.ui.toast(step.title, 'success', firstTime(`campaign_${step.wave}`) ? line : '', step.wave === 1 ? 'first-wave-unlock' : null);
       emit({type: CAMPAIGN_UNLOCKED, wave: step.wave, ids: step.ids, code: displayIslandCode(code)});
     }
   }
@@ -150,6 +150,7 @@ export function createLoading(isl) {
     return fresh;
   };
   const target = () => isl.visiting ?? isl.own;
+  const researchIsland = () => !isl.visitCode || isl.visiting?.code === isl.visitCode ? target() : null;
   // Which island is on screen (a visit or your own, and its code), not which answer object: a fresh read of
   // the same island (a crewmate's change, a finished wave) replaces the object but not the island.
   const shownIsland = () => (target() ? JSON.stringify([isl.visiting ? 'visit' : 'own', target().code]) : null);

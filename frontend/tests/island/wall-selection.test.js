@@ -37,6 +37,58 @@ function postAt(drawing, art, id, x, z = 0) {
     .map(points => ({order: mesh.renderOrder, points})));
 }
 
+it('retires each shared building stand-in once when prepared art replaces it', async () => {
+  let finishBuildings, finishWalls;
+  const buildings = new Promise(resolve => { finishBuildings = resolve; });
+  const walls = new Promise(resolve => { finishWalls = resolve; });
+  const prepared = new THREE.Texture();
+  const place = {group: new THREE.Group(), colliders: [], zones: []};
+  const drawing = decorateIsland(place, {
+    loadArt: ids => ids.length === 1 ? new Promise(() => {}) : buildings.then(() =>
+      Object.fromEntries(ids.map(id => [id, new THREE.MeshBasicMaterial({map: id === 'island-cannon' ? prepared : null})]))),
+    loadWallAtlas: () => walls,
+  });
+  drawing.apply({spots: [{id: 'cannon_1', kind: 'cannon', built: true, level: 1}, wall('wall_1', 0)]});
+  const cannon = drawing.root.getObjectByName('island-cannon:cannon_1');
+  const otherCannon = drawing.root.getObjectByName('island-cannon:cannon_2');
+  const oldCannon = cannon.material.map;
+  expect(otherCannon.material.map).toBe(oldCannon);
+  const oldWall = drawing.root.getObjectByName('island-wall:wall_1').material.map;
+  const bell = vi.spyOn(drawing.root.getObjectByName('island-bell').material.map, 'dispose');
+  const marker = vi.spyOn(drawing.root.getObjectByName('island-marker:cannon_1').material.map, 'dispose');
+  const cannonDispose = vi.spyOn(oldCannon, 'dispose');
+  const wallDispose = vi.spyOn(oldWall, 'dispose');
+  const readyDispose = vi.spyOn(prepared, 'dispose');
+  expect(cannon.visible).toBe(true);
+  expect(cannonDispose).not.toHaveBeenCalled();
+
+  finishBuildings();
+  await new Promise(setImmediate);
+  expect(cannon.parent).toBeNull();
+  expect(otherCannon.parent).toBeNull();
+  expect(cannonDispose).toHaveBeenCalledOnce();
+  expect(wallDispose).toHaveBeenCalledOnce();
+  expect(drawing.root.getObjectByName('island-cannon:cannon_1').material.map).toBe(prepared);
+  expect(readyDispose).not.toHaveBeenCalled();
+  expect(bell).not.toHaveBeenCalled();
+  expect(marker).not.toHaveBeenCalled();
+
+  const version = oldWall.version;
+  const wallArt = atlas(true);
+  const atlasDispose = vi.spyOn(wallArt.texture, 'dispose');
+  finishWalls(wallArt);
+  await drawing.retryWallArt();
+  expect(oldWall.version).toBe(version);
+  expect(drawing.root.getObjectByName('island-wall-connections').children[0].material.map).toBe(wallArt.texture);
+  expect(atlasDispose).not.toHaveBeenCalled();
+  drawing.dispose();
+  drawing.dispose();
+  expect(cannonDispose).toHaveBeenCalledOnce();
+  expect(wallDispose).toHaveBeenCalledOnce();
+  expect(readyDispose).toHaveBeenCalledOnce();
+  expect(atlasDispose).toHaveBeenCalledOnce();
+});
+
 describe('selected walls retain ordinary painter depth', () => {
   it('exposes only an existing selected wall through a read-only diagnostic across readiness, clearing and disposal', () => {
     const root = new THREE.Group(), drawing = makeWallConnections(root), group = drawing.root;
@@ -151,7 +203,13 @@ describe('selected walls retain ordinary painter depth', () => {
 it('the actual world reuses its one tile bracket through selection, Move, Close, visitor and battle lifecycle', async () => {
   const place = {group:new THREE.Group(),colliders:[],zones:[]}; let anchor = {spotId:'wall_13',x:-4,z:-17.5};
   const drawing = decorateIsland(place,{reducedMotion:true,loadArt:()=>new Promise(()=>{}),loadWallAtlas:async()=>atlas(),selection:()=>anchor});
-  const rows = [wall('wall_13',-4,-17.5)]; drawing.apply({spots:rows}); await drawing.retryWallArt(); drawing.update(0);
+  const rows = [wall('wall_13',-4,-17.5)];
+  drawing.apply({spots:rows});
+  const standin = drawing.root.getObjectByName('island-wall:wall_1').material.map;
+  const version = standin.version, dispose = vi.spyOn(standin, 'dispose');
+  await drawing.retryWallArt(); drawing.update(0);
+  expect(standin.version).toBe(version + 1);
+  expect(dispose).not.toHaveBeenCalled();
   const bracket = drawing.root.getObjectByName('island-selection-bracket');
   expect(bracket.visible).toBe(true); expect(bracket.userData.spotId).toBe('wall_13');
   expect(drawing.root.getObjectsByProperty('name','island-selection-bracket')).toHaveLength(1);

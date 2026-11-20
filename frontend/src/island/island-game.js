@@ -181,6 +181,7 @@ export function createGames(isl) {
     void isl.session?.leave();
     interruptBoat();
     isl.village.leave();
+    isl.reportVisitGeneration++;
     invalidateWallFeedback();
     isl.selectionGeneration++; isl.loadTicket++;
     isl.moving.cancel(); isl.demolishSpot = null; isl.demolishQuote = null;

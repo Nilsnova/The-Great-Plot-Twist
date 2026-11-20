@@ -15,6 +15,7 @@ import {toasts as gameToasts} from '../ui/toasts.js';
 import {crewLabel, progressLines} from './progression.js';
 import {drawArsenal} from './arsenal-ui.js';
 import {drawSkills, drawTech, drawTowerTree, iconOf} from './skill-tree.js';
+import {houseSupportView, upgradeComparisonView} from './building-inspection.js';
 import {drawUpgradeOverview} from './upgrade-overview-view.js';
 import {renderStructureRecoveryView} from './structure-recovery-view.js';
 import {createSelectionDock} from './selection-dock.js';
@@ -40,7 +41,7 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
   let modal = null, kind = null, render = null, disposed = false, lastToast = null, boatNoticeTimer = null;
   let selection = null, selectionModel = null, selectionHandlers = null, returnToDock = null;
   // The Tech hub tile the player tapped (kept while the page lives); the tree shows its detail.
-  let techPicked = null;
+  let techPicked = null, techFindSpot = null;
   let overviewKind = 'all', overviewState = 'all';
   const banner = node('div', 'island-banner'); banner.setAttribute('role', 'status'); banner.setAttribute('aria-live', 'polite'); banner.hidden = true;
   const bannerEyebrow = node('span', 'island-banner-eyebrow', 'Harbor bell'), bannerText = node('strong', 'island-banner-text');
@@ -120,7 +121,10 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
     if (selectionModel?.spotId !== model.spotId) returnToDock = null;
     selectionModel = model; selectionHandlers = on;
     if (!dock && !details) returnToDock = null;
-    if (dock && returnToDock) returnToDock = () => buildCard(model, on, {dock: true});
+    if (dock && returnToDock) {
+      returnToDock = () => buildCard(model, on, {dock: true});
+      return buildCard(model, on, {details: true});
+    }
     else if (dock) {
       if (modal) close();
       selection ??= createSelectionDock({container, onClose: close, onDetails: () => {
@@ -141,13 +145,22 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
       if (!treeCard) body.append(line('island-purpose', model.purpose));
       if (model.pips.length && !treeCard) { const row = node('div', 'island-level'); row.append(pips(model.pips), line('island-stats', model.stats)); body.append(row); }
       if (model.owner) body.append(line('island-owner', model.owner));
+      if (model.houseSupport) {
+        const support = node('section', 'island-house-support');
+        houseSupportView(support, model.houseSupport); body.append(support);
+      }
       let act = null;
       if (treeCard) {
         const drawn = drawTowerTree(model.tree, {select: id => on.treeSelect?.(model.spotId, id),
           buy: action => (action.type === 'upgrade' ? on.upgrade?.(model.spotId) : on.tree?.(model.spotId, action.path, action.tier))}, {button, line});
         // The level pips stay at the top of the tree (read out as "Level 2 of 5"); the trunk's Upgrade keeps its focus name.
         if (model.pips.length) drawn.part.querySelector('.island-tree-top')?.prepend(pips(model.pips));
-        if (model.tree.detail.action?.type === 'upgrade') drawn.act.dataset.focus = 'upgrade';
+        if (model.tree.detail.action?.type === 'upgrade') {
+          drawn.act.dataset.focus = 'upgrade';
+          const base = drawn.part.querySelector('.island-skill-line');
+          if (base) base.prepend('Base stats · ');
+          if (model.upgradeComparison) drawn.act.before(upgradeComparisonView(model.upgradeComparison));
+        }
         body.append(drawn.part);
         act = drawn.act;
         if (act.disabled) focusable = drawn.part.querySelector('.island-node.is-picked');
@@ -293,12 +306,13 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
       return focusable;
     });
   }
-  // handlers: {research({branch, tier, choice, change})}. GAME-V3.md §5.1: one small tree per tower kind (tier 1
+  // handlers: {research({branch, tier, choice, change}), find(id, kind)}. GAME-V3.md §5.1: one small tree per tower kind (tier 1
   // at the root, tiers 2 and 3 a fork of two), drawn by skill-tree.js; a tap on a tile shows it in the detail panel.
   function techCard(model, handlers = {}) {
     open('tech', model.title, body => {
       modal.element.classList.add('island-card-wide');
       const view = {picked: techPicked, research: action => handlers.research?.(action), locked: box => lockedNote(box, model),
+        find: handlers.find, findSpot: techFindSpot, rememberFind: id => { techFindSpot = id; },
         select: id => { techPicked = id; techCard(model, handlers); }};
       return drawTech(body, model, view, {button, line});
     });
@@ -571,10 +585,10 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
       return model.start.show && !model.start.disabled ? go : model.url ? copy : done;
     });
   }
-  function overviewCard(model) {
+  function overviewCard(model, {find = null} = {}) {
     if (overviewKind !== 'all' && !model.kinds.some(item => item.id === overviewKind)) overviewKind = 'all';
-    open('overview', model.title, body => drawUpgradeOverview(body, model, {kind: overviewKind, state: overviewState,
-      choose: (kind, state) => { overviewKind = kind; overviewState = state; overviewCard(model); }}));
+    open('overview', model.title, body => drawUpgradeOverview(body, model, {kind: overviewKind, state: overviewState, find,
+      choose: (kind, state) => { overviewKind = kind; overviewState = state; overviewCard(model, {find}); }}));
   }
   // Keep the live receipt in the stable header when a wall details sheet redraws its body.
   function prepareWallReceipt(model) {
@@ -620,6 +634,7 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
     overviewCard, leaderboardCard, buildCard, bellCard, inviteCard, lobbyCard, crewCard, captainCard, captainsCard, harborCard, techCard, wreckCard, arsenalCard, demolishCard, close, copyLink,
     cancel: () => close(true),
     get selectionElement() { return selection?.element ?? null; },
+    focusSelection() { selection?.focusDetails(); },
     get selectionSpot() { return selection ? selectionModel.spotId : null; },
     get selectionRange() { return selection?.coverage ?? null; },
     // Re-draw the open card from fresh models (the island controller calls this on every change).
@@ -647,9 +662,9 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
       measureBoatNotice();
       boatNoticeTimer = setTimeout(() => { boatNotice.hidden = true; measureBoatNotice(); }, 7000);
     },
-    toast(text, tone = 'info', next = '') {
+    toast(text, tone = 'info', next = '', context = null) {
       if (disposed || !text) return;
-      const id = toasts().show(next ? {text, tone, next} : {text, tone});
+      const id = toasts().show({text, tone, next, context});
       lastToast = id === null ? null : {id, text};
     },
     get toastText() { return lastToast && toasts().shown.some(item => item.id === lastToast.id) ? lastToast.text : ''; },

@@ -12,6 +12,7 @@ const adapters = {
   loadArt: async ids => Object.fromEntries(ids.map(id => [id, new THREE.MeshBasicMaterial({ map: new THREE.Texture() })])),
   loadBackdrop: async () => new THREE.Texture(),
 };
+const homeTreeScale = ({x, z}) => x === -13 && z === -12 ? .42 : .7;
 describe('real place lifetime', () => {
   it.each(Object.keys(edgeTrees))('keeps %s tree feet, blockers and drawing behavior while restraining only home foliage', async id => {
     const place = await createPlace({id, ...adapters, island: {decorate() {}}});
@@ -23,7 +24,8 @@ describe('real place lifetime', () => {
         ...edgeTrees[id].map(([x, z]) => ({x, z, radius: .48})),
       ]);
       trees.forEach((mesh, index) => {
-        const [x, z] = edgeTrees[id][index], foot = projectGround(x, z), scale = id === 'home_islet' ? .7 : 1;
+        const [x, z] = edgeTrees[id][index], foot = projectGround(x, z);
+        const scale = id === 'home_islet' ? homeTreeScale({x, z}) : 1;
         expect(mesh.userData.ground).toEqual({x, z});
         expect(mesh.position.toArray()).toEqual([foot.x, foot.y, 0]);
         expect(mesh.renderOrder).toBe(100 + z);
@@ -48,10 +50,11 @@ describe('real place lifetime', () => {
       material: mesh.material, order: mesh.renderOrder, ground: {...mesh.userData.ground}}));
     const progress = decorateProgress(place), house = id => ({id, kind: 'house', built: true});
     try {
-      for (const [houses, scale] of [[[], .7], [[house('house_1')], .77],
-        [[house('house_1'), house('house_2')], .84], [[house('house_2')], .77], [[], .7]]) {
+      for (const [houses, growth] of [[[], 1], [[house('house_1')], 1.1],
+        [[house('house_1'), house('house_2')], 1.2], [[house('house_2')], 1.1], [[], 1]]) {
         progress.apply({wave: 0}, houses, true);
         trees.forEach((mesh, index) => {
+          const scale = homeTreeScale(original[index].ground) * growth;
           for (const value of mesh.scale.toArray()) expect(value).toBeCloseTo(scale, 12);
           expect(mesh.position).toEqual(original[index].position);
           expect(mesh.geometry).toBe(original[index].geometry);
@@ -63,7 +66,10 @@ describe('real place lifetime', () => {
       }
       progress.apply({wave: 0}, [house('house_1'), house('house_2')], true);
       progress.dispose(); progress.dispose();
-      for (const mesh of trees) expect(mesh.scale.toArray()).toEqual([.7, .7, .7]);
+      for (const mesh of trees) {
+        const restored = homeTreeScale(mesh.userData.ground);
+        expect(mesh.scale.toArray()).toEqual([restored, restored, restored]);
+      }
       expect(place.colliders).toEqual(colliders);
       const materials = [...new Set(trees.map(mesh => mesh.material))], releases = materials.map(() => 0);
       materials.forEach((material, index) => material.addEventListener('dispose', () => releases[index]++));

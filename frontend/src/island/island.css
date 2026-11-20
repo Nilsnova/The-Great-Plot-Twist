@@ -185,6 +185,22 @@
 .island-skill-detail-cost{color:var(--u-mute);font-size:14px}
 .island-skill-line{color:var(--u-ink);font-size:17px;line-height:1.4}
 .island-skill-note{color:var(--u-mute);font-size:14px;font-weight:700}
+.island-tech-scope{display:grid;gap:4px;padding:8px 10px;border-left:2px solid var(--u-brass);background:var(--u-sea);color:var(--u-ink);font-size:16px;line-height:1.35}
+.island-tech-buildings{font-weight:700;color:var(--u-parch)}
+.island-tech-find{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px;margin-top:4px}
+.island-tech-find select{width:100%;min-width:0;height:44px;padding:6px 8px;color:var(--u-ink);background:var(--u-sea);border:2px solid var(--u-line);border-radius:var(--u-radius-xs)}
+.island-tech-find .kit-button{min-width:44px;padding-inline:12px}
+.island-capstone-compare{display:grid;gap:8px;min-width:0;color:var(--u-ink);font-size:16px;line-height:1.35}
+.island-capstone-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.island-capstone-choice{display:grid;grid-template-rows:auto auto 1fr auto;gap:4px;min-width:0;padding:8px;background:var(--u-sea);border:1px solid var(--u-line);border-radius:var(--u-radius-xs);overflow-wrap:anywhere}
+.island-capstone-choice strong,.island-capstone-price{color:var(--u-parch)}
+.island-capstone-cost{white-space:nowrap}
+.island-capstone-label{color:var(--u-mute);font-weight:700}
+.island-capstone-loss{color:var(--u-parch)}
+@media(min-width:901px){
+  .kit-modal.island-card.island-card-tech:has(.island-capstone-compare){width:min(1160px,94vw)}
+  .island-tech:has(.island-capstone-compare){grid-template-columns:minmax(0,1fr) minmax(305px,325px)}
+}
 .island-skill-detail .island-reason{color:var(--u-rust);font-size:15px}
 .island-skill-detail>.kit-button.island-primary{justify-self:stretch;min-height:56px;font-size:var(--u-lg)}
 /* The role: three tiles, the picked role's line and its button. */
@@ -217,6 +233,8 @@
 @media(max-width:900px){
   .island-tree-card{grid-template-columns:minmax(0,1fr);grid-template-rows:none;grid-template-areas:"top" "tabs" "tree" "detail" "msg" "role" "respec" "coins"}
   .island-tree-card>.island-skill-detail{position:sticky;bottom:0;z-index:3;box-shadow:0 -10px 24px #04161bcc}
+  .island-card-tech>.kit-modal-header{z-index:4}
+  .island-tech>.island-tech-detail:has(.island-capstone-compare){position:static;box-shadow:var(--u-bevel-quiet)}
 }
 /* Under 640 px: the card fills the screen, and one branch shows at a time. */
 @media(max-width:640px){
@@ -226,6 +244,7 @@
   .island-node{scroll-margin:16px 0 240px}
   .island-branch-tab{font-size:12px}
   .island-tree-card>.island-branch-tabs{grid-area:tabs;display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:6px}
+  .island-tech>.island-branch-tabs{grid-template-columns:repeat(3,minmax(0,1fr)) minmax(88px,1.12fr)}
   .island-tree>.island-branch:not(.is-current){display:none}
   .island-tree-top{grid-template-columns:auto minmax(0,1fr);align-items:center;column-gap:var(--u-3)}
   .island-tree-top>:is(.island-skills-how,.island-tech-next,.island-campaign-locked){grid-column:1/-1}
@@ -235,6 +254,7 @@
   .island-skill-detail .island-node-icon{width:48px;height:48px;font-size:24px}
   .island-skill-line{font-size:16px}
 }
+@media(max-width:360px){.island-tech>.island-tech-detail{position:static;box-shadow:var(--u-bevel-quiet)}}
 /* D055: a tower's card with its upgrade tree (skill-tree.js drawTowerTree): centred and bigger, like the captain's;
    the tree left (the level as the trunk, two paths of three tiers), the detail panel right; the skills and the
    secondary buttons below. Under 900 px one column, the panel sticks to the bottom. */
@@ -321,6 +341,7 @@
 @media(max-width:900px){
   .kit-modal.island-card.island-card-docked[open]{position:fixed;inset:auto 0 0 0;margin:0;width:100%;max-width:none;max-height:60dvh;overflow:auto;overscroll-behavior:contain;
     border-radius:var(--u-radius) var(--u-radius) 0 0;padding:0 14px max(16px,env(safe-area-inset-bottom))}
+  .island-card.island-card-docked .kit-modal-header{margin-inline:-14px}
 }
 /* The goals panel folds away while a docked card is open; the musket button moves out from under the card:
    to the left of the side panel on a desktop, just above the bottom sheet on a phone. */

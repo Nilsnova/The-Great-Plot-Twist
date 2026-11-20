@@ -173,6 +173,9 @@ try {
   const managing = () => island(i => i.managing === true);
   await audit('village-mode', {prepare: async () => { if (!(await managing())) await island(i => i.toggleVillage()); }, keep: managing});
   await audit('village-mode-toast', {prepare: toast, keep: managing});
+  await page.getByRole('combobox',{name:'Approach coverage', exact:true}).selectOption('boarders');
+  await audit('village-mode-coverage-toast', {prepare: toast, keep: managing});
+
   await island(i => { if (i.managing) i.toggleVillage(); }); await wait(300);
 
   if (all) {

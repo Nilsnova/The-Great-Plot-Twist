@@ -1,8 +1,9 @@
 import {node} from '../ui/kit/dom.js';
 import {BUILDINGS} from './td-rules.js';
+import {createCoverageLegend} from './coverage-legend.js';
 import './village-mode.css';
 
-export function createVillageBar({container, onLeave, onPick, onCamera = () => {}}) {
+export function createVillageBar({container, onLeave, onPick, onCamera = () => {}, onCoverage}) {
   const bar = node('section', 'island-village-mode');
   bar.hidden = true; bar.setAttribute('aria-label', 'Village mode');
   const copy = node('div', 'island-village-copy');
@@ -15,6 +16,16 @@ export function createVillageBar({container, onLeave, onPick, onCamera = () => {
     buildings.value = '';
     if (id) onPick(id);
   });
+  const coverage = onCoverage ? node('select', 'island-village-coverage') : null;
+  const legend = coverage ? createCoverageLegend() : null;
+  if (coverage) {
+    bar.classList.add('has-coverage');
+    coverage.setAttribute('aria-label', 'Approach coverage');
+    for (const [value, name] of [['', 'Coverage off'], ['boarders', 'Ground'], ['ships', 'Sea']]) {
+      const option = node('option', '', name); option.value = value; coverage.append(option);
+    }
+    coverage.addEventListener('change', () => onCoverage(coverage.value));
+  }
   const leave = node('button', 'kit-button kit-quiet island-village-exit', 'Exit');
   leave.setAttribute('aria-label', 'Exit village mode'); leave.type = 'button'; leave.addEventListener('click', onLeave);
   const tools = node('div', 'island-village-camera'); tools.setAttribute('role', 'group'); tools.setAttribute('aria-label', 'Village camera');
@@ -22,10 +33,15 @@ export function createVillageBar({container, onLeave, onPick, onCamera = () => {
     const button = node('button', 'kit-button kit-quiet', label); button.type = 'button'; button.setAttribute('aria-label', name);
     button.addEventListener('click', () => onCamera(action)); tools.append(button);
   }
-  bar.append(copy, buildings, tools, leave); container.append(bar);
+  bar.append(copy, buildings);
+  if (coverage) bar.append(coverage);
+  bar.append(tools, leave);
+  if (legend) bar.append(legend.element);
+  container.append(bar);
   let previous = '';
   return {
     render(active) { bar.hidden = !active; },
+    setCoverage(value) { if (coverage) { coverage.value = value; legend.show(value); } },
     focusBuildings() {
       if (bar.hidden || buildings.hidden) return false;
       buildings.focus({preventScroll: true});

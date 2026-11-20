@@ -4,11 +4,11 @@
 
 import {canDockSelection, holdOtherBuildingAction} from './selection-dock.js';
 import {footprintOf} from './placement.js';
-import {previewDefenseCoverage} from '../pirates/sim.js';
-import {BELL, CABIN, isPointSpot, spotById, ppSpotById, defenses, placedSpot, ARSENAL} from './spots.js';
+import {previewDefenseCoverage, previewDefenseUpgrade} from '../pirates/sim.js';
+import {BELL, CABIN, isPointSpot, spotById, ppSpotById, defenses, onIsland, placedSpot, ARSENAL} from './spots.js';
 import {buildCardModel, bellModel, inviteModel, crewModel, captainModel, captainsModel, skillsModel, coinText,
   harborModel, techModel, wreckModel, demolishModel} from './card-model.js';
-import {isOpen} from '../campaign/index.js';
+import {campaignOf, isOpen} from '../campaign/index.js';
 import {displayIslandCode} from './codes.js';
 import {ISLAND_INVITE_OPENED} from '../ui/quest-events.js';
 import {progressSummary} from './progression.js';
@@ -27,7 +27,7 @@ export function createCards(isl) {
     repairStructure, tellCoins, unlocks, islandUnlocks, campaign, target, where, applyWorld, freshOwn, reloadOwn,
     refreshDefended, lobby, startGame, openLobby, bellAction, build, readWalls, repairWall, upgrade, askDemolish,
     confirmDemolish, placeCode, specialise, buyTree, startMove, research, giveWreck, hire, upgradeCaptain, learnSkill,
-    takeRole, respecCaptain;
+    takeRole, respecCaptain, inspectHouse, syncCoreContext, researchIsland;
   // --- cards ---------------------------------------------------------------------------------
   function buildModel(spotId) {
     if (isPointSpot(spotId)) {
@@ -62,6 +62,15 @@ export function createCards(isl) {
       movable: island?.layout?.movable === true, treePicked: isl.treePicked.get(spotId) ?? null,
       recoveryState: recoveryView, recoveryStatus: recoveryEnabled ? (recoveryReady ? 'ready' : isl.recoveryStatus) : 'disabled',
       recoveryError: isl.recoveryError, recoveryPending: isl.recoveryPendingSpot === spotId, recoveryVersion: recoveryModelVersion()});
+    const version = island?.recoveryVersion ?? 0;
+    if (model.mode === 'upgrade' && Number.isSafeInteger(spot?.upgradeCost) && model.tree?.detail.action?.type === 'upgrade' && !isl.busySpot
+      && (version === 0 || version === 1 && recoveryEnabled) && (!isl.battle || isl.waveOver)
+      && (!recoveryEnabled || (recoveryReady && recoveryRow?.level === model.level
+        && recoveryRow.hpUnits === 1_000_000 && recoveryView.repairWindow !== 'reserved_wave'))) {
+      model.upgradeComparison = previewDefenseUpgrade({defenses: defenses(island.spots, campaign()?.research?.tiers),
+        selectedId: spotId, currentLevel: model.level, gunnerCount: island.crew?.gunner,
+        defensesV2: recoveryPolicyOn() || defensesV2On()});
+    }
     if (recoveryEnabled && isl.recoveryState?.displayPhase === 'combat' && !live) {
       model.recovery = {visible: false, status: 'error', message: 'Battle health is still loading.'};
     }
@@ -236,6 +245,7 @@ export function createCards(isl) {
     if (isl.disposed) return;
     isl.village.refresh();
     applyWorld();
+    if (isl.moving.active) isl.moving.refresh();
     if (isl.ui.open === 'build' && isl.openSpot) showBuild(isl.openSpot);
     else if (isl.ui.open === 'bell') isl.ui.bellCard(bell(), bellAction);
     else if (isl.ui.open === 'invite') isl.ui.inviteCard(inviteModel(isl.own?.code));
@@ -244,18 +254,28 @@ export function createCards(isl) {
     else if (isl.ui.open === 'captain') isl.ui.captainCard(captain(), captainHandlers);
     else if (isl.ui.open === 'captains') isl.ui.captainsCard(captainsModel([...isl.here.values()]));
     else if (isl.ui.open === 'harbor') isl.ui.harborCard(harbor(), harborHandlers);
-    else if (isl.ui.open === 'tech') isl.ui.techCard(tech(), techHandlers);
+    else if (isl.ui.open === 'tech') showTechHub();
     else if (isl.ui.open === 'wreck') isl.ui.wreckCard(wreck(), wreckHandlers);
     else if (isl.ui.open === 'demolish') isl.ui.demolishCard(demolishCardModel(), demolishHandlers);
     else if (isl.ui.open === 'arsenal') isl.arsenal.redraw();
-    else if (isl.ui.open === 'overview') isl.ui.overviewCard(overview());
+    else if (isl.ui.open === 'overview') showOverview();
   }
   // The Tear down button follows the wave on screen (off while it runs, on again in its break).
   function refreshCardIfBuild() { if (isl.ui.open === 'build' && isl.openSpot) refreshCard(); }
   function openHarbor() { isl.openSpot = null; isl.cardMessage = ''; isl.ui.harborCard(harbor(), harborHandlers); }
-  function openTechHub() { isl.openSpot = null; isl.cardMessage = ''; isl.ui.techCard(tech(), techHandlers); void freshOwn(); }
+  function showTechHub() {
+    const scope = buildingFindScope();
+    isl.ui.techCard(tech(), {research: step => void research(step), find: canFindBuilding() ? (id, kind) => {
+      if (findOwnedBuilding(id, 'tech', scope, kind) === false) {
+        isl.cardMessage = 'This defense is no longer on your island.';
+        showTechHub();
+      }
+    } : null});
+  }
+  function openTechHub() { isl.openSpot = null; isl.cardMessage = ''; showTechHub(); void freshOwn(); }
   function openWreck() { isl.openSpot = null; isl.cardMessage = ''; isl.ui.wreckCard(wreck(), wreckHandlers); void freshOwn(); void readBoat(); }
   function openBuild(spotId) {
+    isl.reportLocation = null;
     isl.openSpot = spotId; isl.cardMessage = ''; showBuild(spotId);
     if (!isl.own && isl.ownRetry) void refreshDefended();
     if (spotById(spotId)?.slot === 'wall') void readWalls();
@@ -266,6 +286,8 @@ export function createCards(isl) {
   }
   function showBuild(spotId) {
     const model = buildModel(spotId);
+    isl.selectedHouse = model.kind === 'house' ? inspectHouse(spotId) : null;
+    model.houseSupport = isl.selectedHouse?.support ?? null;
     if (isl.ui.selectionSpot === spotId && !model.built) { isl.ui.close(); isl.openSpot = null; return; }
     const dock = isl.village.active && !isl.visiting && !isPointSpot(spotId) && canDockSelection(model);
     const destroyed = model.recovery?.actualHp === 0 && model.recoveryLevel === model.level;
@@ -276,16 +298,75 @@ export function createCards(isl) {
     isl.ui.buildCard(model, handlers, {dock});
   }
   function selectedAnchor() {
-    if (!isl.ui.selectionElement || !isl.village.active || !isl.openSpot) return null;
+    if (!isl.village.active) return null;
+    if (!isl.ui.selectionElement || !isl.openSpot) return isl.reportLocation;
     const spots = target()?.spots, spot = spots?.find(item => item.id === isl.openSpot);
     const at = placedSpot(isl.openSpot, spots);
     if (!at || !Number.isFinite(at.x) || !Number.isFinite(at.z)) return null;
     return {spotId: isl.openSpot, kind: spot?.kind, level: spot?.level, x: at.x, z: at.z,
       size: footprintOf(isl.openSpot), lift: 1, keepFit: spot?.kind !== 'wall'};
   }
+  function defenseReportIdentity() {
+    const code = target()?.code;
+    return code ? JSON.stringify([code, isl.resetGeneration, isl.coreTravelGeneration, isl.reportVisitGeneration]) : null;
+  }
+  function canFocusDefenseReport(intent) {
+    if (!intent?.identity || intent.identity !== defenseReportIdentity() || !isl.village.available
+      || !spotById(intent.id) || ![intent.x, intent.z].every(Number.isFinite) || !onIsland(intent.x, intent.z)) return false;
+    const epoch = syncCoreContext().epoch;
+    return !intent.epoch || !epoch || intent.epoch === epoch;
+  }
+  function structureAtReportSite(intent) {
+    const spot = isl.own?.spots.find(item => item.id === intent.id);
+    const at = placedSpot(intent.id, isl.own?.spots);
+    return spot?.built && spot.kind === intent.kind && at?.x === intent.x && at.z === intent.z;
+  }
+  async function resolveDefenseReport(intent) {
+    if (!canFocusDefenseReport(intent)) return null;
+    if (!intent.epoch) return {spot: null};
+    const answer = await isl.api.structureRecovery();
+    if (!canFocusDefenseReport(intent)) return null;
+    if (!answer.ok) return {spot: null};
+    const data = answer.data;
+    if (data.islandEpoch !== intent.epoch || data.repairWindow !== 'between_waves') return null;
+    const row = data.structures.find(item => item.spot === intent.id);
+    const current = intent.instanceId && row?.instanceId === intent.instanceId && row.kind === intent.kind;
+    return {spot: current && structureAtReportSite(intent) ? intent.id : null};
+  }
+  function focusDefenseReport(intent, destination) {
+    if (!canFocusDefenseReport(intent)) return false;
+    isl.ui.close(); isl.moving.cancel(); isl.openSpot = null; resetInput();
+    if (!isl.village.enter()) return false;
+    isl.reportLocation = null;
+    if (destination.spot === intent.id && structureAtReportSite(intent) && canDockSelection(buildModel(intent.id))) {
+      openBuild(intent.id);
+      isl.ui.focusSelection();
+    } else {
+      isl.reportLocation = {x: intent.x, z: intent.z, lift: 1, positionOnly: true};
+      isl.ui.toast('Battle location marked', 'info');
+      isl.villageBar.focusBuildings();
+    }
+    return true;
+  }
   function openCrew() { isl.openSpot = null; isl.cardMessage = ''; isl.ui.crewCard(crew(), hire); void freshOwn(); }
-  const overview = () => upgradeOverviewModel({island: isl.own, battle: isl.battle && !isl.waveOver, message: isl.ownMessage});
-  function openOverview() { isl.openSpot = null; isl.cardMessage = ''; isl.ui.overviewCard(overview()); void freshOwn(); }
+  const buildingFindScope = () => JSON.stringify([isl.own?.code, isl.own?.islandEpoch, isl.resetGeneration, isl.coreTravelGeneration, isl.reportVisitGeneration]);
+  const canFindBuilding = () => isl.village.available && !isl.moving.active;
+  function showOverview(message = isl.ownMessage) {
+    const find = canFindBuilding(), scope = buildingFindScope();
+    isl.ui.overviewCard(upgradeOverviewModel({island: isl.own, battle: isl.battle && !isl.waveOver, find, message}), {
+      find: find ? id => {
+        if (findOwnedBuilding(id, 'overview', scope) === false) showOverview('This building is no longer on your island.');
+      } : null,
+    });
+  }
+  function findOwnedBuilding(id, card, scope, kind = null) {
+    if (isl.ui.open !== card || scope !== buildingFindScope() || !canFindBuilding()) return;
+    if (!spotById(id) || !isl.own.spots.some(spot => spot.id === id && spot.built === true && (!kind || spot.kind === kind))) return false;
+    if (!isl.village.enter()) return;
+    isl.ui.close();
+    openBuild(id);
+  }
+  function openOverview() { isl.openSpot = null; isl.cardMessage = ''; showOverview(); void freshOwn(); }
   function openCaptain(tab = null) {
     isl.openSpot = null; isl.cardMessage = ''; if (['captain', 'skills'].includes(tab)) isl.captainTab = tab;
     isl.ui.captainCard(captain(), captainHandlers); void freshOwn();
@@ -321,6 +402,7 @@ export function createCards(isl) {
   }
   function pick(id) {
     if (isl.disposed) return;
+    isl.reportLocation = null;
     if (id === BELL.id) void openBell();
     else if (id === CABIN.id) openLobby();
     else if (id === 'island_harbor') openHarbor();
@@ -334,9 +416,10 @@ export function createCards(isl) {
       repairStructure, tellCoins, unlocks, islandUnlocks, campaign, target, where, applyWorld, freshOwn, reloadOwn,
       refreshDefended, lobby, startGame, openLobby, bellAction, build, readWalls, repairWall, upgrade, askDemolish,
       confirmDemolish, placeCode, specialise, buyTree, startMove, research, giveWreck, hire, upgradeCaptain,
-      learnSkill, takeRole, respecCaptain} = isl);
+      learnSkill, takeRole, respecCaptain, inspectHouse, syncCoreContext, researchIsland} = isl);
   }
   return {demolishHandlers, demolishCardModel, interruptBoat, readBoat, bell, refreshCard, refreshCardIfBuild,
     openHarbor, openTechHub, openWreck, selectedAnchor, openCrew, openOverview, openCaptain, openLeaderboard,
-    openCaptains, openInvite, pick, link};
+    openCaptains, openInvite, pick, defenseReportIdentity, canFocusDefenseReport, resolveDefenseReport,
+    focusDefenseReport, link};
 }

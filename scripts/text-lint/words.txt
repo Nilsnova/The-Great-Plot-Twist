@@ -97,6 +97,7 @@ apple
 applicable
 application
 applied
+applies
 apply
 approval
 approved
@@ -441,11 +442,13 @@ commander
 companies
 company
 compare
+comparison
 compass
 complete
 completed
 component
 components
+conditional
 conditions
 configuration
 configured
@@ -506,6 +509,7 @@ courier
 course
 cove
 cover
+coverage
 crab
 cracked
 craft
@@ -582,6 +586,7 @@ delivery
 demand
 demo
 demolish
+deploys
 deposit
 deposits
 descriptions
@@ -696,6 +701,7 @@ english
 enough
 enter
 entering
+enters
 entries
 entry
 envelopes
@@ -896,6 +902,7 @@ game's
 gamepad
 games
 gannet
+gap
 gaps
 garden
 gate
@@ -999,6 +1006,7 @@ head
 headers
 heading
 heal
+healing
 health
 heap
 hear
@@ -1086,6 +1094,7 @@ image
 images
 impact
 implementations
+improve
 in
 inbox
 inc
@@ -1506,6 +1515,7 @@ nyse
 o
 oar
 object
+observed
 occupied
 occupy
 of
@@ -1749,6 +1759,7 @@ prologue
 prompt
 prompts
 proof
+proposed
 props
 prose
 protect
@@ -2110,6 +2121,7 @@ shores
 short
 shortcut
 shortcuts
+shorten
 shorter
 shortly
 shot
@@ -2215,6 +2227,7 @@ speak
 speaker
 speech
 speed
+speeds
 spelling
 spend
 spends
@@ -2265,6 +2278,7 @@ state
 stated
 states
 station
+stats
 status
 stay
 stayed
@@ -2342,6 +2356,7 @@ swims
 swings
 switch
 switched
+symbol
 symbols
 system
 t
@@ -2522,6 +2537,7 @@ underway
 undone
 unexplored
 unfinished
+unit
 units
 unknown
 unlock
