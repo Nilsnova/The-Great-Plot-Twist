@@ -201,16 +201,18 @@ void main(){
       float height=sin(longWave)*.62+sin(shortWave)*.38;
       float slope=cos(longWave)*.58+cos(shortWave)*.42;
       float field=smoothstep(.21,.73,coarse+curl*.15);
-      float face=smoothstep(.11,.73,height)*smoothstep(-.3,.88,slope);
+      float face=smoothstep(.06,.74,height)*smoothstep(-.27,.80,slope);
       float trough=smoothstep(.17,.84,-height);
-      colour=mix(colour,uDeep,trough*(.13+field*.15)*offshore);
-      colour=mix(colour,uLight,face*(.10+field*.33)*offshore);
-      float ridge=(1.0-band(abs(height-.71),.037))*smoothstep(.06,.68,slope);
-      float spray=smoothstep(.47,.74,ripple+curl*.21)*smoothstep(.24,.70,field);
+      colour=mix(colour,uDeep,trough*(.16+field*.16)*offshore);
+      colour=mix(colour,uLight,face*(.13+field*.26)*offshore);
+      // Current-aligned grooves split the reflection into short, crisp breaks at the crest.
+      float facets=pxNoise(current*vec2(.68,2.6)+drift+vec2(curl,-coarse));
+      float ridge=(1.0-band(abs(height-.67+(facets-.5)*.17),.032))*smoothstep(.04,.66,slope);
+      float spray=smoothstep(.40,.77,facets*.61+ripple*.39+curl*.12)*smoothstep(.19,.69,field);
       float nearLight=mix(.75,.30,smoothstep(2.0,13.0,d));
-      colour=mix(colour,mix(uStroke,uFoam,.44),ridge*spray*nearLight*offshore);
-      float afterglow=(1.0-band(abs(height-.46),.11))*smoothstep(.24,.85,slope);
-      colour=mix(colour,uStroke,afterglow*spray*.19*offshore);
+      colour=mix(colour,mix(uStroke,uFoam,.57),ridge*spray*nearLight*offshore);
+      float returnLight=(1.0-band(abs(height-.43+(facets-.5)*.16),.043))*smoothstep(.19,.72,slope);
+      colour=mix(colour,uStroke,returnLight*spray*.19*offshore);
 
       // Submerged stone and narrow refracted marks sit beneath the white breaking water.
       float shelf=smoothstep(.28,1.0,d)*(1.0-smoothstep(2.3,5.5,d));
@@ -236,11 +238,14 @@ void main(){
       float washAdvance=mix(.49,.16,rockShore);
       float wash=(1.0-band(abs(d-surf-washAdvance-grain*.31),.061))*smoothstep(.41,.76,grain);
       colour=mix(colour,uShallow2,wash*mix(.35,.25,rockShore)*shoreLight);
-      float rockFoam=smoothstep(.43,.74,grain+.12*run);
-      float backwash=1.0-band(abs(d-.29-grain*.24),.073);
-      float bubbles=(1.0-band(abs(d-.71-grain*.28-run*.10),.045))*smoothstep(.59,.77,grain);
-      colour=mix(colour,uFoam,max(backwash*rockFoam*.76,bubbles*.82)*rockShore*shoreLight);
-      waterlineLight=mix(1.0,mix(.42,1.0,rockFoam),rockShore);
+      float eddy=pxNoise(p*vec2(2.65,3.94)+vec2(run*.45,foamTime*.047));
+      float rockFoam=smoothstep(.32,.73,grain*.64+eddy*.36+.11*run);
+      float brokenEdge=(grain-.5)*.29+(eddy-.5)*.16;
+      float backwash=1.0-band(abs(d-.31-brokenEdge),.067);
+      float bubbles=(1.0-band(abs(d-.74-brokenEdge*1.9-run*.12),.041))*smoothstep(.48,.76,eddy);
+      float breaking=max(backwash*rockFoam*.95,bubbles*.86);
+      colour=mix(colour,uFoam,breaking*rockShore*shoreLight);
+      waterlineLight=mix(1.0,mix(.27,.97,rockFoam),rockShore);
     }
   }
   colour=mix(colour,uFoam,(1.0-band(d,edge))*shoreLight*waterlineLight);
