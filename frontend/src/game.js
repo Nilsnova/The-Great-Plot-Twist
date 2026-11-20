@@ -420,6 +420,9 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     const draw=shell.mode!=='title';
     if(draw)graphics.renderer.render(scene,view.camera);
     graphics.sampleFrame(performance.now(),{active:draw&&active&&!outsideBlocked()});
+  },{
+    // A frame that throws is skipped, not fatal (core/loop.js). If frames keep failing, say so in plain words.
+    onTrouble(){if(!disposed)hud.message('Something went wrong. If the game looks stuck, reload the page.',{tone:'error',ms:10000});},
   });
   // The narrator and the tutorials: right after the first frame (and again on each arrival if that load failed).
   if(globalThis.requestAnimationFrame)requestAnimationFrame(()=>void guide.start());else void guide.start();
