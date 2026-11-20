@@ -5,7 +5,8 @@ import {projectGround} from '../projection.js';
 
 // Low planting beds on the grass beside the existing walks. Keep their entrances and
 // the center of the village open. Each row gives the shrub foot, the side of its
-// understory, the shrub scale and the understory art.
+// understory, the shrub scale and the understory art. The bell bed's flower sits
+// behind the raised terrace on the original meadow.
 const BEDS = [
   [-8.27, -11.41, -1, .74, 'flowers'], [-2.93, -10.83, 1, .61, 'grass-tuft'],
   [5.65, -12.48, -1, .76, 'grass-tuft'], [10.68, -10.98, 1, .69, 'flowers'],
@@ -15,7 +16,7 @@ const BEDS = [
   [-10.95, 5.54, -1, .72, 'flowers'], [-5.37, 5.46, 1, .62, 'grass-tuft'],
   [10.66, 6.31, -1, .68, 'grass-tuft'], [10.54, 11.59, 1, .74, 'flowers'],
   [-12.28, 1.63, -1, .73, 'grass-tuft'], [11.56, .87, 1, .71, 'flowers'],
-  [-6.02, 11.39, -1, .67, 'grass-tuft'], [6.91, 15.37, 1, .76, 'flowers'],
+  [-6.02, 11.39, -1, .67, 'grass-tuft'], [6.91, 15.37, 1, .76, 'flowers', true],
 ];
 const ART = ['shrub', 'flowers', 'grass-tuft'];
 const GARDEN_ART = [...ART, 'rock', 'home-broadleaf'];
@@ -94,31 +95,24 @@ function packGardenArt(sources) {
 }
 
 function gardenPlants() {
-  return BEDS.flatMap(([x, z, side, scale, understory], index) => {
+  return BEDS.flatMap(([x, z, side, scale, understory, behindTerrace], index) => {
     const stone = STONE_BEDS.has(index);
     return [
       {id: BROADLEAF_BEDS.has(index) ? 'home-broadleaf' : 'shrub', x, z, scale},
       {id: 'shrub', x: x - .53 * side, z: z - .17, scale: scale * .67},
       {id: stone ? 'rock' : 'shrub', x: x + .54 * side, z: z + .26, scale: scale * (stone ? .41 : .56)},
-      {id: understory, x: x + .58 * side, z: z + .52, scale: scale * .81},
+      {id: understory, x: x + .58 * side, z: z + .52, scale: scale * .81, behindTerrace},
     ];
   }).sort((a, b) => a.z - b.z);
 }
 
-export function createHomeGardens(root, art) {
-  if (typeof document === 'undefined') return [];
-  const sources = GARDEN_ART.map(id => art[id]?.map?.image);
-  if (sources.some(source => !source?.width || !source?.height)) return [];
-  const packed = packGardenArt(sources);
-  if (!packed) return [];
-
+function addGardenLayer(root, plants, rectangles, material, name, renderOrder) {
   const vertices = [], indices = [], uv = [], feet = [], colors = [];
-  const plants = gardenPlants();
   for (const {id, x, z, scale} of plants) {
     const [width, height, anchor] = artSizes[id], foot = projectGround(x, z);
     const half = width * scale * .5, bottom = foot.y - height * scale * anchor;
     const top = bottom + height * scale, first = vertices.length / 3;
-    const [left, low, right, high] = packed.rectangles[id];
+    const [left, low, right, high] = rectangles[id];
     feet.push(foot.y);
     vertices.push(foot.x - half, bottom, 0, foot.x + half, bottom, 0,
       foot.x + half, top, 0, foot.x - half, top, 0);
@@ -132,11 +126,9 @@ export function createHomeGardens(root, art) {
   geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
   geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
   geometry.setIndex(indices);
-  const material = spriteMaterial(leafTexture(packed.atlas) ?? smoothTexture(packed.atlas));
-  material.vertexColors = true;
   const mesh = new THREE.Mesh(geometry, material);
-  mesh.name = 'home-village-gardens';
-  mesh.renderOrder = 22; // Above ground finishes, behind buildings, wall previews and actors.
+  mesh.name = name;
+  mesh.renderOrder = renderOrder;
   mesh.raycast = () => {};
   let previousDepth = 1;
   mesh.onBeforeRender = (_, _scene, camera) => {
@@ -150,6 +142,21 @@ export function createHomeGardens(root, art) {
     previousDepth = depth;
   };
   root.add(mesh);
+}
+
+export function createHomeGardens(root, art) {
+  if (typeof document === 'undefined') return [];
+  const sources = GARDEN_ART.map(id => art[id]?.map?.image);
+  if (sources.some(source => !source?.width || !source?.height)) return [];
+  const packed = packGardenArt(sources);
+  if (!packed) return [];
+
+  const material = spriteMaterial(leafTexture(packed.atlas) ?? smoothTexture(packed.atlas));
+  material.vertexColors = true;
+  const plants = gardenPlants();
+  // The raised bank occludes the flower at its original meadow position.
+  addGardenLayer(root, plants.filter(plant => plant.behindTerrace), packed.rectangles, material, 'home-under-terrace-garden', 4.65);
+  addGardenLayer(root, plants.filter(plant => !plant.behindTerrace), packed.rectangles, material, 'home-village-gardens', 22);
   return BEDS.map(([x, z, , scale]) => ({x, z, width: scale * 1.07, depth: scale * .51,
     reach: scale * .48, opacity: .56}));
 }
