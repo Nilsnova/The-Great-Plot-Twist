@@ -732,6 +732,7 @@ Errors have the house shape `{"error": {"code": "...", "message": "..."}}`; the 
 |---|---|
 | every spot of `GET /api/island`, `GET /api/island/visit/{code}` and every island answer | also `x`, `z`: where the spot stands, in island units on a grid of 0.5 (an old save: its fixed spot; Pirate Point's spots: `null`). The browser's wave simulation reads these through `spots.js` `defenses()`, in the `{id, kind, level, x, z}` shape `src/pirates/sim.js` always read. |
 | `layout` of the same answers | `{version: 1 \| 2, grid: 0.5, movable}`: 1 = the fixed spots (an old save, nothing stored), 2 = a spot was moved; `movable` is true only with the flag `placement` on and the layout table readable. |
+| `POST /api/island/build` (new standard wall) | Before charging, check the settled saved cell against the same fixed scenery as Move. A blocked old cell returns `409 place_taken` so the player can move the slot first. An existing paid action still returns `200`. The checked snapshot, any settled cell update and the purchase share the owner lock. A changed snapshot returns `409 busy`. An unreadable layout returns `503 layout_unavailable`. The check also covers saved cells while Move is disabled. Apply `20261118090000_normal_wall_build_clearance.sql` before deploying the server change. |
 | `POST /api/island/move` `{spot, x, z, code?}` | One of the 22 island spots (built or empty, with whatever stands on it) to one grid cell, free, between waves; on your own island or (with `code`) a game you are a member of. Answers the island. Safe to repeat (no click id). `404 feature_off`, `404 no_such_spot`, `422 off_grid`, `409 not_on_land`, `409 off_path` (a wall off every wall lane, D056: "Walls go on a pirate path."), `409 place_taken` (footprint 2 x 2 walls/towers, 3 x 3 watchtower/houses; overlaps the heart, cabin, bell, Harbor, Tech hub, wreck or another spot; touching is fine), `409 blocks_route` (towers, houses and the watchtower may not cut every way from the heart to the beach; walls never count), `409 wave_running`, `409 busy`, `403 not_member`, `404 no_such_island`, `503 layout_unavailable`, `429 too_many_requests` (the build budget). Every island answer carries the settled x/z: a wall stored off every lane stands on the nearest free lane cell (D056, `layout.settle_walls`). After a move the browser emits `island_spots_changed`, so the room re-reads the island as after a build. |
 
 The live room of an island is `live:place:isle_<the 5 symbols in lowercase>:1` (for `ISLE-K7Q2M`: `live:place:isle_k7q2m:1`), Pirate Point's is `live:place:pirate_point:1`; both fit the existing place-room policies (BUILD-PLAN 3.6).
@@ -1314,7 +1315,7 @@ G7 and G8 draw other captains from the case adapter's view (`presence` in `front
 
 | What | G7/G8 adapter view and intents | A4 module (`frontend/src/online/realtime.js`) | What G9 does |
 |---|---|---|---|
-| Our position | `reportPosition({place, x, y, facing, moving})`; `y` is the world's z | `live.setPlace(place)` on travel and arrival, then `live.update({x, z, facing, moving})` | pass `y` as `z`; call `setPlace(null)` during the intro, the cinematics and the tour |
+| Our position | `reportPosition({place, x, y, facing, moving})`; `y` is the world's z. Exact `{place: null}` clears the selected room and queued position without coordinates. | `live.setPlace(place)` on travel and arrival, then `live.update({x, z, facing, moving})`; clear uses `live.setPlace(null)` | Shared islands use the fresh canonical session's exact `isle_<code>_<24hex>` nonce, room 1. Unknown shared context clears; only explicit verified legacy context uses `isle_<code>`. Pass `y` as `z`; clear during unlocated transitions. |
 | Others' position | `presence.others[]` with `x`, `y` | `live_peer_moved {id, x, z, facing, moving, everyMs}` | `y` = `z`; keep `everyMs` for the glide |
 | Facing | `front`, `back`, `left`, `right` | `up`, `down`, `left`, `right` (`facingFrom`) | `back` = `up` (moving to a smaller z), `front` = `down` |
 | Emotes | `wave`, `cheer`, `point`, `lantern`, `shrug` (art `public/pixel/emote-*.png`) | `wave`, `cheer`, `nod`, `shrug`, `follow_me`, `help` (`EMOTES` in `live-rules.js`) | only `wave`, `cheer` and `shrug` exist on both sides, and A4's module refuses any other id. One list has to be chosen before the wiring (D006 left emotes to a later package) |
@@ -1378,6 +1379,12 @@ A flag is off unless the setting `FEATURE_FLAGS` names it (comma separated). The
 | `tower_health` | T33 tower hp inside a wave (D049, proposed): the wave answers carry `rules: ["tower_health"]`, and every client of that wave gives cannons, mortars, harpoons and culverins hp. Off: no `rules`, towers as before | T33; off by default in code (**on in production since ~21:53 UTC, 14 Nov 2026**); needs migration `20261114130500_wave_rules.sql` applied first (done live 14 Nov 2026), and `islands` |
 | `wall_recovery` | wall damage that stays after a wave (D039, proposed): `GET /api/island/walls`, `POST /api/island/repair`, `walls` on the wave routes, `409 needs_repair` on upgrade. Off: exactly the old behavior, the new columns are never read | T29–T32/T47; off by default in code; needs migration 20261114100000 applied first (applied live 14 Nov 2026; flag on in production), and `islands` on |
 | `defenses_v2` | new tower kinds beyond cannon, mortar and harpoon, first the culverin (T43, D048 proposed): `backend/content/defenses_v2.json` is merged into the island catalogue, so `GET /api/island` lists the kind on the tower spots, in `prices` and in `unlocks`, and `POST /api/island/build`/`upgrade` accept it; it is also a wave rule: the wave answers carry `"defenses_v2"` in `rules`, and only then does every client's sim let the culverins fight (event `culverin_fired`). Off: the file is not read, every island answer is as before, and a sim ignores any culverin | T43; off by default in code (**on in production since ~21:53 UTC, 14 Nov 2026**). Both migrations `20261114130500_wave_rules.sql` and `20261114140000_culverin.sql` were applied live 14 Nov 2026 |
+
+**Retired flags (18 Nov 2026, `refactor/slim-3`):** `placement`, `tower_health`, `pathing`, `tower_obstacles`, `ship_fire`,
+`rescue`, `defenses_v2`, `more_tower_spots` and `wall_recovery` are always on. Their names stay accepted in
+`FEATURE_FLAGS` (production lists them) and change nothing; what their rows above describe as "on" is the only
+behaviour. Every new wave carries all six sim rules (`backend/server/island/wave_rules.py` `ALWAYS_ON`); rules stay
+frozen per wave, and the browser's sim still plays a wave stored without a rule as before.
 
 The separately guarded [disposable local API](LOCAL-TEST-SERVER.md) provides a fixture-only
 sign-in endpoint for automation. It does not enable `sign_in` or change the normal app's auth
@@ -1866,15 +1873,16 @@ with paid-restore race protection in `20261115150000_wall_restore_record_fence.s
 The main game owns the pirate update loop by passing `loop:false` to `wireWaves`; its `update(delta)` forwards the existing `mountPirates.update`. The optional third argument of `createController.update(delta, active, beforeAnimate)` runs after movement/collision/facing and before `character.animate`. The game uses it for combat sampling and pose consumption in one frame. Default module loops and existing two-argument movement callers keep their behavior.
 
 Legacy body poses may also use accepted outcomes correlated to live local/validated-room inputs admitted after initial catch-up. This channel preserves original event order, rejects ambiguous actor/type batches, and clears on travel/hidden/stop/disposal. It changes neither simulation inputs nor generic renderer/audio history filtering. Recovery feedback keeps its existing prediction/dedup rules. See `live-attack-feedback.js`, the controller and D066.
-
 ## Shared island treasury foundation (MP-ECO-02)
 
 The additive foundation in `backend/server/island/treasury.py`, `treasury_models.py` and
 `treasury_store.py` defines exact accounts per island/run. Contracts are in migrations
 `20261118050050_island_treasury.sql` / `20261118050100_island_treasury_functions.sql`,
 [database rights and checks](../supabase/README.md#shared-island-treasury-foundation-mp-eco-02)
-and [the package spec](../specs/MP-ECO-02-island-treasury.md). Existing HTTP routes do not call
-admission or these money functions; personal-wallet runtime remains unchanged.
+and [the package spec](../specs/MP-ECO-02-island-treasury.md). Arsenal, structure repair,
+Harbor wagers and boat HTTP adapters now consume the guarded domain transactions below.
+Admission remains explicit; complete shared gameplay still requires the canonical persisted
+authority, island projection and lifecycle integrations.
 
 `EconomyContext(mode,version,actor_id,island_owner,account_id,run_epoch,revision)` and
 `resolve_economy_context(admin,actor_id,island_owner,*,expected_epoch=None)` live in
@@ -1942,3 +1950,167 @@ The internal treasury result can contain its originating account projection. A p
 must expose fresh economy/assets only if that origin is still the active current account/epoch and
 the actor is a current member. A departed or retired-origin retry may return its authorized immutable
 receipt, with current projections null/omitted. Never display an old receipt balance as current funds.
+
+## Operator pause and recovery (MP-ECO-21)
+
+This maintenance contract is separate from gameplay owner/member permissions. It adds no HTTP
+route, public admission, conversion or activation. Both RPCs are executable only by `service_role`;
+`PUBLIC`, `anon` and `authenticated` are revoked. Their empty search paths and owner execution are
+required because callers cannot write admission state or invoke private treasury locks directly.
+
+| Service-only RPC | Contract |
+|---|---|
+| `island_economy_operator_context(p_island_owner uuid)` | Read the current exact shared origin, active/retired account, admission state and canonical decimal-string `controlRevision`; creates nothing. |
+| `island_economy_set_offers(p_operation_uid text,p_island_owner uuid,p_account_id uuid,p_run_epoch uuid,p_expected_revision numeric,p_expected_state text,p_target_state text)` | Compare-and-set one active exact origin between `active` and `paused`. Expected revision is the **operator control** revision, independent of the financial revision. New controls never grant coins, initialize a profile, downgrade shared mode, reset an epoch or change player rights. |
+
+The private `island_economy_private.operator_offer_receipts` records the immutable request
+fingerprint and original result. Its monotonic per-account/epoch control revision prevents an old
+new-UID preflight from succeeding after pause → resume returns to the same state. An identical
+committed UID replays its original `receipt` before mutable preflight, with `repeat:true` and a
+separate fresh `current` projection; replaying an old pause after resume does **not** pause again.
+Changed UID reuse refuses `action_conflict`; stale control generation, admission state, origin
+or retired accounts refuse without an effect. Refused controls create no receipt or generation.
+
+Use each control as its own transaction. Its outer operator-UID advisory lock uses the disjoint
+two-key namespace `(19513,hashtext(uid))`; the existing island scope precedes the account UUID and
+state row. Runtime game transactions never acquire the operator lock. This is a single-origin
+control, not an atomic all-islands batch. Canonical old-origin settlement and wave closure remain
+eligible while new offers are paused; pause is distinct from the session's between-wave pause.
+
+[Database grants](../supabase/README.md#operator-pause-and-recovery-mp-eco-21) and the
+[executable rehearsal/runbook](../specs/MP-ECO-21-release-runbook.md#executable-controls-and-isolated-rehearsal)
+name migration `20261119144620_island_economy_operator_recovery.sql`. The supplied CLI accepts only
+a manifest-bound disposable Unix-socket cluster; it refuses hosted/TCP or libpq-option overrides.
+Hosted use, deployment, live migration and activation remain separately authorized release work.
+
+## Guarded shared economy domain transactions
+
+Service-only arsenal, combat repair, wager and ship-game transaction functions
+consume the version-one treasury and common operation registry. Their exact
+SQL signatures, HTTP adapters, receipt/replay rules, grants and
+remaining authority/session gates are described in
+[Guarded shared economy transactions](economy/DOMAIN-TRANSACTIONS.md).
+The adapters require explicit accounting mode and the shared capability header;
+their presence does not admit existing islands or activate a deployment.
+
+## Shared island core HTTP boundary
+
+The [core API spec](../specs/MP-ECO-CORE-API.md) defines the version-one read/quote contract.
+`backend/server/routes/island.py` preserves the existing URLs and legacy serializers. Persisted
+mode is resolved read-only before dispatch; missing or unreadable database state cannot select
+a legacy wallet path. Shared GET `/api/island`, `/api/island/visit/{code}` and demolition quotes
+require `X-Island-Economy-Version: 1`. Shared reads return one member-authorized snapshot with
+authenticated `actorId`, target economy/crew/progress/structures, actor personal projection and
+exact decimal-string quotes. Paused members may read. There is no implicit admission/import,
+wave expiration, fake stock, live roster or world revision derived from financial revision.
+
+Strict shared POST bodies are defined in `server/island/economy_http_models.py`: server-prepared
+flat intent/CAS/quote fields plus `actionUid`, optional `code`, and exactly
+`economy: {mode: 'island_shared', version: 1, islandOwner, runEpoch}`. Build/upgrade/demolish,
+research, tower-skill/tree, wreck and hire dispatch to their existing atomic domain adapters.
+No client-selected actor/account/payer/catalogue/action is accepted. Old-shaped requests on
+persisted shared targets refuse before legacy side effects; malformed shared fields remain
+validation errors. New shared writes require the actual persisted permission provider;
+`economy_path_unavailable` remains the result when it is absent.
+
+Before current preflight, service-only `island_economy_operation_origin` resolves an authenticated
+actor's existing root to its original account/epoch/domain. The domain transaction still checks
+the complete frozen intent and immutable receipt. Historical exact retries can survive departure,
+pause or retirement without unauthorized fresh projections. Shared success returns that original
+domain receipt unchanged; a later coherent refresh is independent and may fail without changing
+the committed outcome. Treasury revisions order only monetary projections.
+
+The application registers the existing global GET `/api/captain` and POST
+`/api/captain/{role,skill,respec}` router with the atomic legacy-guard migration dependency.
+Its strict personal version/revision/root contract is independent of the viewed island's money
+mode, and missing adoption is explicitly `409 captain_not_initialized` on GET. Read failures
+never mean an unadopted profile. Shared snapshots advertise the implemented versioned
+arsenal/session/repair/reset/market/match paths. Move remains unavailable pending its
+coordinated client path. A capability is protocol support, not permission: existing route
+flags, membership, origin and controller checks still apply. This adds no public conversion.
+
+## Shared wave accounting foundation (MP-ECO-03)
+
+[The additive migration](../supabase/migrations/20261118050200_wave_treasury_settlement.sql)
+defines immutable shared wave snapshots, participation confirmations, canonical closures and
+personal completion receipts. [The package spec](../specs/MP-ECO-03-wave-treasury-settlement.md)
+describes the transactional integration contract; [database rights](../supabase/README.md#shared-wave-accounting-foundation-mp-eco-03)
+remain explicit. Existing wave HTTP routes are not converted or activated by this foundation.
+
+| Private SQL hook | Required caller contract |
+|---|---|
+| `island_wave_accounting_freeze_locked(wave_id,account_id,run_epoch,roster,reward_basis)` | Same accepted-bell transaction; earlier scope/account/personal locks and checked personal assignments already exist. Freeze account/epoch, actual played wave, protocol, houses, allowed rewards and stable participant-slot/Engineer identities once. |
+| `island_wave_confirm_participation_locked(wave_id,player_id,controlling_session_id)` | Checked controlling-session acknowledgment after combat begins. Frozen slot, current global assignment, membership and timing must agree; the caller separately validates current controller generation/revocation. |
+| `island_wave_accounting_settle_locked(wave_id,outcome,earned_bonuses)` | Same canonical lifecycle transaction as final outcome, HP and session closure, after any rescue outcome. One origin-account credit plus immutable personal receipts and MP-ECO-07 effects commit or roll back together. |
+
+All write hooks are unavailable to `service_role`/browser direct execution; an enclosing
+security-definer lifecycle RPC must call them. `outcome` is `won`, `lost`, `abandoned` or
+`expired`; unresolved/client-selected results are not canonical authority. Exact retry returns
+the original terminal facts; a different outcome cannot replace them. `lootCoins` and the common
+`economy` envelope use exact decimal strings and the frozen originating account, including after
+that account retires. A new low-wave attempt has its own reward source and does not use island best.
+
+Personal receipt identity is `(player_id,wave_id)`, with a UUID receipt, played wave, canonical
+outcome, confirmed-participation flag, frozen Engineer commitment, original account/epoch and
+terminal fingerprint. `island_wave_completion_receipt(player_id,wave_id)` is a **service-only
+read** for the authenticated Captain; it requires no current island membership and performs no
+financial/profile mutation. `server.island.wave_economy.personal_completion` strictly checks
+that identity. Membership, spectating and countdown-only connection create no eligible win.
+
+A narrow insert trigger refuses legacy personal `pirate_loot` for an already frozen shared
+wave. It takes no new lock: freeze and legacy finish serialize on the wave row. Private personal
+anchors use `FOR NO KEY UPDATE` to remain compatible with unrelated legacy foreign-key checks.
+This guard does not replace future route context checks or full canonical lifecycle integration.
+Missing personal hooks/state fail closed; deletion dispositions and continuing-island closure
+must be explicitly integrated before affected account deletion is admitted.
+
+## Canonical wave transport and lifecycle composition
+
+The [shared wave boundary](../specs/MP-ECO-11-shared-wave-http.md) extends the
+existing start/join/current/finish and protocol-two journal paths. Shared write
+bodies carry the exact four-field economy intent plus UUID `sessionId` and a
+canonical decimal-string `connectionGeneration`. Journal GET uses paired
+`islandOwner`/`runEpoch` query fields and optional complete session proof. A valid
+member may spectate without controlling a Captain. Persisted mode is discovered
+before any legacy island initializer; old requests cannot choose shared money or
+restore old control for a globally adopted Captain. Native transport requires
+the common version-one header and protocol two. The combined native producer
+and client must be installed before these capabilities are advertised.
+
+`POST /api/island/revive` uses the [free revival contract](../specs/MP-ECO-12-free-revival-runtime.md).
+Its strict body captures origin, action UID, wave, target token, fall, hold and
+controller proof. The existing ordered input journal alone starts/cancels a hold.
+Completion returns an immutable receipt and journal identity; no coins, payment
+receipt or fresh HP patch is returned. Ordinary and Medic hold duration, reach,
+fall identity and sealed journal state are checked in the canonical transaction.
+
+`POST /api/island/fresh-start` retains its legacy body and additionally accepts
+`{economy,actionUid,confirmCode}` for an admitted shared island. The server selects
+the once-only starting grant. The public shared reply keeps the original reset
+receipt with `currentEconomy:null`; a fresh GET alone adopts its replacement
+account/epoch. Old bets remain bound to the retired account. Reset preserves all
+personal Captain progress and never transfers the old cash into the new run.
+
+`DELETE /api/me` retains mandatory strict `confirm:true` and adds optional strict
+`confirmOwnedIslandDeletion` (default false). One atomic service-only lifecycle
+RPC classifies the actor's persisted ownership and disposes held copies, controls,
+owned assets, crew handover and Auth deletion. An admitted owned island requires
+the separate true confirmation (`409 owned_island_confirmation_required`). A
+member's visited island and other players' personal progress survive. Automatic
+guest cleanup uses the same transaction and skips owners needing confirmation
+while continuing later eligible guests. Legacy-only accounts retain their purge.
+See [lifecycle composition](../specs/MP-ECO-20-lifecycle-compatibility.md).
+
+Valid island/journal requests check the live deleted-actor guard after their
+request budget. Malformed bodies/queries and incompatible native requests reach
+no domain transaction. Historical exact retries still belong to their original
+actor/account/epoch; an Auth cache cannot resurrect a deleted player.
+
+Existing `game_join`/`game_leave` RPC signatures and the invite alias share the
+canonical membership transaction. A real departure withdraws only that island's
+control/slot and held copies; pending returns follow the actual accepted wave.
+Join/rejoin/leave rotate the current private topic when membership changes.
+Redundant operations and refused owner departure have no lifecycle effect. The
+HTTP create/join/list/lobby/leave routes check live actor status after their
+budgets. Lobby roles use global adopted Captain state, with legacy reads only
+for explicitly unadopted players and no initialization or read-failure fallback.

@@ -1,0 +1,294 @@
+{
+  "purpose": "Component applicability of retained evidence; no tests or browser scenarios were rerun.",
+  "recordedAt": "2026-11-19T18:24:23.083143+00:00",
+  "historicalRenderedSource": "b239bdf094d132fc57969fb31f652f106db8abc5",
+  "currentProductionCandidate": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+  "publishedMainAtComparison": "3bd2588cdc88bfd5ce8f0e64e9ae607841851065",
+  "candidateToPublishedMain": {
+    "protectedPathspecs": [
+      "backend/server",
+      "backend/content",
+      "frontend/src",
+      "supabase/migrations",
+      "backend/uv.lock",
+      "backend/pyproject.toml",
+      "frontend/package-lock.json",
+      "frontend/package.json",
+      ":(exclude)backend/server/tests"
+    ],
+    "changedPaths": []
+  },
+  "historicalToCandidate": {
+    "changedProductionPaths": [
+      "backend/server/island/construction_rules.py",
+      "frontend/src/island/index.js",
+      "frontend/src/island/island-load.js",
+      "frontend/src/island/island-session.js",
+      "frontend/src/island/shared-wave-shapes.js",
+      "frontend/src/island/wave-flow.js",
+      "frontend/src/pirates/controller.js",
+      "supabase/migrations/20261119144620_island_economy_operator_recovery.sql"
+    ],
+    "backendOnlyChange": "backend/server/island/construction_rules.py",
+    "backendAstEqualAfterRemovingDocstrings": true,
+    "unchangedAuthSdkFiles": 34,
+    "authSdkGitManifestSha256": "70b91c2ff2a3b4ac387cb85d2bb792b4d33a3277730bd43895e82eeb0f0851f0",
+    "unchangedOldApplicationMigrations": 107,
+    "oldMigrationGitManifestSha256": "fb43275ade2d93799672899508aebf99a04d97f049a250404f3b01c6f0201f85",
+    "addedMigrations": [
+      "supabase/migrations/20261119144620_island_economy_operator_recovery.sql"
+    ],
+    "operatorScope": "Migration 108 adds private operator receipts and service-only operator context/offer functions. The retained normal-path cases invoke no operator routine; full schemas are not identical."
+  },
+  "retainedCore": {
+    "report": "docs/evidence/MP-ECO-20-local-provider/core.json",
+    "originalApplicationSource": "3bdd8eda16470795fdedd68c42fffab54e5f2ced",
+    "executedCheckoutBefore": "71f5374b68a0d1ad5cea282903a9cd69567adc2f",
+    "executedCheckoutAfter": "61f244873bb0dc59831e1b09313ff05fdce07b87",
+    "entrySha256": "a271f58fe7c7985656bd86c1241e925ced45af5fb98fc5eba55406d98e27adc1",
+    "helperBlobs": {
+      "frontend/scripts/authenticated-economy/core.mjs": {
+        "sha256": "a271f58fe7c7985656bd86c1241e925ced45af5fb98fc5eba55406d98e27adc1",
+        "executedBlobMatches": true
+      },
+      "frontend/scripts/authenticated-economy/clients.mjs": {
+        "sha256": "641ae6018386213ac78efcab217167c44c80d91ac63d301922f66575892127f8",
+        "executedBlobMatches": true
+      },
+      "frontend/scripts/authenticated-economy/runtime.mjs": {
+        "sha256": "489a4d89302c6eda6618a20fe9beb4165942b108c01a42f265b18d0c9e558e37",
+        "executedBlobMatches": true
+      },
+      "frontend/scripts/authenticated-economy/observer.mjs": {
+        "sha256": "40cb288da9f9a80e337fba5a39a12b1b23501ad1ff48a2a4614975492997f140",
+        "executedBlobMatches": true
+      },
+      "frontend/scripts/authenticated-economy/private-realtime.mjs": {
+        "sha256": "5b7a0968d39ff1acaa0ac2e30c61f0fa373d4cf51ddc3b6ec8a5450ac41de198",
+        "executedBlobMatches": true
+      },
+      "frontend/scripts/authenticated-economy/source.mjs": {
+        "sha256": "e1f2b4d9a9652285e2c9cb26e4fe96e92119f78583768b5b4fc957e65b273952",
+        "executedBlobMatches": true
+      },
+      "backend/tools/authenticated_economy/observe.py": {
+        "sha256": "18707a8ed12d18c69a4c04de1a416089ccbe89619f5f6f6e9a270840df551839",
+        "executedBlobMatches": true
+      },
+      "backend/tools/authenticated_economy/config.py": {
+        "sha256": "f066a3e3e1d1a0643ce3ba6da9d28a42f23dbe4f5b3358319aa13345e2aabb92",
+        "executedBlobMatches": true
+      }
+    },
+    "unchangedDependencyPathspecs": [
+      "backend/server",
+      "backend/content",
+      "frontend/src/online",
+      "backend/uv.lock",
+      "backend/pyproject.toml",
+      "frontend/package-lock.json",
+      "frontend/package.json",
+      ":(exclude)backend/server/tests"
+    ],
+    "changedDependencyPaths": [],
+    "actualLayer": "Real Chromium contexts, public GoTrue SDK signup, production session restoration and browser-origin fetch. Default core does not enter the rendered game.",
+    "applicableFacts": [
+      "Missing/unsupported capability reads and missing-capability mutation 409; missing epoch 422; outsider 403; forged actor 422; authorized initial shared read 200.",
+      "Invited registered-member fresh-quote construction; exact same-UID replay 200 and changed-intent 409.",
+      "Construction-only last-funds contention and independent treasury/private-wallet reconciliation.",
+      "Free personal respec did not spend island funds; new Carpenter purchase was refused 409."
+    ],
+    "excludedClaims": [
+      "Rendered cards or gameplay",
+      "Anonymous UI",
+      "Purchase/wager/repair cross-domain contention",
+      "Engineer generation completion"
+    ]
+  },
+  "retainedSessions": {
+    "report": "docs/evidence/MP-ECO-20-sessions/result.json",
+    "originalApplicationSource": "82abc298570ce5436c721a992f538c16d04c30e5",
+    "executedScenarioSource": "051d6b0544b7b48ea5b3efdd2bf39181b7e4864e",
+    "entryPath": "frontend/scripts/check-economy-sessions-provider.mjs",
+    "entrySha256": "8ee117bf1c04c058989684c41eb94fa0ba9999ea8ce003c2d12909e5318054e7",
+    "entryBlobMatches": true,
+    "changedBackendContentAuthSdkPaths": [],
+    "applicableFacts": [
+      "Actual authenticated duplicate-session and cross-island controller refusals 409.",
+      "Proofless cloned browser tab remained read-only; the new renderer promotion requires a valid controlling participant proof.",
+      "Canonical retained UUID/new generation, HP 1000000, down false, position (0,12) and empty cooldown facts on unchanged authority code.",
+      "Explicit departure withdrew control and conserved both original accounts."
+    ],
+    "excludedClaims": [
+      "Current rendered controller-promotion correctness from this historical run alone",
+      "Fallen reconnect",
+      "Nonempty cooldown persistence",
+      "Natural grace expiry in this particular journey"
+    ]
+  },
+  "conditionalRenderedReuse": [
+    {
+      "observation": "Historical idle Settings reset and peer topic reacquisition",
+      "conditions": "No current wave. The added refreshControl returns before effects; new account/epoch/full-economy funding stamps still emit the original payload. Keep original source and observed cached-socket boundaries explicit."
+    },
+    {
+      "observation": "Historical Account deletion and preservation",
+      "conditions": "Unchanged backend effects are applicable. Idle peer UI clearance requires the same no-current-wave branch assessment; do not infer malicious cached-socket deletion or universal immediate cache eviction."
+    }
+  ],
+  "notReusableAsBlanketCurrentProof": [
+    "Active-wave spectator/reconnect/controller promotion or pacing crosses six changed frontend modules and needs its own branch-specific evidence.",
+    "Historical rendered revival at treasury 200 is not a rendered zero-bank revival.",
+    "New API-only or sealed-simulation scenarios cannot become browser evidence by relabeling.",
+    "A first-build stale quote after Engineer selection remains an observed product concern; this comparison does not waive it."
+  ],
+  "limits": [
+    "Original tests retain original sources and results.",
+    "Component comparison is not a rerun or proof of the complete fifteen-row matrix.",
+    "Physical-device coverage and hosted rollout are not claimed."
+  ],
+  "quoteRefreshFollowup": {
+    "comparedAt": "2026-11-19T18:39:34.191625+00:00",
+    "priorServedCandidate": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+    "newFrontendCandidate": "74be485507fbdbf1eb662f96f11a40c5e902e507",
+    "integrationCandidate": "dc20dd3839785e32ee8c973413fae958ddbf8efa",
+    "integrationProtectedEquivalent": true,
+    "changedProductionPaths": [
+      "frontend/src/island/island-actions.js"
+    ],
+    "unchangedProductionScope": "All backend production, content, 108 migrations, dependency locks and Auth/SDK files are byte-identical. All frontend files except island-actions.js are byte-identical.",
+    "changedFunctions": [
+      "new applyRoleProfile helper",
+      "takeRole awaits fresh shared construction quotes",
+      "respecCaptain awaits fresh shared construction quotes"
+    ],
+    "unchangedActionPrefixSha256": "a2aceb65ad41c28d1ba5df599bfa65487168fd89f1d9e870ce0907c4c4815c97",
+    "unchangedActionPrefixScope": "All island-actions.js source before the new applyRoleProfile helper, including build, demolition, research, crew, quote/selection fences and captainRequest, is byte-identical.",
+    "unchangedLifecycleFilesSha256": {
+      "frontend/src/island/island-game.js": "2983eb96c2ad301314f93391e9c757204100ecedf1705ad4f864d282001a63ce",
+      "frontend/src/island/reset.js": "20fe0275750276dd4a1d9efcf9e0ad21ff704e67424dca4499981b03238b49bf",
+      "frontend/src/island/shared-reset-api.js": "521925a5ed92bed561a11a9093c23d50ada14b09b790952cd0c161ef110db7ed",
+      "frontend/src/screens/account/index.js": "92cfda98b029b69bbb282f32dbcd481567c7f7aeebe72e7cc5a9c4f9bc11fc7d",
+      "frontend/src/online/adapter/account-view.js": "e081ede1644111fe8e2d682fae104d9bb9655348ec0b657999070977cb95b42b"
+    },
+    "retainedApplicability": [
+      "Core/browser HTTP refusals and accounting use unchanged backend, Auth/SDK and API proof dependencies.",
+      "Reset/deletion do not invoke the changed role/respec helper; their direct implementation files and unchanged action prefix are recorded separately rather than claiming a whole-module match.",
+      "Role-free combat/repair/revival and wager/ship routes do not call the changed helper; preserve each original64 source/result and settings."
+    ],
+    "requiresNewObservation": "Selecting/respecifying role and the first construction action afterward require actual served74 frontend evidence. Earlier64 role/quote failures remain failures; DOM tests and build do not replace the current provider browser check.",
+    "testProvenance": "The candidate fix package records 29 Chromium DOM checks and its frontend build separately. This source comparison reruns neither.",
+    "limits": [
+      "No blanket active-wave or lifecycle-transition waiver.",
+      "This comparison does not establish automatic admission/leave topics or a missing rendered action."
+    ]
+  },
+  "finalActorGuardFollowup": {
+    "comparedAt": "2026-11-19T18:51:03.642079+00:00",
+    "executedProviderFrontend": "74be485507fbdbf1eb662f96f11a40c5e902e507",
+    "finalFrontendCandidate": "9c25ec4b08f30ba08b89cb84e362bdbd8e942754",
+    "changedProtectedPaths": [
+      "frontend/src/island/island-actions.js"
+    ],
+    "exactRuntimeDelta": "Two added if (!current()) return checks immediately before role/respec busy-state cleanup; no other runtime change from74.",
+    "unchangedScope": "All backend/content/108migrations/locks/AuthSDK and other frontend files remain identical. The quote-refresh helper and authoritative reads are unchanged.",
+    "actualProviderProof": "The owner/visitor successes remain attributed to74. Both retain the same authenticated actor and already passed the success-path post-refresh current() check. The two new current checks also evaluate true along those unchanged successful traces; no request, quote or financial mutation is added.",
+    "providerRerun": false,
+    "newRefusalBranchEvidence": {
+      "report": "docs/evidence/MP-ECO-20-engineer-first-buy/auth-guard-follow-up.json",
+      "runtimeGitBlob": "c33fb1dd8e16267862edec786666ebe892262df3",
+      "regressionGitBlob": "6fe3d29d8846f21e1fb846a2737ed316c0766766",
+      "redBeforeFix": 2,
+      "passedAfterFix": 31,
+      "files": 5,
+      "durationSeconds": 43.44,
+      "buildExitCode": 0
+    },
+    "limits": [
+      "The delayed-auth-refusal branch is regression evidence, not a new actual-provider browser observation.",
+      "The final source is not relabeled as the executed74frontend."
+    ]
+  },
+  "membershipDepartureFollowup": {
+    "comparedAt": "2026-11-19T19:22:58.914917+00:00",
+    "priorRoleGuardCandidate": "9c25ec4b08f30ba08b89cb84e362bdbd8e942754",
+    "newFrontendCandidate": "90a9a8227579c2be86cbe1d024fa75de7d61637e",
+    "additionalChangedProtectedPaths": [
+      "frontend/src/island/shared-session-client.js"
+    ],
+    "totalChangedProtectedPathsFromServed64": [
+      "frontend/src/island/island-actions.js",
+      "frontend/src/island/shared-session-client.js"
+    ],
+    "unchangedScope": "All backend, content, 108 migrations, dependency locks, Auth/SDK files and other frontend files are byte-identical. Only the existing depart helper changes inside shared-session-client.js; source before depart and from leave onward matches exactly.",
+    "runtimeGitBlob": "c97925d56a34e120044780e47e3efa91a8bb034a",
+    "newTerminalBranch": "Only an authenticated leave reply with status 403 and exact code not_member retires the saved original departure through the existing exact-record intents.departed comparison. General 403, unknown refusal and network failure remain retryable. Existing stale-controller and retired-epoch handling is preserved.",
+    "authorityBoundary": "The API binds the original record to its current authenticated actor. Canonical game_leave already removes membership, withdraws target control/slots/stock and rotates topic atomically. Retiring the local obsolete departure grants no new authority; subsequent attach still uses normal canonical membership/global-controller checks.",
+    "retainedCases": [
+      "Financial and wallet/accounting effects remain attributed to actual 64 with unchanged backend/API/SQL.",
+      "Current zero-revival and real 67-second grace/direct-own restoration remain actual 64 observations; they do not enter the removed-membership departure branch.",
+      "Owner/visitor successful Engineer first-buy remains actual 74, as separately qualified through 9c; no departed membership occurs on those traces.",
+      "Old sessions duplicate/proofless controller refusals and existing successful same-scope departures retain their branch-specific authority evidence."
+    ],
+    "needsNewActualObservation": "Same actual actor must normally rejoin then Leave on served 90, observe the authentic old-scope403not_member and automatic fresh own-session handoff after its normal UI/focus trigger. The actual 64 waiting failure remains failed until this separate proof succeeds.",
+    "reportedChecksNotRerunHere": {
+      "scope": "session client/API/intents",
+      "beforeFixFailures": 1,
+      "afterFixPassed": 76,
+      "durationSeconds": 2.09,
+      "freshBuild": "passed"
+    },
+    "limits": [
+      "This is source comparison, not a provider rerun.",
+      "No broad active-wave, arbitrary403 or realtime-transition waiver.",
+      "The final new UI handoff must keep90 source distinct from older64/74 traces."
+    ]
+  },
+  "conditionalConnectedControllerPacingReuse": {
+    "comparedAt": "2026-11-19T19:35:34.657860+00:00",
+    "originalReportedApplicationSource": "b239bdf094d132fc57969fb31f652f106db8abc5",
+    "comparedFrontendCandidate": "90a9a8227579c2be86cbe1d024fa75de7d61637e",
+    "retainedDocumentation": [
+      "docs/TEST-MAP.md historical defended-win/auto-next and following worker-closure rows",
+      "docs/WALKTHROUGH.md corresponding 107-migration rendered pacing account"
+    ],
+    "provenance": "Retained committed observations and source comparison, not a new run or reconstructed browser trace.",
+    "recordedObservedCase": [
+      "Three ordinary quoted cannon purchases reduced treasury 200 to 110; two distinct own WON receipts belonged to one canonical successful attempt.",
+      "With an eligible connected leader, ordinary Pause and Auto next kept the break paused for nine real seconds. Ordinary Resume allowed one non-player SYS wave_auto_start after its deadline; both clients automatically rendered that same new wave.",
+      "The recorded full browser trace showed exactly one initial browser start POST/UID and no additional browser start. The worker observer alone is not the source of that browser-trace assertion.",
+      "After both browsers closed, the production due worker ran after both real last_seen+60-second deadlines. It closed that SYS attempt abandoned with zero loot, withdrew both slots and released controls/personal assignments. A quiescent reread matched."
+    ],
+    "requiredConditions": [
+      "The recorded pacing clients are already connected controlling participants; no spectator-to-controller promotion, lost-control restore or changed actor is claimed.",
+      "The added refreshControl path sees no current wave or a current wave whose session.isController is true, so it returns before any new request/emission.",
+      "Normal wave-start paths leave controlRefresh at its default false; the worker-produced next wave has a different waveId.",
+      "No role/respec or removed-membership departure branch is invoked in this connected-controller pacing case."
+    ],
+    "changedFrontendBranchComparison": {
+      "island-session.js": "onActivated adds refreshControl after the existing reload/apply/refresh work. For the stated no-current-wave/already-controller conditions, the new helper immediately returns.",
+      "wave-flow.js": "begin adds controlRefresh=false. With false, the same-wave joined short-circuit is equivalent to the old one; a different SYS waveId follows the unchanged stopTimers/current/WAVE_STARTED path.",
+      "pirates/controller.js": "The new same-wave branch promotes only a validated native spectator. Existing controllers retain the old same-wave return; a different next waveId bypasses that branch.",
+      "island-load.js": "World-only duplicate wallet-event suppression does not change wave-start/settings/clock handlers; explicit purchases and actual funding/account changes retain their dispatch.",
+      "final-role-and-departure-fixes": "Role/respec quote hydration and exact 403 not_member saved-departure retirement are outside the recorded connected-controller branch."
+    },
+    "unchangedPacingDependencySha256": {
+      "frontend/src/pirates/game-wiring.js": "a936681a9b25353339bbc7b1a56bf4eaf09ef48d4ccc55e4a96cf3070bffae47",
+      "frontend/src/pirates/controller-frame.js": "1f3e57e60b8164754a7bb142bdad616989f28a15e504b301371f50dea716ff1a",
+      "frontend/src/pirates/controller-captain.js": "985706ca5a37f810fd387560650a981189f4088f46a1ede364d10143bb4c4e46",
+      "frontend/src/pirates/hud.js": "427bee443b466a667c9513d50301d5503be0f09675948a79e138d1ed13d51deb",
+      "frontend/src/island/shared-session-api.js": "09b7d7b3b39dec339b84a1ddd30b31d26d30199b80f6d090a5ef97e609072ec8",
+      "backend/server/island/shared_session_worker.py": "2d194424915b3e00aba82162e63180c14dacc227853e294a9cad28ab45d360ee",
+      "backend/server/island/shared_session_api.py": "3d99da5ef10f565ee6b22cb1af9c1f4d553ea337a56b930cf170268ac058a5fd",
+      "supabase/migrations/20261119002149_shared_session_pacing.sql": "9732b1e061b7fe4aa67245d0e570153a26a8b958938771ba0feff5177ded0ddb"
+    },
+    "workerClosureApplicability": "All 107 old SQL migration blobs and backend runtime code remain unchanged except the documented catalogue docstring; additive private operator 108 is not called by the observed normal pacing/worker closure. Once browsers are closed, changed frontend promotion code is not executing.",
+    "notEstablished": [
+      "Auto-start with no eligible connected leader",
+      "Spectator or restored-document promotion/reconnect correctness by this historical case",
+      "Fallen/nonempty-cooldown reconnect persistence",
+      "Any new run, changed source label, additional victory or new grant"
+    ],
+    "newTestExecution": false
+  }
+}

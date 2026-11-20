@@ -5,6 +5,7 @@
 // true (the fake server, or ?wavedebug=1), so the loop can be tried end to end.
 import {WAVE_STARTED, WAVE_FINISHED, hasWaveRenderer as defaultHasRenderer, setWaveFinisher} from './wave-hooks.js';
 import {coinText, countdownText, lootText, secondsUntil} from './card-model.js';
+import {sameFrozenNativeWave} from './shared-wave-shapes.js';
 
 export const PLACEHOLDER_SECONDS = 20;
 const HERE_SECONDS = 3;
@@ -51,9 +52,9 @@ export function createWaveFlow({api, emit, notify = () => {}, banner = () => {},
     }
   }
   // A wave we are in: remember it, tell the game, count down.
-  function begin(wave, where, {fresh = false} = {}) {
+  function begin(wave, where, {fresh = false, controlRefresh = false} = {}) {
     lookupGeneration++;
-    if (current?.wave.waveId === wave.waveId && current.joined) return;
+    if (current?.wave.waveId === wave.waveId && current.joined && !controlRefresh) return;
     stopTimers();
     current = {wave, where, joined: true, finished: false, startAt: now()};
     emit({type: WAVE_STARTED, waveId: wave.waveId, wave: wave.wave, seed: wave.seed, startsAt: wave.startsAt,
@@ -62,6 +63,8 @@ export function createWaveFlow({api, emit, notify = () => {}, banner = () => {},
       ...(Number.isInteger(wave.recoveryVersion) ? {recoveryVersion: wave.recoveryVersion} : {}),
       ...(Number.isInteger(wave.waveProtocol) ? {waveProtocol: wave.waveProtocol} : {}),
       ...(wave.initialSnapshot && typeof wave.initialSnapshot === 'object' ? {initialSnapshot: wave.initialSnapshot} : {}),
+      ...(wave.initialSnapshot?.economy?.mode==='island_shared' ? {nativeShared:true,spectator:wave.session?.isController!==true,
+        controlSessionId:wave.session?.isController?wave.session.sessionId:null} : {}),
       ...(typeof wave.participantToken === 'string' ? {participantToken: wave.participantToken} : {}),
       ...(Number.isSafeInteger(wave.lastActorCounter) ? {lastActorCounter: wave.lastActorCounter} : {}),
       ...(Number.isSafeInteger(wave.clockOffsetMs) ? {clockOffsetMs: wave.clockOffsetMs} : {}), // api.js clockOffset
@@ -88,6 +91,7 @@ export function createWaveFlow({api, emit, notify = () => {}, banner = () => {},
     const answer = await api.startWave({where});
     if (disposed || generation !== contextGeneration) return {...answer, ignored: true};
     if (answer.ok) {
+      if(answer.data.historical || answer.ignored){await look(where);return {...answer,ignored:true};}
       await ready();
       // A fresh same-target read may confirm another wave while start/prepare is pending.
       if (!disposed && generation === contextGeneration
@@ -107,7 +111,8 @@ export function createWaveFlow({api, emit, notify = () => {}, banner = () => {},
     if (!waveId || current.where !== where) return {ok: false, status: 404, code: 'no_such_wave', message: 'There is no wave to join.'};
     lookupGeneration++;
     const stillCurrent = () => !disposed && generation === contextGeneration && current?.where === where && current?.wave.waveId === waveId;
-    const answer = await api.joinWave({waveId});
+    const spectator=current.wave.initialSnapshot?.economy?.mode==='island_shared' && current.wave.session?.isController!==true;
+    const answer = spectator?{ok:true,data:current.wave}:await api.joinWave({waveId});
     if (!stillCurrent()) return {...answer, ignored: true};
     if (answer.ok) {
       await ready();
@@ -118,11 +123,26 @@ export function createWaveFlow({api, emit, notify = () => {}, banner = () => {},
     return answer;
   }
   const join = (where = 'own') => run(() => joinNow(where));
+  // A restored document may have opened the replay before its controlling session
+  // attached. Only a fresh validated server projection can promote that replay.
+  async function refreshControl(where = 'own',{guard=()=>true}={}) {
+    const before=current;
+    if(!guard() || !before || before.where!==where || before.wave.session?.isController===true
+      || !before.wave.initialSnapshot?.economy)return null;
+    const generation=contextFor(where),lookup=++lookupGeneration;
+    const answer=await api.currentWave({where});
+    if(!guard() || disposed || generation!==contextGeneration || lookup!==lookupGeneration || current!==before)return {...answer,ignored:true};
+    if(answer.ok && answer.data?.session?.isController===true && sameFrozenNativeWave(before.wave,answer.data)) {
+      begin(answer.data,where,{controlRefresh:true});
+    }
+    return answer;
+  }
   // A friend sailing in (or a page reload) asks whether a wave runs there; it is shown, not joined.
   async function look(where = 'own') {
     const generation = contextFor(where), lookup = ++lookupGeneration;
     const answer = await api.currentWave({where});
     if (disposed || generation !== contextGeneration || lookup !== lookupGeneration || !answer.ok) return answer;
+    if (answer.data === null && current === null) return answer; // An idle read must retain the focused card's DOM.
     if (answer.data && current?.wave.waveId !== answer.data.waveId) {
       stopTimers(); current = {wave: answer.data, where, joined: false, finished: false, startAt: now()};
     } else if (!answer.data && current && (!current.joined || current.where !== where)) {
@@ -159,6 +179,7 @@ export function createWaveFlow({api, emit, notify = () => {}, banner = () => {},
     if (number !== undefined) { lookupGeneration++; current.finished = true; stopTimers(); banner(null); current = null; }
     if (data) {
       if (data.away) notify('This wave ended while you were away. The bell is free again.', 'info');
+      else if (data.nativeShared) notify(data.survived?'Wave won. The island treasury was updated.':'The wave ended. Rebuild and ring the bell again.',data.survived?'success':'info');
       else if (data.survived) notify(lootText(data), 'success');
       else if (Number.isSafeInteger(data.coins)) notify(`The pirates broke through. You have ${coinText(data.coins)}.`, 'error');
       emit({type: WAVE_FINISHED, survived: data.survived === true, waveId, ...(number ? {wave: number} : {}), ...data});
@@ -168,7 +189,7 @@ export function createWaveFlow({api, emit, notify = () => {}, banner = () => {},
   }
   const stopFinisher = setWaveFinisher(args => finish(args, {retry: false}));
   return {
-    ring, join, look, finish, ended,
+    ring, join, look, refreshControl, finish, ended,
     get busy() { return activeOperation !== null; },
     get current() { return current ? {...current} : null; },
     secondsLeft: () => (current ? Math.max(0, Math.ceil((current.startAt - now()) / 1000)) : null),

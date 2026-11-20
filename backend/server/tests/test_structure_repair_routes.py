@@ -88,6 +88,12 @@ def test_saved_v1_repair_route_works_while_recovery_admission_flag_is_off(monkey
 
 def test_http_repair_uses_the_real_t55_reader_and_paid_service_with_a_fresh_view():
     world = World(settings=off_structure_recovery_settings())
+    world.database.islands["K7Q2M"] = {
+        "player_id": PLAYER_ID,
+        "code": "K7Q2M",
+        "wave_best": 0,
+        "flags": 0,
+    }
     structure = {
         "spot": "wall_1",
         "instanceId": str(RECEIPT.instance_id),
@@ -140,14 +146,16 @@ def test_stale_repair_quote_returns_fresh_state_and_current_wallet(monkeypatch):
     async def repair(*args):
         raise ApiError(409, "stale_recovery_quote", "Refresh this repair quote.")
 
-    async def target_island(*args):
-        return ISLAND, None
+    async def resolve_target(*args):
+        return ISLAND
 
     async def read_state(*args):
         return STATE
 
     monkeypatch.setattr("server.island.structure_repair.repair", repair)
-    monkeypatch.setattr(structure_repair.service, "target_island", target_island)
+    monkeypatch.setattr(
+        structure_repair.structure_recovery, "resolve_target_island", resolve_target
+    )
     monkeypatch.setattr(structure_repair.structure_recovery, "read_state", read_state)
 
     response = world.client.post("/api/island/structures/repair", json=BODY, headers=PLAYER)

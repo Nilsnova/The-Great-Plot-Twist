@@ -4,6 +4,7 @@ import {createSession} from '../src/online/session.js';
 import {createApi} from '../src/online/api.js';
 import {createRealAdapter} from '../src/online/adapter/index.js';
 import {viewKeys} from '../src/adapter/contract.js';
+import {findPanelServices} from '../src/online/panel-services.js';
 
 const me={id:'private-player-placeholder',captainName:'Placeholder captain',coins:0,kit:null,place:null,crews:[]};
 function serverApi({signedIn=false}={}){
@@ -26,6 +27,17 @@ function serverApi({signedIn=false}={}){
 
 async function flush(){for(let index=0;index<12;index++)await Promise.resolve();}
 describe('real adapter core',()=>{
+  it('makes only the accepted authenticated profile ID available to private feature adapters',async()=>{
+    const deps=serverApi({signedIn:true}), actor='025a77bb-09ba-465d-8457-ab877971c729';
+    deps.replies.set('GET /api/me',{ok:true,status:200,data:{...me,id:actor}});
+    const adapter=createRealAdapter({...deps,publicApi:deps.api});
+    try{
+      await vi.waitFor(()=>expect(findPanelServices(deps.session)?.getActorId()).toBe(actor));
+      expect(JSON.stringify(adapter.read())).not.toContain(actor);
+      await adapter.signOut();
+      expect(findPanelServices(deps.session)?.getActorId()).toBeNull();
+    }finally{adapter.dispose();}
+  });
   it('returns at once with a cloned online view while config is pending',async()=>{
     let finish;
     const request=new Promise(resolve=>{finish=resolve;});

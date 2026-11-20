@@ -2,6 +2,7 @@
 .island-reset p{margin:0;font-size:var(--u-sm,16px);line-height:1.5}
 .island-reset-stays{font-weight:700;color:var(--u-rust,#e7a587)}
 .island-reset-note{color:var(--u-mute,#cfdcd6)}
+.island-reset-scope{overflow-wrap:anywhere;color:var(--u-mute,#cfdcd6)}
 .island-reset-form{display:flex;flex-wrap:wrap;align-items:flex-end;gap:var(--u-3,12px)}
 .island-reset-label{display:grid;gap:6px;flex:1 1 220px;min-width:0;font:600 var(--u-sm,16px)/1.4 var(--u-font)}
 .island-reset-code{min-height:48px;width:100%;box-sizing:border-box;padding:8px 12px;font:20px/1.2 var(--u-font);letter-spacing:2px;text-transform:uppercase;color:#15382f;background:#fff7dc;border:2px solid #a7b58c;border-radius:6px}

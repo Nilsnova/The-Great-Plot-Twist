@@ -1,0 +1,269 @@
+{
+  "result": "passed",
+  "sourceBefore": {
+    "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+    "actualCheckoutHead": "3b720688c06f0bd04dff2879ed9b018322885c09",
+    "productionDiffFromBaseline": "empty",
+    "paths": [
+      "backend/server",
+      "backend/content",
+      "frontend/src",
+      "supabase/migrations",
+      "backend/uv.lock",
+      "backend/pyproject.toml",
+      "frontend/package-lock.json",
+      "frontend/package.json",
+      ":(exclude)backend/server/tests"
+    ]
+  },
+  "sourceAfter": {
+    "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+    "actualCheckoutHead": "3b720688c06f0bd04dff2879ed9b018322885c09",
+    "productionDiffFromBaseline": "empty",
+    "paths": [
+      "backend/server",
+      "backend/content",
+      "frontend/src",
+      "supabase/migrations",
+      "backend/uv.lock",
+      "backend/pyproject.toml",
+      "frontend/package-lock.json",
+      "frontend/package.json",
+      ":(exclude)backend/server/tests"
+    ]
+  },
+  "productionSource": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+  "servedSourcesBefore": [
+    {
+      "service": "api",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "6849704385f2f49a00be2b96a91eebc14d1fbc75",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    },
+    {
+      "service": "frontend",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "6849704385f2f49a00be2b96a91eebc14d1fbc75",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    }
+  ],
+  "servedSourcesAfter": [
+    {
+      "service": "api",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "6849704385f2f49a00be2b96a91eebc14d1fbc75",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    },
+    {
+      "service": "frontend",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "6849704385f2f49a00be2b96a91eebc14d1fbc75",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    }
+  ],
+  "workerBefore": {
+    "service": "worker",
+    "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+    "actualCheckoutHead": "6849704385f2f49a00be2b96a91eebc14d1fbc75",
+    "productionDiffFromBaseline": "empty",
+    "paths": [
+      "backend/server",
+      "backend/content",
+      "frontend/src",
+      "supabase/migrations",
+      "backend/uv.lock",
+      "backend/pyproject.toml",
+      "frontend/package-lock.json",
+      "frontend/package.json",
+      ":(exclude)backend/server/tests"
+    ],
+    "recordedAt": "2026-11-19T17:08:49.769Z",
+    "processAlive": true
+  },
+  "workerAfter": {
+    "service": "worker",
+    "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+    "actualCheckoutHead": "6849704385f2f49a00be2b96a91eebc14d1fbc75",
+    "productionDiffFromBaseline": "empty",
+    "paths": [
+      "backend/server",
+      "backend/content",
+      "frontend/src",
+      "supabase/migrations",
+      "backend/uv.lock",
+      "backend/pyproject.toml",
+      "frontend/package-lock.json",
+      "frontend/package.json",
+      ":(exclude)backend/server/tests"
+    ],
+    "recordedAt": "2026-11-19T17:08:49.769Z",
+    "processAlive": true
+  },
+  "scenarioSha256": "b3c0ecbdeeed77de384989cf9e6bab2b1c9c55da4c338a34e76c611eb222ea81",
+  "helpersBefore": {
+    "api-clients.mjs": "a9369da75350b882ac6a312c20903965a362409978e86e108c256f9cc450a9f7",
+    "observer.mjs": "40cb288da9f9a80e337fba5a39a12b1b23501ad1ff48a2a4614975492997f140",
+    "source.mjs": "56d138914dc5b4e15159162bb21db68c985b2c9083c2e5bac4b34a90502ea8d9",
+    "runtime.mjs": "d1387a35fd7243df58e8d9589586034b3a098489bb20e43bece9b6b45040865f",
+    "observe.py": "18707a8ed12d18c69a4c04de1a416089ccbe89619f5f6f6e9a270840df551839",
+    "config.py": "9c1ab2bc84f0e5da14748624064a8a68357a52a44d3d79473251302a46082b47",
+    "application.py": "05effdff57cb2443ac691c1e0bf4741563bece314a476cfbc4d6ae0a13b6bd6e",
+    "worker.py": "49da1ea8bd677741af8665e0588b3fd4be9ef924a4d229bd60320c2cfe2cd906",
+    "shared_session_worker.py": "dda32eae363ef206ac4342844d29fdd7ffe9646f43f40678d26e767566b63f7d",
+    "record-source.mjs": "0c30cbbc32f1728d2fc6957ecf108bb02f210d2f0665a20e5d2401caf0b5bc0a"
+  },
+  "helpersAfter": {
+    "api-clients.mjs": "a9369da75350b882ac6a312c20903965a362409978e86e108c256f9cc450a9f7",
+    "observer.mjs": "40cb288da9f9a80e337fba5a39a12b1b23501ad1ff48a2a4614975492997f140",
+    "source.mjs": "56d138914dc5b4e15159162bb21db68c985b2c9083c2e5bac4b34a90502ea8d9",
+    "runtime.mjs": "d1387a35fd7243df58e8d9589586034b3a098489bb20e43bece9b6b45040865f",
+    "observe.py": "18707a8ed12d18c69a4c04de1a416089ccbe89619f5f6f6e9a270840df551839",
+    "config.py": "9c1ab2bc84f0e5da14748624064a8a68357a52a44d3d79473251302a46082b47",
+    "application.py": "05effdff57cb2443ac691c1e0bf4741563bece314a476cfbc4d6ae0a13b6bd6e",
+    "worker.py": "49da1ea8bd677741af8665e0588b3fd4be9ef924a4d229bd60320c2cfe2cd906",
+    "shared_session_worker.py": "dda32eae363ef206ac4342844d29fdd7ffe9646f43f40678d26e767566b63f7d",
+    "record-source.mjs": "0c30cbbc32f1728d2fc6957ecf108bb02f210d2f0665a20e5d2401caf0b5bc0a"
+  },
+  "startedAt": "2026-11-19T17:13:40.157Z",
+  "finishedAt": "2026-11-19T17:15:03.339Z",
+  "facts": [
+    {
+      "event": "twenty-total-including-carried-not-twenty-stored",
+      "at": "2026-11-19T17:13:50.496Z",
+      "total": 20,
+      "stored": 16,
+      "carried": 4,
+      "refusedTwentyFirst": 409,
+      "purchaseCount": 20,
+      "chargedCoins": "2600",
+      "balance": "2400",
+      "exactReplay": true
+    },
+    {
+      "event": "exclusive-copy-race-atomic-full-swap-and-free-basic",
+      "at": "2026-11-19T17:13:51.753Z",
+      "raceStatuses": [
+        200,
+        409
+      ],
+      "total": 20,
+      "staleTenureStatus": 409,
+      "returnedAtCapacity": true,
+      "freeBasicObserved": true
+    },
+    {
+      "event": "grandfathered-overflow-preserved-with-unrestricted-returns",
+      "at": "2026-11-19T17:13:52.321Z",
+      "total": 24,
+      "identityHash": "f958dcb464b97e68b65b28968d984f374d88ef00e497364bb7414d055677410e",
+      "returnedAndRetaken": true,
+      "newPurchaseStatus": 409
+    },
+    {
+      "event": "canonical-bell-froze-four-exact-loadouts",
+      "at": "2026-11-19T17:13:53.061Z",
+      "wave": 11,
+      "participants": 4,
+      "frozenLoadoutHash": "dd5dcf3b452026a94b173e5e08f94f156b519af5fee4dfbd4f25cbaa916fd234",
+      "mutationStatus": 409,
+      "initialSnapshotHash": "bf6c552021813a5004e008082a5028bef51cc468e19262f001eccd2966abb702"
+    },
+    {
+      "event": "departed-and-deleted-holders-kept-pending-copies",
+      "at": "2026-11-19T17:13:53.778Z",
+      "total": 24,
+      "pendingCopies": 2,
+      "authDeleted": true,
+      "profileDeleted": true
+    },
+    {
+      "event": "all-clients-stopped-with-fixed-real-grace",
+      "at": "2026-11-19T17:13:54.428Z",
+      "remainingControllers": 2,
+      "repeatedDisconnectDidNotExtendDeadline": true,
+      "originalCopiesRetainedUntilDeadline": true,
+      "browserProcesses": 0,
+      "observation": "No player API or arsenal read occurs during the following real grace wait."
+    },
+    {
+      "event": "independent-worker-settled-all-original-pending-copies",
+      "at": "2026-11-19T17:15:02.779Z",
+      "outcome": "abandoned",
+      "lootCoins": "0",
+      "total": 24,
+      "stored": 24,
+      "identityHash": "f958dcb464b97e68b65b28968d984f374d88ef00e497364bb7414d055677410e",
+      "frozenSnapshotUnchanged": true,
+      "frozenLoadoutsUnchanged": true,
+      "continuingPersonalWalletsUnchanged": true,
+      "money": {
+        "balance": "2400",
+        "held": "0",
+        "revision": "21",
+        "ledger_balance": "2400",
+        "ledger_held": "0",
+        "purchases": 20
+      }
+    },
+    {
+      "event": "deleted-holder-copy-reused-once-after-canonical-close",
+      "at": "2026-11-19T17:15:03.273Z",
+      "raceStatuses": [
+        200,
+        409
+      ],
+      "total": 24,
+      "exactSavedIdentityRetained": true
+    }
+  ],
+  "limitations": [
+    "Fresh 5000-coin budget, saved wave10 unlock and four converted overflow copies are explicit setup, not earning/conversion evidence.",
+    "No browser rendering, natural combat win, HP/fall, injected outcome, accelerated clock or immutable-history edit is used.",
+    "Unattended canonical abandonment depends on the separately running common production worker; its PID/source evidence belongs to the provider harness.",
+    "This bounded arsenal case does not establish other authenticated acceptance rows, hosted deployment or activation."
+  ]
+}

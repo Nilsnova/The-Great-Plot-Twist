@@ -18,6 +18,14 @@ POST /api/island/fresh-start  {"confirmCode": "ISLE-K7Q2M", "actionUid": "..."}
     wave_running (between waves only), 404 player_not_set_up, 422 validation_error, 429 (the
     build budget, 30 a minute).
 
+Admitted shared islands use the same endpoint with the strict additional
+"economy" intent {mode:"island_shared",version:1,islandOwner,runEpoch} and
+X-Island-Economy-Version:1. The server selects starting capital and grant policy.
+The shared reply is an immutable original-origin reset receipt with
+currentEconomy:null; a fresh canonical GET alone adopts the replacement run.
+Reset preserves all personal Captain progression and settles old bets only into
+the retired account. An unknown result is retried with its original UID/body.
+
 Used by: frontend/src/island/api.js (freshStart) and the Settings section of
 frontend/src/island/reset.js.
 """
@@ -25,7 +33,10 @@ frontend/src/island/reset.js.
 from fastapi import APIRouter, Request
 from pydantic import BaseModel, ConfigDict, Field
 
-from server.island import fresh_start
+from server.island import codes, fresh_start, shared_lifecycle
+from server.island.economy_http import require_economy_capability
+from server.island.economy_http_models import SharedEconomy
+from server.island.economy_operations import root_action_uid
 from server.island.service import IslandCatalogueDep
 from server.routes.island import ACTION_UID_PATTERN, CODE_MAX_LENGTH, IslandPlayerDep
 from server.supabase_admin import AdminDep
@@ -49,15 +60,32 @@ class FreshStartOut(BaseModel):
     counts: fresh_start.CountsRow
 
 
-@router.post("/island/fresh-start")
+class SharedResetRequest(FreshStartRequest):
+    """The original run stays captured even when its reset response is lost."""
+
+    economy: SharedEconomy
+
+
+@router.post("/island/fresh-start", response_model=None)
 async def post_fresh_start(
-    body: FreshStartRequest,
+    body: SharedResetRequest | FreshStartRequest,
     player: IslandPlayerDep,
     catalogue: IslandCatalogueDep,
     admin: AdminDep,
     request: Request,
-) -> FreshStartOut:
+) -> FreshStartOut | dict:
+    if isinstance(body, SharedResetRequest):
+        require_economy_capability(request)
+        root_action_uid(body.actionUid)
     request.app.state.island_build_budget.spend(player.id)
+    if codes.read_code(body.confirmCode) is None:
+        raise fresh_start.wrong_code()
+    await shared_lifecycle.ensure_not_deleted(admin, player.id)
+    if isinstance(body, SharedResetRequest):
+        return await shared_lifecycle.reset_island(
+            admin, catalogue, player.id, str(body.economy.islandOwner),
+            str(body.economy.runEpoch), body.actionUid, body.confirmCode,
+        )
     done = await fresh_start.fresh_start(
         admin, catalogue, player.id, body.confirmCode, body.actionUid
     )

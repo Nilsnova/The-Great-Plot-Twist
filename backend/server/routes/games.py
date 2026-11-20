@@ -4,7 +4,8 @@ POST /api/island/invite/join, which is now an alias of POST /api/games/join.
 
 A game is an island (backend/server/island/games.py): your own island is the game you host, its
 code ISLE-K7Q2M is the game's code, and you can be a member of other players' games. The database
-part is supabase/migrations/20261112040000_game_rooms.sql. Coins stay in each player's own wallet.
+part starts at supabase/migrations/20261112040000_game_rooms.sql. Explicit legacy games retain
+personal wallets; admitted shared games use their island treasury.
 
 Every route needs a signed-in player and the flag "islands" (404 feature_off), like
 routes/island.py; join checks the login itself, because a guest comes there to get through the
@@ -43,8 +44,9 @@ GET /api/games/{code}
     -> {"game": <game>, "members": [{"id": "<player id>", "name": "Captain Gull",
         "role": "host", "you": false}, ...]}  the lobby: the host first, then the members by when
     they joined; "you" marks the caller.
-    Who is online is not here: the client reads it from the presence of the island's room
-    (live:place:isle_<code>:1), whose ids are these ids.
+    Room presence is cosmetic. Shared clients obtain the exact private nonce place and
+    controlling/spectator status from canonical session metadata. Adopted Captain roles come
+    from each member's global personal profile; unadopted roles retain the legacy projection.
     Errors: 403 not_member, 404 no_such_game, 429
 
 POST /api/games/leave  {"code": "ISLE-K7Q2M"}
@@ -70,7 +72,7 @@ from server.demo.code import admit
 from server.demo.gate import demo_closed
 from server.errors import ApiError
 from server.flags import is_enabled
-from server.island import games, store
+from server.island import games, shared_lifecycle, store
 from server.island.codes import read_code
 from server.island.games import Game
 from server.island.service import IslandCatalogueDep, no_such_island
@@ -172,6 +174,7 @@ async def post_create(
     body: CreateRequest | None = None,
 ) -> CreateResponse:
     request.app.state.games_budget.spend(player.id)
+    await shared_lifecycle.ensure_not_deleted(admin, player.id)
     game, created = await games.create(admin, catalogue.starting_coins, player.id)
     return CreateResponse(game=game_out(game), created=created)
 
@@ -195,7 +198,12 @@ async def join_game(
         raise demo_closed()
     request.app.state.games_budget.spend(player.id)
     code = read_code(body.code)
-    island = await store.find_island(admin, code) if code is not None else None
+    if code is None:
+        request.app.state.invite_budget.spend(player.id)
+        request.app.state.invite_budget.spend(address_key(request))
+        raise missing()
+    await shared_lifecycle.ensure_not_deleted(admin, player.id)
+    island = await store.find_island(admin, code)
     # A code you are not in yet spends the player's code budget; a code that names no game also
     # spends the address's, so guessing stays slow while ten friends on one home network can
     # still all join one real game.
@@ -251,6 +259,7 @@ async def post_invite_join(
 @router.get("/games")
 async def get_games(player: IslandPlayerDep, admin: AdminDep, request: Request) -> GamesResponse:
     request.app.state.games_budget.spend(player.id)
+    await shared_lifecycle.ensure_not_deleted(admin, player.id)
     return GamesResponse(games=[game_out(game) for game in await games.mine(admin, player.id)])
 
 
@@ -259,6 +268,9 @@ async def post_leave(
     body: LeaveRequest, player: IslandPlayerDep, admin: AdminDep, request: Request
 ) -> LeaveResponse:
     request.app.state.games_budget.spend(player.id)
+    if read_code(body.code) is None:
+        raise games.no_such_game()
+    await shared_lifecycle.ensure_not_deleted(admin, player.id)
     return LeaveResponse(left=await games.leave(admin, body.code, player.id))
 
 
@@ -271,6 +283,9 @@ async def get_lobby(
 ) -> LobbyResponse:
     # A code lookup: the visit budget, so guessing codes stays slow.
     request.app.state.island_visit_budget.spend(player.id)
+    if read_code(code) is None:
+        raise games.no_such_game()
+    await shared_lifecycle.ensure_not_deleted(admin, player.id)
     lobby = await games.lobby(admin, code, player.id)
     return LobbyResponse(
         game=game_out(lobby.game),

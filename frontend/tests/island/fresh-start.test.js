@@ -108,6 +108,8 @@ describe('the Settings section model', () => {
   it('names the starting coins when the island answer has them, else says "your starting coins"', () => {
     expect(resetWhat(200)).toContain('your coins become 🪙 200.');
     expect(resetWhat(undefined)).toContain('your coins become your starting coins.');
+    expect(resetWhat(200,{preserveCaptain:true})).toContain('Your personal Captain level and skills are preserved.');
+    expect(resetWhat(200,{preserveCaptain:true})).not.toContain("your captain's level and skills go back to the start");
     expect(doneLine(200)).toBe('Your island starts fresh: 🪙 200 and wave 1. Ring the bell when you are ready.');
     expect(doneLine(null)).toContain('your starting coins and wave 1');
   });

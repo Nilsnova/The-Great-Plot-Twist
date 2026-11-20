@@ -1,0 +1,619 @@
+{
+  "kind": "reviewed-source-qualified-local-acceptance",
+  "applicationCandidate": "90a9a8227579c2be86cbe1d024fa75de7d61637e",
+  "interpretation": "Each scenario combines targeted SQL and a meaningful authenticated-browser witness, with additional actual Auth/API evidence. Reused evidence keeps its original execution/source; comparison qualifies unchanged dependencies rather than manufacturing a rerun.",
+  "sourceQualification": {
+    "artifact": "MP-ECO-20-retained-source-qualification/comparisons.json",
+    "sha256": "eb41844171c9d3730e8653a15d8d6ae86c60823e8fcaf60e05c5e567fb8b2416"
+  },
+  "rows": [
+    {
+      "scenario": "treasury-concurrent-spending",
+      "status": "passed_at_declared_layers",
+      "observed": "Actual Chromium sessions raced the last available construction coins; current cross-domain and grant races additionally execute through real Auth/API and disposable SQL.",
+      "sql": {
+        "recordedCheckout": "4130f7c0c437f8d064a9332e78e5b090bd9b0e1d",
+        "productionSource": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+        "batch": {
+          "artifact": "MP-ECO-20-browser-completion/current-sql.json",
+          "sha256": "64375d6c36ecf92b9f55f1bf61ba6012fca8d4de41d7d384974ecc740d2bae30"
+        },
+        "includedTestFiles": [
+          "server/tests/island_sql/test_island_treasury_sql.py",
+          "server/tests/island_sql/test_shared_domain_acceptance_sql.py",
+          "server/tests/island_sql/test_current_cross_domain_compatibility_sql.py"
+        ]
+      },
+      "authenticatedBrowser": {
+        "entrypoint": "cd frontend && NODE_EXTRA_CA_CERTS=\"$PROVIDER_CA\" node scripts/authenticated-economy/core.mjs",
+        "originalProductionSources": [
+          "3bdd8eda16470795fdedd68c42fffab54e5f2ced"
+        ],
+        "evidence": [
+          {
+            "artifact": "MP-ECO-20-local-provider/core.json",
+            "sha256": "6af3bb17b817a4d57f1059bb9df99080f003029f7765402b3d3048005de8209d"
+          }
+        ],
+        "executionBoundary": "Recorded staged/retained facts; see each artifact and README for actual intervals, commands, unsuccessful invocations and source hashes. This is not an assertion that every whole driver exited zero."
+      },
+      "limits": [
+        "Counterexamples and additional combinations retain their independently recorded SQL/API/browser layers; not every variant was repeated through rendered input."
+      ]
+    },
+    {
+      "scenario": "settlement-source-account",
+      "status": "passed_at_declared_layers",
+      "observed": "Rendered 1/1/198 stakes, 398 return, entire-return reinvestment and owner reset; actual final payout remained retired796/new200, with unchanged private money.",
+      "sql": {
+        "recordedCheckout": "4130f7c0c437f8d064a9332e78e5b090bd9b0e1d",
+        "productionSource": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+        "batch": {
+          "artifact": "MP-ECO-20-browser-completion/current-sql.json",
+          "sha256": "64375d6c36ecf92b9f55f1bf61ba6012fca8d4de41d7d384974ecc740d2bae30"
+        },
+        "includedTestFiles": [
+          "server/tests/island_sql/test_shared_lifecycle_transactions_sql.py",
+          "server/tests/island_sql/test_shared_lifecycle_races_sql.py"
+        ]
+      },
+      "authenticatedBrowser": {
+        "entrypoint": "NODE_EXTRA_CA_CERTS=\"$PROVIDER_CA\" node frontend/scripts/authenticated-economy/visible-wagers.mjs \"$PRIVATE_SETUP_DIRECTORY\" \"$NEW_PRIVATE_OUTPUT\" \"$RECORDED_OPENING_REPORT\"",
+        "originalProductionSources": [
+          "64ee02b360d68836b2de9247121ab47dc6a3ecbf"
+        ],
+        "evidence": [
+          {
+            "artifact": "MP-ECO-20-visible-wagers/summary.json",
+            "sha256": "1e30315915486bf6a4f1f88f8becd0badd4f7dd771a1a6c8b9b322f4c1d6eb8a"
+          }
+        ],
+        "executionBoundary": "Recorded staged/retained facts; see each artifact and README for actual intervals, commands, unsuccessful invocations and source hashes. This is not an assertion that every whole driver exited zero."
+      },
+      "limits": [
+        "Counterexamples and additional combinations retain their independently recorded SQL/API/browser layers; not every variant was repeated through rendered input."
+      ]
+    },
+    {
+      "scenario": "wave-income-once",
+      "status": "passed_at_declared_layers",
+      "observed": "Two rendered native clients completed a genuine35-coin victory, separate from repair charges. Current API/production-simulation evidence additionally verifies house/boss and duplicate terminal accounting.",
+      "sql": {
+        "recordedCheckout": "4130f7c0c437f8d064a9332e78e5b090bd9b0e1d",
+        "productionSource": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+        "batch": {
+          "artifact": "MP-ECO-20-browser-completion/current-sql.json",
+          "sha256": "64375d6c36ecf92b9f55f1bf61ba6012fca8d4de41d7d384974ecc740d2bae30"
+        },
+        "includedTestFiles": [
+          "server/tests/island_sql/test_wave_treasury_settlement_sql.py",
+          "server/tests/island_sql/test_shared_session_close_sql.py"
+        ]
+      },
+      "authenticatedBrowser": {
+        "entrypoint": "node --experimental-repl-await",
+        "originalProductionSources": [
+          "64ee02b360d68836b2de9247121ab47dc6a3ecbf"
+        ],
+        "evidence": [
+          {
+            "artifact": "MP-ECO-20-repair-quota/completed-observation.json",
+            "sha256": "6153f5c689587d77b0caf628d93d7d3b6cd5b124a6ad4548fcc2ef8d4172322c"
+          }
+        ],
+        "executionBoundary": "Recorded staged/retained facts; see each artifact and README for actual intervals, commands, unsuccessful invocations and source hashes. This is not an assertion that every whole driver exited zero."
+      },
+      "limits": [
+        "Counterexamples and additional combinations retain their independently recorded SQL/API/browser layers; not every variant was repeated through rendered input."
+      ]
+    },
+    {
+      "scenario": "personal-participation",
+      "status": "passed_at_declared_layers",
+      "observed": "Actual native two-client combat, reconnect and revival plus source-qualified clone/cross-island browser refusals; current API/SQL covers participation exclusions, delayed claims and milestone idempotency.",
+      "sql": {
+        "recordedCheckout": "4130f7c0c437f8d064a9332e78e5b090bd9b0e1d",
+        "productionSource": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+        "batch": {
+          "artifact": "MP-ECO-20-browser-completion/current-sql.json",
+          "sha256": "64375d6c36ecf92b9f55f1bf61ba6012fca8d4de41d7d384974ecc740d2bae30"
+        },
+        "includedTestFiles": [
+          "server/tests/island_sql/test_personal_captain_sql.py",
+          "server/tests/island_sql/test_personal_captain_operations_sql.py",
+          "server/tests/island_sql/test_shared_session_wave_sql.py"
+        ]
+      },
+      "authenticatedBrowser": {
+        "entrypoint": "NODE_EXTRA_CA_CERTS=\"$PROVIDER_CA\" node frontend/scripts/check-economy-rendered-zero-revival.mjs --runtime \"$LOCAL_RUNTIME\" --output \"$NEW_PRIVATE_OUTPUT\" --expected-commit 64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+        "originalProductionSources": [
+          "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+          "82abc298570ce5436c721a992f538c16d04c30e5"
+        ],
+        "evidence": [
+          {
+            "artifact": "MP-ECO-20-repair-quota/completed-observation.json",
+            "sha256": "6153f5c689587d77b0caf628d93d7d3b6cd5b124a6ad4548fcc2ef8d4172322c"
+          },
+          {
+            "artifact": "MP-ECO-20-rendered-zero-revival/result.json",
+            "sha256": "9ffbfcf8c68fa1c7b16aba3e193c468087d734c64689cd57d86c9b7915af11f6"
+          },
+          {
+            "artifact": "MP-ECO-20-sessions/result.json",
+            "sha256": "c9fac43fec8d2deb77c980a5bf1b29dd2e96944bc6ef44b23cfa4aec040fbdc1"
+          }
+        ],
+        "executionBoundary": "Recorded staged/retained facts; see each artifact and README for actual intervals, commands, unsuccessful invocations and source hashes. This is not an assertion that every whole driver exited zero."
+      },
+      "limits": [
+        "Counterexamples and additional combinations retain their independently recorded SQL/API/browser layers; not every variant was repeated through rendered input."
+      ]
+    },
+    {
+      "scenario": "engineer-generation",
+      "status": "passed_at_declared_layers",
+      "observed": "Visible free Engineer selection and role lock; owner and visitor first physical construction purchases each submitted9 and returned9, one debit5000to4991. API/SQL additionally verifies captured commitment generations.",
+      "sql": {
+        "recordedCheckout": "4130f7c0c437f8d064a9332e78e5b090bd9b0e1d",
+        "productionSource": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+        "batch": {
+          "artifact": "MP-ECO-20-browser-completion/current-sql.json",
+          "sha256": "64375d6c36ecf92b9f55f1bf61ba6012fca8d4de41d7d384974ecc740d2bae30"
+        },
+        "includedTestFiles": [
+          "server/tests/island_sql/test_personal_captain_sql.py",
+          "server/tests/island_sql/test_personal_captain_operations_sql.py"
+        ]
+      },
+      "authenticatedBrowser": {
+        "entrypoint": "NODE_EXTRA_CA_CERTS=\"$PROVIDER_CA\" node frontend/scripts/authenticated-economy/engineer-first-buy.mjs \"$LOCAL_RUNTIME\" \"$NEW_PRIVATE_OUTPUT\"",
+        "originalProductionSources": [
+          "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+          "74be485507fbdbf1eb662f96f11a40c5e902e507"
+        ],
+        "evidence": [
+          {
+            "artifact": "MP-ECO-20-engineer-first-buy/result.json",
+            "sha256": "3eaeb9d14b4ced4d98453468fe6b0a6ce34374d01b3ec9e201b32280b14ee319"
+          },
+          {
+            "artifact": "MP-ECO-22-visible-idle/partial-idle.json",
+            "sha256": "ba5cf2e1cfff3a5813464eae4c6be223f3f2cd2d682e5dded899dfa03ea337c6"
+          }
+        ],
+        "executionBoundary": "Recorded staged/retained facts; see each artifact and README for actual intervals, commands, unsuccessful invocations and source hashes. This is not an assertion that every whole driver exited zero."
+      },
+      "limits": [
+        "The original stale first-click remains failed. Actual first-buy frontend is74be4855; later stable-actor guard applicability is explicitly compared rather than relabeled as another run."
+      ]
+    },
+    {
+      "scenario": "arsenal-holder-lifecycle",
+      "status": "passed_at_declared_layers",
+      "observed": "Physical shared Pistols Buy60, Return, Take samecopy, Return: total1/stored1, bank200to140 and one purchase. Current Auth/API/SQL additionally covers capacity20, overflow24, frozen copies, departure/deletion and autonomous return.",
+      "sql": {
+        "recordedCheckout": "4130f7c0c437f8d064a9332e78e5b090bd9b0e1d",
+        "productionSource": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+        "batch": {
+          "artifact": "MP-ECO-20-browser-completion/current-sql.json",
+          "sha256": "64375d6c36ecf92b9f55f1bf61ba6012fca8d4de41d7d384974ecc740d2bae30"
+        },
+        "includedTestFiles": [
+          "server/tests/island_sql/test_shared_arsenal_sql.py",
+          "server/tests/island_sql/test_arsenal_holder_deletion_sql.py"
+        ]
+      },
+      "authenticatedBrowser": {
+        "entrypoint": "NODE_EXTRA_CA_CERTS=\"$PROVIDER_CA\" node frontend/scripts/check-economy-lifecycle-browser-provider.mjs --runtime \"$LOCAL_RUNTIME\" --output \"$NEW_PRIVATE_OUTPUT\"",
+        "originalProductionSources": [
+          "64ee02b360d68836b2de9247121ab47dc6a3ecbf"
+        ],
+        "evidence": [
+          {
+            "artifact": "MP-ECO-22-visible-idle/partial-arsenal.json",
+            "sha256": "b3056491767370eab0665e25e201574dc18871f119ae96770386c2a89de54e20"
+          }
+        ],
+        "executionBoundary": "Recorded staged/retained facts; see each artifact and README for actual intervals, commands, unsuccessful invocations and source hashes. This is not an assertion that every whole driver exited zero."
+      },
+      "limits": [
+        "The browser lifecycle is one copy; capacity/overflow/deletion races remain API/SQL. Overflow and unlocks are declared setup, not conversion."
+      ]
+    },
+    {
+      "scenario": "repairs-free-revival",
+      "status": "passed_at_declared_layers",
+      "observed": "Staged two-browser three40-coin repairs/fourth refusal/order/reconnect/terminal healing; separate genuine enemy fall and physical E hold at shared0/0, one revival event and unchanged wallet/quota.",
+      "sql": {
+        "recordedCheckout": "4130f7c0c437f8d064a9332e78e5b090bd9b0e1d",
+        "productionSource": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+        "batch": {
+          "artifact": "MP-ECO-20-browser-completion/current-sql.json",
+          "sha256": "64375d6c36ecf92b9f55f1bf61ba6012fca8d4de41d7d384974ecc740d2bae30"
+        },
+        "includedTestFiles": [
+          "server/tests/island_sql/test_t60_shared_repair_acceptance_sql.py",
+          "server/tests/island_sql/test_shared_free_revival_sql.py"
+        ]
+      },
+      "authenticatedBrowser": {
+        "entrypoint": "NODE_EXTRA_CA_CERTS=\"$PROVIDER_CA\" node frontend/scripts/check-economy-rendered-zero-revival.mjs --runtime \"$LOCAL_RUNTIME\" --output \"$NEW_PRIVATE_OUTPUT\" --expected-commit 64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+        "originalProductionSources": [
+          "64ee02b360d68836b2de9247121ab47dc6a3ecbf"
+        ],
+        "evidence": [
+          {
+            "artifact": "MP-ECO-20-repair-quota/completed-observation.json",
+            "sha256": "6153f5c689587d77b0caf628d93d7d3b6cd5b124a6ad4548fcc2ef8d4172322c"
+          },
+          {
+            "artifact": "MP-ECO-20-rendered-zero-revival/result.json",
+            "sha256": "9ffbfcf8c68fa1c7b16aba3e193c468087d734c64689cd57d86c9b7915af11f6"
+          }
+        ],
+        "executionBoundary": "Recorded staged/retained facts; see each artifact and README for actual intervals, commands, unsuccessful invocations and source hashes. This is not an assertion that every whole driver exited zero."
+      },
+      "limits": [
+        "Quota evidence is staged, not a successful uninterrupted driver. Rendered zero-bank test uses declared saved defenses and supported suppression of automatic melee input; both private wallets remain200."
+      ]
+    },
+    {
+      "scenario": "unrestricted-bets",
+      "status": "passed_at_declared_layers",
+      "observed": "Physical one-coin, separate same-event and all-available stakes, both real300-second maturities, reinvestment and reset isolation. Native Match board genuinely unavailable; no wager or private-money effect.",
+      "sql": {
+        "recordedCheckout": "4130f7c0c437f8d064a9332e78e5b090bd9b0e1d",
+        "productionSource": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+        "batch": {
+          "artifact": "MP-ECO-20-browser-completion/current-sql.json",
+          "sha256": "64375d6c36ecf92b9f55f1bf61ba6012fca8d4de41d7d384974ecc740d2bae30"
+        },
+        "includedTestFiles": [
+          "server/tests/island_sql/test_current_cross_domain_compatibility_sql.py",
+          "server/tests/shared_wagers_sql/test_shared_wager_transactions_sql.py",
+          "server/tests/shared_wagers_runtime_sql/test_wager_jobs_sql.py"
+        ]
+      },
+      "authenticatedBrowser": {
+        "entrypoint": "NODE_EXTRA_CA_CERTS=\"$PROVIDER_CA\" node frontend/scripts/authenticated-economy/visible-wagers.mjs \"$PRIVATE_SETUP_DIRECTORY\" \"$NEW_PRIVATE_OUTPUT\" \"$RECORDED_OPENING_REPORT\"",
+        "originalProductionSources": [
+          "64ee02b360d68836b2de9247121ab47dc6a3ecbf"
+        ],
+        "evidence": [
+          {
+            "artifact": "MP-ECO-20-visible-wagers/summary.json",
+            "sha256": "1e30315915486bf6a4f1f88f8becd0badd4f7dd771a1a6c8b9b322f4c1d6eb8a"
+          },
+          {
+            "artifact": "MP-ECO-20-visible-wagers/match-unavailable.json.gz",
+            "sha256": "9b13ceece668c83f8c452706f422cbf784e48c0a3516b484255e764c82fc38a0"
+          }
+        ],
+        "executionBoundary": "Recorded staged/retained facts; see each artifact and README for actual intervals, commands, unsuccessful invocations and source hashes. This is not an assertion that every whole driver exited zero."
+      },
+      "limits": [
+        "Increasing external quotes are a declared transport fixture; the actual cache/backoff and UTC deadlines are unmodified. No natural football result or accepted football stake is claimed."
+      ]
+    },
+    {
+      "scenario": "ship-reward-cap",
+      "status": "passed_at_declared_layers",
+      "observed": "Actual20-second Broadside UI and normal HTTPclaim200 earned0stars and0coins against cap36. Positive ten-member caps, parallel improvements and origin fences remain real Auth/API plus SQL evidence.",
+      "sql": {
+        "recordedCheckout": "4130f7c0c437f8d064a9332e78e5b090bd9b0e1d",
+        "productionSource": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+        "batch": {
+          "artifact": "MP-ECO-20-browser-completion/current-sql.json",
+          "sha256": "64375d6c36ecf92b9f55f1bf61ba6012fca8d4de41d7d384974ecc740d2bae30"
+        },
+        "includedTestFiles": [
+          "server/tests/island_sql/test_shared_ship_rewards_sql.py"
+        ]
+      },
+      "authenticatedBrowser": {
+        "entrypoint": "NODE_EXTRA_CA_CERTS=\"$PROVIDER_CA\" node frontend/scripts/authenticated-economy/ship-legacy-browser.mjs",
+        "originalProductionSources": [
+          "64ee02b360d68836b2de9247121ab47dc6a3ecbf"
+        ],
+        "evidence": [
+          {
+            "artifact": "MP-ECO-20-ship-legacy-browser/completed-observation.json",
+            "sha256": "9aa792389bed5a47d25c3e2d1fee86c3d3db93d60877ff84fb476ee0d7a68db5"
+          }
+        ],
+        "executionBoundary": "Recorded staged/retained facts; see each artifact and README for actual intervals, commands, unsuccessful invocations and source hashes. This is not an assertion that every whole driver exited zero."
+      },
+      "limits": [
+        "No positive browser payout is claimed. An optional positive-score assertion failed after the actual zero claim; the accepted targeted witness does not require injecting a positive result."
+      ],
+      "separateAuthorityOrSourceSupport": [
+        {
+          "artifact": "MP-ECO-20-ship-legacy-browser/ship-readonly-observation.json",
+          "sha256": "5f754d300326df00c209c4e6a54bb4d7325f0d5cdb5ec0d0e223e5a82cd95f42"
+        }
+      ]
+    },
+    {
+      "scenario": "member-owner-permissions",
+      "status": "passed_at_declared_layers",
+      "observed": "Visible member construction, research, free role and crew purchases; owner-only Settings reset; genuine anonymous classJoin and personal Harbor funding. Full rights/research reversal/deletion authority also executes through current API/SQL.",
+      "sql": {
+        "recordedCheckout": "4130f7c0c437f8d064a9332e78e5b090bd9b0e1d",
+        "productionSource": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+        "batch": {
+          "artifact": "MP-ECO-20-browser-completion/current-sql.json",
+          "sha256": "64375d6c36ecf92b9f55f1bf61ba6012fca8d4de41d7d384974ecc740d2bae30"
+        },
+        "includedTestFiles": [
+          "server/tests/island_sql/test_canonical_membership_lifecycle_sql.py",
+          "server/tests/island_sql/test_shared_lifecycle_transactions_sql.py"
+        ]
+      },
+      "authenticatedBrowser": {
+        "entrypoint": "NODE_EXTRA_CA_CERTS=\"$PROVIDER_CA\" node frontend/scripts/check-economy-transition-browser-provider.mjs --runtime \"$LOCAL_RUNTIME\" --output \"$NEW_PRIVATE_OUTPUT\"",
+        "originalProductionSources": [
+          "64ee02b360d68836b2de9247121ab47dc6a3ecbf"
+        ],
+        "evidence": [
+          {
+            "artifact": "MP-ECO-22-visible-idle/partial-idle.json",
+            "sha256": "ba5cf2e1cfff3a5813464eae4c6be223f3f2cd2d682e5dded899dfa03ea337c6"
+          },
+          {
+            "artifact": "MP-ECO-22-visible-idle/partial-transition.json",
+            "sha256": "3a75364240c3705c21bd1dd1a54dc70080769e5dfcb67edb0e6155d6560d4aa4"
+          },
+          {
+            "artifact": "MP-ECO-20-visible-wagers/summary.json",
+            "sha256": "1e30315915486bf6a4f1f88f8becd0badd4f7dd771a1a6c8b9b322f4c1d6eb8a"
+          },
+          {
+            "artifact": "MP-ECO-20-ship-legacy-browser/class-continuation.json",
+            "sha256": "91e5409ca110ac5db96bf9ae59865794cc33231ec57244d2b4e2f4437cec493e"
+          }
+        ],
+        "executionBoundary": "Recorded staged/retained facts; see each artifact and README for actual intervals, commands, unsuccessful invocations and source hashes. This is not an assertion that every whole driver exited zero."
+      },
+      "limits": [
+        "Counterexamples and additional combinations retain their independently recorded SQL/API/browser layers; not every variant was repeated through rendered input."
+      ]
+    },
+    {
+      "scenario": "reset-deletion",
+      "status": "passed_at_declared_layers",
+      "observed": "Current physical owner reset with an open wager and automatic member epoch adoption; old payout remains isolated. Historical actual Account deletion/peer clearance is retained only with the documented unchanged idle-branch qualification.",
+      "sql": {
+        "recordedCheckout": "4130f7c0c437f8d064a9332e78e5b090bd9b0e1d",
+        "productionSource": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+        "batch": {
+          "artifact": "MP-ECO-20-browser-completion/current-sql.json",
+          "sha256": "64375d6c36ecf92b9f55f1bf61ba6012fca8d4de41d7d384974ecc740d2bae30"
+        },
+        "includedTestFiles": [
+          "server/tests/island_sql/test_shared_lifecycle_transactions_sql.py",
+          "server/tests/island_sql/test_shared_lifecycle_races_sql.py",
+          "server/tests/island_sql/test_shared_lifecycle_native_sql.py"
+        ]
+      },
+      "authenticatedBrowser": {
+        "entrypoint": "NODE_EXTRA_CA_CERTS=\"$PROVIDER_CA\" node frontend/scripts/authenticated-economy/visible-wagers.mjs \"$PRIVATE_SETUP_DIRECTORY\" \"$NEW_PRIVATE_OUTPUT\" \"$RECORDED_OPENING_REPORT\"",
+        "originalProductionSources": [
+          "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+          "b239bdf094d132fc57969fb31f652f106db8abc5"
+        ],
+        "evidence": [
+          {
+            "artifact": "MP-ECO-20-visible-wagers/summary.json",
+            "sha256": "1e30315915486bf6a4f1f88f8becd0badd4f7dd771a1a6c8b9b322f4c1d6eb8a"
+          }
+        ],
+        "executionBoundary": "Recorded staged/retained facts; see each artifact and README for actual intervals, commands, unsuccessful invocations and source hashes. This is not an assertion that every whole driver exited zero.",
+        "historicalDeletionObservation": {
+          "source": "b239bdf094d132fc57969fb31f652f106db8abc5",
+          "documentation": "docs/TEST-MAP.md, actual Account deletion and automatic peer-clearance checkpoint",
+          "qualification": "Only the recorded idle path with unchanged deletion/backend and documented no-current-wave guards; not a new execution."
+        }
+      },
+      "limits": [
+        "Historical deletion retains its original source and exact API404/Auth403 scope; no universal immediate token-cache eviction is inferred."
+      ],
+      "separateAuthorityOrSourceSupport": [
+        {
+          "artifact": "MP-ECO-20-retained-source-qualification/comparisons.json",
+          "sha256": "eb41844171c9d3730e8653a15d8d6ae86c60823e8fcaf60e05c5e567fb8b2416"
+        }
+      ]
+    },
+    {
+      "scenario": "legacy-class-contexts",
+      "status": "passed_at_declared_layers",
+      "observed": "Physical personal wall and Pirate Point purchases, personal Harbor display, genuine anonymous classJoin at Pirate Point and ordinary travel to personal Harbor Market; prior shared and personal accounts remain separate.",
+      "sql": {
+        "recordedCheckout": "4130f7c0c437f8d064a9332e78e5b090bd9b0e1d",
+        "productionSource": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+        "batch": {
+          "artifact": "MP-ECO-20-browser-completion/current-sql.json",
+          "sha256": "64375d6c36ecf92b9f55f1bf61ba6012fca8d4de41d7d384974ecc740d2bae30"
+        },
+        "includedTestFiles": [
+          "server/tests/island_sql/test_current_cross_domain_compatibility_sql.py",
+          "server/tests/island_sql/test_main_rules_compatibility_sql.py",
+          "server/tests/island_sql/test_islands_and_waves_sql.py"
+        ]
+      },
+      "authenticatedBrowser": {
+        "entrypoint": "NODE_EXTRA_CA_CERTS=\"$PROVIDER_CA\" node frontend/scripts/authenticated-economy/class-browser-continuation.mjs",
+        "originalProductionSources": [
+          "64ee02b360d68836b2de9247121ab47dc6a3ecbf"
+        ],
+        "evidence": [
+          {
+            "artifact": "MP-ECO-20-ship-legacy-browser/completed-observation.json",
+            "sha256": "9aa792389bed5a47d25c3e2d1fee86c3d3db93d60877ff84fb476ee0d7a68db5"
+          },
+          {
+            "artifact": "MP-ECO-20-ship-legacy-browser/class-continuation.json",
+            "sha256": "91e5409ca110ac5db96bf9ae59865794cc33231ec57244d2b4e2f4437cec493e"
+          }
+        ],
+        "executionBoundary": "Recorded staged/retained facts; see each artifact and README for actual intervals, commands, unsuccessful invocations and source hashes. This is not an assertion that every whole driver exited zero."
+      },
+      "limits": [
+        "The class side context enables existing demo compatibility and disables recovery admission only locally. No fake identity, response replacement or real backend outage is claimed."
+      ]
+    },
+    {
+      "scenario": "old-client-rejection",
+      "status": "passed_at_declared_layers",
+      "observed": "Actual browser capability/epoch/actor/nonmember refusals and authorized initial read, plus current shared protocol-one refusal without personal fallback.",
+      "sql": {
+        "recordedCheckout": "4130f7c0c437f8d064a9332e78e5b090bd9b0e1d",
+        "productionSource": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+        "batch": {
+          "artifact": "MP-ECO-20-browser-completion/current-sql.json",
+          "sha256": "64375d6c36ecf92b9f55f1bf61ba6012fca8d4de41d7d384974ecc740d2bae30"
+        },
+        "includedTestFiles": [
+          "server/tests/island_sql/test_shared_domain_acceptance_sql.py",
+          "server/tests/island_sql/test_main_rules_compatibility_sql.py"
+        ]
+      },
+      "authenticatedBrowser": {
+        "entrypoint": "cd frontend && NODE_EXTRA_CA_CERTS=\"$PROVIDER_CA\" node scripts/authenticated-economy/core.mjs",
+        "originalProductionSources": [
+          "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+          "3bdd8eda16470795fdedd68c42fffab54e5f2ced"
+        ],
+        "evidence": [
+          {
+            "artifact": "MP-ECO-20-local-provider/core.json",
+            "sha256": "6af3bb17b817a4d57f1059bb9df99080f003029f7765402b3d3048005de8209d"
+          },
+          {
+            "artifact": "MP-ECO-20-ship-legacy-browser/completed-observation.json",
+            "sha256": "9aa792389bed5a47d25c3e2d1fee86c3d3db93d60877ff84fb476ee0d7a68db5"
+          }
+        ],
+        "executionBoundary": "Recorded staged/retained facts; see each artifact and README for actual intervals, commands, unsuccessful invocations and source hashes. This is not an assertion that every whole driver exited zero."
+      },
+      "limits": [
+        "Counterexamples and additional combinations retain their independently recorded SQL/API/browser layers; not every variant was repeated through rendered input."
+      ]
+    },
+    {
+      "scenario": "wave-protocol-1",
+      "status": "passed_at_declared_layers",
+      "observed": "Actual browser legacy idle read and admitted-shared old-protocol refusal. Supported natural legacy combat/payment/races execute through real Auth/API and unchanged production controller; expiry remains a declared SQL time fixture.",
+      "sql": {
+        "recordedCheckout": "4130f7c0c437f8d064a9332e78e5b090bd9b0e1d",
+        "productionSource": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+        "batch": {
+          "artifact": "MP-ECO-20-browser-completion/current-sql.json",
+          "sha256": "64375d6c36ecf92b9f55f1bf61ba6012fca8d4de41d7d384974ecc740d2bae30"
+        },
+        "includedTestFiles": [
+          "server/tests/island_sql/test_main_rules_compatibility_sql.py",
+          "server/tests/island_sql/test_islands_and_waves_sql.py"
+        ]
+      },
+      "authenticatedBrowser": {
+        "entrypoint": "NODE_EXTRA_CA_CERTS=\"$PROVIDER_CA\" node frontend/scripts/authenticated-economy/ship-legacy-browser.mjs",
+        "originalProductionSources": [
+          "64ee02b360d68836b2de9247121ab47dc6a3ecbf"
+        ],
+        "evidence": [
+          {
+            "artifact": "MP-ECO-20-ship-legacy-browser/completed-observation.json",
+            "sha256": "9aa792389bed5a47d25c3e2d1fee86c3d3db93d60877ff84fb476ee0d7a68db5"
+          }
+        ],
+        "executionBoundary": "Recorded staged/retained facts; see each artifact and README for actual intervals, commands, unsuccessful invocations and source hashes. This is not an assertion that every whole driver exited zero."
+      },
+      "limits": [
+        "No rendered legacy combat finish or naturally elapsed900-second expiry is claimed."
+      ],
+      "separateAuthorityOrSourceSupport": [
+        {
+          "artifact": "MP-ECO-20-protocol-one/protocol-one-result.json",
+          "sha256": "0a1d28b03db51dc1ab1e736cc7c171be4c700eaaf194ee8be5cf8cb5eadcc279"
+        }
+      ]
+    },
+    {
+      "scenario": "wave-protocol-2",
+      "status": "passed_at_declared_layers",
+      "observed": "Current rendered native countdown, retained member reconnect, ordered damage/repair/revival/closure; source-qualified clone/cross-island browser facts plus actual67-second offline worker closure and ordinary restore without old-attempt resurrection.",
+      "sql": {
+        "recordedCheckout": "4130f7c0c437f8d064a9332e78e5b090bd9b0e1d",
+        "productionSource": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+        "batch": {
+          "artifact": "MP-ECO-20-browser-completion/current-sql.json",
+          "sha256": "64375d6c36ecf92b9f55f1bf61ba6012fca8d4de41d7d384974ecc740d2bae30"
+        },
+        "includedTestFiles": [
+          "server/tests/island_sql/test_shared_session_wave_sql.py",
+          "server/tests/island_sql/test_shared_session_control_sql.py",
+          "server/tests/island_sql/test_shared_session_pacing_sql.py",
+          "server/tests/island_sql/test_shared_session_close_sql.py",
+          "server/tests/island_sql/test_shared_session_worker_sql.py"
+        ]
+      },
+      "authenticatedBrowser": {
+        "entrypoint": "NODE_EXTRA_CA_CERTS=\"$PROVIDER_CA\" node frontend/scripts/check-economy-restored-session-browser-provider.mjs --runtime \"$LOCAL_RUNTIME\" --output \"$NEW_PRIVATE_OUTPUT\" --sessions \"$PRIVATE_ACTUAL_SESSIONS\" --own-grace-only",
+        "originalProductionSources": [
+          "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+          "82abc298570ce5436c721a992f538c16d04c30e5"
+        ],
+        "evidence": [
+          {
+            "artifact": "MP-ECO-20-repair-quota/completed-observation.json",
+            "sha256": "6153f5c689587d77b0caf628d93d7d3b6cd5b124a6ad4548fcc2ef8d4172322c"
+          },
+          {
+            "artifact": "MP-ECO-20-rendered-zero-revival/result.json",
+            "sha256": "9ffbfcf8c68fa1c7b16aba3e193c468087d734c64689cd57d86c9b7915af11f6"
+          },
+          {
+            "artifact": "MP-ECO-20-sessions/result.json",
+            "sha256": "c9fac43fec8d2deb77c980a5bf1b29dd2e96944bc6ef44b23cfa4aec040fbdc1"
+          },
+          {
+            "artifact": "MP-ECO-22-visible-idle/grace-restoration.json",
+            "sha256": "20cee18a5f4b416cc25b81f53fb4868a8cb8209204fbc8e85d785427b88e0ee4"
+          }
+        ],
+        "executionBoundary": "Recorded staged/retained facts; see each artifact and README for actual intervals, commands, unsuccessful invocations and source hashes. This is not an assertion that every whole driver exited zero."
+      },
+      "limits": [
+        "No observed nonempty-cooldown or fallen reconnect is invented; their separate state/decoder/SQL assertions retain their layers."
+      ]
+    }
+  ],
+  "globalGates": {
+    "status": "passed_at_recorded_bounded_layers",
+    "departureProof": {
+      "artifact": "MP-ECO-20-membership-departure/result.json",
+      "sha256": "ffc3c83822307bb11cacc552feb70bae9e62c4b2c10cf279ba6f80e92f7f9eb2"
+    },
+    "realGraceProof": {
+      "artifact": "MP-ECO-22-visible-idle/grace-restoration.json",
+      "sha256": "20cee18a5f4b416cc25b81f53fb4868a8cb8209204fbc8e85d785427b88e0ee4"
+    },
+    "scope": "Real paired native combat and zero-bank revival; visible domain controls; observed product metadata/topic transitions, member handoff and real-grace restore; exact accounting, personal progress/lifecycle and declared compatibility. Historical idle reset/deletion/pacing witnesses retain their conditional branch qualifications."
+  },
+  "notClaimed": [
+    "Hosted deployment, production migration, activation or save conversion",
+    "Natural external feed outcomes or physical-device testing",
+    "Every negative or race repeated at every evidence layer",
+    "A new full backend/frontend regression or blanket uninterrupted browser-suite pass"
+  ],
+  "artifactPackaging": {
+    "note": "These commits package reports and executable test tools; they are not relabeled as original production executions. Each raw artifact retains its measured scenario/hash and production source.",
+    "visibleWagers": "95ce5f993ed9e8bffb8ee1826c25deb4607de078",
+    "contextAndShip": "805864cde6ae980beb6673b9dbcb2d1273bbba1d",
+    "visibleLifecycle": "4283b3d7db37709d3e961a662057dfe398e36c9a",
+    "renderedZeroRevival": "75c6de0c72a9e96d54b3f70fe8017014edc7ebf9",
+    "departureProof": "b613a9b3cd9a91665685da0852c85476685618dc"
+  }
+}

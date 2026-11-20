@@ -1,0 +1,3 @@
+.shared-harbor-amount{display:block;box-sizing:border-box;width:100%;min-height:44px;color:var(--u-ink);background:var(--u-deep);border:2px solid var(--harbor-line);padding:8px;font:inherit}
+.shared-harbor-activity{margin:0;overflow-wrap:anywhere}
+.shared-harbor .harbor-price,.shared-harbor .harbor-win{overflow-wrap:anywhere}

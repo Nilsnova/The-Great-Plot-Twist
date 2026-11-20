@@ -130,6 +130,9 @@ class FakeDemoDatabase:
             "GET demo_lock_attempts": lambda: self.read_attempts(request),
             "POST rpc/demo_lock_record": lambda: self.lock_record(body),
             "POST rpc/delete_player": lambda: self.delete_player(body),
+            "POST rpc/island_lifecycle_delete_player": lambda: self.delete_player(
+                {"p_player_id": body["p_actor_id"]}
+            ),
         }
         handler = handlers.get(route)
         if handler is None:

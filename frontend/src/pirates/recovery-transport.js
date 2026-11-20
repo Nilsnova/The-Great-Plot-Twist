@@ -44,7 +44,7 @@ export function recoveryRefusal(answer) {
 /** 'later', 'refresh' or 'terminal' for a refusal (see above). */
 export function refusalKind(refusal) {
   const status = refusal?.status ?? 0, code = refusal?.code ?? '';
-  if (status === 0 || status >= 500 || status === 429 || LATER_CODES.has(code)) return 'later';
+  if (status === 0 || status === 401 || status >= 500 || status === 429 || LATER_CODES.has(code)) return 'later';
   return REFRESH_CODES.has(code) ? 'refresh' : 'terminal';
 }
 /** How long to wait before the next try: Retry-After when given, else 0.25 s doubling up to 8 s. */
@@ -63,6 +63,8 @@ export function commandForJournal(input) {
   if (!isObject(input) || typeof input.type !== 'string') return null;
   const { type } = input;
   if (type === 'repair' || type === 'rebuild') return null;
+  if(type==='captain_revive_hold_cancel')return {type};
+  if(type==='captain_revive_hold_start' && isParticipantToken(input.targetId) && isParticipantToken(input.fallId))return {type,targetId:input.targetId,fallId:input.fallId};
   if (type === 'fire' && isWireId(input.cannonId) && isWireId(input.targetId)) {
     return { type, cannonId: input.cannonId, targetId: input.targetId };
   }
@@ -98,6 +100,12 @@ export function simulationInputFromJournal(event) {
     || !Number.isInteger(event.effectiveTick) || event.effectiveTick < 0 || event.effectiveTick > MAX_TICK
     || !isObject(event.payload)) return null;
   if (event.type === 'structure_repaired') return { type: 'structure_repaired', event };
+  if(event.type==='captain_withdrawn'){
+    const token=event.participantToken,payload=event.payload;
+    return isParticipantToken(token) && payload.participantToken===token && Object.keys(payload).length===2
+      && ['leave','disconnect_expired','membership_lost','account_deleted','reset'].includes(payload.reason)
+      ? {type:'captain_withdrawn',by:token}:null;
+  }
   if (event.type === 'participant_joined') return null;
   const command = event.payload.command;
   const token = event.participantToken;
@@ -110,6 +118,15 @@ export function simulationInputFromJournal(event) {
   const normalized = commandForJournal(command);
   if (!normalized) return null;
   const input = { ...normalized, by: token };
+  if(event.type==='captain_revive' && Object.hasOwn(event.payload,'operationId')){
+    const payload=event.payload,captain=payload.captain;
+    if(Object.keys(payload).length!==6 || !['operationId','fallId','holdId'].every(key=>isParticipantToken(payload[key]))
+      || payload.targetId!==command.targetId || Object.keys(command).length!==5
+      || !['type','targetId','downAt','x','z'].every(key=>Object.hasOwn(command,key))
+      || !isObject(captain) || Object.keys(captain).length!==3 || !['level','skills','weapon'].every(key=>Object.hasOwn(captain,key)))return null;
+    input.canonicalReviveSeq=event.serverSeq;input.canonicalFallId=payload.fallId;
+    input.trustedCaptain=JSON.parse(JSON.stringify(captain));
+  }
   if (['captain_shot', 'captain_strike', 'captain_revive'].includes(command.type)) {
     const captain = event.payload.captain;
     if (!isObject(captain) || !Number.isInteger(captain.level) || captain.level < 1 || captain.level > 5
@@ -152,6 +169,10 @@ export function createRecoveryTransport({ get, post } = {}) {
       return Promise.resolve(post(`/api/waves/${encodeURIComponent(waveId)}/health`, body))
         .then(dataOrRefusal, thrownRefusal);
     },
+    captains({waveId,report}={}){
+      if(typeof waveId!=='string' || !report || report.waveProtocol!==2)return Promise.resolve(null);
+      return Promise.resolve(post(`/api/waves/${encodeURIComponent(waveId)}/captains`,report)).then(dataOrRefusal,thrownRefusal);
+    },
     finishWave(body) {
       if (!validRecoveryFinishBody(body)) return Promise.resolve(null);
       return Promise.resolve(post('/api/waves/finish', body)).then(answer => {
@@ -170,7 +191,7 @@ function validRecoveryFinishBody(body) {
   return true;
 }
 
-function validCheckpoint(checkpoint) {
+export function validCheckpoint(checkpoint) {
   if (!isObject(checkpoint) || typeof checkpoint.islandEpoch !== 'string' || !checkpoint.islandEpoch
     || typeof checkpoint.checkpointUid !== 'string' || checkpoint.checkpointUid.length < 8
     || !Number.isInteger(checkpoint.throughTick) || checkpoint.throughTick < 0 || checkpoint.throughTick > MAX_TICK

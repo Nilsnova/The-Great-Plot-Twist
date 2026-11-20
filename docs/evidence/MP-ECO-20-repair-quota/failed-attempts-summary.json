@@ -1,0 +1,87 @@
+{
+  "publicationSanitization": "Absolute local worktree prefixes in failure stacks replaced with checkout placeholders; original raw reports retained privately. Financial and protocol values unchanged.",
+  "attempts": [
+    {
+      "observation": "mp505-full-repair-quota-health-sync-partial",
+      "status": "failed",
+      "completedSteps": [
+        "accepted real countdown shares three uses; intact request has no financial/quota effect",
+        "ordinary member reconnect retains frozen participant and shared untouched allowance"
+      ],
+      "failure": {
+        "name": "AssertionError",
+        "message": "Actual natural checkpoint refused: {\"ok\":false,\"code\":\"health_sync_required\"}\n\nfalse !== true\n"
+      },
+      "scenarioSha256": "ac5e36e4f2c97e5d655c235ed519265f97c752d2018eefa174372ce7d740c346"
+    },
+    {
+      "observation": "mp505-full-repair-quota-physical-click-partial",
+      "status": "failed",
+      "completedSteps": [
+        "accepted real countdown shares three uses; intact request has no financial/quota effect",
+        "ordinary member reconnect retains frozen participant and shared untouched allowance",
+        "natural damage accepted; stale price consumes neither coins nor a shared use"
+      ],
+      "failure": {
+        "name": "TimeoutError",
+        "message": "page.waitForResponse: Timeout 20000ms exceeded while waiting for event \"response\""
+      },
+      "scenarioSha256": "bb0be09063c801dde328416fb962a9ac2a7bc70055f23ab7a5654c345777cb8b"
+    },
+    {
+      "observation": "mp505-full-repair-quota-short-wave-partial",
+      "status": "failed",
+      "completedSteps": [
+        "accepted real countdown shares three uses; intact request has no financial/quota effect",
+        "ordinary member reconnect retains frozen participant and shared untouched allowance",
+        "natural damage accepted; stale price consumes neither coins nor a shared use",
+        "owner buys shared repair one through authenticated browser transport"
+      ],
+      "failure": {
+        "name": "AssertionError",
+        "message": "the actual simulation must commit its accepted damage prefix\n\nfalse !== true\n"
+      },
+      "scenarioSha256": "a10cdc947ff414a933edd7c144957861bb0ab43c553f64cf89b541fa2615c7cd"
+    },
+    {
+      "observation": "mp505-full-repair-quota-two-repairs-partial",
+      "status": "failed",
+      "completedSteps": [
+        "accepted real countdown shares three uses; intact request has no financial/quota effect",
+        "ordinary member reconnect retains frozen participant and shared untouched allowance",
+        "natural damage accepted; stale price consumes neither coins nor a shared use",
+        "owner buys shared repair one through authenticated browser transport",
+        "original UID after later natural damage returns its immutable receipt without healing or spending",
+        "authenticated shared repair 2 replays on both clients"
+      ],
+      "failure": {
+        "name": "TimeoutError",
+        "message": "page.waitForFunction: Timeout 90000ms exceeded."
+      },
+      "scenarioSha256": "a54f98cad46283a26990cf7a212376ec7ad868e1c3bc98291b554cf598a84400"
+    },
+    {
+      "observation": "mp505-full-repair-quota-wave18-partial",
+      "status": "failed",
+      "completedSteps": [
+        "accepted real countdown shares three uses; intact request has no financial/quota effect",
+        "ordinary member reconnect retains frozen participant and shared untouched allowance"
+      ],
+      "failure": {
+        "name": "AssertionError",
+        "message": "the actual simulation must commit its accepted damage prefix\n\nfalse !== true\n"
+      },
+      "scenarioSha256": "5249c1c16698b0caef084e5632b286a71d90829196bcf63bbb887fd460beb663"
+    },
+    {
+      "observation": "mp505-full-repair-quota-first-entry-failure",
+      "status": "failed",
+      "completedSteps": [],
+      "failure": {
+        "name": "TimeoutError",
+        "message": "locator.evaluate: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.island-card[open] [data-focus=\"bell\"]:not([disabled])')\u001b[22m\n"
+      },
+      "scenarioSha256": "bb0be09063c801dde328416fb962a9ac2a7bc70055f23ab7a5654c345777cb8b"
+    }
+  ]
+}

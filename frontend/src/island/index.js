@@ -70,26 +70,34 @@ import {createLoading} from './island-load.js';
 import {createGames} from './island-game.js';
 import {createCards} from './island-cards.js';
 import {createActions} from './island-actions.js';
+import {createIslandEconomy} from './island-economy.js';
+import {createSharedBoatApi} from './shared-boat-api.js';
+import {createBoatRoundSession} from './shared-boat-session.js';
+import {createIslandSession} from './island-session.js';
+import {readLegacyEconomy} from './economy-view.js';
+import {createSharedWaveApi} from './shared-wave-api.js';
+import {createSharedRevivalApi} from './shared-revival-api.js';
+import {createSharedResetApi} from './shared-reset-api.js';
 
 export {ARRIVAL_KEY, SPOTS_CHANGED, NEWS_KEY, CAMPAIGN_UNLOCKED, TOWER_SPECIALISED, TOWER_TREE_BOUGHT,
   HOUSE_ROLE_PICKED, VISIT_NAMED, ISLAND_RESET, CHART_NAMES, ALL_REPAIRED} from './island-shared.js';
 
 export function createIsland({container, emit, on, mode = 'live', getTransport = () => null, transport = null,
   search = globalThis.location?.search ?? '', focus = () => {}, resetInput = () => {}, reducedMotion = () => false,
-  preferences = () => ({}), storage = safeLocal(), visitStorage = undefined, loadCutscenes = () => import('../cutscenes/player.js'),
+  preferences = () => ({}), storage = safeLocal(), visitStorage = undefined, getActorId = () => null, isOnIsland = () => true,
+  authGeneration = () => transport, onAuthGenerationChange = () => () => {},
+  loadCutscenes = () => import('../cutscenes/player.js'),
   loadBoatScene = () => import('../pirates/boat/scene.js'),
   onCoins = () => {}, onCaptain = () => {}, onQuestIsland = () => {}, menu = addMenuExtras, settings = addSettingsSection, now, setTimer, clearTimer, openHarborStall = () => {},
   travel = () => travelAllowed({islandsMode: mode}), villageCamera = () => {},
-  // D039 (proposed): whether /api/config says the flag wall_recovery is on (lasting wall damage, Repair/Rebuild).
-  wallRecovery = () => false, structureRecoveryOn = () => false,
-  // T43 (D048 proposed): whether /api/config says the flag defenses_v2 is on (a tower spot then offers the culverin).
-  defensesV2On = () => false} = {}) {
+  structureRecoveryOn = () => false} = {}) {
   // The island's state, shared by its parts (island-*.js) as isl.own, isl.visiting, isl.ui, ...: every `let` of this
   // closure and the objects built below that the parts use; the options too.
   const isl = {container, emit, on, mode, getTransport, transport, search, focus, resetInput, reducedMotion,
-    preferences, storage, visitStorage, loadCutscenes, loadBoatScene, onCoins, onCaptain, onQuestIsland, menu,
-    settings, now, setTimer, clearTimer, openHarborStall, travel, villageCamera, wallRecovery, structureRecoveryOn,
-    defensesV2On};
+    preferences, storage, visitStorage, getActorId, isOnIsland, authGeneration, onAuthGenerationChange, loadCutscenes, loadBoatScene, onCoins, onCaptain, onQuestIsland, menu,
+    settings, now, setTimer, clearTimer, openHarborStall, travel, villageCamera, structureRecoveryOn};
+  Object.assign(isl, createIslandEconomy(isl));
+  const economyContext = mode === 'fake' ? {} : {getEconomy: isl.getEconomy, getActorId};
   // The parts, each a closure over isl; they call each other through names linked once all exist. They only
   // define functions here: everything that runs at the start stays below, in its order.
   const parts = [createRecovery, createLoading, createGames, createCards, createActions].map(create => create(isl));
@@ -108,6 +116,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   // ownRetry: your own island's read failed for a passing reason, so the next reread (the wave wiring's
   // 15 s timer, the bell or a build card) reads it again instead of leaving the island empty for good.
   isl.disposed = false; isl.own = null; isl.ownMessage = ''; isl.ownRetry = false; isl.visiting = null; isl.visitCode = readVisit(visitStorage); isl.busySpot = null; isl.cardMessage = '';
+  isl.personalUnavailable = false; isl.selectionGeneration = 0;
   isl.pendingWallet = null; isl.walletGeneration = 0;
   isl.world = null; isl.cutscene = null; isl.openSpot = null; isl.loadTicket = 0; isl.battle = false;
   isl.housePlayer = null; isl.selectedHouse = null; isl.movingHouse = null;
@@ -137,10 +146,27 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   // Once-per-device lines (the first unlock explanation, the musket hint).
   isl.news = (() => { try { return new Set(JSON.parse(storage?.getItem(NEWS_KEY) ?? '[]')); } catch { return new Set(); } })();
   // The fake answers at once; the live transport is the signed-in session's, read at every call.
-  isl.live = {get: path => (getTransport()?.get?.(path) ?? notReady()), post: (path, body) => (getTransport()?.post?.(path, body) ?? notReady())};
+  isl.live = {get: (path, ...options) => (getTransport()?.get?.(path, ...options) ?? notReady()),
+    post: (path, body, ...options) => (getTransport()?.post?.(path, body, ...options) ?? notReady())};
   isl.islandTransport = transport ?? isl.live;
-  isl.api = createIslandApi({transport: isl.islandTransport, waveProtocol: where => where === 'pirate_point' ? 1 : 2});
-  isl.recoveryTransport = Object.freeze({get: path => isl.islandTransport.get(path), post: (path, body) => isl.islandTransport.post(path, body)});
+  isl.sharedBoatApi = createSharedBoatApi({transport: isl.islandTransport, getEconomy: isl.getEconomy, onEconomy: isl.refreshEconomy});
+  isl.sharedBoatSession = createBoatRoundSession({api: isl.sharedBoatApi, getEconomy: isl.getEconomy, getActorId, storage});
+  isl.session = createIslandSession(isl);
+  isl.sharedWaves = createSharedWaveApi({transport:isl.islandTransport,getEconomy:isl.getEconomy,getActorId,
+    getProof:()=>isl.session.proof(),onEconomy:isl.refreshEconomy,storage,allowLegacy:()=>mode==='fake' || !!readLegacyEconomy(isl.getEconomy())});
+  isl.sharedRevival=createSharedRevivalApi({transport:isl.islandTransport,getEconomy:isl.getEconomy,getActorId,getProof:()=>isl.session.proof(),storage});
+  isl.sharedReset=createSharedResetApi({transport:isl.islandTransport,getEconomy:isl.getEconomy,getActorId,getCode:()=>isl.own?.code,
+    canReset:()=>isl.domainAvailable('reset') && !isl.visitCode && !isl.visiting,storage});
+  isl.api = createIslandApi({transport: isl.islandTransport, ...economyContext, onEconomy: isl.refreshEconomy,
+    sharedWaves:()=>mode!=='fake' && isl.domainAvailable('session')?isl.sharedWaves:null,
+    sharedReset:()=>mode!=='fake'?isl.sharedReset:null,
+    economy: () => isl.currentFunds().shared ? isl.currentFunds().economy : undefined, sharedSnapshot: () => isl.visitCode && !isl.visiting ? null : isl.visiting ?? isl.own,
+    personalCaptain: () => isl.own?.captain ?? (isl.personalUnavailable ? {progressionVersion: 1} : null),
+    personalScope: () => `${getActorId() ?? ''}:${isl.own?.code ?? ''}`, pendingStorage: storage, authGeneration, negotiateEconomy: mode !== 'fake',
+    waveProtocol: where => where === 'pirate_point' ? 1 : 2});
+  isl.recoveryTransport = Object.freeze(isl.sharedWaves.recoveryTransport(isl.islandTransport));
+  const roomPlace = () => mode === 'fake' || readLegacyEconomy(isl.getEconomy())
+    ? islandRoom(isl.visiting?.code ?? isl.visitCode ?? isl.own?.code ?? '') || null : isl.session.roomPlace();
   isl.ui = createIslandUi({container, focus, resetInput,
     onSelection: active => isl.villageBar.render(isl.village.active && !active && !isl.moving.active)});
   // T36, flexible placement: Move mode (move-mode.js) with its bar (move-bar.js) and the preview on the island.
@@ -214,7 +240,9 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   };
   globalThis.addEventListener?.('keydown', villageKeys, true);
   // The arsenal (T41, D042): the crew's weapons (the server's flag "arsenal" is always on; the old shop is gone).
-  isl.arsenal = createArsenal({api: createArsenalApi({transport: transport ?? isl.live}), ui: isl.ui, emit, enabled: () => true,
+  isl.arsenal = createArsenal({api: createArsenalApi({transport: transport ?? isl.live, ...economyContext}),
+    ...economyContext, onEconomy: isl.refreshEconomy, ui: isl.ui, emit, enabled: () => isl.domainAvailable('arsenal'),
+    readEnabled: () => !target() || !!isl.visitCode && !isl.visiting || isl.domainAvailable('arsenal'),
     code: () => (isl.visiting ? displayIslandCode(isl.visiting.code) : isl.visitCode ? displayIslandCode(isl.visitCode) : null),
     place: () => (isl.visiting ? 'visit' : 'own'), level: () => isl.own?.captain?.level ?? 1,
     skills: () => readSkills([...(isl.own?.skills?.known ?? []), ...(isRole(isl.own?.skills?.role) ? [isl.own.skills.role] : [])]),
@@ -261,6 +289,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   const stopPoint = on('arrived', event => { if (event.place === POINT_PLACE) void loadPoint(); });
   // Leaving the island closes its card and ends a visit (the next landing is your own island).
   const stopTravel = on('travel', event => {
+    void isl.session.leave();
     interruptBoat();
     isl.village.leave();
     invalidateWallFeedback();
@@ -296,6 +325,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   const stopSettings = settings(() => createResetSection({read: resetState, reset: resetIsland}));
 
 
+  const stopEconomyIdentity = isl.watchEconomyIdentity();
   return {
     decorate(place, art, cleanups, adapters = {}) {
       isl.world?.dispose();
@@ -352,7 +382,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     },
     presencePlace(place) {
       if (place !== ISLAND_PLACE) return null;
-      return islandRoom(isl.visiting?.code ?? isl.visitCode ?? isl.own?.code ?? '');
+      return roomPlace();
     },
     load, loadPoint, playArrival, visit, sailHome, resetIsland, pick, build, upgrade, hire, upgradeCaptain, learnSkill, takeRole, respecCaptain, setPresence,
     setRecoveryCombatState, setRecoveryCheckpointHandler, setCoreCombatState,
@@ -397,7 +427,9 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     resetWalletRecovery() { isl.pendingWallet = null; isl.walletGeneration++; wrote('own'); },
     get recoveryTransport() { return isl.recoveryTransport; },
     get recoveryVersion() { return recoveryModelVersion(); },
-    roomPlace: () => islandRoom(isl.visiting?.code ?? isl.visitCode ?? isl.own?.code ?? '') || null,
+    roomPlace,
+    get session() { return isl.session; },
+    completeRevival:intent=>isl.sharedRevival.complete(intent),
     // A recovery wave ended on screen (controller.js): free the bell and the village, and with its close
     // answer ({survived, loot, coins, waveBest, flags}) tell the island like a finish answer.
     recoveryWaveEnded(waveId, data = null) { if (!isl.disposed && typeof waveId === 'string') isl.flow.ended(waveId, data); },
@@ -405,7 +437,10 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       if (isl.disposed || !target()) return null;
       if (isl.visitCode && !(await joinFirst(isl.visitCode))) return null; // a friend's wave: join the game first
       if (isl.disposed || !target()) return null;
+      if(isl.getEconomy()?.mode==='island_shared' && !isl.session.proof())await isl.session.ensure();
+      if(isl.disposed || !target())return null;
       const looked = await isl.flow.look(where());
+      if (!looked?.ok) return looked;
       if (isl.flow.current && !isl.flow.current.joined) return isl.flow.join(where());
       // A newer read of the current wave (the landing's own, after a reload) made this answer stale before it
       // was shown: 'busy' makes the wave wiring try again in a moment instead of never joining.
@@ -445,13 +480,15 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     placeName,
     get visiting() { return isl.visiting ? {...isl.visiting} : isl.visitCode ? {code: isl.visitCode} : null; },
     get island() { return isl.own ? structuredClone(isl.own) : null; },
+    get economy() { const value = isl.getEconomy(); return value ? structuredClone(value) : null; },
+    refreshEconomy: isl.refreshEconomy,
     // T52: your own island's best wave, without copying the island (the tutorials read it every frame).
     get ownWaveBest() { return Number.isSafeInteger(isl.own?.waveBest) ? isl.own.waveBest : null; },
     get flow() { return isl.flow; },
     // The fake server's helpers (setCoins, failNext, startWaveAt...) in fake mode, for the console and checks.
     get dev() { return transport?.dev ?? null; },
     get ui() { return isl.ui; },
-    get active() { return isl.ui.active || !!isl.cutscene || !!isl.boatGame; }, // D057: a boat round holds the keys too
+    get active() { return isl.ui.active || !!isl.cutscene || isl.boatLoading || !!isl.boatGame; }, // Pending rounds hold the keys too.
     get managing() { return isl.village.active; },
     get selection() { return selectedAnchor(); },
     get selectionElement() { return isl.ui.selectionElement; },
@@ -462,13 +499,16 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     get moving() { return isl.moving.state; },
     get moveMode() { return isl.moving; },
     handleEscape() {
+      if (isl.boatLoading) { interruptBoat(); return true; }
       if (isl.boatGame) { isl.boatGame.close(); return true; }
       if (isl.cutscene) { isl.cutscene.skip(); return true; }
       if (isl.moving.active && !isl.ui.active) { isl.moving.cancel(); return true; }
       return isl.ui.cancel() || isl.village.leave();
     },
     dispose() {
+      stopEconomyIdentity?.();
       if (isl.disposed) return; isl.disposed = true;
+      isl.session.dispose();
       isl.village.dispose(); isl.villageBar.dispose();
       stopRecoveryPoll(); isl.recoveryReadId++;
       stopFinished(); stopStarted(); stopArrived(); stopPoint(); stopInteract(); stopTravel(); stopMenu?.(); stopSettings?.(); stopStartedGame(); isl.stopGame(); clearTimeout(isl.syncSoon);

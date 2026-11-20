@@ -1,0 +1,15 @@
+{
+  "productionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+  "sharedHelperCommit": "6849704385f2f49a00be2b96a91eebc14d1fbc75",
+  "applicationMigrations": 108,
+  "sqlTestSha256": "bee5b0669154245ce94cecc5c9cee643612472a73c9be5b2bef187ad4217a100",
+  "artifacts": {
+    "disposable-sql.txt": "685a8002bef961a58f48e8646a8564e22918b190f26139fdb97060d997778d1a",
+    "focused-routes.txt": "331412f3a3b3b4436e2346f72cf4137c64aacea28f81521240ab429a4b75ee15",
+    "provider/compatibility-result.json": "7622e2793968998bf8a1d85de33517e149d26df596d6cb81fe8e5258d8fb6da6",
+    "provider/compatibility-source-proof.json": "4dd6e9b6dc738c8c7bf05b1f69f3018ae10f84baef3126a8fb0aa3ef614a5a13",
+    "provider/repair-wager-result.json": "465340d8feb78e7bbce7285e32a736befdeef1e248f61473fee13873945c19e4",
+    "provider/repair-wager-source-proof.json": "decbcd22106e1b97d94a668a17c65a0aa5c8ebe29082c456a2898f340430b73e"
+  },
+  "qualification": "The run manifests fence actual API/frontend production bytes and the scenario checkout against the full declared baseline before and after; each scenario and four direct helper files are hashed. A full transitive helper closure is not inferred."
+}

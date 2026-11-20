@@ -11,8 +11,209 @@
 ## How to read it
 
 - Every command starts in the repository root. `cd backend` or `cd frontend` comes first, as in [ENGINEERING.md, section 3](ENGINEERING.md#3-commands).
-- **No test uses the network.** Outside services, the sign-in check, the database and the clock are fakes ([ENGINEERING.md, section 5](ENGINEERING.md), rule 3).
+- **Read the evidence layer.** Default unit/component tests inject outside services,
+  sign-in, transport or clocks. Opt-in SQL checks execute real disposable PostgreSQL.
+  Separately recorded authenticated acceptance uses actual Auth, REST and Realtime;
+  it is not established by a fake transport or an emulated phone viewport.
 - **No CI.** The only GitHub Actions workflow is the keep-alive ([.github/workflows/keepalive.yml](../.github/workflows/keepalive.yml)). Each pull request pastes its own results ([CONTRIBUTING.md](../CONTRIBUTING.md)).
+
+The integrated shared economy has a separate [MP-ECO-20 acceptance matrix](economy/ACCEPTANCE.md).
+Its [offline assertion/evidence tests](../backend/server/tests/test_economy_acceptance.py)
+run with `cd backend && uv run pytest -q server/tests/test_economy_acceptance.py`.
+They validate decimal treasury reconciliation and evidence metadata, using synthetic
+inputs. They do not verify treasury RPCs, hosted authentication or the integrated
+multiplayer economy. Runtime SQL, authenticated-browser and physical-device evidence
+remain separate; the existing fake-room `test:mp` check does not establish them.
+
+## Local economy acceptance completion
+
+The [completion index](evidence/MP-ECO-20-browser-completion/README.md) records all
+15 scenarios and their SQL/authenticated-browser layers against the qualified
+application candidate `90a9a8227579c2be86cbe1d024fa75de7d61637e`. Its 30-entry
+[metadata manifest](evidence/MP-ECO-20-final-manifest.json) links the actual
+artifacts and hashes; it does not turn retained results into reruns.
+
+Fresh focused results are 380 disposable-SQL cases, 31 role/auth cases and 76 session
+cases, each at its recorded source; fresh builds/spoiler guards passed for the
+two client fixes. Actual first-purchase and post-membership-leave proofs verify
+those fixes. Real paired zero-bank revival, visible wagers with actual deadlines,
+crew/arsenal, class/ship and real-grace restoration complete the recorded witnesses.
+Fixtures, staged driver failures, historical branch qualifications and unclaimed
+hosted/physical-device coverage are explicit in the index.
+
+The following checkpoint sections preserve earlier scopes and pending inventories
+at their original dates/sources. Their partial labels describe those checkpoints;
+the completion index above records the final local acceptance resolution.
+
+## Shared economy integration checkpoint — 19 November 2026
+
+Application/test source inventory: `9f107a6cbb57e0a9f01b1f4b8fb60da5d19dacad`. Canonical
+authority, native sessions/journal/closure worker, personal Captain progression,
+domain transactions, reset/deletion and coordinated clients are present. The shared
+snapshot advertises arsenal/session/repair/reset/market/match; move remains unavailable.
+The source contains 107 migrations, including the
+[accepted-prefix freshness boundary](../supabase/migrations/20261119014418_shared_revival_checkpoint_freshness.sql),
+and the client includes the [native clock and incomplete-hold correction](../specs/MP-ECO-11-canonical-client.md#native-clock-correction-and-incomplete-holds).
+These source facts and the rows below locate checks. Completed backend,
+frontend/component and build results retain their exact sources; the authenticated
+rendered scenario matrix has its own explicit status.
+
+| Layer / area | Checks | Boundary |
+|---|---|---|
+| Python HTTP and coherent reads | [core routes](../backend/server/tests/test_core_economy_routes.py), [shared snapshots](../backend/server/tests/test_shared_snapshot.py), [session routes](../backend/server/tests/test_shared_session_routes.py), [wave routes](../backend/server/tests/test_shared_wave_routes.py) | Strict capability/origin/controller DTOs, verified-actor forwarding, quote and replay handling; fake Auth/Admin remain explicit. |
+| Native canonical SQL | [control](../backend/server/tests/island_sql/test_shared_session_control_sql.py), [accepted bell/journal](../backend/server/tests/island_sql/test_shared_session_wave_sql.py), [terminal effects](../backend/server/tests/island_sql/test_shared_session_close_sql.py), [worker](../backend/server/tests/island_sql/test_shared_session_worker_sql.py) | Actual provider and producer RPCs. Trusted templates, combat reports, selected clock/state fixtures and the worker's SQL transport adapter are qualified per module; these are not provider-authenticated clients. |
+| Domain SQL and races | [cross-domain acceptance](../backend/server/tests/island_sql/test_shared_domain_acceptance_sql.py), [native combat](../backend/server/tests/island_sql/test_shared_combat_native_sql.py), [revival journal](../backend/server/tests/island_sql/test_shared_revival_journal_sql.py) | Real treasury/registry/assets, rollback and concurrency. Domain-unit helpers seed canonical facts without replacing the provider. Native revival uses real producer/hold time but synthetic accepted combat reports; it does not verify every simulated hit. |
+| Lifecycle SQL | [reset/deletion](../backend/server/tests/island_sql/test_shared_lifecycle_transactions_sql.py), [committed lock races](../backend/server/tests/island_sql/test_shared_lifecycle_races_sql.py), [native lifecycle](../backend/server/tests/island_sql/test_shared_lifecycle_native_sql.py), [membership](../backend/server/tests/island_sql/test_canonical_membership_lifecycle_sql.py) | Actual lifecycle transactions, original-account retention, private aliases and lock order; isolated database setup is not actual provider account deletion. |
+| Client/component | [session client](../frontend/tests/island/shared-session-client.test.js), [wave API](../frontend/tests/island/shared-wave-api.test.js), [shared core](../frontend/tests/island/shared-core.test.js), [arsenal](../frontend/tests/island/shared-arsenal.test.js), [wagers](../frontend/tests/harbor/shared-wagers-http.test.js) | Real client modules with controlled HTTP/auth/channel inputs; browser DOM checks remain component evidence. |
+
+Recorded checkpoints must retain their exact sources:
+
+| Source and check | Actual result | Limit |
+|---|---|---|
+| `799242b4a494f8760136bead5b2ed02c461c0bdd`, broad backend excluding the documented unchanged exhaustive settings matrix, disposable SQL enabled | **15,185 passed, 28 failed, 5 skipped in 1003.19s**, exit 1 | A failed historical checkpoint, not the final result. The five skips lacked the Node/client dependencies used by place-registry checks. |
+| `b696faf485443444cf4ffc98e080e51b95ca17f8` plus `491265ff` and `374df4c6`, affected modules after test/dev-tool compatibility alignment | **121 passed in 64.35s**, then **98 passed in 44.63s**, both exit 0, no skips | 219 distinct affected cases include all 28 formerly failing nodes. These bounded runs do not relabel the earlier broad run or replace a final aggregate run. |
+| `5107d5b49516e34cd3ac51075d12321b6ebcbc24`, earlier broad backend | Interrupted, exit 130: **5,029 passed, 5 failed, 116 errors**, no skips | Partial counts only. Three semantic assertions were investigated separately; confirmed disk exhaustion invalidated the remaining affected execution. This is not a completed pass. |
+| `581b65db61692cc1a56c7e1bcff4eedfd3caffc9`, earlier full frontend | **5,262 passed, 30 failed, 121 skipped**, exit 1; separate normal build exit 0 | The frontend run remains failed, including explicit ENOSPC failures and a paid-revival assertion. Its successful build does not establish a current-candidate frontend/build pass. |
+| `37570bf9e5e3c67ebd2eb1a735c9df3c709f3b80`, full backend excluding only the documented unchanged exhaustive settings matrix, disposable SQL enabled | **15,284 passed in 958.28s**, exit 0, zero failures/errors/skips; full Ruff and **107** migration parse/unique-version checks passed | All five registry cases and both calm/storm SQL → Python → Node decoder cases executed. Backend/static evidence only; no new authenticated browser acceptance is implied. |
+| `b239bdf094d132fc57969fb31f652f106db8abc5`, comparison with tested `37570bf9` | Backend tree and all 825 backend blobs/modes, 107 migration hashes, 13 decoder-closure hashes and both dependency locks match exactly; repository diff is only `frontend/src/campaign/tutorials.json` | Comparison, not another test run. Keep the backend result assigned to `37570bf9`; subsequent frontend/build and rendered outcomes are separate rows. |
+| `b239bdf0`, earlier unfiltered frontend | **5,464 passed, one failed, no skips**, exit 1, 1172.06s | The Nearby desktop whole-test 20-second timeout remains a failed result. A same-budget diagnostic completed the E/Use interactions before the deadline interrupted remaining assertions; no production fix is inferred. |
+| `9f107a6cbb57e0a9f01b1f4b8fb60da5d19dacad`, full unfiltered one-worker frontend, then standard build | **5,465 passed / 507 files in 1229.67s**, exit 0, zero failures/errors/skips; standard build exit 0 | Clean source and unchanged locks/migrations. The explicit Nearby per-test budget matches existing full-game tests; assertions and fixtures are unchanged. This is frontend/component/build evidence. |
+| `37570bf9` → `9f107a6c`, backend comparison; `b239bdf0` → `9f107a6c`, production frontend comparison | Complete backend tree/all 825 blobs/modes, 107 SQL hashes, 13 decoder hashes and both locks exact; all 1,484 non-test frontend blobs/modes exact | Comparison, not another run or a changed source label. Authenticated observations retain application source `b239bdf0` and their own outcomes. |
+| `a6de304bbeb5f45983e18d043c848c71a4566609`, fresh 106-migration local stack and three actual registered Chromium/SDK users | Limited native HTTP/WSS probe completed: real attachment/adoption, bell/replay/input, outsider denial, topic isolation across admission/departure and terminal observation after last withdrawal | Service-only admission of a fresh island is labeled setup. SDK channels manually follow metadata; rendered gameplay, automatic product topic changes and the complete scenario matrix are not verified. |
+| `a8fa5de1`, rendered native combat on the subsequent 107-migration local provider | Two genuine accepted WON receipts/personal completions; independent committed-state inspection found one 35-coin original-account wave credit, treasury 100 → 135, confirmed participation and released assignments/reservation | Personal wallets stayed unchanged. This observed wave-income case does not establish free revival, automatic pacing or the complete scenario matrix. |
+| `5a111e05`, rendered idle owner reset on the 107-migration local provider | Reset changed account/epoch and owner's accepted private topic; automatic member session/topic reacquisition **failed** | Preserve this failure. The subsequent reconciliation verification is a separate row below. |
+| `b239bdf0`, subsequent actual Settings reset on the 107-migration local provider | Both honest clients automatically acquired replacement session/topic with accepted product WebSocket joins; cached-old-socket isolation, stale-proof refusal, original UID replay and personal Captain/wallet preservation passed | Cached old SDK sockets were established before reset; post-reset new-topic/fresh-revoked-old diagnostic joins waited for both replacement product joins. Owner deletion was disabled; other membership/deletion transitions retain separate status. The earlier failed reset remains failed. |
+| `b239bdf0`, rendered free-revival attempt on the 107-migration local provider | Ordinary guide dismissal/movement and enemy-caused fall observed; ordered helper hold-start input POST received HTTP 200; both Captains then fell before a complete hold was observed and both native loss receipts settled | **Failed** free-revival scenario. No completed revival or committed zero-cost accounting pass is claimed. |
+| `b239bdf0`, subsequent actual free teammate revival and independent committed accounting on the 107-migration local provider | Both clients observed the same fall at 23.45 and journal revival at 37.7/50 HP; repeated requests retained one original body/UID and one immutable receipt/journal effect. Before terminal, treasury 200, both personal wallets/ledgers and paid repair quota stayed unchanged, with no financial child/direct-UID debit | Free revival/accounting **passed**. The subsequent natural loss settled both own native receipts; automatic pacing and other matrix scenarios remain separate. The earlier failed attempt remains failed. |
+| `b239bdf0`, actual defended win, break controls and worker auto-next on the 107-migration local provider | Three current quoted cannon buys (200 → 110); paired distinct own WON receipts; paused Auto next held for nine real seconds, then ordinary Resume; one non-player SYS start after deadline rendered on both clients | **Passed** for an eligible connected leader. Exactly one initial browser start POST/UID and no extra start are proved by the complete browser trace, not the worker observer alone. No unconnected-leader auto-start claim. |
+| `b239bdf0`, regular due-worker closure after both pacing browsers closed | After both actual last-seen +60-second deadlines, the unchanged worker closed that SYS attempt abandoned/zero loot, withdrew slots and released controls/assignments; quiescent reread matched | Real elapsed timestamps; no injected combat state, clock changes or forced finish. This separate closure is not a win or a new grant. |
+| `b239bdf0`, separate actual local test-owned Account deletion UI | Initial confirmation returned 409; explicit additional account-and-island confirmation returned 200. Peer automatically cleared the island room and kept personal Captain/progress/wallet; cached owner API returned exact 404 `player_not_set_up` and independent Auth returned 403 | **Passed** for this temporary local owner. No reset, Auto next toggle or new grant. No immediate cache-eviction, universal 401, malicious cached-socket deletion or complete lifecycle-matrix claim. |
+
+### Reproducible local provider follow-up
+
+The [isolated provider harness](../specs/MP-ECO-20-authenticated-provider-harness.md)
+runs the actual production API/frontend with official Auth, PostgREST and private
+Realtime on disposable PostgreSQL 17 Alpine. New observations use application
+source `3bdd8eda16470795fdedd68c42fffab54e5f2ced` and all 107 then-current
+migrations. Small-image extension/hosting limits and explicit fresh-island
+admission remain documented. Offline checks are separate: seven Python boundary
+tests and two Node endpoint/source-boundary tests passed; Ruff and new script syntax
+checks passed. These do not establish provider acceptance by themselves.
+
+The table accounts for every required scenario. **Partial** means useful evidence
+exists but the complete row is not established on one current source. Retained
+`b239bdf0` results above keep that original source and were not rerun; current
+frontend applicability requires component-specific comparison.
+
+| Scenario | Current or retained evidence | Remaining boundary |
+|---|---|---|
+| `treasury-concurrent-spending` | Partial: current two real members raced three quoted purchases for the last 20 coins; two committed and one returned 409; independent ledger/wallet reconciliation | Cross-domain purchase/wager/repair competition and concurrent grants/reset remain separate. The fresh 30-coin admission was explicit last-funds setup. |
+| `settlement-source-account` | Partial: current registered-session reset with real-clock settlement credited retired origin 402/0 while replacement stayed 200/0; repeated receipts and independent ledgers matched | Old personal commitments and the full leave/change-island combination remain separate. Market source facts were explicit fixtures. |
+| `wave-income-once` | Partial: retained `a8fa5de1` paired 35-coin win and `b239bdf0` defended win | Current multiple-finish/bonus/terminal-race combinations. |
+| `personal-participation` | Partial: canonical SQL and retained confirmed-combat completion | Current spectator/countdown/absent negatives and recovery after departure/reset. |
+| `engineer-generation` | Partial: current free role/respec, two 9-coin discounted buys with one pending generation, blocked role change and legacy-route evasion; unchanged wallets | Saved eligibility fixtures do not establish earned milestones or delayed completion of a superseded generation. |
+| `arsenal-holder-lifecycle` | Partial: current island unlock refusal/acceptance, exact 60-coin buy/replay, one-copy two-member take race and stale-tenure refusal | Complete current capacity/excess/frozen-loadout/departure/grace/deletion combination. Capacity 20 was displayed/read, not filled in this case. |
+| `repairs-free-revival` | Partial: retained `b239bdf0` genuine free revival/accounting and natural loss; current paid owner repair and exact retry were observed in a separate incomplete follow-up | Retained revival had treasury 200. Paid-repair follow-up stopped at member reconnect/promotion; no completed row is claimed. Current zero-coin revival and full repair quota/order remain separate. |
+| `unrestricted-bets` | Partial: current one-coin and all-remaining 199-coin same-event stakes, two-coin winnings reinvestment, exact 200/changed 409 retries and zero-available refusal; separate all-in 180 loss | Actual five-minute deadlines elapsed; trusted readings were explicit fixtures and genuine fresh opener returned `prices_stale`. Fees, cross-domain races and excluded-product combinations remain separate. |
+| `ship-reward-cap` | Partial: cap/idempotency/source-account SQL | Current authenticated ten-member/parallel-record/old-origin combination. |
+| `member-owner-permissions` | Partial: current member build/demolition/bell, member reset 403, owner reset; outsider mutation 403, forged actor 422; actual canonical private channel owner/member success and outsider refusal | Full invited guest, research-change and session-succession combinations remain separate. Private SDK delivery is not automatic rendered-client lifecycle proof. |
+| `reset-deletion` | Partial: current zero-funds owner reset/replay gave one 200 grant, old account 0; retained actual Account deletion | Current authenticated open old-epoch settlement and member deletion/copy return. |
+| `legacy-class-contexts` | Partial: existing legacy/class/excluded-product regression coverage | Current authenticated context switches and prerequisite-read-failure no-fallback cases. |
+| `old-client-rejection` | Partial: current provider passed missing/unsupported capability reads 409, missing-capability mutation 409, missing epoch 422, authorized first read and outsider/actor forgery refusal; SQL/route checks retained | No older released client binary was launched. Unsupported mutation variants retain separate route-test evidence. |
+| `wave-protocol-1` | Partial: legacy/protocol admission SQL and HTTP checks | Current authenticated shared-admission refusal and explicit no-personal-payout fallback. |
+| `wave-protocol-2` | Partial: current zero-funds rendered native bell/natural loss; current session duplicate/cross-island refusal, real grace reconnect and withdrawal; retained Auto next and expiry | Session reconnect retained healthy HP, position and an empty cooldown set. Fallen-state and nonempty-cooldown persistence are not inferred. |
+
+The [current zero-funds evidence](evidence/MP-ECO-22/authenticated-combined-result.json)
+records real registered identities and production transactions from 15:12:26Z to
+15:20:04Z on 19 November 2026. Harness hash
+`69ded16a9514aa6072080f7c6f743865917935add1fc9c6fcadfab3b28c98688` identifies
+the executed scenario. Saved advanced island state and trusted market readings
+were explicit setup; the five-minute deadline, rendered member bell, enemy-caused
+wave 31 loss, member 403 and owner reset/replay were actual observations. Clock,
+HP and outcome were not edited during the scene. The separate session evidence is
+in `docs/evidence/MP-ECO-20-sessions/result.json`, recorded from 15:38:50Z to
+15:41:00Z with unchanged helper hashes; its source/transport partition limits are
+explicit. New [core and personal/arsenal evidence](evidence/MP-ECO-20-local-provider/README.md)
+is authenticated browser transport,
+not rendered-card passes. Earlier successful rendered zero-funds actions retain
+their own evidence. The [registered-session origin case](evidence/MP-ECO-20-origins-provider/README.md)
+adds real-clock origin settlement and reinvestment with explicit market fixtures;
+no natural fresh-provider opening is claimed. This does not complete #505.
+
+### Explicit candidate and current authority follow-up
+
+The [current authority evidence](evidence/MP-ECO-20-provider-authority/README.md)
+pins full candidate `64ee02b360d68836b2de9247121ab47dc6a3ecbf`, with 108 migrations.
+The harness now requires `runtime.expectedCommit` and records/checks the actual
+running API/frontend source. Historical `3bdd8eda` results above keep their source.
+
+| Current check | Actual result and layer | Limit |
+|---|---|---|
+| Explicit provider configuration and source guards | Nine focused Python tests, two Node guard tests, scoped Ruff and script syntax passed; real GoTrue-to-production verification and independent Chromium session restoration passed | Local provider only; no hosted deployment or broad regression rerun. |
+| Registered research/demolition/succession/owner lifecycle | Six authenticated HTTP groups passed, with independent shared-ledger/private-wallet checks | Saved unlock/capital setup is explicit; initialized Captain preservation is separate from earned receipts. |
+| Concurrent game creation and reset grants | Three authenticated groups passed: shared starting capital did not multiply, identical reset UID had one effect, different UIDs against one epoch had one winner | This does not perform real save conversion. |
+| Genuine anonymous invited member | Real official-provider anonymous identity, normal invite/class admission, guest build/demolition/research change and owner-only reset refusal passed | Separate anonymous-enabled Auth and demo-flag API; the frozen primary context remained unchanged. API-only, not anonymous browser UX. |
+
+Successful wager opening, actual personal participation/Engineer generations,
+boss/house reward accounting, full arsenal lifecycle, cross-domain contention and
+paid-repair quota retain their own scenario reports and precise boundaries.
+Passing this authority slice alone does not close the complete matrix.
+
+### Fifteen-row accounting for candidate `64ee02b3`
+
+The complete declared SHA is `64ee02b360d68836b2de9247121ab47dc6a3ecbf`.
+The acceptance procedure requires targeted SQL and authenticated-browser evidence
+for each row. A real Node HTTP client or sealed production simulation establishes
+its stated Auth/API layer, not a browser observation. The separate combat gate
+also explicitly requires a rendered zero-coin revival. Historical browser runs
+keep their original source until a relevant source comparison establishes their
+applicability. This does not require every counterexample at every layer, a
+natural external feed, a physical device or a historical client executable.
+
+| Required scenario | Actual current proof and SQL boundary | Remaining browser/combined boundary |
+|---|---|---|
+| `treasury-concurrent-spending` | Actual Auth construction/wager and naturally damaged repair/wager races, observed scope-lock overlap, no personal fallback; four current disposable-SQL cases. Concurrent create/same-UID and distinct-UID reset grants passed with one replacement account/grant. | New contention/grant drivers are API-only. Current quota supplies browser repair evidence for its own slice; it does not render these contention races. |
+| `settlement-source-account` | Actual HTTP one-coin/all-funds/reinvestment with both real 300-second deadlines, owner reset and old-account-only settlement; original personal duel recipient is independently tested. Retained lifecycle SQL keeps its source. | New complete origin combinations are API-only. Targeted browser applicability and leave/change-island combinations retain their separate status. |
+| `wave-income-once` | Current API/sealed-simulation wave-two win credited 45 once; late victory could not reverse a saved loss. Natural boss-five/house case credited `(75+50+0)×3=375` once across three participants/six acknowledgments. Current quota has a genuine two-browser 35-coin victory. | Expanded duplicate/bonus combinations are API-only. Retained reward SQL and the targeted current browser slice must keep their exact scope. |
+| `personal-participation` | Actual provider combat/disconnect/reconnect, spectator/countdown/absent negatives, departure/reset receipt recovery and duplicate claims passed; participation SQL retains its documented trust boundaries. | New participation matrix uses API/sealed simulation; a complete current authenticated-browser row is not inferred. |
+| `engineer-generation` | Real Auth generation C1/C2, discounted purchases, captured/delayed completion, role/respec fences and matching-generation clearing passed. Existing generation SQL is retained, not reported rerun. | The new generation matrix is API-only; historical browser/source applicability remains separate. |
+| `arsenal-holder-lifecycle` | Twenty actual purchases included four carried copies; converted-overflow fixture 24 remained intact. Exclusive full swap, stale tenure, frozen loadouts, member leave/deletion and an independent worker's real-grace return all passed, including post-deletion copy competition. SQL races retain their sources. | The comprehensive new lifecycle case explicitly does not render. It does not claim real conversion or a simultaneous deletion/take browser race. |
+| `repairs-free-revival` | Current staged two-independent-browser quota observed three 40-coin repairs, fourth `repair_limit_reached`, exact old UID/later damage, member reconnect, natural victory and full current HP with damaged closed HP retained. A separate actual Auth/sealed-simulation zero-bank timed revival passed with one event and no debit/quota. | The interrupted quota driver remains failed; the completed staged observation is separate. The new zero-bank case is API/simulation only; the explicit rendered zero-bank target/hold gate remains pending a separate observation. |
+| `unrestricted-bets` | Unchanged production HTTP handlers with explicitly trusted external quote transport accepted 1+1+198 same-event stakes, exact/changed retries, real deadlines, all-proceeds reinvestment and original-account settlement. A genuine admitted anonymous guest's one-coin opening/retry passed. Current RPC/SQL contention is separate. | New full wager cases are API-only; trusted quote fixtures are not natural feeds. No successful browser betting journey is inferred. |
+| `ship-reward-cap` | Eleven real registered identities exercised ten-member caps for both games, parallel improvements, 60 exact retries, lower/repeated rounds, foreign-record fences, reset and immutable old receipts. SQL cap coverage remains source-qualified. | API-only with declared saved unlock/wreck and trusted result inputs; no rendered minigame/claim journey is claimed. |
+| `member-owner-permissions` | Real registered and genuine anonymous invited members built, demolished and changed research; nonmembers/forged origins failed; session leadership allowed settings but not reset. Current quota supplies actual member-repair browser evidence. | Broad rights/anonymous coverage is API-only. Required UI agreement and applicable historical browser evidence retain separate boundaries. |
+| `reset-deletion` | Registered owner reset/retries, concurrent grants, old research receipt replay, real member deletion with pending copies, confirmed owner account/island deletion and continuing personal preservation passed; wager origin isolation passed through HTTP. Retained lifecycle SQL remains separate. | Broad new combinations are API-only. Historical deletion UI/topic-transition evidence is not silently relabeled to this candidate. |
+| `legacy-class-contexts` | Actual Auth personal duel recipient, legacy Point purchase/replay, private island context, genuine guest invitation/class admission and excluded-product fences passed. Focused prerequisite-failure tests retain their fake-transport layer. | New context drivers are API-only. No current full browser context or actual backend outage is inferred from injected failure tests. |
+| `old-client-rejection` | Actual Auth missing/unsupported capabilities, strict epoch/actor/account proofs, old shared protocol/no native proof and excluded payload refusals passed; route/SQL tests remain distinct. | New probes are API-only. A historical binary is not an additional requirement; applicable targeted browser evidence is still required by the existing procedure. |
+| `wave-protocol-1` | Separately configured current production API exercised same/different UID bells, natural production-controller win, exact 35-coin payment/retry, idle-null and shared admission refusal. Current SQL covers expiry with explicit timestamp fixtures. | This compatibility case is API/headless with recovery disabled only in its local settings. No browser or actual 900-second expiry wait is claimed. |
+| `wave-protocol-2` | Current quota supplies native browser countdown/reconnect/repair/order/natural closure. Current personal, arsenal/worker and zero-revival cases add real Auth authority/state evidence. Retained session SQL/browser observations keep their sources. | Broader new duplicate/cross-island/fallen/cooldown/grace/withdrawal/pacing combinations remain at their recorded layers; they do not automatically complete the browser row. |
+
+Exact package evidence is recorded under `MP-ECO-20-provider-authority`,
+`MP-ECO-20-personal-provider`, `MP-ECO-20-boss-income-provider`,
+`MP-ECO-20-zero-revival-provider`, `MP-ECO-20-provider-arsenal`,
+`MP-ECO-20-compatibility`, `MP-ECO-20-protocol-one`,
+`MP-ECO-20-ship-cap`, `MP-ECO-20-http-wagers` and
+`MP-ECO-20-repair-quota` in `docs/evidence`. Their exact source hashes, fixture
+boundaries, retained failures and timestamps are authoritative. These bounded
+passes improve coverage; **#505 remains open** for the documented browser and
+combined-layer completion requirements. No hosted activation is implied.
+
+Before the final pinned backend run, provide Node and frontend dependencies matching
+`frontend/package-lock.json` (`cd frontend && npm ci`, or a verified matching local
+installation). A source worktree without those packages must report registry skips.
+The final command, from the repository root, is:
+
+```bash
+cd backend
+CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' --with pglast pytest -q --ignore=server/tests/correctness/test_settings_contract.py
+```
+
+This command completed at the exact backend source above. Preserve its command,
+exit status, JUnit, dependency and migration evidence; later-source applicability
+requires the recorded comparison. Full frontend tests/build also completed at
+their exact source above; authenticated rendered acceptance remains separate.
+The [current acceptance gates](economy/ACCEPTANCE.md#current-integration-and-open-gates)
+also require the actual rendered two-player journey and product Realtime transitions.
 
 ## 1. Backend unit tests (pytest)
 
@@ -40,7 +241,11 @@ Size: 188 test files under [backend/server/tests/](../backend/server/tests/) (15
 
 ## 2. Backend SQL suites (opt-in)
 
-They build a throwaway PostgreSQL on a Unix socket, apply **all migrations twice**, run each test in a rolled-back transaction, and never read a database URL or credentials ([case_sql/conftest.py](../backend/server/tests/case_sql/conftest.py)). Plain `uv run pytest` skips them.
+They build a throwaway PostgreSQL on a Unix socket and apply **all migrations twice**.
+Tests use rollback transactions or module-isolated clusters for committed races;
+they never read a hosted database URL or credentials
+([case_sql/conftest.py](../backend/server/tests/case_sql/conftest.py)). Plain
+`uv run pytest` skips these opt-in checks.
 
 Command pattern (from `backend/`):
 `CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q server/tests/<suite>`

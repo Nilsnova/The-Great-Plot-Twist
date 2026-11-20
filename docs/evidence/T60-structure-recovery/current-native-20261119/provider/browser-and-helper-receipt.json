@@ -1,0 +1,23 @@
+{
+  "observedAt": "2026-11-19T16:14:57.773Z",
+  "distinctBrowserObjects": true,
+  "clients": [
+    {
+      "role": "owner",
+      "actorId": "063b9da3-0b4d-4882-af2f-6de3d6d1dbc5"
+    },
+    {
+      "role": "member",
+      "actorId": "88e02cc3-99d1-4856-aa9d-a6108317b9a1"
+    }
+  ],
+  "loadedExportFunctionSha256": {
+    "createClients": "1979a06c2cecdc87b7cc517bb61d9873c4660eb9e73f0c86fcf705b123953781",
+    "api": "81b68d95d8abcb491729fdc6c24d9795c2c526d7f9d7996ec345b8ca114d2521",
+    "land": "88856999485b6cb046c0b9de214e50b1f5ca85556d84050e376335197e034fcb",
+    "loadRuntime": "ea26b9532d1dd9a87b1276f508db799fefab8dd471f88cb124f6029b12cf5e39",
+    "observe": "a0e9451625566620474a8d956f0af199908663e9945698ec49bf1cdf4778f59d",
+    "admit": "059f7d7e1b080320162d3b6f42b687f67e7c7f16957aa9c13abe65766292a909"
+  },
+  "scope": "Post-run identity/helper observation; no provider credentials or authentication tokens are included."
+}

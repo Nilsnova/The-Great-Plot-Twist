@@ -854,3 +854,23 @@ Sources: [D022](DECISIONS.md), [delete route](../backend/server/routes/delete_me
 ## Keeping this inventory current
 
 Run `python3 -m unittest discover -s docs/tests -v` from the repository root. The documentation test requires a section for every current table after applying migration creates/drops in timestamp order and a row for every declared or added column. It checks coverage, not deployed RLS, provider retention or the truth of prose. Update this inventory, the notice and the standalone page together when data handling changes.
+## Shared economy lifecycle additions
+
+Source inventory for explicitly admitted shared islands, reviewed 19 November
+2026. This supplements the legacy account inventory above; it is not a check of
+hosted retention settings or an admission/conversion operation.
+
+| Record group | Data and purpose | Deletion/reset handling |
+| --- | --- | --- |
+| Treasury accounts, ledger, stakes and common operation/receipt identities | Original island/account/run and actor UUIDs, exact play-money amounts and accepted request effects; settle and replay once. | Reset retires the old origin and creates one new grant. Account deletion preserves required shared origin/settlement history while removing the private wallet and its ledger. |
+| Global personal Captain state and Engineer commitments | Level, personal best, points, skills, role, assignment and generation-specific commitment. | All players retain progression through island reset; the deleted player's live personal state is removed on account deletion. |
+| Canonical session settings, controls, frozen slots and receipts | Controller/session UUIDs, generation, deadlines, frozen Captain/loadout, topic generation and accepted effects. | Revoke control and dispose held stock before destructive cascades. Preserve only required immutable participant/retry history; no email, display name or login token is added to these records. |
+| Canonical wave accounting, input journal, health/Captain checkpoints and revival holds/receipts | Opaque participant tokens, ordered actions, HP/fall/hold facts and original reward/completion identities. | Shared UUID history survives where needed for continuing-island closure, personal completions and exact retries. Owned live island assets are removed only through confirmed owner deletion. |
+| Deleted-player dispositions | Original player UUID and deletion time only. | Immutable marker prevents cached identities and missing-profile history from restoring authority. No Auth/profile foreign key recreates a live account. |
+
+Shared tables grant no browser writes; service-only boundary functions enforce
+membership, original scope, controller and transaction ordering. Existing public
+profile visibility remains separate. The application defines no automatic purge
+schedule for retained shared UUID/history records. See [Privacy](PRIVACY.md),
+[shared interfaces](INTERFACES.md#canonical-wave-transport-and-lifecycle-composition)
+and the migration rights in [Supabase](../supabase/README.md).

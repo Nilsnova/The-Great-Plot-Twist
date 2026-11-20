@@ -22,11 +22,13 @@ TABLES = frozenset(
     {
         "islands",
         "island_members",
+        "island_layout",
         "island_recovery_state",
         "islet_buildings",
         "island_research",
         "islets",
         "wallets",
+        "wallet_transactions",
         "profiles",
         "structure_repair_receipts",
         "wave_runs",
@@ -35,6 +37,10 @@ TABLES = frozenset(
 FUNCTIONS = frozenset(
     {
         "island_open",
+        "islet_build",
+        "island_economy_context",
+        "island_lifecycle_actor_status",
+        "personal_captain_context",
         "wave_rules_keep",
         "structure_recovery_read_state",
         "island_structure_repair",

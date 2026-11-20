@@ -1,0 +1,130 @@
+{
+  "sourceCommit": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+  "status": "passed",
+  "scenario": "authenticated-compatibility-and-cross-domain",
+  "scenarioSha256": "ca93d12403b18cac3c00d04e2a02b2d69a2371531c0c3aba497ab8fac9e920b3",
+  "steps": [
+    {
+      "name": "old-private-duel-keeps-personal-recipient",
+      "openedBeforeAdmission": true,
+      "closedAfterAdmission": true,
+      "privateBefore": "200",
+      "heldPrivate": "190",
+      "returnedPrivate": "200",
+      "island": {
+        "account": "1f3975fb-6904-4315-a2fa-073be30165c8",
+        "epoch": "a0ac206d-b201-4c68-8340-e663ea82c38a",
+        "balance": "10",
+        "committed": "0",
+        "revision": "1",
+        "ledger_balance": "10",
+        "ledger_committed": "0",
+        "ledger_entries": "1"
+      }
+    },
+    {
+      "name": "old-client-protocol-and-excluded-payload-fences",
+      "fences": [
+        {
+          "name": "missing capability read",
+          "status": 409,
+          "code": "economy_context_required"
+        },
+        {
+          "name": "unsupported capability read",
+          "status": 409,
+          "code": "economy_version_mismatch"
+        },
+        {
+          "name": "legacy build on admitted island",
+          "status": 409,
+          "code": "economy_context_required"
+        },
+        {
+          "name": "missing epoch",
+          "status": 422,
+          "code": "validation_error"
+        },
+        {
+          "name": "forged actor",
+          "status": 422,
+          "code": "validation_error"
+        },
+        {
+          "name": "legacy protocol on shared island",
+          "status": 409,
+          "code": "client_update_required"
+        },
+        {
+          "name": "native protocol without proof",
+          "status": 409,
+          "code": "economy_context_required"
+        },
+        {
+          "name": "excluded exchange with island payload",
+          "status": 422,
+          "code": "validation_error"
+        },
+        {
+          "name": "private duel with island payload",
+          "status": 422,
+          "code": "validation_error"
+        }
+      ],
+      "noIslandOrPersonalEffects": true
+    },
+    {
+      "name": "legacy-point-and-islet-read-personal-funds",
+      "pointCoins": "200",
+      "isletCoins": "200",
+      "islandMoneyUnchanged": {
+        "account": "1f3975fb-6904-4315-a2fa-073be30165c8",
+        "epoch": "a0ac206d-b201-4c68-8340-e663ea82c38a",
+        "balance": "10",
+        "committed": "0",
+        "revision": "1",
+        "ledger_balance": "10",
+        "ledger_committed": "0",
+        "ledger_entries": "1"
+      }
+    },
+    {
+      "name": "legacy-point-build-and-replay-retain-personal-accounting",
+      "paidCoins": 10,
+      "privateBefore": "200",
+      "privateAfter": "190",
+      "islandUnchanged": true
+    },
+    {
+      "name": "legacy-protocol-one-idle-read",
+      "status": 200,
+      "currentWave": null,
+      "boundary": "No legacy combat outcome or new protocol-one bell is inferred from an idle read."
+    },
+    {
+      "name": "last-funds-construction-versus-trusted-wager",
+      "canonicalScopeGateObserved": true,
+      "purchaseStatus": 409,
+      "purchaseError": "insufficient_funds",
+      "wagerStatus": "done",
+      "wagerRefusal": null,
+      "committed": {
+        "account": "1f3975fb-6904-4315-a2fa-073be30165c8",
+        "epoch": "a0ac206d-b201-4c68-8340-e663ea82c38a",
+        "balance": "10",
+        "committed": "10",
+        "revision": "2",
+        "ledger_balance": "10",
+        "ledger_committed": "10",
+        "ledger_entries": "2"
+      },
+      "layer": "Actual authenticated construction HTTP against actual trusted-input product RPC; no HTTP price-source claim."
+    }
+  ],
+  "limits": [
+    "Real provider Auth and production HTTP; this API-only scenario does not establish rendered gameplay.",
+    "A ten-coin fresh shared admission and saved Harbor unlock are explicit installer setup.",
+    "Wager opening terms below are trusted fixture inputs to the actual RPC, not an authenticated HTTP opener or natural feed.",
+    "No combat HP, terminal result or stored clock is injected. Repair competition is separately scoped."
+  ]
+}

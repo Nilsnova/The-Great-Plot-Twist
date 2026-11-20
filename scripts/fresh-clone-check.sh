@@ -39,6 +39,9 @@ blocked() {
 }
 
 if step clone git clone --quiet --depth 1 --single-branch --branch "$revision" -- "$repository" "$checkout"; then
+  # The frontend packages go in first: some backend tests run the game's JavaScript with node.
+  frontend_ready=0
+  step frontend-install bash -c 'cd "$1/frontend" && npm ci --no-audit --no-fund' _ "$checkout" && frontend_ready=1
   if step backend-install bash -c 'cd "$1/backend" && uv sync --locked' _ "$checkout"; then
     step backend-tests bash -c 'cd "$1/backend" && .venv/bin/python -m pytest -q --tb=no' _ "$checkout" || :
     step backend-ruff bash -c 'cd "$1/backend" && .venv/bin/ruff check .' _ "$checkout" || :
@@ -46,7 +49,7 @@ if step clone git clone --quiet --depth 1 --single-branch --branch "$revision" -
     blocked backend-tests
     blocked backend-ruff
   fi
-  if step frontend-install bash -c 'cd "$1/frontend" && npm ci --no-audit --no-fund' _ "$checkout"; then
+  if [ "$frontend_ready" -eq 1 ]; then
     step frontend-tests bash -c 'cd "$1/frontend" && npm_config_offline=true npm test' _ "$checkout" || :
     if step frontend-build bash -c 'cd "$1/frontend" && npm_config_offline=true npm run build' _ "$checkout"; then
       step spoiler-guard bash -c 'cd "$1/frontend" && node scripts/check-spoilers.js' _ "$checkout" || :

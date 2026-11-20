@@ -13,6 +13,13 @@ const fixtures = [];
 afterEach(() => { for (const fixture of fixtures.splice(0)) fixture.island.dispose(); });
 function harness() {
   const base = createFakeIslandTransport(), ownReads = [], arsenalReads = [], coins = [], listeners = new Map();
+  const legacyRead = base.get;
+  // Keep this legacy-wallet fixture explicit when the live owner supplies context callbacks.
+  base.get = async path => {
+    const answer = await legacyRead(path);
+    return answer.ok && (path === '/api/island' || path.startsWith('/api/island/visit/'))
+      ? {...answer, data: {...answer.data, economy: {mode: 'personal_legacy', version: 0,islandOwner:'11111111-1111-4111-8111-111111111111',accountId:null,runEpoch:null,revision:null,treasury:null}}} : answer;
+  };
   const held = {own: true, arsenal: false};
   const on = (type, callback) => {
     const callbacks = listeners.get(type) ?? new Set(); callbacks.add(callback); listeners.set(type, callbacks);
@@ -93,17 +100,19 @@ describe('arsenal coin ordering beside a fresh personal wallet', () => {
     h.held.arsenal = true;
     const refreshing = h.island.arsenal.refresh(); expect(h.arsenalReads).toHaveLength(1);
     recover(h, 120); await h.arsenalReads[0].answer(); await refreshing;
-    expect(h.coins.at(-1)).toBe(120);
+    // The unknown island cannot display even a fresh personal wallet; discovery must not authorize it.
+    expect(h.coins.at(-1)).toBe(loaded ? 120 : null);
     if (loaded) expect(h.island.island.coins).toBe(120);
   });
 
-  it('keeps a newer arsenal balance through an older first island read without replacing island identity', async () => {
+  it('waits for verified legacy context before accepting an arsenal wallet balance', async () => {
     const h = harness(), loading = h.island.load(); recover(h, 120);
     h.setCoins(80); h.held.arsenal = true;
     const refreshing = h.island.arsenal.refresh(); await h.arsenalReads[0].answer(); await refreshing;
-    expect(h.coins.at(-1)).toBe(80); const before = h.coins.length;
+    expect(h.coins.at(-1)).toBeNull();
     await h.ownReads[0].answer(); await loading;
-    expect(h.coins.slice(before)).not.toContain(120); expect(h.island.island.coins).toBe(80);
+    await h.arsenalReads[1].answer();
+    expect(h.coins.at(-1)).toBe(80); expect(h.island.island.coins).toBe(80);
   });
 
   it('lets an own read asked after the arsenal request keep its newer balance', async () => {

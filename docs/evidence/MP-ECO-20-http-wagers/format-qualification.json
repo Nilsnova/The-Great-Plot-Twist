@@ -1,0 +1,7 @@
+{
+  "path": "backend/tools/authenticated_economy/wager_http_fixture.py",
+  "measuredSha256": "31238675a7ce84f1563eeb0da11818712b19bfd71dffcbe9f182cce1ca1c949a",
+  "formattedSha256": "73cbf6458d05b3265f349682d904fe135cee92ca7c27b7f382aa4fa28ff8fa2c",
+  "pythonASTIdenticalExcludingLocations": true,
+  "scope": "Only line wrapping after completion of the source-fenced HTTP case. No long case is claimed as rerun on the formatted bytes."
+}

@@ -15,12 +15,15 @@ import {progressSummary} from './progression.js';
 import {upgradeOverviewModel} from './upgrade-overview.js';
 import {withWallRecovery} from './wall-recovery.js';
 import {preparationModel} from './preparation-model.js';
+import {launchSharedBoatScene} from './shared-boat-scene.js';
+import {boatOrigin, sameBoatOrigin} from './shared-boat-shapes.js';
+import {declaresPersonalCaptain} from './economy-captain.js';
 
 export function createCards(isl) {
   const {emit, on, focus, resetInput, reducedMotion, preferences, loadBoatScene, openHarborStall, villageCamera,
-    wallRecovery, defensesV2On} = isl;
+    } = isl;
   // From the other parts (island-*.js), linked once every part exists.
-  let clearRecoveryError, recoveryPolicyOn, recoveryControlsOn, recoveryModelVersion, readStructureRecovery,
+  let currentFunds, sharedCard, clearRecoveryError, recoveryPolicyOn, recoveryControlsOn, recoveryModelVersion, readStructureRecovery,
     repairStructure, tellCoins, unlocks, islandUnlocks, campaign, target, where, applyWorld, freshOwn, reloadOwn,
     refreshDefended, lobby, startGame, openLobby, bellAction, build, readWalls, repairWall, upgrade, askDemolish,
     confirmDemolish, placeCode, specialise, buyTree, startMove, research, giveWreck, hire, upgradeCaptain, learnSkill,
@@ -34,7 +37,7 @@ export function createCards(isl) {
         // The server holds you to your own unlocks at Pirate Point too (a level you have not won is refused).
         unlocks: isl.own ? unlocks() : null});
     }
-    // On a friend's island you build with your own coins (and your own unlocks); it stays theirs.
+    // The defended island supplies shared funds and unlocks; legacy islands retain personal funding.
     const island = target(), spot = island?.spots.find(item => item.id === spotId) ?? null;
     const recoveryEnabled = recoveryControlsOn() && !!spot?.built && ['wall', 'cannon', 'mortar', 'harpoon', 'culverin', 'swivel'].includes(spot.kind);
     const recoveryReady = recoveryEnabled && isl.recoveryStatus === 'ready' && recoveryPolicyOn()
@@ -52,10 +55,11 @@ export function createCards(isl) {
       repairWindow: replayActive ? 'reserved_wave' : recoveryViewState.repairWindow,
       waveId: replayActive ? isl.recoveryCombat.waveId : recoveryViewState.waveId,
     } : recoveryViewState;
-    const model = buildCardModel({spotId, slot: spotById(spotId)?.slot, spot, coins: isl.own?.coins ?? null,
+    const model = buildCardModel({spotId, slot: spotById(spotId)?.slot, spot, coins: isl.own?.coins ?? null, ...sharedCard(),
       visitor: !!isl.visiting, ownerName: isl.visiting?.ownerName, busy: isl.busySpot === spotId ? isl.busyKind : false, message: isl.cardMessage || (!island ? isl.ownMessage : ''),
-      unlocks: isl.own ? islandUnlocks() : null, prices: isl.own?.prices ?? null, campaign: campaign(), battle: isl.battle && !isl.waveOver,
-      movable: island?.layout?.movable === true, flags: {defenses_v2: defensesV2On() === true}, treePicked: isl.treePicked.get(spotId) ?? null,
+      unlocks: isl.own ? islandUnlocks() : null, prices: currentFunds().shared ? island?.prices ?? null : isl.own?.prices ?? null,
+      campaign: campaign(), battle: isl.battle && !isl.waveOver || currentFunds().shared && (isl.flow.busy || !!isl.flow.current && !isl.waveOver),
+      movable: island?.layout?.movable === true, treePicked: isl.treePicked.get(spotId) ?? null,
       recoveryState: recoveryView, recoveryStatus: recoveryEnabled ? (recoveryReady ? 'ready' : isl.recoveryStatus) : 'disabled',
       recoveryError: isl.recoveryError, recoveryPending: isl.recoveryPendingSpot === spotId, recoveryVersion: recoveryModelVersion()});
     const version = island?.recoveryVersion ?? 0;
@@ -75,17 +79,27 @@ export function createCards(isl) {
     return holdOtherBuildingAction(recoveryControlsOn() ? model : withWallRecovery(model, {wall: shown, coins: isl.own?.coins ?? null,
       busy: isl.busySpot === spotId ? isl.busyKind : false, battle: isl.battle && !isl.waveOver}), isl.busySpot);
   }
-  // Hiring still changes the caller's own island when they are visiting.
-  const crew = () => crewModel({crew: isl.own?.crew ?? {}, coins: isl.own?.coins ?? null, unlocks: isl.own ? unlocks() : null,
-    busy: isl.busyCrew, message: isl.cardMessage || (!isl.own ? isl.ownMessage : ''), prices: isl.own?.prices,
-    recoveryVersion: isl.visiting ? isl.own?.recoveryVersion ?? 0 : recoveryModelVersion()});
+  // Shared hires use the defended island; legacy hires still use the caller's own island.
+  const crew = () => {
+    const island = currentFunds().shared ? target() : isl.own;
+    return crewModel({crew: island?.crew ?? {}, coins: isl.own?.coins ?? null, ...sharedCard(),
+      unlocks: isl.own ? currentFunds().shared ? islandUnlocks() : unlocks() : null,
+      busy: isl.busyCrew, battle: isl.flow.busy || !!isl.flow.current && !isl.waveOver || isl.battle && !isl.waveOver,
+      message: isl.cardMessage || (!island ? isl.ownMessage : ''), prices: island?.prices,
+      recoveryVersion: currentFunds().shared ? recoveryModelVersion() : isl.visiting ? isl.own?.recoveryVersion ?? 0 : recoveryModelVersion()});
+  };
   const captain = () => {
-    const message = isl.cardMessage || (!isl.own ? isl.ownMessage : ''), wonWave = isl.own ? unlocks().wonWave : 0;
+    const message = isl.cardMessage || (!isl.own ? isl.ownMessage : '');
+    const profile=isl.own?.captain ?? (isl.personalUnavailable ? {progressionVersion:1} : null);
+    const wonWave = currentFunds().shared || declaresPersonalCaptain(isl.own?.captain) ? isl.own?.captain?.personalBestWave ?? 0 : isl.own ? unlocks().wonWave : 0;
     return {tab: isl.captainTab,
-      captain: captainModel({captain: isl.own?.captain ?? null, coins: isl.own?.coins ?? null, unlocks: isl.own ? unlocks() : null, busy: isl.busyCaptain, message: isl.captainTab === 'captain' ? message : ''}),
+      captain: captainModel({captain: profile, coins: isl.own?.coins ?? null, ...sharedCard(), points: isl.own?.skills?.points ?? null,
+        unlocks: isl.own ? unlocks() : null, busy: isl.busyCaptain, message: isl.captainTab === 'captain' ? message : ''}),
       skills: skillsModel({skills: isl.own?.skills ?? null, wonWave, picked: isl.pickedSkill, busy: isl.busySkill, message: isl.captainTab === 'skills' ? message : '',
-        coins: isl.own?.coins ?? null, captainLevel: isl.own?.captain?.level ?? 1, pickedRole: isl.pickedRole, busyRole: isl.busyRole, respecAsk: isl.respecAsk, busyRespec: isl.busyRespec,
+        coins: isl.own?.coins ?? null, ...sharedCard(), personalCaptain: profile,
+        captainLevel: isl.own?.captain?.level ?? 1, pickedRole: isl.pickedRole, busyRole: isl.busyRole, respecAsk: isl.respecAsk, busyRespec: isl.busyRespec,
         battle: isl.battle && !isl.waveOver, recoveryVersion: recoveryModelVersion()})};
+
   };
   const captainHandlers = {upgrade: () => void upgradeCaptain(), tab: id => { isl.captainTab = id; },
     pick: id => { isl.pickedSkill = id; isl.cardMessage = ''; refreshCard(); }, learn: id => void learnSkill(id),
@@ -98,16 +112,21 @@ export function createCards(isl) {
     treeSelect: (spotId, id) => { isl.treePicked.set(spotId, id); isl.cardMessage = ''; refreshCard(); }, tree: (spotId, path, tier) => void buyTree(spotId, path, tier)};
   const demolishHandlers = {confirm: () => void confirmDemolish(), keep: () => { const spot = isl.demolishSpot; isl.demolishSpot = null; if (spot) openBuild(spot); }};
   const demolishCardModel = () => demolishModel({quote: isl.demolishQuote, busy: isl.busyDemolish, message: isl.cardMessage});
-  const harbor = () => harborModel({campaign: campaign()});
-  const tech = () => {
-    const confirmed = researchIsland();
-    return techModel({campaign: confirmed ? campaignOf(confirmed) : null, spots: confirmed?.spots, coins: isl.own?.coins ?? null,
-      towerPrices: isl.own?.prices, busy: isl.busyResearch, battle: isl.battle && !isl.waveOver,
-      message: isl.cardMessage || (!confirmed ? isl.ownMessage : ''), recoveryVersion: recoveryModelVersion()});
+  const harbor = () => {
+    const model=harborModel({campaign:campaign()});
+    return {...model,stalls:model.stalls.map(stall=>['market','match'].includes(stall.id) && !isl.domainAvailable(stall.id)
+      ?{...stall,open:false,reason:'This activity is unavailable on shared islands.'}:stall)};
   };
-  const wreck = () => wreckModel({campaign: campaign(), coins: isl.own?.coins ?? null, busy: isl.busyGift, message: isl.cardMessage || (!target() ? isl.ownMessage : ''),
-    boat: isl.boatStatus, battle: isl.battle && !isl.waveOver});
-  const harborHandlers = {open: id => { isl.ui.close(); try { openHarborStall(id); } catch { /* The stall answers on its own. */ } }};
+  const tech = () => techModel({campaign: campaign(), coins: isl.own?.coins ?? null, ...sharedCard(), busy: isl.busyResearch,
+    battle: isl.battle && !isl.waveOver || currentFunds().shared && (isl.flow.busy || !!isl.flow.current && !isl.waveOver),
+    message: isl.cardMessage || (!target() ? isl.ownMessage : ''), recoveryVersion: recoveryModelVersion()});
+  const wreck = () => wreckModel({campaign: campaign(), coins: isl.own?.coins ?? null, ...sharedCard(), busy: isl.busyGift, message: isl.cardMessage || (!target() ? isl.ownMessage : ''),
+    boat: isl.boatStatus, requireRewardScope: isl.mode !== 'fake', battle: isl.battle && !isl.waveOver || currentFunds().shared && (isl.flow.busy || !!isl.flow.current && !isl.waveOver)});
+  const harborHandlers = {open: id => {
+    if(['market','match'].includes(id) && !isl.domainAvailable(id)) return;
+    isl.ui.close(); try { openHarborStall(id); } catch { /* The stall answers on its own. */ }
+  }};
+  const techHandlers = {research: step => void research(step)};
   const wreckHandlers = {give: amount => void giveWreck(amount), sail: game => void sail(game)};
   const boatBlocked = () => (isl.battle && !isl.waveOver) || isl.flow.busy || (!!isl.flow.current && !isl.waveOver);
   // Dispose directly: normal Close opens the wreck card and would keep captain input blocked.
@@ -123,8 +142,14 @@ export function createCards(isl) {
   }
   async function readBoat() {
     if (!isOpen(campaign(), 'ship')) { isl.boatStatus = null; return; }
-    const ticket = ++isl.boatTicket, answer = await isl.api.boatStatus(placeCode());
-    if (isl.disposed || ticket !== isl.boatTicket) return;
+    const ticket = ++isl.boatTicket, code = target()?.code;
+    const economy = boatOrigin(isl.getEconomy()), actorId = isl.getActorId();
+    if (isl.mode !== 'fake') isl.boatStatus = null;
+    const answer = await (isl.mode === 'fake' ? isl.api.boatStatus(placeCode()) : isl.sharedBoatApi.status(placeCode()));
+    if (isl.disposed || ticket !== isl.boatTicket || code !== target()?.code) return;
+    if (isl.mode !== 'fake' && (actorId !== isl.getActorId()
+      || economy && !sameBoatOrigin(economy, isl.getEconomy()))) return;
+    if (isl.getEconomy()?.mode === 'island_shared' && !sameBoatOrigin(answer.data?.economy, isl.getEconomy())) return;
     isl.boatStatus = answer.ok ? answer.data : null;
     if (isl.ui.open === 'wreck') refreshCard();
   }
@@ -133,6 +158,20 @@ export function createCards(isl) {
     isl.boatLoading = true;
     const launch = ++isl.boatLaunch;
     const at = campaign(), code = target()?.code ?? '', where = placeCode();
+    const economy = boatOrigin(isl.getEconomy()), actorId = isl.getActorId();
+    let rewardScope = isl.mode === 'fake' ? 'player' : null;
+    if (isl.mode !== 'fake') {
+      await readBoat();
+      if (isl.disposed || launch !== isl.boatLaunch) return;
+      if (!isl.boatStatus?.open || !['island', 'player'].includes(isl.boatStatus.rewardScope)) {
+        isl.boatLoading = false; isl.ui.toast('Read the current ship rewards before sailing. Try again.', 'info'); return;
+      }
+      rewardScope = isl.boatStatus.rewardScope;
+      if (rewardScope === 'island' && (!sameBoatOrigin(economy, isl.getEconomy())
+        || !sameBoatOrigin(isl.boatStatus.economy, economy))) {
+        isl.boatLoading = false; isl.ui.toast('Read the current island treasury before sailing.', 'info'); return;
+      }
+    }
     let scene;
     try { scene = await loadBoatScene(); } catch {
       if (!isl.disposed && launch === isl.boatLaunch) { isl.boatLoading = false; isl.ui.toast('The boat could not load. Try again.', 'info'); }
@@ -141,7 +180,25 @@ export function createCards(isl) {
     if (isl.disposed || launch !== isl.boatLaunch) return;
     isl.boatLoading = false;
     if (boatBlocked() || code !== target()?.code || at?.wave !== campaign()?.wave) return;
+    if (isl.mode !== 'fake' && (actorId !== isl.getActorId()
+      || ((rewardScope === 'island' || isl.getEconomy()?.mode === 'island_shared')
+        && !sameBoatOrigin(economy, isl.getEconomy())))) {
+      isl.ui.toast('The island or sign-in changed. Read the ship rewards again.', 'info'); return;
+    }
     isl.ui.close();
+    if (rewardScope === 'island') {
+      isl.boatLoading = true;
+      const answer = await launchSharedBoatScene({createBoatGame: scene.createBoatGame, session: isl.sharedBoatSession,
+        game, container: document.body, code, reducedMotion, easy: () => preferences()?.easyFinishers === true,
+        isCurrent: () => !isl.disposed && launch === isl.boatLaunch && !boatBlocked() && code === target()?.code
+          && sameBoatOrigin(economy, isl.getEconomy()) && actorId === isl.getActorId(),
+        onSettled: () => { if (!isl.disposed) void readBoat(); },
+        onClose: () => { isl.boatGame = null; if (!isl.disposed) { focus(); openWreck(); } }});
+      if (isl.disposed || launch !== isl.boatLaunch) { answer.data?.dispose(); return; }
+      isl.boatLoading = false;
+      if (!answer.ok) { isl.ui.toast(answer.message, 'error'); openWreck(); return; }
+      isl.boatGame = answer.data; return;
+    }
     const round = scene.createBoatGame({container: document.body, game, wave: at?.wave ?? 0, code, reducedMotion,
       easy: () => preferences()?.easyFinishers === true,
       onFinish: async ({stars}) => {
@@ -165,10 +222,24 @@ export function createCards(isl) {
   }
   function bell() {
     const wave = isl.flow.current, island = target();
-    return bellModel({wave: wave?.wave ?? null, joined: wave?.joined === true, countdown: isl.flow.secondsLeft(), busy: isl.flow.busy,
+    const model=bellModel({wave: wave?.wave ?? null, joined: wave?.joined === true, countdown: isl.flow.secondsLeft(), busy: isl.flow.busy,
       visitor: !!isl.visiting, ownerName: isl.visiting?.ownerName, waveBest: island?.waveBest ?? 0, nextWave: island?.nextWave,
-      preparation: preparationModel({island, wallRecovery: wallRecovery() && !recoveryControlsOn(),
+      preparation: preparationModel({island, wallRecovery: !recoveryControlsOn(),
         wallState: {code: isl.wallsFor, rows: [...isl.walls.values()]}}), message: isl.cardMessage});
+    if(!currentFunds().shared)return model;
+    if(!isl.domainAvailable('session'))return {...model,disabled:true,action:'none',line:'Island defense is unavailable. Reload the island.'};
+    const session=isl.session,settings=session.settingsView;
+    if(!session.proof()){
+      if(wave)return {...model,button:wave.joined?'Watching defense':'Watch defense',disabled:wave.joined || isl.flow.busy,
+        action:wave.joined?'none':'join',message:'Spectating this island. Connect your Captain before the next bell to join its roster.'};
+      const connecting=session.state.phase==='connecting';
+      return {...model,button:connecting?'Connecting…':'Retry connection',disabled:connecting,action:'session',line:session.state.message || 'Watching this island. Retry to connect your Captain.'};
+    }
+    if(!wave){
+      if(settings?.canManage!==true)return {...model,disabled:true,action:'none',line:'Waiting for the session leader to ring the bell.'};
+      return {...model,line:`Ring it and wave ${island.nextWave} sails in after a ${settings.countdownSeconds} second countdown.`};
+    }
+    return model;
   }
   function refreshCard() {
     if (isl.disposed) return;
@@ -222,8 +293,7 @@ export function createCards(isl) {
     const destroyed = model.recovery?.actualHp === 0 && model.recoveryLevel === model.level;
     if (dock && model.slot === 'tower' && !destroyed) {
       const installed = defenses(target()?.spots ?? [], campaign()?.research?.tiers);
-      // Keep coverage for an installed recovery-v1 Culverin when new purchases are disabled.
-      model.coverage = previewDefenseCoverage(installed, spotId, {defensesV2: defensesV2On() === true || recoveryPolicyOn()});
+      model.coverage = previewDefenseCoverage(installed, spotId, {defensesV2: true});
     }
     isl.ui.buildCard(model, handlers, {dock});
   }
@@ -342,7 +412,7 @@ export function createCards(isl) {
     else if (spotById(id) || isPointSpot(id)) openBuild(id);
   }
   function link() { // the names of the other parts, once every part exists (index.js)
-    ({clearRecoveryError, recoveryPolicyOn, recoveryControlsOn, recoveryModelVersion, readStructureRecovery,
+    ({currentFunds, sharedCard, clearRecoveryError, recoveryPolicyOn, recoveryControlsOn, recoveryModelVersion, readStructureRecovery,
       repairStructure, tellCoins, unlocks, islandUnlocks, campaign, target, where, applyWorld, freshOwn, reloadOwn,
       refreshDefended, lobby, startGame, openLobby, bellAction, build, readWalls, repairWall, upgrade, askDemolish,
       confirmDemolish, placeCode, specialise, buyTree, startMove, research, giveWreck, hire, upgradeCaptain,
