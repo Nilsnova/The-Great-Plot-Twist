@@ -50,8 +50,10 @@ const ROCK_GARDENS = {
   55: [.63, .73],
 };
 const SHADOW = new THREE.Color('#344032');
-const SUN = new THREE.Vector3(-.6, .71, .43).normalize();
-const GROUND_CAST = new THREE.Vector2(-SUN.x, -SUN.z).normalize();
+const PLANT_SHADOW = new THREE.Color('#263119');
+// Match the village cast when viewed from the normal camera, where positive Z runs down the screen.
+const GROUND_CAST = new THREE.Vector2(.66, .75).normalize();
+const SUN = new THREE.Vector3(-GROUND_CAST.x * .64, .77, -GROUND_CAST.y * .64).normalize();
 const STEP = .5;
 const BLOCK_WIDTHS = [1.72, 2.24, 2.41, 1.68, 2.16, 1.52];
 const BLOCK_BEVEL = [
@@ -166,7 +168,7 @@ export function createHomeTerraces(root, coastArt, art) {
   function sunlight(a, b, d) {
     normal.subVectors(b, a).cross(edge.subVectors(d, a)).normalize();
     if (normal.y < 0) normal.negate();
-    return .81 + .34 * Math.max(-.64, normal.dot(SUN));
+    return .84 + .43 * Math.max(-.68, normal.dot(SUN));
   }
   function vertex(p, tint, light, grass, opacity, detail, recessed = false) {
     const ground = projectGround(p.x, p.z);
@@ -189,8 +191,8 @@ export function createHomeTerraces(root, coastArt, art) {
     // crown opens broader bevels along the riser and makes the cut change with the grain.
     const outer = BLOCK_BEVEL.map(([u, v]) => point(u, v, 0));
     const innerCut = BLOCK_BEVEL.map(([u, v]) => [.10 + u * .8, .13 + v * .73]);
-    const inner = innerCut.map(([u, v]) => point(u, v, .024 + worn * .008));
-    const center = point(.5, .5, .039 + worn * .011);
+    const inner = innerCut.map(([u, v]) => point(u, v, .036 + worn * .011));
+    const center = point(.5, .5, .069 + worn * .015);
     let crown = [.5, .5], fold;
     if (split) {
       const turn = worn < 0 ? -1 : 1;
@@ -240,7 +242,7 @@ export function createHomeTerraces(root, coastArt, art) {
     for (const {points, coordinates} of facets) {
       for (const [i, point] of points.entries()) {
         const uv = coordinates[i];
-        const light = .82 + (daylight.get(point) - .82) * .67 + (uv[1] - .45) * .12
+        const light = .83 + (daylight.get(point) - .82) * .9 + (uv[1] - .46) * .21
           + worn * .037 - (seam.has(point) ? .071 : 0);
         vertex(point, color, light, 0, 1, uv, underTurf);
       }
@@ -302,12 +304,14 @@ export function createHomeTerraces(root, coastArt, art) {
       const [r0, h0] = profile[Math.max(0, next - 1)], [r1, h1] = profile[next];
       return THREE.MathUtils.lerp(h0, h1, r0 === r1 ? 0 : (radius - r0) / (r1 - r0));
     }
+    const planted = [];
     if (art) {
       const addPlant = (name, along, across, scale) => {
         const sample = THREE.MathUtils.lerp(start, finish, along);
         const plant = samplePoint(sample)(across, heightAt(across));
         if (!plantings.has(name)) plantings.set(name, []);
         plantings.get(name).push([plant, scale]);
+        if (art[name]) planted.push({name, sample, across, scale, plant});
       };
       FOLIAGE[first].forEach(entry => addPlant(...entry));
       const [along, across] = ROCK_GARDENS[first];
@@ -422,6 +426,28 @@ export function createHomeTerraces(root, coastArt, art) {
       layer = bottom;
     }
 
+    for (const {name, sample, across, scale, plant} of planted) {
+      const [width] = artSizes[name];
+      const radius = width * scale * .43;
+      // Follow the ledge under each plant. The artwork itself keeps its old ground pin.
+      const along = samplePoint(sample + .2)(across, 0).sub(plant);
+      const cross = samplePoint(sample)(across + .12, 0).sub(plant);
+      const det = along.x * cross.z - along.z * cross.x;
+      if (Math.abs(det) < .001) continue;
+      const widthRatio = radius * 1.16, lengthRatio = radius * 1.05;
+      const skew = radius * .36;
+      const weight = name === 'birch' ? .72 : name === 'rock' ? .59 : .55;
+      const coordinates = [[-1, -1], [1, -1], [1, 1], [-1, 1]];
+      const corners = coordinates.map(([u, v]) => {
+        const alongCast = v * lengthRatio + skew, perpendicular = u * widthRatio;
+        const dx = GROUND_CAST.x * alongCast - GROUND_CAST.y * perpendicular;
+        const dz = GROUND_CAST.y * alongCast + GROUND_CAST.x * perpendicular;
+        const row = THREE.MathUtils.clamp(sample + .2 * (dx * cross.z - dz * cross.x) / det, start, finish);
+        const column = THREE.MathUtils.clamp(across + .12 * (along.x * dz - along.z * dx) / det, Math.min(across, 0), 1);
+        return samplePoint(row)(column, heightAt(column));
+      });
+      for (const i of [0, 1, 2, 0, 2, 3]) vertex(corners[i], PLANT_SHADOW, 1, -2, weight, coordinates[i]);
+    }
   }
 
   const geometry = new THREE.BufferGeometry();
@@ -442,7 +468,7 @@ export function createHomeTerraces(root, coastArt, art) {
       varying vec3 vSurface;
       void main() {
         vec2 groundOffset = vec2(0.0);
-        if (terraceMaterial.z < -.5) {
+        if (terraceMaterial.z < -.5 && terraceMaterial.z > -1.5) {
           // Only the soft painted projection extends. The stone, grass and their feet stay fixed.
           groundOffset = surfaceDetail.yz * (1.0 - mod(surfaceDetail.x, 2.0));
         }
@@ -471,12 +497,25 @@ export function createHomeTerraces(root, coastArt, art) {
         return mix(mix(hash2(cell), hash2(cell + vec2(1, 0)), fade.x),
           mix(hash2(cell + vec2(0, 1)), hash2(cell + vec2(1, 1)), fade.x), fade.y);
       }
+      float turfGrain(vec2 p) {
+        vec2 footprint = fwidth(p);
+        float unresolved = smoothstep(.48, 1.26, max(footprint.x, footprint.y));
+        return mix(noise2(p), .5, unresolved);
+      }
       void main() {
         vec2 floorPoint = unprojectGround(vTerrain);
         vec2 shore = floorPoint / vec2(${COAST.rx.toFixed(1)}, ${COAST.rz.toFixed(1)});
         float angle = atan(shore.y, shore.x);
         float rim = 1.0 + .055 * sin(angle * 5.0 + ${COAST.seed.toFixed(1)}) + .035 * cos(angle * 7.0);
         if (length(shore) >= rim * .994) discard;
+        if (vTerrace.z < -1.5) {
+          vec2 offset = vSurface.xy;
+          float canopy = 1.0 - smoothstep(.27, 1.0, length(offset));
+          float contact = 1.0 - smoothstep(.035, .47, length(offset + vec2(0.0, .33)));
+          gl_FragColor = vec4(vTone, vTerrace.w * (.61 * canopy + .39 * contact));
+          #include <colorspace_fragment>
+          return;
+        }
         vec2 samplePoint = vec2(vTerrace.x / 64.0, -vTerrace.y * ${LEGACY_DEPTH} / 48.0) * .64 + .5;
         vec3 source = texture2D(uCoastArt, samplePoint).rgb;
         float grain = smoothstep(.11, .43, dot(source, vec3(.27, .62, .11)));
@@ -514,14 +553,16 @@ export function createHomeTerraces(root, coastArt, art) {
           float cut = min(vSurface.z, 1.0);
           stone = weatheredSandstone(stone, layers, vSurface.xy, cut);
           // Tight earth contact grounds the lower stone bevel and the uncut mortar.
-          float rootShadow = (1.0 - smoothstep(.015, .21, height)) * .25;
+          float rootShadow = (1.0 - smoothstep(.025, .29, height)) * .31;
           float patina = smoothstep(.50, .83, grainBreak) * (1.0 - smoothstep(.08, .37, vSurface.y));
           float sodShade = step(1.5, vSurface.z) * smoothstep(.68, .98, vSurface.y);
           float corners = smoothstep(.19, .48, abs(vSurface.x - .5));
           float toe = (1.0 - smoothstep(.03, .27, vSurface.y)) * corners * cut;
+          float shoulder = smoothstep(.50, .82, vSurface.y) * (1.0 - smoothstep(.86, 1.0, vSurface.y));
+          float foot = (1.0 - smoothstep(.06, .49, vSurface.y)) * cut;
           stone = mix(stone, stone * vec3(.70, .78, .65), sodShade * (.48 + grainBreak * .22));
           stone = mix(stone, stone * vec3(.82, .94, .72), .48 * patina * cut);
-          stone *= 1.0 - rootShadow - toe * (.12 + grainBreak * .06);
+          stone *= 1.0 + shoulder * cut * .23 - rootShadow - foot * .175 - toe * (.12 + grainBreak * .06);
           gl_FragColor = vec4(stone, vTerrace.w);
           #include <colorspace_fragment>
           return;
@@ -533,8 +574,8 @@ export function createHomeTerraces(root, coastArt, art) {
         float underside = smoothstep(2.28, 2.88, turfKind);
         vec2 sward = vTerrace.xy * vec2(4.2, 5.3);
         float patches = noise2(sward * .43);
-        float tufts = noise2(sward * 3.8 + vec2(patches));
-        float tips = noise2(vTerrace.xy * vec2(23.0, 32.0) + vec2(height * 3.6));
+        float tufts = turfGrain(sward * 3.8 + vec2(patches));
+        float tips = turfGrain(vTerrace.xy * vec2(23.0, 32.0) + vec2(height * 3.6));
         float moss = smoothstep(.35, .67, grainBreak);
         vec3 turfColor = mix(vTone, source, .27 - underside * .12);
         turfColor = mix(turfColor, vec3(.37, .46, .081), lip * (.12 + moss * .13) * (1.0 - underside));
@@ -543,7 +584,7 @@ export function createHomeTerraces(root, coastArt, art) {
         // broken band of moss and short grass makes the lower shelf read as a separate step.
         float wobble = noise2(vTerrace.xy * .92) - .5;
         float across = vSurface.x + wobble * .18 + (patches - .5) * .06;
-        float shoulder = smoothstep(-.13, .13, across) * (1.0 - smoothstep(.47, .91, across)) * vSurface.y;
+        float shoulder = smoothstep(-.13, .13, across) * (1.0 - smoothstep(.55, .98, across)) * vSurface.y;
         float wallPocket = noise2(sward * vec2(.48, .22));
         float recess = step(1.5, vSurface.z) * smoothstep(.57 - wallPocket * .08, 1.0, across);
         turfColor = mix(turfColor, vec3(.425, .553, .105), shoulder * .43);
