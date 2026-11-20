@@ -19,20 +19,30 @@ function covers(point, [a, b, c]) {
   return edges.every(value => value > -1e-6) || edges.every(value => value < 1e-6);
 }
 
-it('raises terraces without overlapping the shore, old defenses or any new wall footprint', () => {
+it('grounds every terrace foot and keeps the raised rear crests clear of defenses and wall lanes', () => {
   const root = new THREE.Group(), shore = new THREE.Texture();
   backdrop(root, shore);
   const terrace = createHomeTerraces(root, shore);
-  const {position, terraceMaterial} = terrace.geometry.attributes;
+  const {position, terraceMaterial, surfaceDetail} = terrace.geometry.attributes;
   const triangles = [];
-  let highestRear = 0, highestFront = 0;
+  let highestRear = 0, highestFront = 0, raisedCrests = 0;
   for (let i = 0; i < position.count; i += 3) {
     const points = [i, i + 1, i + 2].map(index => {
       const x = position.getX(index), y = position.getY(index);
-      const ground = unprojectGround(x, y);
-      expect(surfaceClass('home_islet', ground.x, ground.z)).toBeGreaterThan(0);
-      const baseZ = terraceMaterial.getY(index);
-      const depth = y - projectGround(terraceMaterial.getX(index), baseZ).y;
+      const baseX = terraceMaterial.getX(index), baseZ = terraceMaterial.getY(index);
+      expect(surfaceClass('home_islet', baseX, baseZ)).toBeGreaterThan(0);
+      const view = unprojectGround(x, y);
+      const depth = y - projectGround(baseX, baseZ).y;
+      if (surfaceClass('home_islet', view.x, view.z) === 0) {
+        const allowedRise = surfaceDetail.getW(index);
+        expect(baseZ).toBeLessThan(0);
+        expect(terraceMaterial.getZ(index)).toBeGreaterThanOrEqual(0);
+        expect(allowedRise).toBeGreaterThan(0);
+        expect(allowedRise).toBeLessThanOrEqual(1.381);
+        const belowCrest = unprojectGround(x, y - allowedRise - .01);
+        expect(surfaceClass('home_islet', belowCrest.x, belowCrest.z)).toBeGreaterThan(0);
+        raisedCrests++;
+      }
       if (baseZ > 0) highestFront = Math.max(highestFront, depth);
       else highestRear = Math.max(highestRear, depth);
       return {x, y};
@@ -41,6 +51,7 @@ it('raises terraces without overlapping the shore, old defenses or any new wall 
   }
   expect(highestRear).toBeGreaterThan(2.45);
   expect(highestFront).toBeGreaterThan(1.42);
+  expect(raisedCrests).toBeGreaterThan(0);
   const coastalGuns = ALL_SPOTS.filter(spot => ['cannon_1', 'cannon_2', 'cannon_3', 'cannon_4'].includes(spot.id))
     .map(spot => ({...spot, kind: 'cannon'}));
   const inshore = defenseDisplayAnchors('home_islet', coastalGuns);
