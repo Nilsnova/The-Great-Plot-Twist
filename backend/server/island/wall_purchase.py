@@ -16,7 +16,6 @@ async def checked_layout(
     built: dict[str, Built],
     recovery_version: int,
 ) -> dict:
-    # A saved position must stay safe even if the Move flag is temporarily disabled.
     rows = await layout_store.read_rows(admin, owner)
     if rows is None:
         raise ApiError(503, "layout_unavailable", "Wall placement is not available yet.")
@@ -32,7 +31,8 @@ async def checked_layout(
     raw = saved.get(spot_id, (current.x, current.z))
     # A checked legacy position that actually changed needs a saved coordinate inside the
     # purchase. Existing matching rows and implicit defaults need no write.
-    materialize = catalogue.placement and raw != effective
+    # (The flag "placement" is retired and always on, 8210bc59: the catalogue no longer carries it.)
+    materialize = raw != effective
     return {
         "p_seen": layout_store.seen_rows(rows),
         "p_x_half": round(effective[0] * layout_store.HALF),

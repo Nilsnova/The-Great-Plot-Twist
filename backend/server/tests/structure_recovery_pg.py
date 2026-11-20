@@ -37,6 +37,7 @@ TABLES = frozenset(
 FUNCTIONS = frozenset(
     {
         "island_open",
+        "island_build_checked_wall",
         "islet_build",
         "island_economy_context",
         "island_lifecycle_actor_status",
