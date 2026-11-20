@@ -14,7 +14,7 @@
 .kit-modal.shell-screen[data-mode=settings] .controls-overview{border-top:2px solid #3d6a6b;padding-top:var(--u-4);font-size:var(--u-sm)}
 .kit-modal.shell-screen[data-mode=settings] .controls-overview h3{margin:0 0 var(--u-3)}
 .kit-modal.shell-screen[data-mode=settings] .controls-overview p{margin:0 0 var(--u-3)}
-.kit-modal.shell-screen[data-mode=settings] .controls-overview strong{display:block;margin-bottom:6px;color:var(--u-gold)}
+.kit-modal.shell-screen[data-mode=settings] .controls-overview strong{display:block;margin-bottom:6px;color:var(--u-parch)}
 .kit-modal.shell-screen[data-mode=settings] :is(.problem-report-description,.build-info){font:16px/1.55 var(--u-font)}
 .kit-modal.shell-screen[data-mode=settings] .shell-body>:is(.kit-button,a.kit-button){justify-self:start}
 .kit-modal.shell-screen[data-mode=settings] .shell-links{display:flex;flex-wrap:wrap;gap:var(--u-2)}

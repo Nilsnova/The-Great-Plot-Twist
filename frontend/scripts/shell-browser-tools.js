@@ -1,9 +1,9 @@
+import {FRONT_DOOR_KEY} from '../src/front-door/logic.js';
+
 // True once the player stands in the harbor with no dialog open. A dev build names the place through
 // window.__island; a production build has no such object (check-loading.js asserts that), so there the
 // focused world canvas is the sign that the harbor is ready.
-// It also returns true while a first-Play cutscene, How to play page or goal card is open.
-function inHarbor(orFirstCard = false) {
-  if (orFirstCard && document.querySelector('dialog.cutscene[open],.tutorial-card[open],.goal-card[open]')) return true;
+function inHarbor() {
   if (document.querySelector('dialog[open]')) return false;
   if (window.__island) return window.__island.world.current?.id === 'saltreach_harbor';
   return !!document.activeElement?.matches('canvas[tabindex="0"]');
@@ -13,16 +13,17 @@ function inHarbor(orFirstCard = false) {
 // Harbor. Shared graphics checks then exercise the world. The Lighthouse prologue left on 10 Nov (D031).
 export async function startFromTitle(page) {
   await page.locator('.shell-screen[open]').waitFor();
+  const first=await page.evaluate(key=>localStorage.getItem(key)!=='1',FRONT_DOOR_KEY);
   await page.locator('#play').click();
-  const skip=page.getByRole('button',{name:'Skip',exact:true}),card=page.locator('.goal-card[open]');
-  // The lore, the first How to play pages and the card show once per device; a later Play goes straight to the harbor.
-  await page.waitForFunction(inHarbor,true,{timeout:30000});
-  const first=await page.evaluate(()=>!!document.querySelector('dialog.cutscene[open],.tutorial-card[open],.goal-card[open]'));
-  if(await page.locator('dialog.cutscene[open]').count()){
-    await skip.click();await page.waitForFunction(()=>document.querySelector('.tutorial-card[open],.goal-card[open]'),null,{timeout:30000});
-  }
-  if(await page.locator('.tutorial-card[open]').count())await page.locator('.tutorial-card[open]').getByRole('button',{name:'Skip',exact:true}).click();
   if(first){
+    // The world canvas can receive focus before the first-run cutscene and cards have opened.
+    const lore=page.locator('dialog.cutscene[open]'),tutorial=page.locator('.tutorial-card[open]'),card=page.locator('.goal-card[open]');
+    await lore.or(tutorial).or(card).first().waitFor({timeout:30000});
+    if(await lore.count()){
+      await lore.getByRole('button',{name:'Skip',exact:true}).click();
+      await tutorial.or(card).first().waitFor({timeout:30000});
+    }
+    if(await tutorial.count())await tutorial.getByRole('button',{name:'Skip',exact:true}).click();
     await card.waitFor({timeout:30000});await card.getByRole('button',{name:'Got it',exact:true}).click();
   }
   await page.waitForFunction(inHarbor,null,{timeout:30000});

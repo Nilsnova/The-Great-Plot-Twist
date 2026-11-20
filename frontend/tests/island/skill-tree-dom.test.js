@@ -1,12 +1,12 @@
 // The skill tree and the Tech hub as real trees (src/island/skill-tree.js) in real Chromium with the fake server, on a
-// laptop (1280x720) and a phone (390x844): tiles in the three states joined by lines, one detail panel with one big
+// laptop (1280x720) and a phone (375x812): tiles in the three states joined by lines, one detail panel with one big
 // button for the tapped tile, keyboard (Enter on a tile, Enter on Learn), the respec and Escape, big touch targets,
 // and nothing wider than the screen (a phone shows one branch at a time).
 import {expect, it} from 'vitest';
 import {browserHarness} from '../g20-browser.js';
 const evaluate = browserHarness();
 
-const SIZES = [[1280, 720], [390, 844]];
+const SIZES = [[1280, 720], [375, 812]];
 // What the open card shows: the visible tiles' states, the one detail panel, overflow and the smallest tile.
 const look = (page, tiles) => page.evaluate(tiles => {
   const card = document.querySelector('.island-card[open]');
@@ -74,7 +74,7 @@ for (const [width, height] of SIZES) {
     const phone = width < 640;
     expect(result.first).toMatchObject({states: ['is-closed', 'is-learned', 'is-locked', 'is-ready'], details: 1, primary: 1, wide: true, overflow: false,
       shown: phone ? 7 : 21, branchTabs: phone ? 3 : 0});
-    expect(result.first.width).toBeGreaterThan(phone ? 370 : 1000);
+    expect(result.first.width).toBeGreaterThan(phone ? 355 : 1000);
     expect(result.first.lines).toBeGreaterThan(0);
     expect(result.first.smallest).toBeGreaterThanOrEqual(44);
     expect([result.firstFocus, result.first.detailName]).toEqual(['hot_shot', 'Hot shot']); // opens on the picked tile (the one learned last)
@@ -94,9 +94,12 @@ for (const [width, height] of SIZES) {
         const {createIsland} = await window.g20Import('/src/island/index.js');
         const {createFakeIslandTransport} = await window.g20Import('/src/pirates/fake-api.js');
         const {on, emit} = await window.g20Import('/src/core/events.js');
-        const transport = createFakeIslandTransport();
+        const transport = createFakeIslandTransport({flags: {more_tower_spots: true}});
         const island = createIsland({container: document.body, emit, on, mode: 'fake', transport, storage: null, menu: () => () => {}});
         transport.dev.setWaveBest(16); transport.dev.setCoins(2000); await island.load();
+        await island.build('cannon_1', 'cannon');
+        await island.build('cannon_2', 'mortar');
+        await island.build('cannon_8', 'cannon');
         await island.research({branch: 'cannon'});
         island.ui.close();
         island.openTechHub();
@@ -104,18 +107,70 @@ for (const [width, height] of SIZES) {
       });
       await page.locator('.island-card[open] .island-tech-tree').waitFor();
       const first = await look(page, '.island-research-option');
-      await page.locator('.island-research-option[data-option="long_guns"]').click();
+      const truncatedBranches = await page.locator('.island-branch-tab span:last-child:visible').evaluateAll(labels =>
+        labels.filter(label => label.scrollWidth > label.clientWidth).map(label => label.textContent));
+      const buildings = page.locator('.island-tech-buildings');
+      const acceptedIds = await buildings.getAttribute('data-spot-ids');
+      const acceptedLabels = await buildings.textContent();
+      const option = page.locator('.island-research-option[data-option="long_guns"]');
+      await option.focus(); await page.keyboard.press('Enter');
       const picked = await look(page, '.island-research-option');
+      const detail = await page.locator('.island-tech-scope').textContent();
+      await page.evaluate(() => window.testIsland.setBattle(true));
+      const reserved = await look(page, '.island-research-option');
       await page.keyboard.press('Escape');
       const closed = await page.evaluate(() => !document.querySelector('.island-card[open]'));
       await page.evaluate(() => window.testIsland.dispose());
-      return {first, picked, closed};
+      return {first, picked, closed, acceptedIds, acceptedLabels, detail, reserved, truncatedBranches};
     });
     const phone = width < 640;
     expect(result.first).toMatchObject({states: ['is-learned', 'is-locked', 'is-ready'], details: 1, primary: 1, detailName: 'Rapid II', wide: true, overflow: false,
       shown: phone ? 5 : 20, branchTabs: phone ? 4 : 0});
     expect(result.first.smallest).toBeGreaterThanOrEqual(44);
+    expect(result.truncatedBranches).toEqual([]);
     expect(result.picked).toMatchObject({details: 1, primary: 1, detailName: 'Long guns', button: 'Pick · 🪙 360', disabled: false, overflow: false});
+    expect([result.acceptedIds, result.acceptedLabels]).toEqual(['cannon_1 cannon_8', '2 built cannons · #1, #8']);
+    expect(result.detail).toContain('Research adds this bonus automatically.');
+    expect(result.detail).toContain('Tower upgrade paths are separate.');
+    expect(result.reserved).toMatchObject({disabled: true, reason: 'Between waves only.'});
     expect(result.closed).toBe(true);
   });
 }
+
+it('keeps the current island’s accepted defenses when a paid research answer from a visit arrives after sailing home', async () => {
+  const result = await evaluate.withPage(page => page.evaluate(async () => {
+    const {createIsland} = await window.g20Import('/src/island/index.js');
+    const {createFakeIslandTransport, FAKE_FRIEND} = await window.g20Import('/src/pirates/fake-api.js');
+    const {on, emit} = await window.g20Import('/src/core/events.js');
+    const base = createFakeIslandTransport({friends: [{...FAKE_FRIEND, waveBest: 25}]}), messages = [];
+    let finishReply, submitted;
+    const paid = new Promise(resolve => { submitted = resolve; });
+    const transport = {...base, async post(path, body) {
+      const answer = await base.post(path, body);
+      if (path !== '/api/island/research') return answer;
+      return new Promise(resolve => { finishReply = () => resolve(answer); submitted(); });
+    }};
+    const island = createIsland({container: document.body, on, mode: 'fake', transport, storage: null,
+      emit: event => { messages.push(event); emit(event); }, menu: () => () => {}});
+    const read = () => ({code: island.gameCode, cannon: document.querySelector('.island-tech-buildings')?.dataset.spotIds,
+      coins: island.island.coins, tier: island.campaign.research.tiers.cannon.tier});
+    try {
+      base.dev.setWaveBest(25); base.dev.setCoins(2000); await island.load();
+      await island.build('cannon_2', 'cannon');
+      island.visit(FAKE_FRIEND.code); await island.load(); island.openTechHub();
+      const visitor = read();
+      const pending = island.research({branch: 'cannon'}); await paid;
+      await island.sailHome(); island.openTechHub();
+      const home = read();
+      finishReply(); await pending;
+      return {visitor, home, after: read(), visitAccepted: base.world.islands.get(FAKE_FRIEND.code).research.includes('cannon'),
+        confirmedToasts: messages.filter(event => event.type === 'tech_researched').length};
+    } finally { island.dispose(); }
+  }));
+  expect(result.visitor).toMatchObject({code: 'FR3ND', cannon: 'cannon_1', tier: 0});
+  expect(result.home).toMatchObject({code: 'K7Q2M', cannon: 'cannon_2', tier: 0});
+  expect(result.after).toEqual(result.home);
+  expect(result.visitor.coins - result.after.coins).toBe(180);
+  expect(result.visitAccepted).toBe(true);
+  expect(result.confirmedToasts).toBe(0);
+});

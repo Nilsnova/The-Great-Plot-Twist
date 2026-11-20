@@ -5,6 +5,7 @@
 
 import { round2, distance } from './sim-read.js';
 import { crewFor } from './sim-fleet.js';
+import { barracksPosts } from '../campaign/houses.js';
 
 export function createTick(sim) {
   const { C, B, heart, waveNumber, fog, countdown, withFlagship, boss, crew, curve, happening, finisher, rescue, S,
@@ -28,10 +29,10 @@ export function createTick(sim) {
       if (happening.id) events.push({ type: 'wave_event', t: 0, event: happening.id, wave: waveNumber });
       // The Barracks' militia walk out of their doors (CONFIG.houses.barracks), the same on every screen.
       const G = HO.barracks;
-      for (const house of barracks) for (let k = 0; k < G.units[house.level - 1] && militia.length < G.max; k++) {
+      for (const { house, x: homeX, z: homeZ } of barracksPosts(barracks, G)) {
         const id = `militia_${militia.length + 1}`, hp = Math.round(G.hp[house.level - 1] * curve.hp);
-        const unit = { id, militia: true, houseId: house.id, homeX: round2(house.x + (k ? .9 : 0) - (G.units[house.level - 1] > 1 ? .45 : 0)),
-          homeZ: round2(house.z + G.door), x: house.x, z: round2(house.z + .6), hp, maxHp: hp, damage: round2(G.damage[house.level - 1] * curve.hp),
+        const unit = { id, militia: true, houseId: house.id, homeX, homeZ,
+          x: house.x, z: round2(house.z + .6), hp, maxHp: hp, damage: round2(G.damage[house.level - 1] * curve.hp),
           state: 'walking', foe: null, hitIn: G.every / 2, facing: 1, level: house.level };
         militia.push(unit); militiaById.set(id, unit);
         events.push({ type: 'militia_out', t: 0, militiaId: id, houseId: house.id, hp, x: round2(unit.x), z: round2(unit.z) });

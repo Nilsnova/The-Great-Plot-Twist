@@ -27,6 +27,62 @@ async function withPhone(width, height, run) {
   });
 }
 
+it.each([[375, 812, false], [320, 568, false], [320, 568, true]])('keeps the post-wave caption and Use reachable at %s×%s (large: %s)', async (width, height, large) => {
+  await withPhone(width, height, async page => {
+    await page.evaluate(async large => {
+      for (const sheet of ['/src/ui/base.css', '/src/ui/kit/kit.css', '/src/ui/shell.css', '/src/ui/devices.css']) await window.g20Import(sheet);
+      const {createTouchControls} = await window.g20Import('/src/controls/touch.js');
+      const {createWaveHud} = await window.g20Import('/src/pirates/hud.js');
+      const {default: createCaptionsView} = await window.g20Import('/src/audio/captions-view.js');
+      const {createToasts} = await window.g20Import('/src/ui/toasts.js');
+      const {default: campaign} = await window.g20Import('/src/campaign/campaign.json');
+      const {createNarratorCard} = await window.g20Import('/src/narrator/card.js');
+      const {default: lines} = await window.g20Import('/src/narrator/lines.json');
+      const game = document.createElement('main'); document.body.append(game);
+      window.inputs = []; window.skips = 0;
+      window.touch = createTouchControls(game, {setVirtual() {}, press: code => inputs.push(code)}, {});
+      window.narration = createNarratorCard(game, {large: () => large, onSkip: () => window.skips++});
+      const wave = createWaveHud({container: game});
+      wave.bar({wave: 1, shipsLeft: 0, boardersLeft: 0, islandHp: 100, maxIslandHp: 100});
+      wave.pause({title: 'Wave 1 won!', line: '3 ships sunk · +15', ready: true, seconds: 8, hold: {label: 'Pause', enabled: true}});
+      createCaptionsView(game).show('Victory: the island holds');
+      if (!large) {
+        const unlock = campaign.steps.find(step => step.wave === 1);
+        createToasts({parent: game}).show({text: unlock.title, next: unlock.line, tone: 'success', context: 'first-wave-unlock'});
+      }
+      touch.update(null, true);
+      narration.show(lines.lines.find(line => line.id === 'unlock_captain'));
+    }, large);
+    await page.evaluate(() => touch.update('wall_1', true, 'Build here', true));
+    const use = page.getByRole('button', {name: 'Use: Build here'});
+    const skip = page.getByRole('button', {name: 'Skip the narrator'});
+    await expect.poll(() => use.evaluate(button => {
+      const card = narration.element, skip = card.querySelector('button');
+      const r = card.getBoundingClientRect(), b = button.getBoundingClientRect(), s = skip.getBoundingClientRect();
+      const centerHits = (node, box) => node.contains(document.elementFromPoint((box.left + box.right) / 2, (box.top + box.bottom) / 2));
+      const separate = r.right <= b.left || r.left >= b.right || r.bottom <= b.top || r.top >= b.bottom;
+      return {separate, useHit: centerHits(button, b), skipHit: centerHits(skip, s), skipSize: [s.width, s.height]};
+    })).toEqual({separate: true, useHit: true, skipHit: true, skipSize: [44, 44]});
+    if (!large) expect(await use.evaluate(button => {
+      const rect = node => node.getBoundingClientRect();
+      const intersects = (a, b) => a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
+      const caption = rect(narration.element), cue = rect(document.querySelector('.sound-caption'));
+      const result = rect(document.querySelector('.pirate-break'));
+      const stick = rect(document.querySelector('.touch-stick-group'));
+      const toast = rect(document.querySelector('.u-toast'));
+      return {
+        otherOverlaps: [intersects(caption, cue), intersects(caption, result), intersects(cue, rect(button)), intersects(cue, stick)],
+        toastClear: [caption, cue, result, stick, rect(button)].every(box => !intersects(toast, box)),
+        soundGap: cue.top - toast.bottom >= 4,
+      };
+    })).toEqual({otherOverlaps: [false, false, false, false], toastClear: true, soundGap: true});
+    if (!large) expect(await page.locator('.u-toasts').ariaSnapshot()).toContain('Houses add loot after every won wave.');
+    await capture(page, `${width}x${height}-post-wave-touch${large ? '-large' : ''}`);
+    await use.tap(); await skip.tap();
+    expect(await page.evaluate(() => ({inputs, skips}))).toEqual({inputs: ['KeyE'], skips: 1});
+  });
+});
+
 async function mount(page, large = false) {
   await page.evaluate(async large => {
     for (const sheet of ['/src/ui/base.css', '/src/ui/kit/kit.css', '/src/ui/styles.css', '/src/ui/readability.css', '/src/ui/devices.css']) await window.g20Import(sheet);

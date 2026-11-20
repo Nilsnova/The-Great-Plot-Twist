@@ -1,0 +1,22 @@
+.kit-modal.defense-report-modal { width: min(560px, calc(100vw - 24px)); }
+.defense-report-result { font-size: 1.2em; font-weight: 750; margin: 0 0 10px; }
+.defense-report-totals { display: flex; flex-wrap: wrap; gap: 6px 18px; }
+.defense-report-totals p { margin: 0; }
+.defense-report-note { color: var(--u-mute); font-size: .9em; margin-block: 8px; }
+.defense-report-site {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin-block: 14px;
+  padding: 10px 12px;
+  border-inline-start: 3px solid #9dd5c9;
+  border-radius: 5px;
+  background: #73adab20;
+}
+.defense-report-site > p { margin: 0; }
+.defense-report-site [role="status"] { flex-basis: 100%; }
+.defense-report-site .kit-button { flex: none; min-height: 44px; margin-inline-start: auto; }
+.defense-report-structures > summary { padding-block: 8px; cursor: pointer; }
+.defense-report-structures ul { margin: 12px 0 0; padding-inline-start: 20px; }
+.defense-report-structures li > p { margin: 4px 0 12px; }
