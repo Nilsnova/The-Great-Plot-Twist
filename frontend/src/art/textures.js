@@ -7,6 +7,8 @@ import {paint} from './paint.js';
 import {islandFrame, framesFor} from './registry.js';
 import {NO_OUTLINE} from './island.js';
 import {acquireRasterSheet, getRasterFrame, normalizeRasterFrame} from './village-raster.js';
+import {applyVillagePalette} from './village-palette.js';
+import {applyWallMaterials} from './wall-materials.js';
 
 const CAP = {high: 4, low: 2};
 // Logical px per screen height at zoom 1 (the camera frames about 20 units = 320 logical px).
@@ -81,7 +83,14 @@ export async function paintIds(ids, density, visit, {frames = null, acquire = ac
   }
   for (const {sheet, ids: names} of groups.values()) {
     const lease = await acquire(sheet);
-    try { for (const id of names) visit(id, paintId(id, density, frames[id], lease.image)); } finally { lease.release(); }
+    try {
+      for (const id of names) {
+        const canvas = paintId(id, density, frames[id], lease.image);
+        applyVillagePalette(id, canvas);
+        applyWallMaterials(id, canvas);
+        visit(id, canvas);
+      }
+    } finally { lease.release(); }
   }
 }
 
@@ -93,7 +102,17 @@ export async function paintIds(ids, density, visit, {frames = null, acquire = ac
 export function lazyMaterials(names, density = screenDensity()) {
   const known = new Set(names.filter(name => islandFrame(name))), target = {};
   const make = name => {
-    if (!Object.hasOwn(target, name) && known.has(name)) target[name] = spriteMaterial(smoothTexture(frameCanvas(name, density)));
+    if (!Object.hasOwn(target, name) && known.has(name)) {
+      const frame = islandFrame(name), detailLimit = frame[4]?.worldDetail;
+      let resolution = density;
+      // Small vector scenery may opt into a finer desktop canvas. Atlas inputs and low quality
+      // keep their requested densities because their backing textures have separate budgets.
+      if (detailLimit > density && density >= CAP.high && typeof window !== 'undefined' && window.innerWidth >= 1024) {
+        const native = window.innerHeight * (window.devicePixelRatio || 1) / VIEW_LOGICAL_ROWS;
+        resolution = Math.max(density, Math.min(detailLimit, Math.ceil(native * 2) / 2));
+      }
+      target[name] = spriteMaterial(smoothTexture(frameCanvas(name, resolution, frame)));
+    }
     return target[name];
   };
   return new Proxy(target, {

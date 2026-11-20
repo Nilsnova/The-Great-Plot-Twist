@@ -81,7 +81,8 @@ export function canvas(width, height) {
 /**
  * Paints one drawing into a new canvas: size [w, h] in logical px, density texels per logical px,
  * outline the extra silhouette ring (logical px) drawn around the whole sprite in ink, so every
- * sprite gets the same bold outer edge whatever its parts. Returns the canvas.
+ * sprite gets the same outer edge whatever its parts. A painter may set c.outlineStops to tint
+ * that edge with the same light direction as its materials. Returns the canvas.
  */
 export function paint(draw, [w, h], density = 2, { outline = .9, pad = 0 } = {}) {
   const width = Math.max(1, Math.ceil(w * density)), height = Math.max(1, Math.ceil(h * density));
@@ -93,7 +94,9 @@ export function paint(draw, [w, h], density = 2, { outline = .9, pad = 0 } = {})
   if (outline <= 0) return art;
   // The silhouette ring: the sprite's alpha in ink, stamped in a circle behind the sprite.
   const ring = canvas(width, height), r = ring.getContext('2d');
-  r.drawImage(art, 0, 0); r.globalCompositeOperation = 'source-in'; r.fillStyle = INK; r.fillRect(0, 0, width, height);
+  r.drawImage(art, 0, 0); r.globalCompositeOperation = 'source-in';
+  r.fillStyle = c.outlineStops ? linear(r, width * .05, height * .15, width * .8, height * .9, c.outlineStops) : INK;
+  r.fillRect(0, 0, width, height);
   const out = canvas(width, height), o = out.getContext('2d'), k = outline * density;
   // Ground shadows sit under the ring and the sprite, so they never get an outline.
   o.setTransform(density, 0, 0, density, 0, 0); for (const item of shadows) shadow(o, ...item); o.setTransform(1, 0, 0, 1, 0, 0);

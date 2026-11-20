@@ -216,16 +216,15 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       && (!own.islandEpoch || recoveryState.islandEpoch === own.islandEpoch) ? recoveryState : null;
     const needsLegacyWalls = !needsRecovery && wallRecovery();
     const legacyWalls = needsLegacyWalls && wallsFor === own.code ? walls : null;
-    const defensesV2 = defensesV2On() === true || recoveryPolicyOn();
     // Accepted data and the local Move draft change independently. Stable frames reuse their snapshot.
     const cached = approachCache;
     if (cached?.island === own && cached.target === approachTarget && cached.draft === approachMove
       && cached.recovery === recovery && cached.legacyWalls === legacyWalls && cached.needsLegacyWalls === needsLegacyWalls
-      && cached.needsRecovery === needsRecovery && cached.defensesV2 === defensesV2) return cached.value;
+      && cached.needsRecovery === needsRecovery) return cached.value;
     const value = approachSnapshot({target: approachTarget, island: own, draft: approachMove,
-      recovery, needsRecovery, legacyWalls, needsLegacyWalls, defensesV2});
+      recovery, needsRecovery, legacyWalls, needsLegacyWalls, defensesV2: true});
     approachCache = {island: own, target: approachTarget, draft: approachMove, recovery,
-      legacyWalls, needsLegacyWalls, needsRecovery, defensesV2, value: cached?.value.version === value.version ? cached.value : value};
+      legacyWalls, needsLegacyWalls, needsRecovery, value: cached?.value.version === value.version ? cached.value : value};
     return approachCache.value;
   }
   const villageKeys = event => {
@@ -341,7 +340,11 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       isl.world = deco; isl.coreWorld = core; applyWorld(); core.setHealth(isl.coreState.current);
       deco.runArtTask('core', () => core.retryArt());
       const original = place.update;
-      place.update = (dt, frame) => { original(dt, frame); deco.update(dt, frame?.time ?? 0, frame?.paused); };
+      place.update = (dt, frame) => {
+        original(dt, frame);
+        deco.update(dt, frame?.time ?? 0, frame?.paused, frame);
+        core.update(dt, frame, reducedMotion());
+      };
       cleanups.push(() => { deco.dispose(); core.dispose(); if (isl.world === deco) { isl.world = null; isl.housePlayer = null; } if (isl.coreWorld === core) isl.coreWorld = null; place.update = original; });
     },
     // Pirate Point's shared build spots on lighthouse_isle (factory.js); its bell and lamps stay lane P's.
@@ -378,7 +381,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     anchor(zone) {
       const thing = placedSpot(zone, target()?.spots) ?? ppSpotById(zone) ?? (zone === BELL.id ? BELL : zone === CABIN.id ? CABIN : zone === ARSENAL.id ? ARSENAL : campaignBuilding(zone));
       if (!thing) return null;
-      return {x: thing.x, z: thing.z, lift: thing.kind === 'watchtower' ? 4.6 : thing.h ? Math.min(4.6, thing.h * .7) : 2.6};
+      return {x: thing.x, z: thing.z, ...isl.world?.displayAnchor(zone), lift: thing.kind === 'watchtower' ? 4.6 : thing.h ? Math.min(4.6, thing.h * .7) : 2.6};
     },
     presencePlace(place) {
       if (place !== ISLAND_PLACE) return null;
@@ -491,6 +494,11 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     get active() { return isl.ui.active || !!isl.cutscene || isl.boatLoading || !!isl.boatGame; }, // Pending rounds hold the keys too.
     get managing() { return isl.village.active; },
     get selection() { return selectedAnchor(); },
+    get selectionView() {
+      const selection = selectedAnchor();
+      const view = selection && isl.world?.displayAnchor(selection.spotId);
+      return view ? {...selection, ...view} : selection;
+    },
     get selectionElement() { return isl.ui.selectionElement; },
     get defenseReportIdentity() { return defenseReportIdentity(); },
     canFocusDefenseReport, resolveDefenseReport, focusDefenseReport,

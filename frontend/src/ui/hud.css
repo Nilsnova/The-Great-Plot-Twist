@@ -2,18 +2,45 @@
    Small frames use the same rounded brass rim and soft shadow as the panels (kit.css tokens). */
 .hud-play{font-family:var(--u-font);color:var(--u-ink)}
 .hud-play .hud-coins,.hud-play .hud-menu,.hud-play .quest-strip,.hud-play .interact,.hud-arrival{box-shadow:var(--u-frame);border-radius:var(--u-radius-sm)}
-.hud-play .hud-coins{position:absolute;top:18px;left:20px;display:flex;align-items:center;gap:12px;min-height:44px;padding:6px 16px;box-sizing:border-box;background:var(--u-sea);font:800 22px/1 var(--u-font);color:var(--u-gold);font-variant-numeric:tabular-nums;letter-spacing:.5px;pointer-events:auto}
+.hud-play .hud-coins{position:absolute;top:18px;left:20px;display:flex;align-items:center;gap:12px;min-height:44px;padding:6px 16px;box-sizing:border-box;background:var(--u-chip-surface) var(--u-sea);font:800 22px/1 var(--u-font);color:var(--u-gold);font-variant-numeric:tabular-nums;letter-spacing:.5px;pointer-events:auto}
 .hud-play .hud-wave{display:inline-flex;align-items:center;gap:8px;padding-left:12px;border-left:1px solid var(--u-gold);color:var(--u-ink);font:700 18px/1.2 var(--u-font);letter-spacing:0;white-space:nowrap}
 .hud-play .hud-wave[hidden]{display:none}
+/* Embossed doubloon and turquoise wave crest. Forced colors use the original glyphs. */
+.hud-play .hud-symbol-text{display:none}
+.hud-play .hud-coin-mark,.hud-play .hud-wave-icon{display:inline-block;position:relative;width:1.08em;height:1em;line-height:1;overflow:hidden;color:transparent;flex:none}
+.hud-play .hud-coin-mark{
+  vertical-align:-.12em;box-sizing:border-box;width:1em;border:1px solid #ffe6a1;border-radius:50%;
+  background:linear-gradient(135deg,#fff0b1 5%,#ffc655 43%,#c77e13 94%);
+  box-shadow:inset 0 0 0 .075em #a96122,inset .10em .12em 0 #fff2bb,darkgoldenrod 0 .04em .04em,#092b36 0 .10em .10em;
+}
+.hud-play .hud-coin-mark::after{
+  content:"⚓︎";position:absolute;inset:0;display:grid;place-items:center;
+  color:#88501b;font-size:.73em;text-shadow:0 1px #ffdf91;
+}
+.hud-play .hud-wave-icon::before,.hud-play .hud-wave-icon::after{content:"";position:absolute}
+.hud-play .hud-wave-icon::before{
+  inset:.10em .04em .16em .23em;transform:skewX(-20deg) rotate(-11deg);
+  border:.175em solid #66ced5;border-right-color:#3299b0;border-bottom-color:transparent;border-radius:56% 61% 22% 35%;
+}
+.hud-play .hud-wave-icon::after{
+  bottom:.16em;left:.03em;width:.98em;height:.30em;background:#57bac9;
+  border-radius:70% 18% 72% 16%;transform:rotate(-7deg);
+}
+@media(forced-colors:active){
+  .hud-play .hud-symbol-text{display:inline}
+  .hud-play .hud-coin-mark,.hud-play .hud-wave-icon{color:CanvasText;overflow:visible;background:none;border:0;box-shadow:none}
+  .hud-play .hud-coin-mark::after,.hud-play .hud-wave-icon::before,.hud-play .hud-wave-icon::after{content:none}
+}
+
 .hud-play .hud-right{position:absolute;top:18px;right:20px;width:min(310px,calc(100vw - 40px));display:grid;justify-items:end;gap:14px}
-.hud-play .hud-menu{display:inline-flex;align-items:center;gap:10px;min-height:44px;padding:8px 16px;border:0;background:var(--u-sea);color:var(--u-ink);font:700 17px/1 var(--u-font);cursor:pointer;pointer-events:auto}
-.hud-play .hud-menu:hover{background:var(--u-raise)}.hud-play .hud-menu:focus-visible{outline:3px solid var(--u-gold);outline-offset:6px}
+.hud-play .hud-menu{display:inline-flex;align-items:center;gap:10px;min-height:44px;padding:8px 16px;border:0;background:var(--u-chip-surface) var(--u-sea);color:var(--u-ink);font:700 17px/1 var(--u-font);cursor:pointer;pointer-events:auto}
+.hud-play .hud-menu:hover{background:var(--u-quiet-surface) var(--u-raise)}.hud-play .hud-menu:focus-visible{outline:3px solid var(--u-gold);outline-offset:6px}
 .hud-menu-icon{width:18px;height:3px;background:currentColor;box-shadow:0 -6px currentColor,0 6px currentColor}
 
 /* The quest strip: only the current goal shows (owner, 15 Nov: "limit the visual overload"); the title's
    "1 of 10" says how many there are, and a tap on the goal shows its hint. */
 .quest-strip li:not(:has([data-current=true])){display:none}
-.hud-play .quest-strip{width:100%;box-sizing:border-box;margin-top:var(--hud-quest-offset,0px);padding:10px 12px 12px;background:#123238f0;pointer-events:auto}
+.hud-play .quest-strip{width:100%;box-sizing:border-box;margin-top:var(--hud-quest-offset,0px);padding:10px 12px 12px;background:var(--u-panel-surface) var(--u-sea);pointer-events:auto}
 .quest-strip h2{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:0 0 8px;font:700 18px/1.2 var(--u-serif);color:var(--u-gold)}
 .quest-strip .quest-progress{font:600 16px/1 var(--u-font);color:var(--u-mute);margin-left:auto}
 .quest-fold{flex:0 0 auto;min-width:44px;min-height:44px;margin:-12px -8px -12px 0;border:0;background:none;color:var(--u-gold);font:700 20px/1 var(--u-font);cursor:pointer}
@@ -23,16 +50,17 @@
 .quest-item{display:flex;align-items:center;gap:10px;width:100%;min-height:44px;padding:6px 10px 6px 6px;text-align:left;font:600 16px/1.3 var(--u-font);color:var(--u-ink);background:var(--u-card);border:2px solid #3d6a6b;cursor:pointer}
 .quest-item:hover{background:var(--u-raise)}.quest-item:focus-visible{outline:3px solid var(--u-gold);outline-offset:2px}
 .quest-check{flex:0 0 28px;height:28px;display:grid;place-items:center;font:800 16px/1 var(--u-font);color:var(--u-ink);background:var(--u-deep);border:2px solid var(--u-line)}
-.quest-item[data-current=true]{border-color:var(--u-gold);background:#1f4a4a}.quest-item[data-current=true] .quest-check{background:var(--u-gold);border-color:var(--u-deep);color:#2b1d06}
+.quest-item[data-current=true]{border-color:var(--u-brass);background:var(--u-paper-surface) var(--u-parch);color:var(--u-pink)}.quest-item[data-current=true] .quest-check{background:var(--u-action-surface) var(--u-gold);border-color:var(--u-brown);color:#2b1d06}
+.quest-item[data-current=true]:hover{background:#fff0ca}
 .quest-item[data-done=true]{color:var(--u-mute);background:#173a3f}.quest-item[data-done=true] .quest-check{background:#2f6b5a;border-color:#a9d39a;color:#fff}
 .quest-item[data-done=true] .quest-label{text-decoration:line-through;text-decoration-thickness:2px}
-.quest-hint{margin:8px 0 0;padding:10px 12px;font:16px/1.45 var(--u-font);background:var(--u-parch);color:var(--u-pink);border:2px solid var(--u-brown)}
+.quest-hint{margin:8px 0 0;padding:10px 12px;font:16px/1.45 var(--u-font);background:var(--u-paper-surface) var(--u-parch);color:var(--u-pink);border:2px solid var(--u-brown)}
 .quest-next{margin:8px 0 0;font:600 16px/1.4 var(--u-font);color:var(--u-gold)}
 
 /* Contextual: the arrival banner, the E prompt */
-.hud-arrival{position:absolute;top:18%;left:50%;transform:translateX(-50%);display:grid;justify-items:center;gap:2px;width:max-content;max-width:calc(100vw - 40px);box-sizing:border-box;padding:12px 32px 14px;background:var(--u-parch);color:var(--u-pink);text-align:center;animation:hud-arrive 2s ease both;pointer-events:none}
-.hud-arrival span{font:700 16px/1.3 var(--u-font);letter-spacing:2px;text-transform:uppercase;color:var(--u-brown)}.hud-arrival strong{font:700 30px/1.15 var(--u-serif)}
-@keyframes hud-arrive{0%{opacity:0;transform:translate(-50%,-10px)}12%,82%{opacity:1;transform:translate(-50%,0)}100%{opacity:0}}
+.hud-arrival{position:absolute;top:18%;left:50%;transform:translateX(var(--hud-arrival-x,-50%));display:grid;justify-items:center;gap:2px;width:max-content;max-width:calc(100vw - 40px);box-sizing:border-box;padding:12px 32px 14px;background:var(--u-paper-surface) var(--u-parch);color:var(--u-pink);text-align:center;animation:hud-arrive 2s ease both;pointer-events:none}
+.hud-arrival span{display:var(--hud-arrival-eyebrow,block);font:700 16px/1.3 var(--u-font);letter-spacing:2px;text-transform:uppercase;color:var(--u-brown)}.hud-arrival strong{font:700 var(--hud-arrival-title,30px)/1.15 var(--u-serif)}
+@keyframes hud-arrive{0%{opacity:0;transform:translate(var(--hud-arrival-x,-50%),-10px)}12%,82%{opacity:1;transform:translate(var(--hud-arrival-x,-50%),0)}100%{opacity:0}}
 .hud-play .interact{position:absolute;bottom:96px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:12px;max-width:calc(100vw - 40px);padding:8px 16px 8px 8px;background:var(--u-sea);border:0}
 .hud-play .interact kbd{display:grid;place-items:center;min-width:34px;height:34px;padding:0 6px;font:800 18px/1 var(--u-font);color:#2b1d06;background:var(--u-gold);border:2px solid var(--u-deep)}
 .hud.hud-play .interact.floating{bottom:auto;transform:translate(-50%,-100%);pointer-events:none;white-space:nowrap}
@@ -56,7 +84,32 @@
   .hud-play .quest-strip{padding:8px 10px 10px}
   .quest-strip h2{font-size:16px;margin-bottom:6px}
   .hud-play .interact{bottom:84px;max-width:calc(100vw - 24px)}
-  .hud-arrival{top:30%}.hud-arrival strong{font-size:26px}
+  .hud-arrival{top:30%;--hud-arrival-title:26px}
+}
+/* The Home portrait header keeps its three pieces on one row above the village. */
+@media(min-width:355px) and (max-width:600px) and (orientation:portrait){
+  .hud-play.hud-home:not(.hud-wide-balance) .hud-coins {
+    display:flex; max-width:calc((100vw - 132px) / 2 - 17px); padding:7px 9px;
+    font-size:17px; gap:4px;
+  }
+  .hud-play.hud-home:not(.hud-wide-balance) .hud-wave:not([hidden]) {
+    position:absolute; top:0; left:calc(50vw - 12px); transform:translateX(-50%);
+    box-sizing:border-box; min-height:44px; max-width:calc(100vw - 225px); padding:6px 7px; gap:4px;
+    border:0; border-radius:var(--u-radius-sm); box-shadow:var(--u-frame);
+    background:var(--u-chip-surface) var(--u-sea); font-size:13px; pointer-events:none;
+  }
+  .hud-play.hud-home:not(.hud-wide-balance) .hud-wave-value { min-width:0; overflow:hidden; text-overflow:ellipsis; }
+  .hud-play.hud-home:not(.hud-wide-balance) .hud-menu { padding-inline:10px; gap:7px; }
+}
+/* On portrait exploration landings, keep the map and its first paths clear. */
+@media(max-width:600px) and (orientation:portrait){
+  .hud-play:has(.hud-coins[hidden]){--hud-arrival-top:12px}
+  :is(.hud-play:has(.hud-coins[hidden]),
+      html:not(:has(.pirate-hud:not([hidden]) .pirate-bar:not([hidden])))
+        .hud-play:has(.hud-coins:not([hidden])):not(:has(.hud-wave:not([hidden]),.quest-strip:not([hidden])))) .hud-arrival{
+    --hud-arrival-title:18px;--hud-arrival-eyebrow:none;--hud-arrival-x:0%;
+    top:var(--hud-arrival-top,64px);left:12px;max-width:calc(100vw - 148px);padding:8px 12px;text-align:left;overflow-wrap:anywhere
+  }
 }
 @media(prefers-reduced-motion:reduce){.hud-arrival{animation:none}}
 html[data-reduced-motion=true] .hud-arrival{animation:none}

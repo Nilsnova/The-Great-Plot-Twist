@@ -5,6 +5,8 @@ import {artSizes,projectPoint} from '../art.js';
 import {PRESENCE_LIMITS,captainVariant,placePresenceLabels,resolveActorAsset,samplePosition,selectNearby,shouldSnapSample} from './logic.js';
 import {poseFrame} from '../../pirates/poses.js';
 import {createShotArt} from '../../pirates/shot-art.js';
+import {isWavePlace,PIRATE_POINT_PLACE} from '../../net/live-rules.js';
+import {createActorContacts} from '../actor-contact.js';
 const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
 const materialFor=(art,id)=>art[id]??art.explorer;
 function makeMesh(name,material,asset){
@@ -24,6 +26,7 @@ export function createOtherCaptains(scene,container,art,reducedMotion=false,{col
   const readScale=()=>{try{const k=Number(scale());return Number.isFinite(k)&&k>0?k:1;}catch{return 1;}};
   const withColour=peer=>{let own=null;try{own=colourOf(peer?.id);}catch{own=null;}return Number.isInteger(own)&&own>=0&&own<10?{...peer,colour:own+1}:peer;};
   const records=new Map();let input={status:'off',place:null,others:[],hiddenCount:0,sampledAt:0},clock=0,stats={drawn:0,hidden:0,ids:[]};let disposed=false,ingested=0,ripples=0;
+  let contacts;
   function releaseRenderable(record){
     if(!record.group)return;
     root.remove(record.group);record.body.geometry.dispose();record.emoteMesh?.geometry.dispose();record.poseMesh?.geometry.dispose();record.shotArt?.dispose();record.shotArt=null;
@@ -51,7 +54,8 @@ export function createOtherCaptains(scene,container,art,reducedMotion=false,{col
   }
   function createRecord(peer,time){
     const record={id:peer.id,group:null,body:null,emoteMesh:null,poseMesh:null,label:null,asset:null,peer:{...peer},from:{x:peer.x,y:peer.y},to:{x:peer.x,y:peer.y},fromAt:time,toAt:time,
-      place:peer.place,receivedAt:time,joinedAt:time,leavingAt:null,ownedMaterial:null,ownedEmoteMaterial:null,emoteId:null,quiet:ingested===0,announced:false,emoteAt:0};
+      place:peer.place,receivedAt:time,joinedAt:time,leavingAt:null,ownedMaterial:null,ownedEmoteMaterial:null,emoteId:null,quiet:ingested===0,announced:false,emoteAt:0,
+      idlePhase:0,idlePeriod:3.25+(peer.id.charCodeAt(peer.id.length-1)%7)*.12};
     records.set(peer.id,record);return record;
   }
   const positionAt=(record,time)=>samplePosition({...record,time,moving:record.peer.moving});
@@ -88,6 +92,10 @@ export function createOtherCaptains(scene,container,art,reducedMotion=false,{col
     const {selected,hidden}=selectNearby([...records.values()],{place,player:{x:player?.x??0,y:player?.y??0},now:clock,filter,blocked,max});
     const chosen=new Set(selected.map(record=>record.id));
     const motionOff=typeof reducedMotion==='function'?reducedMotion():reducedMotion;
+    const homeIsland=place==='home_islet'||(place!==PIRATE_POINT_PLACE&&isWavePlace(place));
+    if(homeIsland&&selected.length&&!contacts)contacts=createActorContacts(scene,'home-visitor-foot-shadows',PRESENCE_LIMITS.visible);
+    contacts?.begin();
+    const idleStep=Number.isFinite(dt)?clamp(dt,0,.1):0;
     const assets=new Map(selected.map(record=>[record.id,resolveActorAsset(withColour(record.peer),{facing:record.peer.facing,moving:!motionOff&&record.peer.moving,frame:Math.floor(clock/180)%2+1,hasAsset:id=>Boolean(art[id])})]));
     for(const record of [...records.values()]){
       if(record.leavingAt!==null&&clock-record.leavingAt>=PRESENCE_LIMITS.fadeMs){removeRecord(record);continue;}
@@ -99,13 +107,21 @@ export function createOtherCaptains(scene,container,art,reducedMotion=false,{col
       const point=positionAt(record,clock),placePoint=projectPoint(point.x,point.y);record.group.position.set(placePoint.x,placePoint.y,0);record.body.userData.logical=point;
       if(!record.announced){record.announced=true;if(!record.quiet&&clock-record.joinedAt<1500)arrive(placePoint,motionOff);}
       const bodyAsset=assets.get(record.id);record.asset=bodyAsset;record.body.userData.asset=bodyAsset;const fadeIn=clamp((clock-record.joinedAt)/260,0,1),fadeOut=record.leavingAt===null?1:clamp(1-(clock-record.leavingAt)/PRESENCE_LIMITS.fadeMs,0,1),alpha=fadeIn*fadeOut;
-      setMaterial(record,record.body,materialFor(art,bodyAsset),'body',alpha);{const k=readScale();record.body.scale.set((record.peer.facing==='left'?-1:1)*k,k,1);}record.body.renderOrder=100+record.peer.y+.15;
-      {const pose=typeof poses?.get==='function'?poses.get(record.id):null,posed=pose?poseFrame(pose,captainVariant(withColour(record.peer))-1):null;
-        if(posed&&art[posed]){
-          if(!record.poseMesh){record.poseMesh=makeMesh(posed,art[posed],posed);record.poseMesh.name='captain-pose';record.group.add(record.poseMesh);record.shotArt=createShotArt();}
-          const k=readScale();record.poseMesh.material=record.shotArt.material(pose,captainVariant(withColour(record.peer))-1)??art[posed];record.poseMesh.userData.pose=posed;record.poseMesh.scale.set((pose.flip?-1:1)*k,k,1);
-          record.poseMesh.renderOrder=record.body.renderOrder;record.poseMesh.visible=true;record.body.visible=false;
-        }else{if(record.poseMesh)record.poseMesh.visible=false;record.body.visible=true;}}
+      const k=readScale();
+      if(homeIsland&&record.group.visible)contacts?.add(point.x,point.y,k,alpha);
+      const pose=typeof poses?.get==='function'?poses.get(record.id):null,posed=pose?poseFrame(pose,captainVariant(withColour(record.peer))-1):null;
+      const idle=homeIsland&&!motionOff&&record.group.visible&&record.leavingAt===null&&clock>=record.toAt
+        &&!record.peer.moving&&!record.peer.emote&&!pose;
+      record.idlePhase=idle?(record.idlePhase+idleStep)%record.idlePeriod:0;
+      // The body origin is its planted foot. A subtle torso stretch needs no extra mesh or position change.
+      const breath=1+.016*Math.sin(Math.PI*record.idlePhase/record.idlePeriod)**2;
+      record.body.scale.set((record.peer.facing==='left'?-1:1)*k,k*breath,1);
+      setMaterial(record,record.body,materialFor(art,bodyAsset),'body',alpha);record.body.renderOrder=100+record.peer.y+.15;
+      if(posed&&art[posed]){
+        if(!record.poseMesh){record.poseMesh=makeMesh(posed,art[posed],posed);record.poseMesh.name='captain-pose';record.group.add(record.poseMesh);record.shotArt=createShotArt();}
+        record.poseMesh.material=record.shotArt.material(pose,captainVariant(withColour(record.peer))-1)??art[posed];record.poseMesh.userData.pose=posed;record.poseMesh.scale.set((pose.flip?-1:1)*k,k,1);
+        record.poseMesh.renderOrder=record.body.renderOrder;record.poseMesh.visible=true;record.body.visible=false;
+      }else{if(record.poseMesh)record.poseMesh.visible=false;record.body.visible=true;}
       if(record.peer.emote&&art[`emote-${record.peer.emote}`]){
         if(record.emoteId!==record.peer.emote){if(record.emoteMesh){record.group.remove(record.emoteMesh);record.emoteMesh.geometry.dispose();record.ownedEmoteMaterial?.dispose();record.ownedEmoteMaterial=null;}
           record.emoteId=record.peer.emote;record.emoteMesh=makeMesh(`emote-${record.emoteId}`,materialFor(art,`emote-${record.emoteId}`),`emote-${record.emoteId}`);record.emoteMesh.renderOrder=942;record.group.add(record.emoteMesh);record.emoteAt=clock;}
@@ -116,6 +132,7 @@ export function createOtherCaptains(scene,container,art,reducedMotion=false,{col
       record.label.textContent=record.peer.name;record.label.title=record.peer.kit?.name??'Captain';record.label.hidden=true;
       record.label.style.opacity=String(alpha);record.label.style.fontSize='16px';record.label.style.display='none';
     }
+    contacts?.end();
     const labels=selected.filter(record=>!blocked&&canvas&&camera&&!hiddenNow(record.id)).map(record=>({record,point:screenPoint(positionAt(record,clock).x,positionAt(record,clock).y,camera,canvas,container)}));
     const box=container.getBoundingClientRect?.()??{width:container.clientWidth??375,height:container.clientHeight??667};
     const positions=placePresenceLabels(labels,{width:box.width||375,height:box.height||667,maxLabels:(box.width||375)<=450?2:4});
@@ -136,5 +153,5 @@ export function createOtherCaptains(scene,container,art,reducedMotion=false,{col
     }
     return list;
   }
-  return {ingest,update,figures,get stats(){return {...stats,ids:[...stats.ids]};},dispose(){if(disposed)return;disposed=true;for(const record of [...records.values()])removeRecord(record);root.removeFromParent();}};
+  return {ingest,update,figures,get stats(){return {...stats,ids:[...stats.ids]};},dispose(){if(disposed)return;disposed=true;for(const record of [...records.values()])removeRecord(record);contacts?.dispose();root.removeFromParent();}};
 }

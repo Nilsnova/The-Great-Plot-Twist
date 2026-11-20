@@ -1,0 +1,125 @@
+{
+  "sourceFile": "frontend/public/village/home-harbor-v2.png",
+  "generatedBy": "OpenAI built-in image generation, 2026-11-19",
+  "reference": "Home Island concept supplied by Johannes Franz Lang, 2026-11-19",
+  "referenceSha256": "e93b1486918789502c33e4b3a445c1019fce5d19ade9d9e8ea41e106bae911dc",
+  "sha256": "a21c44f3a329abe2fa80b292e20d9c1baa7fc33bf1fc1cd67c7325dd488e9221",
+  "bytes": 1064637,
+  "nativeSize": [
+    1254,
+    1254
+  ],
+  "mode": "RGBA",
+  "alpha": {
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "meaningfulThreshold": 32
+  },
+  "cells": [
+    {
+      "id": "island-harbor",
+      "rect": [
+        43,
+        55,
+        563,
+        494
+      ],
+      "sourceFoot": [
+        281,
+        478
+      ],
+      "nativeGroundFoot": [
+        324,
+        533
+      ],
+      "logical": [
+        80,
+        72,
+        8
+      ],
+      "meaningfulAlphaBounds": [
+        12,
+        12,
+        551,
+        482
+      ]
+    },
+    {
+      "id": "island-wreck",
+      "rect": [
+        670,
+        150,
+        509,
+        380
+      ],
+      "sourceFoot": [
+        254,
+        364
+      ],
+      "nativeGroundFoot": [
+        924,
+        514
+      ],
+      "logical": [
+        96,
+        56,
+        6
+      ],
+      "meaningfulAlphaBounds": [
+        12,
+        12,
+        497,
+        368
+      ],
+      "fitBounds": [
+        353,
+        364,
+        353,
+        16
+      ]
+    },
+    {
+      "id": "island-wreck-mended",
+      "rect": [
+        40,
+        659,
+        554,
+        530
+      ],
+      "sourceFoot": [
+        277,
+        514
+      ],
+      "nativeGroundFoot": [
+        317,
+        1173
+      ],
+      "logical": [
+        96,
+        80,
+        6
+      ],
+      "meaningfulAlphaBounds": [
+        12,
+        12,
+        542,
+        518
+      ],
+      "fitBounds": [
+        385,
+        514,
+        385,
+        16
+      ]
+    }
+  ],
+  "authoringStudySha256": "1656aff9b35df996100c82a2fcd5db2d60d4756c928843df33609d6534fcd8bf",
+  "prompts": [
+    "Create one original game production transparent atlas with three separate art cells across a wide 3\u00d71 landscape image, entirely clear blank gutters. Use the supplied original Home Island concept only for soft volumetric coastal tabletop style and palette, no UI or scene. Three-quarter front/right orthographic camera, soft upper-left sunlight, deep navy bevels, warm ochre timber and small mellow brass accents. Each image has a clean bounded contact edge, no external floor, sand, grass, scenery, people, interface or lettering. LEFT: single-storey compact maritime trading-house Harbor building. Broad, layered navy slate gable roof, warm chunky timber columns and beam, pale stone plinth and partial stone warehouse wall. Main front must be a wide OPEN wooden trading counter in a shaded window, visually obvious merchant role through open copper balance scales, a few ochre crates, bundled goods and rolled chart on counter. A shallow porch canopy, optional two tiny muted burgundy/cream cloth accents only, warm small amber lantern, carved blue brass-edged merchant balance emblem above the counter. No flag requiring extra height, no tall chimney, no residential door dominant, do not look like a house. MIDDLE: old small wooden coastal hull beached, left pointed prow, right shorter stern, show right-front three-quarter volume from the same camera. Worn ochre plank grain with a visibly torn opening in the near side, broken ragged mast stub, chipped navy top rail, two tight pale snapped side planks, subtle weathered olive moss only where boards meet ground. Shape reads clearly as an unrepairable beached wreck at first sight, no ocean or rocks. RIGHT: exactly same small hull orientation, substantially identical length, depth, and contact contour, restored coherent oak with a deep navy hull band, three unmistakable fresh pale replacement boards with small metal nails where the open hole was, simple short standing mast with clean pale furled sail, looped rope and small blue pennant. Muted polished bronze bands only. No billowing sails or ship crew. Both hulls lie on the same flat ground line with readable curved boats and must not exceed a very low visible contact shadow under them. The artwork must separate freely: no overlap between cells, each complete image safe transparent padding on all sides, blank true alpha outside artwork. Clarity at phone scale, chunky sculpted stylized materials matching original Harbour chest, navy roofs and limestone shapes, distinctive subtle old maritime design.",
+    "Recompose the three original isolated sprite designs in the input as one square transparent 2\u00d72 production sprite atlas. Maintain the exact artistic designs, paint detail, camera angle, object proportions and front ground line, without adding text, new props, floor, rocks, ocean or interface. Top left cell: the dimensional navy shingle coastal trading house with open oak counter, balance scales, light masonry, rolled charts and crates, just as shown. Top right cell: the beached perspective hull with the large partial side hole, dark weathered oak and broken mast, just as shown. Bottom left cell: the repaired matching hull with the three pale patch planks, rolled ivory sail and upright single mast with small navy pennant, just as shown. Bottom right cell: entirely empty transparency. Exact 2\u00d72 organization and generous true transparent margins between all sprites, so none touch an edge or enter another cell. Keep all whole, including the repaired mast, at roughly common internal relative scale. The overall canvas must be square and no wider than 1536 pixels, to fit the local game's source sheet decoder. Show only the three distinct approved game sprites and true transparent background."
+  ]
+}

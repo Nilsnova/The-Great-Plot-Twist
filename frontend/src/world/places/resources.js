@@ -1,19 +1,43 @@
 // A place owns its root, textures, materials, geometry and explicit subscriptions.
 import * as THREE from 'three';
+import {QUALITY, settings} from '../../config.js';
 import {legacyBackdrop} from '../ground-transform.js';
 import { loadTexture } from '../texture.js';
 import { hasGround, paintGround } from '../../art/ground.js';
 import { premultiply, screenDensity, smoothTexture } from '../../art/textures.js';
 import {acquireRasterSheet} from '../../art/village-raster.js';
-import {TERRAIN_SHEET} from '../../art/village/terrain-materials.js';
+import {materialRect, TERRAIN_SHEET} from '../../art/village/terrain-materials.js';
+import {canvas} from '../../art/paint.js';
 // A place with a painted cartoon ground (src/art/ground.js) gets it instead of its pixel backdrop:
-// 16 to 32 texels per world unit, by the screen's density.
-export async function loadBackdrop(path, { quality = 'high' } = {}) {
+// Rasterise the ground at the screen's density up to the shipped terrain atlas limit.
+export async function loadBackdrop(path, {quality = settings.quality} = {}) {
   const id = /^places\/([a-z_]+)\.png$/.exec(path)?.[1];
   if (id && hasGround(id) && typeof document !== 'undefined') {
     const lease = await acquireRasterSheet(TERRAIN_SHEET);
     try {
-      return smoothTexture(paintGround(id, Math.max(16, Math.min(32, screenDensity(quality) * 8)), lease.image));
+      const limit = (QUALITY[quality] ?? QUALITY.high).groundTexels;
+      const density = Math.max(16, Math.min(limit, screenDensity(quality) * 10));
+      const ground = smoothTexture(paintGround(id, density, lease.image));
+      if (id === 'home_islet' && lease.image?.width && lease.image.height) {
+        try {
+          // Cut the stone from the same atlas already used to paint this ground.
+          const [left, top, width, height] = materialRect(lease.image, 'rock');
+          const tile = canvas(width, height);
+          tile.getContext('2d').drawImage(lease.image, left, top, width, height, 0, 0, width, height);
+          const stone = smoothTexture(tile);
+          stone.wrapS = THREE.MirroredRepeatWrapping;
+          ground.userData.homeStone = stone;
+          const disposeStone = () => {
+            ground.removeEventListener('dispose', disposeStone);
+            delete ground.userData.homeStone;
+            stone.dispose();
+          };
+          ground.addEventListener('dispose', disposeStone);
+        } catch {
+          // The procedural cliffs still work if the extra stone crop is unavailable.
+        }
+      }
+      return ground;
     } finally { lease.release(); }
   }
   const texture = await loadTexture(`${import.meta.env.BASE_URL}${path}`);

@@ -423,7 +423,7 @@ export function harborModel({campaign = null} = {}) {
 //   branches: [{branch, name, tier, summary, folded, tiers: [{tier, state, fork, reason, nodes: [{id, name,
 //     line, state, note, button: {label, aria, disabled, reason, action: {branch, tier, choice, change}} | null}]}]}]
 //   tier state: done · next · locked;  node state: done · chosen · closed · open · locked
-export function techModel({campaign = null, coins = null, busy = null, message = '', battle = false, recoveryVersion = 0, economy = undefined, sharedSnapshot = null} = {}) {
+export function techModel({campaign = null, spots = null, coins = null, busy = null, message = '', battle = false, recoveryVersion = 0, economy = undefined, sharedSnapshot = null} = {}) {
   if (economy !== undefined) return sharedTechCard({economy,sharedSnapshot,busy,message,battle,recoveryVersion});
   const funds = cardFunds(economy, coins); coins = funds.coins;
   const open = isOpen(campaign, 'tech_hub');

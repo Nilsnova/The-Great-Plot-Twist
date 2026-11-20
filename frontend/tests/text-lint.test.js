@@ -96,6 +96,10 @@ describe('G24 player-facing text',()=>{
     expect(records.flatMap(record=>issues(record.text)).some(issue=>issue.rule==='spelling')).toBe(true);
     expect(records.flatMap(record=>issues(record.text)).some(issue=>issue.rule==='dash')).toBe(true);
   });
+  it('skips explicitly marked shader fragments while keeping the surrounding copy',()=>{
+    const source = 'const glsl = /* glsl */ `#ifdef USE_MAP\nvec2 samplePoint = vMapUv;\n#endif`; const text = `Back at sea.`;';
+    expect(displayJavascriptStrings(source).map(record=>record.text)).toEqual(['Back at sea.']);
+  });
   it('extracts JSON display fields and keeps ids and author notes out of spelling checks',()=>{
     expect(jsonStrings({about:'Technical note',id:'bad_identifier',item:{name:'Brass key',text:'A key.'}}).map(record=>record.text))
       .toEqual(['Brass key','A key.']);

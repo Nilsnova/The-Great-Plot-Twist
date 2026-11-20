@@ -22,7 +22,10 @@ export function createTouchControls(container,input,actions) {
     const show=active&&(coarse||navigator.maxTouchPoints>0);
     if(!show&&!element.hidden)release();
     element.hidden=!show;interact.disabled=!zone;interact.hidden=!zone;
-    const contextual=!!zone&&!!label&&combatPrompt&&coarse;
+    const preparing=!!zone&&!!label&&show&&!combatPrompt&&coarse&&innerWidth>=320&&innerWidth<=420&&innerHeight>=560
+      && !!container.querySelector('.coach-panel:not([hidden],.is-combat-guide)');
+    const contextual=!!zone&&!!label&&(preparing||combatPrompt&&coarse);
+    interact.classList.toggle('touch-preparation-action',preparing);
     interact.classList.toggle('touch-context-action',contextual);
     const text=contextual?label:'Use';
     if(interact.textContent!==text)interact.textContent=text;

@@ -35,6 +35,7 @@ import { buildingMarks } from '../art/path-marks.js';
 import { makeCombatWallConnections } from './wall-connections.js';
 import { makeSelectionBracket } from '../island/selection-bracket.js';
 import { makeDefenseRange } from '../island/defense-range.js';
+import { defenseDisplayAnchors } from '../island/defense-display.js';
 import { createSmoother } from './smoothing.js';
 import { projectGround } from '../world/projection.js';
 import { towerLook } from './tower-health.js';
@@ -69,7 +70,7 @@ export function wallShare(post, wall) {
 }
 
 export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion = () => false, quality = () => 'high',
-  beamFrom = null, recoveryV1 = false, nativeCaptains = false, fx = () => scene.userData?.pixelFx ?? null }) {
+  beamFrom = null, place = null, recoveryV1 = false, nativeCaptains = false, fx = () => scene.userData?.pixelFx ?? null }) {
   const owned = [], root = new THREE.Group(); root.name = 'pirate-wave'; scene.add(root);
   const combatOverlay = createCombatOverlay(root);
   const rect = {};
@@ -101,8 +102,11 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   // D055/D051: which path plates and skill emblem a post wears (read-only from the defense's tree and spec, legacy
   // {a, b} or the recovery snapshot's [a, b]); memoised, picked when the post is made or its defense changes.
   const marksOf = post => buildingMarks(post.kind, post.level, post.tree, post.spec);
+  let displayAnchors = defenseDisplayAnchors(place, defenses);
+  const defenseView = id => displayAnchors.get(id);
+  const viewOf = item => defenseView(item.id) ?? item;
   const makePost = item => {
-    const layer = createLayer(`defense:${item.id}`, POST_CAPACITY, material, 100 + item.z, owned); root.add(layer.mesh);
+    const layer = createLayer(`defense:${item.id}`, POST_CAPACITY, material, 100 + viewOf(item).z, owned); root.add(layer.mesh);
     const post = { ...item, level: levelOf(item), layer, flip: false };
     post.marks = marksOf(post);
     return post;
@@ -144,8 +148,9 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     defenseAnchor.spotId = coverage.id;
     defenseAnchor.kind = coverage.kind;
     defenseAnchor.level = coverage.level;
-    defenseAnchor.x = coverage.x;
-    defenseAnchor.z = coverage.z;
+    const view = viewOf(coverage);
+    defenseAnchor.x = view.x;
+    defenseAnchor.z = view.z;
     defenseSelection.show(defenseAnchor);
     if (coverage.status === 'ready') {
       defenseRange ??= makeDefenseRange(root, {combat: true});
@@ -162,16 +167,17 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   const spark = (x, y, options) => { const f = effects(); if (!f || still()) return; f.burst(x, y, low() ? { ...options, count: Math.ceil(options.count / 3) } : options); };
 
   const parts = createDraw(rect, layers, bands, posts, ships, crew, guards, splashes, wallFlash, K, still, low,
-    drawnX, drawnY, effects, spark, nativeCaptains);
+    drawnX, drawnY, effects, spark, nativeCaptains, defenseView);
   const events = createEvents(parts, posts, ships, crew, guards, fire, wallFlash, balls, sinkers, wrecks, splashes,
-    shells, bursts, tracers, jamShots, warnings, fallen, strikes, K, still, low, effects, spark), onEvent = events.onEvent;
+    shells, bursts, tracers, jamShots, warnings, fallen, strikes, K, still, low, effects, spark, defenseView), onEvent = events.onEvent;
   const { drawShip, shipMeta, drawBoarder, drawMilitia, drawFallen, drawBall, drawShell, drawBurst, drawBurning,
     drawTracer, drawJamShot, drawSweep, drawCaptain, drawParty, drawRecoveryHealthBar, drawHealthBar, land } = parts;
   // A tower a gunboat has jammed (GAME-V3.md §4.1): a broken gear with sparks over it, in the air layer so no tree
   // hides it, until the jam is over.
   function drawJamMark(tower) {
     const mark = rect[JAM_FRAMES[still() ? 0 : Math.floor(clock * 5) % 2]];
-    if (mark) layers.air.push(mark, drawnX(tower.x, tower.z), drawnY(tower.z) + 2.7 + (still() ? 0 : Math.sin(clock * 6) * .07), mark.w * 1.2, mark.h * 1.2, .5, mark.anchor * 1.2, opt(.97));
+    const {x, z} = viewOf(tower);
+    if (mark) layers.air.push(mark, drawnX(x, z), drawnY(z) + 2.7 + (still() ? 0 : Math.sin(clock * 6) * .07), mark.w * 1.2, mark.h * 1.2, .5, mark.anchor * 1.2, opt(.97));
   }
   function drawWarning(item) {
     const age = clock - item.at, blink = still() ? 1 : (Math.floor(age * 4) % 2 ? .4 : 1);
@@ -234,10 +240,14 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       drawCaptain();
       drawParty(state);
       if (recoveryV1) {
-        for (const structure of [...(state.walls ?? []), ...(state.towers ?? [])]) drawRecoveryHealthBar(structure);
+        for (const wall of state.walls ?? []) drawRecoveryHealthBar(wall);
+        for (const tower of state.towers ?? []) drawRecoveryHealthBar(tower, viewOf(tower));
       } else {
         // T33: a bar over every tower with hp that has taken damage (none while the wave has no tower health).
-        for (const tower of state.towers ?? []) if (tower.maxHp > 0 && tower.hp > 0 && tower.hp < tower.maxHp) drawHealthBar(tower.x, tower.z, tower.hp, tower.maxHp, TOWER_BAR_LIFT);
+        for (const tower of state.towers ?? []) if (tower.maxHp > 0 && tower.hp > 0 && tower.hp < tower.maxHp) {
+          const {x, z} = viewOf(tower);
+          drawHealthBar(x, z, tower.hp, tower.maxHp, TOWER_BAR_LIFT);
+        }
       }
       // The lamps' beam: from the lighthouse lamp to an exposed flagship.
       const flagship = state.lampsLit && beamFrom ? state.ships.find(ship => ship.kind === 'flagship') : null;
@@ -276,7 +286,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
         }
         const r = rect[id], flashing = (wallFlash.get(post.id) ?? -1) > clock ? .7 : 0;
         const repairing = post.kind === 'wall' && (walls.get(post.id)?.repairing || walls.get(post.id)?.crew);
-        const grow = 1, {x, y} = projectGround(post.x, post.z);
+        const view = viewOf(post), grow = 1, {x, y} = projectGround(view.x, view.z);
         // Match the world renderer's healthy junction posts; damaged/ruin frames remain full width.
         if (!wallConnections.hasPost(post.id)) post.layer.push(r, x, y, r.w * (joinedWall ? .62 : 1), r.h, .5, r.anchor, opt(1, rgb(1, repairing && !still() ? 1 + Math.sin(clock * 10) * .15 : 1, 1), post.kind !== 'wall' && post.flip, flashing));
         if (smoking) {
@@ -337,6 +347,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     setDefenses(list) {
       if (disposed) return;
       inBreak = true;
+      displayAnchors = defenseDisplayAnchors(place, list ?? []);
       showDefenseCoverage(null);
       // A building torn down in the break (GAME-V3.md §4.2) takes its post with it.
       for (const post of posts.filter(entry => !(list ?? []).some(item => item.id === entry.id))) {
@@ -347,6 +358,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
         let post = posts.find(entry => entry.id === item.id);
         if (post) { post.level = levelOf(item); post.tree = item.tree; post.spec = item.spec; if (item.kind !== post.kind) Object.assign(post, {kind: item.kind}); post.marks = marksOf(post); }
         else { post = makePost(item); posts.push(post); }
+        if (post.kind !== 'wall') post.layer.mesh.renderOrder = 100 + viewOf(post).z;
         // A wall repaired or rebuilt in the break (D039): draw its new health, not the one the wave ended with.
         if (post.kind === 'wall' && Number.isInteger(item.health)) post.rest = Math.max(0, Math.min(100, item.health)) / 100;
       }

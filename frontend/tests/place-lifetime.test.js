@@ -12,7 +12,7 @@ const adapters = {
   loadArt: async ids => Object.fromEntries(ids.map(id => [id, new THREE.MeshBasicMaterial({ map: new THREE.Texture() })])),
   loadBackdrop: async () => new THREE.Texture(),
 };
-const homeTreeScale = ({x, z}) => x === -13 && z === -12 ? .42 : .7;
+const HOME_TREE_SCALE = .7;
 describe('real place lifetime', () => {
   it.each(Object.keys(edgeTrees))('keeps %s tree feet, blockers and drawing behavior while restraining only home foliage', async id => {
     const place = await createPlace({id, ...adapters, island: {decorate() {}}});
@@ -25,7 +25,7 @@ describe('real place lifetime', () => {
       ]);
       trees.forEach((mesh, index) => {
         const [x, z] = edgeTrees[id][index], foot = projectGround(x, z);
-        const scale = id === 'home_islet' ? homeTreeScale({x, z}) : 1;
+        const scale = id === 'home_islet' ? HOME_TREE_SCALE : 1;
         expect(mesh.userData.ground).toEqual({x, z});
         expect(mesh.position.toArray()).toEqual([foot.x, foot.y, 0]);
         expect(mesh.renderOrder).toBe(100 + z);
@@ -54,7 +54,7 @@ describe('real place lifetime', () => {
         [[house('house_1'), house('house_2')], 1.2], [[house('house_2')], 1.1], [[], 1]]) {
         progress.apply({wave: 0}, houses, true);
         trees.forEach((mesh, index) => {
-          const scale = homeTreeScale(original[index].ground) * growth;
+          const scale = HOME_TREE_SCALE * growth;
           for (const value of mesh.scale.toArray()) expect(value).toBeCloseTo(scale, 12);
           expect(mesh.position).toEqual(original[index].position);
           expect(mesh.geometry).toBe(original[index].geometry);
@@ -67,7 +67,7 @@ describe('real place lifetime', () => {
       progress.apply({wave: 0}, [house('house_1'), house('house_2')], true);
       progress.dispose(); progress.dispose();
       for (const mesh of trees) {
-        const restored = homeTreeScale(mesh.userData.ground);
+        const restored = HOME_TREE_SCALE;
         expect(mesh.scale.toArray()).toEqual([restored, restored, restored]);
       }
       expect(place.colliders).toEqual(colliders);

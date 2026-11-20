@@ -1,0 +1,132 @@
+{
+  "sourceFile": "frontend/public/village/home-heart-v4.png",
+  "generatedBy": "OpenAI built-in image generation with the original alpha restored, 2026-11-19",
+  "reference": "Home Island concept supplied by Johannes Franz Lang, 2026-11-19",
+  "referenceSha256": "e93b1486918789502c33e4b3a445c1019fce5d19ade9d9e8ea41e106bae911dc",
+  "priorSpriteSha256": "e11a3ce67f647f77b1634dcc63dde2a0070c60ef66e8569a7a2e4f715ea501fb",
+  "sha256": "2068cdb6a878a5d5234b79ac04caeb8b12dfbe6ca390083194bd875732c9d116",
+  "bytes": 1636927,
+  "nativeSize": [
+    1312,
+    1199
+  ],
+  "mode": "RGBA",
+  "alpha": {
+    "meaningfulThreshold": 16,
+    "priorFile": "frontend/public/village/home-heart-v3.png",
+    "identicalPixels": 1573088,
+    "changedPixels": 0,
+    "sha256": "80e48dd1258aff21461c511f0d258e971cd65330a8dca342cad109a9b061ce8f"
+  },
+  "cells": {
+    "island_core": {
+      "rect": [
+        27,
+        0,
+        603,
+        698
+      ],
+      "sourceFoot": [
+        263,
+        684
+      ],
+      "nativeGroundFoot": [
+        290,
+        684
+      ],
+      "meaningfulAlphaBounds": [
+        39,
+        10,
+        618,
+        686
+      ],
+      "logical": [
+        128,
+        128,
+        12
+      ],
+      "frontOpening": {
+        "sample": [
+          245,
+          435,
+          342,
+          545
+        ],
+        "alphaBelow16Fraction": 1.0
+      }
+    },
+    "island_core_damaged": {
+      "rect": [
+        684,
+        0,
+        602,
+        698
+      ],
+      "sourceFoot": [
+        262,
+        684
+      ],
+      "nativeGroundFoot": [
+        946,
+        684
+      ],
+      "meaningfulAlphaBounds": [
+        696,
+        10,
+        1274,
+        686
+      ],
+      "logical": [
+        128,
+        128,
+        12
+      ],
+      "frontOpening": {
+        "sample": [
+          901,
+          435,
+          998,
+          545
+        ],
+        "alphaBelow16Fraction": 1.0
+      }
+    },
+    "island_core_broken": {
+      "rect": [
+        29,
+        896,
+        600,
+        289
+      ],
+      "sourceFoot": [
+        261,
+        275
+      ],
+      "nativeGroundFoot": [
+        290,
+        1171
+      ],
+      "meaningfulAlphaBounds": [
+        41,
+        908,
+        617,
+        1173
+      ],
+      "logical": [
+        128,
+        128,
+        12
+      ]
+    }
+  },
+  "coreFitBounds": [
+    263,
+    684,
+    340,
+    14
+  ],
+  "generation": {
+    "generatedPaintSha256": "5863456ebf9cc3b8cba27f4e99631500985198140ebffc2293a39c97ff5417b5",
+    "method": "Match the source framing, blend the approved interior paint, and retain every alpha byte from the original authoring sheet."
+  }
+}

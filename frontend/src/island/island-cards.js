@@ -69,7 +69,7 @@ export function createCards(isl) {
         && recoveryRow.hpUnits === 1_000_000 && recoveryView.repairWindow !== 'reserved_wave'))) {
       model.upgradeComparison = previewDefenseUpgrade({defenses: defenses(island.spots, campaign()?.research?.tiers),
         selectedId: spotId, currentLevel: model.level, gunnerCount: island.crew?.gunner,
-        defensesV2: recoveryPolicyOn() || defensesV2On()});
+        defensesV2: true});
     }
     if (recoveryEnabled && isl.recoveryState?.displayPhase === 'combat' && !live) {
       model.recovery = {visible: false, status: 'error', message: 'Battle health is still loading.'};
@@ -117,7 +117,7 @@ export function createCards(isl) {
     return {...model,stalls:model.stalls.map(stall=>['market','match'].includes(stall.id) && !isl.domainAvailable(stall.id)
       ?{...stall,open:false,reason:'This activity is unavailable on shared islands.'}:stall)};
   };
-  const tech = () => techModel({campaign: campaign(), coins: isl.own?.coins ?? null, ...sharedCard(), busy: isl.busyResearch,
+  const tech = () => techModel({campaign: campaign(), spots: target()?.spots ?? null, coins: isl.own?.coins ?? null, ...sharedCard(), busy: isl.busyResearch,
     battle: isl.battle && !isl.waveOver || currentFunds().shared && (isl.flow.busy || !!isl.flow.current && !isl.waveOver),
     message: isl.cardMessage || (!target() ? isl.ownMessage : ''), recoveryVersion: recoveryModelVersion()});
   const wreck = () => wreckModel({campaign: campaign(), coins: isl.own?.coins ?? null, ...sharedCard(), busy: isl.busyGift, message: isl.cardMessage || (!target() ? isl.ownMessage : ''),

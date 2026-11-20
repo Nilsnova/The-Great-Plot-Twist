@@ -72,18 +72,22 @@ export function createHarborLife({ place, art, ctx } = {}) {
   return {
     update(dt, state = {}) {
       if (disposed) return;
-      elapsed += Math.max(0, Number.isFinite(dt) ? dt : 0);
       const still = reduced(reducedMotion);
+      const paused = !!smoke && state.paused;
+      if (!paused && !still) elapsed += Math.max(0, Number.isFinite(dt) ? dt : 0);
       if (smoke) {
         smoke.visible = built.has('plot_1');
-        if (!still) {
-          const drift = (elapsed % 2.8) * .22;
-          smoke.position.y = cabin.y + 5.1 + drift;
+        if (!paused || still) {
+          const plume = still ? 0 : (elapsed % 2.8) / 2.8, wind = state.weather?.wind ?? 0;
+          smoke.position.x = cabin.x - .15 + plume * plume * wind * .42;
+          smoke.position.y = cabin.y + 5.1 + plume * (2.8 * .22);
+          smoke.scale.set(1 + plume * .65, 1 + plume * .22, 1);
+          smoke.material.opacity = still ? .18 : .34 * Math.sin(Math.PI * plume);
         }
       }
       if (greenhouseBirds) {
         greenhouseBirds.visible = built.has('plot_4');
-        if (!still && greenhouseBirds.visible) greenhouseBirds.position.x = greenhouse.x + Math.sin(elapsed * .7) * .18;
+        if (greenhouseBirds.visible && (!paused || still)) greenhouseBirds.position.x = greenhouse.x + (still ? 0 : Math.sin(elapsed * .7) * .18);
       }
       if (windowLight) {
         const night = state.night ?? 0;

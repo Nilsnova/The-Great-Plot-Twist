@@ -1,7 +1,8 @@
 // Original world-only material atlas. Sampled into the existing backdrop, never a new land mask.
 import {shippedTerrain} from './shipped.js';
+import {canvas} from '../paint.js';
 export const TERRAIN_SOURCE_SHEET = Object.freeze({file: 'village/terrain-materials-v1.png', width: 1254, height: 1254});
-// The ground is painted at most 32 texels per world unit; the shipped atlas (scripts/ship-village-art.mjs)
+// The ground is painted at most 39 texels per world unit; the shipped atlas (scripts/ship-village-art.mjs)
 // resamples each authored crop to at least 39 texels per unit, with its own repeated one-texel border.
 export const TERRAIN_SHEET = Object.freeze(shippedTerrain
   ? {file: shippedTerrain.file, width: shippedTerrain.width, height: shippedTerrain.height} : TERRAIN_SOURCE_SHEET);
@@ -29,11 +30,29 @@ export function materialCells(name, bounds = BACKDROP) {
   return cells;
 }
 
+export function materialRect(image, name) {
+  // A caller may still hand over the authored original (evidence scripts); its crops are the authored rects.
+  return shippedTerrain && image?.width === shippedTerrain.width && image?.height === shippedTerrain.height
+    ? shippedTerrain.rects[name] : TERRAIN_MATERIALS[name].rect;
+}
+
+/** Fill a large, translucent meadow without independently blending the shared tile edges. */
+export function mirroredGrassPattern(context, image) {
+  const [x, y, width, height] = materialRect(image, 'grass');
+  const tile = canvas(width * 2, height * 2), painter = tile.getContext('2d');
+  for (const side of [0, 1]) for (const row of [0, 1]) {
+    painter.setTransform(side ? -1 : 1, 0, 0, row ? -1 : 1, side * 2 * width, row * 2 * height);
+    painter.drawImage(image, x, y, width, height, 0, 0, width, height);
+  }
+  const pattern = context.createPattern(tile, 'repeat');
+  const [worldWidth, worldHeight] = TERRAIN_MATERIALS.grass.period;
+  pattern.setTransform({a: worldWidth / width, d: worldHeight / height});
+  return pattern;
+}
+
 /** The caller owns clipping. No full-size intermediate canvas or retained decoded image. */
 export function paintMaterial(context, image, name, {bounds = BACKDROP, alpha = 1} = {}) {
-  // A caller may still hand over the authored original (evidence scripts); its crops are the authored rects.
-  const rect = shippedTerrain && image?.width === shippedTerrain.width && image?.height === shippedTerrain.height
-    ? shippedTerrain.rects[name] : TERRAIN_MATERIALS[name].rect;
+  const rect = materialRect(image, name);
   context.save(); context.globalAlpha *= alpha;
   for (const cell of materialCells(name, bounds)) {
     context.save();
@@ -51,14 +70,16 @@ export function meadowScale(angle) {
     const offset = angle - bearing * Math.PI / 180;
     return Math.abs(Math.atan2(Math.sin(offset), Math.cos(offset)));
   }));
-  const t = Math.max(0, Math.min(1, (distance - Math.PI / 12) / (Math.PI / 12)));
+  // Grass wraps the rocky shoulders more tightly, leaving the middle of each beach open.
+  const t = Math.max(0, Math.min(1, (distance - Math.PI / 15) / (Math.PI * 7 / 90)));
   return .86 + .125 * t * t * (3 - 2 * t);
 }
 
 /** A filled union matching round path strokes/clearings, for clipped paver sampling. */
-export function pathMaterialMask(paths, width = 2.04) {
-  const result = new Path2D(), radius = width / 2;
-  for (const points of paths.lines) {
+export function pathMaterialMask(paths, width = 2.04, padding = 0) {
+  const result = new Path2D();
+  for (const [lane, points] of paths.lines.entries()) {
+    const radius = (paths.widths?.[lane] ?? width) / 2 + padding;
     for (let i = 1; i < points.length; i++) {
       const [ax, az] = points[i - 1], [bx, bz] = points[i], ay = az * .72, by = bz * .72;
       const length = Math.hypot(bx - ax, by - ay);
@@ -69,8 +90,19 @@ export function pathMaterialMask(paths, width = 2.04) {
     }
     for (const [x, z] of points) { result.moveTo(x + radius, z * .72); result.arc(x, z * .72, radius, 0, Math.PI * 2); }
   }
-  for (const [x, z, radius] of paths.clearings) {
-    result.moveTo(x + radius, z * .72); result.ellipse(x, z * .72, radius, radius * .72, 0, 0, Math.PI * 2);
+  for (const [x, z, clearing] of paths.clearings) {
+    const radius = clearing + padding, y = z * .72;
+    if (!paths.stoneAprons) {
+      result.moveTo(x + radius, y); result.ellipse(x, y, radius, radius * .72, 0, 0, Math.PI * 2);
+      continue;
+    }
+    // The dressed apron is an octagon inscribed in the original clearing.
+    for (let corner = 0; corner < 8; corner++) {
+      const angle = (corner + .5) * Math.PI / 4;
+      const px = x + Math.cos(angle) * radius, py = y + Math.sin(angle) * radius * .72;
+      if (corner) result.lineTo(px, py); else result.moveTo(px, py);
+    }
+    result.closePath();
   }
   return result;
 }

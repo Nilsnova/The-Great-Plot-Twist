@@ -290,7 +290,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     emit({ type: 'wave_controller_started', waveId: info.waveId, wave: info.wave, flagship: info.flagship,
       ...(recoveryReplay ? { recovery: true } : {}) });
     if (world.scene) {
-      Promise.resolve(createRenderer({ scene: world.scene, defenses, reducedMotion, quality, beamFrom, colour: read(captainColour, 0),
+      Promise.resolve(createRenderer({ scene: world.scene, place, defenses, reducedMotion, quality, beamFrom, colour: read(captainColour, 0),
         towerStates: info.rules?.towerHealth === true || !!snapshot, culverins: defenses.some(item => item.kind === 'culverin'),
         recoveryV1: !!snapshot,nativeCaptains:info.nativeShared===true,
         swivels: defenses.some(item => item.kind === 'swivel') })).then(renderer => {

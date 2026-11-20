@@ -1,0 +1,203 @@
+{
+  "sourceFile": "frontend/public/village/home-bell-v3.png",
+  "generatedBy": "OpenAI built-in image generation, registered inside the original source alpha, 2026-11-19",
+  "reference": "Home Island concept supplied by Johannes Franz Lang, 2026-11-19",
+  "referenceSha256": "e93b1486918789502c33e4b3a445c1019fce5d19ade9d9e8ea41e106bae911dc",
+  "sha256": "865856e3ec8fa62afbc4085083764d7ca726e33598718d1d7a3d9e20a3425d3d",
+  "bytes": 1329950,
+  "nativeSize": [
+    1312,
+    1199
+  ],
+  "mode": "RGBA",
+  "alpha": {
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "meaningfulThreshold": 16,
+    "priorFile": "frontend/public/village/home-heart-v2.png",
+    "changedPixels": 0,
+    "identicalPixels": 1573088,
+    "sha256": "df266aec5624b854bfcbc5419cb195aed9868f0b833173e3c5b5c950e5adb465"
+  },
+  "cells": {
+    "island_core": {
+      "id": "island_core",
+      "rect": [
+        55,
+        0,
+        543,
+        614
+      ],
+      "sourceFoot": [
+        271,
+        598
+      ],
+      "nativeGroundFoot": [
+        326,
+        598
+      ],
+      "logical": [
+        128,
+        128,
+        12
+      ],
+      "meaningfulAlphaBounds": [
+        12,
+        10,
+        531,
+        602
+      ],
+      "frontOpening": {
+        "sample": [
+          277,
+          414,
+          373,
+          505
+        ],
+        "alphaBelow16Fraction": 1.0
+      }
+    },
+    "island_core_damaged": {
+      "id": "island_core_damaged",
+      "rect": [
+        709,
+        0,
+        547,
+        619
+      ],
+      "sourceFoot": [
+        273,
+        603
+      ],
+      "nativeGroundFoot": [
+        982,
+        603
+      ],
+      "logical": [
+        128,
+        128,
+        12
+      ],
+      "meaningfulAlphaBounds": [
+        12,
+        10,
+        535,
+        607
+      ],
+      "frontOpening": {
+        "sample": [
+          933,
+          414,
+          1029,
+          505
+        ],
+        "alphaBelow16Fraction": 1.0
+      }
+    },
+    "island_core_broken": {
+      "id": "island_core_broken",
+      "rect": [
+        54,
+        917,
+        562,
+        248
+      ],
+      "sourceFoot": [
+        281,
+        232
+      ],
+      "nativeGroundFoot": [
+        335,
+        1149
+      ],
+      "logical": [
+        128,
+        128,
+        12
+      ],
+      "meaningfulAlphaBounds": [
+        12,
+        12,
+        550,
+        236
+      ]
+    },
+    "island-bell": {
+      "id": "island-bell",
+      "rect": [
+        710,
+        644,
+        535,
+        513
+      ],
+      "sourceFoot": [
+        267,
+        497
+      ],
+      "nativeGroundFoot": [
+        977,
+        1141
+      ],
+      "logical": [
+        56,
+        72,
+        8
+      ],
+      "meaningfulAlphaBounds": [
+        12,
+        12,
+        523,
+        501
+      ]
+    }
+  },
+  "coreFitBounds": [
+    281,
+    603,
+    281,
+    16
+  ],
+  "prompt": "Create an original production 2\u00d72 sprite atlas with FOUR isolated coastal island game buildings and spare blank gutters, truly transparent background, four equal well-separated art cells. The supplied original owner concept is ONLY for softly rendered rich 3D carved materials, natural warm light, navy timber architecture, stone, and taste. No pasted scene, text, UI, characters, doors between columns or ground background. All four in consistent fixed front-right 3/4 game view, warm upper-left daylight and soft depth. Top left, HEALTHY HOME HEART: an open-sided roofed coastal pavilion, elliptical pale limestone plinth with low beveled edge, FOUR slim ochre carved wood columns, shallow carved front arch beam, uniquely layered rich navy pitched gable roof with a little raised central timber lantern opening and navy anchor pennant, restrained gold fasteners and warm metal hanging light at TOP of the front arch. CRITICAL: no back wall, no front wall, no gate, no entrance door, no curtain, no furniture. Absolutely clear broad open transparent central front and back arch and large transparent side openings clearly showing a player could walk through. All negative space is true alpha. Top right, the exact SAME pavilion with identical position within its cell, roof and four upright post dimensions and same plinth, moderately DAMAGED: visible broken slate patch and chipped rafters, large vertical cracks and dark scorch streaks across two pillars and displaced stone, retain the visible open arch, original lantern and identifiable pennant. Bottom left, DESTROYED version of the exact same pavilion: same oval limestone plinth viewed in the same orientation and size, no upright volume or roof, diagonal collapsed warm wood and navy tiles around its sides and fallen anchor emblem, cleared center creating room to walk through. Bottom right, HARBOR BELL on its own squared, stepped pale limestone plinth: an instantly readable large softly golden bronze bell with open space beneath, stout round honey timber arch supported by two posts, restrained navy circular anchor crest centered above, two small flanking golden lantern fixtures, no shingle roof or walls. Keep gentle highlights and embossed light stone, no oversized bright cube jewelry. Clean graphic silhouette meaningful at 55 pixels. Each completely separate artwork must maintain safe transparent padding in all directions.",
+  "priorSpriteSha256": "bdb838f162ce1ecc37d402aa4a20f2fd323cb1ae6299b14dac10bc1588fb5ce6",
+  "generation": {
+    "generatedMaterialSha256": "759ec8d55a983cb1f21c419577f1a0cc1cc831aec9890361534d07be58a6ba6a",
+    "unchangedRgbaOutsideEdits": 1298633,
+    "registration": [
+      {
+        "id": "island-bell",
+        "rect": [
+          710,
+          644,
+          535,
+          513
+        ],
+        "previous": [
+          724,
+          658,
+          1231,
+          1142
+        ],
+        "painted": [
+          723,
+          658,
+          1230,
+          1142
+        ],
+        "scale": [
+          1,
+          1
+        ],
+        "offset": [
+          -1,
+          0
+        ],
+        "visible": 131295,
+        "meanOpaqueRgbDelta": 14.50653109410107
+      }
+    ]
+  }
+}

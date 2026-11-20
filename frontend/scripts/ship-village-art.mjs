@@ -14,6 +14,7 @@ import {chromium} from 'playwright-core';
 import * as baked from '../src/art/village/baked.js';
 import {sheetHeader} from '../src/art/village-decode.js';
 import {TERRAIN_MATERIALS, TERRAIN_SOURCE_SHEET} from '../src/art/village/terrain-materials.js';
+import {QUALITY} from '../src/config.js';
 const root = fileURLToPath(new URL('..', import.meta.url)), publicRoot = resolve(root, 'public');
 const evidence = resolve(root, '../docs/evidence/VIS-30-world-art'), bakePath = resolve(evidence, 'bake-report.json');
 const quality = Number(process.argv.find(arg => arg.startsWith('--quality='))?.slice(10) ?? .9);
@@ -21,7 +22,7 @@ if (!(quality >= .5 && quality <= 1)) throw new Error('Quality must be between 0
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 // Visible-error bounds a lossy encode must stay within on every sheet (alpha-weighted mean RGB, 0-255).
 export const LIMITS = Object.freeze({alphaWeightedMeanRgbDelta: 6, maxAlphaDelta: 0});
-// Ground density is at most 32 texels per world unit (src/world/places/resources.js); halving the 625-texel
+// Ground density is at most 39 texels per world unit (src/world/places/resources.js); halving the 625-texel
 // crops keeps grass/sand at 39, rock 52 and paths 57 texels per unit.
 const TERRAIN = Object.freeze({width: 628, height: 628, rects: {grass: [1, 1, 312, 312], path: [315, 1, 312, 312], rock: [1, 315, 312, 312], sand: [315, 315, 312, 312]}});
 const reportBytes = await readFile(bakePath), report = JSON.parse(reportBytes);
@@ -87,7 +88,7 @@ try {
   const shipReport = {scope: 'lossy WebP shipping transport of the proved masters; frame metadata, masters and authored originals unchanged',
     sourceCommit, compilerDirtyPaths: execFileSync('git', ['status', '--short'], {cwd: root, encoding: 'utf8'}).trim(), bakeReportSha256: hash(reportBytes), browser: browser.version(), encoder: 'Chrome canvas toDataURL image/webp', quality, limits: LIMITS,
     sprites: {files: sprites, masterBytes: total(masters), shippedBytes: total(sprites)},
-    terrain: {...terrain, sourceBytes: terrainBytes, sourceRects: Object.fromEntries(names.map(name => [name, TERRAIN_MATERIALS[name].rect])), rects: TERRAIN.rects, maxGroundTexelsPerUnit: 32},
+    terrain: {...terrain, sourceBytes: terrainBytes, sourceRects: Object.fromEntries(names.map(name => [name, TERRAIN_MATERIALS[name].rect])), rects: TERRAIN.rects, maxGroundTexelsPerUnit: QUALITY.high.groundTexels},
     initialTransfer: {masterPlusTerrainBytes: total(masters) + terrainBytes, shippedBytes: total(records), targetBytes: 4 * 10 ** 6, targetMet: total(records) <= 4 * 10 ** 6},
     errors, externalRequests};
   if (normalizerUpdates.length) {

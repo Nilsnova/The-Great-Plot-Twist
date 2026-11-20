@@ -2,6 +2,7 @@
 import {readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {expect, it} from 'vitest';
+import {QUALITY} from '../../src/config.js';
 import * as baked from '../../src/art/village/baked.js';
 import {shippedSheets, shippedTerrain} from '../../src/art/village/shipped.js';
 import {sheetHeader} from '../../src/art/village-decode.js';
@@ -36,6 +37,7 @@ it('ships the terrain atlas from the authored crops at no less than the ground e
   expect(hash(source)).toBe(ship.terrain.sourceSha256); expect(hash(bytes)).toBe(ship.terrain.sha256);
   expect(header(bytes)).toEqual({type: 'webp', width: shippedTerrain.width, height: shippedTerrain.height});
   expect(ship.terrain.sourceRects).toEqual(Object.fromEntries(Object.entries(TERRAIN_MATERIALS).map(([name, row]) => [name, row.rect])));
+  expect(ship.terrain.maxGroundTexelsPerUnit).toBe(QUALITY.high.groundTexels);
   for (const [name, material] of Object.entries(TERRAIN_MATERIALS)) {
     const [, , w, h] = shippedTerrain.rects[name];
     expect(Math.min(w / material.period[0], h / material.period[1]), name).toBeGreaterThanOrEqual(ship.terrain.maxGroundTexelsPerUnit);
