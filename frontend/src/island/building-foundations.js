@@ -8,15 +8,15 @@ import {padCorners as corners, TOWER_PAD} from './defense-display.js';
 import {foundationMaterial, FOOTING} from './foundation-finish.js';
 
 const FORMS = {
-  house: {width: 1.36, depth: .86, rear: .46, reach: 1.7},
-  watchtower: {width: 1.17, depth: .90, rear: .52, reach: 2.6},
+  house: {width: 1.36, depth: .86, rear: .46, reach: 2.9, roof: 'gable'},
+  watchtower: {width: 1.17, depth: .90, rear: .52, reach: 4.1, roof: 'tower'},
   tower: {...TOWER_PAD, reach: .92, plinth: .145},
-  heart: {width: 2.03, depth: 1.20, rear: .59, reach: 2.38},
-  island_cabin: {width: 1.55, depth: .98, rear: .52, reach: 1.82},
-  island_bell: {width: .96, depth: .66, rear: .31, reach: 1.24},
-  island_arsenal: {width: 1.56, depth: .94, rear: .50, reach: 1.79, plinth: .054, cornerInset: .17},
-  island_harbor: {width: 1.52, depth: .95, rear: .48, reach: 1.72, plinth: .048, cornerInset: .15},
-  island_techhub: {width: 1.72, depth: 1.16, rear: .58, reach: 2.04, plinth: .051, cornerInset: .38},
+  heart: {width: 2.03, depth: 1.20, rear: .59, reach: 4.35, roof: 'gable'},
+  island_cabin: {width: 1.55, depth: .98, rear: .52, reach: 3.55, roof: 'gable'},
+  island_bell: {width: .96, depth: .66, rear: .31, reach: 2.25, roof: 'gable'},
+  island_arsenal: {width: 1.56, depth: .94, rear: .50, reach: 3.65, roof: 'gable', plinth: .054, cornerInset: .17},
+  island_harbor: {width: 1.52, depth: .95, rear: .48, reach: 3.20, roof: 'gable', plinth: .048, cornerInset: .15},
+  island_techhub: {width: 1.72, depth: 1.16, rear: .58, reach: 3.85, roof: 'hip', plinth: .051, cornerInset: .38},
 };
 const RETAINING_STONE = [0xc3a47b, 0xb0916b, 0x9a7f61, 0x80694f, 0x726049].map(hex => new THREE.Color(hex));
 const [SHOULDER, RETAINING_FRONT, RETAINING_SIDE, RETAINING_JOINT, EMBEDDED_STONE] = RETAINING_STONE;
@@ -110,12 +110,12 @@ function geometryOf(foundations) {
 
   // Ground shadows all go first, so a nearby occupied footing keeps its own highlights.
   for (const {x, z, slot, ruin} of foundations) {
-    const {width, depth, rear, reach} = FORMS[slot], scale = ruin ? .72 : 1;
+    const {width, depth, rear, reach, roof} = FORMS[slot], scale = ruin ? .72 : 1;
     const footZ = z - rear + .13, halfWidth = (width + .08) * scale, halfDepth = (depth + .24) * scale;
     appendGroundShadow((gx, gz, tint, alpha, contact) => vertex(gx, gz, 0, tint, alpha, 1,
       [(gx - x) / halfWidth, (gz - footZ) / halfDepth, contact ? FOOTING.contact : FOOTING.shadow]), indices, {
       x, z: footZ, width: halfWidth, depth: halfDepth,
-      reach: reach * (ruin ? .32 : 1), opacity: ruin ? .51 : 1,
+      reach: reach * (ruin ? .22 : 1), roof: ruin ? null : roof, opacity: ruin ? .51 : 1,
     });
     if (slot === 'heart' && !ruin) shadePassage(x, z);
   }
