@@ -76,7 +76,7 @@ function wallGrassEdge(surface, meadow) {
   };
 }
 
-function paintSandWaterline(c, rim) {
+function paintSandWaterline(c, rim, home) {
   const segments = rim.length - 1;
   for (let i = 0; i < segments; i += 3) {
     const {x, y, depth} = rim[i];
@@ -88,32 +88,47 @@ function paintSandWaterline(c, rim) {
     if (exposure < .035) continue;
     const tangent = Math.atan2(next.y - previous.y, next.x - previous.x);
     const swell = .5 + .28 * Math.sin(i * .31 + 1.2) + .22 * Math.cos(i * .71);
+    // The wet band hugs the existing shore. Overlapping pools create the ragged edge left by the wash.
+    const wet = home ? .995 - .006 * swell : .993 - .009 * swell;
     c.save(); c.globalAlpha *= exposure;
-    // A narrow scalloped stain where the water darkens the sand.
-    const wet = .993 - .009 * swell;
-    c.translate(x * wet, y * wet); c.rotate(tangent); c.scale(1.37 + swell * .81, .40 + swell * .42);
-    c.fillStyle = radial(c, 0, 0, 1,
-      [[0, '#86674e94'], [.37, '#a67c595b'], [.72, '#b6926c2b'], [1, '#b6926c00']]);
+    c.translate(x * wet, y * wet); c.rotate(tangent);
+    c.scale(home ? 1.24 + swell * .70 : 1.37 + swell * .81, home ? .36 + swell * .31 : .40 + swell * .42);
+    c.fillStyle = radial(c, 0, 0, 1, home
+      ? [[0, '#8f7655a6'], [.35, '#aa885d92'], [.66, '#bc97694f'], [1, '#bc976900']]
+      : [[0, '#86674e94'], [.37, '#a67c595b'], [.72, '#b6926c2b'], [1, '#b6926c00']]);
     c.fill(ellipse(0, 0, 1));
     c.restore();
 
-    const dry = .953 - .012 * swell;
+    // Dry sand catches the same sun as the upper terrace. It rounds off between the stone feet.
+    const dry = (home ? .936 : .953) - .012 * swell;
     c.save(); c.globalAlpha *= exposure;
-    c.translate(x * dry, y * dry); c.rotate(tangent); c.scale(1.52 + swell * .61, .38 + swell * .20);
-    c.fillStyle = radial(c, 0, 0, 1, [[0, '#ffe9aa50'], [.43, '#ffdd9b37'], [1, '#ffdd9b00']]);
+    c.translate(x * dry, y * dry); c.rotate(tangent);
+    c.scale(home ? 1.12 + swell * .60 : 1.52 + swell * .61, (home ? .39 : .38) + swell * .20);
+    c.fillStyle = radial(c, 0, 0, 1, home
+      ? [[0, '#fff3c4d0'], [.36, '#ffe6abb2'], [.72, '#ffe2a36a'], [1, '#ffe2a300']]
+      : [[0, '#ffe9aa50'], [.43, '#ffdd9b37'], [1, '#ffdd9b00']]);
+    c.fill(ellipse(0, 0, 1));
+    c.restore();
+
+    if (!home) continue;
+    // An intermediate, sand-coloured sheen connects the dry pocket to its wet edge.
+    const damp = .965 + .003 * Math.cos(i * .52);
+    c.save(); c.globalAlpha *= exposure;
+    c.translate(x * damp, y * damp); c.rotate(tangent); c.scale(1.27 + swell * .39, .19 + swell * .17);
+    c.fillStyle = radial(c, 0, 0, 1, [[0, '#e0bd87a2'], [.55, '#dfb98760'], [1, '#dfb98700']]);
     c.fill(ellipse(0, 0, 1));
     c.restore();
   }
 }
 
-function paintBeachDetails(c, beach, rim, materials) {
+function paintBeachDetails(c, beach, rim, materials, home) {
   c.save();
   c.clip(beach);
   c.globalCompositeOperation = 'source-atop';
   c.globalAlpha = .88;
   c.fillStyle = linear(c, -16, -13, 15, 13, [[0, '#fff0bf83'], [.40, '#fbda9f38'], [.73, '#d2a97508'], [1, '#926d583d']]);
   c.fill(beach);
-  paintSandWaterline(c, rim);
+  paintSandWaterline(c, rim, home);
   // Rocky shoulders shade the sand at their feet. The four open approaches keep a warm centre.
   for (let i = 2; i < rim.length - 1; i += 5) {
     const {x, y, depth} = rim[i];
@@ -483,12 +498,19 @@ function lawnRelief() {
 }
 
 function paintTerrain(c, s, coast, random, materials, relief) {
-  const rim = cliffProfile(s);
+  const rim = cliffProfile(s), home = s === surfaces.home_islet;
   paintCliffFaces(c, rim, materials);
-  // Wet sand fading into the shallows (translucent, so the sea still reads it as water).
-  c.fillStyle = '#c7b79c70'; c.fill(coast(1.035));
+  const beach = coast(1), apron = coast(1.035);
+  c.fillStyle = '#c7b79c70'; c.fill(apron);
+  if (home) {
+    // Colour only the exposed translucent wash, leaving the sand and turf underpaint intact.
+    const flood = new Path2D(apron);
+    flood.addPath(beach);
+    c.save(); c.globalCompositeOperation = 'source-atop';
+    c.fillStyle = '#5a9c8c80'; c.fill(flood, 'evenodd');
+    c.restore();
+  }
   // The beach: warm sand, darker at the waterline, lighter towards the meadow.
-  const beach = coast(1);
   c.fillStyle = '#f2d595'; c.fill(beach);
   if (materials) { c.save(); c.clip(beach); paintMaterial(c, materials, 'sand', {alpha: .9}); c.restore(); }
   c.save(); c.clip(beach);
@@ -496,7 +518,7 @@ function paintTerrain(c, s, coast, random, materials, relief) {
   c.lineWidth = .25; c.strokeStyle = '#c9a878'; c.stroke(beach);
   c.fillStyle = '#e2bf7e'; for (let i = 0; i < 260; i++) { const a = random() * Math.PI * 2, k = .86 + random() * .13; c.fill(ellipse(Math.cos(a) * s.rx * k, Math.sin(a) * s.rz * k * .72, .07 + random() * .08, .05)); }
   c.restore();
-  paintBeachDetails(c, beach, rim, materials);
+  paintBeachDetails(c, beach, rim, materials, home);
   if (!materials) paintGrassRim(c, rim, beach);
   // Continue the meadow under the visible wall foot while leaving the sand wash facing the sea.
   const grassRadius = wallGrassEdge(s, materials ? meadowEdge : () => .85);
