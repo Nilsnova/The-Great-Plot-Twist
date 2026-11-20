@@ -137,6 +137,36 @@ float waterDistance(vec2 p){
   float beyond=length((uv-edge)*vec2(${BACKDROP.width * 16}.0,${BACKDROP.height * 16}.0));
   return min(255.0,texture2D(uCoast,edge).r*255.0+beyond);
 }
+vec3 rockWash(vec3 colour,vec2 p,float shoreDistance,float coastRock,float light,float time){
+  // Follow the painted shoreline, including concave pockets between the stone toes.
+  // A short reach smooths the distance field between adjacent coast texels.
+  vec2 coastSlope=vec2(waterDistance(p+vec2(.23,0))-waterDistance(p-vec2(.23,0)),
+    waterDistance(p+vec2(0,.23))-waterDistance(p-vec2(0,.23)));
+  vec2 normal=normalize(coastSlope+.2*normalize(p+vec2(.01)));
+  vec2 tangent=vec2(-normal.y,normal.x);
+  vec2 foot=p-normal*shoreDistance;
+  float edge=pxNoise(foot*vec2(1.29,1.95)+vec2(8.2,4.6));
+  float surge=.5+.5*sin(time*(1.05+uWind*.54)+dot(foot,vec2(.72,.94))+edge*3.4);
+  float spread=smoothstep(.24,.76,edge);
+  float chop=pxNoise((p+tangent*time*.09)*vec2(3.7,5.9));
+  float arc=shoreDistance-.18-surge*.35-(edge-.5)*.30;
+  float nearWater=smoothstep(.09,.21,shoreDistance);
+  float shell=1.0-smoothstep(.49,1.56,shoreDistance+(.5-edge)*.24);
+  float stain=(1.0-smoothstep(.04,.39,shoreDistance))*(.39+.39*edge);
+  colour=mix(colour,uDeep,stain*coastRock);
+
+  // Ridges have a translucent shoulder, an opaque crest and broken bubble trails.
+  float shoulder=(1.0-band(abs(arc-.10),.23+.13*spread))*(.39+.61*spread);
+  float front=(1.0-band(abs(arc+(chop-.5)*.16),.048+.10*spread))
+    *smoothstep(.22,.53,chop*.39+edge*.61);
+  float retreat=1.0-band(abs(arc-.24-(chop-.5)*.46),.032+.074*spread);
+  retreat*=smoothstep(.37,.72,chop*.67+edge*.33);
+  float trail=1.0-band(abs(arc-.54-(edge-.5)*.46),.030+.048*spread);
+  trail*=smoothstep(.50,.81,chop)*spread;
+  float wash=nearWater*coastRock*(.87+.13*light);
+  colour=mix(colour,mix(uShallow,uFoam,.37),max(shoulder*.55,shell*spread*.24)*wash);
+  return mix(colour,uFoam,max(front,max(retreat*.86,trail*.76))*wash);
+}
 void main(){
   vec2 p=vWorld;float t=uSeaTime;
   float d=waterDistance(p)/16.0; // world units to the nearest land (16 = open sea)
@@ -167,13 +197,14 @@ void main(){
     float north=shore.y<0.0&&reach.y>reach.x?1.0:0.0;
     rockShore=smoothstep(.20+north*.11,.47+north*.10,shoulder);
     float beach=1.0-rockShore;
-    float bedding=pxNoise(p*vec2(.51,1.52)+vec2(.35,2.2));
+    float bedding=pxNoise(p*vec2(.56,1.62)+vec2(.35,2.2));
     // Steep rock drops into open water quickly. Keep most of the exposed sand tint
     // at the actual beaches, with little broken turquoise pockets along the rock shelves.
     float drop=1.0-smoothstep(.13,1.45+.64*bedding,d+(.5-bedding)*.44);
-    vec3 overRock=mix(offshoreColour,uShallow,drop*(.20+.32*bedding)*shoreLight);
+    float pools=smoothstep(.39,.73,bedding);
+    vec3 overRock=mix(offshoreColour,uShallow,drop*(.14+.52*pools)*shoreLight);
     colour=mix(colour,overRock,rockShore*.92);
-    float submergedSand=(1.0-smoothstep(.23,4.1,d+bedding*.59))*beach;
+    float submergedSand=(1.0-smoothstep(.16,3.4,d+bedding*.63))*beach;
     vec3 sandWater=mix(uShallow2,vec3(.60,.55,.32),.24);
     colour=mix(colour,sandWater,submergedSand*(.32+bedding*.25));
     float lee=smoothstep(-.54,.57,dot(normalize(shore),vec2(.71,.71)));
@@ -264,38 +295,7 @@ void main(){
         float curlBack=curl+.28+(.5-pockets)*.43;
         float returnFoam=(1.0-band(abs(d-curlBack),.036))*smoothstep(.44,.79,ripples);
         colour=mix(colour,uFoam,returnFoam*beach*.30*shoreLight);
-        if(rockShore>.01&&d<2.2){
-          // The impact front pinches at the rock and curls out where a pocket of water
-          // collects the backwash. Open holes keep the foam from tracing a uniform rim.
-          float grit=pxNoise(p*vec2(3.45,5.65)+vec2(foamTime*.082,-foamTime*.054));
-          float impact=smoothstep(.27,.63,pockets*.51+ripples*.40+grit*.09);
-          float lobe=smoothstep(.28,.74,ripples);
-          float firstBreak=.17+run*.28+refraction*.67+lobe*.24;
-          float delta=d-firstBreak;
-          float tear=smoothstep(.25,.74,grit*.67+pockets*.33);
-          float seam=delta+(grit-.5)*.15;
-          float front=(1.0-band(abs(seam),.048+.090*impact))
-            *smoothstep(.19,.51,grit*.36+ripples*.64)*impact;
-          float spokes=(1.0-band(abs(delta-.10+(grit-.5)*.52),.042+.056*tear))
-            *smoothstep(.32,.76,grit)*impact;
-          float brokenWash=1.0-band(abs(delta-.27-pockets*.44+(grit-.5)*.26),.032+.053*tear);
-          float returnCrests=brokenWash*smoothstep(.40,.75,ripples*.54+grit*.46)*impact;
-          float ebb=(1.0-band(abs(delta-.15),.23))*tear*impact;
-          float foamFragments=smoothstep(.54,.79,grit)
-            * (1.0-smoothstep(.085,.42,abs(delta-.26+(ripples-.5)*.45))) * impact;
-          float onWater=smoothstep(.07,.19,d);
-          float litRock=rockShore*onWater*(.88+.12*shoreLight);
-          vec3 foam=mix(uFoam,vec3(.94,.989,1.0),.63);
-          // Turquoise water shows through the lace that fans out below each hit.
-          float lace=(1.0-band(abs(seam-.15-(ripples-.5)*.36),.073+.09*grit))*tear*impact;
-          colour=mix(colour,mix(uShallow2,foam,.34),max(ebb*.32,lace*.64)*litRock);
-          // Receding water wraps the immediate rock toe between the bigger breakers.
-          float toe=.19+lobe*.21+run*.13;
-          float cling=(1.0-band(abs(d-toe+(grit-.5)*.23),.028+.038*tear))
-            *smoothstep(.37,.66,pockets*.55+grit*.45);
-          float breaking=max(front,max(spokes,returnCrests*.89));
-          colour=mix(colour,foam,max(max(breaking,cling*.84),foamFragments*.90)*litRock);
-        }
+        if(rockShore>.01&&d<1.8)colour=rockWash(colour,p,d,rockShore,shoreLight,foamTime);
       }
     }
   }else{

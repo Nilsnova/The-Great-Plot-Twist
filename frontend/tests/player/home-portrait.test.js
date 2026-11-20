@@ -29,6 +29,15 @@ it('frames more vertical ground in portrait and keeps screen-to-world reversible
   expect(ground.clone().project(camera).distanceTo(before)).toBeLessThan(1e-10);
 });
 
+it('uses tall portrait room for more depth and still yields to the selection dock', () => {
+  const camera = makeCamera();
+  const fit = portraitIslandFrame(camera, phone);
+  const selected = portraitIslandFrame(camera, {...phone, bottom: 250});
+  expect(1 / fit.height).toBeCloseTo(2.55);
+  expect(selected.height).toBeGreaterThan(fit.height);
+  expect(selected.width).toBe(fit.width);
+});
+
 it('keeps upright proportions and restores the world transforms after drawing', () => {
   const camera = makeCamera(), portrait = createHomePortrait(camera);
   const scene = new THREE.Scene(), tree = new THREE.Mesh(), floor = new THREE.Mesh();

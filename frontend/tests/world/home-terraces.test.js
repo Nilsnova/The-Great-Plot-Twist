@@ -110,6 +110,28 @@ it('grounds the terrace footings in the original island and keeps defenses and w
   expect(released).toHaveLength(3);
 });
 
+it('keeps grass visible behind the high sandstone lip above the west cove', () => {
+  const root = new THREE.Group(), shore = new THREE.Texture();
+  backdrop(root, shore);
+  const {position, terraceMaterial, surfaceDetail} = createHomeTerraces(root, shore).geometry.attributes;
+  const {rx, rz} = surfaces.home_islet;
+  const sections = new Map();
+  for (let i = 0; i < position.count; i++) {
+    const x = terraceMaterial.getX(i), z = terraceMaterial.getY(i);
+    if (x < -8 || x > -2 || z > -19 || terraceMaterial.getZ(i) !== 1) continue;
+    if (surfaceDetail.getZ(i) !== 1 || surfaceDetail.getW(i) <= .05 || terraceMaterial.getW(i) < .7) continue;
+    const angle = Math.round(Math.atan2(z / rz, x / rx) * 180 / Math.PI);
+    const crossSlope = surfaceDetail.getX(i);
+    const section = sections.get(angle) ?? {};
+    if (crossSlope < .01) section.lip = position.getY(i);
+    if (crossSlope > .5 && crossSlope < .8) section.tread = position.getY(i);
+    sections.set(angle, section);
+  }
+  const visible = [...sections.values()].filter(({lip, tread}) => tread - lip > .28);
+  expect(visible.length).toBeGreaterThan(6);
+  createLifetime(root)();
+});
+
 it('keeps edge walls on the live lanes clear of above-ground shoreline rock', () => {
   const root = new THREE.Group(), shore = new THREE.Texture();
   backdrop(root, shore);

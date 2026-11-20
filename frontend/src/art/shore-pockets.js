@@ -80,16 +80,16 @@ function drawShelf(c, rim, from, to, reach, seed, rockSheet, materials, openingA
   const bank = Math.ceil(length * 2);
   const line = Array.from({length: bank + 1}, (_, i) => point(i / bank, 1));
   const shelf = poly([...line, ...Array.from({length:bank + 1}, (_, i) => point(1 - i / bank, .03))], .068);
-  // Sand accumulates around the exposed joints. A few overlapping pools colour the contact
-  // strip with no sharp dark line on the inland side of the faceted part.
+  // Short shadows at exposed joints tuck the pale sand beneath the stone faces.
+  // They soften towards the open beach and never extend the painted shore.
   for (let i = 1; i < bank; i++) {
     const u = i / bank, amount = exposure(u);
     if (amount < .04) continue;
     const [x, y] = point(u, .13);
     const angle = Math.atan2(y, x) + Math.PI / 2;
-    c.save(); c.translate(x, y); c.rotate(angle); c.scale(.50 + amount * .40, .28 + amount * .37);
+    c.save(); c.translate(x, y); c.rotate(angle); c.scale(.53 + amount * .44, .24 + amount * .30);
     c.globalAlpha *= amount;
-    c.fillStyle = radial(c, 0, 0, 1, [[0, '#816c4b75'], [.45, '#a0805452'], [1, '#ad895c00']]);
+    c.fillStyle = radial(c, 0, 0, 1, [[0, '#584937a2'], [.38, '#80614169'], [.73, '#a0825130'], [1, '#ad895c00']]);
     c.fill(ellipse(0, 0, 1));
     c.restore();
   }

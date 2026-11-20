@@ -122,6 +122,8 @@ it('keeps the tidal rock groups and their wash in the existing Fit envelope', ()
   const {position, shoreRelief} = cliff.geometry.attributes;
   const bounds = projectedCoastBounds(cliffProfile(surfaces.home_islet));
   const shoreQuadrants = new Set();
+  const sillSides = new Set();
+  const {rx, rz} = surfaces.home_islet;
   for (let i = 0; i < position.count; i++) {
     const region = shoreRelief.getZ(i);
     if (region < 6) continue;
@@ -133,6 +135,14 @@ it('keeps the tidal rock groups and their wash in the existing Fit envelope', ()
     if (region === 6 && shoreRelief.getY(i) > .8) {
       shoreQuadrants.add((x > 0 ? 1 : 0) + (y > 0 ? 2 : 0));
     }
+    if (region === 7) {
+      const ground = unprojectGround(x, y);
+      const bearing = Math.atan2(ground.z / rz, ground.x / rx) * (180 / Math.PI);
+      expect(surfaceClass('home_islet', ground.x, ground.z)).toBe(0);
+      expect(Math.min(...NAVAL_APPROACH_BEARINGS.map(lane => Math.abs(bearing - lane)))).toBeGreaterThan(18);
+      if (shoreRelief.getY(i) > .8) sillSides.add(Math.sign(x));
+    }
   }
   expect(shoreQuadrants).toEqual(new Set([0, 1, 2, 3]));
+  expect(sillSides).toEqual(new Set([-1, 1]));
 });

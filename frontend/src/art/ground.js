@@ -201,8 +201,8 @@ function paintTurfBevel(c, coast, meadow, grassRadius, rim, materials) {
   c.clip(meadow);
   c.globalCompositeOperation = 'source-atop';
   const curve = angle => .023 + .021 * (.5 + .5 * Math.sin(angle * 6 + .5)) + .009 * Math.cos(angle * 13);
-  c.fillStyle = linear(c, -17, -13, 14, 11, [[0, '#5676390d'], [.52, '#44693811'], [1, '#3d53321a']]);
-  for (const width of [1.58, 1.39, 1.13, .92, .70, .47]) {
+  c.fillStyle = linear(c, -17, -13, 14, 11, [[0, '#5676390d'], [.52, '#4b693113'], [1, '#354b291c']]);
+  for (const width of [1.58, 1.28, 1.04, .82, .59, .39]) {
     const band = new Path2D(meadow);
     band.addPath(coast(angle => grassRadius(angle) - width * curve(angle), .012, 3));
     c.fill(band, 'evenodd');
@@ -210,8 +210,8 @@ function paintTurfBevel(c, coast, meadow, grassRadius, rim, materials) {
   // Warm soil shows below the sunlit grass on the same rounded cut.
   if (materials) {
     const random = seeded(98641);
-    const sandShadow = linear(c, -16, -14, 13, 12, [[0, '#5e713778'], [.47, '#55563285'], [1, '#3e442ea2']]);
-    const grassLight = linear(c, -16, -14, 13, 12, [[0, '#e5ec9aa5'], [.45, '#c7d77685'], [1, '#aabc563d']]);
+    const sandShadow = linear(c, -16, -14, 13, 12, [[0, '#68723583'], [.47, '#675132a2'], [1, '#403a27b9']]);
+    const grassLight = linear(c, -16, -14, 13, 12, [[0, '#deef82bc'], [.45, '#cbd975a3'], [1, '#a5c45167']]);
     const point = (index, inset) => {
       const {x, y} = rim[index], angle = index / (rim.length - 1) * Math.PI * 2;
       const contour = 1 + .012 * (Math.sin(angle * 13 + 3) * .6 + Math.sin(angle * 23 + 6) * .4);
@@ -222,13 +222,14 @@ function paintTurfBevel(c, coast, meadow, grassRadius, rim, materials) {
     for (let i = 1; i < rim.length - 4;) {
       const span = 1 + Math.floor(random() * (rim[i].depth > 1.1 ? 4 : 3));
       const wear = random(), root = .09 + .11 * wear;
+      const ledge = rim[i].depth > 1.34 && beachExposure(i, rim.length - 1) < .5;
       const path = Array.from({length: span + 1}, (_, segment) => point(i + segment, root + .055 * random()));
-      stroke(c, path, sandShadow, .07 + .17 * wear, .63 + .27 * wear);
+      stroke(c, path, sandShadow, .07 + .17 * wear + (ledge ? .065 : 0), .63 + .27 * wear);
       if (wear > .28) {
         const grass = Array.from({length: span + 1}, (_, segment) => point(i + segment, .27 + .145 * random()));
-        stroke(c, grass, grassLight, .035 + .065 * wear, .73 + .18 * wear);
+        stroke(c, grass, grassLight, .035 + .065 * wear + (ledge ? .045 : 0), .73 + .18 * wear);
       }
-      if (rim[i].depth > 1.34 && wear > .50) {
+      if (ledge && wear > .50) {
         const [x, y] = point(i, .34 + .26 * wear);
         paintGrassTuft(c, x, y, .38 + .32 * wear, '#b9cb62');
       }

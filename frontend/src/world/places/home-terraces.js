@@ -56,7 +56,7 @@ const WORN_LEDGE = 4;
 // shelf ends and the open watchtower landing remain in their original places.
 const REAR_SADDLES = [[122.15, 127.50, 1.31], [142.94, 150.82, 1.13]];
 const SADDLE_PROFILE = [
-  [0, 0], [.102, .145], [.215, .437], [.346, .714], [.472, .945], [.735, 1], [.90, .74], [1, .02],
+  [0, 0], [.066, .146], [.136, .541], [.222, .876], [.305, .972], [.792, .976], [.93, .79], [1, .02],
 ];
 // The east slope opens on either side of the wall socket. A rock shoulder carries
 // the thick sod into the pine shelf, with the lower bedding still reaching the beach.
@@ -113,30 +113,30 @@ const SOD_MATERIAL = [[2.9, ROOTS], [2.6, ROOTS], [2.0, GRASS_CREST], [1.48, TUR
 // Each stop starts a band. The two faces have deep bases, lit shoulders and grass lips.
 // A short incline at the back of the upper tread hides where it joins the old meadow.
 const REAR_PROFILE = [
-  [0, 0, -.15, RECESS], [.025, .052, -.24, STONE], [.048, .372, -.055, STONE],
-  [.062, .482, .13, STONE], [.099, .534, .21, LIP], [.151, .565, .12, TURF],
-  [.37, .566, .045, TURF], [.412, .565, -.135, RECESS], [.427, .631, -.23, STONE],
-  [.444, .844, -.055, STONE], [.465, .94, .14, STONE], [.504, .988, .24, LIP],
-  [.563, 1.026, .12, TURF], [.874, 1.026, .065, TURF], [.947, .837, -.01, TURF],
+  [0, 0, -.19, RECESS], [.018, .061, -.30, STONE], [.035, .388, -.085, STONE],
+  [.051, .500, .15, STONE], [.074, .549, .25, LIP], [.124, .584, .15, TURF],
+  [.388, .585, .055, TURF], [.445, .584, -.17, RECESS], [.460, .659, -.29, STONE],
+  [.477, .876, -.07, STONE], [.496, .963, .16, STONE], [.523, 1.014, .28, LIP],
+  [.573, 1.051, .14, TURF], [.896, 1.047, .065, TURF], [.957, .832, -.01, TURF],
   [1, .42, -.12, TURF],
 ];
 const FRONT_PROFILE = [
-  [0, 0, -.15, RECESS], [.027, .058, -.22, STONE], [.047, .31, -.08, STONE],
-  [.063, .458, .13, STONE], [.097, .516, .20, LIP], [.146, .548, .12, TURF],
-  [.399, .548, .044, TURF], [.451, .547, -.14, RECESS], [.466, .629, -.24, STONE],
-  [.482, .825, -.04, STONE], [.511, .929, .14, STONE], [.545, .976, .23, LIP],
-  [.592, 1.01, .11, TURF], [.815, .969, .065, TURF], [.924, .610, .025, TURF],
+  [0, 0, -.19, RECESS], [.019, .063, -.26, STONE], [.038, .333, -.08, STONE],
+  [.054, .475, .15, STONE], [.078, .521, .24, LIP], [.123, .548, .14, TURF],
+  [.399, .548, .051, TURF], [.451, .547, -.17, RECESS], [.466, .629, -.29, STONE],
+  [.482, .825, -.05, STONE], [.511, .929, .16, STONE], [.545, .976, .28, LIP],
+  [.592, 1.01, .14, TURF], [.815, .969, .065, TURF], [.924, .610, .025, TURF],
   [1, .02, -.08, TURF],
 ];
 // A wide cove platform supports two unequal rocky shoulders. The shoulders rise and
 // fall along the shelf instead of forming a second continuous course of masonry.
-const SHORE_TREAD_BACK = .544;
+const SHORE_TREAD_BACK = .576;
 const SHORE_PROFILE = [
-  [0, 0, -.16, RECESS], [.022, .05, -.24, STONE], [.033, .199, -.15, STONE],
-  [.053, .318, .072, STONE], [.094, .36, .14, LIP], [.145, .408, .104, TURF],
-  [.459, .409, .061, TURF], [SHORE_TREAD_BACK, .408, -.12, RECESS], [.565, .454, -.20, STONE],
-  [.584, .597, -.045, STONE], [.618, .703, .12, STONE], [.654, .745, .18, LIP],
-  [.716, .793, .10, TURF], [.875, .792, .061, TURF], [.950, .422, -.01, TURF],
+  [0, 0, -.20, RECESS], [.015, .057, -.28, STONE], [.028, .219, -.15, STONE],
+  [.042, .336, .09, STONE], [.069, .376, .20, LIP], [.115, .421, .123, TURF],
+  [.490, .421, .065, TURF], [SHORE_TREAD_BACK, .421, -.16, RECESS], [.591, .475, -.26, STONE],
+  [.606, .621, -.048, STONE], [.631, .719, .13, STONE], [.655, .766, .24, LIP],
+  [.705, .813, .13, TURF], [.905, .811, .061, TURF], [.967, .451, -.01, TURF],
   [1, .026, -.10, TURF],
 ];
 
@@ -156,18 +156,16 @@ function shelfPoint(row, foot, back, taper, rise, radius, elevation, crestRoom) 
 function clipCrest(p, crestRoom) {
   p.shoreReach = crestRoom;
   const ground = projectGround(p.x, p.z);
-  if (crestRoom > 0 && !onTop(ground.x, ground.y + p.y)) {
+  if (p.y > 0 && !onTop(ground.x, ground.y + p.y)) {
     // Find the old outline vertically above this dry foot. The high rear crests may
     // rise above the screen-space shoreline while still standing on the same land.
     let onLand = 0, beyondLand = p.y;
-    for (let i = 0; i < 9; i++) {
+    for (let i = 0; i < 12; i++) {
       const trial = (onLand + beyondLand) * .5;
       if (onTop(ground.x, ground.y + trial)) onLand = trial;
       else beyondLand = trial;
     }
     p.y = Math.min(p.y, onLand + crestRoom);
-  } else {
-    while (p.y > .012 && !onTop(ground.x, ground.y + p.y)) p.y *= .86;
   }
   return p;
 }
@@ -268,8 +266,8 @@ export function createHomeTerraces(root, coastArt, art) {
     // crown opens broader bevels along the riser and makes the cut change with the grain.
     const outer = BLOCK_BEVEL.map(([u, v]) => point(u, v, 0));
     const innerCut = BLOCK_BEVEL.map(([u, v]) => [.10 + u * .8, .13 + v * .73]);
-    const inner = innerCut.map(([u, v]) => point(u, v, .036 + worn * .011));
-    let center = point(.5, .5, .069 + worn * .015);
+    const inner = innerCut.map(([u, v]) => point(u, v, .049 + worn * .013));
+    let center = point(.5, .5, .084 + worn * .018);
     let crown = [.5, .5], fold;
     if (split) {
       const turn = worn < 0 ? -1 : 1;
@@ -333,7 +331,7 @@ export function createHomeTerraces(root, coastArt, art) {
     const bevel = outline.map(([u, v]) => [.05 + u * .90, .105 + v * .79]);
     const rim = bevel.map(([u, v]) => point(u, v, v > .52 ? .035 : .007));
     const roofUV = [.52 + lean * .14, .605 - lean * .07], heelUV = [.44 - lean * .12, .36 + lean * .06];
-    const roof = point(...roofUV, .051), heel = point(...heelUV, -.024);
+    const roof = point(...roofUV, .072), heel = point(...heelUV, -.030);
     const facets = [];
     const add = (a, b, c, auv, buv, cuv, shade) => facets.push({points: [a, b, c], uv: [auv, buv, cuv], shade});
     for (let i = 0; i < near.length; i++) {
@@ -341,7 +339,7 @@ export function createHomeTerraces(root, coastArt, art) {
       add(near[i], near[next], rim[next], outline[i], outline[next], bevel[next], -.07);
       add(near[i], rim[next], rim[i], outline[i], bevel[next], bevel[i], -.07);
       const upper = i >= 3 && i < 8;
-      add(upper ? roof : heel, rim[i], rim[next], upper ? roofUV : heelUV, bevel[i], bevel[next], upper ? .075 : -.10);
+      add(upper ? roof : heel, rim[i], rim[next], upper ? roofUV : heelUV, bevel[i], bevel[next], upper ? .106 : -.13);
     }
     add(roof, rim[8], heel, roofUV, bevel[8], heelUV, -.025);
     add(roof, heel, rim[3], roofUV, heelUV, bevel[3], -.025);
@@ -385,7 +383,7 @@ export function createHomeTerraces(root, coastArt, art) {
         });
       }
       const width = .993 - .923;
-      const rise = crest * anchor * (.85 + .15 * Math.sin(sample * 1.40) + .09 * Math.cos(sample * 2.5));
+      const rise = crest * anchor * (.91 + .07 * Math.sin(sample * 1.40) + .035 * Math.cos(sample * 2.5));
       return SADDLE_PROFILE.map(([radius, height]) => {
         const taper = anchor + (1 - anchor) * .52;
         const reach = .993 - width * (1 - radius) * taper;
@@ -509,11 +507,11 @@ export function createHomeTerraces(root, coastArt, art) {
       const cliffSupport = 1 - THREE.MathUtils.smoothstep(Math.abs(sample - footCenter), footWidth * .31, footWidth);
       const cragLift = cragRise * (1 - THREE.MathUtils.smoothstep(Math.abs(along - cragCenter), cragWidth * crownWidth, cragWidth));
       const crown = crowns && Math.max(
-        1 - THREE.MathUtils.smoothstep(Math.abs(along - crowns[0]), .09, .34),
-        .73 * (1 - THREE.MathUtils.smoothstep(Math.abs(along - crowns[1]), .045, .197)));
-      const mass = crests && (.23 + .77 * Math.max(
-        1 - THREE.MathUtils.smoothstep(Math.abs(along - crests[0]), .145, .325),
-        .65 * (1 - THREE.MathUtils.smoothstep(Math.abs(along - crests[1]), .11, .25))));
+        1 - THREE.MathUtils.smoothstep(Math.abs(along - crowns[0]), .135, .35),
+        .73 * (1 - THREE.MathUtils.smoothstep(Math.abs(along - crowns[1]), .078, .202)));
+      const mass = crests && (.34 + .66 * Math.max(
+        1 - THREE.MathUtils.smoothstep(Math.abs(along - crests[0]), .184, .349),
+        .80 * (1 - THREE.MathUtils.smoothstep(Math.abs(along - crests[1]), .133, .273))));
       return (radius, elevation, stoneFoot = false) => {
         if (atPlant && reserve) {
           // Regrade the plant foot at its original world anchor as the shelf broadens towards the meadow.
@@ -531,10 +529,14 @@ export function createHomeTerraces(root, coastArt, art) {
             * (.79 + .21 * shoulder) * strength;
           const lower = THREE.MathUtils.smoothstep(radius, .014, lowerSod) * falloff;
           const upper = THREE.MathUtils.smoothstep(radius, upperToe, upperSod) * falloff;
-          const capDepth = THREE.MathUtils.smoothstep(radius, upperSod, upperSod + (1 - upperSod) * .48);
-          lift = (.31 + .235 * mass + room * lowerRise) * lower + (.17 + (1.50 + room * upperRise) * mass) * upper;
-          crestRoom = Math.min(1.38, (.13 + room * lowerRise * .31) * lower
-            + (.10 + .04 * room + (.86 + .29 * capDepth + room * (.04 + upperRise * .39)) * mass) * upper);
+          const lowerDepth = THREE.MathUtils.smoothstep(radius, lowerSod, upperToe);
+          const capDepth = THREE.MathUtils.smoothstep(radius, upperSod, upperSod + (1 - upperSod) * .67);
+          lift = (.31 + .235 * mass + room * lowerRise) * lower + (.17 + (1.34 + room * upperRise) * mass) * upper;
+          // The distant edge of a grass seat can break the painted silhouette
+          // higher than its lip so the top still has depth after clipping.
+          const lowerRoom = (.05 + .22 * lowerDepth + room * lowerRise * .12) * lower;
+          const upperRoom = .40 + .24 * mass + .15 * room * upperRise + .73 * capDepth;
+          crestRoom = Math.min(1.38, THREE.MathUtils.lerp(lowerRoom, upperRoom, upper));
         }
         // The southern cap rises from its existing stone foot and lower shelf.
         const cap = cragLift * THREE.MathUtils.smoothstep(elevation, .640, .963);
@@ -863,11 +865,11 @@ export function createHomeTerraces(root, coastArt, art) {
           // tighter shadow, and the opposite side has a longer falloff across the same strip.
           vec3 meadow = texture2D(uCoastArt, floorUv).rgb;
           float towardStone = mod(vSurface.x, 2.0);
-          float contact = smoothstep(.51, .90, towardStone);
+          float contact = smoothstep(.47, .90, towardStone);
           float direction = min(1.0, length(vSurface.yz) * 1.55);
           float falloff = smoothstep(mix(.23, .01, direction), .75, towardStone);
           float grass = smoothstep(.015, .085, meadow.g - meadow.r);
-          float shade = (.29 + direction * .34) * falloff * grass + .52 * contact;
+          float shade = (.29 + direction * .34) * falloff * grass + .59 * contact;
           float edgeFade = mix(1.0, .72, step(1.5, mod(vSurface.x, 4.0)));
           vec3 soil = mix(meadow * vec3(.49, .60, .60), vTone, .15 * contact);
           if (vSurface.x >= 4.0) {
@@ -883,6 +885,9 @@ export function createHomeTerraces(root, coastArt, art) {
           #include <colorspace_fragment>
           return;
         }
+        vec3 ground = vec3(vTerrace.x, height, vTerrace.y);
+        vec3 slopeNormal = cross(dFdx(ground), dFdy(ground));
+        vec3 faceNormal = abs(slopeNormal) * inversesqrt(max(dot(slopeNormal, slopeNormal), 1e-12));
         if (vTerrace.z < .5) {
           vec3 stone = vTone * mix(.91, 1.10, grain);
           vec2 layers = vec2(vTerrace.x + vTerrace.y * .36, height + vTerrace.y * .13);
@@ -896,7 +901,7 @@ export function createHomeTerraces(root, coastArt, art) {
           float rockContact = (1.0 - smoothstep(.018, .12, abs(height))) * .14;
           float rootShadow = mix(earthShadow, rockContact, cliffFoot);
           float patina = smoothstep(.50, .83, grainBreak) * (1.0 - smoothstep(.08, .37, vSurface.y));
-          float sodShade = step(1.5, vSurface.z) * smoothstep(.68, .98, vSurface.y);
+          float sodShade = step(1.5, vSurface.z) * smoothstep(.57, .96, vSurface.y);
           float corners = smoothstep(.19, .48, abs(vSurface.x - .5));
           float toe = (1.0 - smoothstep(.03, .27, vSurface.y)) * corners * cut;
           float shoulder = smoothstep(.50, .82, vSurface.y) * (1.0 - smoothstep(.86, 1.0, vSurface.y));
@@ -905,6 +910,12 @@ export function createHomeTerraces(root, coastArt, art) {
           stone = mix(stone, stone * vec3(.82, .94, .72), .48 * patina * cut);
           float bevelShadow = (foot * .175 + toe * (.12 + grainBreak * .06)) * (1.0 - .45 * cliffFoot);
           stone *= 1.0 + shoulder * cut * .23 - rootShadow - bevelShadow;
+          // Stone leading into the ledge is warm, with cooler sky reflected in
+          // the narrow returns. Large face values remain legible when zoomed out.
+          float returnPlane = smoothstep(.35, .88, faceNormal.x) * (1.0 - faceNormal.y);
+          float bevelLight = smoothstep(.30, .77, faceNormal.y) * shoulder * cut;
+          stone *= mix(vec3(1.0), vec3(.71, .83, 1.055), returnPlane * (.73 + cut * .19));
+          stone *= 1.0 + bevelLight * .19;
           if (cliffFoot > 0.0) {
             vec4 cliff = texture2D(uCoastArt, floorUv);
             float underRim = cliffFoot * smoothstep(.035, .26, -height) * smoothstep(.78, .98, cliff.a);
@@ -946,11 +957,11 @@ export function createHomeTerraces(root, coastArt, art) {
         // broken band of moss and short grass makes the lower shelf read as a separate step.
         float wobble = noise2(vTerrace.xy * .92) - .5;
         float across = vSurface.x + wobble * .18 + (patches - .5) * .06;
-        float shoulder = smoothstep(-.13, .13, across) * (1.0 - smoothstep(.55, .98, across)) * vSurface.y;
+        float shoulder = smoothstep(-.14, .12, across) * (1.0 - smoothstep(.57, .92, across)) * vSurface.y;
         float wallPocket = noise2(sward * vec2(.48, .22));
-        float recess = step(1.5, vSurface.z) * smoothstep(.57 - wallPocket * .08, 1.0, across);
-        turfColor = mix(turfColor, vec3(.425, .553, .105), shoulder * .43);
-        turfColor = mix(turfColor, vec3(.123, .193, .047), recess * (.31 + .12 * wallPocket + .07 * moss));
+        float recess = step(1.5, vSurface.z) * smoothstep(.62 - wallPocket * .08, 1.0, across);
+        turfColor = mix(turfColor, vec3(.433, .558, .104), shoulder * .53);
+        turfColor = mix(turfColor, vec3(.111, .177, .052), recess * (.37 + .14 * wallPocket + .08 * moss));
         float meadowGrain = (tips - .5) * .12 + (tufts - .5) * .18 + (patches - .5) * .19;
         float leafLight = lip * (1.0 - underside) * smoothstep(.56, .87, tufts * .59 + tips * .41) * .16;
         float shoulderLight = shoulder * (.25 + (tufts - .5) * .13) - recess * (.22 + wallPocket * .09);
@@ -964,9 +975,7 @@ export function createHomeTerraces(root, coastArt, art) {
         }
         // The high banks carry turf on their flat shelves. Soil shows through
         // the steep shoulders in irregular pockets rather than a green sheet.
-        vec3 ground = vec3(vTerrace.x, height, vTerrace.y);
-        vec3 slopeNormal = cross(dFdx(ground), dFdy(ground));
-        float flatness = abs(slopeNormal.y) * inversesqrt(max(dot(slopeNormal, slopeNormal), 1e-12));
+        float flatness = faceNormal.y;
         float highBank = smoothstep(7.0, 12.5, -vTerrace.y);
         float westSpur = smoothstep(15.5, 18.2, -vTerrace.x) * (1.0 - smoothstep(2.0, 5.0, abs(vTerrace.y + 8.5)));
         highBank = max(highBank, westSpur);

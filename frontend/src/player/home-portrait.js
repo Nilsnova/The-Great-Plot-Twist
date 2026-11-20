@@ -5,7 +5,7 @@ import {projectedCoastBounds} from '../world/projection.js';
 const shore = projectedCoastBounds(cliffProfile(surfaces.home_islet));
 // Allow room for the raised shoreline, landmarks and pier beyond the playable surface.
 const ISLAND_HEIGHT = shore.maxY - shore.minY + 5;
-const MAX_PORTRAIT_DEPTH = 2.35;
+const MAX_PORTRAIT_DEPTH = 2.55;
 const SHORE_MARGIN = 5;
 
 export function usesPortraitVillage(viewport) {
