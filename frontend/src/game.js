@@ -103,7 +103,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   // until then the events they listen to are kept and replayed to them (core/lazy-part.js).
   let narrator=null,tutorials=null;
   const guide=createLazyPart({on,load:()=>import('./tutorial/guide.js'),build:(module,on)=>{
-    narrator=module.createNarrator({container,on,audio,getGame:()=>{const visit=island?.visiting,own=island?.island;return visit?{code:visit.code,waveBest:0,recoveryVersion:visit.recoveryVersion??0}:own?{code:own.code,waveBest:own.waveBest??0,recoveryVersion:own.recoveryVersion??0}:null;}});
+    narrator=module.createNarrator({container,on,audio,quiet:()=>shell.mode==='title',getGame:()=>{const visit=island?.visiting,own=island?.island;return visit?{code:visit.code,waveBest:0,recoveryVersion:visit.recoveryVersion??0}:own?{code:own.code,waveBest:own.waveBest??0,recoveryVersion:own.recoveryVersion??0}:null;}});
     tutorials=module.createTutorials({container,on,reducedMotion,probe:tutorialHooks.probe,locate:tutorialHooks.locate,spotTarget:tutorialHooks.spotTarget,anchor:tutorialHooks.anchor,tour:tutorialHooks.tour,
       say:trigger=>narrator.say(trigger),setGuide:view=>hud.setGuide(view),hudParent:()=>container.querySelector('.hud-play .hud-right'),
       focusGame:()=>graphics.renderer.domElement.focus({preventScroll:true}),
@@ -315,7 +315,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
       if(disposed)return null;
       waves=module.wireWaves({scene,camera:view.camera,canvas:graphics.renderer.domElement,container,player:controller.player,world,input,audio,reducedMotion,loop:false,
         getPracticeToken:session.getToken,quality:()=>settings.quality,isBlocked:()=>!active||outsideBlocked(),on,emit,island,fakeApi:fake?fake.createFakeIslandApi():null,
-        rehearsal:!island,host:!island,openRoom:local?topic=>local.createLocalRoom(topic):topic=>rooms.openRoom(topic),notify:text=>hud.message(text)});
+        rehearsal:!island,host:!island,isShown:()=>shell.mode!=='title',openRoom:local?topic=>local.createLocalRoom(topic):topic=>rooms.openRoom(topic),notify:text=>hud.message(text)});
       return waves;
     }).catch(error=>{console.error(error);wavesLoad=null;return null;});
     return wavesLoad;
@@ -457,7 +457,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     captions.show('Graphics paused. Reload the page to restore the island.');
   }, { once: true });
   return {dispose,resetInput:resetControls,hasOverlay:()=>!!harbor?.active||!!sharedHarbor?.active||!!island?.active||!!waves?.reportActive||!!tutorials?.active||!!classDemo?.active||shortcuts.active||tutorial.active||chart.open||sailing.active||(marketUi?.active||sportsUi.active)||stopPlots.active,
-    setMode(mode){mapTouch?.cancel();if(mode!=='playing'){harbor?.close();sharedHarbor?.close();marketUi?.close();sportsUi.close();beginRequest++;}audio.setScreen(mode);input.reset();if(mode==='playing')view.start(reducedMotion());else view.pause();},
+    setMode(mode){mapTouch?.cancel();if(mode==='title')narrator?.hush();if(mode!=='playing'){harbor?.close();sharedHarbor?.close();marketUi?.close();sportsUi.close();beginRequest++;}audio.setScreen(mode);input.reset();if(mode==='playing')view.start(reducedMotion());else view.pause();},
     handleEscape(){
       if(shortcuts.active){shortcuts.close();return true;}
       if(tutorial.active){tutorial.close();return true;}
