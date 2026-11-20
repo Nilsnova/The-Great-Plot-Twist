@@ -31,13 +31,14 @@
 import assert from 'node:assert/strict';
 import {mkdir, writeFile} from 'node:fs/promises';
 import {execFileSync} from 'node:child_process';
+import {defaultShotsDir} from './shots-dir.js';
 import {compareSyncSamples} from './multiplayer-sync-samples.js';
 import {openWorldBrowser, settle} from './world-browser-tools.js';
 import {stubOfflineApi} from './api-browser-fixture.js';
 import {stubWeather} from './weather-browser-fixture.js';
 
 const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-const out = process.argv[2] ?? `/Users/nilslenke/Developer/fri6-integration/td-shots/mp/check-${stamp}`;
+const out = process.argv[2] ?? defaultShotsDir(`mp/check-${stamp}`);
 await mkdir(out, {recursive: true});
 const qaSource = execFileSync('git', ['rev-parse', 'HEAD'], {cwd: new URL('..', import.meta.url), encoding: 'utf8'}).trim();
 const syncReceipts = [];

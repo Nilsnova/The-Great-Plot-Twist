@@ -4,12 +4,13 @@
 // npm run capture:wow -- [label] [--perf-only]. Offline fixtures only; nothing reaches a live service.
 // SHOTS_DIR sets the folder (default: the fri6-integration evidence folder, subfolder <label>).
 import {mkdir,writeFile} from 'node:fs/promises';
+import {defaultShotsDir} from './shots-dir.js';
 import {openWorldBrowser,measure} from './world-browser-tools.js';
 import {stubOfflineApi} from './api-browser-fixture.js';
 import {stubWeather} from './weather-browser-fixture.js';
 
 const perfOnly=process.argv.includes('--perf-only'),label=process.argv.slice(2).find(arg=>!arg.startsWith('--'))??'after';
-const shotsDir=process.env.SHOTS_DIR??`/Users/nilslenke/Developer/fri6-integration/g29-wow-shots/${label}`;
+const shotsDir=process.env.SHOTS_DIR??defaultShotsDir(`g29-wow/${label}`);
 await mkdir(shotsDir,{recursive:true});
 const env=await openWorldBrowser(),report={label,checked:new Date().toISOString(),shots:[],perf:{}};
 const frames=(page,n)=>page.evaluate(async n=>{for(let i=0;i<n;i++)await new Promise(requestAnimationFrame);},n);
