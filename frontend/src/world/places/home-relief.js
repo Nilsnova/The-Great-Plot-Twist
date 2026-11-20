@@ -344,19 +344,24 @@ function homeCliffGeometry(rows = cliffProfile(surface)) {
     const outline = [[.06, .10], [.47, .025], [.85, .05], [.975, .17], [.99, .77],
       [.88, .94], [.49, 1], [.12, .94], [.02, .76], [.012, .22]];
     const upperBedding = .36 + twist * .09;
-    const lowerBedding = .68 - .069 * Math.cos(from * 2.41);
+    // Broaden the supporting slabs only on the high banks, well clear of the approaches.
+    const braced = foot - top > .80 && (from >= 20 && to <= 33 || from >= 58 && to <= 72);
+    const bedding = .68 - .069 * Math.cos(from * 2.41);
+    const lowerBedding = braced ? Math.max(upperBedding + .207, bedding - .115) : bedding;
     const layers = foot - top > .63
       ? [[.012, upperBedding - .031], [upperBedding + .016, lowerBedding - .029], [lowerBedding + .023, .988]]
       : [[.018, upperBedding + .10], [upperBedding + .157, .982]];
     for (const [course, [ceiling, floor]] of layers.entries()) {
       const foundation = course === layers.length - 1;
+      const buttress = foundation && braced;
       const jog = .07 * Math.sin(from * 2.14 + 1.52 * course);
       const tint = STONES[(pigment + course * 2) % STONES.length].clone()
         .lerp(OUTCROP, foundation ? .14 : .06).lerp(BEDROCK, foundation ? .29 : .065);
       const point = (u, v, inset, retreat, tone) => {
         const base = THREE.MathUtils.lerp(ceiling, floor, v);
         const taper = (.024 + .022 * Math.abs(lean)) * v * v;
-        const across = THREE.MathUtils.lerp(taper, 1 - taper, u);
+        const spread = buttress ? .066 * v * v : 0;
+        const across = THREE.MathUtils.lerp(taper - spread, 1 - taper + spread, u);
         const strike = lean * .32 * (base - .47);
         const sample = THREE.MathUtils.clamp(THREE.MathUtils.lerp(from, to, across + jog) + strike, from, to);
         const joint = .045 * twist * (u - .5) + .021 * Math.sin(from + course + u * Math.PI);
@@ -369,10 +374,10 @@ function homeCliffGeometry(rows = cliffProfile(surface)) {
       };
       const rim = outline.map(([u, v], i) => point(u, v, .076 + .09 * v, .46 + .10 * v,
         i < 3 ? -.095 : -.245));
-      const turn = .14 + Math.abs(lean) * .072;
+      const turn = (buttress ? .103 : .14) + Math.abs(lean) * .072;
       const face = outline.map(([u, v]) => point(
         THREE.MathUtils.lerp(turn, .844, u), .14 + .71 * v + (u - .5) * lean * .053,
-        .018 + .018 * v, .023 + .089 * u, .044 - .033 * v,
+        .018 + .018 * v, .023 + (buttress ? .049 : .089) * u, .044 - .033 * v,
       ));
       const crown = point(.52 + twist * .09, .37 + lean * .031, .016, .009, .104);
       const facets = [];
