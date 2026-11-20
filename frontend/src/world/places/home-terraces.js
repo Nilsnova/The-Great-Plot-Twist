@@ -19,6 +19,12 @@ const BANKS = [
   {first: 30, last: 37, foot: .985, back: .888, height: 1.92},
   {first: 55, last: 67, foot: .958, back: .835, height: 1.62},
 ];
+// Tall caps emerge at unequal positions on their existing treads. Values are
+// the centre and half-width along the bank, followed by the rise in world units.
+const CRAGS = {
+  30: [.57, .40, 1.31],
+  55: [.81, .13, 1.27],
+};
 const STONE = ['#c79c67', '#dbaf77', '#b88b60', '#d4ae7e', '#c59767'].map(hex => new THREE.Color(hex));
 const MORTAR = new THREE.Color('#96734f'), RECESS = new THREE.Color('#765840');
 const ENDS = [new THREE.Color('#aa8357'), new THREE.Color('#b99165')];
@@ -251,6 +257,7 @@ export function createHomeTerraces(root, coastArt, art) {
 
   for (const {first, last, foot, back, height, shore, reserve = 0, crowns, stepBack = 0} of BANKS) {
     const front = foot > back;
+    const crag = CRAGS[first];
     const profile = shore ? SHORE_PROFILE.map(([radius, elevation, tone, material]) => {
       // The narrower cove keeps its existing plantings on the broad lower shelf.
       const spread = radius < SHORE_TREAD_BACK ? radius / SHORE_TREAD_BACK : (1 - radius) / (1 - SHORE_TREAD_BACK);
@@ -271,6 +278,7 @@ export function createHomeTerraces(root, coastArt, art) {
       const originalFoot = foot + breadth, rim = back + breadth * .31;
       const shelfFoot = originalFoot - reserve * shoulder;
       const along = (sample - start) / (finish - start);
+      const cragLift = crag ? crag[2] * (1 - THREE.MathUtils.smoothstep(Math.abs(along - crag[0]), crag[1] * .27, crag[1])) : 0;
       const crown = crowns && Math.max(
         1 - THREE.MathUtils.smoothstep(Math.abs(along - crowns[0]), .09, .34),
         .73 * (1 - THREE.MathUtils.smoothstep(Math.abs(along - crowns[1]), .045, .197)));
@@ -285,7 +293,10 @@ export function createHomeTerraces(root, coastArt, art) {
         const wornEnd = shore ? (1 - shoulder) * (1 - THREE.MathUtils.smoothstep(radius, .23, .56)) : 0;
         const irregularity = 1 + taper * Math.sin(sample * 1.11 + radius * 3) * .027 - wornEnd * .21;
         const shoulderCut = shore ? Math.max(0, elevation - .33) * (.80 - .73 * crown) : 0;
-        return shelfPoint(row, shelfFoot, rim, taper, rise, radius, (elevation - shoulderCut) * irregularity);
+        // Start at the stone foot. The lower shelf, slope and plant anchors use the original X/Z.
+        const cap = cragLift * THREE.MathUtils.smoothstep(elevation, .640, .963);
+        const top = (elevation - shoulderCut) * irregularity + cap / rise;
+        return shelfPoint(row, shelfFoot, rim, taper, rise, radius, top);
       };
     }
     const sodRings = profile.flatMap((entry, ring) => entry[3] === LIP ? [ring] : []);
@@ -387,20 +398,22 @@ export function createHomeTerraces(root, coastArt, art) {
         return samplePoint(sample)(THREE.MathUtils.lerp(r0, r1, (h - h0) / (h1 - h0)) - bulge, h);
       }
       // A massive lower plinth carries the finer, staggered stone courses above it.
-      const courses = upper && !shore ? [[.46, .965, .61, 1], [.035, .43, 0, 0]] : [[.036, .963, upper ? .76 : 0, 0]];
+      const courses = upper && !shore && !crag ? [[.46, .965, .61, 1], [.035, .43, 0, 0]] : [[.036, .963, upper ? .76 : 0, 0]];
       const grout = shore ? .065 : upper ? .044 : .049;
       for (const [bottom, top, shift, course] of courses) {
         let column = 0;
         for (let next = start - shift; next < finish; column++) {
-          const scale = shore ? (upper ? .82 : 1.12) : (upper ? 1 : .91);
+          const scale = crag && upper ? 1.36 : shore ? (upper ? .82 : 1.12) : (upper ? 1 : .91);
           const width = BLOCK_WIDTHS[(column + from + (upper ? 2 : 0)) % BLOCK_WIDTHS.length] * scale;
           const left = Math.max(start + .014, next + grout), right = Math.min(finish - .014, next + width - grout);
           if (right - left > .19) {
             const worn = Math.sin(column * 2.41 + start * .77 + course * 1.9 + from);
             const groutRipple = (shore ? .04 : .022) * worn;
-            const point = (u, v, bulge) => across(THREE.MathUtils.lerp(left, right, u),
+            const slope = crag && upper ? worn * .11 : 0;
+            const point = (u, v, bulge) => across(THREE.MathUtils.lerp(left, right, u + Math.sin(u * Math.PI) * slope * v),
               THREE.MathUtils.lerp(bottom, top, v) + (1 - 2 * u) * groutRipple, bulge);
-            stone(point, STONE[(column + course * 3 + from) % STONE.length], worn, !upper || course === 1, !upper || shore);
+            stone(point, STONE[(column + course * 3 + from) % STONE.length], worn, !upper || course === 1,
+              !upper || shore || Boolean(crag));
           }
           next += width;
         }
