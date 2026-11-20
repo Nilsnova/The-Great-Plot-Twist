@@ -25,6 +25,9 @@ const CRAGS = {
   30: [.52, .53, .79, .56],
   55: [.82, .16, 1.02, .49],
 };
+// Parts of the lowest southern stone courses continue down into the cliff face.
+// Each span gives its centre and half-width in coast samples, then the depth below the old top.
+const CLIFF_FOOTINGS = {30: [33.3, 2.15, .43], 55: [61.2, 3.94, .49]};
 const REAR_CRESTS = {
   97: [.40, .78, .50],
   116.5: [.36, .87],
@@ -120,7 +123,7 @@ function onTop(x, y) {
 function shelfPoint(row, foot, back, taper, rise, radius, elevation, crestRoom) {
   const reach = Math.min(.987, THREE.MathUtils.lerp(foot, back, .49 + (radius - .49) * Math.sqrt(taper)));
   const p = new THREE.Vector3(row.x * reach, taper * rise * elevation, row.z * reach);
-  p.crestRoom = crestRoom;
+  p.shoreReach = crestRoom;
   const ground = projectGround(p.x, p.z);
   if (crestRoom > 0 && !onTop(ground.x, ground.y + p.y)) {
     // Find the old outline vertically above this dry foot. The high rear crests may
@@ -140,7 +143,7 @@ function shelfPoint(row, foot, back, taper, rise, radius, elevation, crestRoom) 
 
 function blendStone(a, b, amount) {
   const point = a.clone().lerp(b, amount);
-  point.crestRoom = THREE.MathUtils.lerp(a.crestRoom ?? 0, b.crestRoom ?? 0, amount);
+  point.shoreReach = THREE.MathUtils.lerp(a.shoreReach ?? 0, b.shoreReach ?? 0, amount);
   return point;
 }
 
@@ -220,7 +223,7 @@ export function createHomeTerraces(root, coastArt, art) {
     // shadow strips use the distance from the foot plus a ground-plane offset.
     if (detail) surfaceDetails.push(detail[0], detail[1], detail[2] ?? (recessed ? 2 : 1));
     else surfaceDetails.push(0, 0, 0);
-    surfaceDetails.push(p.crestRoom ?? 0);
+    surfaceDetails.push(p.shoreReach ?? 0);
   }
   function face(a, b, c, d, tint, lightA, lightB, grass = 0, opacity = [1, 1, 1, 1], detail, recessed) {
     const sun = (sunlight(a, b, c) + sunlight(a, c, d)) * .5;
@@ -293,6 +296,7 @@ export function createHomeTerraces(root, coastArt, art) {
 
   for (const {first, last, foot, back, height, shore, reserve = 0, crowns, stepBack = 0} of BANKS) {
     const front = foot > back;
+    const [footCenter, footWidth, footDepth] = CLIFF_FOOTINGS[first] ?? [0, 1, 0];
     const [cragCenter, cragWidth, cragRise, crownWidth] = CRAGS[first] ?? [0, 1, 0, .27];
     const profile = shore ? SHORE_PROFILE.map(([radius, elevation, tone, material]) => {
       // The narrower cove keeps its existing plantings on the broad lower shelf.
@@ -320,6 +324,7 @@ export function createHomeTerraces(root, coastArt, art) {
       const originalFoot = foot + breadth, rim = back + breadth * .31;
       const shelfFoot = originalFoot - reserve * shoulder;
       const along = (sample - start) / (finish - start);
+      const cliffSupport = 1 - THREE.MathUtils.smoothstep(Math.abs(sample - footCenter), footWidth * .31, footWidth);
       const cragLift = cragRise * (1 - THREE.MathUtils.smoothstep(Math.abs(along - cragCenter), cragWidth * crownWidth, cragWidth));
       const crown = crowns && Math.max(
         1 - THREE.MathUtils.smoothstep(Math.abs(along - crowns[0]), .09, .34),
@@ -327,7 +332,7 @@ export function createHomeTerraces(root, coastArt, art) {
       const mass = crests && (.23 + .77 * Math.max(
         1 - THREE.MathUtils.smoothstep(Math.abs(along - crests[0]), .145, .325),
         .65 * (1 - THREE.MathUtils.smoothstep(Math.abs(along - crests[1]), .11, .25))));
-      return (radius, elevation) => {
+      return (radius, elevation, stoneFoot = false) => {
         if (atPlant && reserve) {
           // Regrade the plant foot at its original world anchor as the shelf broadens towards the meadow.
           const squeeze = Math.sqrt(taper);
@@ -351,7 +356,17 @@ export function createHomeTerraces(root, coastArt, art) {
         // The southern cap rises from its existing stone foot and lower shelf.
         const cap = cragLift * THREE.MathUtils.smoothstep(elevation, .640, .963);
         const raised = (elevation - shoulderCut) * irregularity + lift / (taper * rise) + cap / rise;
-        return shelfPoint(row, shelfFoot, rim, taper, rise, radius, raised, crestRoom);
+        const point = shelfPoint(row, shelfFoot, rim, taper, rise, radius, raised, crestRoom);
+        if (stoneFoot && footDepth && cliffSupport > 0) {
+          // Pull the existing bottom bevel into bedrock and let its upper edge stay put.
+          const join = cliffSupport * (1 - THREE.MathUtils.smoothstep(radius, -.014, .111));
+          point.x = THREE.MathUtils.lerp(point.x, row.x * .998, join);
+          point.z = THREE.MathUtils.lerp(point.z, row.z * .998, join);
+          point.y -= footDepth * join;
+          // Negative allowance denotes a foot below the visible shore, rather than a raised crest.
+          point.shoreReach = -footDepth * join;
+        }
+        return point;
       };
     }
     // Shade each tread from its sod rim to the base of the next rise.
@@ -370,7 +385,8 @@ export function createHomeTerraces(root, coastArt, art) {
     for (let sample = start; sample <= finish; sample += STEP) {
       const point = samplePoint(sample);
       const overhang = .031 + .006 * Math.sin(sample * 2.3);
-      const shape = profile.map(([radius, elevation, , material]) => point(radius - (material === LIP ? overhang : 0), elevation));
+      const shape = profile.map(([radius, elevation, , material]) =>
+        point(radius - (material === LIP ? overhang : 0), elevation, material === STONE || material === RECESS));
       const sod = Object.fromEntries(sodRings.map(ring => {
         const [from, low] = profile[ring], [to, high] = profile[ring + 1];
         const curl = .025 * Math.sin(sample * 3.4 + ring) + .014 * Math.cos(sample * 6.7);
@@ -461,7 +477,7 @@ export function createHomeTerraces(root, coastArt, art) {
         const h = THREE.MathUtils.lerp(low, high, v);
         const index = Math.max(1, span.findIndex(([, height]) => height >= h));
         const [r0, h0] = span[index - 1], [r1, h1] = span[index];
-        return samplePoint(sample)(THREE.MathUtils.lerp(r0, r1, (h - h0) / (h1 - h0)) - bulge, h);
+        return samplePoint(sample)(THREE.MathUtils.lerp(r0, r1, (h - h0) / (h1 - h0)) - bulge, h, front && !upper);
       }
       // A massive lower plinth carries the finer, staggered stone courses above it.
       const courses = upper && !shore ? [[.46, .965, .61, 1], [.035, .43, 0, 0]] : [[.036, .963, upper ? .76 : 0, 0]];
@@ -579,7 +595,7 @@ export function createHomeTerraces(root, coastArt, art) {
         vec2 shore = floorPoint / vec2(${COAST.rx.toFixed(1)}, ${COAST.rz.toFixed(1)});
         float angle = atan(shore.y, shore.x);
         float rim = 1.0 + .055 * sin(angle * 5.0 + ${COAST.seed.toFixed(1)}) + .035 * cos(angle * 7.0);
-        if (length(shore) >= rim * .994 && vSurface.w < .015) discard;
+        if (length(shore) >= rim * .994 && abs(vSurface.w) < .015) discard;
         vec2 samplePoint = vec2(vTerrace.x / 64.0, -vTerrace.y * ${LEGACY_DEPTH} / 48.0) * .64 + .5;
         vec3 source = texture2D(uCoastArt, samplePoint).rgb;
         float grain = smoothstep(.11, .43, dot(source, vec3(.27, .62, .11)));
@@ -616,8 +632,12 @@ export function createHomeTerraces(root, coastArt, art) {
           vec2 layers = vec2(vTerrace.x + vTerrace.y * .36, height + vTerrace.y * .13);
           float cut = min(vSurface.z, 1.0);
           stone = weatheredSandstone(stone, layers, vSurface.xy, cut);
-          // Tight earth contact grounds the lower stone bevel and the uncut mortar.
-          float rootShadow = (1.0 - smoothstep(.025, .29, height)) * .31;
+          // The joined foot crosses the old grass edge. Give it a narrow contact
+          // at the turf and the same warm stone colour below, with full coverage.
+          float cliffFoot = smoothstep(.025, .24, -vSurface.w);
+          float earthShadow = (1.0 - smoothstep(.025, .29, height)) * .31;
+          float rockContact = (1.0 - smoothstep(.018, .12, abs(height))) * .14;
+          float rootShadow = mix(earthShadow, rockContact, cliffFoot);
           float patina = smoothstep(.50, .83, grainBreak) * (1.0 - smoothstep(.08, .37, vSurface.y));
           float sodShade = step(1.5, vSurface.z) * smoothstep(.68, .98, vSurface.y);
           float corners = smoothstep(.19, .48, abs(vSurface.x - .5));
@@ -626,7 +646,14 @@ export function createHomeTerraces(root, coastArt, art) {
           float foot = (1.0 - smoothstep(.06, .49, vSurface.y)) * cut;
           stone = mix(stone, stone * vec3(.70, .78, .65), sodShade * (.48 + grainBreak * .22));
           stone = mix(stone, stone * vec3(.82, .94, .72), .48 * patina * cut);
-          stone *= 1.0 + shoulder * cut * .23 - rootShadow - foot * .175 - toe * (.12 + grainBreak * .06);
+          float bevelShadow = (foot * .175 + toe * (.12 + grainBreak * .06)) * (1.0 - .45 * cliffFoot);
+          stone *= 1.0 + shoulder * cut * .23 - rootShadow - bevelShadow;
+          if (cliffFoot > 0.0) {
+            vec4 cliff = texture2D(uCoastArt, floorUv);
+            float underRim = cliffFoot * smoothstep(.035, .26, -height) * smoothstep(.78, .98, cliff.a);
+            vec3 bedrock = weatheredSandstone(cliff.rgb, layers, vSurface.xy, cut * .55);
+            stone = mix(stone, bedrock, underRim * .55);
+          }
           if (vTerrace.y < 0.0) {
             // Break up the taller rear faces at close zoom, and keep the beveled edges warm.
             vec2 frequency = vec2(4.2, 6.4);

@@ -5,11 +5,12 @@ import {footprintOf} from '../../src/island/placement.js';
 import {ALL_SPOTS} from '../../src/island/spots.js';
 import {WALL_LANE_ROWS} from '../../src/island/wall-lanes.js';
 import {WALL_PERIMETER_CELLS} from '../../src/island/wall-perimeter.js';
-import {projectGround, unprojectGround} from '../../src/world/projection.js';
+import {cliffProfile} from '../../src/art/coast-cliffs.js';
+import {projectGround, projectedCoastBounds, unprojectGround} from '../../src/world/projection.js';
 import {createHomeRelief} from '../../src/world/places/home-relief.js';
 import {createHomeTerraces} from '../../src/world/places/home-terraces.js';
 import {backdrop, createLifetime} from '../../src/world/places/resources.js';
-import {surfaceClass} from '../../src/world/places/surfaces.js';
+import {surfaceClass, surfaces} from '../../src/world/places/surfaces.js';
 
 const turn = (a, b, c) => (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
 
@@ -19,13 +20,15 @@ function covers(point, [a, b, c]) {
   return edges.every(value => value > -1e-6) || edges.every(value => value < 1e-6);
 }
 
-it('grounds every terrace foot and keeps the raised rear crests clear of defenses and wall lanes', () => {
+it('grounds the terrace footings in the original island and keeps defenses and wall lanes clear', () => {
   const root = new THREE.Group(), shore = new THREE.Texture();
   backdrop(root, shore);
   const terrace = createHomeTerraces(root, shore);
   const {position, terraceMaterial, surfaceDetail} = terrace.geometry.attributes;
   const triangles = [];
   let highestRear = 0, highestFront = 0, raisedCrests = 0;
+  const joinedCliffs = new Set();
+  const coast = projectedCoastBounds(cliffProfile(surfaces.home_islet));
   for (let i = 0; i < position.count; i += 3) {
     const points = [i, i + 1, i + 2].map(index => {
       const x = position.getX(index), y = position.getY(index);
@@ -34,14 +37,27 @@ it('grounds every terrace foot and keeps the raised rear crests clear of defense
       const view = unprojectGround(x, y);
       const depth = y - projectGround(baseX, baseZ).y;
       if (surfaceClass('home_islet', view.x, view.z) === 0) {
-        const allowedRise = surfaceDetail.getW(index);
-        expect(baseZ).toBeLessThan(0);
+        const shoreReach = surfaceDetail.getW(index);
         expect(terraceMaterial.getZ(index)).toBeGreaterThanOrEqual(0);
-        expect(allowedRise).toBeGreaterThan(0);
-        expect(allowedRise).toBeLessThanOrEqual(1.381);
-        const belowCrest = unprojectGround(x, y - allowedRise - .01);
-        expect(surfaceClass('home_islet', belowCrest.x, belowCrest.z)).toBeGreaterThan(0);
-        raisedCrests++;
+        if (shoreReach < 0) {
+          expect(baseZ).toBeGreaterThan(0);
+          expect(depth).toBeLessThanOrEqual(.05);
+          expect(depth).toBeGreaterThanOrEqual(-.50);
+          expect(x).toBeGreaterThanOrEqual(coast.minX);
+          expect(x).toBeLessThanOrEqual(coast.maxX);
+          expect(y).toBeGreaterThanOrEqual(coast.minY);
+          expect(y).toBeLessThanOrEqual(coast.maxY);
+          const aboveFoot = unprojectGround(x, y - shoreReach + .01);
+          expect(surfaceClass('home_islet', aboveFoot.x, aboveFoot.z)).toBeGreaterThan(0);
+          joinedCliffs.add(Math.sign(baseX));
+        } else {
+          expect(baseZ).toBeLessThan(0);
+          expect(shoreReach).toBeGreaterThan(0);
+          expect(shoreReach).toBeLessThanOrEqual(1.381);
+          const belowCrest = unprojectGround(x, y - shoreReach - .01);
+          expect(surfaceClass('home_islet', belowCrest.x, belowCrest.z)).toBeGreaterThan(0);
+          raisedCrests++;
+        }
       }
       if (baseZ > 0) highestFront = Math.max(highestFront, depth);
       else highestRear = Math.max(highestRear, depth);
@@ -52,6 +68,7 @@ it('grounds every terrace foot and keeps the raised rear crests clear of defense
   expect(highestRear).toBeGreaterThan(2.45);
   expect(highestFront).toBeGreaterThan(1.42);
   expect(raisedCrests).toBeGreaterThan(0);
+  expect(joinedCliffs).toEqual(new Set([-1, 1]));
   const coastalGuns = ALL_SPOTS.filter(spot => ['cannon_1', 'cannon_2', 'cannon_3', 'cannon_4'].includes(spot.id))
     .map(spot => ({...spot, kind: 'cannon'}));
   const inshore = defenseDisplayAnchors('home_islet', coastalGuns);
