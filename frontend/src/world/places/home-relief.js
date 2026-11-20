@@ -30,16 +30,6 @@ const HEADLANDS = [
 const HEADLAND_BEDS = [[11.1, 34.7], [55.2, 79.1]];
 const RECESSED_BED = .25;
 const TERRACE_ARCS = [[25, 34], [55, 67]];
-const REAR_STONE = 4, REAR_TURF = 5;
-// Separate shoulders root the existing high shelves in the rear coast. The
-// central landing remains open between the western and eastern groups.
-const REAR_HEADLANDS = [
-  {from: 119.6, to: 123.7, reach: 1.48, height: 1.04, lean: .17, stone: 3, grass: false},
-  {from: 121.7, to: 127.2, reach: 2.05, height: 1.82, lean: -.15, stone: 5, grass: true},
-  {from: 145.95, to: 151.75, reach: 1.02, height: 1.76, footTurn: .33, landingCut: .66, lean: -.14, stone: 2, grass: true},
-  {from: 148.8, to: 152.55, reach: 1.41, height: 1.03, lean: -.18, stone: 5, grass: false},
-];
-const REAR_OUTLINE = [[0, .39], [.19, .064], [.55, 0], [.85, .16], [1, .49], [.88, .85], [.59, 1], [.16, .82]];
 // Above-ground turf clearances for the southeast and southwest wall footings.
 const WALL_FOOTING_ARCS = [[21, 25], [71, 74.5]];
 const CUT_CORNERS = [[.09, .02], [.56, 0], [.84, .035], [1, .21], [.98, .75], [.83, .97],
@@ -184,9 +174,7 @@ function homeCliffGeometry(rows = cliffProfile(surface)) {
   function triangle(a, b, c, tint, tones, bias, fractions, region, sun = sunlight(a, b, c), cut) {
     for (const [i, vertex] of [a, b, c].entries()) {
       const light = THREE.MathUtils.clamp(.77 + sun + tones[i], .24, 1.44);
-      const rear = region >= REAR_STONE;
-      const display = projectGround(vertex.x, rear ? vertex.z : vertex.z - vertex.y / LEGACY_DEPTH);
-      if (rear) display.y += vertex.y;
+      const display = projectGround(vertex.x, vertex.z - vertex.y / LEGACY_DEPTH);
       positions.push(display.x, display.y, vertex.z + vertex.y * .6 + bias);
       colors.push(tint.r * light, tint.g * light, tint.b * light);
       relief.push(-vertex.y, fractions[i], region);
@@ -300,63 +288,6 @@ function homeCliffGeometry(rows = cliffProfile(surface)) {
     }
   }
 
-  function carveRearHeadland({from, to, reach, height, lean, stone, grass, footTurn = 0, landingCut = 0}) {
-    const color = STONES[stone].clone().lerp(OUTCROP, .65).lerp(BEDROCK, .12);
-    const center = stoneVertex(rows, (from + to) * .5, 0, reach * .49);
-    center.y = height * .42;
-    const tiers = [
-      [1, 1, 0, -.22], [.97, .96, .20, -.11], [.84, .76, .55, -.04],
-      [.62, .59, .90, .065], [.43, .47, 1, .14],
-    ];
-    const point = (along, across, rise, grade) => {
-      const sample = THREE.MathUtils.lerp(from, to, THREE.MathUtils.clamp(along, 0, 1));
-      // The eastern toe tapers towards the wall sockets while its seaward heel
-      // supports the whole rock face above the saddle.
-      const taper = landingCut * (1 - THREE.MathUtils.smoothstep(along, .38, .60));
-      const vertex = stoneVertex(rows, sample, 0, .10 + across * reach * (1 - taper));
-      const shoulder = 1 - THREE.MathUtils.smoothstep(Math.abs(along - .50 - lean), .05, .48);
-      vertex.y = height * rise * (.42 + .58 * shoulder) * (1 + .12 * Math.sin(along * 9.2 + lean));
-      return {vertex, grade, cut: [along, rise]};
-    };
-    const rings = tiers.map(([length, width, rise, grade]) => {
-      return REAR_OUTLINE.map(([u, v], i) => {
-        const foot = footTurn * (1 - rise) ** 2 * THREE.MathUtils.smoothstep(v, .34, .82);
-        return point(
-          .5 + (u - .5) * length * (1 - foot) + foot * .5 + lean * rise * rise + .04 * rise * Math.sin(i * 3.1 + rise * 7),
-          .47 + (v - .47) * width + rise * (.052 * v + .084 * Math.cos(i * 2.9 + rise * 5)),
-          rise * (1 + .115 * Math.sin(v * 7.2 + u * 4 + lean)), grade,
-        );
-      });
-    });
-    const facets = [];
-    for (let ring = 0; ring < rings.length - 1; ring++) {
-      const [lower, upper] = [rings[ring], rings[ring + 1]];
-      for (let i = 0; i < lower.length; i++) {
-        const next = (i + 1) % lower.length;
-        const layer = grass && ring === rings.length - 2 && i < 6 ? REAR_TURF : REAR_STONE;
-        facets.push({points: [lower[i], lower[next], upper[next]], layer},
-          {points: [lower[i], upper[next], upper[i]], layer});
-      }
-    }
-    const top = rings.at(-1), peak = point(.5 + lean, .48, .995, .15);
-    for (let i = 0; i < top.length; i++) {
-      facets.push({points: [top[i], top[(i + 1) % top.length], peak], layer: grass ? REAR_TURF : REAR_STONE});
-    }
-    const light = (a, b, c) => {
-      faceNormal.subVectors(b, a).cross(edge.subVectors(c, a)).normalize();
-      exterior.copy(a).add(b).add(c).addScaledVector(center, -3);
-      if (faceNormal.dot(exterior) < 0) faceNormal.negate();
-      return Math.max(-.53, faceNormal.dot(SUN)) * .49;
-    };
-    const daylight = averageStoneLight(facets.map(({points}) => points), vertex => vertex.vertex, light);
-    for (const {points, layer} of facets) {
-      const [a, b, c] = points.map(corner => corner.vertex);
-      const tones = points.map(corner => corner.grade + daylight.get(corner) * .58);
-      triangle(a, b, c, layer === REAR_TURF ? TURF : color, tones, .67, [0, 0, 0], layer,
-        light(a, b, c) * .40, points.map(corner => corner.cut));
-    }
-  }
-
   const isHeadland = sample => HEADLAND_BEDS.some(([from, to]) => sample >= from && sample <= to);
   // A continuous dark bed shows only where separate columns taper away from one another.
   const nearEnd = (rows.length - 1) / 2;
@@ -464,7 +395,6 @@ function homeCliffGeometry(rows = cliffProfile(surface)) {
   }
 
   HEADLANDS.forEach(carveHeadland);
-  REAR_HEADLANDS.forEach(carveRearHeadland);
   // Broken boulder clusters frame the sandy cove. Their bases stay on the old top, outside
   // the entrance lane, and their bevels cast enough contrast to read beside the larger cliff.
   const boulders = [
@@ -551,34 +481,6 @@ export function createHomeRelief(group, coastArt) {
         // Preserve all of the visible, playable upper beach, including the existing shallow coves.
         vec4 rock = texture2D(uCoastArt, vec2(logical.x / 64.0, -logical.y * ${LEGACY_DEPTH} / 48.0) + .5);
         float sandPigment = smoothstep(.065, .24, rock.r - rock.g);
-        if (vShoreRelief.z > 3.5) {
-          float height = -vShoreRelief.x;
-          vec2 foot = unprojectGround(vReliefPoint - vec2(0.0, height));
-          vec2 anchor = foot / vec2(${surface.rx.toFixed(1)}, ${surface.rz.toFixed(1)});
-          float bearing = atan(anchor.y, anchor.x);
-          float edge = 1.0 + .055 * sin(bearing * 5.0 + ${surface.seed.toFixed(1)}) + .035 * cos(bearing * 7.0);
-          if (length(anchor) > edge) discard;
-          float grain = sandstoneGrain(foot * vec2(5.6, 8.1)).x;
-          vec3 color = vStone;
-          if (vShoreRelief.z > 4.5) {
-            float surfaceGrain = sandstoneGrain(foot * vec2(15.0, 21.0)).x;
-            float rooted = smoothstep(.87, .98, vShoreCut.y);
-            color *= mix(vec3(.83, .89, .69), vec3(1.08, 1.04, .89), rooted);
-            color *= .91 + grain * .15 + surfaceGrain * .10;
-          } else {
-            color = weatheredSandstone(color, layers, vShoreCut.xy, .76);
-            vec3 fracture = sandstoneGrain(layers * vec2(2.8, 4.1));
-            float unevenLight = clamp(dot(fracture.yz, vec2(-.092, .13)), -.10, .16);
-            float side = smoothstep(.30, .69, vShoreCut.x);
-            color *= mix(vec3(1.13, 1.081, 1.03), vec3(.96, 1.0, 1.034), side) * (1.0 + unevenLight);
-            float topLight = smoothstep(.54, .94, vShoreCut.y);
-            float contact = 1.0 - smoothstep(.04, .35, height);
-            color *= .90 + .17 * grain + .11 * topLight - .34 * contact;
-          }
-          gl_FragColor = vec4(color, 1.0);
-          #include <colorspace_fragment>
-          return;
-        }
         if (vShoreRelief.z > 1.5) {
           if (length(shore) > rim || rock.a < .78) discard;
           float height = -vShoreRelief.x;
