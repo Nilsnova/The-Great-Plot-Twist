@@ -2,33 +2,49 @@
 import * as THREE from 'three';
 import { createFrameState } from './frame-state.js';
 import {createHarborLife} from '../ambient/harbor-life.js';
+import {HOME_LANTERN_LIGHT} from '../../art/home-shore.js';
+import {outpostArtwork} from '../../art/outpost-scenery.js';
+import {harborArtId} from '../../art/harbor-buildings.js';
+import {animateLandmarkMaterial} from '../../island/landmark-motion.js';
 import { loadArt, placeArt } from '../art.js';
 import { paintedBlob } from '../primitives.js';
 import { swayMaterial, updateSway } from '../wind.js';
 import { createBeam } from '../beam.js';
+import {createGroundShadows} from '../ground-shadow.js';
 import { places } from './registry.js';
 import { layouts, edgeTrees, homeMooring } from './layouts.js';
-import { placeGround } from './surfaces.js';
+import { placeGround, surfaceClass } from './surfaces.js';
 import { backdrop, createLifetime, loadBackdrop } from './resources.js';
 import { makeSelectedCanopy } from './selected-canopy.js';
-import { makeMooringRope } from './mooring.js';
+import { makeMooring } from './mooring.js';
 import {projectGround} from '../projection.js';
+import {createHomeGardens, prepareHomeFoliage} from './home-gardens.js';
+import {createHomeRelief} from './home-relief.js';
+import {createHomeTerraces} from './home-terraces.js';
+
+const HOME_PROP_ART = {bench: 'home-bench', barrel: 'home-barrel', lantern: 'home-lantern'};
 
 // Compose all art, colliders and cleanup under one place root for predictable travel disposal.
 export async function createSettlement(ctx) {
   const { id } = ctx;
   const data = places[id];
   const placements = [...(layouts[id] ?? []), ...(ctx.placements ?? [])];
-  const mooring = id === 'home_islet' ? homeMooring : [];
+  const home = id === 'home_islet', harbor = id === 'saltreach_harbor';
+  function appearance(asset) {
+    if (harbor) return harborArtId(asset);
+    if (home && Object.hasOwn(HOME_PROP_ART, asset)) return HOME_PROP_ART[asset];
+    return outpostArtwork(asset);
+  }
+  const mooring = home ? homeMooring : [];
   const trees = edgeTrees[id] ?? [];
   const extraArtIds = [
-    ...(id === 'saltreach_harbor' ? ['harbour-office-glow'] : []),
+    ...(harbor ? [appearance('harbour-office-glow')] : []),
     ...(id === 'home_islet'
-      ? ['build-plot', 'islet-empty-plot', 'islet-locked-sign', 'islet-signal-station', 'islet-signal-station-lit', 'cabin', 'workshop', 'windmill', 'greenhouse']
+      ? ['shrub', 'home-broadleaf', 'build-plot', 'islet-empty-plot', 'islet-locked-sign', 'islet-signal-station', 'islet-signal-station-lit', 'cabin', 'workshop', 'windmill', 'greenhouse']
       : []),
   ];
   const artIds = [...new Set([
-    ...placements.map(placement => placement.asset),
+    ...placements.map(placement => appearance(placement.asset)),
     ...mooring.map(placement => placement.asset),
     'oak', 'pine', 'birch', 'rock', 'flowers', 'grass-tuft',
     ...extraArtIds,
@@ -37,11 +53,31 @@ export async function createSettlement(ctx) {
   const group = new THREE.Group();
   group.name = `place:${id}`;
   const frameState = createFrameState(ctx, data.spawn);
+  const foliage = [], selectedCanopy = home ? makeSelectedCanopy(foliage) : null;
   const cleanups = [], dispose = createLifetime(group, art, cleanups);
   try {
-    backdrop(group, await (ctx.loadBackdrop ?? loadBackdrop)(`places/${id}.png`));
+    const ground = backdrop(group, await (ctx.loadBackdrop ?? loadBackdrop)(`places/${id}.png`));
+    let captainShadow;
+    if (id === 'home_islet') {
+      createHomeRelief(group, ground.material.map);
+      createHomeTerraces(group, ground.material.map, art);
+      const bedShadows = createHomeGardens(group, art);
+      prepareHomeFoliage(art, selectedCanopy.preserveMask);
+      const treeShadows = trees.map(([x, z], i) => ({
+        x, z: z + .12, width: [.93, .85, .88][i % 3], depth: .68,
+        reach: [2.76, 3.15, 2.58][i % 3], canopy: true, opacity: .87,
+      }));
+      createGroundShadows(group, [...treeShadows, ...bedShadows]);
+      captainShadow = createGroundShadows(group, [{x: 0, z: 0, width: .38, depth: .32, reach: .38, opacity: .83}]);
+      captainShadow.name = 'home-captain-contact';
+      captainShadow.visible = false;
+    }
+    let lanternLight;
     placements.forEach(item => {
-      const mesh = placeArt(group, art, item.asset, item.x, item.z);
+      const asset = appearance(item.asset);
+      const mesh = placeArt(group, art, asset, item.x, item.z);
+      if (!home && asset !== item.asset) mesh.userData.asset = item.asset;
+      if (asset === 'home-lantern') lanternLight ??= animateLandmarkMaterial(mesh.material, {lights: [HOME_LANTERN_LIGHT], lightStrength: 2});
       if (item.asset === 'ferry-pier') mesh.renderOrder = 6;
       if (item.asset === 'fog-bank') mesh.renderOrder = 920;
     });
@@ -52,26 +88,34 @@ export async function createSettlement(ctx) {
       mesh.raycast = () => {};
       return mesh;
     });
-    const mooringRope = skiff ? makeMooringRope(group, bollard, skiff) : null;
-    const foliage = trees.map(([x, z], i) => {
+    const shoreBoat = skiff ? makeMooring(group, bollard, skiff) : null;
+    trees.forEach(([x, z], i) => {
       const mesh = placeArt(group, art, ['oak', 'pine', 'birch'][i % 3], x, z);
       // Smaller home canopies reveal walls; house growth multiplies this visual baseline.
       // The ground foot, radius-.48 blocker and painter order remain unchanged.
-      // A shorter northwest palm leaves the cannon behind it readable in the village camera.
-      if (id === 'home_islet') mesh.scale.setScalar(x === -13 && z === -12 ? .42 : .7);
-      mesh.material = swayMaterial(mesh.material.clone(), mesh.userData.asset); return mesh;
+      if (home) mesh.scale.setScalar(.7);
+      const crown = home ? {bendFrom: .48, phase: i * 2.399} : undefined;
+      mesh.material = swayMaterial(mesh.material.clone(), mesh.userData.asset, crown);
+      foliage.push(mesh);
     });
-    const selectedCanopy = id === 'home_islet' ? makeSelectedCanopy(foliage) : null;
-    let player = {x: data.spawn[0], z: data.spawn[1]};
+    let player = {x: data.spawn[0], z: data.spawn[1]}, shoreTime = 0;
     function updateCanopyOpacity(mesh) {
       const p = mesh.userData.ground;
       const playerBehind = player.z < p.z && Math.abs(player.x - p.x) < 2.2 && p.z - player.z < 6;
       // Each tree already owns its wind material. Selection and captain occlusion share one opacity writer.
       mesh.material.opacity = selectedCanopy?.has(mesh) ? .24 : playerBehind ? .3 : 1;
     }
+    const undergrowth = [];
+    function plant(asset, x, z, phase) {
+      const mesh = placeArt(group, art, asset, x, z);
+      if (home) {
+        mesh.material = swayMaterial(mesh.material.clone(), asset, {bendFrom: .22, phase});
+        undergrowth.push(mesh);
+      }
+    }
     trees.forEach(([x, z], i) => {
-      placeArt(group, art, 'grass-tuft', x + 2, z + 1);
-      if (i % 2 === 0) placeArt(group, art, 'flowers', x - 1.6, z + 1);
+      plant('grass-tuft', x + 2, z + 1, 1.3 + i * 2.399);
+      if (i % 2 === 0) plant('flowers', x - 1.6, z + 1, 2.1 + i * 2.399);
     });
     const lights = data.lights.map(light => {
       const { x, y } = light.beamOrigin;
@@ -83,8 +127,9 @@ export async function createSettlement(ctx) {
       };
     });
     let windowGlow, stormFlag;
-    if (id === 'saltreach_harbor') {
-      windowGlow = placeArt(group, art, 'harbour-office-glow', -8, 8.5);
+    if (harbor) {
+      windowGlow = placeArt(group, art, appearance('harbour-office-glow'), -8, 8.5);
+      windowGlow.userData.asset = 'harbour-office-glow';
       windowGlow.material = windowGlow.material.clone(); windowGlow.renderOrder = 922;
       stormFlag = createStormFlag(group);
     }
@@ -98,16 +143,30 @@ export async function createSettlement(ctx) {
         ...placements.filter(placement => placement.collider).map(placement => placement.collider),
         ...trees.map(([x, z]) => ({ x, z, radius: .48 })),
       ],
-      setSelectedCanopy(building) {
-        if (selectedCanopy?.show(building)) foliage.forEach(updateCanopyOpacity);
+      setSelectedCanopy(building, portraitDepth) {
+        if (selectedCanopy?.show(building, portraitDepth)) foliage.forEach(updateCanopyOpacity);
       },
       update(dt, state) {
         state = frameState(dt, state);
         player = state.player;
-        foliage.forEach(mesh => {
-          updateCanopyOpacity(mesh);
-          updateSway(mesh.material, state.time, state.weather?.wind ?? 0);
-        });
+        if (captainShadow) {
+          const {x, z} = player;
+          const foot = projectGround(x, z);
+          // Near the very edge a cast shadow would otherwise spill down the cliff face.
+          captainShadow.visible = surfaceClass(id, x * 1.027, z * 1.027) > 0;
+          captainShadow.position.set(foot.x, foot.y, 0);
+        }
+        const still = home && (typeof ctx.reducedMotion === 'function' ? ctx.reducedMotion() : !!ctx.reducedMotion);
+        const wind = state.weather?.wind ?? 0, breeze = Math.max(.14, wind);
+        foliage.forEach(updateCanopyOpacity);
+        if (!home || !state.paused || still) {
+          if (home && !still && Number.isFinite(dt)) shoreTime += Math.min(.1, Math.max(0, dt));
+          const time = home ? shoreTime : state.time;
+          foliage.forEach(mesh => updateSway(mesh.material, time, home ? breeze : wind, still ? 0 : home ? 1.36 : 1));
+          undergrowth.forEach(mesh => updateSway(mesh.material, time * 1.21, breeze, still ? 0 : .84));
+          shoreBoat?.update(time, wind, still, state.night);
+          lanternLight?.update({time, night: state.night, still});
+        }
         if (windowGlow) windowGlow.material.opacity = state.night * .95;
         const brightness = state.night;
         lights.forEach(light => {
@@ -119,9 +178,10 @@ export async function createSettlement(ctx) {
         if (stormFlag) stormFlag.visible = stormFlagShouldShow(state);
       }, dispose,
     };
-    if (mooringRope) {
-      // The southwest wave approach crosses the skiff; the beach post stays on the sand.
-      place.setMooringBattle = active => { skiff.visible = mooringRope.visible = !active; };
+    // Keep the southwest approach clear of the floating mooring during battle.
+    if (shoreBoat) {
+      place.setMooringBattle = shoreBoat.setBattle;
+      place.prepareMooringRender = shoreBoat.prepareRender;
     }
     ctx.decorate?.(place, art, cleanups);
     if (id === 'home_islet' || id === 'saltreach_harbor') {

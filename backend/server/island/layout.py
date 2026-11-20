@@ -19,7 +19,8 @@ The browser repeats these rules for its preview in frontend/src/island/placement
 import json
 import math
 from collections import deque
-from dataclasses import dataclass, replace
+from collections.abc import Collection
+from dataclasses import dataclass, field, replace
 from functools import cache
 from pathlib import Path
 
@@ -33,6 +34,8 @@ MAX_UNITS = 30
 SEA, BEACH = 0, 1
 # Walls never block the route: the boarders hack through them (src/pirates/sim.js).
 WALL_SLOT = "wall"
+WALL_EDGE_MESSAGE = "Walls go in one row along the grass edge."
+WALL_FULL_MESSAGE = "There is no free wall socket along the grass edge."
 Position = tuple[float, float]
 
 
@@ -93,6 +96,8 @@ class LayoutRules:
     # D060: the extra tower spots ("extraSpots"); part of `spots` only in island_layout(more=True).
     extra_spots: tuple[LayoutSpot, ...] = ()
     wall_obstacles: tuple[WallObstacle, ...] = ()
+    wall_perimeter: frozenset[Position] = frozenset()
+    wall_defaults: dict[str, Position] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -122,10 +127,26 @@ def read_lanes(rows: list) -> dict[float, tuple[tuple[float, float], ...]]:
     return lanes
 
 
+def read_perimeter(rows: list) -> frozenset[Position]:
+    cells: set[Position] = set()
+    for z, *runs in rows:
+        if not runs or len(runs) % 2:
+            raise ValueError("a wall perimeter row must contain complete cell pairs")
+        for x, end in zip(runs[::2], runs[1::2], strict=True):
+            cell = (float(x), float(z))
+            if x != end or cell in cells:
+                raise ValueError("the wall perimeter must use distinct single cells")
+            cells.add(cell)
+    return frozenset(cells)
+
+
 def load_layout(path: Path = CONTENT_FILE) -> LayoutRules:
     """Read and check the layout file. Raises LayoutFileError on any mistake."""
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
+        perimeter = data.get("wallPerimeter", {})
+        if not isinstance(perimeter, dict):
+            raise ValueError("the wall perimeter must be an object")
         rules = LayoutRules(
             version=int(data["version"]),
             grid=float(data["grid"]),
@@ -139,6 +160,10 @@ def load_layout(path: Path = CONTENT_FILE) -> LayoutRules:
             wall_lanes=read_lanes(data["wallLanes"]["rows"]),
             extra_spots=tuple(read_spot(row) for row in data.get("extraSpots", {}).get("rows", [])),
             wall_obstacles=tuple(WallObstacle(**row) for row in data["wallObstacles"]),
+            wall_perimeter=read_perimeter(perimeter.get("rows", [])),
+            wall_defaults={
+                spot: (float(x), float(z)) for spot, x, z in perimeter.get("defaults", [])
+            },
         )
     except (OSError, ValueError, KeyError, TypeError) as error:
         raise LayoutFileError(f"{path.name} cannot be read: {error}") from error
@@ -155,6 +180,26 @@ def check_file(rules: LayoutRules, path: Path) -> None:
             raise LayoutFileError(f"{path.name}: {spot.spot} has the unknown slot {spot.slot}.")
         if not (on_grid(rules, spot.x) and on_grid(rules, spot.z)):
             raise LayoutFileError(f"{path.name}: {spot.spot} is not on the grid.")
+    if rules.wall_perimeter:
+        check_perimeter(rules, path)
+
+
+def check_perimeter(rules: LayoutRules, path: Path) -> None:
+    wall_ids = {spot.spot for spot in rules.spots if spot.slot == WALL_SLOT}
+    defaults = set(rules.wall_defaults.values())
+    if rules.wall_defaults.keys() != wall_ids or len(defaults) != len(wall_ids):
+        raise LayoutFileError(f"{path.name}: every wall must have its own default perimeter cell.")
+    if not defaults <= rules.wall_perimeter:
+        raise LayoutFileError(f"{path.name}: a default wall is outside the perimeter.")
+    placed: list[Box] = []
+    size = rules.footprints[WALL_SLOT]
+    for x, z in rules.wall_perimeter:
+        box = Box(WALL_SLOT, "perimeter cell", x, z, size, size)
+        if not on_grid(rules, x) or not on_grid(rules, z) or not wall_is_dry(rules, box):
+            raise LayoutFileError(f"{path.name}: perimeter cell ({x}, {z}) needs dry grid land.")
+        if any(overlaps(box, other) for other in placed):
+            raise LayoutFileError(f"{path.name}: perimeter cells overlap at ({x}, {z}).")
+        placed.append(box)
 
 
 @cache
@@ -180,14 +225,53 @@ def spot_named(rules: LayoutRules, spot_id: str) -> LayoutSpot | None:
     return None
 
 
-def positions_of(rules: LayoutRules, stored: dict[str, Position]) -> dict[str, Position]:
-    """Every spot's place: the stored one if any, else its fixed spot. An old save stores
-    nothing, so it is converted to the grid as it was (every fixed spot is a grid cell).
-    Then settle_walls() puts a wall that stands on no pirate path (D056) on a lane."""
-    placed = {}
-    for spot in rules.spots:
-        placed[spot.spot] = stored.get(spot.spot, (spot.x, spot.z))
-    return settle_walls(rules, placed, stored)
+def positions_of(
+    rules: LayoutRules, stored: dict[str, Position], built: Collection[str] | None = None
+) -> dict[str, Position]:
+    """The effective places on an island. Empty wall slots use the perimeter when the
+    layout is available, and paid legacy walls keep their previous settlement."""
+    placed = {spot.spot: stored.get(spot.spot, (spot.x, spot.z)) for spot in rules.spots}
+    if not rules.wall_perimeter or built is None:
+        return settle_walls(rules, placed, stored)
+    return settle_perimeter(rules, placed, stored, built)
+
+
+def settle_perimeter(
+    rules: LayoutRules,
+    placed: dict[str, Position],
+    stored: dict[str, Position],
+    built: Collection[str],
+) -> dict[str, Position]:
+    walls = [spot for spot in rules.spots if spot.slot == WALL_SLOT]
+    perimeter_rows = {
+        spot.spot: stored[spot.spot]
+        for spot in walls
+        if stored.get(spot.spot) in rules.wall_perimeter
+    }
+    legacy = placed
+    if any(spot.spot in built and spot.spot not in perimeter_rows for spot in walls):
+        # New perimeter positions have no role in the old pirate-lane settlement.
+        legacy_stored = {key: value for key, value in stored.items() if key not in perimeter_rows}
+        fixed = {spot.spot: (spot.x, spot.z) for spot in walls if spot.spot in perimeter_rows}
+        legacy = settle_walls(rules, placed | fixed, legacy_stored)
+    settled = {
+        spot.spot: perimeter_rows.get(spot.spot, legacy[spot.spot])
+        for spot in rules.spots
+        if spot.slot != WALL_SLOT or spot.spot in built
+    }
+    # Reserve specifically picked perimeter cells before positioning the remaining markers.
+    empty = sorted(
+        (spot.spot for spot in walls if spot.spot not in built),
+        key=lambda spot_id: spot_id not in perimeter_rows,
+    )
+    for spot_id in empty:
+        preferred = perimeter_rows.get(spot_id, rules.wall_defaults[spot_id])
+        where = nearest_wall_cell(
+            rules, settled, spot_id, preferred, rules.wall_perimeter, perimeter=True
+        )
+        if where is not None:
+            settled[spot_id] = where
+    return settled
 
 
 def settle_walls(
@@ -213,14 +297,21 @@ def settle_walls(
 
 
 def wall_fits(
-    rules: LayoutRules, others: dict[str, Position], spot_id: str, where: Position
+    rules: LayoutRules,
+    others: dict[str, Position],
+    spot_id: str,
+    where: Position,
+    *,
+    perimeter: bool = False,
 ) -> bool:
     """A wall may stand at `where` next to `others`: on a lane, on land, clear of everything."""
-    if not on_wall_lane(rules, where[0], where[1]):
+    if not perimeter and not on_wall_lane(rules, where[0], where[1]):
         return False
     if surface_class(rules, where[0], where[1]) == SEA:
         return False
     box = box_of(rules, spot_id, where)
+    if perimeter and (not wall_is_dry(rules, box) or wall_scenery(rules, box)):
+        return False
     if any(overlaps(box, other) for other in rules.keep_out):
         return False
     return not any(
@@ -241,28 +332,43 @@ def lane_cells(rules: LayoutRules) -> list[Position]:
 def nearest_lane_cell(
     rules: LayoutRules, others: dict[str, Position], spot_id: str, where: Position
 ) -> Position | None:
+    return nearest_wall_cell(rules, others, spot_id, where, lane_cells(rules))
+
+
+def nearest_wall_cell(
+    rules: LayoutRules,
+    others: dict[str, Position],
+    spot_id: str,
+    where: Position,
+    cells: Collection[Position],
+    *,
+    perimeter: bool = False,
+) -> Position | None:
     def far(cell: Position) -> tuple[float, float, float]:
         return ((cell[0] - where[0]) ** 2 + (cell[1] - where[1]) ** 2, cell[1], cell[0])
 
-    for cell in sorted(lane_cells(rules), key=far):
-        if wall_fits(rules, others, spot_id, cell):
+    for cell in sorted(cells, key=far):
+        if wall_fits(rules, others, spot_id, cell, perimeter=perimeter):
             return cell
     return None
 
 
 def place_spots(rules: LayoutRules, spots: tuple, stored: dict[str, Position] | None) -> tuple:
     """The spot views (rules.SpotView) with the x and z of where each one stands."""
-    placed = positions_of(rules, stored or {})
+    built = {spot.id for spot in spots if spot.built} if stored is not None else None
+    placed = positions_of(rules, stored or {}, built)
     return tuple(
         replace(spot, x=placed[spot.id][0], z=placed[spot.id][1]) if spot.id in placed else spot
         for spot in spots
     )
 
 
-def info_of(rules: LayoutRules, stored: dict[str, Position] | None) -> LayoutInfo:
+def info_of(
+    rules: LayoutRules, stored: dict[str, Position] | None, *, allow_move: bool = True
+) -> LayoutInfo:
     """stored is None when the layout could not be read: the fixed spots, no moving."""
     version = 2 if stored else 1
-    return LayoutInfo(version, rules.grid, stored is not None)
+    return LayoutInfo(version, rules.grid, allow_move and stored is not None)
 
 
 def footprint_of(rules: LayoutRules, spot_id: str) -> float:
@@ -300,48 +406,65 @@ def overlaps(a: Box, b: Box | WallObstacle) -> bool:
     return abs(a.x - b.x) < (a.w + b.w) / 2 and abs(a.z - b.z) < (a.d + b.d) / 2
 
 
+def wall_is_dry(rules: LayoutRules, box: Box) -> bool:
+    return all(
+        surface_class(rules, x * rules.grid, z * rules.grid) != SEA
+        for x, z in cells_under(rules, box)
+    )
+
+
+def wall_scenery(rules: LayoutRules, box: Box) -> WallObstacle | None:
+    for other in rules.wall_obstacles:
+        if other.radius:
+            if (
+                math.hypot(
+                    max(abs(box.x - other.x) - box.w / 2, 0),
+                    max(abs(box.z - other.z) - box.d / 2, 0),
+                )
+                < other.radius
+            ):
+                return other
+        elif overlaps(box, other):
+            return other
+    return None
+
+
 def check_move(
     rules: LayoutRules, positions: dict[str, Position], spot_id: str, x: float, z: float
 ) -> None:
     """Raise MoveRefused when `spot_id` may not stand at (x, z). The first failing rule wins:
-    404 no_such_spot, 422 off_grid, 409 not_on_land, 409 off_path (a wall off every pirate
-    path, D056), 409 place_taken, 409 wall_rows, 409 blocks_route."""
-    if spot_named(rules, spot_id) is None:
+    404 no_such_spot, 422 off_grid, 409 not_on_land, 409 off_path, 409 place_taken,
+    409 wall_rows (legacy lanes only), 409 blocks_route."""
+    spot = spot_named(rules, spot_id)
+    if spot is None:
         raise MoveRefused(404, "no_such_spot", "There is no such build spot.")
     if not (on_grid(rules, x) and on_grid(rules, z)):
         raise MoveRefused(422, "off_grid", "Pick a square of the build grid.")
     if surface_class(rules, x, z) == SEA:
         raise MoveRefused(409, "not_on_land", "Buildings stand on land, not in the sea.")
-    if spot_named(rules, spot_id).slot == WALL_SLOT and not on_wall_lane(rules, x, z):
+    wall = spot.slot == WALL_SLOT
+    if wall and rules.wall_perimeter and (x, z) not in rules.wall_perimeter:
+        raise MoveRefused(409, "off_path", WALL_EDGE_MESSAGE)
+    if wall and not rules.wall_perimeter and not on_wall_lane(rules, x, z):
         raise MoveRefused(409, "off_path", "Walls go on a pirate path.")
     moved = box_of(rules, spot_id, (x, z))
     for other in rules.keep_out:
         if overlaps(moved, other):
             raise MoveRefused(409, "place_taken", f"That is too close to {other.name}.")
-    if spot_named(rules, spot_id).slot == WALL_SLOT:
-        for other in rules.wall_obstacles:
-            hit = (
-                math.hypot(
-                    max(abs(x - other.x) - moved.w / 2, 0),
-                    max(abs(z - other.z) - moved.d / 2, 0),
-                )
-                < other.radius
-                if other.radius
-                else overlaps(moved, other)
-            )
-            if hit:
-                raise MoveRefused(409, "place_taken", f"That is too close to {other.name}.")
+    if wall and (scenery := wall_scenery(rules, moved)):
+        raise MoveRefused(409, "place_taken", f"That is too close to {scenery.name}.")
     for other_id, where in positions.items():
         if other_id != spot_id and overlaps(moved, box_of(rules, other_id, where)):
             raise MoveRefused(409, "place_taken", "Another building stands there.")
     final = {**positions, spot_id: (x, z)}
-    if spot_named(rules, spot_id).slot == WALL_SLOT:
+    if wall and not rules.wall_perimeter:
         wall_ids = [spot.spot for spot in rules.spots if spot.slot == WALL_SLOT]
         before = [positions[id_] for id_ in wall_ids if id_ in positions]
         after = [final[id_] for id_ in wall_ids if id_ in final]
         if added_wall_row(before, after, rules.heart):
             raise MoveRefused(
-                409, "wall_rows",
+                409,
+                "wall_rows",
                 "Use at most three wall rows per approach. Align pieces to share a row.",
             )
     if not route_open(rules, final):

@@ -748,6 +748,7 @@ explore
 explorer
 exploring
 exposes
+extend
 external
 extra
 eye
@@ -943,6 +944,7 @@ got
 grapeshot
 grab
 graphics
+grass
 gray
 great
 greater

@@ -43,13 +43,13 @@ Every row is a distinct original PNG in `public/pixel/`. Dimensions and anchors 
 | `workshop` | 112 × 112 | Home workshop and crossed tools; settlements.py |
 | `windmill` | 112 × 160 | Static native-pixel sails, home plot; settlements.py |
 | `greenhouse` | 112 × 96 | Glass panels and planted pots; settlements.py |
-| `build-plot` | 144 × 96 | Ground parcel and low corner posts; settlements.py |
+| `build-plot` | 144 × 96 | Shared village sand, low sandstone edging and cedar stakes; settlements.py |
 | `back-room` | 96 × 96 | Cove outbuilding; case_places.py, original boathouse source reused |
 | `low-tide-cave` | 112 × 96 | Stone cave entrance; case_places.py |
 | `arena-gate` | 112 × 96 | Stone arch with timber gate; case_places.py |
 | `raid-arch` | 112 × 112 | Tall stone arch and neutral pennants; case_places.py |
 | `watchtower-ruin` | 80 × 144 | Broken masonry tower, future beam origin; case_places.py |
-| `reef` | 96 × 64 | Angular shoreline rocks and water contact; case_places.py |
+| `reef` | 96 × 64 | Weathered slate slabs and grass contact on The Teeth; case_places.py |
 | `salvage-yard` | 144 × 112 | Timber hull, shelter and salvage crates; case_places.py |
 | `fog-bank` | 192 × 96 | Translucent clustered fog bands; case_places.py |
 
@@ -69,6 +69,10 @@ Every row is a distinct original PNG in `public/pixel/`. Dimensions and anchors 
 | `places/chart-relit.png` | 448 × 256 | Chart revealed by the external Relighting gate; chart.py |
 
 ## Edit, reproduce and inspect
+
+Lighthouse Isle (Pirate Point), Saltreach Harbor, Smugglers’ Cove, Wreck Point and The Teeth use the original Home Islet grass, sand and paving from `public/village/terrain-materials-v1.png`. `scripts/pixel_art/place_materials.py` tones the materials for each location and bakes them onto the existing ground and path pixels. The indexed PNGs preserve the original 1024 × 768 dimensions and transparency, with no additional runtime textures. The Lighthouse keeps the winding path sandy and applies the treatment to the world backdrop, while the title background still uses its original colour treatment.
+
+Home Islet paints textured limestone setts on the original paths. The original shoreline bounds the sandstone faces in front and the low grassy shelves in back. The east, south, west and northern Smugglers approaches keep their sandy entries, with the familiar bollard and skiff at the southwest mooring.
 
 From `frontend/`, run `python3 scripts/pixel_art/generate.py`. Pillow is an offline authoring dependency; playing, building and JS testing require no Python. Sources live in `scripts/pixel_art/`: common.py, nature.py, buildings.py, people.py, props.py, ground.py, destinations.py, nautical.py, settlements.py, case_places.py, place_ground.py, chart.py and generate.py. The Node helpers export canonical land masks from terrain.js and places/surfaces.js; visual shorelines and walkability use the same functions.
 
@@ -237,8 +241,8 @@ Four original additions in `scripts/pixel_art/islet.py`, registered in `src/pixe
 
 | Sprite id | Native pixels | Purpose |
 | --- | --- | --- |
-| `islet-empty-plot` | 56 × 64 | Timber parcel marker, without miniature text |
-| `islet-locked-sign` | 64 × 72 | Closed padlock sign for plots coming later |
+| `islet-empty-plot` | 56 × 64 | Amber timber sign with a build symbol |
+| `islet-locked-sign` | 64 × 72 | Muted timber sign with a closed padlock |
 | `islet-signal-station` | 80 × 128 | Small stone station and cedar signal mast, unlit |
 | `islet-signal-station-lit` | 80 × 128 | Matching station with a steady gold lens at night |
 
@@ -473,3 +477,15 @@ in the cartoon style of the Tech hub and the Harbor (src/art/campaign.js). Respo
 | Frame | Size | What it shows |
 |---|---|---|
 | `island-arsenal` | 80 × 80 (anchor 8) | Stone armory with a slate roof and ridge cap, an iron-banded timber door under a brass crossed-muskets shield, a weapon rack with three guns, a red-banded powder barrel and a red pennant |
+
+## Home house family (19 Nov 2026)
+
+The original [nine house sprites](public/village/houses-v2.png) were made with OpenAI image generation using Johannes Franz Lang's Home Island concept as a lighting and material reference. The plain houses gain a porch and then an upper dormer and balcony. Barracks, Tavern, and Workshop use distinct silhouettes and retain their existing crossed swords, tankard, and hammer signs. The [source report](../docs/evidence/VIS-06-houses/asset-report-v2.json) records measured alpha bounds and ground feet. The existing browser compiler produces the world-only WebP. The authored PNG remains out of the production build.
+
+The [Cabin and Arsenal source](public/village/home-fixed-v3.png) uses the same original concept and generation method. Directional light defines the navy roofs, brass fittings and honey timber. The Cabin has a high gable, gold wheel and anchor pennant. The broader Arsenal has a sheltered side rack and stone entry. The [source and fit report](../docs/evidence/VIS-05-hero/fixed-buildings-v3.json) records the original alpha, both crops and the measured ground feet.
+
+The [Heart tide hall source](public/village/home-heart-v5.png) uses the same original concept and generation method. Rounded navy roof tiles, a pirate pennant, the ship's wheel and stepped limestone identify the landmark. Centered stairs and a leftward return align the hall with the existing path. The intact and damaged hall leave the throughway open, and all three states share one scale and ground pin. The [source report](../docs/evidence/VIS-05-hero/heart-v5.json) records the alpha, three crops and ground feet.
+
+The [Harbor Bell](public/village/home-bell-v3.png) uses brighter amber light on the bronze, hemp and timber arch. The [Watchtower](public/village/landmarks-v2.png) uses directional light across the navy tiles, timber braces and stone footings. The base, level 4 and level 5 frames keep their distinct pennants and metal trim. The [Bell receipt](../docs/evidence/VIS-12-landmarks/bell-v3.json) and [Watchtower receipt](../docs/evidence/VIS-12-landmarks/asset-report-v2.json) record unchanged alpha and feet.
+
+The [Harbor trading house and hull source](public/village/home-harbor-v2.png) matches the navy roofing, oak and limestone. Open balance scales identify the trading counter. A broken rail and hull hole identify the wreck. The repaired boat shows fresh planks, a standing mast and a furled sail. The [source report](../docs/evidence/VIS-13-services/home-harbor-asset-v2.json) records the normalized feet and hull widths.

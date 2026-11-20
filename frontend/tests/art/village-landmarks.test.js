@@ -6,8 +6,10 @@ import {frames, sheets} from '../../src/art/village/landmarks.js';
 import {buildingArt} from '../../src/island/world.js';
 import {islandFrame} from '../../src/art/registry.js';
 
-const source = readFileSync(new URL('../../public/village/landmarks-v1.png', import.meta.url));
-const report = JSON.parse(readFileSync(new URL('../../../docs/evidence/VIS-12-landmarks/asset-report.json', import.meta.url)));
+const source = readFileSync(new URL(`../../public/${sheets.villageLandmarks.file}`, import.meta.url));
+const report = JSON.parse(readFileSync(new URL('../../../docs/evidence/VIS-12-landmarks/asset-report-v2.json', import.meta.url)));
+const bell = JSON.parse(readFileSync(new URL('../../../docs/evidence/VIS-12-landmarks/bell-v3.json', import.meta.url)));
+const bellSource = readFileSync(new URL(`../../public/${sheets.villageBell.file}`, import.meta.url));
 
 describe('approved landmark sources', () => {
   it('loads the exact inspected RGBA sheet without an opaque backdrop', () => {
@@ -16,6 +18,9 @@ describe('approved landmark sources', () => {
     expect([source.readUInt32BE(16), source.readUInt32BE(20)]).toEqual([sheets.villageLandmarks.width, sheets.villageLandmarks.height]);
     expect(createHash('sha256').update(source).digest('hex')).toBe(report.sha256);
     expect(report.alpha.corners.every(alpha => alpha < report.alpha.meaningfulThreshold)).toBe(true);
+    expect(bellSource[25]).toBe(6);
+    expect([bellSource.readUInt32BE(16), bellSource.readUInt32BE(20)]).toEqual(bell.nativeSize);
+    expect(createHash('sha256').update(bellSource).digest('hex')).toBe(bell.sha256);
   });
 
   it('preserves every actual watchtower selection and only the approved bell presentation change', () => {
@@ -27,8 +32,8 @@ describe('approved landmark sources', () => {
   });
 
   it('contains complete measured objects, exact feet and non-overlapping source rectangles', () => {
-    const entries = Object.values(frames);
-    for (const cell of report.cells) {
+    const entries = Object.values(frames).filter(frame => frame.sheet === 'villageLandmarks');
+    for (const cell of [...report.cells.filter(cell => cell.id !== 'island-bell'), bell.cells['island-bell']]) {
       const frame = frames[cell.id], sheet = sheets[frame.sheet];
       expect(frame.rect).toEqual(cell.rect);
       expect(frame.sourceFoot).toEqual(cell.sourceFoot);

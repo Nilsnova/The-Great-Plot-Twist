@@ -60,6 +60,7 @@ import { createCharacter } from './player/character.js';
 import { POSE_IDS } from './pirates/poses.js';
 import { createController } from './player/controller.js';
 import { createCamera } from './player/camera.js';
+import {createHomePortrait, usesPortraitVillage} from './player/home-portrait.js';
 import {createVillageNavigation} from './player/village-navigation.js';
 import {createVillagePlacementFocus} from './player/village-placement-focus.js';
 import { createHud } from './ui/hud.js';
@@ -89,8 +90,11 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   const pixelFx = createPixelFx(scene); scene.userData.lightPools = lightPools; scene.userData.pixelFx = pixelFx;
   // The clock follows the player's local time (automated checks keep the old fixed morning).
   const followLocalTime = !navigator.webdriver; if (followLocalTime) { const now = new Date(); settings.hour = now.getHours() + now.getMinutes() / 60; }
-  const character = createCharacter(art, { reducedMotion }); scene.add(character.sprite);
+  const character = createCharacter(art, { reducedMotion,
+    idleMotion: () => world.current?.id === 'home_islet' && active && !inBattle && !shell.blocked && !isAppBlocked?.(),
+  }); scene.add(character.sprite);
   const controller = createController(character, input, []), view = createCamera(input);
+  const homePortrait = createHomePortrait(view.camera);
   const isletState=createIsletState({on});
   // The narrator (src/narrator/: voiced lines and captions for every new thing, keyed by island code)
   // and the tutorials (src/tutorial/tutorials.js) load in their own chunk right after the first frame (the loop below);
@@ -328,16 +332,18 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     if(key!==villageLayoutKey){
       const bar=villageBar;
       const top=width<640?Math.max(villageQuests?.getBoundingClientRect().bottom??0,villagePurse?.getBoundingClientRect().bottom??0):80;
-      villageViewport={height,top:Math.max(80,top+12),bottom:bar?height-bar.getBoundingClientRect().top+12:112};
+      villageViewport={width,height,top:Math.max(80,top+12),bottom:bar?height-bar.getBoundingClientRect().top+12:112};
       villageLayoutKey=key;
     }
     view.setVillageView(true,villageViewport);
     if(active&&!outsideBlocked()&&height>villageViewport.top+villageViewport.bottom){
-      focusPlacement(island.moving);focusSelection(placing?null:island.selection);
+      const selection=placing?null:island.selectionView;
+      focusPlacement(island.moving);
+      focusSelection(selection&&usesPortraitVillage(villageViewport)?{...selection,keepFit:true}:selection);
     }
   }
   // Where a world point hangs on screen, as fractions of the canvas (the floating E prompt and the "Walk closer" hint).
-  function screenAt(id){const a=island?.anchor?.(id);if(!a)return null;const point=projectGround(a.x,a.z);projected.set(point.x,point.y+a.lift,0).project(view.camera);
+  function screenAt(id){const a=island?.anchor?.(id);if(!a)return null;const point=projectGround(a.x,a.z);projected.set(point.x,point.y+a.lift/(view.camera.userData.homePortraitDepth??1),0).project(view.camera);
     return Math.abs(projected.x)<=1.2&&Math.abs(projected.y)<=1.2?{x:(projected.x+1)/2,y:(1-projected.y)/2}:null;}
   canvas.setAttribute('aria-label','Island exploration. Tap a clear path or drag the movement stick to walk. Arrow keys and WASD also move. Hold Tab to see the whole island.');
   mapTouch=createMapTouch({canvas,input,container,position:()=>controller.player.position,place:()=>world.current?.id,enabled:()=>active&&!disposed&&!captainBlocked(),
@@ -385,6 +391,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     character.setColour(island?.game?island.captainColour():null);character.setScale(characterScale);
     updateVillageView();
     view.update(delta, controller.player.position);
+    homePortrait.update(view.villageFit && world.current?.id === 'home_islet' && !view.camera.userData.tour ? villageViewport : null);
     // A captain down in the wave lies in the wave's drawing: their standing presence figure hides (pirates/figures.js).
     experience.update(delta,{speed,hide:waves?.figures?.(experience.figures())??null,poses:poses?.figures??null});
     const zone = active&&!captainBlocked()&&!captainDown ? findZone(controller.player.position, world.current?.zones ?? []) : null;
@@ -408,7 +415,10 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
       hint:farHint?{text:WALK_CLOSER,at:screenAt(farHint.id)}:null,managing:island?.managing===true&&!inBattle,waveStatus,speed,blocked:!active||outsideBlocked()||!!waves?.island.wave||!!waves?.point?.controller.wave }); tutorials?.update(delta); input.endFrame();
   }, () => {
     const draw=shell.mode!=='title';
-    if(draw)graphics.renderer.render(scene,view.camera);
+    if(draw)homePortrait.draw(scene,()=>{
+      world.current?.prepareMooringRender?.();
+      graphics.renderer.render(scene,view.camera);
+    });
     graphics.sampleFrame(performance.now(),{active:draw&&active&&!outsideBlocked()});
   });
   // The narrator and the tutorials: right after the first frame (and again on each arrival if that load failed).

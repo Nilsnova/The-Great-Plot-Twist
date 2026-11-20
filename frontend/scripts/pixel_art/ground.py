@@ -2,8 +2,22 @@
 from PIL import Image, ImageDraw
 from random import Random
 from subprocess import check_output
-from pathlib import Path
 from math import sin, cos
+from place_materials import paint_region
+
+GRASS = ((113,144,86,255), (117,147,89,255), (121,151,93,255))
+GRASS_PATCHES = ((107,139,80,255), (128,154,92,255))
+GRASS_TUFTS = ((102,132,76,255), (131,158,96,255))
+PATH = ((193,165,121,255), (172,148,106,255), (181,157,113,255))
+SAND = (193,168,119,255)
+
+
+def lighthouse_materials(image, root):
+    return paint_region(image, root, 'lighthouse_isle', {
+        'grass': (*GRASS, *GRASS_PATCHES, *GRASS_TUFTS),
+        'path': PATH,
+        'sand': (SAND,),
+    })
 
 def point(x,z):return (round(512+x*16),round(384+z*16*.72))
 
@@ -12,16 +26,13 @@ def ground(root):
     classes=check_output(['node','scripts/export-pixel-ground.js'],cwd=root)
     assert len(classes)==w*h
     im=Image.new('RGBA',(w,h));pix=im.load();rng=Random(87)
-    palette=['#719056','#759359','#79975d']  # three ordered tones: broad, calm bands (td-clean)
-    from PIL.ImageColor import getrgb
-    palette=[getrgb(c)+(255,) for c in palette]
     # Broad low-contrast patches, then deliberate small clusters; no pixel noise filter.
     for y in range(h):
         for x in range(w):
             c=classes[y*w+x]&3
             if c:
-                if c==1:color=(193,168,119,255)
-                else:color=palette[min(2,max(0,int((sin(x/61)+cos(y/53)+sin((x+y)/89)+3)/2)))]
+                if c==1:color=SAND
+                else:color=GRASS[min(2,max(0,int((sin(x/61)+cos(y/53)+sin((x+y)/89)+3)/2)))]
                 pix[x,y]=color
     d=ImageDraw.Draw(im)
     # Selective coast contact pixels: dry sand, wet edge, broken shoreline.
@@ -36,10 +47,10 @@ def ground(root):
         for yy in range(y-ry,y+ry):
             for xx in range(x-rx,x+rx):
                 if classes[yy*w+xx]&3==2 and ((xx-x)/rx)**2+((yy-y)/ry)**2 < .8 + .15*sin(xx*.6+yy*.9):
-                    pix[xx,yy]=(107,139,80,255) if i%3 else (128,154,92,255)
+                    pix[xx,yy]=GRASS_PATCHES[0] if i%3 else GRASS_PATCHES[1]
     # Tufts in small clusters of three to five (no scattered speckle).
     for i in range(190):
-        cx=rng.randrange(20,w-20);cy=rng.randrange(20,h-20);color='#66844c' if i%2 else '#839e60'
+        cx=rng.randrange(20,w-20);cy=rng.randrange(20,h-20);color=GRASS_TUFTS[0] if i%2 else GRASS_TUFTS[1]
         for k in range(rng.randrange(3,6)):
             x=cx+rng.randrange(-9,10);y=cy+rng.randrange(-5,6)
             if 2<=x<w-4 and 2<=y<h-5 and classes[y*w+x]&3==2:d.line([(x,y+2),(x,y),(x+1,y+2),(x+3,y+1)],fill=color)
@@ -66,10 +77,10 @@ def ground(root):
     for y in range(2,h-2):
         for x in range(2,w-2):
             if mp[x,y] and classes[y*w+x]&3:
-                pix[x,y]=(193,165,121,255)
+                pix[x,y]=PATH[0]
                 # One-pixel rim where the path meets grass: darker below, lighter at the sides.
-                if classes[(y+1)*w+x]&3==2 and not mp[x,y+1]:pix[x,y]=(172,148,106,255)
-                elif classes[y*w+x]&3==2 and (not mp[x-1,y] or not mp[x+1,y] or not mp[x,y-1]):pix[x,y]=(181,157,113,255)
+                if classes[(y+1)*w+x]&3==2 and not mp[x,y+1]:pix[x,y]=PATH[1]
+                elif classes[y*w+x]&3==2 and (not mp[x-1,y] or not mp[x+1,y] or not mp[x,y-1]):pix[x,y]=PATH[2]
     # A few pebble pairs on the path and flower clusters beside it, placed sparingly.
     for i in range(1400):
         x=rng.randrange(8,w-8);y=rng.randrange(8,h-8)

@@ -7,6 +7,12 @@ from subprocess import check_output
 from random import Random
 from math import sin, cos
 from ground import point
+from place_materials import REGIONAL_MATERIALS, paint_region
+
+SAND=(193,168,119,255)
+GRASS_PATCHES=((107,139,80,255),(128,154,92,255))
+GRASS_TUFTS=((102,132,76,255),(131,158,96,255))
+PATH_PALETTE=((193,165,121,255),(171,151,111,255),(172,148,106,255),(181,157,113,255))
 PATHS={
  'saltreach_harbor': [[(0,19),(0,12),(0,5),(0,-9)],[(-23,0),(-19,0),(-9,-2),(1,-2),(12,-2),(21,-3)],[(-8,10.3),(0,10.3),(9,10.6)],[(3,8.5),(0,8.5)], [(-1,3.5),(0,3.5)]],
  'home_islet': [[(0,14),(0,-12)],[(-8,7.5),(7,7.5)],[(-8,-5.5),(7,-5.5)]],
@@ -15,6 +21,13 @@ PATHS={
  'the_teeth': [[(0,14),(0,-8),(9,-9)],[(-8,9),(0,8),(8,1)],[(-5,-3),(0,-3)]],
  'gulls_rest': [[(0,13),(0,-5)]],
 }
+
+def land_color(surface, x, y, palette):
+    if surface == 1:
+        return SAND
+    tone = int((sin(x / 61) + cos(y / 53) + sin((x + y) / 89) + 3) / 2)
+    return palette[min(2, max(0, tone))]
+
 def ground(root,id):
     w,h=1024,768;classes=check_output(['node','scripts/export-place-ground.js',id],cwd=root)
     assert len(classes)==w*h
@@ -24,7 +37,7 @@ def ground(root,id):
     for y in range(h):
         for x in range(w):
             c=classes[y*w+x]
-            if c in [1,2]:p[x,y]=(193,168,119,255) if c==1 else pal[min(2,max(0,int((sin(x/61)+cos(y/53)+sin((x+y)/89)+3)/2)))]
+            if c in [1,2]:p[x,y]=land_color(c,x,y,pal)
     d=ImageDraw.Draw(im)
     for y in range(2,h-2):
         for x in range(2,w-2):
@@ -37,14 +50,14 @@ def ground(root,id):
         rx=rng.randrange(7,20);ry=rng.randrange(4,11)
         for yy in range(y-ry,y+ry):
             for xx in range(x-rx,x+rx):
-                if classes[yy*w+xx]==2 and ((xx-x)/rx)**2+((yy-y)/ry)**2<.8+.15*sin(xx*.6+yy*.9):p[xx,yy]=(107,139,80,255) if i%3 else (128,154,92,255)
+                if classes[yy*w+xx]==2 and ((xx-x)/rx)**2+((yy-y)/ry)**2<.8+.15*sin(xx*.6+yy*.9):p[xx,yy]=GRASS_PATCHES[0] if i%3 else GRASS_PATCHES[1]
     # Tufts in small clusters of three to five, one dark and one light shade per cluster.
     for i in range(170):
         cx=rng.randrange(20,w-20);cy=rng.randrange(20,h-20);dark=i%2==0
         for k in range(rng.randrange(3,6)):
             x=cx+rng.randrange(-9,10);y=cy+rng.randrange(-5,6)
             if 2<=x<w-4 and 2<=y<h-5 and classes[y*w+x]==2:
-                d.line([(x,y+2),(x,y),(x+1,y+2),(x+3,y+1)],fill='#66844c' if dark else '#839e60')
+                d.line([(x,y+2),(x,y),(x+1,y+2),(x+3,y+1)],fill=GRASS_TUFTS[0] if dark else GRASS_TUFTS[1])
     mask=Image.new('L',(w,h));md=ImageDraw.Draw(mask)
     for route in PATHS[id]:
         for a,b in zip(route,route[1:]):
@@ -56,11 +69,11 @@ def ground(root,id):
     for y in range(3,h-3):
         for x in range(3,w-3):
             if classes[y*w+x] in [1,2] and mp[x,y]:
-                p[x,y]=(193,165,121,255)
-                if id=='saltreach_harbor' and y<550 and (x//8+y//6)%6==0 and x%8<6 and y%6==0:p[x,y]=(171,151,111,255)
+                p[x,y]=PATH_PALETTE[0]
+                if id=='saltreach_harbor' and y<550 and (x//8+y//6)%6==0 and x%8<6 and y%6==0:p[x,y]=PATH_PALETTE[1]
                 # One-pixel rim where the path meets grass: darker below, lighter above.
-                if classes[(y+1)*w+x]==2 and not mp[x,y+1]:p[x,y]=(172,148,106,255)
-                elif classes[y*w+x]==2 and (not mp[x-1,y] or not mp[x+1,y] or not mp[x,y-1]):p[x,y]=(181,157,113,255)
+                if classes[(y+1)*w+x]==2 and not mp[x,y+1]:p[x,y]=PATH_PALETTE[2]
+                elif classes[y*w+x]==2 and (not mp[x-1,y] or not mp[x+1,y] or not mp[x,y-1]):p[x,y]=PATH_PALETTE[3]
     # A few flower clusters beside the paths, cream and rose (gold stays for lights).
     for i in range(60):
         x=rng.randrange(8,w-8);y=rng.randrange(8,h-8)
@@ -68,4 +81,22 @@ def ground(root,id):
         for dx,dy in [(0,0),(3,1),(1,3)][:2+i%2]:
             if classes[(y+dy)*w+x+dx]==2 and not mp[x+dx,y+dy]:
                 p[x+dx,y+dy+1]=(92,120,70,255);p[x+dx,y+dy]=(236,226,196,255) if i%3 else (214,160,160,255)
+    additions = None
+    if id == 'saltreach_harbor':
+        # The deck is a separate sprite. Restore only natural land that the dock cut out.
+        natural = check_output(['node', 'scripts/export-place-ground.js', id, '--natural-coast'], cwd=root)
+        additions = Image.new('RGBA', im.size)
+        below_deck = additions.load()
+        for index, (surface, coast) in enumerate(zip(classes, natural)):
+            if surface != 3 or not coast:
+                continue
+            y, x = divmod(index, w)
+            if not p[x, y][3]:
+                below_deck[x, y] = PATH_PALETTE[0] if mp[x, y] else land_color(coast, x, y, pal)
+    if id in REGIONAL_MATERIALS:
+        return paint_region(im, root, id, {
+            'grass': (*pal, *GRASS_PATCHES, *GRASS_TUFTS),
+            'path': PATH_PALETTE,
+            'sand': (SAND,),
+        }, additions)
     return im

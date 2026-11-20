@@ -26,10 +26,10 @@ export function createSelectionDock({container, onClose, onDetails, loadPortrait
   const portrait = createBuildingPortrait({className: 'island-selection-portrait', loadPortrait});
   const copy = node('div', 'island-selection-copy'), title = node('strong', 'island-selection-title');
   const level = node('span', 'island-selection-level'), hp = node('p', 'island-selection-health');
-  const spec = node('span', 'island-selection-spec');
+  const spec = node('span', 'island-selection-spec'), stats = node('p', 'island-selection-stats');
   const identity = node('p', 'island-selection-identity'); identity.append(level, spec);
   const meter = node('div', 'island-selection-meter'), fill = node('span'); meter.setAttribute('role', 'meter'); meter.setAttribute('aria-label', 'Building health'); meter.append(fill);
-  copy.append(title, identity, hp, meter);
+  copy.append(title, identity, stats, hp, meter);
   const actions = node('div', 'island-selection-actions'), messages = node('div', 'island-selection-messages');
   const support = node('section', 'island-house-support');
   const coverageRow = node('div', 'island-selection-coverage');
@@ -68,6 +68,8 @@ export function createSelectionDock({container, onClose, onDetails, loadPortrait
       if (changed || !model.coverage) rangeShown = false;
       element.classList.toggle('is-structure', model.kind !== 'wall');
       title.textContent = model.title; level.textContent = `Level ${model.level}`;
+      stats.textContent = model.slot === 'tower' ? model.stats ?? '' : ''; stats.hidden = !stats.textContent;
+      details.classList.toggle('is-upgrade-entry', !!model.tree && model.mode === 'upgrade');
       const role = activeRole(model);
       spec.textContent = ROLES[role]?.name ?? SPECS[model.skills?.current]?.name ?? '';
       spec.hidden = !spec.textContent;

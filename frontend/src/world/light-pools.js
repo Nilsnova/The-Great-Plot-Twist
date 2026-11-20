@@ -12,12 +12,15 @@ const MAX = 48;
 // Pools per placed sprite: [dx, dz, radius, lift, kind]; kind 0 lies on the ground, 1 is a halo.
 const SOURCES = {
   lantern: [[0, .1, 2.3, 0, 0], [0, 0, .9, 1.05, 1]],
+  'home-lantern': [[.03, .16, 1.85, 0, 0]],
   'harbour-office': [[-2.05, .9, 2.1, 0, 0], [2.05, .9, 2.1, 0, 0]],
   'harbour-beacon': [[0, 1.1, 3.2, 0, 0], [0, 0, 1.5, 4.81, 1]],
   cottage: [[-1.9, .6, 2.0, 0, 0], [1.9, .6, 2.0, 0, 0]],
   lighthouse: [[0, .4, 3.2, 0, 0], [0, 0, 1.7, 8.61, 1]],
   'islet-signal-station-lit': [[0, .6, 2.4, 0, 0]],
 };
+// The cabin's illuminated windows spill onto the path directly in front of its step.
+const CABIN_LIGHT = [[-.87, .41, 1.45, 0, 0], [.69, .5, 1.29, 0, 0]];
 
 const vertex = /* glsl */`
 attribute vec4 aPool;varying vec2 vWorld;varying vec4 vPool;varying float vMin;
@@ -67,7 +70,8 @@ export function createLightPools(scene) {
     setPlace(group) {
       base = [];
       group?.traverse?.(object => {
-        const asset = object.userData?.asset, ground = object.userData?.ground, sources = SOURCES[asset];
+        const {asset, ground} = object.userData ?? {};
+        const sources = object.name === 'island-cabin' ? CABIN_LIGHT : SOURCES[asset];
         if (!sources || !ground) return;
         for (const [dx, dz, r, lift, kind] of sources) {
           const point = projectPoint(ground.x + dx, ground.z + dz);

@@ -1,4 +1,5 @@
 import {pixelViewport} from '../src/pixel/display.js';
+import {QUALITY} from '../src/config.js';
 import {stubOfflineApi} from './api-browser-fixture.js';
 import {readHttp} from './http-read.js';
 import {startFromTitle,closeSettings,openSettingsFromMenu} from './shell-browser-tools.js';
@@ -57,7 +58,10 @@ try {
         devicePixelRatio, pixelRatio: game.renderer.getPixelRatio(), shadows: game.renderer.shadowMap.enabled };
     });
     report.modes[name] = stats;
-    check(stats.calls < 150 && stats.triangles < 150000 && stats.pixelRatio <= 1.5, `${name} stays within rendering budgets`);
+    const limits = QUALITY[stats.quality];
+    check(stats.calls < 150 && stats.triangles < 150000 && stats.pixelRatio <= limits.pixelRatio
+      && stats.nativeFramebuffer[0] * stats.nativeFramebuffer[1] <= limits.renderPixels,
+    `${name} stays within rendering budgets`);
   }
   await measure('arrival-high');
   await page.keyboard.press('Escape');
@@ -76,22 +80,32 @@ try {
   const cameraAfter = await page.evaluate(() => ({ zoom: window.__island.camera.zoom, rotation: window.__island.camera.quaternion.toArray() }));
   check(cameraAfter.zoom > cameraBefore.zoom && cameraAfter.rotation.every((value, i) => value === cameraBefore.rotation[i]), 'Wheel zoom works while the pixel camera keeps its fixed angle');
   const events = await page.evaluate(async () => {
-    const { zones } = await import('/src/world/zones.js'); window.__received = [];
-    window.__island.on('interact', event => window.__received.push(event));
-    return zones;
+    const game = window.__island;
+    await game.world.goTo('home_islet', {fast: true});
+    window.__received = [];
+    game.on('interact', event => window.__received.push(event));
+    return game.world.current.zones.filter(zone => /^plot_[1-4]$/.test(zone.id));
   });
+  check(events.length === 4, 'The live island exposes all four plot hotspots');
   for (const [index, zone] of events.entries()) {
-    // The cottage doorway now enters its room automatically; its outside E zone is still available.
-    await page.evaluate(zone => {const game=window.__island,z=zone.id==='cottage'?7:zone.z;
-      game.player.position.set(zone.x,zone.id==='cottage'?game.world.current.groundHeight(zone.x,z):zone.y,z);}, zone);
+    await page.evaluate(zone => window.__island.player.position.set(zone.x, zone.y, zone.z), zone);
     await page.waitForFunction(id => document.querySelector('.interact')?.dataset.zone === id, zone.id);
     await page.keyboard.down('KeyE');
     await page.waitForFunction(count => window.__received.length >= count, index + 1);
-    await page.waitForTimeout(180); await page.keyboard.up('KeyE'); await dismissPanels(page);
+    const panel = page.locator('.islet-modal');
+    await panel.waitFor({state: 'visible'});
+    await page.keyboard.up('KeyE');
+    await page.keyboard.press('Escape');
+    await panel.waitFor({state: 'hidden'});
+    await dismissPanels(page);
   }
   const received = await page.evaluate(() => window.__received);
   check(received.length === 4 && received.every((event, index) => event.type === 'interact' && event.id === events[index].id), `All four hooks emit exactly once per held E press: ${JSON.stringify(received)}`);
-  await page.evaluate(() => { const game = window.__island; game.player.position.set(-7, 4, 7); });
+  await page.evaluate(async () => {
+    const game = window.__island;
+    await game.world.goTo('lighthouse_isle', {fast: true});
+    game.player.position.set(-7, 4, 7);
+  });
   await page.keyboard.down('KeyW'); await page.waitForTimeout(700); await page.keyboard.up('KeyW');
   await dismissPanels(page);
   await page.waitForFunction(() => !document.querySelector('.u-toast'));
@@ -122,7 +136,7 @@ try {
   await stubOfflineApi(retina);await stubWeather(retina);await retina.goto(url);await startFromTitle(retina);await retina.waitForTimeout(1200);
   await measure('retina-high', retina); await retina.screenshot({ path: `captures/${stamp}_${prefix}-Retina.png` });
   await retina.evaluate(() => window.__island.quality('low')); await measure('retina-low', retina);
-  for (const [quality, maximum, ratioCap] of [['high', 1920 * 1080, 1.5], ['low', 1280 * 720, 1]]) {
+  for (const [quality, {renderPixels: maximum, pixelRatio: ratioCap}] of Object.entries(QUALITY)) {
     const sample = report.modes[`retina-${quality}`];
     const expected = pixelViewport(1440, 900, {quality, pixelRatio: 2, densityScale: sample.densityScale});
     check(sample.devicePixelRatio === 2 && sample.quality === quality

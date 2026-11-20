@@ -9,6 +9,7 @@
 //   game.update(dt) is called by its own animation frame (autoplay) or by a test; game.dispose().
 import './boat.css';
 import { node as el } from '../../ui/kit/dom.js';
+import { linear, mix } from '../../art/paint.js';
 import { BOAT, GAME_TEXT, boatDifficulty, boatSalt, coinsFor, enemyX, fallOf, itemsOf, passAt, passesOf, scoreOf, shotAt, starsOf } from './rules.js';
 
 export { GAME_TEXT, starText };
@@ -154,16 +155,42 @@ export function createBoatGame({ container, game = 'broadside', wave = 30, code 
     const w = size, h = size * .32;
     // the hull
     ctx.fillStyle = OUTLINE; ctx.beginPath(); ctx.moveTo(-w * .55, -h * .2); ctx.lineTo(w * .62, -h * .35); ctx.lineTo(w * .4, h); ctx.lineTo(-w * .45, h); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = colours.hull; ctx.beginPath(); ctx.moveTo(-w * .5, -h * .08); ctx.lineTo(w * .55, -h * .24); ctx.lineTo(w * .36, h * .86); ctx.lineTo(-w * .41, h * .86); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = colours.stripe; ctx.fillRect(-w * .46, h * .2, w * .92, h * .16);
-    for (let k = 0; k < 3; k++) { ctx.fillStyle = OUTLINE; ctx.fillRect(-w * .3 + k * w * .25, h * .42, w * .08, h * .18); }
+    ctx.fillStyle = linear(ctx, -w * .4, -h * .22, w * .12, h,
+      [[0, '#d2a16b'], [.32, colours.hull], [.57, mix(colours.hull, '#24445a', .64)], [1, '#1d3346']]);
+    ctx.beginPath(); ctx.moveTo(-w * .5, -h * .08); ctx.lineTo(w * .55, -h * .24);
+    ctx.lineTo(w * .36, h * .86); ctx.lineTo(-w * .41, h * .86); ctx.closePath(); ctx.fill();
+    ctx.save(); ctx.clip();
+    ctx.fillStyle = linear(ctx, -w * .45, -h * .27, 0, h * .24, [[0, '#efc38b'], [1, '#96603d']]);
+    ctx.beginPath(); ctx.moveTo(-w * .51, -h * .15); ctx.lineTo(w * .57, -h * .27);
+    ctx.quadraticCurveTo(w * .21, h * .21, -w * .43, h * .18); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#e3af6a'; ctx.lineWidth = Math.max(1, w * .013);
+    ctx.beginPath(); ctx.moveTo(-w * .45, h * .20); ctx.quadraticCurveTo(0, h * .37, w * .48, h * .07); ctx.stroke();
+    ctx.fillStyle = colours.stripe; ctx.fillRect(-w * .46, h * .29, w * .92, h * .11);
+    for (let k = 0; k < 3; k++) {
+      const port = -w * .29 + k * w * .25;
+      ctx.fillStyle = OUTLINE; ctx.fillRect(port, h * .5, w * .08, h * .17);
+      ctx.fillStyle = '#bf925e'; ctx.fillRect(port, h * .47, w * .08, h * .04);
+    }
+    ctx.restore();
     // masts and sails
     const masts = colours.masts ?? 2;
+    const billow = still() ? 0 : Math.sin(clock * 3.1) * w * .026;
     for (let m = 0; m < masts; m++) {
       const mx = masts === 1 ? 0 : -w * .18 + m * w * .36, top = -h * (masts === 1 ? 3.2 : 3.6 - m * .3);
       ctx.strokeStyle = OUTLINE; ctx.lineWidth = Math.max(3, size * .035); ctx.beginPath(); ctx.moveTo(mx, 0); ctx.lineTo(mx, top); ctx.stroke();
       ctx.fillStyle = OUTLINE; ctx.beginPath(); ctx.moveTo(mx - w * .17, top * .9); ctx.quadraticCurveTo(mx + w * .02, top * .55, mx - w * .15, -h * .45); ctx.lineTo(mx + w * .2, -h * .45); ctx.quadraticCurveTo(mx + w * .3, top * .55, mx + w * .17, top * .9); ctx.closePath(); ctx.fill();
-      ctx.fillStyle = colours.sail; ctx.beginPath(); ctx.moveTo(mx - w * .14, top * .86); ctx.quadraticCurveTo(mx + w * .03, top * .56, mx - w * .12, -h * .55); ctx.lineTo(mx + w * .17, -h * .55); ctx.quadraticCurveTo(mx + w * .26, top * .56, mx + w * .14, top * .86); ctx.closePath(); ctx.fill();
+      const shade = mix(colours.sail, '#323b51', .53), shine = mix(colours.sail, '#fff4d2', .55);
+      ctx.fillStyle = linear(ctx, mx - w * .16, top * .72, mx + w * .26, -h * .47,
+        [[0, shade], [.27, colours.sail], [.51, shine], [.75, colours.sail], [1, shade]]);
+      ctx.beginPath(); ctx.moveTo(mx - w * .14, top * .86);
+      ctx.quadraticCurveTo(mx + w * .03 + billow, top * .56, mx - w * .12, -h * .55);
+      ctx.quadraticCurveTo(mx + w * .045, -h * .34, mx + w * .17, -h * .55);
+      ctx.quadraticCurveTo(mx + w * .26 + billow, top * .56, mx + w * .14, top * .86); ctx.closePath(); ctx.fill();
+      ctx.save(); ctx.clip();
+      ctx.strokeStyle = shade; ctx.lineWidth = Math.max(.95, w * .012);
+      ctx.beginPath(); ctx.moveTo(mx + w * .07, top * .88);
+      ctx.quadraticCurveTo(mx + w * .17 + billow, top * .53, mx + w * .075, -h * .44); ctx.stroke();
+      ctx.restore();
     }
     const fx = masts === 1 ? 0 : w * .18, ft = -h * (masts === 1 ? 3.2 : 3.3);
     ctx.fillStyle = OUTLINE; ctx.fillRect(fx - 2, ft - h * .55, w * .2, h * .5); ctx.fillStyle = colours.flag; ctx.fillRect(fx, ft - h * .5, w * .17, h * .4);
@@ -239,9 +266,31 @@ export function createBoatGame({ container, game = 'broadside', wave = 30, code 
     ctx.strokeStyle = 'rgba(230,246,244,.55)'; ctx.lineWidth = 4;
     for (const side of [-1, 1]) { ctx.beginPath(); ctx.moveTo(side * size * .28, size * .5); ctx.quadraticCurveTo(side * size * .5, size * .9, side * size * .7, size * 1.25); ctx.stroke(); }
     ctx.fillStyle = OUTLINE; ctx.beginPath(); ctx.moveTo(0, -size * .78); ctx.quadraticCurveTo(size * .48, -size * .1, size * .34, size * .62); ctx.lineTo(-size * .34, size * .62); ctx.quadraticCurveTo(-size * .48, -size * .1, 0, -size * .78); ctx.fill();
-    ctx.fillStyle = hurt ? '#e8473a' : '#8a5a32'; ctx.beginPath(); ctx.moveTo(0, -size * .66); ctx.quadraticCurveTo(size * .38, -size * .08, size * .27, size * .53); ctx.lineTo(-size * .27, size * .53); ctx.quadraticCurveTo(-size * .38, -size * .08, 0, -size * .66); ctx.fill();
+    ctx.fillStyle = linear(ctx, -size * .29, -size * .3, size * .25, size * .5,
+      hurt ? [[0, '#f58364'], [1, '#ce4035']]
+        : [[0, '#dcad71'], [.32, '#bd8552'], [.58, '#8d6244'], [1, '#31516b']]);
+    ctx.beginPath(); ctx.moveTo(0, -size * .66);
+    ctx.quadraticCurveTo(size * .38, -size * .08, size * .27, size * .53); ctx.lineTo(-size * .27, size * .53);
+    ctx.quadraticCurveTo(-size * .38, -size * .08, 0, -size * .66); ctx.fill();
+    ctx.save(); ctx.clip();
+    ctx.strokeStyle = '#825736'; ctx.lineWidth = Math.max(.9, size * .018);
+    for (const at of [-.12, 0, .12]) {
+      ctx.beginPath(); ctx.moveTo(size * at * .6, -size * .42);
+      ctx.quadraticCurveTo(size * (at + .025), size * .11, size * at, size * .53); ctx.stroke();
+    }
+    ctx.strokeStyle = '#e3ac6d'; ctx.lineWidth = Math.max(1.7, size * .028);
+    ctx.beginPath(); ctx.moveTo(-size * .26, size * .45); ctx.quadraticCurveTo(0, size * .53, size * .26, size * .45); ctx.stroke();
+    ctx.restore();
     ctx.fillStyle = OUTLINE; ctx.beginPath(); ctx.moveTo(-size * .05, -size * .42); ctx.lineTo(size * .44, size * .22); ctx.lineTo(-size * .05, size * .3); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = '#efe2bd'; ctx.beginPath(); ctx.moveTo(0, -size * .32); ctx.lineTo(size * .35, size * .18); ctx.lineTo(0, size * .24); ctx.closePath(); ctx.fill();
+    const billow = still() ? 0 : Math.sin(clock * 3.4) * size * .034;
+    ctx.fillStyle = linear(ctx, 0, -size * .32, size * .3, size * .16,
+      [[0, '#b79b77'], [.37, '#fff0ca'], [.68, '#e9cfa0'], [1, '#ae8d67']]);
+    ctx.beginPath(); ctx.moveTo(0, -size * .32);
+    ctx.quadraticCurveTo(size * .16 + billow, -size * .005, size * .35, size * .18);
+    ctx.quadraticCurveTo(size * .16, size * .27, 0, size * .24); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#b2906d'; ctx.lineWidth = Math.max(1, size * .015);
+    ctx.beginPath(); ctx.moveTo(size * .033, -size * .14);
+    ctx.quadraticCurveTo(size * .084 + billow, size * .063, size * .13, size * .23); ctx.stroke();
     ctx.restore();
   }
   function coin(x, y, r, spin) {

@@ -5,6 +5,8 @@ import { createPlace } from '../src/world/places/factory.js';
 import { places, placeIds } from '../src/world/places/registry.js';
 import {edgeTrees, layouts} from '../src/world/places/layouts.js';
 import {projectGround} from '../src/world/projection.js';
+import {outpostArtwork} from '../src/art/outpost-scenery.js';
+import {pixelSizes} from '../src/pixel/catalog.js';
 import {decorateProgress} from '../src/island/decorations.js';
 import { canStand } from '../src/player/collision.js';
 import { on, emit } from '../src/core/events.js';
@@ -12,8 +14,22 @@ const adapters = {
   loadArt: async ids => Object.fromEntries(ids.map(id => [id, new THREE.MeshBasicMaterial({ map: new THREE.Texture() })])),
   loadBackdrop: async () => new THREE.Texture(),
 };
-const homeTreeScale = ({x, z}) => x === -13 && z === -12 ? .42 : .7;
 describe('real place lifetime', () => {
+  it.each(['smugglers_cove', 'wreck_point', 'the_teeth'])('keeps the original %s scenery boxes and feet', async id => {
+    const place = await createPlace({id, ...adapters});
+    try {
+      for (const {asset, x, z} of layouts[id].filter(({asset}) => outpostArtwork(asset) !== asset)) {
+        const mesh = place.group.children.find(node => node.userData.asset === asset
+          && node.userData.ground?.x === x && node.userData.ground?.z === z);
+        const [width, height, anchor] = pixelSizes[asset];
+        const foot = projectGround(x, z);
+        expect(mesh.position.toArray()).toEqual([foot.x, foot.y, 0]);
+        expect(mesh.geometry.parameters).toMatchObject({width, height});
+        mesh.geometry.computeBoundingBox();
+        expect(mesh.geometry.boundingBox.min.y).toBeCloseTo(-height * anchor, 6);
+      }
+    } finally { place.dispose(); }
+  });
   it.each(Object.keys(edgeTrees))('keeps %s tree feet, blockers and drawing behavior while restraining only home foliage', async id => {
     const place = await createPlace({id, ...adapters, island: {decorate() {}}});
     try {
@@ -25,7 +41,7 @@ describe('real place lifetime', () => {
       ]);
       trees.forEach((mesh, index) => {
         const [x, z] = edgeTrees[id][index], foot = projectGround(x, z);
-        const scale = id === 'home_islet' ? homeTreeScale({x, z}) : 1;
+        const scale = id === 'home_islet' ? .7 : 1;
         expect(mesh.userData.ground).toEqual({x, z});
         expect(mesh.position.toArray()).toEqual([foot.x, foot.y, 0]);
         expect(mesh.renderOrder).toBe(100 + z);
@@ -54,7 +70,7 @@ describe('real place lifetime', () => {
         [[house('house_1'), house('house_2')], 1.2], [[house('house_2')], 1.1], [[], 1]]) {
         progress.apply({wave: 0}, houses, true);
         trees.forEach((mesh, index) => {
-          const scale = homeTreeScale(original[index].ground) * growth;
+          const scale = .7 * growth;
           for (const value of mesh.scale.toArray()) expect(value).toBeCloseTo(scale, 12);
           expect(mesh.position).toEqual(original[index].position);
           expect(mesh.geometry).toBe(original[index].geometry);
@@ -66,10 +82,7 @@ describe('real place lifetime', () => {
       }
       progress.apply({wave: 0}, [house('house_1'), house('house_2')], true);
       progress.dispose(); progress.dispose();
-      for (const mesh of trees) {
-        const restored = homeTreeScale(mesh.userData.ground);
-        expect(mesh.scale.toArray()).toEqual([restored, restored, restored]);
-      }
+      for (const mesh of trees) expect(mesh.scale.toArray()).toEqual([.7, .7, .7]);
       expect(place.colliders).toEqual(colliders);
       const materials = [...new Set(trees.map(mesh => mesh.material))], releases = materials.map(() => 0);
       materials.forEach((material, index) => material.addEventListener('dispose', () => releases[index]++));
@@ -94,8 +107,8 @@ describe('real place lifetime', () => {
       place.dispose();
     }
   });
-  it('removes every object and disposes shared-per-place resources exactly once', async () => {
-    const place = await createPlace({ id: 'saltreach_harbor', ...adapters });
+  it.each(['saltreach_harbor', 'home_islet'])('removes every %s object and disposes shared resources exactly once', async id => {
+    const place = await createPlace({ id, ...adapters });
     const parent = new THREE.Group(); parent.add(place.group);
     const resources = new Set();
     place.group.traverse(o => { if (o.geometry) resources.add(o.geometry); if (o.material) { resources.add(o.material); if (o.material.map) resources.add(o.material.map); } });

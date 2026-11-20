@@ -1,0 +1,257 @@
+{
+  "sourceFile": "frontend/public/village/landmarks-v2.png",
+  "generatedBy": "OpenAI built-in image generation, registered inside the original source alpha, 2026-11-19",
+  "sha256": "6ba0599eefd11cd4bf13b36613ed952334d6eb60a19dcf2b759361b0e3dd4ac4",
+  "bytes": 1158120,
+  "nativeSize": [
+    1254,
+    1254
+  ],
+  "mode": "RGBA",
+  "alpha": {
+    "corners": [
+      0,
+      0,
+      1,
+      0
+    ],
+    "meaningfulThreshold": 16,
+    "solidThreshold": 240,
+    "priorFile": "frontend/public/village/landmarks-v1.png",
+    "changedPixels": 0,
+    "identicalPixels": 1572516,
+    "sha256": "6de8bc50ccc3aba9cc88207c25d553c3cc7010e2115ea59978f149956e3a3273"
+  },
+  "cells": [
+    {
+      "id": "island-bell",
+      "region": [
+        0,
+        0,
+        627,
+        576
+      ],
+      "rect": [
+        112,
+        69,
+        459,
+        497
+      ],
+      "sourceFoot": [
+        225,
+        483
+      ],
+      "meaningfulAlphaBounds": [
+        12,
+        12,
+        447,
+        485
+      ],
+      "solidBounds": [
+        14,
+        14,
+        445,
+        484
+      ]
+    },
+    {
+      "id": "island-watchtower",
+      "region": [
+        627,
+        0,
+        627,
+        576
+      ],
+      "rect": [
+        760,
+        8,
+        325,
+        558
+      ],
+      "sourceFoot": [
+        161,
+        543
+      ],
+      "meaningfulAlphaBounds": [
+        12,
+        12,
+        313,
+        546
+      ],
+      "solidBounds": [
+        14,
+        14,
+        311,
+        544
+      ]
+    },
+    {
+      "id": "island-watchtower-l4",
+      "region": [
+        0,
+        576,
+        627,
+        678
+      ],
+      "rect": [
+        168,
+        582,
+        332,
+        611
+      ],
+      "sourceFoot": [
+        164,
+        596
+      ],
+      "meaningfulAlphaBounds": [
+        12,
+        12,
+        320,
+        599
+      ],
+      "solidBounds": [
+        13,
+        13,
+        319,
+        597
+      ]
+    },
+    {
+      "id": "island-watchtower-l5",
+      "region": [
+        627,
+        576,
+        627,
+        678
+      ],
+      "rect": [
+        742,
+        575,
+        357,
+        624
+      ],
+      "sourceFoot": [
+        174,
+        609
+      ],
+      "meaningfulAlphaBounds": [
+        12,
+        12,
+        345,
+        612
+      ],
+      "solidBounds": [
+        13,
+        13,
+        344,
+        610
+      ]
+    }
+  ],
+  "limits": [
+    "Read-only source inspection; PNG bytes are unchanged and no offline cropped image is emitted.",
+    "Actual generated row spacing is measured rather than assumed to divide the sheet exactly in half.",
+    "Runtime source rectangles retain all alpha>=16 plus12px margin; lower-alpha peripheral noise remains in the unchanged original PNG.",
+    "Actual game foot/overhang/neighbor/phase and device evidence is coordinated separately."
+  ],
+  "priorSpriteSha256": "f1b8eeeadb2883b3565b47e592a722539edeb1281902955fb67650b4a819fab2",
+  "generation": {
+    "generatedMaterialSha256": "3d6e6bb9ce3881f3ae298b641dcb254db8f704a106b0a6c44f221d1055c1e81b",
+    "unchangedRgbaOutsideEdits": 965546,
+    "registration": [
+      {
+        "id": "island-watchtower",
+        "rect": [
+          760,
+          8,
+          325,
+          558
+        ],
+        "previous": [
+          774,
+          22,
+          1070,
+          551
+        ],
+        "painted": [
+          757,
+          18,
+          1063,
+          552
+        ],
+        "scale": [
+          1.0337837837837838,
+          1.00945179584121
+        ],
+        "offset": [
+          -43.148648648648646,
+          -4.20793950850662
+        ],
+        "visible": 93220,
+        "meanOpaqueRgbDelta": 20.663094471858685
+      },
+      {
+        "id": "island-watchtower-l4",
+        "rect": [
+          168,
+          582,
+          332,
+          611
+        ],
+        "previous": [
+          181,
+          595,
+          486,
+          1178
+        ],
+        "painted": [
+          177,
+          594,
+          489,
+          1179
+        ],
+        "scale": [
+          1.022950819672131,
+          1.0034305317324186
+        ],
+        "offset": [
+          -8.154098360655723,
+          -3.0411663807890363
+        ],
+        "visible": 105094,
+        "meanOpaqueRgbDelta": 15.827335528193807
+      },
+      {
+        "id": "island-watchtower-l5",
+        "rect": [
+          742,
+          575,
+          357,
+          624
+        ],
+        "previous": [
+          755,
+          588,
+          1085,
+          1184
+        ],
+        "painted": [
+          744,
+          587,
+          1082,
+          1186
+        ],
+        "scale": [
+          1.0242424242424242,
+          1.00503355704698
+        ],
+        "offset": [
+          -29.303030303030255,
+          -3.9597315436242297
+        ],
+        "visible": 115495,
+        "meanOpaqueRgbDelta": 18.746196805056496
+      }
+    ]
+  }
+}

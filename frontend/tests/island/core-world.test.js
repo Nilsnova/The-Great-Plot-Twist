@@ -85,6 +85,28 @@ describe('the existing core landmark renderer', () => {
     for (const object of [...made.materials, ...made.textures]) expect(object.userData.disposals).toBe(1);
   });
 
+  it('animates the standing hall details at the ground pin, freezes on pause, and rests in reduced motion', async () => {
+    const {view} = start(); await view.retryArt();
+    const {mesh} = view, anchor = mesh.position.toArray();
+    const shader = {uniforms: {}, vertexShader: '#include <begin_vertex>', fragmentShader: '#include <map_fragment>'};
+    mesh.material.onBeforeCompile(shader);
+    const {uLandmarkClock, uLandmarkWind, uLandmarkFlicker} = shader.uniforms;
+    view.update(.06, {weather: {wind: .5}, night: .8});
+    expect(uLandmarkClock.value).toBeCloseTo(.06);
+    expect(uLandmarkWind.value).toBeGreaterThan(0);
+    expect(uLandmarkFlicker.value).toBeGreaterThan(0);
+    view.update(.06, {paused: true});
+    expect(uLandmarkClock.value).toBeCloseTo(.06);
+    view.update(.06, {paused: true}, true);
+    expect([uLandmarkClock.value, uLandmarkWind.value, uLandmarkFlicker.value]).toEqual([0, 0, 0]);
+    expect(mesh.position.toArray()).toEqual(anchor);
+    view.setHealth({frame: IDS[2], hp: 0, max: 100});
+    const rubble = {uniforms: {}, vertexShader: '', fragmentShader: ''};
+    mesh.material.onBeforeCompile(rubble);
+    expect(rubble.uniforms).toEqual({});
+    view.dispose();
+  });
+
   it('coalesces concurrent attempts, releases a partial failure once, and retries without accepting incomplete art', async () => {
     const work = deferred(); let visit;
     const prepare = vi.fn((ids, density, callback) => { visit = callback; return work.promise; });

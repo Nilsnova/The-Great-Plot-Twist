@@ -7,12 +7,13 @@ import * as THREE from 'three';
 import {unprojectGround} from '../world/projection.js';
 import {groundGeometry} from '../world/ground-transform.js';
 import {artSizes, loadArt, placeArt, projectPoint} from '../world/art.js';
-import {ALL_SPOTS as ISLAND_SPOTS, CABIN, BELL, CAMPAIGN_BUILDINGS, ARSENAL, islandZones, placedSpot} from './spots.js';
+import {ALL_SPOTS as ISLAND_SPOTS, CABIN, BELL, CAMPAIGN_BUILDINGS, ARSENAL, ISLAND_PLACE, defenses, islandZones, placedSpot} from './spots.js';
 import {isExtraSpot} from './extra-spots.js';
-import {makeFootprint, makeWallLanes} from './move-preview.js';
+import {makeFootprint, makeWallPerimeter} from './move-preview.js';
 import {makeSelectionBracket} from './selection-bracket.js';
 import {makeDefenseRange} from './defense-range.js';
-import {makeWallFeedback} from './wall-feedback.js';
+import {makeBuildingFeedback, makeWallFeedback} from './wall-feedback.js';
+import {footprintOf, freeWallCells, positionsOf} from './placement.js';
 import {isOpen, spotWave, waveOf} from '../campaign/index.js';
 import {LOCK_WAVES} from '../art/campaign.js';
 import {SLOT_KINDS} from './td-rules.js';
@@ -23,6 +24,9 @@ import {frameCanvas, smoothTexture, spriteMaterial} from '../art/textures.js';
 import {clickVerdict, WALK_CLOSER} from '../world/reach.js';
 import {decorateProgress} from './decorations.js';
 import {makeWallConnections} from './wall-connections.js';
+import {makeBuildingFoundations} from './building-foundations.js';
+import {defenseDisplayAnchors} from './defense-display.js';
+import {animateLandmarkMaterial, landmarkProfiles} from './landmark-motion.js';
 import {makeWallPurchaseLight} from './wall-purchase-light.js';
 import {createStructureRecoveryIndicators} from './structure-recovery-indicators.js';
 import {towerStateFrame} from '../art/tower-states.js';
@@ -34,6 +38,7 @@ import {createArtworkTasks, createStaticVillageArt} from './static-village-art.j
 import {createVillageArtNotice} from '../ui/village-art-notice.js';
 
 const UNIT = 16;
+const BELL_RING_SECONDS = 1.2;
 const FULL_HP_UNITS = 1_000_000;
 const RECOVERY_TOWERS = Object.freeze(['cannon', 'mortar', 'harpoon', 'culverin', 'swivel']);
 const RECOVERY_PHASES = new Set(['between_waves', 'preparing']);
@@ -168,7 +173,7 @@ export function makeRangeRing(root) {
   };
 }
 
-export function makeHouseSupportMarkers(root) {
+export function makeHouseSupportMarkers(root, displayAnchor = () => null) {
   const group = new THREE.Group(); group.name = 'island-house-support'; group.visible = false; root.add(group);
   const rings = [], brackets = [];
   let shown = null;
@@ -184,7 +189,7 @@ export function makeHouseSupportMarkers(root) {
       rings.forEach((ring, index) => ring.show(areas[index] ? {...areas[index], role: support.role} : null));
       brackets.forEach((bracket, index) => {
         const target = targets[index];
-        bracket.show(target ? {spotId: target.id, kind: target.kind, x: target.x, z: target.z, size: 1.6} : null);
+        bracket.show(target ? {spotId: target.id, kind: target.kind, x: target.x, z: target.z, ...displayAnchor(target.id), size: 1.6} : null);
       });
     },
     dispose() {
@@ -203,7 +208,7 @@ export function campaignArt(building, campaign) {
   if (building.mended && campaign.wreck && campaign.wreck.paid >= campaign.wreck.goal) return building.mended;
   return building.art;
 }
-// A spot the campaign opens later (the inner wall ring after wave 5) shows a lock badge instead of the build badge.
+// A spot the campaign opens later shows a lock badge instead of the build badge.
 export const spotLocked = (spot, campaign) => !!campaign && spotWave(spot.id) > (campaign.wave ?? 0);
 // The first wave any of the spot's kinds opens after (the house after 1, the watchtower after 3), or null.
 export function lockWave(kinds, unlocks) {
@@ -217,7 +222,7 @@ export function lockWave(kinds, unlocks) {
 // ctx: {art (the place's loaded art, with 'cabin'), reducedMotion, canvas, camera, isActive, onPick(id), player() (its
 // position: a click out of reach calls onFar(id, {hint, zone}) instead of onPick),
 // loadArt (tests), and for Pirate Point: layout {spots, zones(), bell: false, cabin: false}}.
-// Returns {apply({spots, visitor, battle, unlocks}), update(dt, time), pickAt(x, z), dispose()}.
+// Returns {apply({spots, visitor, battle, unlocks}), update(dt, time, paused, frame), pickAt(x, z), dispose()}.
 // A marker shows on an empty spot only when something may be built there (unlocks, TOWER-DEFENSE.md §9).
 export function decorateIsland(place, ctx = {}) {
   const layout = ctx.layout ?? {spots: ISLAND_SPOTS, zones: islandZones, bell: true, cabin: true};
@@ -231,6 +236,15 @@ export function decorateIsland(place, ctx = {}) {
     notice?.set(value); ctx.onArtState?.(value);
   }, error => ctx.onArtError?.(error));
   const staticArt = createStaticVillageArt({root, load: ctx.loadArt ?? loadArt, sizes: artSizes, registered: getRasterFrame, tasks});
+  const landmarkMotion = new Map();
+  let landmarkClock = 0;
+  function trackMotion(mesh, id) {
+    const material = mesh?.material, profile = landmarkProfiles[id];
+    if (layout.zones === islandZones && profile && material?.map?.userData.villageArt?.source === 'png'
+        && !landmarkMotion.has(material)) {
+      landmarkMotion.set(material, animateLandmarkMaterial(material, profile));
+    }
+  }
   notice = createVillageArtNotice({container: ctx.container, isActive: ctx.isActive,
     retry: () => Promise.all([retryArt(), staticArt.retry(), retryWallArt(), retryProgressArt(), ctx.retryAdditionalArt?.()]), focus: () => ctx.canvas?.focus({preventScroll: true})});
   const progress = layout.zones === islandZones ? decorateProgress(place) : null;
@@ -275,6 +289,7 @@ export function decorateIsland(place, ctx = {}) {
   // The campaign's buildings (home island only): one mesh per frame they can show, the right one visible.
   const campaignMeshes = new Map(); // building id -> {frame name -> mesh}
   const campaignTextures = new Map();
+  const campaignLandmarks = [];
   if (layout.bell !== false) for (const building of CAMPAIGN_BUILDINGS) {
     const names = [...new Set([building.art, building.mended, 'island-site', ...[4, 5, 6, 8].map(n => `island-site-${n}`)].filter(Boolean))];
     const meshes = {};
@@ -283,6 +298,7 @@ export function decorateIsland(place, ctx = {}) {
       const mesh = sprite(root, texture, building.x, building.z, `island-campaign:${building.id}:${name}`);
       mesh.visible = false; mesh.userData.campaign = building.id; meshes[name] = mesh;
       staticArt.track(mesh, name);
+      if (landmarkProfiles[name]) campaignLandmarks.push([mesh, name]);
     }
     campaignMeshes.set(building.id, meshes);
   }
@@ -295,13 +311,17 @@ export function decorateIsland(place, ctx = {}) {
     }
     return arsenalMesh;
   };
-  if (layout.cabin !== false && ctx.art?.cabin) placeArt(root, ctx.art, 'cabin', CABIN.x, CABIN.z).name = 'island-cabin';
+  const cabin = layout.cabin !== false && ctx.art?.cabin ? placeArt(root, ctx.art, 'cabin', CABIN.x, CABIN.z) : null;
+  if (cabin) cabin.name = 'island-cabin';
   // The reach of a house's role while its card is open (GAME-V3.md "Houses"): a soft disc with a bright rim on
   // the ground, in the role's colour. ctx.range() says which ({x, z, radius, role} or null), read every frame.
-  const houseSupport = typeof ctx.houseSupport === 'function' ? makeHouseSupportMarkers(root) : null;
+  let displayAnchors = new Map();
+  const viewOf = (id, where) => (preview?.spotId === id ? null : displayAnchors.get(id)) ?? where;
+  const houseSupport = typeof ctx.houseSupport === 'function' ? makeHouseSupportMarkers(root, id => viewOf(id, null)) : null;
   const rangeRing = houseSupport ? null : makeRangeRing(root);
   const defenseRange = typeof ctx.defenseRange === 'function' ? makeDefenseRange(root) : null;
   const homeWalls = layout.zones === islandZones;
+  const foundations = homeWalls ? makeBuildingFoundations(root) : null;
   const purchaseLight = homeWalls ? makeWallPurchaseLight() : null;
   const wallConnections = makeWallConnections(root, {purchaseLight});
   let joinedWalls = new Set();
@@ -309,24 +329,33 @@ export function decorateIsland(place, ctx = {}) {
   let preview = null;
   const footprint = makeFootprint(root), selectionBracket = makeSelectionBracket(root);
   const wallFeedback = homeWalls ? makeWallFeedback(root) : null;
-  // D056: while a wall is moved, the cells where a wall stops pirates glow (home island only).
-  const wallLanes = homeWalls ? makeWallLanes(root) : null;
+  const buildingFeedback = homeWalls ? makeBuildingFeedback(root) : null;
+  // While a wall is moved, free spots along the Home Island grass edge glow.
+  const wallPerimeter = homeWalls ? makeWallPerimeter(root) : null;
   // Where a spot stands now: the cell of a move under way, the answer's x/z, else its fixed spot (Pirate Point's stay).
   const whereOf = spot => {
     if (preview?.spotId === spot.id) return {x: preview.x, z: preview.z};
-    return layout.zones === islandZones ? placedSpot(spot.id, state.spots) ?? spot : spot;
+    if (!homeWalls) return spot;
+    return placedSpot(spot.id, state.spots) ?? (ISLAND_SPOTS.some(item => item.id === spot.id) ? null : spot);
   };
   function builtWallAnchor(id, level) {
     const row = state.spots.find(item => item.id === id);
     return row?.built === true && row.kind === 'wall' && row.level === level ? placedSpot(id, state.spots) : null;
   }
-  function clearWallFeedback() {
+  function confirmedBuildingAt({spotId, level, kind, x, z}) {
+    const row = state.spots.find(item => item.id === spotId);
+    const spot = placedSpot(spotId, state.spots);
+    return row?.built === true && row.kind === kind && row.level === level && kind !== 'wall'
+      && !!spot && spot.x === x && spot.z === z && kindsOf(spot).includes(kind);
+  }
+  function clearPurchaseFeedback() {
     wallFeedback?.clear();
     purchaseLight?.show(null, 0);
+    buildingFeedback?.clear();
   }
   const recoveryIndicators = createStructureRecoveryIndicators({root, locate: id => {
     const spot = SPOTS.find(item => item.id === id);
-    return spot ? whereOf(spot) : null;
+    return spot ? viewOf(id, whereOf(spot)) : null;
   }});
   let recoveryState = null, recoveryStateKey = 'null';
   // The real art once it has loaded (null until then: the drawn sprites stand in), and what each spot shows.
@@ -354,7 +383,7 @@ export function decorateIsland(place, ctx = {}) {
     const marks = kind && appearance?.look !== 'broken' ? buildingMarks(kind, level, answer?.tree, answer?.spec) : [];
     // A recovery ruin frame stands alone; only the normal level art is drawn as posts of a joined wall.
     const joined = kind === 'wall' && id === normalId && joinedWalls.has(spot.id);
-    const where = whereOf(spot), key = !id || hidden ? '' : `${id}:${pips}:${joined}:${marks.map(mark => mark.art).join('+')}@${where.x},${where.z}`;
+    const where = viewOf(spot.id, whereOf(spot)), key = !id || hidden ? '' : `${id}:${pips}:${joined}:${marks.map(mark => mark.art).join('+')}@${where.x},${where.z}`;
     if (shown.get(spot.id)?.key === key) return;
     clear(spot.id);
     if (!key) return;
@@ -362,6 +391,7 @@ export function decorateIsland(place, ctx = {}) {
     if (joined) mesh.scale.x = .62; // Keep the original level art as posts; the join draws the span.
     mesh.userData.role = activeRole({kind, level, spec: answer?.spec}); mesh.userData.art = id;
     mesh.userData.recoveryLook = appearance?.look ?? 'intact';
+    trackMotion(mesh, id);
     const meshes = [mesh], [, height, anchor] = artSizes[id], top = height * (1 - anchor) + .15;
     // One row (pipRow): 4 and 5 smaller and spaced wider than a disc, so the gold stars never overlap.
     const row = pips ? pipRow(level, {step: .6}) : {offsets: []}, pipWidth = artSizes[PIP_ART][0];
@@ -376,21 +406,30 @@ export function decorateIsland(place, ctx = {}) {
   }
   function showCrew(spots, crew, hidden) {
     const places = hidden || !crew ? [] : crewPlaces(spots.map(item => {
-      const spot = SPOTS.find(entry => entry.id === item.id), where = spot ? whereOf(spot) : null;
+      const spot = SPOTS.find(entry => entry.id === item.id), where = spot ? viewOf(spot.id, whereOf(spot)) : null;
       return where ? {...item, x: where.x, z: where.z} : null;
     }).filter(Boolean), crew, {bell: layout.bell === false ? null : BELL});
     const key = places.map(item => `${item.kind}@${item.x},${item.z}`).join('|');
     if (shown.get('crew')?.key === key) return;
     clear('crew');
-    shown.set('crew', {key, meshes: places.map(item => { const mesh = put(crewArt[item.kind], item.x, item.z, 0, .02); mesh.name = `island-crew:${item.kind}:${item.at}`; return mesh; })});
+    const meshes = places.map(({kind, at, x, z}) => {
+      const mesh = put(crewArt[kind], x, z, 0, .02);
+      mesh.name = `island-crew:${kind}:${at}`;
+      if (homeWalls) mesh.userData.idle = {phase: x * .57 + z * .93, lean: kind === 'lookout' ? .038 : .021};
+      return mesh;
+    });
+    shown.set('crew', {key, meshes});
   }
 
   // battle: a wave is on screen; its renderer (src/pirates/render.js) draws the walls and cannons with
   // their damage, so the island's own wall and cannon sprites step aside until it ends.
   function apply({spots = [], visitor = false, battle = false, unlocks = null, crew = null, campaign = null, arsenal = false, feedbackScope = null} = {}) {
     if (disposed) return;
-    if (battle || feedbackScope !== state.feedbackScope) clearWallFeedback();
+    if (battle || feedbackScope !== state.feedbackScope) clearPurchaseFeedback();
     state = {spots, visitor, battle, unlocks, crew, campaign, arsenal: arsenal === true, feedbackScope};
+    if (wallPerimeter) wallPerimeter.show(preview && !battle && SPOTS.some(spot => spot.id === preview.spotId && spot.slot === 'wall')
+      ? freeWallCells(preview.spotId, positionsOf(spots)) : []);
+    if (homeWalls) displayAnchors = defenseDisplayAnchors(ISLAND_PLACE, defenses(spots));
     place.setMooringBattle?.(battle);
     if (battle || visitor) {
       defenseRange?.show(null);
@@ -399,8 +438,13 @@ export function decorateIsland(place, ctx = {}) {
     const pulse = wallFeedback?.current;
     if (pulse) {
       const anchor = builtWallAnchor(pulse.spotId, pulse.level);
-      if (anchor?.x !== pulse.x || anchor?.z !== pulse.z) clearWallFeedback();
+      if (anchor?.x !== pulse.x || anchor?.z !== pulse.z) {
+        wallFeedback.clear();
+        purchaseLight.show(null, 0);
+      }
     }
+    const buildingPulse = buildingFeedback?.current;
+    if (buildingPulse && (visitor || !confirmedBuildingAt(buildingPulse))) buildingFeedback.clear();
     if (visitor || battle) wallConnections.select(null);
     joinedWalls = wallConnections.show(battle ? [] : spots.map(item => {
       const spot = SPOTS.find(entry => entry.id === item.id);
@@ -412,24 +456,40 @@ export function decorateIsland(place, ctx = {}) {
     const shownArsenal = showArsenal(known && state.arsenal);
     if (shownArsenal) shownArsenal.visible = known && state.arsenal;
     progress?.apply(campaign, spots, known);
+    const standing = [];
+    if (bell) standing.push({slot: BELL.id, x: BELL.x, z: BELL.z});
+    if (cabin) standing.push({slot: CABIN.id, x: CABIN.x, z: CABIN.z});
+    if (shownArsenal?.visible) standing.push({slot: ARSENAL.id, x: ARSENAL.x, z: ARSENAL.z});
     for (const [id, meshes] of campaignMeshes) {
-      const frame = known ? campaignArt(CAMPAIGN_BUILDINGS.find(item => item.id === id), campaign) : null;
+      const building = CAMPAIGN_BUILDINGS.find(item => item.id === id);
+      const frame = known ? campaignArt(building, campaign) : null;
       for (const [name, mesh] of Object.entries(meshes)) mesh.visible = name === frame;
+      if (frame === building.art) standing.push({slot: id, x: building.x, z: building.z});
     }
     for (const spot of SPOTS) {
       const answer = spots.find(item => item.id === spot.id), built = answer?.built === true, where = whereOf(spot);
       const marker = markers.get(spot.id);
       // D060: an extra tower spot stands only while the answer lists it (the server's flag more_tower_spots).
-      if (isExtraSpot(spot.id) && !answer) { marker.visible = false; marker.locked = false; clear(spot.id); for (const kind of kindsOf(spot)) buildings.get(`${spot.id}:${kind}`).visible = false; continue; }
+      if (!where || (isExtraSpot(spot.id) && !answer)) {
+        marker.visible = false; marker.locked = false; clear(spot.id);
+        for (const kind of kindsOf(spot)) buildings.get(`${spot.id}:${kind}`).visible = false;
+        continue;
+      }
       if (marker) {
         for (const mesh of [marker.ring, marker.badge, marker.lock, marker.lockRing]) moveSprite(mesh, where.x, where.z);
         marker.x = where.x; marker.z = where.z;
       }
-      for (const kind of kindsOf(spot)) moveSprite(buildings.get(`${spot.id}:${kind}`), where.x, where.z);
+      const view = viewOf(spot.id, where);
+      for (const kind of kindsOf(spot)) moveSprite(buildings.get(`${spot.id}:${kind}`), view.x, view.z);
       // Locked things stay on the map (GAME-V3.md §4): a spot the campaign opens later, or whose kind is not
       // open yet, shows a lock badge instead of the glowing ring.
       const open = (!unlocks || kindsOf(spot).some(kind => (unlocks.levels?.[kind] ?? 0) >= 1)) && !spotLocked(spot, campaign);
       const hidden = battle && BATTLE_KINDS.includes(answer?.kind ?? spot.kind);
+      if (foundations && built && slotOf(spot) !== 'wall') {
+        const recovery = recoveryState?.structures?.find(item => item.spot === spot.id);
+        const ruin = structureRecoveryAppearance(answer, recovery, recoveryState)?.look === 'broken';
+        standing.push({slot: slotOf(spot), x: view.x, z: view.z, ruin, inshore: view !== where});
+      }
       for (const kind of kindsOf(spot)) {
         buildings.get(`${spot.id}:${kind}`).visible = !art && built && (answer.kind === kind || (kindsOf(spot).length === 1))
           && !(battle && BATTLE_KINDS.includes(kind)) && !(kind === 'wall' && wallConnections.hasPost(spot.id));
@@ -443,6 +503,7 @@ export function decorateIsland(place, ctx = {}) {
       const wave = open ? null : spotLocked(spot, campaign) ? spotWave(spot.id) : lockWave(kindsOf(spot), unlocks);
       if (marker.wave !== wave) { marker.wave = wave; marker.lock.material.map = lockTexture(wave).texture; marker.lock.material.needsUpdate = true; }
     }
+    foundations?.show(standing);
     // The wave's renderer draws the crew during a battle; outside one they stand by their posts.
     if (art) showCrew(spots, crew, battle);
     if (layout.zones === islandZones) {
@@ -497,16 +558,16 @@ export function decorateIsland(place, ctx = {}) {
   // The nearest pickable thing to a ground point (a tap), or null.
   // Built sprites can overlap legally. In village mode, give the opaque foreground art priority over
   // the old nearest-foot box. The box still serves markers, service buildings and loading stand-ins.
-  function frontBuildingAt(tap) {
+  function frontBuildingAt(tap, portraitDepth) {
     let front = null;
     for (const [id, item] of shown) {
-      if (!ctx.canPickRemote?.(id)) continue;
+      if (!ctx.canPickRemote?.(id) && !displayAnchors.has(id)) continue;
       const mesh = item.meshes[0];
       if (!mesh?.visible || !mesh.userData.art || mesh.name.startsWith('island-wall:')
         || (front && mesh.renderOrder < front.order)) continue;
       const [width, height, anchor] = artSizes[mesh.userData.art], image = mesh.material.map?.image;
       const u = .5 + (tap.x - mesh.position.x) / width;
-      const v = 1 - anchor - (tap.y - mesh.position.y) / height;
+      const v = 1 - anchor - (tap.y - mesh.position.y) * portraitDepth / height;
       if (u < 0 || u >= 1 || v < 0 || v >= 1 || !image?.getContext) continue;
       try {
         const alpha = image.getContext('2d')?.getImageData(Math.floor(u * image.width), Math.floor(v * image.height), 1, 1).data[3];
@@ -519,10 +580,17 @@ export function decorateIsland(place, ctx = {}) {
     return front?.id ?? null;
   }
   function pickAt(x, z) {
-    const tap = projectPoint(x, z), front = frontBuildingAt(tap);
+    const portraitDepth = ctx.camera?.userData.homePortraitDepth ?? 1;
+    const tap = projectPoint(x, z), front = frontBuildingAt(tap, portraitDepth);
     if (front) return front;
     const candidates = [...SPOTS.filter(spot => !isExtraSpot(spot.id) || state.spots.some(item => item.id === spot.id))
-        .map(spot => ({id: spot.id, ...whereOf(spot), w: 2.4, h: spot.kind === 'watchtower' ? 5 : 3})),
+        .flatMap(spot => {
+          const where = whereOf(spot);
+          if (!where) return [];
+          const view = viewOf(spot.id, where);
+          const bounds = {id: spot.id, ...where, w: 2.4, h: spot.kind === 'watchtower' ? 5 : 3};
+          return view === where ? [bounds] : [bounds, {...bounds, ...view}];
+        }),
       ...(bell ? [{id: BELL.id, x: BELL.x, z: BELL.z, w: 1.6, h: 3.4}] : []),
       ...(arsenalMesh?.visible ? [{id: ARSENAL.id, x: ARSENAL.x, z: ARSENAL.z, w: ARSENAL.w / 2, h: ARSENAL.h}] : []),
       ...(campaignMeshes.size ? CAMPAIGN_BUILDINGS.map(item => ({id: item.id, x: item.x, z: item.z, w: item.w, h: item.h})) : []),
@@ -530,8 +598,9 @@ export function decorateIsland(place, ctx = {}) {
     let best = null, bestScore = Infinity;
     for (const item of candidates) {
       const foot = projectPoint(item.x, item.z);
-      if (Math.abs(foot.x - tap.x) > item.w || tap.y > foot.y + item.h || tap.y < foot.y - .54) continue;
-      const score = Math.hypot(foot.x - tap.x, foot.y - tap.y);
+      const dy = (tap.y - foot.y) * portraitDepth;
+      if (Math.abs(foot.x - tap.x) > item.w || dy > item.h || dy < -.54) continue;
+      const score = Math.hypot(foot.x - tap.x, dy);
       if (score < bestScore) { best = item.id; bestScore = score; }
     }
     return best;
@@ -569,7 +638,7 @@ export function decorateIsland(place, ctx = {}) {
   let ringing = 0;
   return {
     runArtTask: (key, operation) => tasks.run(key, operation),
-    apply, pickAt, retryArt: () => Promise.all([retryArt(), staticArt.retry(), retryWallArt(), retryProgressArt(), ctx.retryAdditionalArt?.()]),
+    apply, pickAt, displayAnchor: id => viewOf(id, null), retryArt: () => Promise.all([retryArt(), staticArt.retry(), retryWallArt(), retryProgressArt(), ctx.retryAdditionalArt?.()]),
     setRecoveryState(value) {
       const accepted = value?.recoveryVersion === 1 && RECOVERY_PHASES.has(value.displayPhase)
         && typeof value.islandEpoch === 'string' && Array.isArray(value.structures) ? value : null;
@@ -588,14 +657,13 @@ export function decorateIsland(place, ctx = {}) {
         wallConnections.select(null);
         defenseRange?.show(null);
         place.setSelectedCanopy?.(null);
-        clearWallFeedback();
+        clearPurchaseFeedback();
       }
       footprint.show(preview);
-      wallLanes?.show(preview && SPOTS.find(spot => spot.id === preview.spotId)?.slot === 'wall');
       apply(state);
     },
     get previewing() { return preview ? {...preview} : null; },
-    get wallLanesShown() { return !!wallLanes?.shown; },
+    get wallLanesShown() { return !!wallPerimeter?.shown; },
     showWallFeedback(spotId, level) {
       if (disposed || !wallFeedback || !state.feedbackScope || state.battle || preview) return;
       const anchor = builtWallAnchor(spotId, level);
@@ -604,13 +672,21 @@ export function decorateIsland(place, ctx = {}) {
         purchaseLight.show(anchor, wallFeedback.light);
       }
     },
-    clearWallFeedback,
-    ring() { ringing = 1.2; },
-    update(dt, time = 0, paused = false) {
+    showBuildingFeedback(purchase) {
+      if (disposed || !buildingFeedback || !state.feedbackScope || state.visitor || state.battle || preview
+          || !confirmedBuildingAt(purchase)) return false;
+      const {spotId, level} = purchase;
+      buildingFeedback.show(spotId, level, purchase, reduced(), .7 * footprintOf(spotId), viewOf(spotId, purchase));
+      return true;
+    },
+    clearPurchaseFeedback,
+    ring() { ringing = BELL_RING_SECONDS; },
+    update(dt, time = 0, paused = false, frame = {}) {
       if (disposed) return;
       notice.update();
       const selection = preview ? null : ctx.selection?.();
-      selectionBracket.show(selection);
+      const view = selection?.kind && !selection.positionOnly ? viewOf(selection.spotId, null) : null;
+      selectionBracket.show(view ? {...selection, ...view} : selection);
       wallConnections.select(state.battle || state.visitor ? null : selection?.spotId);
       let canopyTarget = null;
       if (selection?.kind && !state.battle && !state.visitor) {
@@ -618,7 +694,7 @@ export function decorateIsland(place, ctx = {}) {
           ? wallConnections.selectedCanopyTarget
           : shown.get(selection.spotId)?.meshes[0] ?? null;
       }
-      place.setSelectedCanopy?.(canopyTarget);
+      place.setSelectedCanopy?.(canopyTarget, ctx.camera?.userData.homePortraitDepth);
       recoveryIndicators.update();
       const still = reduced();
       const coverage = selection && !state.battle && !state.visitor ? ctx.defenseRange?.() : null;
@@ -631,6 +707,7 @@ export function decorateIsland(place, ctx = {}) {
         wallFeedback.update(dt, paused, still);
         purchaseLight.show(wallFeedback.current, wallFeedback.light);
       }
+      buildingFeedback?.update(dt, paused, still);
       const glow = still ? 1 : .7 + .3 * Math.sin(time * 3.2), bob = still ? 0 : Math.sin(time * 2.4) * 2.4 / UNIT;
       // Calm markers (owner, 15 Nov: "limit the visual overload"): only the spots near the captain glow and bob;
       // the others stay on the map as faint, still rings and badges, so a dozen gold "+" never shout at once.
@@ -645,22 +722,42 @@ export function decorateIsland(place, ctx = {}) {
         for (const mesh of [marker.badge, marker.lock]) mesh.material.opacity = marker.fade;
         marker.badge.position.y = marker.badge.userData.baseY + (near ? bob : 0);
       }
-      if (!bell) return;
-      if (ringing > 0 && !still) { ringing = Math.max(0, ringing - dt); bell.rotation.z = bell.userData.art ? 0 : Math.sin(ringing * 18) * .12 * ringing; }
-      else bell.rotation.z = 0;
+      trackMotion(cabin, 'cabin');
+      trackMotion(bell, 'island-bell');
+      trackMotion(arsenalMesh, ARSENAL.art);
+      for (const [mesh, id] of campaignLandmarks) if (mesh.visible) trackMotion(mesh, id);
+      if (!paused || still) {
+        const step = Number.isFinite(dt) ? Math.min(.1, Math.max(0, dt)) : 0;
+        if (!still) landmarkClock += step;
+        ringing = still ? 0 : Math.max(0, ringing - step);
+        const ring = ringing / BELL_RING_SECONDS;
+        const motion = {time: landmarkClock, wind: frame?.weather?.wind ?? frame?.wind, night: frame?.night,
+          ring: .23 * ring ** 1.45 * Math.sin((BELL_RING_SECONDS - ringing) * 16), still};
+        for (const detail of landmarkMotion.values()) detail.update(motion);
+        // Crew sprites pivot at their ground feet. The combat renderer takes over during waves.
+        for (const mesh of shown.get('crew')?.meshes ?? []) {
+          const idle = mesh.userData.idle;
+          if (!idle) continue;
+          const phase = landmarkClock * 1.7 + idle.phase;
+          mesh.rotation.z = still ? 0 : idle.lean * Math.sin(phase);
+          mesh.scale.y = still ? 1 : 1 + .027 * Math.sin(phase * .5) ** 2;
+        }
+      }
     },
     get root() { return root; },
     get wallJoins() { return wallConnections.links; },
     retryWallArt,
     dispose() {
       if (disposed) return; disposed = true; cleanups.splice(0).forEach(stop => stop());
-      tasks.dispose(); notice.dispose(); staticArt.dispose();
+      tasks.dispose(); notice.dispose(); staticArt.dispose(); landmarkMotion.clear();
       progress?.dispose(); recoveryIndicators.dispose();
       wallConnections.dispose(); selectionBracket.dispose();
+      foundations?.dispose();
       defenseRange?.dispose();
       houseSupport?.dispose(); rangeRing?.dispose();
       place.setSelectedCanopy?.(null);
       wallFeedback?.dispose();
+      buildingFeedback?.dispose();
       place.setMooringBattle?.(false);
       for (const id of [...shown.keys()]) clear(id);
       for (const item of lockTextures.values()) item.texture.dispose(); // the padlocks a spot no longer shows

@@ -4,23 +4,22 @@
    and the toasts move under the bar while a wave runs; the musket button sits bottom right. */
 .pirate-hud{position:absolute;inset:0;pointer-events:none;z-index:35;font:16px/1.3 var(--u-font);color:var(--u-ink)}
 .pirate-hud>*{pointer-events:auto}
-.pirate-bar{position:absolute;left:50%;top:16px;transform:translateX(-50%);display:grid;grid-template-columns:minmax(140px,1fr) auto;gap:6px 14px;align-items:center;width:min(500px,calc(100vw - 24px));min-width:0;max-width:calc(100vw - 24px);box-sizing:border-box;background:var(--u-sea);padding:8px 14px;box-shadow:var(--u-frame);border-radius:var(--u-radius-sm);pointer-events:none}
+.pirate-bar{position:absolute;left:50%;top:16px;transform:translateX(-50%);display:grid;grid-template-columns:minmax(140px,1fr) auto;gap:6px 14px;align-items:center;width:min(500px,calc(100vw - 24px));min-width:0;max-width:calc(100vw - 24px);box-sizing:border-box;background:var(--u-panel-surface) var(--u-sea);padding:8px 14px;box-shadow:var(--u-frame);border-radius:var(--u-radius-sm);pointer-events:none}
 .pirate-bar-extra,.pirate-down,.pirate-event,.pirate-goal-hint,.pirate-danger{grid-column:1/-1}
 @media(max-width:480px){.pirate-bar{grid-template-columns:minmax(0,1fr);gap:5px}.pirate-bar .pirate-health-meter{width:72px}}
 .pirate-bar-text{text-align:center;font:700 16px/1.3 var(--u-font);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pirate-bar-meter{display:block;height:8px;background:var(--u-deep);border:1px solid var(--u-line)}
-.pirate-bar-fill{display:block;height:100%;width:100%;background:#9fd26a;transition:width .25s steps(4)}
-.pirate-bar-fill[data-level=low]{background:#f3c35c}.pirate-bar-fill[data-level=bad]{background:#d8553f}
+.pirate-bar-meter{display:block;height:8px;background:var(--u-deep);border:1px solid var(--u-line);box-shadow:inset 0 2px 3px #011219c7}
+.pirate-bar-fill{display:block;height:100%;width:100%;transition:width .25s steps(4)}
 .pirate-bar.pirate-hurt{background:#4a2a24}
 .pirate-countdown{position:absolute;left:50%;top:22%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;pointer-events:none;text-shadow:3px 3px #0e1c15}
-.pirate-countdown-words{font:700 16px/1.3 var(--u-font);letter-spacing:2px;text-transform:uppercase;color:var(--u-brown);background:var(--u-parch);padding:4px 14px;box-shadow:var(--u-frame);border-radius:var(--u-radius-sm)}
+.pirate-countdown-words{font:700 16px/1.3 var(--u-font);letter-spacing:2px;text-transform:uppercase;color:var(--u-brown);background:var(--u-paper-surface) var(--u-parch);padding:4px 14px;box-shadow:var(--u-frame);border-radius:var(--u-radius-sm);text-shadow:none}
 .pirate-countdown-number{font:700 88px/1 var(--u-serif);color:var(--u-gold)}
 .pirate-pop .pirate-countdown-number{animation:pirate-pop .5s steps(5) both}
 @keyframes pirate-pop{0%{transform:scale(1.5);opacity:.3}100%{transform:scale(1);opacity:1}}
 .pirate-prompt{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);min-height:48px;min-width:140px;display:flex;gap:8px;align-items:center;justify-content:center;font:700 18px/1.2 var(--u-font)}
 .pirate-prompt kbd{border:2px solid currentColor;padding:0 6px;font:inherit}
 .pirate-prompt[disabled]{opacity:.75}
-.pirate-banner{position:absolute;left:50%;top:34%;transform:translateX(-50%);display:flex;flex-direction:column;gap:6px;align-items:center;text-align:center;background:var(--u-parch);color:var(--u-pink);padding:16px 30px;box-shadow:var(--u-frame);border-radius:var(--u-radius-sm);pointer-events:none;max-width:calc(100vw - 32px);box-sizing:border-box}
+.pirate-banner{position:absolute;left:50%;top:34%;transform:translateX(-50%);display:flex;flex-direction:column;gap:6px;align-items:center;text-align:center;background:var(--u-paper-surface) var(--u-parch);color:var(--u-pink);padding:16px 30px;box-shadow:var(--u-frame);border-radius:var(--u-radius-sm);pointer-events:none;max-width:calc(100vw - 32px);box-sizing:border-box}
 .pirate-banner strong{font:700 34px/1.15 var(--u-serif);color:var(--u-pink)}.pirate-banner span{font:600 18px/1.3 var(--u-font);color:var(--u-brown)}
 /* Tower defense v2: loot this run under the bar, the boss warning, the break between waves. */
 .pirate-hud>.pirate-hurt-edge{position:absolute;inset:0;pointer-events:none;opacity:0;box-shadow:inset 0 0 0 8px #d8553f,inset 0 0 0 14px #d8553f66}
@@ -59,7 +58,7 @@
    column between 340 px margins; under 900 px they move below the card), the
    musket (bottom right) and the narrator (bottom centre). Title and loot line beside the × in its own
    corner; Next wave and Pause on one row; the Auto switch a small line below. */
-.pirate-break{position:absolute;right:20px;top:96px;display:grid;gap:6px;width:min(310px,calc(100vw - 40px));box-sizing:border-box;padding:6px 6px 4px 16px;text-align:left;background:var(--u-parch);color:var(--u-brown);box-shadow:var(--u-frame);border-radius:var(--u-radius-sm)}
+.pirate-break{position:absolute;right:20px;top:96px;display:grid;gap:6px;width:min(310px,calc(100vw - 40px));box-sizing:border-box;padding:6px 6px 4px 16px;text-align:left;background:var(--u-paper-surface) var(--u-parch);color:var(--u-brown);box-shadow:var(--u-frame);border-radius:var(--u-radius-sm)}
 .pirate-break-head{display:flex;align-items:flex-start;gap:6px}
 .pirate-break-text{flex:1;min-width:0;display:grid;gap:2px;padding-top:6px}
 .pirate-break-title{font:700 20px/1.2 var(--u-serif);color:var(--u-pink)}.pirate-break-line{font:600 16px/1.3 var(--u-font)}
@@ -111,9 +110,11 @@ html:has(.pirate-hud:not([hidden]) .pirate-bar:not([hidden])) .quest-strip{displ
    fallen captains, and the prompt held down to help a teammate up. */
 .pirate-health{display:flex;align-items:center;gap:6px;font:600 17px/1.2 var(--u-font)}
 .pirate-health-text{white-space:nowrap}
-.pirate-health-meter{display:block;width:96px;height:7px;background:var(--u-deep);border:1px solid var(--u-line)}
-.pirate-health-fill{display:block;height:100%;width:100%;background:#9fd26a;transition:width .2s steps(4)}
-.pirate-health-fill[data-level=low]{background:#f3c35c}.pirate-health-fill[data-level=bad]{background:#d8553f}
+.pirate-health-meter{display:block;width:96px;height:7px;background:var(--u-deep);border:1px solid var(--u-line);box-shadow:inset 0 2px 3px #011219c7}
+.pirate-health-fill{display:block;height:100%;width:100%;transition:width .2s steps(4)}
+.pirate-bar-fill,.pirate-health-fill{background:linear-gradient(#caed93,#82b74f)}
+:is(.pirate-bar-fill,.pirate-health-fill)[data-level=low]{background:linear-gradient(#ffe187,#e9a847)}
+:is(.pirate-bar-fill,.pirate-health-fill)[data-level=bad]{background:linear-gradient(#ff947d,#cc483a)}
 .pirate-health.pirate-flash{animation:pirate-health-hit .35s steps(3) both}
 @keyframes pirate-health-hit{0%,60%{color:#ffb0a0}100%{color:inherit}}
 /* While you are down: one slim strip inside the wave bar, under its numbers, so the fight stays in view

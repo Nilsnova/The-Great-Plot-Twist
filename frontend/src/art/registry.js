@@ -10,9 +10,16 @@ import {swivelFrames} from './swivel.js'; // D055: the swivel-gun nest
 import {arsenalFrames} from './arsenal.js';
 import {pathMarkFrames} from './path-marks.js'; // D055/D051: the path plates and skill emblems over a building
 import {homeShoreFrames} from './home-shore.js';
+import {outpostSceneryFrames} from './outpost-scenery.js';
+import {harborBuildingFrames} from './harbor-buildings.js';
+import {lighthouseFrames} from './lighthouse-buildings.js';
 
 let local = null;
-const island = () => (local ??= {...peopleFrames(), ...islandFrames(), ...campaignFrames(), ...extraFrames(), ...defensesV2Frames(), ...swivelFrames(), ...arsenalFrames(), ...pathMarkFrames(), ...homeShoreFrames()});
+const island = () => (local ??= {
+  ...peopleFrames(), ...islandFrames(), ...campaignFrames(), ...extraFrames(),
+  ...defensesV2Frames(), ...swivelFrames(), ...arsenalFrames(), ...pathMarkFrames(),
+  ...homeShoreFrames(), ...outpostSceneryFrames(), ...harborBuildingFrames(), ...lighthouseFrames(),
+});
 let fleet = null;
 const FLEET = /^(pirate-|fx-)/;
 /** True when a cartoon drawing exists for the frame name (fleet names are known by their prefix). */

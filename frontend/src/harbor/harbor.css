@@ -3,8 +3,8 @@
    harbor-. The cards also carry the old panels' marker classes (market-modal, sports-modal)
    for Escape and focus, so the first rules undo those panels' own frames. */
 .kit-modal.harbor-card{--harbor-ink:var(--u-ink);--harbor-quiet:var(--u-mute);--harbor-line:#3d6a6b;--harbor-good:#b9e39a;--harbor-bad:var(--u-rust);--harbor-warn:var(--u-gold);
-  width:min(680px,calc(100vw - 24px));max-height:calc(100dvh - 40px);padding:0 22px 22px;border:0;color:var(--u-ink);background:linear-gradient(#173c42,var(--u-sea) 40%) var(--u-sea);font:var(--u-md)/1.55 var(--u-font)}
-.kit-modal.harbor-card .kit-modal-header{margin:0 -22px 20px;padding:10px 12px 10px 22px;background:var(--u-parch)}
+  width:min(680px,calc(100vw - 24px));max-height:calc(100dvh - 40px);padding:0 22px 22px;border:0;color:var(--u-ink);background:var(--u-panel-surface) var(--u-sea);font:var(--u-md)/1.55 var(--u-font)}
+.kit-modal.harbor-card .kit-modal-header{margin:0 -22px 20px;padding:10px 12px 10px 22px;background:var(--u-paper-surface) var(--u-parch)}
 .kit-modal.harbor-card .kit-modal-body{padding:0;max-height:none;overflow:visible}
 .harbor-card :is(button,input,select,p,li,h3,small){font-family:var(--u-font)}
 .harbor-card-body,.harbor-card-main{display:grid;gap:var(--u-3)}
@@ -14,7 +14,7 @@
 .harbor-status{margin:0;padding:10px 12px;border:2px solid var(--harbor-line);background:var(--u-deep);display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .harbor-status[data-tone=warn]{border-color:var(--harbor-warn);color:var(--harbor-warn)}
 .harbor-list,.harbor-stalls{display:grid;gap:var(--u-3);margin:0;padding:0;list-style:none}
-.harbor-item,.harbor-stall{border:2px solid var(--harbor-line);padding:12px 14px;display:grid;gap:var(--u-2);background:var(--u-card);box-shadow:inset 0 2px #ffffff0f,0 3px var(--u-deep)}
+.harbor-item,.harbor-stall{border:2px solid var(--harbor-line);padding:12px 14px;display:grid;gap:var(--u-2);background:var(--u-chip-surface) var(--u-card);box-shadow:inset 0 1px #b9dcd932,0 3px var(--u-deep)}
 .harbor-item p,.harbor-stall p{margin:0}
 .harbor-item-top{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px}
 .harbor-item-title{margin:0;font:700 var(--u-md)/1.35 var(--u-serif);color:var(--u-gold);overflow-wrap:anywhere}

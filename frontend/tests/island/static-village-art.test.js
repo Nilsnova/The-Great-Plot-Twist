@@ -35,6 +35,106 @@ it('prepares static bell/tech art at the same ground foot and keeps authoritativ
   expect(drawing.root.children.filter(mesh => mesh.name === 'island-arsenal')).toHaveLength(1); expect(load.mock.calls.filter(([ids]) => ids.includes(ARSENAL.art))).toHaveLength(1); drawing.dispose();
 });
 
+it('swings the native bell metal without moving its pavilion, stops for reduced motion, and freezes on pause', async () => {
+  let reducedMotion = false;
+  const bellMap = material();
+  bellMap.map.image = {width: 224, height: 288};
+  bellMap.map.userData.villageArt = {source: 'png'};
+  const load = async ids => Object.fromEntries(ids.map(id => [id, id === 'island-bell' ? bellMap : material()]));
+  const {drawing} = start(load, {reducedMotion: () => reducedMotion});
+  await flush();
+  const bell = drawing.root.getObjectByName('island-bell'), foot = bell.position.clone();
+  drawing.update(.02);
+  const shader = {uniforms: {}, vertexShader: '#include <begin_vertex>', fragmentShader: '#include <map_fragment>'};
+  bellMap.onBeforeCompile(shader);
+  const angle = shader.uniforms.uLandmarkRing;
+  expect(angle.value).toBe(0);
+  drawing.ring(); drawing.update(.08);
+  expect(angle.value).toBeGreaterThan(.15);
+  const swinging = angle.value;
+  drawing.update(.9, 1, true);
+  expect(angle.value).toBe(swinging);
+  expect(bell.position.equals(foot)).toBe(true);
+  expect(bell.rotation.z).toBe(0);
+  expect(bell.userData.ground).toEqual({x: BELL.x, z: BELL.z});
+  reducedMotion = true; drawing.update(.02, 1, true);
+  expect(angle.value).toBe(0);
+  reducedMotion = false; drawing.update(.10, 1.1);
+  expect(angle.value).toBe(0);
+  drawing.dispose();
+});
+
+it('adds service detail motion as the actual campaign frames become visible', async () => {
+  const ids = ['island-harbor', 'island-techhub', 'island-wreck', 'island-wreck-mended'];
+  const native = Object.fromEntries(ids.map(id => {
+    const resource = material();
+    resource.map.userData.villageArt = {source: 'png'};
+    return [id, resource];
+  }));
+  const keys = () => ids.map(id => native[id].customProgramCacheKey().includes(':landmark:'));
+  const load = async names => Object.fromEntries(names.map(id => [id, native[id] ?? material()]));
+  const {drawing} = start(load);
+  await flush(); drawing.apply(state(false, 0)); drawing.update(.02);
+  expect(keys()).toEqual([false, false, false, false]);
+  const unlocked = state(false, 13);
+  drawing.apply(unlocked); drawing.update(.02);
+  expect(keys()).toEqual([true, true, false, false]);
+  const repaired = {...unlocked, campaign: {...unlocked.campaign, wreck: {paid: 500, goal: 500}}};
+  drawing.apply(repaired); drawing.update(.02);
+  expect(keys()).toEqual([true, true, false, true]);
+  drawing.dispose();
+});
+
+it('shifts hired crew at their station, holds during pause, and restores the still pose', async () => {
+  let reducedMotion = false;
+  const load = async names => Object.fromEntries(names.map(id => [id, material()]));
+  const {drawing} = start(load, {reducedMotion: () => reducedMotion});
+  const village = {spots: [{id: 'cannon_1', kind: 'cannon', built: true, level: 1}], crew: {gunner: 1, lookout: 1}};
+  drawing.apply(village); await flush();
+  const gunner = drawing.root.getObjectByName('island-crew:gunner:cannon_1');
+  const foot = gunner.position.clone();
+  drawing.update(.1);
+  const first = gunner.rotation.z;
+  drawing.update(.1);
+  const second = gunner.rotation.z;
+  expect(second).not.toBe(first);
+  expect(gunner.position.equals(foot)).toBe(true);
+  drawing.update(.1, 0, true);
+  expect(gunner.rotation.z).toBe(second);
+  reducedMotion = true;
+  drawing.update(.1, 0, true);
+  expect(gunner.rotation.z).toBe(0);
+  expect(gunner.scale.y).toBe(1);
+  drawing.apply({...village, battle: true});
+  expect(drawing.root.getObjectByName('island-crew:gunner:cannon_1')).toBeUndefined();
+  drawing.dispose();
+});
+
+it('lights the intact defense artwork without moving its base and suspends the idle light during pause or Reduced Motion', async () => {
+  let reducedMotion = false;
+  const cannon = material();
+  cannon.map.userData.villageArt = {source: 'png'};
+  const load = async ids => Object.fromEntries(ids.map(id => [id, id === 'island-cannon-l2' ? cannon : material()]));
+  const {drawing} = start(load, {reducedMotion: () => reducedMotion});
+  drawing.apply({spots: [{id: 'cannon_1', kind: 'cannon', built: true, level: 2}]});
+  await drawing.retryArt();
+  const post = drawing.root.getObjectByName('island-cannon:cannon_1'), foot = post.position.clone();
+  const shader = {uniforms: {}, vertexShader: '#include <begin_vertex>', fragmentShader: '#include <map_fragment>'};
+  cannon.onBeforeCompile(shader);
+  const {uLandmarkMetal: metal, uLandmarkClock: clock, uLandmarkFlicker: flicker} = shader.uniforms;
+  expect(metal.value).toEqual([.43, .10, .86, .47]);
+  drawing.update(.08);
+  expect(clock.value).toBe(.08);
+  expect(flicker.value).toBeGreaterThan(0);
+  drawing.update(.1, 1, true);
+  expect(clock.value).toBe(.08);
+  expect(post.position.equals(foot)).toBe(true);
+  reducedMotion = true;
+  drawing.update(.1, 1.1, true);
+  expect(flicker.value).toBe(0);
+  drawing.dispose();
+});
+
 it('reports main artwork failure, coalesces actual retries and clears the failure only after success', async () => {
   let fail = true; const errors = [], views = [], next = deferred();
   const load = vi.fn(async ids => {

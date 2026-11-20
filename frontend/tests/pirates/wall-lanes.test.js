@@ -1,17 +1,16 @@
-// D056 "Every wall stands on a pirate path": the wall lanes are the sim's own routes (src/pirates/wall-lanes.js),
-// both stored copies equal that derivation, every wall of the default layout and of a random legal layout stands on
-// one, boarders hack those walls in the real sim, a gap-free line across a lane holds them, and no boarder ever
-// stands inside a standing wall.
+// Historical D056 lanes and old paid walls still run through the same simulation. The perimeter
+// placement rules for new and moved walls are covered by the island placement tests.
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { createWave } from '../../src/pirates/sim.js';
 import { deriveWallLanes, laneRoutes, stoppedBearings } from '../../src/pirates/wall-lanes.js';
 import { WALL_LANE_ROWS } from '../../src/island/wall-lanes.js';
-import { checkMove, onWallLane, positionsOf, OFF_PATH } from '../../src/island/placement.js';
 import { SPOTS } from '../../src/island/spots.js';
 
 const server = JSON.parse(readFileSync(new URL('../../../backend/content/island_layout.json', import.meta.url), 'utf8'));
 const WALL_IDS = SPOTS.filter(spot => spot.slot === 'wall').map(spot => spot.id);
+const legacyLane = (x, z) => WALL_LANE_ROWS.some(([row, ...runs]) => row === z
+  && runs.some((start, index) => index % 2 === 0 && x >= start && x <= runs[index + 1]));
 const laneCells = () => WALL_LANE_ROWS.flatMap(([z, ...runs]) => {
   const out = [];
   for (let i = 0; i < runs.length; i += 2) for (let x = runs[i]; x <= runs[i + 1] + 1e-9; x += .5) out.push({ x, z });
@@ -50,23 +49,15 @@ describe('wall lanes (D056)', () => {
     }
   });
 
-  it('hold every wall of the default layout, and a wall alone on each of them stops boarders', () => {
+  it('hold every wall of the original layout, and a legacy wall alone on each of them stops boarders', () => {
     for (const id of WALL_IDS) {
       const spot = SPOTS.find(item => item.id === id);
-      expect(onWallLane(spot.x, spot.z), id).toBe(true);
+      expect(legacyLane(spot.x, spot.z), id).toBe(true);
       expect(stoppedBearings(spot.x, spot.z).length, id).toBeGreaterThanOrEqual(3);
     }
   });
 
-  it('refuse a wall off every path in Move mode, but not a tower', () => {
-    const placed = positionsOf();
-    expect(checkMove('wall_1', -4, -5.5, placed)).toEqual({ ok: false, code: 'off_path', message: OFF_PATH });
-    expect(OFF_PATH).toBe('Walls go on a pirate path.');
-    expect(checkMove('wall_1', -12, .5, placed)).toEqual({ ok: true });
-    expect(checkMove('cannon_1', -4, -9, placed)).toEqual({ ok: true });
-  });
-
-  it('in the default layout: boarders hack every wall and never stand inside one', () => {
+  it('in the original layout: boarders hack every wall and never stand inside one', () => {
     const walls = WALL_IDS.map(id => { const spot = SPOTS.find(item => item.id === id); return [id, spot.x, spot.z]; });
     const hacks = {}, inside = [];
     for (const [wave, seed] of [[8, 1], [8, 2], [20, 1], [20, 2]]) {
@@ -78,17 +69,20 @@ describe('wall lanes (D056)', () => {
     expect(inside).toEqual([]);
   }, 60_000);
 
-  it('in a random legal layout: every wall stands on a route, boarders hack walls, none stands inside one', () => {
-    const roll = dice(56), cells = laneCells(), placed = positionsOf();
+  it('in a sampled historical layout: boarders hack walls and none stands inside one', () => {
+    const roll = dice(56), cells = laneCells();
+    const placed = Object.fromEntries(SPOTS.filter(spot => spot.slot === 'wall').map(spot => [spot.id, spot]));
     for (const id of WALL_IDS) {
       for (let tries = 0; tries < 500; tries++) {
         const cell = cells[Math.floor(roll() * cells.length)];
-        if (checkMove(id, cell.x, cell.z, placed).ok) { placed[id] = { x: cell.x, z: cell.z }; break; }
+        const overlap = Object.entries(placed).some(([other, point]) => other !== id
+          && Math.abs(cell.x - point.x) < 2 && Math.abs(cell.z - point.z) < 2);
+        if (!overlap) { placed[id] = cell; break; }
       }
     }
     const walls = WALL_IDS.map(id => [id, placed[id].x, placed[id].z]);
     for (const [id, x, z] of walls) {
-      expect(onWallLane(x, z), id).toBe(true);
+      expect(legacyLane(x, z), id).toBe(true);
       expect(stoppedBearings(x, z).length, id).toBeGreaterThanOrEqual(3);
     }
     const run = play(walls, { wave: 15, seed: 3 });
@@ -127,7 +121,7 @@ describe('wall lanes (D056)', () => {
 
   it('a gap-free line across the east lane makes its boarders hack, not walk round', () => {
     const line = [-3, -1, 1, 3].map((z, i) => [`wall_${i + 1}`, 17, z]);
-    for (const [, x, z] of line) expect(onWallLane(x, z)).toBe(true);
+    for (const [, x, z] of line) expect(legacyLane(x, z)).toBe(true);
     for (const seed of [1, 2]) {
       const defenses = line.map(([id, x, z]) => ({ id, kind: 'wall', level: 5, x, z }));
       const sim = createWave({ seed: seed * 7919, wave: 8, defenses, pathing: true }), east = new Set();

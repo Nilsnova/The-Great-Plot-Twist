@@ -7,10 +7,19 @@ const UNIT = 16;
 const HEIGHTS = [.85, .95, 1.10, 1.20, 1.30];
 const BASE_HALF = .47, BODY_HALF = .38, CROWN_HALF = .28;
 const PLINTH_HEIGHT = .20, BEVEL_HEIGHT = .13;
+const CROWN_LIGHT = 1.09;
 const POST_WIDTH = .60, POST_HEIGHT = .65;
 const END = .84;
 // The pale stone sheet starts another bright course at the bottom of the existing face samples.
 const PALE_STONE_BASE_INSET = {front: 1 / 12, side: 1 / 16};
+// The upper tiers already have carved joints and gold hardware. Tilt the light across the
+// existing faces and soften the large brass caps between the brighter heraldic posts.
+const HIGH_COURSES = {
+  foot: [.84, .84, 1.02, 1.05],
+  stone: [.94, .91, 1.26, 1.30],
+  bevel: [.76, .80, .92, .97],
+  crown: [.85, .77, .74, .82],
+};
 export function wallVisualRows(spots = []) {
   return spots.filter(row => row?.built === true && row.kind === 'wall' && typeof row.id === 'string'
     && Number.isFinite(row.x) && Number.isFinite(row.z)).map(row => ({id: row.id, x: row.x, z: row.z,
@@ -25,13 +34,14 @@ export function texturedWallBatches(links, posts, art, {selectedId = null, selec
     if (!layers.has(order)) layers.set(order, {positions: [], ground: [], uvs: [], colors: [], indices: []});
     return layers.get(order);
   };
-  function quad(layer, points, id, shade = 1, trim = [0, 1]) {
+  function quad(layer, points, id, shade = 1, trim = [0, 1], light = null) {
     const frame = art.rects[id]; if (!frame) return;
     const first = layer.positions.length / 3;
-    for (const [x, y, groundX, groundZ] of points) {
+    for (const [index, [x, y, groundX, groundZ]] of points.entries()) {
+      const brightness = shade * (light?.[index] ?? 1);
       layer.positions.push(x, y, 0);
       layer.ground.push(groundX, groundZ);
-      layer.colors.push(shade, shade, shade);
+      layer.colors.push(brightness, brightness * .982, brightness * .939);
     }
     const u0 = (frame.x + .5) / art.width, u1 = (frame.x + frame.w - .5) / art.width;
     const base = 1 - (frame.y + frame.h - .5) / art.height;
@@ -43,6 +53,7 @@ export function texturedWallBatches(links, posts, art, {selectedId = null, selec
   }
   function span(link, layer, showEnd = false) {
     const height = HEIGHTS[link.level - 1];
+    const light = link.level >= 4 ? HIGH_COURSES : null;
     const vertical = link.x0 === link.x1;
     function ring(half, lift) {
       const x0 = Math.min(link.x0, link.x1) - (vertical ? half : 0);
@@ -60,14 +71,14 @@ export function texturedWallBatches(links, posts, art, {selectedId = null, selec
       const id = wallSurfaceFrame(link.level, name);
       const inset = link.level === 2 ? PALE_STONE_BASE_INSET[name] : 0;
       const strip = (low, high) => [low[start], low[end], high[end], high[start]];
-      quad(layer, strip(foot, shoulder), id, shade * .62, [inset, .32]);
-      quad(layer, strip(shoulder, lip), id, shade, [.32, 1]);
-      quad(layer, strip(lip, crown), wallSurfaceFrame(link.level, 'top'), shade * .86);
+      quad(layer, strip(foot, shoulder), id, shade * .61, [inset, .32], light?.foot);
+      quad(layer, strip(shoulder, lip), id, shade, [.32, 1], light?.stone);
+      quad(layer, strip(lip, crown), wallSurfaceFrame(link.level, 'top'), shade * .92, undefined, light?.bevel);
     }
     // The positive X and Z faces are camera-facing under the village projection.
-    if (!vertical || showEnd) side(3, 2, 'front', .86);
-    if (vertical || showEnd) side(1, 2, 'side', .69);
-    quad(layer, crown, wallSurfaceFrame(link.level, 'top'), .96);
+    if (!vertical || showEnd) side(3, 2, 'front', .94);
+    if (vertical || showEnd) side(1, 2, 'side', .74);
+    quad(layer, crown, wallSurfaceFrame(link.level, 'top'), CROWN_LIGHT, undefined, light?.crown);
   }
   const byId = new Map(posts.map(post => [post.id, post]));
   for (const link of links) {
@@ -109,7 +120,8 @@ export function texturedWallBatches(links, posts, art, {selectedId = null, selec
       const height = HEIGHTS[post.level - 1];
       quad(layer, [[post.x-CROWN_HALF,post.z-CROWN_HALF],[post.x+CROWN_HALF,post.z-CROWN_HALF],
         [post.x+CROWN_HALF,post.z+CROWN_HALF],[post.x-CROWN_HALF,post.z+CROWN_HALF]]
-        .map(([x,z]) => {const point=projectPoint(x,z);return [point.x,point.y+height+.02,x,z];}), wallSurfaceFrame(post.level,'top'));
+        .map(([x,z]) => {const point=projectPoint(x,z);return [point.x,point.y+height+.02,x,z];}),
+        wallSurfaceFrame(post.level,'top'), CROWN_LIGHT, undefined, post.level >= 4 ? HIGH_COURSES.crown : null);
       continue;
     }
     // Damage and selection never enlarge a post. Scale around its source foot,

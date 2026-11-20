@@ -2,7 +2,7 @@
 // market stall, the Tech hub's workshop, the wreck on the beach (and her mended hull), and the building site
 // that stands where something opens later, with a sign that shows the wave it opens after. Seen from the
 // game's three-quarter camera like the rest of src/art/island.js. Original designs, painted in code.
-import {INK, ellipse, line, mix, part, poly, rect, shadow, stroke} from './paint.js';
+import {INK, ellipse, line, linear, mix, part, poly, rect, shadow, stroke} from './paint.js';
 import {groundRing} from './island.js';
 
 const WOOD = '#a8693a', WOOD_LIGHT = '#c98a4e', WOOD_DARK = '#7a4a2a', STONE = '#a9a39a', STONE_LIGHT = '#cfc8bb';
@@ -11,27 +11,50 @@ const BRASS = '#f2c14e', IRON = '#3e4250', TEAL = '#2c7f8c', TEAL_LIGHT = '#4fb0
 // The Harbor: a plank stall with a striped awning, crates and a little flag (80 x 72).
 function harbor(c, {w, h}) {
   const g = h - 8, cx = w / 2; shadow(c, cx, g, 34, 6);
-  for (const x of [cx - 30, cx + 26]) part(c, rect(x, g - 44, 4, 44, 1.2), WOOD_DARK, {depth: 1, width: 1.1});
-  part(c, rect(cx - 32, g - 18, 64, 18, 2), WOOD, {depth: 2.6, width: 1.3, gloss: rect(cx - 29, g - 16, 50, 1.6, .8), light: WOOD_LIGHT});
-  for (let x = cx - 26; x < cx + 30; x += 10) stroke(c, line([[x, g - 17], [x, g - 1]]), WOOD_DARK, .9);
-  part(c, rect(cx - 34, g - 21, 68, 4.6, 1.6), WOOD_LIGHT, {depth: .8, width: 1.1});
+  const oak = linear(c, 0, g - 44, 0, g, [[0, '#bb8753'], [.42, '#8b5b3f'], [1, '#684531']]);
+  for (const x of [cx - 30, cx + 26]) {
+    part(c, rect(x, g - 44, 4, 44, 1.2), oak, {width: 1.1});
+    stroke(c, [[x + 1, g - 38], [x + 1, g - 22]], '#d49a5d', .68);
+  }
+  part(c, rect(cx - 32, g - 18, 64, 18, 2),
+    linear(c, 0, g - 18, 0, g, [[0, '#78513b'], [.2, '#b07a4b'], [.67, '#97613e'], [1, '#6e4935']]),
+    {width: 1.3});
+  for (let x = cx - 26; x < cx + 30; x += 10) {
+    stroke(c, [[x, g - 16.4], [x, g - 1]], '#744b35', .75);
+    stroke(c, [[x + 1.35, g - 15], [x + 1.35, g - 3]], '#c18b56', .55);
+  }
+  part(c, rect(cx - 34, g - 21, 68, 4.6, 1.6),
+    linear(c, 0, g - 21, 0, g - 16.4, [[0, '#dba86d'], [.42, '#b7804e'], [.6, '#90613f'], [1, '#6a4834']]),
+    {width: 1.1, gloss: rect(cx - 30.5, g - 20.4, 58, .8, .4), light: '#e9b984'});
   // Goods on the counter: a coin pile, a jar, a small chart.
   for (const [x, y] of [[cx - 20, g - 23], [cx - 16, g - 24.5], [cx - 18, g - 26]]) part(c, ellipse(x, y, 3, 1.4), BRASS, {width: .8, shade: false});
-  part(c, rect(cx - 4, g - 30, 7, 9, 2.4), '#7fd0e0', {depth: .8, width: 1, gloss: rect(cx - 2.6, g - 28.6, 1.4, 5, .6)});
+  part(c, rect(cx - 4, g - 30, 7, 9, 2.4), '#6aa5ad',
+    {depth: .8, width: 1, gloss: rect(cx - 2.6, g - 28.6, 1.2, 5, .6), light: '#aad1ca'});
   part(c, rect(cx + 9, g - 25, 14, 4, 1), CREAM, {width: .9, shade: false}); stroke(c, line([[cx + 11, g - 23], [cx + 21, g - 23]]), RED, .8);
   // The awning: red and cream stripes with a scalloped edge.
   const top = g - 52, edge = g - 40;
   const roof = poly([[cx - 38, edge], [cx - 30, top], [cx + 30, top], [cx + 38, edge]], [2, 2, 2, 2]);
-  part(c, roof, CREAM, {depth: 2.4, width: 1.4});
+  const ivory = linear(c, 0, top, 0, edge + 2.6, [[0, '#e5ccab'], [.36, '#ffedcc'], [.73, '#edd7b4'], [1, '#ba9675']]);
+  const canvasRed = linear(c, 0, top, 0, edge + 2.6, [[0, '#b86c54'], [.35, '#cb8061'], [.73, '#ac533f'], [1, '#753c35']]);
+  part(c, roof, ivory, {width: 1.4, line: '#5d4337'});
   c.save(); c.clip(roof);
-  for (let x = cx - 40; x < cx + 40; x += 16) { c.fillStyle = RED; c.beginPath(); c.moveTo(x, edge); c.lineTo(x + 6, top); c.lineTo(x + 14, top); c.lineTo(x + 8, edge); c.closePath(); c.fill(); }
+  c.fillStyle = canvasRed;
+  for (let x = cx - 40; x < cx + 40; x += 16) {
+    c.fill(poly([[x, edge], [x + 6, top], [x + 14, top], [x + 8, edge]], 0));
+  }
+  stroke(c, [[cx - 31.2, top + 1.3], [cx + 31.2, top + 1.3]], '#f6dcaa', .7, .6);
   c.restore();
-  for (let x = cx - 38; x < cx + 38; x += 8) part(c, ellipse(x + 4, edge, 4, 2.6, 0), (Math.floor((x - cx + 38) / 8) % 2) ? CREAM : RED, {width: 1, shade: false});
+  for (let x = cx - 38; x < cx + 38; x += 8) {
+    const alternate = Math.floor((x - cx + 38) / 8) % 2;
+    part(c, ellipse(x + 4, edge, 4, 2.6), alternate ? ivory : canvasRed, {width: 1, line: '#694737'});
+  }
   // Crates beside the stall and the harbor flag.
-  part(c, rect(cx + 30, g - 13, 11, 13, 1.4), WOOD_LIGHT, {depth: 1.4, width: 1.1});
+  part(c, rect(cx + 30, g - 13, 11, 13, 1.4), '#b9814f', {depth: 1.4, width: 1.1, shade: '#78533a'});
   stroke(c, line([[cx + 31, g - 12], [cx + 40, g - 1]]), WOOD_DARK, 1.1);
-  part(c, rect(cx - 1, top - 14, 2, 15, .6), WOOD_DARK, {width: .8});
-  part(c, poly([[cx + 1, top - 14], [cx + 13, top - 11], [cx + 1, top - 7]], .8), TEAL, {depth: .8, width: 1});
+  part(c, rect(cx - 1, top - 14, 2, 15, .6), WOOD_DARK, {width: .8, shade: '#50382b'});
+  part(c, poly([[cx + 1, top - 14], [cx + 13, top - 11], [cx + 1, top - 7]], .8), '#4b6280',
+    {depth: .8, width: 1, shade: '#2f3e59'});
+  stroke(c, [[cx + 2, top - 12.5], [cx + 8.2, top - 11.1]], '#d4a15f', .7);
 }
 
 // The Tech hub: a stone workshop with a brass dome, a big gear on the front and a chimney (80 x 88).
@@ -89,15 +112,25 @@ function wreck(mended) {
 function site(wave) {
   return (c, {w, h}) => {
     const g = h - 6, cx = w / 2; shadow(c, cx, g, 26, 5);
-    part(c, ellipse(cx, g - 3, 26, 7), '#d9c08f', {depth: 1, width: 1.2, shade: '#c4a874'});
-    for (const [x, y] of [[cx - 22, g - 4], [cx + 22, g - 4], [cx - 12, g + 1], [cx + 12, g + 1]]) part(c, rect(x - 1.3, y - 10, 2.6, 10, .8), WOOD_DARK, {width: .9});
-    stroke(c, line([[cx - 22, g - 12], [cx - 12, g - 8], [cx + 12, g - 8], [cx + 22, g - 12]]), '#e8d6a8', 1.2);
-    part(c, rect(cx - 20, g - 12, 10, 8, 1.2), WOOD_LIGHT, {depth: 1, width: 1}); stroke(c, line([[cx - 19, g - 11], [cx - 11, g - 5]]), WOOD_DARK, .9);
+    part(c, ellipse(cx, g - 3, 26, 7),
+      linear(c, 0, g - 10, 0, g + 4, [[0, '#ddc7a1'], [.57, '#c6ad87'], [1, '#a68a69']]),
+      {width: 1.2, line: '#79654d'});
+    for (const [x, y] of [[cx - 22, g - 4], [cx + 22, g - 4], [cx - 12, g + 1], [cx + 12, g + 1]]) {
+      part(c, rect(x - 1.3, y - 10, 2.6, 10, .8), '#ad7e53', {width: .9, shade: '#694735'});
+    }
+    const rope = [[cx - 22, g - 12], [cx - 12, g - 8], [cx + 12, g - 8], [cx + 22, g - 12]];
+    stroke(c, rope, '#775b42', 1.75);
+    stroke(c, rope, '#ead5a8', .95);
+    part(c, rect(cx - 20, g - 12, 10, 8, 1.2), '#bc8b5d', {depth: 1, width: 1, shade: '#7b553a'});
+    stroke(c, [[cx - 19, g - 11], [cx - 11, g - 5]], '#966843', .9);
     // The signpost with the wave number.
-    part(c, rect(cx + 5, g - 32, 3, 28, 1), WOOD_DARK, {depth: .8, width: 1});
-    part(c, rect(cx - 6, g - 46, 26, 16, 3), CREAM, {depth: 1.6, width: 1.3});
+    part(c, rect(cx + 5, g - 32, 3, 28, 1), '#a16e48', {depth: .8, width: 1, shade: '#654433'});
+    part(c, rect(cx - 6, g - 46, 26, 16, 3),
+      linear(c, 0, g - 46, 0, g - 30, [[0, '#e5b479'], [.45, '#b07a4c'], [1, '#805334']]), {width: 1.3});
+    part(c, rect(cx - 3.6, g - 43.8, 21.2, 11.8, 1.4),
+      linear(c, 0, g - 43.8, 0, g - 32, [[0, '#3b5169'], [1, '#253346']]), {line: '#6a4933', width: .7});
     if (wave) {
-      c.save(); c.fillStyle = INK; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = 'bold 10px sans-serif';
+      c.save(); c.fillStyle = CREAM; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = 'bold 10px sans-serif';
       c.fillText(String(wave), cx + 7, g - 37.6); c.restore();
     }
     // A padlock on the post.

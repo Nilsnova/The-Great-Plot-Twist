@@ -11,9 +11,8 @@
 //   - the goal: a gold ring and a heart badge on the island's heart;
 //   - the walls: a small hp bar over every wall that is hurt or being hacked (green, yellow, red), and a broken
 //     wall's gap outlined in red with a rubble badge.
-// Between waves (no wave, or the break after a won one) the same landings and routes show faintly, so players
-// can put walls and towers where the pirates will walk, over the wall lanes (D056, island/wall-lanes.js): a faint
-// gold band where a wall stops the pirates, the only ground a wall may stand on.
+// Between waves the landings and routes show faintly. Small gold markers trace the single wall
+// row along Home Island's grass edge.
 //
 // The pure part (tested in tests/pirates/battle-guide.test.js) works out landings and routes; the drawing part
 // is one instanced quad mesh on the ground and one in the air, like render.js's layers. Nothing is allocated per
@@ -24,7 +23,7 @@ import { createBoarderPaths, WALL_FOOTPRINT } from './boarder-paths.js';
 import { towerMaxHp } from './tower-health.js';
 import { blocksAsTower } from './tower-obstacles.js';
 import { toScreen } from '../world/pixel-glsl.js';
-import { WALL_LANE_ROWS } from '../island/wall-lanes.js';
+import { WALL_PERIMETER_CELLS } from '../island/wall-perimeter.js';
 import { classifyApproach, sampleSeaApproaches } from '../island/coverage-model.js';
 import {projectGround, LEGACY_DEPTH, groundProjectionGlsl} from '../world/projection.js';
 
@@ -34,7 +33,7 @@ export const GUIDE = Object.freeze({
   heartReach: CONFIG.boarding.heartRadius,
   dotEvery: 1,         // one dot per grid cell (1 unit)
   previewAlpha: .38,   // between waves: the routes and landings are a faint preview (dots only, no chevrons)
-  laneAlpha: .16,      // between waves: the wall lanes (D056) under the routes
+  laneAlpha: .26,      // between waves: low-contrast studs mark the wall perimeter
   chevronEvery: 6,     // in a wave: one chevron every this many cells (more on a phone), small dots between
   barShow: 1,          // a wall bar shows below this share of hp (or while the wall is hacked)
 });
@@ -199,16 +198,16 @@ const round2 = value => Math.round(value * 100) / 100;
 // ---------------------------------------------------------------- drawing
 
 const SHAPE = { disc: 0, ring: 1, chevron: 2, icon: 3, box: 4, dashed: 5,
-  gap: 6, conditional: 7, unknown: 8 };
+  gap: 6, conditional: 7, unknown: 8, lane: 9 };
 const ICONS = ['skull', 'heart', 'rubble'];
 const ICON_PX = 64;
 const vertex = /* glsl */`
 ${groundProjectionGlsl}
 uniform bool uGround;
 attribute vec4 iPos;attribute vec2 iSize;attribute vec4 iColor;attribute vec4 iUv;
-varying vec2 vLocal;varying vec4 vColor;varying vec2 vUv;varying float vShape;
+varying vec2 vLocal;varying vec4 vColor;varying vec2 vUv;varying float vShape,vSpan;
 void main(){
-  vec2 corner=position.xy;vLocal=corner*2.0-1.0;vShape=iPos.w;vColor=iColor;vUv=mix(iUv.xy,iUv.zw,corner);
+  vec2 corner=position.xy;vLocal=corner*2.0-1.0;vShape=iPos.w;vSpan=iSize.x;vColor=iColor;vUv=mix(iUv.xy,iUv.zw,corner);
   vec2 local=(corner-.5)*iSize;float c=cos(iPos.z),s=sin(iPos.z);
   local=vec2(local.x*c-local.y*s,local.x*s+local.y*c);
   vec2 at=iPos.xy+local;
@@ -216,17 +215,25 @@ void main(){
   gl_Position=projectionMatrix*viewMatrix*vec4(at,0.0,1.0);
 }`;
 const fragment = /* glsl */`
-uniform sampler2D uIcons;varying vec2 vLocal;varying vec4 vColor;varying vec2 vUv;varying float vShape;
+uniform sampler2D uIcons;varying vec2 vLocal;varying vec4 vColor;varying vec2 vUv;varying float vShape,vSpan;
 void main(){
   float r=length(vLocal),a=vColor.a;vec3 rgb=vColor.rgb;
   if(vShape<.5){a*=1.0-smoothstep(.82,1.0,r);}
-  else if(vShape<1.5){a*=smoothstep(.62,.72,r)*(1.0-smoothstep(.9,1.0,r));}
+  else if(vShape<1.5){
+    float rim=smoothstep(.853,.887,r)*(1.0-smoothstep(.930,.962,r));
+    float glow=smoothstep(.76,.9,r)*(1.0-smoothstep(.92,1.0,r));
+    a*=max(rim,.24*glow);
+  }
   else if(vShape<2.5){float x=vLocal.x,y=abs(vLocal.y);
     // A chevron pointing along +x: the big arrowhead minus a smaller one set back behind it.
     a*=step(-.75,x)*step(y,(.85-x)*.62)*(1.0-step(y,(.1-x)*.62));}
   else if(vShape<3.5){vec4 t=texture2D(uIcons,vUv);a*=t.a;rgb=t.rgb*vColor.rgb;}
   else if(vShape>4.5&&vShape<5.5){// T50: a landing ring, cut into 14 dashes.
     a*=smoothstep(.66,.74,r)*(1.0-smoothstep(.9,1.0,r))*step(0.0,sin(atan(vLocal.y,vLocal.x)*14.0));}
+  else if(vShape>8.5){
+    float cells=abs(fract((vLocal.x+1.0)*vSpan)-.5)*2.0;
+    a*=1.0-smoothstep(.24,.54,length(vec2(cells,vLocal.y)));
+  }
   else if(vShape>5.5){
     vec2 p=abs(vLocal);
     float d=vShape>6.5&&vShape<7.5?p.x+p.y:max(p.x,p.y);
@@ -319,7 +326,7 @@ export function skullAt(landing, heart = CONFIG.boarding.heart, walls = [], scal
   return [round2(landing.x + dx / d * SKULL_SHIFT * scale), round2(landing.z + dz / d * SKULL_SHIFT * scale)];
 }
 const RGB = hex => { const c = new THREE.Color(hex); return { r: c.r, g: c.g, b: c.b }; };
-const LANE = RGB('#ffe08a'), RED = RGB('#ff4a36'), DARK = RGB('#1f2622'), GOLD = RGB('#ffd34d'), WHITE = { r: 1, g: 1, b: 1 };
+const LANE = RGB('#ffe08a'), RED = RGB('#ff4a36'), DARK = RGB('#1f2622'), GOLD = RGB('#f8dc98'), WHITE = { r: 1, g: 1, b: 1 };
 const BAR = { good: RGB('#7ed957'), low: RGB('#ffd34d'), bad: RGB('#ff4a36') };
 const COVERAGE_MARKS = {
   uncovered: {shape: SHAPE.gap, width: .89, height: 1.26, color: {...RGB('#f0e1c4'), a: .86}},
@@ -332,7 +339,7 @@ const COVERAGE_MARKS = {
  * view: null (hide), or {mode: 'preview'|'wave', lanes (the wave_started lanes, or null: every sea lane), defenses
  * (where the walls stand), stateWalls (the sim's walls in a wave, else null), boarders, heart: {x, z}, wave, dt}.
  * Preview coverage replaces the guide drawings with classified marks. Its version changes with layout and stats.
- * preview draws faintly, over the wall lanes, without wall marks (view.wallLanes: false leaves the lanes out); wave draws everything. The
+ * Preview marks the perimeter (view.wallLanes: false leaves it out). During waves the guide shows damage instead. The
  * routes are worked out again only when routeKey() changes (position, maximum hp or quarter-health band).
  */
 // sparse(): a phone-sized screen (overlap audit, 15 Nov): half the dots and fewer chevrons, so the routes stay readable.
@@ -430,20 +437,18 @@ export function createBattleGuide({ scene, reducedMotion = () => false, characte
     const badge = projectGround(sx, sz);
     air.push(SHAPE.icon, badge.x, badge.y + 1.5 * k, 1.8 * k, 1.8 * k, { ...WHITE, a: Math.min(1, alpha + .3) }, { icon: 'skull' });
   }
-  // D056: one box per run of a wall lane row (every half unit from x0 to x1 on row z, one grid cell round each).
   let laneBoxes = 0;
   function drawLanes() {
-    laneBoxes = 0;
-    for (const [z, ...runs] of WALL_LANE_ROWS) for (let i = 0; i < runs.length; i += 2) {
-      const w = runs[i + 1] - runs[i] + .5;
-      ground.push(SHAPE.box, (runs[i] + runs[i + 1]) / 2, drawnY(z), w, .5 * Y, { ...LANE, a: GUIDE.laneAlpha });
-      laneBoxes++;
+    for (const {x, z} of WALL_PERIMETER_CELLS) {
+      ground.push(SHAPE.lane, x, drawnY(z), .8, .8 * Y, { ...LANE, a: GUIDE.laneAlpha });
     }
+    laneBoxes = WALL_PERIMETER_CELLS.length;
   }
   function drawHeart(heart, live) {
     const pulse = still() ? 1 : 1 + (live ? .08 : .04) * Math.sin(clock * 3), y = drawnY(heart.z), r = 4 * k * pulse;
-    ground.push(SHAPE.ring, heart.x, y, r + .3 * k, (r + .3 * k) * Y, { ...DARK, a: .55 });
-    ground.push(SHAPE.ring, heart.x, y, r, r * Y, { ...GOLD, a: live ? .95 : .75 });
+    const edge = r + .12 * k;
+    ground.push(SHAPE.ring, heart.x, y, edge, edge * Y, { ...DARK, a: live ? .44 : .36 });
+    ground.push(SHAPE.ring, heart.x, y, r, r * Y, { ...GOLD, a: live ? .94 : .60 });
     const badge = projectGround(heart.x, heart.z);
     air.push(SHAPE.icon, badge.x, badge.y + 2.4 * k, 2 * k * pulse, 2 * k * pulse, { ...WHITE, a: 1 }, { icon: 'heart' });
   }
@@ -483,7 +488,7 @@ export function createBattleGuide({ scene, reducedMotion = () => false, characte
         const live = view.mode === 'wave', alpha = live ? .95 : GUIDE.previewAlpha;
         // Village management already shows its precise grid. Combat still draws useful live guidance.
         if (!live && view.managing === true) { laneBoxes = 0; ground.end(); air.end(); return; }
-        if (!live && view.wallLanes !== false) drawLanes(); else laneBoxes = 0; // D056: under everything else
+        if (!live && view.wallLanes !== false) drawLanes(); else laneBoxes = 0;
         k = live ? Math.max(1, Math.min(2, Number(characterScale()) || 1)) : 1;
         const heart = view.heart ?? CONFIG.boarding.heart;
         const walls = prepareRoutes(view, heart);

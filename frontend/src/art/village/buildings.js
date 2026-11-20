@@ -1,14 +1,11 @@
-// Original shaded cabin source. The world-only VIS-32 provider normalizes it to the existing foot.
+// Original warm timber cabin, normalized to the existing world foot.
 export const sheets = {
-  buildingsHero: {file: 'village/buildings-hero-v1.png', width: 1254, height: 1254},
+  buildingsHero: {file: 'village/home-fixed-v3.png', width: 1774, height: 887},
 };
 
 export const frames = {
   cabin: {
-    sheet: 'buildingsHero',
-    rect: [75, 39, 1108, 1103],
-    logical: [96, 96, 12],
-    sourceFoot: [552, 1085],
-    fitBounds: [552, 1085, 556, 18],
+    sheet: 'buildingsHero', rect: [52, 24, 774, 816],
+    logical: [96, 96, 12], sourceFoot: [387, 800], fitBounds: [387, 800, 387, 16],
   },
 };

@@ -1,0 +1,91 @@
+{
+  "sourceFile": "frontend/public/village/home-fixed-v2.png",
+  "generatedBy": "OpenAI built-in image generation, 2026-11-19",
+  "reference": "Home Island concept supplied by Johannes Franz Lang, 2026-11-19",
+  "referenceSha256": "e93b1486918789502c33e4b3a445c1019fce5d19ade9d9e8ea41e106bae911dc",
+  "sha256": "ec6349ad26db4beefe3d539b6195c3609b749348da0c2cc16831b56386ee646a",
+  "bytes": 1585086,
+  "nativeSize": [
+    1774,
+    887
+  ],
+  "mode": "RGBA",
+  "alpha": {
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "meaningfulThreshold": 32
+  },
+  "cells": {
+    "cabin": {
+      "rect": [
+        52,
+        24,
+        774,
+        816
+      ],
+      "sourceFoot": [
+        387,
+        800
+      ],
+      "nativeGroundFoot": [
+        439,
+        824
+      ],
+      "logical": [
+        96,
+        96,
+        12
+      ],
+      "solidBounds": [
+        64,
+        36,
+        814,
+        828
+      ],
+      "meaningfulAlphaBounds": [
+        12,
+        12,
+        762,
+        804
+      ]
+    },
+    "island-arsenal": {
+      "rect": [
+        928,
+        191,
+        808,
+        640
+      ],
+      "sourceFoot": [
+        404,
+        624
+      ],
+      "nativeGroundFoot": [
+        1332,
+        815
+      ],
+      "logical": [
+        80,
+        80,
+        8
+      ],
+      "solidBounds": [
+        940,
+        203,
+        1724,
+        819
+      ],
+      "meaningfulAlphaBounds": [
+        12,
+        12,
+        796,
+        628
+      ]
+    }
+  },
+  "prompt": "Create an original game-production transparent atlas of TWO well-separated building sprites for the supplied Home Island concept. It is a material and perspective reference only. No surrounding scene, characters, ground plane, caption, UI, lettering or background matte. Wide landscape canvas, equal left and right asset cells, wide completely transparent center gutter. Each building seen from consistent fixed dimensional three-quarter camera, front and right side visible, sunlit upper-left with soft contact shadow limited tightly below stepped stone plinth. Hand-painted softened volumetric 3D forms with navy slate broad layered roof panels, pale limestone foundation profiles, deeply shadowed timber eaves, warm ochre rounded timber columns, amber glass recesses, and controlled mellow warm brass fittings. No mirror-polished gold cubes or black cartoon outline. Clear and chunky on a tiny phone map. LEFT sprite is the captain's permanent Cabin, the village's recognizable home. Bold central front stone arch and dark timber door, a fitted brass ship's wheel over the gable entrance, a small anchor pennant atop an ochre ridge mast, stepped front entry, two restrained brass lanterns, small barrel grouping on visible right wall, deeper layered high navy roof with modest secondary side gable, small attic window. It should feel proud and homelike, not palatial. RIGHT sprite is the Arsenal, distinctly a lower broader working stone armory with a deep navy gabled side canopy shading a recognizable equipment rack of three vertically leaning old nautical musket props, double timber hatch with dark steel bands, a small crossed-musket emblem on old-blue cloth, subdued darker metal hinge and corner hardware, and powder keg to the right of the low entry. It should have a thick open lean-to and squared pale masonry corners rather than a symmetrical residential silhouette. Give both a tight natural visible bottom contour on light masonry with grounded perspective and an intact 12px-equivalent clear gutter around all solid pixels. Keep both whole in their cells, same sun and sea climate, distinct visual roles, believable 3D. Nothing else."
+}

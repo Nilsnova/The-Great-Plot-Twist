@@ -16,12 +16,14 @@ try {
   assert.ok(!(await page.locator('.hud').textContent()).includes('CC BY'));
   report.checks.push('Gameplay has no provider, licence or attribution block');
   report.hud=[];
+  // The offline title enters as a guest with no wallet. Measure the visible header control.
+  const menu=page.getByRole('button',{name:'Menu',exact:true});
   for(const [width,height] of [[1280,800],[375,667]]){
-    await page.setViewportSize({width,height});const bounds=await page.locator('.hud-coins').boundingBox();
-    assert.ok(bounds.height<=80&&bounds.width<300);report.hud.push({viewport:width,...bounds});
+    await page.setViewportSize({width,height});const bounds=await menu.boundingBox();
+    assert.ok(bounds&&bounds.height<=80&&bounds.width<300);report.hud.push({viewport:width,...bounds});
     await page.screenshot({path:`captures/20261106_G8-Clean-Weather-HUD-${width}.png`});
   }
-  report.checks.push('The HUD stays compact on desktop and phone (weather and time live in the pause menu)');
+  report.checks.push('The visible Menu stays compact on desktop and phone (weather and time live in the pause menu)');
   await openSettingsFromMenu(page);
   await page.getByRole('button',{name:'Credits',exact:true}).click();await page.locator('.shell-credits').waitFor();
   assert.ok((await page.locator('.shell-credits').textContent()).includes('adapted for the game'));

@@ -17,7 +17,7 @@ export const TUTORIAL_PAGES = Object.freeze([
     alt: 'A small house and a coin',
     art: [art('island-house', 64, 64, 2), art('coin-icon', 16, 16, 4)]},
   {id: 'build', title: 'Build',
-    text: ['The island has 16 build spots for walls, cannons and mortars, and 6 more for inner walls after wave 5.',
+    text: ['Build walls in one row along the grass edge, with six more pieces unlocked after wave 5.',
       'Walk up to a spot and press E (or Use on a phone); build on it again to raise its level.',
       'A house adds loot, and from level 2 it picks a job: Barracks, Tavern or Workshop.'],
     alt: 'A wall, a cannon and a mortar',

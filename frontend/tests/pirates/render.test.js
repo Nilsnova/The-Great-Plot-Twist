@@ -2,7 +2,8 @@
 import * as THREE from 'three';
 import { describe, expect, it } from 'vitest';
 import { CONFIG, coastPoint, createWave } from '../../src/pirates/sim.js';
-import { ATLAS_IDS, BOARDER_BANDS, MUSKET, createWaveRenderer, packAtlas } from '../../src/pirates/render.js';
+import {SAILING_WAKE} from '../../src/art/fleet-wake.js';
+import { ATLAS_IDS, BOARDER_BANDS, CHARACTER_SCALE, MUSKET, bandOf, createWaveRenderer, packAtlas } from '../../src/pirates/render.js';
 import { pirateDimensions } from '../../src/pixel/pirate-catalog.js';
 import {projectGround} from '../../src/world/projection.js';
 
@@ -74,6 +75,84 @@ describe('pirate wave renderer', () => {
     expect(renderer.root.visible).toBe(false);
     renderer.dispose();
   });
+
+  it('keeps the Home boarders’ contact shading on shore and clears it with the battle', () => {
+    const scene = new THREE.Scene();
+    const renderer = createWaveRenderer({scene, atlas: atlas(), place: 'home_islet', reducedMotion: () => true});
+    const state = {ships: [], walls: [], towers: [], boarders: [
+      {id: 'landed', x: 1, z: -3, hp: 9, maxHp: 9},
+      {id: 'offshore', x: 22, z: 0, hp: 9, maxHp: 9},
+    ]};
+    renderer.update({state});
+    const shadow = renderer.root.getObjectByName('pirate-foot-shadows');
+    const contact = shadow.geometry.getAttribute('footprint'), pin = projectGround(1, -3);
+    expect(shadow.visible).toBe(true);
+    expect(shadow.geometry.instanceCount).toBe(1);
+    expect(contact.getX(0)).toBeCloseTo(pin.x + .15 * CHARACTER_SCALE);
+    expect(contact.getY(0)).toBeCloseTo(pin.y - .05 * CHARACTER_SCALE);
+    renderer.setVisible(false);
+    renderer.update({state});
+    expect(shadow.geometry.instanceCount).toBe(0);
+    expect(shadow.visible).toBe(false);
+    renderer.dispose();
+    expect(shadow.parent).toBeNull();
+  });
+
+  it.each([false, true])('settles a newly landed boarder around the shore pin (reduced motion: %s)', reduced => {
+    const scene = new THREE.Scene();
+    const renderer = createWaveRenderer({scene, atlas: atlas(), place: 'home_islet', reducedMotion: () => reduced});
+    const boarder = {id: 'boarder-1', x: 16, z: 7, state: 'walking', facing: 1, hp: 9, maxHp: 9};
+    const state = {ships: [], walls: [], towers: [], boarders: [boarder]};
+    renderer.events([{type: 'boarder_landed', boarderId: boarder.id, x: boarder.x, z: boarder.z}]);
+    renderer.update({state});
+    const figures = renderer.root.getObjectByName(`pirates:boarders:${bandOf(boarder.z)}`).geometry;
+    const pos = figures.getAttribute('iPos'), size = figures.getAttribute('iSize'), pin = projectGround(boarder.x, boarder.z);
+    expect(pos.getX(0)).toBeCloseTo(pin.x);
+    expect(pos.getY(0)).toBeCloseTo(pin.y);
+    expect(pos.getZ(0)).toBeCloseTo(reduced ? 0 : .093);
+    const firstHeight = size.getY(0), firstAnchor = size.getW(0);
+    for (let frame = 0; frame < 15; frame++) renderer.update({state, dt: 1 / 60});
+    expect(pos.getY(0)).toBeCloseTo(pin.y);
+    expect(pos.getZ(0)).toBeCloseTo(reduced ? 0 : -.042);
+    expect(size.getY(0) * (reduced ? 1 : .9)).toBeCloseTo(firstHeight);
+    expect(size.getW(0) * (reduced ? 1 : .9)).toBeCloseTo(firstAnchor);
+    renderer.dispose();
+  });
+
+  it('trails sailing ships along the Home water plane and clears the foam when they stop', () => {
+    const {id, width, height} = SAILING_WAKE;
+    const packed = packAtlas([...ATLAS_IDS, id], {...pirateDimensions, [id]: [width, height, 0]});
+    const scene = new THREE.Scene();
+    let reduced = false, quality = 'high';
+    const renderer = createWaveRenderer({scene, atlas: {texture: new THREE.Texture(), ...packed}, place: 'home_islet',
+      reducedMotion: () => reduced, quality: () => quality});
+    const ship = {id: 'sloop-1', kind: 'sloop', state: 'sailing', x: 0, z: 30, hp: 20, maxHp: 20};
+    renderer.events([{type: 'ship_spawned', shipId: ship.id, kind: ship.kind, x: 0, z: 30, toX: 0, toZ: 22}]);
+    const sea = renderer.root.getObjectByName('pirates:near-sea').geometry;
+    const draw = time => renderer.update({state: {ships: [ship], walls: [], towers: []}, simTime: time, dt: .05});
+    draw(1);
+    const expectedU = (packed.rects[id].x + .01) / packed.width;
+    expect(sea.instanceCount).toBe(2);
+    expect(sea.getAttribute('iUv').getX(0)).toBeCloseTo(expectedU);
+    expect(sea.getAttribute('iPos').getZ(0)).toBeCloseTo(Math.atan2(.6, -.2));
+    expect(sea.getAttribute('iPos').getY(0)).toBeLessThan(sea.getAttribute('iPos').getY(1));
+    ship.x = -1;
+    draw(2);
+    expect(Math.abs(sea.getAttribute('iPos').getZ(0))).toBeCloseTo(Math.PI);
+    reduced = true;
+    draw(3);
+    expect(sea.instanceCount).toBe(1);
+    reduced = false;
+    quality = 'low';
+    draw(4);
+    expect(sea.instanceCount).toBe(1);
+    quality = 'high';
+    ship.state = 'attacking';
+    draw(5);
+    expect(sea.instanceCount).toBe(1);
+    renderer.dispose();
+  });
+
   it('pools one selected defense overlay below the captain range and clears it at every handoff', () => {
     const scene = new THREE.Scene(), record = {id: 'mortar_1', kind: 'mortar', level: 3, x: 4, z: -6};
     const renderer = createWaveRenderer({scene, atlas: atlas(), defenses: [record], fx: () => null});

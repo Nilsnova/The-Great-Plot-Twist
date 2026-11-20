@@ -1,0 +1,268 @@
+{
+  "sourceFile": "frontend/public/village/houses-v2.png",
+  "generatedBy": "OpenAI built-in image generation, 2026-11-19",
+  "reference": "Home Island original concept supplied by Johannes Franz Lang, 2026-11-19",
+  "referenceSha256": "e93b1486918789502c33e4b3a445c1019fce5d19ade9d9e8ea41e106bae911dc",
+  "sha256": "940ab505b98c5a98678805e06ecb66624ba140e35ee52d42ec9509df91cc776b",
+  "bytes": 2043640,
+  "nativeSize": [
+    1261,
+    1247
+  ],
+  "mode": "RGBA",
+  "alpha": {
+    "corners": [
+      1,
+      0,
+      1,
+      0
+    ],
+    "solidThreshold": 240,
+    "transparentNoiseThreshold": 16
+  },
+  "cells": [
+    {
+      "id": "island-house",
+      "group": "plain",
+      "rect": [
+        23,
+        106,
+        351,
+        303
+      ],
+      "sourceFoot": [
+        175,
+        289
+      ],
+      "nativeGroundFoot": [
+        198,
+        395
+      ],
+      "solidBounds": [
+        12,
+        12,
+        339,
+        291
+      ]
+    },
+    {
+      "id": "island-house-l2",
+      "group": "plain",
+      "rect": [
+        418,
+        23,
+        418,
+        389
+      ],
+      "sourceFoot": [
+        209,
+        375
+      ],
+      "nativeGroundFoot": [
+        627,
+        398
+      ],
+      "solidBounds": [
+        12,
+        12,
+        406,
+        377
+      ]
+    },
+    {
+      "id": "island-house-l3",
+      "group": "plain",
+      "rect": [
+        872,
+        2,
+        360,
+        405
+      ],
+      "sourceFoot": [
+        180,
+        391
+      ],
+      "nativeGroundFoot": [
+        1052,
+        393
+      ],
+      "solidBounds": [
+        12,
+        12,
+        348,
+        393
+      ]
+    },
+    {
+      "id": "island-house-barracks",
+      "group": "role",
+      "rect": [
+        10,
+        452,
+        397,
+        334
+      ],
+      "sourceFoot": [
+        198,
+        320
+      ],
+      "nativeGroundFoot": [
+        208,
+        772
+      ],
+      "solidBounds": [
+        12,
+        12,
+        385,
+        322
+      ]
+    },
+    {
+      "id": "island-house-tavern",
+      "group": "role",
+      "rect": [
+        413,
+        445,
+        408,
+        340
+      ],
+      "sourceFoot": [
+        204,
+        326
+      ],
+      "nativeGroundFoot": [
+        617,
+        771
+      ],
+      "solidBounds": [
+        12,
+        12,
+        396,
+        328
+      ]
+    },
+    {
+      "id": "island-house-workshop",
+      "group": "role",
+      "rect": [
+        840,
+        433,
+        418,
+        360
+      ],
+      "sourceFoot": [
+        209,
+        346
+      ],
+      "nativeGroundFoot": [
+        1049,
+        779
+      ],
+      "solidBounds": [
+        12,
+        12,
+        406,
+        348
+      ]
+    },
+    {
+      "id": "island-house-barracks-l3",
+      "group": "role",
+      "rect": [
+        23,
+        843,
+        374,
+        388
+      ],
+      "sourceFoot": [
+        187,
+        374
+      ],
+      "nativeGroundFoot": [
+        210,
+        1217
+      ],
+      "solidBounds": [
+        12,
+        12,
+        362,
+        376
+      ]
+    },
+    {
+      "id": "island-house-tavern-l3",
+      "group": "role",
+      "rect": [
+        415,
+        819,
+        392,
+        416
+      ],
+      "sourceFoot": [
+        196,
+        402
+      ],
+      "nativeGroundFoot": [
+        611,
+        1221
+      ],
+      "solidBounds": [
+        12,
+        12,
+        380,
+        404
+      ]
+    },
+    {
+      "id": "island-house-workshop-l3",
+      "group": "role",
+      "rect": [
+        828,
+        810,
+        418,
+        430
+      ],
+      "sourceFoot": [
+        209,
+        416
+      ],
+      "nativeGroundFoot": [
+        1037,
+        1226
+      ],
+      "solidBounds": [
+        12,
+        12,
+        406,
+        418
+      ]
+    }
+  ],
+  "logicalGroups": {
+    "plain": [
+      80,
+      80,
+      8
+    ],
+    "role": [
+      96,
+      88,
+      8
+    ]
+  },
+  "fitBounds": {
+    "plain": [
+      209,
+      391,
+      209,
+      14
+    ],
+    "role": [
+      209,
+      416,
+      209,
+      14
+    ]
+  },
+  "prompt": "Generate a new original isolated building sprite sheet, a 3 by 3 atlas of nine stylized stone-and-timber coastal village houses. Reference image is style inspiration only: soft model-like volumetric daylight, dark ink-blue slate roofs, sandy cream masonry and aged amber oak. The camera is fixed at a top-down 3/4 game angle with the left-facing front and right side visible, moderate front-facing (not steep isometric). Re-invent and diversify the architectural volumes: more limestone cottage walls, matte thick oak structural beams, simple windows set deep in their planes, slightly larger fewer roof tiles in a continuous broad shaded roof plane. Give each home a novel, modest, tapered limestone stepped plinth resting on ground. Simple creamy wall proportions and visible hand-painted beveled edges. Do not draw flashy bright gold blocks at every joint. Use small matte brass straps only on upper tiers and recognizable icon motifs. Light from upper left, soft but readable ambient occlusion at corners and foot, low glow inside amber panes, quiet gray-brown glass mullions, no gradients outside a sprite. IMPORTANT: true transparent background with nine well separated sprites, wide blank gutters; no people, ground, graphics, text, interface, lettering or labels. Sprites must fit fully in even grid cells. Top row L1 simple white cottage with small planter, single navy roof and no dormer; L2 larger cottage with extended timber side porch, new stubby chimney and one side shutter; L3 taller cottage with arched dormer on the upper left and a little right balcony. Middle row left, L2 Barracks: rectangular ground floor, thicker squared end, muted blue hanging shield with crossed cream swords, side rack of spears and stacked training shield; center, L2 Tavern: welcoming corner side alcove with muted burgundy-and-ivory striped awning, a large hanging metal tankard symbol, two casks; right, L2 Workshop: stone chimney forward on the right, open forge workbench with anvil and hanging dark tools, bronze hammer on a gear sign. Bottom row same three roles each gets a small second floor dormer: L3 Barracks strong upright taller front, slatted roof extension, matching sword shield, side weapons rack; L3 Tavern cozy dormer over matching canopy and tankard, upper wooden balcony and side casks; L3 Workshop larger dark navy lean-to and taller beige masonry chimney with visible metal cap, matching hammer gear and anvil. Similar apparent totals and stable common feet between tiers, remain readable as distinct silhouettes. Each cell must depict a single continuous carefully rendered cohesive sprite, using plausible actual depth and tapered structural edges. Do not copy any existing game asset. Render no rear or aerial-facing alternate angle."
+}

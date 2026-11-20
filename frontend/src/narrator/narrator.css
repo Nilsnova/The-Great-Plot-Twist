@@ -1,19 +1,22 @@
 /* The narrator's caption card (src/narrator/card.js). Token-based, with fallbacks. */
-.narrator-card{position:fixed;left:50%;bottom:16px;z-index:48;transform:translateX(-50%);display:flex;align-items:flex-start;gap:4px;box-sizing:border-box;width:min(560px,calc(100vw - 32px));padding:12px 6px 12px 18px;background:var(--u-sea,#123238);color:var(--u-ink,#f6ecd2);border:2px solid var(--u-brass,#c99a4a);border-radius:14px;box-shadow:0 6px 20px rgb(0 0 0 / .35);pointer-events:none}
+.narrator-card{position:fixed;left:50%;bottom:16px;z-index:48;transform:translateX(-50%);display:flex;align-items:flex-start;gap:4px;box-sizing:border-box;width:min(560px,calc(100vw - 32px));padding:12px 6px 12px 18px;background:var(--u-chip-surface,none) var(--u-sea,#123238);color:var(--u-ink,#f6ecd2);border:2px solid var(--u-brass,#c99a4a);border-radius:14px;box-shadow:inset 0 1px #bed9da33,0 6px 20px rgb(0 0 0 / .35);pointer-events:none}
 .narrator-text{flex:1;margin:0;font:500 var(--u-md,18px)/1.45 var(--u-font,system-ui,sans-serif);overflow-wrap:anywhere}
 .narrator-card.is-large .narrator-text{font-size:var(--u-lg,22px)}
+.narrator-reader{display:contents}.narrator-history{display:none}
 .narrator-skip{flex:none;pointer-events:auto;display:grid;place-items:center;width:44px;height:44px;margin:-8px 0;padding:0;border:0;border-radius:10px;background:transparent;color:inherit;font:400 26px/1 var(--u-font,system-ui,sans-serif)}
 .narrator-skip:hover{background:var(--u-raise,#245059)}
 /* Suppress only a caption that would cover an acute warning; its text and Skip return unchanged. */
-.narrator-card.is-danger-suppressed{visibility:hidden}
-body:has(.narrator-card:not([hidden],.is-danger-suppressed)) .sound-caption:not(.in-dialog){translate:0 calc(-1 * var(--narrator-card-height,0px) - 8px)}
+.narrator-card:is(.is-danger-suppressed,.is-reader-dormant){visibility:hidden}
+body:has(.narrator-card:not([hidden],.is-danger-suppressed,.is-reader-dormant)) .sound-caption:not(.in-dialog){translate:0 calc(-1 * var(--narrator-card-height,0px) - 8px)}
 @media (prefers-reduced-motion:no-preference){:root:not([data-reduced-motion="true"]) .narrator-card:not([hidden]){animation:narrator-in .22s ease-out}}
 /* Dock placement uses the card's measured box, so the reveal cannot translate that box. */
-@media (prefers-reduced-motion:no-preference){:root:not([data-reduced-motion="true"]) .narrator-card.is-combat-docked:not([hidden]){animation-name:narrator-dock-in}}
+@media (prefers-reduced-motion:no-preference){
+  :root:not([data-reduced-motion="true"]) .narrator-card:is(.is-combat-docked,.is-large-touch-reader:not(.is-large)):not([hidden]){animation-name:narrator-dock-in}
+}
 @keyframes narrator-dock-in{from{opacity:0}}
 @keyframes narrator-in{from{opacity:0;translate:0 8px}}
 /* During a wave the card is smaller and softer (owner, 15 Nov: "limit the visual overload"): the fight stays in view. */
-body:has(.pirate-hud:not([hidden]) .pirate-bar:not([hidden])) .narrator-card:not(.is-large,.is-combat-docked){width:min(460px,calc(100vw - 32px));padding:8px 4px 8px 14px;background:color-mix(in srgb,var(--u-sea,#123238) 88%,transparent)}
+body:has(.pirate-hud:not([hidden]) .pirate-bar:not([hidden])) .narrator-card:not(.is-large,.is-combat-docked,.is-large-touch-reader){width:min(460px,calc(100vw - 32px));padding:8px 4px 8px 14px;background:color-mix(in srgb,var(--u-sea,#123238) 88%,transparent)}
 body:has(.pirate-hud:not([hidden]) .pirate-bar:not([hidden])) .narrator-card:not(.is-large,.is-combat-docked) .narrator-text{font-size:16px;line-height:1.4}
 /* In portrait, share the lower edge with active battle controls or a contextual touch action. */
 @media(max-width:600px) and (orientation:portrait) and (pointer:coarse){.narrator-card{--narrator-dock-enabled:1}}
@@ -29,6 +32,43 @@ body:has(.narrator-card.is-wave-footer:not([hidden],.is-danger-suppressed)) .sou
   .narrator-card{--narrator-footer-enabled:1}
   .narrator-card.is-wave-footer{left:max(5px,env(safe-area-inset-left));right:max(5px,env(safe-area-inset-right));bottom:max(5px,env(safe-area-inset-bottom));width:auto;padding:3px 6px}
   .narrator-card.is-wave-footer .narrator-text{line-height:1.14}
+}
+/* A reading strip uses the measured space below fixed portrait touch controls. */
+@media(max-width:420px) and (orientation:portrait) and (pointer:coarse){.narrator-card{--narrator-reader-enabled:1}}
+@media(min-width:320px) and (max-width:375px) and (min-height:560px) and (max-height:640px) and (orientation:portrait) and (pointer:coarse){
+  .narrator-card{--narrator-preparation-reader:1}
+}
+.narrator-card.is-large-touch-reader{
+  left:max(6px,env(safe-area-inset-left));right:max(6px,env(safe-area-inset-right));bottom:max(6px,env(safe-area-inset-bottom));
+  transform:none;width:auto;max-height:var(--narrator-reader-height);padding:4px 4px 4px 10px;border-radius:10px
+}
+.narrator-card.is-large-touch-reader .narrator-reader{
+  display:block;flex:1;min-width:0;max-height:var(--narrator-reader-lines);
+  overflow:auto;overscroll-behavior:contain;touch-action:pan-y;pointer-events:auto;scrollbar-width:thin;scrollbar-color:var(--u-brass) transparent
+}
+.narrator-card.is-large-touch-reader .narrator-reader:focus-visible{
+  outline:2px solid var(--u-brass,#c99a4a);outline-offset:1px;border-radius:3px
+}
+.narrator-card.is-large-touch-reader .narrator-text{line-height:1.2}
+.narrator-card.is-large-touch-reader .narrator-history:not(:empty){display:block}
+.narrator-card.is-large-touch-reader .narrator-history p{margin-bottom:10px}
+.narrator-card.is-large-touch-reader .narrator-skip{margin:0}
+.narrator-card.is-large-touch-reader.has-unread-subtitles::after{
+  content:'';position:absolute;right:23px;bottom:6px;width:7px;height:7px;transform:rotate(45deg);
+  border:solid var(--u-brass,#c99a4a);border-width:0 2px 2px 0
+}
+body:has(.narrator-card.is-large-touch-reader:not([hidden],.is-danger-suppressed)) .sound-caption:not(.in-dialog){
+  --sound-right:max(10px,env(safe-area-inset-right));
+  bottom:var(--narrator-sound-bottom)!important;left:auto;right:var(--sound-right);max-width:calc(100vw - var(--narrator-sound-left) - var(--sound-right));
+  margin:0;padding:2px 5px;transform:none;translate:none;line-height:1.25
+}
+@media(max-width:350px) and (orientation:portrait) and (pointer:coarse){
+  body:has(.narrator-card.is-large-touch-reader:not([hidden],.is-danger-suppressed)) .pirate-hud>.pirate-banner{
+    top:calc(var(--pirate-bar-bottom,172px) + var(--toast-stack-height,0px));width:max-content;
+    max-width:calc(100vw - 32px);gap:4px;padding:8px 12px
+  }
+  body:has(.narrator-card.is-large-touch-reader:not([hidden],.is-danger-suppressed)) .pirate-banner strong{font-size:20px}
+  body:has(.narrator-card.is-large-touch-reader:not([hidden],.is-danger-suppressed)) .pirate-banner span{font-size:16px}
 }
 /* A phone on its side: one quiet line in the bottom-left corner, beside (not above) the centre prompt and the
    musket, so it never meets the wave bar, the goals or a toast (overlap audit, 16 Nov). */

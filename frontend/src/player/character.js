@@ -5,10 +5,11 @@ import { WALK_SPEED } from './controller.js';
 import { poseFrame } from '../pirates/poses.js';
 import { createShotArt } from '../pirates/shot-art.js';
 
-export function createCharacter(art, { reducedMotion = false } = {}) {
+export function createCharacter(art, { reducedMotion = false, idleMotion = () => false } = {}) {
   const group = new THREE.Object3D();
   const holder = new THREE.Group(), sprite = placeArt(holder, art, 'explorer', 0, 0);
-  let phase = 0, facing = 'explorer', flip = 1, previousFrame, body = 'explorer', scale = 1;
+  let phase = 0, breath = 0, facing = 'explorer', flip = 1, previousFrame, body = 'explorer', scale = 1;
+  let facingLean = 0;
   // A shot or a blow (src/pirates/poses.js): this body shows the musket or cutlass frame in its own colour,
   // facing the shot, on its own 48 px mesh (the walking frames are 24 px), then walks on.
   let pose = null, poseMesh = null;
@@ -30,6 +31,8 @@ export function createCharacter(art, { reducedMotion = false } = {}) {
     get poseMesh() { return poseMesh; },
     dispose() { shotArt.dispose(); },
     face(dx, dz) {
+      const direction = projectPoint(dx, dz);
+      facingLean = direction.x / (Math.hypot(direction.x, direction.y) || 1);
       if (Math.abs(dz) > Math.abs(dx)) { facing = dz < 0 ? named('back') : body; flip = 1; }
       else if (Math.abs(dx) > 0.001) { facing = art[named('side')] ? named('side') : body; flip = dx < 0 ? -1 : 1; }
     },
@@ -38,11 +41,18 @@ export function createCharacter(art, { reducedMotion = false } = {}) {
       const moving = speed > .05, amount = Math.min(Math.max(speed, 0) / WALK_SPEED, 1);
       if (moving) phase += delta * Math.min(speed, WALK_SPEED) * 1.1;
       else phase = 0;
+      const villageMotion = !reduce && !pose && idleMotion();
+      breath = !moving && villageMotion ? (breath + delta) % 3.6 : 0;
+      const breathing = 1 + .016 * Math.sin(breath * Math.PI / 3.6) ** 2;
       const point = projectPoint(group.position.x, group.position.z);
       const bounce = moving && !reduce ? Math.sin(phase * Math.PI / 2) ** 2 * .035 * amount : 0;
       // Continuous, like the camera (player/camera.js): smooth art needs no pixel grid.
       sprite.position.set(point.x, point.y + bounce, 0);
-      sprite.scale.set(flip * scale, scale, 1);
+      sprite.scale.set(flip * scale, scale * breathing, 1);
+      // Pivot around the planted feet as the captain starts walking or settles.
+      const lean = moving ? -.056 * facingLean * amount : 0;
+      const settle = 1 - Math.exp(-15 * Math.min(.1, Math.max(0, delta)));
+      sprite.rotation.z = villageMotion ? THREE.MathUtils.lerp(sprite.rotation.z, lean, settle) : 0;
       const clip = [`${facing}-walk-1`, facing, `${facing}-walk-2`, facing];
       const requested = moving && !reduce ? clip[Math.floor(phase) % clip.length] : facing;
       const frame = art[requested] ? requested : facing;

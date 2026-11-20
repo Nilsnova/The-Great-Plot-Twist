@@ -102,7 +102,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     openLobby, setPresence, resetState, resetIsland, playArrival, visit, leaveGame, enterGame, sailHome,
     interruptBoat, refreshCard, refreshCardIfBuild, openHarbor, openTechHub, openWreck, selectedAnchor, openCrew,
     openOverview, openCaptain, openLeaderboard, openCaptains, openInvite, pick, defenseReportIdentity,
-    canFocusDefenseReport, resolveDefenseReport, focusDefenseReport, invalidateWallFeedback, build, readWalls,
+    canFocusDefenseReport, resolveDefenseReport, focusDefenseReport, invalidatePurchaseFeedback, build, readWalls,
     upgrade, askDemolish, confirmDemolish, heardDemolish, specialise, buyTree, toggleVillage, startMove, moved,
     inspectHouse, activeHouseSupport, research, giveWreck, hire, upgradeCaptain, learnSkill, takeRole, respecCaptain} = isl;
   // ownRetry: your own island's read failed for a passing reason, so the next reread (the wave wiring's
@@ -111,7 +111,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   isl.pendingWallet = null; isl.walletGeneration = 0;
   isl.world = null; isl.cutscene = null; isl.openSpot = null; isl.loadTicket = 0; isl.battle = false;
   isl.housePlayer = null; isl.selectedHouse = null; isl.movingHouse = null;
-  isl.wallFeedbackGeneration = 0;
+  isl.purchaseFeedbackGeneration = 0;
   isl.coreState = createCoreState();
   isl.coreWorld = null; isl.coreContextKey = null; isl.coreTravelGeneration = 0; isl.coreRejoin = null;
   isl.pointBattle = false;
@@ -263,7 +263,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   const stopTravel = on('travel', event => {
     interruptBoat();
     isl.village.leave();
-    invalidateWallFeedback();
+    invalidatePurchaseFeedback();
     isl.coreTravelGeneration++; syncCoreContext();
     isl.ui.close(); isl.flow.reset(); isl.openSpot = null; isl.moving.cancel();
     if (isl.visiting && event.to !== ISLAND_PLACE) endVisit();
@@ -311,7 +311,11 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       isl.world = deco; isl.coreWorld = core; applyWorld(); core.setHealth(isl.coreState.current);
       deco.runArtTask('core', () => core.retryArt());
       const original = place.update;
-      place.update = (dt, frame) => { original(dt, frame); deco.update(dt, frame?.time ?? 0, frame?.paused); };
+      place.update = (dt, frame) => {
+        original(dt, frame);
+        deco.update(dt, frame?.time ?? 0, frame?.paused, frame);
+        core.update(dt, frame, reducedMotion());
+      };
       cleanups.push(() => { deco.dispose(); core.dispose(); if (isl.world === deco) { isl.world = null; isl.housePlayer = null; } if (isl.coreWorld === core) isl.coreWorld = null; place.update = original; });
     },
     // Pirate Point's shared build spots on lighthouse_isle (factory.js); its bell and lamps stay lane P's.
@@ -327,7 +331,11 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     },
     owns: isIslandZone,
     label(zone) {
-      if (zone === BELL.id) return isl.flow.current && !isl.flow.current.joined ? 'Join the defense' : 'Ring the harbor bell';
+      if (zone === BELL.id) {
+        const wave = isl.flow.current;
+        if (!wave) return 'Ring the harbor bell';
+        return wave.joined ? 'View wave status' : 'Join the defense';
+      }
       if (zone === CABIN.id) return 'Players and invite';
       if (zone === ARSENAL.id) return 'Open the arsenal';
       const building = campaignBuilding(zone);
@@ -348,7 +356,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     anchor(zone) {
       const thing = placedSpot(zone, target()?.spots) ?? ppSpotById(zone) ?? (zone === BELL.id ? BELL : zone === CABIN.id ? CABIN : zone === ARSENAL.id ? ARSENAL : campaignBuilding(zone));
       if (!thing) return null;
-      return {x: thing.x, z: thing.z, lift: thing.kind === 'watchtower' ? 4.6 : thing.h ? Math.min(4.6, thing.h * .7) : 2.6};
+      return {x: thing.x, z: thing.z, ...isl.world?.displayAnchor?.(zone), lift: thing.kind === 'watchtower' ? 4.6 : thing.h ? Math.min(4.6, thing.h * .7) : 2.6};
     },
     presencePlace(place) {
       if (place !== ISLAND_PLACE) return null;
@@ -422,7 +430,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     // The island's wave controller stopped this wave (src/pirates/game-wiring.js): a bell still holding it goes.
     waveStopped(waveId) { if (!isl.disposed && typeof waveId === 'string') isl.flow.release(waveId); },
     setBattle(value) {
-      if (value === true && !isl.battle) invalidateWallFeedback();
+      if (value === true && !isl.battle) invalidatePurchaseFeedback();
       isl.battle = value === true;
       if (isl.battle) {
         isl.village.leave(); isl.waveOver = false; isl.moving.cancel(); interruptBoat(true);
@@ -454,6 +462,11 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     get active() { return isl.ui.active || !!isl.cutscene || !!isl.boatGame; }, // D057: a boat round holds the keys too
     get managing() { return isl.village.active; },
     get selection() { return selectedAnchor(); },
+    get selectionView() {
+      const selection = selectedAnchor();
+      return selection?.kind && !selection.positionOnly
+        ? {...selection, ...isl.world?.displayAnchor?.(selection.spotId)} : selection;
+    },
     get selectionElement() { return isl.ui.selectionElement; },
     get defenseReportIdentity() { return defenseReportIdentity(); },
     canFocusDefenseReport, resolveDefenseReport, focusDefenseReport,

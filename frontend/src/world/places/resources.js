@@ -1,22 +1,42 @@
 // A place owns its root, textures, materials, geometry and explicit subscriptions.
 import * as THREE from 'three';
+import {QUALITY, settings} from '../../config.js';
 import {legacyBackdrop} from '../ground-transform.js';
 import { loadTexture } from '../texture.js';
 import { hasGround, paintGround } from '../../art/ground.js';
+import {paintOutpostGround} from '../../art/outpost-ground.js';
 import { premultiply, screenDensity, smoothTexture } from '../../art/textures.js';
 import {acquireRasterSheet} from '../../art/village-raster.js';
 import {TERRAIN_SHEET} from '../../art/village/terrain-materials.js';
+const OUTPOST_GROUND = new Set([
+  'pixel/ground.png', 'places/saltreach_harbor.png', 'places/smugglers_cove.png',
+  'places/wreck_point.png', 'places/the_teeth.png',
+]);
 // A place with a painted cartoon ground (src/art/ground.js) gets it instead of its pixel backdrop:
-// 16 to 32 texels per world unit, by the screen's density.
-export async function loadBackdrop(path, { quality = 'high' } = {}) {
+// Rasterise the ground at the screen's density up to the shipped terrain atlas limit.
+export async function loadBackdrop(path, {quality = settings.quality} = {}) {
   const id = /^places\/([a-z_]+)\.png$/.exec(path)?.[1];
   if (id && hasGround(id) && typeof document !== 'undefined') {
     const lease = await acquireRasterSheet(TERRAIN_SHEET);
     try {
-      return smoothTexture(paintGround(id, Math.max(16, Math.min(32, screenDensity(quality) * 8)), lease.image));
+      const limit = (QUALITY[quality] ?? QUALITY.high).groundTexels;
+      const density = Math.max(16, Math.min(limit, screenDensity(quality) * 10));
+      return smoothTexture(paintGround(id, density, lease.image));
     } finally { lease.release(); }
   }
   const texture = await loadTexture(`${import.meta.env.BASE_URL}${path}`);
+  if (OUTPOST_GROUND.has(path) && texture.image?.width && typeof document !== 'undefined') {
+    const density = Math.max(16, Math.min(32, (QUALITY[quality] ?? QUALITY.high).groundTexels, screenDensity(quality) * 10));
+    const original = texture.image;
+    try {
+      const painted = smoothTexture(paintOutpostGround(original, density, {muted: id === 'the_teeth'}));
+      painted.userData.coastSource = original;
+      texture.dispose();
+      return painted;
+    } catch {
+      // Keep the loaded ground if the browser cannot paint its enhanced material.
+    }
+  }
   texture.colorSpace = THREE.SRGBColorSpace; texture.magFilter = THREE.NearestFilter;
   texture.minFilter = THREE.NearestFilter; texture.generateMipmaps = false; return texture;
 }

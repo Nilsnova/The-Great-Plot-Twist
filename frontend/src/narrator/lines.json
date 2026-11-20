@@ -21,7 +21,7 @@
     {"id": "unlock_watchtower", "trigger": "wave_unlock:3", "priority": 1, "voice": "narrator", "text": "Build a watchtower. From up high, its lookouts help every tower nearby fire farther out to sea."},
     {"id": "unlock_gunner", "trigger": "wave_unlock:3", "priority": 1, "voice": "narrator", "text": "A gunner wants to join your crew. Hire one in the Menu, under Crew, and your strongest tower will reload faster."},
     {"id": "unlock_market", "trigger": "wave_unlock:4", "priority": 1, "voice": "narrator", "text": "The market stall at the Harbor is open. Guess whether a real price goes up or down in five minutes, and put a few coins on it."},
-    {"id": "unlock_inner_walls", "trigger": "wave_unlock:5", "priority": 1, "voice": "narrator", "text": "You sank the warship! Now raise the inner ring of walls around the heart. If boarders get past the shore, it is your last line."},
+    {"id": "unlock_inner_walls", "trigger": "wave_unlock:5", "priority": 1, "voice": "narrator", "text": "You sank the warship! Six more wall pieces are ready. Use them to extend your row along the grass edge."},
     {"id": "unlock_carpenter", "trigger": "wave_unlock:5", "priority": 1, "voice": "narrator", "text": "A carpenter has signed on. She mends your most damaged wall while the battle rages. Hire her in the Menu, under Crew."},
     {"id": "unlock_wreck", "trigger": "wave_unlock:6", "priority": 1, "voice": "narrator", "text": "A wreck has washed onto the beach. Mend her hull a little after every wave, and one day she may carry you out to sea."},
     {"id": "unlock_match_board", "trigger": "wave_unlock:7", "priority": 1, "voice": "narrator", "text": "The match board is up at the Harbor. Pick who wins a real football match, and a good pick pays out in coins."},

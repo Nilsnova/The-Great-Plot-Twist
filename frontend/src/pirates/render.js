@@ -25,6 +25,7 @@ import * as THREE from 'three';
 import { CULVERIN_ART, FIRE_ART, HARPOON_ART, SWIVEL_ART, TIER_ART, crewArt, fireArt, levelArt, pipRow, pirateDimensions, pirateFrames, pirateLevels } from '../pixel/pirate-catalog.js';
 // T33 (D049, proposed): the damaged and broken tower drawings, used only while the wave has tower health.
 import { TOWER_KINDS, towerStateFrame } from '../art/tower-states.js';
+import { RECOVERY_BADGE, paintRecoveryBadge, recoveryBadgeFill, recoveryBadgeLift, recoveryBadgeTone } from '../art/structure-health-badge.js';
 import { towerLook } from './tower-health.js';
 import { MARK_IDS, buildingMarks } from '../art/path-marks.js';
 import { pixelGlsl, toScreen } from '../world/pixel-glsl.js';
@@ -34,8 +35,11 @@ import {makeCombatWallConnections} from './wall-connections.js';
 import {WALL_ATLAS_IDS} from '../art/village/walls.js';
 import {wallAtlasView} from '../art/wall-atlas.js';
 import {projectGround, projectGroundVector, projectLegacyGround, groundProjectionGlsl} from '../world/projection.js';
+import {defenseDisplayAnchors} from '../island/defense-display.js';
 import {makeDefenseRange} from '../island/defense-range.js';
 import {makeSelectionBracket} from '../island/selection-bracket.js';
+import {createActorContacts} from '../world/actor-contact.js';
+import {paintSailingWake, SAILING_WAKE} from '../art/fleet-wake.js';
 
 const UNIT = 16;
 const facingTo = item => projectGroundVector(item.toX - item.x, (item.toZ ?? item.z ?? 0) - (item.z ?? 0)).x < 0 ? -1 : 1;
@@ -136,6 +140,7 @@ export const SWIVEL_IDS = [...SWIVEL_ART.levels, ...SWIVEL_ART.fire, SWIVEL_ART.
 // atlas (tests) has none and simply draws no marks.
 export const MARK_ATLAS_IDS = MARK_IDS;
 export const SWIVEL_STATE_IDS = [...SWIVEL_ART.damaged, ...SWIVEL_ART.broken];
+const HEALTH_BADGE = 'recovery-health-badge', RUIN_BADGE = 'recovery-ruin-badge';
 /**
  * The frame of a cannon or mortar post: its level's art, or while it fires its level's firing frame (so a
  * level-3 cannon does not flick to level 1's plain barrel, nor a level-5 one lose its gold). has(id) says
@@ -177,9 +182,28 @@ export async function loadAtlas({ quality = 'high', colour = 0, towerStates = fa
   const ids = [...new Set([...ATLAS_IDS.filter(id => !PIXEL_ONLY_IDS.includes(id)), ...CARTOON_EXTRA_IDS, ...TIER_IDS, ...WALL_ATLAS_IDS, ...FIRE_LEVEL_IDS, ...HARPOON_IDS, ...GUNBOAT_IDS,
     ...(towerStates ? TOWER_STATE_IDS : []), ...(culverins ? CULVERIN_IDS : []), ...(culverins && towerStates ? CULVERIN_STATE_IDS : []),
     ...(swivels ? SWIVEL_IDS : []), ...(swivels && towerStates ? SWIVEL_STATE_IDS : []), ...MARK_ATLAS_IDS])];
-  const atlas = await cartoonAtlas(ids, { quality, extra: [[WHITE, 8, 8]] });
+  const extra = [[WHITE, 8, 8], [SAILING_WAKE.id, SAILING_WAKE.width, SAILING_WAKE.height]];
+  if (towerStates) extra.push([HEALTH_BADGE, RECOVERY_BADGE.width, RECOVERY_BADGE.height],
+    [RUIN_BADGE, RECOVERY_BADGE.width, RECOVERY_BADGE.height]);
+  const atlas = await cartoonAtlas(ids, { quality, extra });
   const white = atlas.rects[WHITE], context = atlas.image.getContext('2d');
   context.fillStyle = '#fff'; context.fillRect(white.x * atlas.density, white.y * atlas.density, white.w * atlas.density, white.h * atlas.density);
+  const wake = atlas.rects[SAILING_WAKE.id];
+  context.save();
+  context.translate(wake.x * atlas.density, wake.y * atlas.density);
+  context.scale(atlas.density, atlas.density);
+  paintSailingWake(context);
+  context.restore();
+  if (towerStates) {
+    for (const id of [HEALTH_BADGE, RUIN_BADGE]) {
+      const { x, y } = atlas.rects[id];
+      context.save();
+      context.translate(x * atlas.density, y * atlas.density);
+      context.scale(atlas.density, atlas.density);
+      paintRecoveryBadge(context, id === RUIN_BADGE);
+      context.restore();
+    }
+  }
   const result = {texture: smoothTexture(atlas.image), width: atlas.image.width / atlas.density, height: atlas.image.height / atlas.density,
     rects: atlas.rects, density: atlas.density};
   result.wallArt = wallAtlasView(result); return result;
@@ -275,6 +299,10 @@ function pool() {
 
 const colour = hex => { const c = new THREE.Color(hex); return { r: c.r, g: c.g, b: c.b }; };
 const GOLD = colour('#ffd77a'), RED = colour('#d8553f'), GREEN = colour('#9fd26a'), DARK = colour('#1f2622'), BEAM = colour('#ffe9a8');
+const RECOVERY_TINT = {
+  green: colour(RECOVERY_BADGE.green), gold: colour(RECOVERY_BADGE.gold), red: colour(RECOVERY_BADGE.red),
+  light: colour(RECOVERY_BADGE.light),
+};
 const BRASS = colour('#e0b04a'), TEAL = colour('#4fc3c9');
 const CANNONBALL_LOOK = {
   island: { core: { r: 1.1, g: 1.05, flashing: .04 }, trail: colour('#ffdc97') },
@@ -342,9 +370,10 @@ export function wallShare(post, wall) {
 }
 
 export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion = () => false, quality = () => 'high',
-  beamFrom = null, recoveryV1 = false, fx = () => scene.userData?.pixelFx ?? null }) {
+  beamFrom = null, place = null, recoveryV1 = false, fx = () => scene.userData?.pixelFx ?? null }) {
   const owned = [], root = new THREE.Group(); root.name = 'pirate-wave'; scene.add(root);
   const combatOverlay = createCombatOverlay(root);
+  const contacts = place === 'home_islet' ? createActorContacts(root, 'pirate-foot-shadows', 320) : null;
   const rect = {};
   for (const [id, r] of Object.entries(atlas.rects)) {
     // A hair in from every edge so neighbours never bleed in.
@@ -374,9 +403,11 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   // D055/D051: which path plates and skill emblem a post wears (read-only from the defense's tree and spec, legacy
   // {a, b} or the recovery snapshot's [a, b]); memoised, picked when the post is made or its defense changes.
   const marksOf = post => buildingMarks(post.kind, post.level, post.tree, post.spec);
+  let displayAnchors = defenseDisplayAnchors(place, defenses);
   const makePost = item => {
-    const layer = createLayer(`defense:${item.id}`, POST_CAPACITY, material, 100 + item.z, owned); root.add(layer.mesh);
-    const post = { ...item, level: levelOf(item), layer, flip: false };
+    const view = displayAnchors.get(item.id) ?? item;
+    const layer = createLayer(`defense:${item.id}`, POST_CAPACITY, material, 100 + view.z, owned); root.add(layer.mesh);
+    const post = { ...item, level: levelOf(item), layer, flip: false, view };
     post.marks = marksOf(post);
     return post;
   };
@@ -384,6 +415,8 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     for (const mark of marks) { const r = rect[mark.art]; if (r) layer.push(r, x + mark.dx, y + mark.dy, r.w, r.h, .5, r.anchor); }
   }
   const posts = defenses.filter(hasPost).map(makePost);
+  // The wall state carries health by ID; the frozen defense vector owns its combat coordinates.
+  const frozenWallPositions = recoveryV1 ? new Map(defenses.filter(item => item.kind === 'wall').map(item => [item.id, item])) : null;
   const wallConnections = makeCombatWallConnections(root, atlas.wallArt);
   let inBreak = false;
   let cannonsList = defenses.filter(item => item.kind === 'cannon' || item.kind === 'mortar');
@@ -417,8 +450,9 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     defenseAnchor.spotId = coverage.id;
     defenseAnchor.kind = coverage.kind;
     defenseAnchor.level = coverage.level;
-    defenseAnchor.x = coverage.x;
-    defenseAnchor.z = coverage.z;
+    const view = displayAnchors.get(coverage.id) ?? coverage;
+    defenseAnchor.x = view.x;
+    defenseAnchor.z = view.z;
     defenseSelection.show(defenseAnchor);
     if (coverage.status === 'ready') {
       defenseRange ??= makeDefenseRange(root, {combat: true});
@@ -437,10 +471,12 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   function shipMeta(id, kind, x, z, toX, toZ) {
     let meta = ships.get(id);
     if (!meta) {
-      const at = projectGround(x, z), dx = projectGround(toX ?? 0, toZ ?? 0).x - at.x;
+      const heading = projectGroundVector((toX ?? 0) - x, (toZ ?? 0) - z), dx = heading.x;
+      const at = projectGround(x, z);
       const facing = Math.abs(dx) > .5 ? (dx < 0 ? -1 : 1) : (at.x > 0 ? -1 : 1);
       let hash = 0; for (const char of id) hash = (hash * 31 + char.charCodeAt(0)) | 0;
-      meta = { kind, facing, phase: (hash >>> 0) % 997 / 997 * 4, flashUntil: -1, bornAt: clock };
+      meta = { kind, facing, wakeAngle: Math.atan2(heading.y, dx), x, z,
+        phase: (hash >>> 0) % 997 / 997 * 4, flashUntil: -1, bornAt: clock };
       ships.set(id, meta);
     }
     return meta;
@@ -453,6 +489,13 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   };
 
   function onEvent(event) {
+    // Follow the rendered gun for projectiles and hit effects; the simulation event is untouched.
+    const isShipShot = event.type === 'gunboat_fired' || (event.type === 'ship_fired' && event.target === 'tower');
+    const gunId = event.cannonId ?? event.towerId, view = displayAnchors.get(gunId);
+    const post = view ? posts.find(item => item.id === gunId) : null;
+    const origin = post ? {x: event.x + view.x - post.x, z: (event.z ?? 0) + view.z - post.z} : null;
+    const hit = isShipShot ? displayAnchors.get(event.targetId) : null;
+    if (origin || hit) event = {...event, ...origin, ...(hit ? {toX: hit.x, toZ: hit.z} : {})};
     const {x, y} = projectGround(event.x, event.z ?? 0);
     // v3 waves: the siege barge's shells fly like a mortar's; a fire ship bursts like a fire bomb.
     if (event.type === 'barge_fired') { onEvent({ ...event, type: 'mortar_fired', towerId: event.shipId }); return; }
@@ -650,7 +693,11 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
         break;
       }
       case 'ship_warning': warnings.add(item => Object.assign(item, { x: event.x, z: event.z, at: clock, boss: event.boss })); break;
-      case 'boarder_landed': splashes.add(item => Object.assign(item, { x: event.x, z: event.z, at: clock, big: false })); break;
+      case 'boarder_landed': {
+        splashes.add(item => Object.assign(item, { x: event.x, z: event.z, at: clock, big: false }));
+        if (contacts && typeof event.boarderId === 'string') boarderMeta(event.boarderId).landedAt = clock;
+        break;
+      }
       case 'boarder_hit': {
         boarderMeta(event.boarderId).flashUntil = clock + FLASH_SECONDS;
         spark(x, y + .7, { count: event.blade ? 10 : 6, speed: [.8, 2.6], angle: Math.PI / 2, spread: 2.4, gravity: 7, life: [.3, .6], colour: event.blade ? '#e8eee8' : '#b0402f', size: [1, 2] });
@@ -718,11 +765,20 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     // A hit shows as a short warm flash, kept light so a ship under steady fire never turns white.
     const fadeIn = Math.min(1, (clock - meta.bornAt) / .6), flashing = clock < meta.flashUntil ? (ship.boss ? .2 : .3) : 0;
     const share = ship.maxHp > 0 ? Math.max(0, Math.min(1, ship.hp / ship.maxHp)) : 1, burning = ship.hp > 0 && share < 1 / 3;
-    // A wake behind a sailing ship: two pale strokes on the water.
+    // One painted wake per Home ship, aligned to the sailing route in the projected water plane.
     if (ship.state === 'sailing' && !low() && !still()) {
-      const back = -meta.facing * size.w * .45, wob = Math.floor(clock * 6 + meta.phase) % 2;
-      layer.push(rect[WHITE], x + back, y - .05, size.w * .28, .06, .5, 0, opt(.45 * fadeIn));
-      layer.push(rect[WHITE], x + back * 1.35 - wob * .1, y + .08, size.w * .18, .06, .5, 0, opt(.3 * fadeIn));
+      const wake = place === 'home_islet' ? rect[SAILING_WAKE.id] : null;
+      if (wake) {
+        const angle = meta.wakeAngle, wash = Math.sin(clock * 4.2 + meta.phase);
+        const stern = size.w * .26;
+        const height = size.w * (.22 + wash * .014);
+        layer.push(wake, x - stern * Math.cos(angle), y - stern * Math.sin(angle) - .10,
+          size.w * (.91 + wash * .045), height, .84, height * .5, opt(fadeIn * (.77 + wash * .08), null, false, 0, angle));
+      } else {
+        const back = -meta.facing * size.w * .45, wob = Math.floor(clock * 6 + meta.phase) % 2;
+        layer.push(rect[WHITE], x + back, y - .05, size.w * .28, .06, .5, 0, opt(.45 * fadeIn));
+        layer.push(rect[WHITE], x + back * 1.35 - wob * .1, y + .08, size.w * .18, .06, .5, 0, opt(.3 * fadeIn));
+      }
     }
     // A ship a harpoon (or Chain shot) holds back (GAME-V3.md §5): foam rings on the water around the hull, swelling
     // a little, and a small coil of rope over it. Cartoon-only: a pixel atlas has neither frame.
@@ -761,7 +817,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     let meta = crew.get(id);
     if (!meta) {
       let hash = 0; for (const char of id) hash = (hash * 31 + char.charCodeAt(0)) | 0;
-      meta = { phase: (hash >>> 0) % 991 / 991 * 2, flashUntil: -1, facing: 1 };
+      meta = { phase: (hash >>> 0) % 991 / 991 * 2, flashUntil: -1, landedAt: -1, facing: 1 };
       crew.set(id, meta);
     }
     return meta;
@@ -771,13 +827,20 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     const meta = boarderMeta(boarder.id), layer = bands[bandOf(boarder.z)], {x, y} = projectGround(boarder.x, boarder.z);
     faceActor(meta, boarder);
     const frames = FRAMES.boarder, hacking = boarder.state === 'hacking' || boarder.state === 'fighting', hit = clock < meta.flashUntil;
-    const step = still() ? 0 : Math.floor(clock * (hacking ? 3 : 5) + meta.phase) % 2;
-    const cartoon = hit ? BOARDER_ART.hit : hacking ? BOARDER_ART.hack[step] : still() ? BOARDER_ART.still : BOARDER_ART.walk[step];
+    const reduced = still(), step = reduced ? 0 : Math.floor(clock * (hacking ? 3 : 5) + meta.phase) % 2;
+    const cartoon = hit ? BOARDER_ART.hit : hacking ? BOARDER_ART.hack[step] : reduced ? BOARDER_ART.still : BOARDER_ART.walk[step];
     const r = rect[cartoon] ?? rect[hacking ? (step ? frames[2] : frames[0]) : frames[step]];
     if (!r) return;
     // A brute (wave 20+) is bigger and redder than the rest of the crowd.
     const big = boarder.brute ? BRUTE_LOOK.scale : 1, look = boarder.brute ? BRUTE_LOOK.tint : {};
-    layer.push(r, x, y, r.w * K() * big, r.h * K() * big, .5, r.anchor * K() * big, opt(1, look, meta.facing < 0, hit ? (rect[cartoon] ? .35 : .7) : 0));
+    const scale = K() * big;
+    const walking = contacts && !reduced && !hit && boarder.state === 'walking';
+    // Absorb the first step at the physical beach pin, then settle into the walk.
+    const land = walking ? Math.max(0, 1 - (clock - meta.landedAt) / .23) : 0;
+    const lean = walking ? (-.042 + .135 * land) * meta.facing : 0, height = scale * (1 - .10 * land);
+    contacts?.add(boarder.x, boarder.z, scale);
+    layer.push(r, x, y, r.w * scale, r.h * height, .5, r.anchor * height,
+      opt(1, look, meta.facing < 0, hit ? (rect[cartoon] ? .35 : .7) : 0, lean));
     if (boarder.hp < boarder.maxHp) {
       const top = y + (r.h - r.anchor) * K() - .35, w = .9, share = Math.max(0, boarder.hp / boarder.maxHp);
       layer.push(rect[WHITE], x - w / 2 - .0625, top - .0625, w + .125, .25, 0, 0, tinted(DARK, .8));
@@ -797,11 +860,15 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   function drawMilitia(unit) {
     const meta = militiaMeta(unit.id), layer = bands[bandOf(unit.z)], {x, y} = projectGround(unit.x, unit.z);
     faceActor(meta, unit);
-    const hit = clock < meta.flashUntil, striking = clock < meta.strikeUntil, step = still() ? 0 : Math.floor(clock * 5 + meta.phase) % 2;
-    const id = hit ? 'militia-hit' : striking ? 'militia-strike' : unit.state === 'walking' && !still() ? MILITIA_IDS[1 + step] : 'militia';
+    const reduced = still(), walking = unit.state === 'walking' && !reduced;
+    const hit = clock < meta.flashUntil, striking = clock < meta.strikeUntil, step = reduced ? 0 : Math.floor(clock * 5 + meta.phase) % 2;
+    const id = hit ? 'militia-hit' : striking ? 'militia-strike' : walking ? MILITIA_IDS[1 + step] : 'militia';
     const r = rect[id];
     if (!r) return;
-    layer.push(r, x, y, r.w * K(), r.h * K(), .5, r.anchor * K(), opt(1, null, meta.facing < 0, hit ? .35 : 0));
+    const scale = K();
+    const lean = contacts && walking && !hit && !striking ? -.036 * meta.facing : 0;
+    contacts?.add(unit.x, unit.z, scale);
+    layer.push(r, x, y, r.w * scale, r.h * scale, .5, r.anchor * scale, opt(1, null, meta.facing < 0, hit ? .35 : 0, lean));
     if (unit.hp < unit.maxHp) {
       const top = y + (r.h - r.anchor) * K() - .35, w = .9, share = Math.max(0, unit.hp / unit.maxHp);
       layer.push(rect[WHITE], x - w / 2 - .0625, top - .0625, w + .125, .25, 0, 0, tinted(DARK, .8));
@@ -810,7 +877,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   }
   // A fallen boarder (or militia): the sprite sinks and fades under a puff of smoke.
   function faceActor(meta, actor) {
-    const target = actor.wallId ? posts.find(post => post.id === actor.wallId) : actor.towerId ? posts.find(post => post.id === actor.towerId)
+    const target = actor.wallId ? posts.find(post => post.id === actor.wallId) : actor.towerId ? (displayAnchors.get(actor.towerId) ?? posts.find(post => post.id === actor.towerId))
       : latest?.party?.find(unit => unit.id === actor.foe) ?? latest?.boarders?.find(unit => unit.id === actor.foe)
         ?? latest?.militia?.find(unit => unit.id === actor.foe);
     const dx = target ? projectGroundVector(target.x - actor.x, target.z - actor.z).x
@@ -1036,20 +1103,23 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     layers.air.push(rect[WHITE], x - w / 2 - .0625, top - .0625, w + .125, .3125, 0, 0, tinted(DARK, .8));
     layers.air.push(rect[WHITE], x - w / 2, top, w * share, .1875, 0, 0, opt(1, share > .5 ? GREEN : share > .25 ? GOLD : RED));
   }
-  function drawRecoveryHealthBar(item) {
-    const { z, hp, maxHp } = item, x = drawnX(item.x, z);
+  function drawRecoveryHealthBar({hp, maxHp}, position, kind) {
+    if (!position) return;
+    const {z} = position, x = drawnX(position.x, z);
     if (!Number.isFinite(x) || !Number.isFinite(z) || !Number.isFinite(hp) || !(maxHp > 0) || hp >= maxHp) return;
-    const w = 1.3, top = drawnY(z) + TOWER_BAR_LIFT * K();
-    layers.air.push(rect[WHITE], x - w / 2 - .0625, top - .0625, w + .125, .3125, 0, 0, tinted(DARK, .8));
-    if (hp <= 0) {
-      // A ruin needs a positive visual signal; a zero-width red bar disappears against its dark track.
-      layers.air.push(rect[WHITE], x - .055, top + .015, .11, .17, .5, 0, tinted(RED, 1));
-      layers.air.push(rect[WHITE], x - .055, top + .22, .11, .08, .5, 0, tinted(RED, 1));
-      return;
+    const { width, height, units, fillInset, fillHeight } = RECOVERY_BADGE;
+    const destroyed = hp <= 0, badge = rect[destroyed ? RUIN_BADGE : HEALTH_BADGE];
+    const center = drawnY(z) + recoveryBadgeLift(kind), left = x - width / (2 * units), bottom = center - height / (2 * units);
+    layers.air.push(badge ?? rect[WHITE], x, center, width / units, height / units, .5, height / (2 * units),
+      badge ? undefined : opt(1, DARK));
+    if (destroyed && !badge) {
+      layers.air.push(rect[WHITE], left + 26 / units, bottom + 5 / units, 2 / units, 3 / units, 0, 0, opt(1, RECOVERY_TINT.light));
+      layers.air.push(rect[WHITE], left + 26 / units, bottom + 2 / units, 2 / units, 2 / units, 0, 0, opt(1, RECOVERY_TINT.light));
     }
-    const share = Math.max(.08, Math.min(1, hp / maxHp)); // Keep a 1-unit positive structure visible at a pixel scale.
-    layers.air.push(rect[WHITE], x - w / 2, top, w * share, .1875, 0, 0,
-      opt(1, share > .5 ? GREEN : share > .25 ? GOLD : RED));
+    if (destroyed) return;
+    const share = hp / maxHp;
+    layers.air.push(rect[WHITE], left + fillInset / units, bottom + fillInset / units,
+      recoveryBadgeFill(share) / units, fillHeight / units, 0, 0, opt(1, RECOVERY_TINT[recoveryBadgeTone(share)]));
   }
   function drawDown(hero, x, z, reviving) {
     x = drawnX(x, z);
@@ -1089,7 +1159,8 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   // hides it, until the jam is over.
   function drawJamMark(tower) {
     const mark = rect[JAM_FRAMES[still() ? 0 : Math.floor(clock * 5) % 2]];
-    if (mark) layers.air.push(mark, drawnX(tower.x, tower.z), drawnY(tower.z) + 2.7 + (still() ? 0 : Math.sin(clock * 6) * .07), mark.w * 1.2, mark.h * 1.2, .5, mark.anchor * 1.2, opt(.97));
+    const view = displayAnchors.get(tower.id) ?? tower;
+    if (mark) layers.air.push(mark, drawnX(view.x, view.z), drawnY(view.z) + 2.7 + (still() ? 0 : Math.sin(clock * 6) * .07), mark.w * 1.2, mark.h * 1.2, .5, mark.anchor * 1.2, opt(.97));
   }
   function drawWarning(item) {
     const age = clock - item.at, blink = still() ? 1 : (Math.floor(age * 4) % 2 ? .4 : 1);
@@ -1127,6 +1198,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   function draw() {
     for (const layer of layerList) layer.begin();
     for (const layer of bands) layer.begin();
+    contacts?.begin();
     const state = latest;
     if (state && visible) {
       for (const wreck of wrecks.items) {
@@ -1136,7 +1208,14 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       }
       for (const ship of state.ships) {
         const at = smooth(ship);
-        drawShip(at, shipMeta(ship.id, ship.kind, at.x, at.z));
+        const meta = shipMeta(ship.id, ship.kind, at.x, at.z);
+        if (place === 'home_islet' && ship.state === 'sailing' && Math.hypot(ship.x - meta.x, ship.z - meta.z) > .08) {
+          const heading = projectGroundVector(ship.x - meta.x, ship.z - meta.z);
+          meta.wakeAngle = Math.atan2(heading.y, heading.x);
+          meta.x = ship.x;
+          meta.z = ship.z;
+        }
+        drawShip(at, meta);
       }
       for (const boarder of state.boarders ?? []) drawBoarder(smooth(boarder));
       for (const unit of state.militia ?? []) drawMilitia(unit);
@@ -1165,10 +1244,14 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       drawCaptain();
       drawParty(state);
       if (recoveryV1) {
-        for (const structure of [...(state.walls ?? []), ...(state.towers ?? [])]) drawRecoveryHealthBar(structure);
+        for (const wall of state.walls ?? []) drawRecoveryHealthBar(wall, frozenWallPositions.get(wall.id), 'wall');
+        for (const tower of state.towers ?? []) drawRecoveryHealthBar(tower, displayAnchors.get(tower.id) ?? tower, tower.kind);
       } else {
         // T33: a bar over every tower with hp that has taken damage (none while the wave has no tower health).
-        for (const tower of state.towers ?? []) if (tower.maxHp > 0 && tower.hp > 0 && tower.hp < tower.maxHp) drawHealthBar(tower.x, tower.z, tower.hp, tower.maxHp, TOWER_BAR_LIFT);
+        for (const tower of state.towers ?? []) if (tower.maxHp > 0 && tower.hp > 0 && tower.hp < tower.maxHp) {
+          const view = displayAnchors.get(tower.id) ?? tower;
+          drawHealthBar(view.x, view.z, tower.hp, tower.maxHp, TOWER_BAR_LIFT);
+        }
       }
       // The lamps' beam: from the lighthouse lamp to an exposed flagship.
       const flagship = state.lampsLit && beamFrom ? state.ships.find(ship => ship.kind === 'flagship') : null;
@@ -1181,6 +1264,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     }
     for (const layer of layerList) layer.end();
     for (const layer of bands) layer.end();
+    contacts?.end();
     wallConnections.show(posts, state?.walls ?? [], {visible, inBreak});
     // Reused every frame (no new Map per frame): this frame's walls and towers by id.
     const walls = frameWalls, towers = frameTowers;
@@ -1207,7 +1291,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
         }
         const r = rect[id], flashing = (wallFlash.get(post.id) ?? -1) > clock ? .7 : 0;
         const repairing = post.kind === 'wall' && (walls.get(post.id)?.repairing || walls.get(post.id)?.crew);
-        const grow = 1, {x, y} = projectGround(post.x, post.z);
+        const grow = 1, {x, y} = projectGround(post.view.x, post.view.z);
         // Match the world renderer's healthy junction posts; damaged/ruin frames remain full width.
         if (!wallConnections.hasPost(post.id)) post.layer.push(r, x, y, r.w * (joinedWall ? .62 : 1), r.h, .5, r.anchor, opt(1, rgb(1, repairing && !still() ? 1 + Math.sin(clock * 10) * .15 : 1, 1), post.kind !== 'wall' && post.flip, flashing));
         if (smoking) {
@@ -1267,6 +1351,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     setDefenses(list) {
       if (disposed) return;
       inBreak = true;
+      displayAnchors = defenseDisplayAnchors(place, list ?? []);
       showDefenseCoverage(null);
       // A building torn down in the break (GAME-V3.md §4.2) takes its post with it.
       for (const post of posts.filter(entry => !(list ?? []).some(item => item.id === entry.id))) {
@@ -1277,6 +1362,10 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
         let post = posts.find(entry => entry.id === item.id);
         if (post) { post.level = levelOf(item); post.tree = item.tree; post.spec = item.spec; if (item.kind !== post.kind) Object.assign(post, {kind: item.kind}); post.marks = marksOf(post); }
         else { post = makePost(item); posts.push(post); }
+        if (post.kind !== 'wall') {
+          post.view = displayAnchors.get(item.id) ?? item;
+          post.layer.mesh.renderOrder = 100 + post.view.z;
+        }
         // A wall repaired or rebuilt in the break (D039): draw its new health, not the one the wave ended with.
         if (post.kind === 'wall' && Number.isInteger(item.health)) post.rest = Math.max(0, Math.min(100, item.health)) / 100;
       }
@@ -1301,6 +1390,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       if (disposed) return; disposed = true;
       wallConnections.dispose();
       combatOverlay.dispose();
+      contacts?.dispose();
       defenseSelection?.dispose();
       defenseRange?.dispose();
       root.removeFromParent(); root.clear();

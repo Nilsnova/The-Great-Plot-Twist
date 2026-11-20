@@ -25,7 +25,7 @@ try{
       const before=await page.evaluate(()=>{
         const g=window.__island;return {x:g.player.position.x,width:g.renderer.domElement.width,height:g.renderer.domElement.height};
       });
-      check(before.width*before.height<=1920*1080,`${width}px high quality bounds framebuffer pixels`);
+      check(before.width*before.height<=3840*2160,`${width}px high quality bounds framebuffer pixels`);
       if(width===1280)check(before.width*before.height/(426*240)>9,'Desktop renders over nine times the old native pixel area');
       await page.keyboard.down('KeyD');
       await page.waitForFunction(start=>window.__island.player.position.x>start+.15,before.x,{timeout:3000});

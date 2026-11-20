@@ -4,3 +4,165 @@ dialog::backdrop{background:#152d27ba}.sea-chart header,.sea-chart footer{displa
 
 /* A cheap full-screen fade reveals the landing in low quality; driven by the frame loop. */
 .arrival-fade{position:fixed;inset:0;z-index:20;pointer-events:none;background:#233d32}
+
+/* Match the island's menus while retaining the chart's illustrated routes and native scrolling. */
+.sea-chart {
+  color: var(--u-ink);
+  background: var(--u-panel-surface) var(--u-sea);
+  border: 2px solid var(--u-brass);
+  border-radius: var(--u-radius);
+  box-shadow: var(--u-frame);
+}
+.sea-chart::backdrop { background: #081f25bd; }
+.sea-chart h2 { color: var(--u-gold); font-family: var(--u-serif); letter-spacing: 0; }
+.sea-chart small, .sea-chart .chart-help { color: var(--u-mute); }
+.sea-chart .chart-scroll {
+  border: 1px solid var(--u-line); border-radius: var(--u-radius-xs);
+  background: var(--u-deep);
+  box-shadow: 0 0 0 2px var(--u-deep), 0 3px 10px #061b2491;
+}
+.sea-chart .chart-close {
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  color: var(--u-ink);
+  background: var(--u-quiet-surface) var(--u-card);
+  border: 2px solid var(--u-brass);
+  border-radius: var(--u-radius-xs);
+}
+.sea-chart .chart-map button { border-radius: var(--u-radius-xs); }
+.sea-chart .chart-map button i {
+  border-radius: 50%;
+  background: var(--u-action-surface) var(--u-gold);
+  border-color: var(--u-deep);
+  box-shadow: 0 0 0 2px var(--u-brass), 0 3px 5px #071c25a3;
+}
+.sea-chart .chart-map button[aria-current='true'] i {
+  background: var(--u-action-hover) var(--u-gold);
+  box-shadow: 0 0 0 3px #fff0b2, 0 3px 6px #071c25b3;
+}
+.sea-chart .chart-map button.locked:not([aria-current='true']) i { background: var(--u-line); box-shadow: none; }
+.sea-chart .chart-map button span {
+  color: var(--u-ink);
+  background: var(--u-chip-surface) var(--u-deep);
+  border-color: var(--u-brass);
+  border-radius: 6px;
+}
+.sea-chart .chart-map button[aria-current='true'] span {
+  color: var(--u-pink);
+  background: var(--u-paper-surface) var(--u-parch);
+  border-color: var(--u-brown);
+}
+.sea-chart .chart-map button.locked:not([aria-current='true']) span {
+  color: var(--u-mute);
+  border-color: var(--u-line);
+}
+.sea-chart input { accent-color: var(--u-gold); }
+
+.sailing {
+  color: var(--u-ink); background: var(--u-panel-surface) var(--u-sea);
+  border-color: var(--u-brass); border-radius: var(--u-radius); box-shadow: var(--u-frame);
+}
+.sailing::backdrop { background: #081f25bd; }
+.sailing h2 { color: var(--u-gold); }
+.sailing canvas {
+  border-radius: var(--u-radius-xs);
+  box-shadow: 0 0 0 1px var(--u-line), 0 0 0 3px var(--u-deep);
+}
+.sailing-status { color: var(--u-mute); }
+.sailing button {
+  color: var(--u-ink); background: var(--u-quiet-surface) var(--u-card);
+  border-color: var(--u-line); border-radius: var(--u-radius-xs); box-shadow: var(--u-bevel-quiet);
+}
+.sailing button:focus-visible { outline: 3px solid var(--u-gold); outline-offset: 3px; }
+.sailing button kbd { color: var(--u-ink); background: var(--u-deep); border-color: var(--u-line); }
+
+.chart-illustration { position: relative; height: 100%; }
+.chart-destinations { display: contents; }
+.chart-current-marker { display: none; }
+
+@media (max-width: 600px) {
+  .sea-chart .chart-map { width: 100%; height: auto; }
+  .sea-chart .chart-map img { height: auto; aspect-ratio: 448 / 256; }
+  .chart-current-marker:not([hidden]) {
+    position: absolute;
+    display: block;
+    width: 13px;
+    height: 13px;
+    transform: translate(-50%, -50%);
+    border: 2px solid var(--u-brown);
+    border-radius: 50%;
+    background: var(--u-parch);
+    box-shadow: 0 0 0 2px var(--u-deep);
+    pointer-events: none;
+  }
+  .chart-destinations { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px; }
+  .sea-chart .chart-destinations button:not([hidden]) {
+    position: static;
+    flex: 1 1 40%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-width: 0;
+    max-width: none;
+    min-height: 44px;
+    padding: 6px 8px;
+    border: 1px solid var(--u-line);
+    background: var(--u-chip-surface) var(--u-card);
+    color: var(--u-ink);
+    text-align: left;
+    transform: none;
+  }
+  .sea-chart .chart-destinations button i { display: none; }
+  .sea-chart .chart-destinations button span {
+    width: auto;
+    max-width: none;
+    border: 0;
+    background: transparent;
+    padding: 0;
+    color: inherit;
+    white-space: normal;
+  }
+  .sea-chart .chart-destinations button[aria-current='true'] {
+    background: var(--u-paper-surface) var(--u-parch);
+    border-color: var(--u-brown);
+    color: var(--u-pink);
+  }
+  .sea-chart .chart-destinations button[aria-current='true']::after {
+    content: 'Here';
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .sea-chart .chart-destinations button.locked:not([aria-current='true']) { border-style: dashed; }
+  .sea-chart .chart-destinations button:hover { border-color: var(--u-brass); }
+  .sea-chart .chart-options { flex-direction: row; align-items: center; gap: 8px; }
+  .sea-chart .chart-options p { margin: 10px 0; }
+  .sea-chart .chart-options label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 600px) and (pointer: coarse) {
+  .sea-chart .chart-help { display: none; }
+}
+
+@media (max-width: 600px) and (max-height: 400px) and (orientation: landscape) {
+  .sea-chart[open] { max-height: calc(100dvh - 16px); padding: 8px 10px; }
+  .sea-chart header h2 { margin: 2px 0 6px; }
+  .sea-chart .chart-map {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+    align-items: center;
+    gap: 8px;
+    aspect-ratio: auto;
+  }
+  .sea-chart .chart-illustration { height: auto; }
+  .sea-chart .chart-destinations { padding: 6px 6px 6px 0; }
+  .sea-chart .chart-options p { margin: 4px 0; }
+}

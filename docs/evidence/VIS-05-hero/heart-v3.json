@@ -1,0 +1,124 @@
+{
+  "sourceFile": "frontend/public/village/home-heart-v3.png",
+  "generatedBy": "OpenAI built-in image generation, 2026-11-19",
+  "reference": "Home Island concept supplied by Johannes Franz Lang, 2026-11-19",
+  "referenceSha256": "e93b1486918789502c33e4b3a445c1019fce5d19ade9d9e8ea41e106bae911dc",
+  "priorSpriteSha256": "bdb838f162ce1ecc37d402aa4a20f2fd323cb1ae6299b14dac10bc1588fb5ce6",
+  "sha256": "e11a3ce67f647f77b1634dcc63dde2a0070c60ef66e8569a7a2e4f715ea501fb",
+  "bytes": 1401486,
+  "nativeSize": [
+    1312,
+    1199
+  ],
+  "mode": "RGBA",
+  "alpha": {
+    "meaningfulThreshold": 16
+  },
+  "cells": {
+    "island_core": {
+      "rect": [
+        27,
+        0,
+        603,
+        698
+      ],
+      "sourceFoot": [
+        263,
+        684
+      ],
+      "nativeGroundFoot": [
+        290,
+        684
+      ],
+      "meaningfulAlphaBounds": [
+        39,
+        10,
+        618,
+        686
+      ],
+      "logical": [
+        128,
+        128,
+        12
+      ],
+      "frontOpening": {
+        "sample": [
+          245,
+          435,
+          342,
+          545
+        ],
+        "alphaBelow16Fraction": 1.0
+      }
+    },
+    "island_core_damaged": {
+      "rect": [
+        684,
+        0,
+        602,
+        698
+      ],
+      "sourceFoot": [
+        262,
+        684
+      ],
+      "nativeGroundFoot": [
+        946,
+        684
+      ],
+      "meaningfulAlphaBounds": [
+        696,
+        10,
+        1274,
+        686
+      ],
+      "logical": [
+        128,
+        128,
+        12
+      ],
+      "frontOpening": {
+        "sample": [
+          901,
+          435,
+          998,
+          545
+        ],
+        "alphaBelow16Fraction": 1.0
+      }
+    },
+    "island_core_broken": {
+      "rect": [
+        29,
+        896,
+        600,
+        289
+      ],
+      "sourceFoot": [
+        261,
+        275
+      ],
+      "nativeGroundFoot": [
+        290,
+        1171
+      ],
+      "meaningfulAlphaBounds": [
+        41,
+        908,
+        617,
+        1173
+      ],
+      "logical": [
+        128,
+        128,
+        12
+      ]
+    }
+  },
+  "coreFitBounds": [
+    263,
+    684,
+    340,
+    14
+  ]
+}

@@ -4,7 +4,7 @@ The rules are in backend/server/island/layout.py (pure) and placement.py (the fl
 the fixed spots in backend/content/island_layout.json, the database part in
 supabase/migrations/20261114110000_island_layout.sql. Like every island route it needs a signed-in
 player and the flag "islands", and the flag "placement" (404 feature_off while either is off;
-without "placement" every island answer shows the fixed spots and layout.movable false).
+without "placement" the island still shows its saved walls, with layout.movable false).
 Answers carry `Cache-Control: private, no-store`.
 
 POST /api/island/move  {"spot": "cannon_1", "x": -10, "z": -10.5, "code"?: "ISLE-K7Q2M"}
@@ -17,6 +17,7 @@ POST /api/island/move  {"spot": "cannon_1", "x": -10, "z": -10.5, "code"?: "ISLE
                          Point's spots do not move)
       422 off_grid       not a multiple of 0.5, or further out than 30 units
       409 not_on_land    the cell is in the sea
+      409 off_path       a wall is outside the marked grass perimeter
       409 place_taken    the footprint (2 x 2 units for walls and towers, 3 x 3 for the
                          watchtower and houses) overlaps the heart, the cabin, the bell, the
                          Harbor, the Tech hub, the wreck or another spot; touching edges are fine

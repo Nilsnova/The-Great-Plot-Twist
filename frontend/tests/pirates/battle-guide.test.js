@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { describe, expect, it } from 'vitest';
 import { CONFIG, coastPoint, createWave } from '../../src/pirates/sim.js';
 import { isOnLand } from '../../src/pirates/boarder-paths.js';
-import { WALL_LANE_ROWS } from '../../src/island/wall-lanes.js';
+import { WALL_PERIMETER_CELLS } from '../../src/island/wall-perimeter.js';
 import { attackedWalls, bearingOf, createBattleGuide, guideRoute, guideRoutes, guideTowers, guideWalls, landingAt, laneLandings, routeDots,
   routeKey, waveLandings, wallBar, skullAt, SKULL_SHIFT } from '../../src/pirates/battle-guide.js';
 import { ISLANDS } from './balance-fixture.js';
@@ -214,11 +214,10 @@ describe('drawing', () => {
       expect(guide.stats().routes).toEqual(expected);
     } finally { guide.dispose(); fresh.dispose(); }
   });
-  it('between waves draws the wall lanes (D056) under the routes, and in a wave leaves them out', () => {
+  it('marks the single perimeter row under the routes, only between waves', () => {
     const guide = createBattleGuide({ scene: scene() });
     guide.update({ mode: 'preview', defenses: [], wave: 4, dt: .016 });
-    const runs = WALL_LANE_ROWS.reduce((sum, row) => sum + (row.length - 1) / 2, 0);
-    expect(guide.stats().lanes).toBe(runs);
+    expect(guide.stats().lanes).toBe(WALL_PERIMETER_CELLS.length);
     guide.update({ mode: 'preview', defenses: [], wave: 4, dt: .016, wallLanes: false });
     expect(guide.stats().lanes).toBe(0);
     guide.update({ mode: 'wave', lanes: null, defenses: [], stateWalls: [], boarders: [], heart: HEART, wave: 4, dt: .016 });
