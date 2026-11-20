@@ -1,5 +1,7 @@
 # The story folder: index
 
+> **History, not today's game.** These files belong to the mystery of the first version, retired by decision [D031](../DECISIONS.md) on 10 Nov 2026. They stay for the record. See the [docs index](../README.md).
+
 > **What this file is:** the one-page index of the story detail round (package S0) for "The Light That Shouldn't Be": what each file is, who owns it, which decisions Nils made, and what is still open.
 >
 > **Who uses it:** Nils first, then the four teammates and their coding agents. Start here, then open the one file your package needs.

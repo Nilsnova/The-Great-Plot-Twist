@@ -1,5 +1,7 @@
 # The story: The Light That Shouldn't Be
 
+> **History, not today's game.** This is the mystery story of the first version. Decision [D031](DECISIONS.md) (10 Nov 2026) retired the mystery; the game is now the pirate tower defense in [PITCH.md](PITCH.md) and [GAME-V3.md](GAME-V3.md). The file stays because decisions and migrations refer to it. See the [docs index](README.md).
+
 > **What this file is:** the approved story skeleton v1, the five decisions Nils made on 5 Nov, the next detail round and the rules for changing the story.
 >
 > **Who uses it:** the S lane first, and everyone who builds a part of the mystery (A3, A6, S3, S4, L3, G2 to G4). The work plan is in ROADMAP.md; what is happening now is in [STATUS.md](STATUS.md).
