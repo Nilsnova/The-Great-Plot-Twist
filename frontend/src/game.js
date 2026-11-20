@@ -22,6 +22,7 @@ import {createShortcutsHost} from './shell/shortcuts-host.js';
 import {createTutorialHost} from './tutorial/host.js';
 import {createWorldExperience} from './world/experience.js';
 import {characterScale as characterScaleFor} from './pirates/character-scale.js';
+import {createFinisherWatch, finisherOwnsKeys} from './pirates/finisher/captain-lock.js';
 import {createIsletState} from './world/islet/state.js';
 import {sendIntent} from './adapter/intent.js';
 import {attachIsletPanel} from './screens/islet/host.js';
@@ -114,7 +115,10 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   const worldBlocked=()=>!!(harbor?.active||sharedHarbor?.active||island?.active||waves?.reportActive||classDemo?.active||shortcuts.active||tutorial.active||!!tutorials?.active||shell?.blocked||isAppBlocked?.()||marketUi?.active||sportsUi.active);
   function resetControls(){mapTouch?.cancel();input.reset();}
   const outsideBlocked=()=>externalOverlay()||world.busy;
-  const captainBlocked=()=>outsideBlocked()||island?.managing===true;
+  // A boss finisher or last-chance rescue owns the keys while it runs (arrows, A/D, Space aim and fire in it):
+  // the captain stands still, so one key press never both aims the minigame and walks the island.
+  const isFinishing=()=>finisherOwnsKeys(waves),finisherChanged=createFinisherWatch();
+  const captainBlocked=()=>outsideBlocked()||island?.managing===true||isFinishing();
   const sportsUi=createSportsEntry({container,getToken:session.getToken,onSessionChange:session.onChange,resetInput:resetControls,focusGame:()=>graphics.renderer.domElement.focus(),onSignIn:()=>{sportsUi.close();openAccount?.();}},{load:loadMatchCard});
   // No prediction market in the game (D035, 11 Nov): the fortune teller and its desk are gone.
   function panelLabel(zone){return island?.label(zone);}
@@ -382,6 +386,8 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     mapTouch.update(delta);
     // Captain health (GAME-V3.md §3): a fallen captain cannot walk, and lies as the wave draws them.
     const captainDown=isCaptainDown();
+    // Keys held when a finisher starts or ends are let go, so the captain does not walk off on his own afterwards.
+    if(finisherChanged(isFinishing()))resetControls();
     // A shot or a cutlass blow poses your own body (and a teammate's figure), never a second captain (pirates/poses.js).
     const speed=controller.update(delta,!captainDown&&active&&!captainBlocked(),combatAfterMove);
     const poses=framePoses;

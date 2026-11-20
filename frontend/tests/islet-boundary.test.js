@@ -86,6 +86,7 @@ describe('the hook in game.js', () => {
     expect(game.match(/const externalOverlay=.*$/m)?.[0]).toContain('stopPlots?.active');
   });
   it('retains every outside overlay when village management also blocks the captain', () => {
-    expect(game).toContain('const captainBlocked=()=>outsideBlocked()||island?.managing===true;');
+    // ...and a running boss finisher or rescue, whose minigame owns the keys (pirates/finisher/captain-lock.js).
+    expect(game).toContain('const captainBlocked=()=>outsideBlocked()||island?.managing===true||isFinishing();');
   });
 });
