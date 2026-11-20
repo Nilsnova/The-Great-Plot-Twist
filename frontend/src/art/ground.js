@@ -549,7 +549,7 @@ function paintTerrain(c, s, coast, random, materials, relief) {
   c.restore();
   paintTurfBevel(c, coast, meadow, grassRadius);
   stroke(c, meadow, linear(c, -16, -14, 13, 12, [[0, '#64854079'], [.53, '#496d3dac'], [1, '#425f36d6']]), .145);
-  paintTerraceFeet(c, beach, rim, materials);
+  paintTerraceFeet(c, beach, rim);
   c.restore();
 }
 function nearPath(paths, x, z, reach) {
