@@ -335,6 +335,19 @@ assertions or gameplay. See the
 
 **Do not cover:** physical phones and their browsers, real audio output (headless Chrome has no real audio device), real sign-in, the live API and Realtime, and slow class Wi-Fi.
 
+### Which browser checks ran green on 20 Nov 2026
+
+Every registered `test:*` browser check was run once on a MacBook with an installed Chrome (Nicolas, 20 Nov), on `main` b65210eb; the three marked with a PR number were run on a branch that includes that PR. One run each, so a pass is one green run and not a stability claim.
+
+| Result | Checks |
+|---|---|
+| **Pass (30)** | `test:world`, `readability`, `overlaps`, `outage`, `a11y`, `help`, `intro`, `build-stamp`, `title-start`, `market`, `input`, `mobile`, `panels`, `settings:visuals`, `signin`, `credits`, `lifecycle`, `spoilers`, `islet:world`, `festival`, `loading`, `production`, `art`, `recovery:component`, `rules`, `walls`, `placement`; `csp` (with #622: a stale font assertion had stopped it since 12 Nov); `demo` and `mp` (with #623: both defaulted to one teammate's home folder; `mp` also read the map one frame too early after a tear-down) |
+| **Fail, last changed 10–11 Nov, before v3: they test the old world (9)** | `test:browser` (`TypeError` reading `entries` at `check-browser.js:83`), `host` (the console now also asks `/api/host/demo`, which the check's fixture refuses), `ui` and `ui:production` ("Gallery shows nine component groups and six request states"), `weather:wiring` (`null` height at `check-weather-wiring.js:21`), `problem-report` (no "Report a problem" link found), `living` (timeout), `harbor:life` ("Ambient motion becomes still under reduced motion"), `online:islet` (waits for `.hud.exploring`) |
+| **Fail, newer checks (4)** | `test:csp:inventory` (the built `fake-api` chunk holds a literal origin `http://fake.local` that the inventory does not list), `test:arsenal` and `test:culverin` (their start sequence stops in the gap before the goal card; past that they still expect the retired flags `arsenal` and `defenses_v2` and older cards), `test:rescue` (timeout "back on the home island") |
+| **Not run** | `test:art:production`, `test:online:islet:chaos` |
+
+None of the failing checks showed a wrong picture or a broken action in the game: each stops on an expectation about an older screen or flag. They are listed here so that nobody reads the table above as "all 39 pass".
+
 ## 5. Live smoke test
 
 | Command | What it checks | Does not cover |
