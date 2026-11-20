@@ -16,6 +16,7 @@
 | [WALKTHROUGH.md](WALKTHROUGH.md) | How each part is built, why, its limits and its tests. The sheet for the walkthrough questions. |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | The big picture on one page: browser, server, database, who may do what, where secrets live. |
 | [TEST-MAP.md](TEST-MAP.md) | Per area: which tests cover it, the command, and what no test covers. |
+| [OUTAGES.md](OUTAGES.md) | What happens when a key is missing, a provider is down or the connection drops, with the test for each case. |
 
 ## The game as it is now
 
