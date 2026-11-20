@@ -259,7 +259,13 @@ void main(){
           float grit=pxNoise(p*vec2(3.45,5.65)+vec2(foamTime*.082,-foamTime*.054));
           float packet=smoothstep(.32,.71,pockets*.44+ripples*.43+grit*.13);
           float rockRun=.20+run*.40+refraction*.71;
-          float toe=1.0-band(abs(d-rockRun),.054+packet*.095);
+          // A narrow crest remains visible from Fit. Its thinner, irregular shoulder breaks up
+          // under closer zoom so a long wave packet never reads as a solid painted strip.
+          float crestDistance=abs(d-rockRun+(grit-.5)*.052);
+          float core=1.0-band(crestDistance,.056+packet*.045);
+          float laceGate=smoothstep(.43,.78,grit*.74+ripples*.26);
+          float lace=1.0-band(crestDistance,.091+packet*.048+(grit-.5)*.053);
+          float toe=max(core,.87*lace*laceGate);
           float backwashAt=rockRun+.27+(.5-grit)*.21;
           float backwash=(1.0-band(abs(d-backwashAt),.034+packet*.014))*smoothstep(.43,.77,ripples);
           float wispAt=rockRun-.13+(grit-.5)*.24;
