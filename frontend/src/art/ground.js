@@ -500,16 +500,8 @@ function lawnRelief() {
 function paintTerrain(c, s, coast, random, materials, relief) {
   const rim = cliffProfile(s), home = s === surfaces.home_islet;
   paintCliffFaces(c, rim, materials);
-  const beach = coast(1), apron = coast(1.035);
-  c.fillStyle = '#c7b79c70'; c.fill(apron);
-  if (home) {
-    // Colour only the exposed translucent wash, leaving the sand and turf underpaint intact.
-    const flood = new Path2D(apron);
-    flood.addPath(beach);
-    c.save(); c.globalCompositeOperation = 'source-atop';
-    c.fillStyle = '#5a9c8c80'; c.fill(flood, 'evenodd');
-    c.restore();
-  }
+  c.fillStyle = '#c7b79c70'; c.fill(coast(1.035));
+  const beach = coast(1);
   // The beach: warm sand, darker at the waterline, lighter towards the meadow.
   c.fillStyle = '#f2d595'; c.fill(beach);
   if (materials) { c.save(); c.clip(beach); paintMaterial(c, materials, 'sand', {alpha: .9}); c.restore(); }
