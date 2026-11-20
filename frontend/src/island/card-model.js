@@ -6,6 +6,8 @@ import {displayIslandCode, visitUrl} from './codes.js';
 import {formatCoinDelta, formatCoins} from '../lib/coins.js';
 import {BRANCHES, ROLES, ROLE_BY_ID, ROLE_LEVEL, SKILLS, SKILL_BY_ID, isRole, pointsEarned, pointsSpent, readSkills, respecPrice} from '../pirates/captain-ids.js';
 import {isExtraSpot} from './extra-spots.js';
+import {defenses, spotById} from './spots.js';
+import {TOWER_TREES} from '../pirates/tower-trees.js';
 import {opensText, spotWave, waveOf, isOpen, tierItem, tierWave} from '../campaign/index.js';
 import {BRANCH_BY_ID, SPECS, TOP_TIER, isCapstone, optionLine, optionName, optionsOf, readSpec, readTier, skillPrice} from '../campaign/tech.js';
 import {BOAT, GAME_TEXT as BOAT_TEXT, coinsFor} from '../pirates/boat/rules.js';
@@ -423,7 +425,7 @@ export function harborModel({campaign = null} = {}) {
 //   branches: [{branch, name, tier, summary, folded, tiers: [{tier, state, fork, reason, nodes: [{id, name,
 //     line, state, note, button: {label, aria, disabled, reason, action: {branch, tier, choice, change}} | null}]}]}]
 //   tier state: done · next · locked;  node state: done · chosen · closed · open · locked
-export function techModel({campaign = null, spots = null, coins = null, busy = null, message = '', battle = false, recoveryVersion = 0, economy = undefined, sharedSnapshot = null} = {}) {
+export function techModel({campaign = null, spots = null, towerPrices = null, coins = null, busy = null, message = '', battle = false, recoveryVersion = 0, economy = undefined, sharedSnapshot = null} = {}) {
   if (economy !== undefined) return sharedTechCard({economy,sharedSnapshot,busy,message,battle,recoveryVersion});
   const funds = cardFunds(economy, coins); coins = funds.coins;
   const open = isOpen(campaign, 'tech_hub');

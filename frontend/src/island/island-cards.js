@@ -117,9 +117,13 @@ export function createCards(isl) {
     return {...model,stalls:model.stalls.map(stall=>['market','match'].includes(stall.id) && !isl.domainAvailable(stall.id)
       ?{...stall,open:false,reason:'This activity is unavailable on shared islands.'}:stall)};
   };
-  const tech = () => techModel({campaign: campaign(), spots: target()?.spots ?? null, coins: isl.own?.coins ?? null, ...sharedCard(), busy: isl.busyResearch,
-    battle: isl.battle && !isl.waveOver || currentFunds().shared && (isl.flow.busy || !!isl.flow.current && !isl.waveOver),
-    message: isl.cardMessage || (!target() ? isl.ownMessage : ''), recoveryVersion: recoveryModelVersion()});
+  const tech = () => {
+    const confirmed = researchIsland();
+    return techModel({campaign: confirmed ? campaignOf(confirmed) : null, spots: confirmed?.spots ?? null,
+      towerPrices: isl.own?.prices ?? null, coins: isl.own?.coins ?? null, ...sharedCard(), busy: isl.busyResearch,
+      battle: isl.battle && !isl.waveOver || currentFunds().shared && (isl.flow.busy || !!isl.flow.current && !isl.waveOver),
+      message: isl.cardMessage || (!confirmed ? isl.ownMessage : ''), recoveryVersion: recoveryModelVersion()});
+  };
   const wreck = () => wreckModel({campaign: campaign(), coins: isl.own?.coins ?? null, ...sharedCard(), busy: isl.busyGift, message: isl.cardMessage || (!target() ? isl.ownMessage : ''),
     boat: isl.boatStatus, requireRewardScope: isl.mode !== 'fake', battle: isl.battle && !isl.waveOver || currentFunds().shared && (isl.flow.busy || !!isl.flow.current && !isl.waveOver)});
   const harborHandlers = {open: id => {
