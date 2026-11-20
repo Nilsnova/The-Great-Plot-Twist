@@ -213,6 +213,10 @@ void main(){
       colour=mix(colour,mix(uStroke,uFoam,.57),ridge*spray*nearLight*offshore);
       float returnLight=(1.0-band(abs(height-.43+(facets-.5)*.16),.043))*smoothstep(.19,.72,slope);
       colour=mix(colour,uStroke,returnLight*spray*.19*offshore);
+      float chop=shortWave*1.22+longWave*.73+(facets-.5)*.81;
+      float reflected=(1.0-band(abs(sin(chop)-.72),.046))*smoothstep(.18,.68,height);
+      float detailFade=1.0-smoothstep(.36,.9,fwidth(chop));
+      colour=mix(colour,uGlint,reflected*detailFade*spray*.27*offshore);
 
       // Submerged stone and narrow refracted marks sit beneath the white breaking water.
       float shelf=smoothstep(.28,1.0,d)*(1.0-smoothstep(2.3,5.5,d));
@@ -277,8 +281,8 @@ void main(){
 
 export function createWater(scene) {
   const colours = { uDeep: '#07566e', uMid: '#087f96', uLight: '#3dbdc9', uShallow: '#38c9b5', uShallow2: '#8be2c5', uFoam: '#f4fffa', uGlint: '#e6fff5', uStroke: '#63cfd6' };
-  const homeColours = {...colours, uDeep: '#064c66', uMid: '#0a91a5', uLight: '#31d3d3',
-    uShallow: '#2ed0b6', uShallow2: '#a6edd6', uFoam: '#f3fff8', uStroke: '#8df1e7'};
+  const homeColours = {...colours, uDeep: '#073d61', uMid: '#087b99', uLight: '#36cfda',
+    uShallow: '#25cabc', uShallow2: '#8be5cf', uFoam: '#f3fff8', uStroke: '#83e6eb'};
   const uniforms = { ...seaUniforms, uHomeCoast: {value: 0} };
   for (const [key, value] of Object.entries(colours)) uniforms[key] = { value: new THREE.Color(value) };
   const material = new THREE.ShaderMaterial({ uniforms, vertexShader: worldVertex, fragmentShader: fragment,
