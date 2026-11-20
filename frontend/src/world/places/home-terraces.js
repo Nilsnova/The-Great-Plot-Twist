@@ -509,7 +509,9 @@ export function createHomeTerraces(root, coastArt, art) {
               const [sodMaterial, sodTint] = SOD_MATERIAL[strip];
               const shade = SOD_PROFILE[strip][2] + variation;
               const light = SOD_PROFILE[strip + 1][2] + variation;
-              face(a[strip], b[strip], b[strip + 1], a[strip + 1], sodTint, shade, light, wornLedge ? WORN_LEDGE : sodMaterial);
+              // Only the sheltered underside of a worn cove edge shows exposed sediment.
+              const surface = wornLedge && strip < 2 ? WORN_LEDGE : sodMaterial;
+              face(a[strip], b[strip], b[strip + 1], a[strip + 1], sodTint, shade, light, surface);
             }
             continue;
           }
@@ -628,6 +630,16 @@ export function createHomeTerraces(root, coastArt, art) {
           stone = mix(stone, stone * vec3(.70, .78, .65), sodShade * (.48 + grainBreak * .22));
           stone = mix(stone, stone * vec3(.82, .94, .72), .48 * patina * cut);
           stone *= 1.0 + shoulder * cut * .23 - rootShadow - foot * .175 - toe * (.12 + grainBreak * .06);
+          if (vTerrace.y < 0.0) {
+            // Break up the taller rear faces at close zoom, and keep the beveled edges warm.
+            vec2 frequency = vec2(4.2, 6.4);
+            float resolved = 1.0 - smoothstep(.43, .96, length(fwidth(layers) * frequency));
+            vec3 cutGrain = sandstoneGrain(layers * frequency);
+            float facets = clamp(dot(cutGrain.yz, vec2(-.16, .12)), -.19, .21);
+            float cleanEdge = (1.0 - smoothstep(.06, .25, vSurface.x)) * smoothstep(.26, .78, vSurface.y);
+            stone *= 1.0 + (facets + (cutGrain.x - .5) * .14) * resolved * cut;
+            stone += stone * vec3(.17, .11, .063) * cleanEdge * cut;
+          }
           gl_FragColor = vec4(stone, vTerrace.w);
           #include <colorspace_fragment>
           return;
