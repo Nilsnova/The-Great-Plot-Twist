@@ -43,7 +43,9 @@ async function verifyPage(path) {
   if(path.startsWith('/help')||path.startsWith('/privacy')){
     assert.match(style.fontFamily,/Courier|system-ui|sans-serif/i,`${path} applies a local readable font`);
     assert.ok(style.fontSize>=16,`${path} keeps supporting-page text readable`);
-  }else assert.match(style.fontFamily, /Courier/i, `${path} applies the local interface font`);
+  // The interface font since the cartoon redesign (12 Nov, src/ui/base.css) is the system UI stack; the
+  // auth-check page keeps its own monospace. Both are local: no web font is fetched.
+  }else assert.match(style.fontFamily, /system-ui|sans-serif|Courier|monospace/i, `${path} applies a local interface font`);
   assert.ok(style.sheetCount > 0, `${path} loads same-origin stylesheets`);
   const violations = await page.evaluate(() => window.__cspViolations ?? []);
   assert.deepEqual(violations, [], `${path} produces no CSP violations`);
