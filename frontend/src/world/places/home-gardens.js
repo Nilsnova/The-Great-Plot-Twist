@@ -24,10 +24,30 @@ const TREE_ART = ['oak', 'pine', 'birch'];
 const HOME_FOLIAGE = [...ART, ...TREE_ART];
 const STONE_BEDS = new Set([0, 3, 4, 8, 10, 13]);
 const BROADLEAF_BEDS = new Set([1, 3, 5, 7, 9, 12, 14, 15, 16, 17]);
+// Low extensions on the lawn side of the existing beds. Each offsets from its bed's
+// original foot, away from the path or doorway. Keep the middle of each yard clear.
+const BED_EDGES = [
+  [0, -.63, -.64, .58, 'flowers'], [1, .70, -.42, .55, 'grass-tuft'],
+  [2, -.63, -.43, .63, 'flowers'], [3, .66, -.53, .57, 'grass-tuft'],
+  [4, -.66, -.48, .60, 'flowers'], [5, 1.22, -2.15, .53, 'grass-tuft'],
+  [6, -.68, -.53, .58, 'grass-tuft'], [9, .68, -.47, .54, 'flowers'],
+  [10, -.71, -.57, .59, 'flowers'], [11, .64, -.53, .58, 'grass-tuft'],
+  [12, .58, -.49, .52, 'grass-tuft'], [13, .63, -.55, .59, 'flowers'],
+  [16, -.67, .38, .60, 'flowers'],
+];
 // These are light multipliers in the same corner order as the sprite quads.
 const GARDEN_LIGHT = [
   .83, .88, .84, .76, .81, .79,
   1.09, 1.065, .976, 1.20, 1.15, .99,
+];
+
+const SHADED_LEAVES = [
+  .67, .79, .71, .63, .74, .71,
+  .91, .97, .83, 1.04, 1.07, .86,
+];
+const SUNLIT_LEAVES = [
+  .83, .88, .75, .78, .86, .70,
+  1.16, 1.14, .88, 1.23, 1.20, .91,
 ];
 
 const CANOPY = {
@@ -157,12 +177,12 @@ function gardenPlants() {
       plants.push({id: undergrowth, x: x - .28 * side, z: z + .37, scale: scale * .58});
     }
     return plants;
-  }).sort((a, b) => a.z - b.z);
+  });
 }
 
 function addGardenLayer(root, plants, rectangles, material, name, renderOrder) {
   const vertices = [], indices = [], uv = [], feet = [], colors = [];
-  for (const {id, x, z, scale} of plants) {
+  for (const {id, x, z, scale, light = GARDEN_LIGHT} of plants) {
     const [width, height, anchor] = artSizes[id], foot = projectGround(x, z);
     const half = width * scale * .5, bottom = foot.y - height * scale * anchor;
     const top = bottom + height * scale, first = vertices.length / 3;
@@ -171,7 +191,7 @@ function addGardenLayer(root, plants, rectangles, material, name, renderOrder) {
     vertices.push(foot.x - half, bottom, 0, foot.x + half, bottom, 0,
       foot.x + half, top, 0, foot.x - half, top, 0);
     uv.push(left, low, right, low, right, high, left, high);
-    colors.push(...GARDEN_LIGHT);
+    colors.push(...light);
     indices.push(first, first + 1, first + 2, first, first + 2, first + 3);
   }
   const geometry = new THREE.BufferGeometry();
@@ -207,10 +227,23 @@ export function createHomeGardens(root, art) {
 
   const material = spriteMaterial(leafTexture(packed.atlas) ?? smoothTexture(packed.atlas));
   material.vertexColors = true;
-  const plants = gardenPlants();
+  const edges = BED_EDGES.map(([bed, across, back, scale, understory]) => {
+    const [baseX, baseZ] = BEDS[bed];
+    return {x: baseX + across, z: baseZ + back, side: Math.sign(across), scale, understory};
+  });
+  const underplanting = edges.flatMap(({x, z, side, scale, understory}) => [
+    {id: 'home-broadleaf', x, z, scale, light: SHADED_LEAVES},
+    {id: 'shrub', x: x - .28 * side, z: z + .24, scale: scale * .74, light: SUNLIT_LEAVES},
+    {id: understory, x: x + .40 * side, z: z + .26, scale: scale * .72},
+  ]);
+  const plants = [...gardenPlants(), ...underplanting].sort((a, b) => a.z - b.z);
   // The raised bank occludes the flower at its original meadow position.
   addGardenLayer(root, plants.filter(plant => plant.behindTerrace), packed.rectangles, material, 'home-under-terrace-garden', 4.65);
   addGardenLayer(root, plants.filter(plant => !plant.behindTerrace), packed.rectangles, material, 'home-village-gardens', 22);
-  return BEDS.map(([x, z, , scale]) => ({x, z, width: scale * 1.07, depth: scale * .51,
-    reach: scale * .48, opacity: .56}));
+  return [
+    ...BEDS.map(([x, z, , scale]) => ({x, z, width: scale * 1.07, depth: scale * .51,
+      reach: scale * .48, opacity: .56})),
+    ...edges.map(({x, z, scale}) => ({x, z, width: scale * 1.04, depth: scale * .49,
+      reach: scale * .36, opacity: .43})),
+  ];
 }

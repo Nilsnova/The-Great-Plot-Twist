@@ -1,18 +1,39 @@
 .island-village-mode {
   position: absolute; z-index: 35; bottom: calc(max(18px, env(safe-area-inset-bottom)) + var(--narrator-card-height, 0px) + 12px); left: 50%; transform: translateX(-50%);
   box-sizing: border-box; width: min(940px, calc(100% - 24px)); display: flex; align-items: center; gap: 12px;
-  padding: 12px 16px; border: 3px solid #d3aa63; border-radius: 16px;
-  background: var(--u-paper-surface) var(--u-parch); color: var(--u-pink);
-  box-shadow: inset 0 0 0 2px #865823, inset 0 0 0 4px #fff3cf, 0 3px 0 #60421d, 0 8px 22px #102f36a0;
+  padding: 12px 16px; border: 3px solid transparent; border-radius: 15px;
+  background:
+    radial-gradient(circle at 6px 6px, #fff1bd 0 1px, #995e2d 1.5px 2px, transparent 3px) padding-box,
+    radial-gradient(circle at calc(100% - 6px) 6px, #fff1bd 0 1px, #995e2d 1.5px 2px, transparent 3px) padding-box,
+    radial-gradient(circle at 6px calc(100% - 6px), #ffe5a1 0 1px, #995e2d 1.5px 2px, transparent 3px) padding-box,
+    radial-gradient(circle at calc(100% - 6px) calc(100% - 6px), #ffe5a1 0 1px, #995e2d 1.5px 2px, transparent 3px) padding-box,
+    linear-gradient(110deg,#fff1cd,#fae0a8 45%,#e9be83) padding-box,
+    var(--u-brass-surface) border-box;
+  color: var(--u-pink);
+  box-shadow: var(--u-brass-bevel);
 }
 .island-village-mode[hidden], .island-village-mode button[hidden] { display: none; }
 .island-village-copy { flex: 1; min-width: 0; }
-.island-village-copy strong { font: 700 20px/1.2 var(--u-serif); }
+.island-village-copy strong { font: 800 20px/1.2 var(--u-serif); text-shadow: 0 1px #fff4cf; }
 .island-village-copy p { margin: 4px 0 0; font-size: 13px; line-height: 1.35; }
-.island-village-mode button { min-height: 44px; flex: none; padding: 8px 12px; border: 2px solid #ae955f; border-radius: 11px; box-shadow: inset 0 1px 1px #b7dfdc50, 0 2px 0 #061f27; }
-.island-village-mode .kit-quiet { background: var(--u-quiet-surface) var(--u-card); color: var(--u-ink); }
+.island-village-mode button { min-height: 44px; flex: none; padding: 8px 12px; border: 1px solid #b78a4d; border-radius: 9px; }
+.island-village-mode .kit-quiet, .island-village-mode select {
+  background: var(--u-enamel-surface) var(--u-sea);
+  color: var(--u-ink);
+  box-shadow: var(--u-enamel-bevel);
+}
+.island-village-mode :is(button, select):hover:not(:disabled) { background: var(--u-enamel-hover) var(--u-raise); }
 .island-village-mode :is(button, select):focus-visible { outline: 3px solid #214c58; outline-offset: 3px; }
-.island-village-buildings, .island-village-coverage { box-sizing: border-box; height: 44px; min-width: 0; width: 142px; max-width: 100%; padding: 6px; border: 2px solid #ae955f; border-radius: 11px; background: var(--u-chip-surface) var(--u-card); color: var(--u-ink); font: 700 14px/1.2 var(--u-font); }
+.island-village-mode .island-village-exit {
+  background: linear-gradient(#fff0c5,#f3d79a 56%,#d5a16a);
+  color: #352314;
+  box-shadow: inset 0 1px 1px #fff4d8, inset 0 -2px 0 #9a643a7a, 0 2px 0 #563a24;
+}
+.island-village-mode .island-village-exit:hover:not(:disabled) { background: linear-gradient(#fffae0,#f6d8a3 70%,#e2b175); }
+.island-village-buildings, .island-village-coverage {
+  box-sizing: border-box; height: 44px; min-width: 0; width: 142px; max-width: 100%; padding: 6px;
+  border: 1px solid #b78a4d; border-radius: 9px; font: 700 14px/1.2 var(--u-font);
+}
 .island-village-mode.has-coverage { flex-wrap: wrap; }
 .island-village-coverage { width: 150px; flex: none; }
 .island-coverage-legend {
@@ -67,4 +88,8 @@
   .has-coverage .island-village-coverage { width: 132px; }
   .island-coverage-legend { padding-top: 4px; font-size: 12px; }
   .island-coverage-source { flex-basis: auto; }
+}
+
+@media (forced-colors: active) {
+  .island-village-mode, .island-village-mode :is(select, button) { border-color: CanvasText; }
 }

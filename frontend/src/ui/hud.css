@@ -37,6 +37,17 @@
 .hud-play .hud-menu:hover{background:var(--u-quiet-surface) var(--u-raise)}.hud-play .hud-menu:focus-visible{outline:3px solid var(--u-gold);outline-offset:6px}
 .hud-menu-icon{width:18px;height:3px;background:currentColor;box-shadow:0 -6px currentColor,0 6px currentColor}
 
+/* Home Island's shipboard enamel matches the village tools and portrait cards. */
+.hud-play.hud-home :is(.hud-coins,.hud-menu) {
+  background: var(--u-enamel-surface) var(--u-sea);
+  box-shadow: var(--u-hud-brass-bevel);
+}
+.hud-play.hud-home .hud-menu:hover { background: var(--u-enamel-hover) var(--u-raise); }
+.hud-play.hud-home .hud-menu-icon { width: 17px; border-radius: 1px; }
+.hud-play.hud-home .quest-strip {
+  box-shadow: inset 0 1px 0 #a2dfdd36, 0 0 0 2px #d6a961, 0 0 0 3px #543723, var(--u-lift);
+}
+
 /* The quest strip: only the current goal shows (owner, 15 Nov: "limit the visual overload"); the title's
    "1 of 10" says how many there are, and a tap on the goal shows its hint. */
 .quest-strip li:not(:has([data-current=true])){display:none}
@@ -95,8 +106,9 @@
   .hud-play.hud-home:not(.hud-wide-balance) .hud-wave:not([hidden]) {
     position:absolute; top:0; left:calc(50vw - 12px); transform:translateX(-50%);
     box-sizing:border-box; min-height:44px; max-width:calc(100vw - 225px); padding:6px 7px; gap:4px;
-    border:0; border-radius:var(--u-radius-sm); box-shadow:var(--u-frame);
-    background:var(--u-chip-surface) var(--u-sea); font-size:13px; pointer-events:none;
+    border:0; border-radius:var(--u-radius-sm);
+    background:var(--u-enamel-surface) var(--u-sea); font-size:13px; pointer-events:none;
+    box-shadow:var(--u-hud-brass-bevel);
   }
   .hud-play.hud-home:not(.hud-wide-balance) .hud-wave-value { min-width:0; overflow:hidden; text-overflow:ellipsis; }
   .hud-play.hud-home:not(.hud-wide-balance) .hud-menu { padding-inline:10px; gap:7px; }

@@ -3,7 +3,7 @@ import {surfaceClass} from './places/surfaces.js';
 import {projectGround} from './projection.js';
 
 const CAST_X = .66, CAST_Z = Math.sqrt(1 - CAST_X * CAST_X);
-const CAST_SHADE = new THREE.Color('#293e29'), CONTACT_SHADE = new THREE.Color('#3b3425');
+const CAST_SHADE = new THREE.Color('#34432c'), CONTACT_SHADE = new THREE.Color('#3b3425');
 const OUTLINE = Array.from({length: 16}, (_, index) => index * Math.PI / 8);
 const roundedCorner = value => Math.sign(value) * Math.abs(value) ** .71;
 
@@ -65,14 +65,15 @@ export function appendGroundShadow(vertex, indices, {x, z, width, depth, reach, 
   }
 
   if (roof) {
-    const outline = roofOutline(width, depth, reach, roof);
-    const cx = reach * CAST_X * .46, cz = reach * CAST_Z * .46;
-    const center = dryVertex(x + cx, z + cz, CAST_SHADE, .66, false), inner = [], outer = [];
+    const sunReach = reach * .81;
+    const outline = roofOutline(width, depth, sunReach, roof);
+    const cx = sunReach * CAST_X * .46, cz = sunReach * CAST_Z * .46;
+    const center = dryVertex(x + cx, z + cz, CAST_SHADE, .62, false), inner = [], outer = [];
     for (const [dx, dz] of outline) {
-      const cast = (dx * CAST_X + dz * CAST_Z) / reach;
+      const cast = (dx * CAST_X + dz * CAST_Z) / sunReach;
       const fade = THREE.MathUtils.smoothstep(cast, .04, 1.17);
-      const spread = 1.12 + fade * .19;
-      inner.push(dryVertex(x + dx, z + dz, CAST_SHADE, .55 - fade * .24, false));
+      const spread = 1.09 + fade * .23;
+      inner.push(dryVertex(x + dx, z + dz, CAST_SHADE, .55 - fade * .33, false));
       outer.push(dryVertex(x + cx + (dx - cx) * spread, z + cz + (dz - cz) * spread, CAST_SHADE, 0, false));
     }
     for (let i = 0; i < outline.length; i++) {

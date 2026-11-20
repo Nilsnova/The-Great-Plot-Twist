@@ -113,30 +113,30 @@ const SOD_MATERIAL = [[2.9, ROOTS], [2.6, ROOTS], [2.0, GRASS_CREST], [1.48, TUR
 // Each stop starts a band. The two faces have deep bases, lit shoulders and grass lips.
 // A short incline at the back of the upper tread hides where it joins the old meadow.
 const REAR_PROFILE = [
-  [0, 0, -.15, RECESS], [.025, .052, -.24, STONE], [.054, .365, -.055, STONE],
-  [.074, .48, .12, STONE], [.11, .515, .21, LIP], [.168, .585, .12, TURF],
-  [.36, .565, .02, TURF], [.405, .576, -.13, RECESS], [.429, .62, -.23, STONE],
-  [.450, .84, -.055, STONE], [.481, .93, .14, STONE], [.52, .977, .24, LIP],
-  [.58, 1.032, .12, TURF], [.848, 1.01, .065, TURF], [.95, .805, -.01, TURF],
+  [0, 0, -.15, RECESS], [.025, .052, -.24, STONE], [.048, .372, -.055, STONE],
+  [.062, .482, .13, STONE], [.099, .534, .21, LIP], [.151, .565, .12, TURF],
+  [.37, .566, .045, TURF], [.412, .565, -.135, RECESS], [.427, .631, -.23, STONE],
+  [.444, .844, -.055, STONE], [.465, .94, .14, STONE], [.504, .988, .24, LIP],
+  [.563, 1.026, .12, TURF], [.874, 1.026, .065, TURF], [.947, .837, -.01, TURF],
   [1, .42, -.12, TURF],
 ];
 const FRONT_PROFILE = [
-  [0, 0, -.15, RECESS], [.030, .058, -.22, STONE], [.056, .30, -.08, STONE],
-  [.083, .452, .11, STONE], [.111, .502, .18, LIP], [.154, .557, .12, TURF],
-  [.393, .563, .025, TURF], [.444, .636, -.08, RECESS], [.468, .682, -.10, STONE],
-  [.497, .810, -.01, STONE], [.525, .910, .14, STONE], [.558, .947, .215, LIP],
-  [.610, 1.008, .107, TURF], [.792, .969, .065, TURF], [.920, .620, .025, TURF],
+  [0, 0, -.15, RECESS], [.027, .058, -.22, STONE], [.047, .31, -.08, STONE],
+  [.063, .458, .13, STONE], [.097, .516, .20, LIP], [.146, .548, .12, TURF],
+  [.399, .548, .044, TURF], [.451, .547, -.14, RECESS], [.466, .629, -.24, STONE],
+  [.482, .825, -.04, STONE], [.511, .929, .14, STONE], [.545, .976, .23, LIP],
+  [.592, 1.01, .11, TURF], [.815, .969, .065, TURF], [.924, .610, .025, TURF],
   [1, .02, -.08, TURF],
 ];
 // A wide cove platform supports two unequal rocky shoulders. The shoulders rise and
 // fall along the shelf instead of forming a second continuous course of masonry.
 const SHORE_TREAD_BACK = .544;
 const SHORE_PROFILE = [
-  [0, 0, -.16, RECESS], [.024, .05, -.24, STONE], [.041, .194, -.15, STONE],
-  [.071, .313, .054, STONE], [.105, .343, .11, LIP], [.163, .426, .104, TURF],
-  [.459, .401, .053, TURF], [SHORE_TREAD_BACK, .389, -.12, RECESS], [.575, .433, -.18, STONE],
-  [.602, .583, -.045, STONE], [.638, .677, .12, STONE], [.679, .721, .17, LIP],
-  [.728, .793, .096, TURF], [.865, .778, .061, TURF], [.950, .397, -.01, TURF],
+  [0, 0, -.16, RECESS], [.022, .05, -.24, STONE], [.033, .199, -.15, STONE],
+  [.053, .318, .072, STONE], [.094, .36, .14, LIP], [.145, .408, .104, TURF],
+  [.459, .409, .061, TURF], [SHORE_TREAD_BACK, .408, -.12, RECESS], [.565, .454, -.20, STONE],
+  [.584, .597, -.045, STONE], [.618, .703, .12, STONE], [.654, .745, .18, LIP],
+  [.716, .793, .10, TURF], [.875, .792, .061, TURF], [.950, .422, -.01, TURF],
   [1, .026, -.10, TURF],
 ];
 
@@ -688,19 +688,31 @@ export function createHomeTerraces(root, coastArt, art) {
         return samplePoint(sample)(THREE.MathUtils.lerp(r0, r1, (h - h0) / (h1 - h0)) - bulge, h, front && !upper);
       }
       if (shore) {
-        // The low escarpment is a single folded rock face. Two stone shoulders
-        // interrupt its upper edge where the sod projects over rooted stone.
-        const faces = upper ? (first === 125 ? [[.005, .54, .47], [.47, .995, -.60]]
-          : [[.005, .35, -.45], [.28, .995, .54]]) : [[.003, .997, first === 125 ? -.58 : .46]];
-        for (const [i, [left, right, lean]] of faces.entries()) {
-          const point = (u, v, bulge) => {
-            const offset = lean * .075 * Math.sin(u * Math.PI) * (v - .52);
-            const sample = THREE.MathUtils.lerp(start, visibleEnd, THREE.MathUtils.lerp(left, right, u + offset));
-            const level = THREE.MathUtils.clamp(THREE.MathUtils.lerp(.021, .984, v) + (u - .5) * lean * .038, 0, 1);
-            return across(sample, level, bulge * .8);
-          };
-          const pigment = REAR_STONE[upper ? i + 1 : 3].clone().lerp(REAR_BED, upper ? .09 : .23);
-          stratum(point, pigment, lean, true);
+        // Short beds follow the shoulder instead of stretching one stone across the cove.
+        // The upper courses break at different offsets so the joints rise through the rock.
+        const beds = upper ? [[.49, .980, .70], [.018, .465, .09]] : [[.026, .971, .43]];
+        for (const [bed, [bottom, top, stagger]] of beds.entries()) {
+          let left = start - stagger;
+          for (let column = 0; left < visibleEnd; column++) {
+            const width = BLOCK_WIDTHS[(column + bed * 3 + Math.floor(first)) % BLOCK_WIDTHS.length]
+              * (upper ? .82 : 1.12);
+            const right = left + width;
+            const begin = Math.max(start + .015, left + .045);
+            const end = Math.min(visibleEnd - .016, right - .041);
+            if (end - begin > .16) {
+              const lean = Math.sin(column * 2.73 + bed * 1.38 + first);
+              const point = (u, v, bulge) => {
+                const sample = THREE.MathUtils.lerp(begin, end, u)
+                  + lean * .061 * Math.sin(u * Math.PI) * (v - .5);
+                const fracture = (u - .5) * lean * .032;
+                const level = THREE.MathUtils.clamp(THREE.MathUtils.lerp(bottom, top, v) + fracture, 0, 1);
+                return across(sample, level, bulge * (upper ? .77 : .86));
+              };
+              const pigment = REAR_STONE[(column + bed * 2 + Math.floor(first)) % REAR_STONE.length];
+              stratum(point, pigment.clone().lerp(REAR_BED, upper ? .09 + bed * .07 : .20), lean, true);
+            }
+            left = right;
+          }
         }
         return;
       }

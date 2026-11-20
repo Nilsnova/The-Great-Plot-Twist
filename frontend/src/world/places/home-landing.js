@@ -6,8 +6,8 @@ const START = 18.38, STEP = .355, PLANKS = 7;
 const center = z => -7.81 - (z - START) * .62;
 const height = z => .045 + (z - START) * .104;
 const halfWidth = i => THREE.MathUtils.lerp(1.24, .83, i / (PLANKS - 1));
-const boards = ['#bc8250', '#d29b65', '#b98051', '#cb915b', '#bb8353', '#d4a06a', '#b47a4d'];
-const endGrain = '#674530', longGrain = '#8d5939', darkGrain = '#906043', lightGrain = '#e6b783';
+const boards = ['#b97b4a', '#cf9257', '#b67a4e', '#d09258', '#be7e4e', '#d39c60', '#b47444'];
+const endGrain = '#62402d', longGrain = '#885437', darkGrain = '#88563d', lightGrain = '#e5b47a';
 
 const TOP = 1, SIDE = 2, PILE = 3, END = 4, ROPE = 5;
 const ACROSS = [0, 0, 255, 255], UPRIGHT = [0, 255, 255, 0];
@@ -53,10 +53,12 @@ function shadeTimber(material) {
           if (surface < 1.5) {
             float seed = floor(p.y * 2.818) * .83;
             float fibre = woodFibre(p.x, edge * 2.05, seed);
-            float bevel = .27 * (1.0 - smoothstep(.013, .10, edge)) - .28 * smoothstep(.86, .99, edge);
-            float glaze = .10 * sin(p.x * 1.3 + p.y * .73);
+            float shoulder = 1.0 - smoothstep(.018, .135, edge);
+            float seam = smoothstep(.81, .995, edge);
+            float bevel = .32 * shoulder - .33 * seam;
+            float glaze = .071 * sin(p.x * 1.3 + p.y * .73);
             float knot = knotGrain(p.x, edge, seed);
-            return base * (1.0 + fibre + bevel + glaze + knot);
+            return base * (1.0 + fibre + bevel + glaze + knot) + vec3(.066, .037, .016) * shoulder;
           }
           if (surface < 2.5) {
             float fibre = woodFibre(p.y, edge * 2.2, p.x * .83);
@@ -69,14 +71,14 @@ function shadeTimber(material) {
             float wet = 1.0 - smoothstep(-.20, .092, height);
             float tide = 1.0 - smoothstep(.02, .072, abs(height - .019));
             vec3 wood = base * (1.0 + fibre);
-            vec3 soaked = wood * vec3(.44, .62, .60);
-            return mix(mix(wood, soaked, wet), vec3(.15, .38, .34), tide * (.36 + .13 * sin(p.x * 18.0)));
+            vec3 soaked = wood * vec3(.34, .50, .54);
+            return mix(mix(wood, soaked, wet), vec3(.12, .31, .29), tide * (.38 + .11 * sin(p.x * 18.0)));
           }
           if (surface > 4.5) {
             float twist = (p.x + p.y * .46) * 31.0 + edge * 4.7;
             float weave = sin(twist) * (1.0 - smoothstep(.65, 2.8, fwidth(twist)));
             float roundness = sin(edge * 3.14159);
-            return base * (.59 + .47 * roundness + .14 * edge + .095 * weave);
+            return base * (.48 + .60 * roundness + .18 * edge + .10 * weave);
           }
           float rings = .13 * sin(edge * 19.0 + sin(p.x * 9.3) * .89 + p.y * 1.9);
           return base * (.85 + .26 * edge + rings);

@@ -74,14 +74,15 @@ it('lifts the grassy front shoulders wholly inside the original walkable top', (
   expect(tallCaps.some(x => x > 0)).toBe(true);
 });
 
-it('roots the raised rear headlands on existing dry shoulders beside the landing', () => {
+it('roots the raised rear headlands and both flank shelves on existing dry ground', () => {
   const root = new THREE.Group(), art = new THREE.Texture();
   const cliff = createHomeRelief(root, art);
   const {position, shoreRelief} = cliff.geometry.attributes;
   const {rx, rz} = surfaces.home_islet;
   const sampleAt = (x, z) => 180 + Math.atan2(z / rz, x / rx) * 90 / Math.PI;
   const sides = [-1, 1];
-  const footings = new Set(), crowns = new Set();
+  const footings = new Set(), crowns = new Set(), flankCrowns = new Set();
+  const raisedArcs = [[100.5, 109.6], [119.4, 127.4], [146.0, 152.8], [162.5, 170.3]];
   for (let i = 0; i < position.count; i++) {
     const region = shoreRelief.getZ(i);
     if (region < 4 || region > 5) continue;
@@ -89,12 +90,13 @@ it('roots the raised rear headlands on existing dry shoulders beside the landing
     const ground = unprojectGround(position.getX(i), position.getY(i) - height);
     const sample = sampleAt(ground.x, ground.z);
     expect(ground.z).toBeLessThan(0);
-    expect(sample).toBeGreaterThan(117);
-    expect(sample).toBeLessThan(155);
-    expect(sample < 133.5 || sample > 138.5).toBe(true);
+    expect(raisedArcs.some(([from, to]) => sample > from && sample < to)).toBe(true);
     expect(surfaceClass('home_islet', ground.x, ground.z)).toBeGreaterThan(0);
     if (height === 0) footings.add(Math.sign(ground.x));
-    if (height > 1.4 && region === 5) crowns.add(Math.sign(ground.x));
+    if (height > 1.4 && region === 5) {
+      if (sample < 112 || sample > 158) flankCrowns.add(Math.sign(ground.x));
+      else crowns.add(Math.sign(ground.x));
+    }
   }
 
   // The continuous eastern ledge carries the headland's turf above the rock heel.
@@ -112,6 +114,7 @@ it('roots the raised rear headlands on existing dry shoulders beside the landing
   }
   expect([...footings].sort()).toEqual(sides);
   expect([...crowns].sort()).toEqual(sides);
+  expect([...flankCrowns].sort()).toEqual(sides);
 });
 
 it('keeps the tidal rock groups and their wash in the existing Fit envelope', () => {
