@@ -16,6 +16,7 @@
     "test:world": "node scripts/check-world.js",
     "test:readability": "node scripts/check-readability.js",
     "test:overlaps": "node scripts/check-overlaps.js",
+    "test:outage": "node scripts/check-outage-feedback.js",
     "test:ui": "node scripts/check-ui-kit.js",
     "test:ui:production": "npm run build && KIT_PRODUCTION=1 node scripts/check-ui-kit.js",
     "test:weather:wiring": "node scripts/check-weather-wiring.js",
