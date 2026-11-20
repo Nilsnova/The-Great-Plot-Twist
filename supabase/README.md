@@ -613,6 +613,7 @@ Rows disappear from the ledger only when their player is deleted: deleting a pla
 | `touch_updated_at()` | no access | no access | no access, only the triggers run it |
 | `wallet_transactions_id_seq` (the ledger's id counter) | no access | no access | no access, the table's own inserts do not need a right on it |
 | `islet_build()` | no access | no access | yes |
+| `island_build_checked_wall()` | no access | no access | yes, for the API after it checks the settled layout |
 | `assign_captain_name()` | no access | no access | yes |
 | `reroll_captain_name()` | no access | no access | yes |
 | `save_progress()` | no access | no access | yes |

@@ -14,6 +14,7 @@ network.
 """
 
 import json
+from datetime import timedelta
 from pathlib import Path
 from uuid import UUID, uuid4
 
@@ -200,20 +201,22 @@ def test_the_first_wave_starts_after_the_countdown_and_a_repeat_is_the_same_wave
     add_players(database, OWNER)
     open_island(database, OWNER, "K7Q2M")
 
+    before = call(database, "select date_trunc('second', clock_timestamp())")
     first = start(database, OWNER, "bell-0001", owner=OWNER)
+    after = call(database, "select date_trunc('second', clock_timestamp())")
     repeat = start(database, OWNER, "bell-0001", owner=OWNER)
 
     assert first["status"] == "started" and first["wave"] == 1 and first["seed"] == 4242
     assert first["weatherKind"] == "storm" and first["ships"] == 1.5 and first["fog"] == 0
     assert first["repeat"] is False
     assert repeat == {**first, "repeat": True}
-    countdown = call(
-        database,
-        "select extract(epoch from starts_at - date_trunc('second', now())) "
-        "from public.wave_runs where id = %s",
-        first["waveId"],
+    # The bell uses the wall clock after taking its locks. The fixture's transaction
+    # timestamp can be a second older even when the requested countdown is exact.
+    starts_at = call(
+        database, "select starts_at from public.wave_runs where id = %s", first["waveId"]
     )
-    assert countdown == 10
+    countdown = timedelta(seconds=TIMING[0])
+    assert before + countdown <= starts_at <= after + countdown
 
 
 def test_one_running_wave_per_island_but_pirate_point_is_its_own(database):

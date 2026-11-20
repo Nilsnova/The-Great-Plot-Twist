@@ -119,6 +119,7 @@ FINISHED = {
 
 PAID_FUNCTIONS = (
     "island_build",
+    "island_build_checked_wall",
     "island_upgrade",
     "island_hire",
     "island_captain",
