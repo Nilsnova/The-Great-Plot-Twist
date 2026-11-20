@@ -35,6 +35,8 @@ export const HEALTH_WORD = '🧑‍✈️';
 // The button: "F: Slash" (the cutlass, D052) with a boarder within strike reach (§12), else the equipped weapon's name (§15).
 // With no pirate in range the name stays and the button dims (owner, 15 Nov: "less text"); OUT_OF_RANGE is spoken.
 export const OUT_OF_RANGE = 'No pirate in range';
+// What the break's Next wave button says while it cannot be pressed (hud.pause, info.waiting).
+export const WAITING = Object.freeze({loot: 'Counting the loot…', starting: 'Starting the next wave…', host: 'Waiting for the host'});
 export const musketText = (ready, blade = false, name = 'Musket') => (blade ? 'F: Slash' : name);
 
 // Your captain's hp under the wave bar, and the timer over a fallen captain (seconds as m:ss).
@@ -339,14 +341,16 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
       eventIcon.textContent = info.icon ?? ''; eventTitle.textContent = info.title; eventLine.textContent = info.line ?? '';
       measureBar();
     },
-    // The break: {title, line, seconds, auto, ready, paused, hold: {label, enabled} | null} or null to hide it.
+    // The break: {title, line, seconds, auto, ready, paused, waiting, hold: {label, enabled} | null} or null to hide it.
+    // waiting says why Next wave cannot be pressed: 'loot' (the server has not answered yet), 'starting' (the next
+    // wave was asked for) or 'host' (a shared island: only its manager starts). Without it: 'loot', as before.
     pause(info) {
       if (!info) { pause.hidden = true; mini.hidden = true; pauseClosed = false; lastPause = ''; document.documentElement.style.removeProperty('--pirate-break-bottom'); return; }
-      const key = `${info.title}|${info.line}|${info.seconds}|${info.auto}|${info.autoEnabled}|${info.ready}|${info.paused}|${info.hold?.label}|${info.hold?.enabled}|${pauseClosed}`;
+      const key = `${info.title}|${info.line}|${info.seconds}|${info.auto}|${info.autoEnabled}|${info.ready}|${info.waiting}|${info.paused}|${info.hold?.label}|${info.hold?.enabled}|${pauseClosed}`;
       pause.hidden = pauseClosed; mini.hidden = !pauseClosed;
       if (key === lastPause) return;
       lastPause = key; pauseTitle.textContent = info.title; pauseLine.textContent = info.line ?? '';
-      next.textContent = info.paused ? 'Paused' : info.ready ? (info.seconds > 0 ? `Next wave · ${info.seconds}` : 'Next wave') : 'Counting the loot…';
+      next.textContent = info.paused ? 'Paused' : info.ready ? (info.seconds > 0 ? `Next wave · ${info.seconds}` : 'Next wave') : WAITING[info.waiting] ?? WAITING.loot;
       next.disabled = !info.ready; auto.checked = info.auto === true;auto.disabled=info.autoEnabled===false;
       hold.hidden = !info.hold; hold.textContent = info.hold?.label ?? ''; hold.disabled = info.hold?.enabled !== true;
       pause.classList.toggle('is-paused', info.paused === true);
