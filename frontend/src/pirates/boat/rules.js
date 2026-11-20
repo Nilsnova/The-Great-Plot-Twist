@@ -97,11 +97,13 @@ export function scoreBroadside(samples, { salt = 0, easy = false, difficulty = b
     last = s; shots++;
     const pass = passAt(passes, s);
     const shot = !pass || sunk.has(pass.k) ? 'miss' : shotAt(pass, s, width);
-    if (shot === 'miss') { misses++; continue; } // a ball into empty sea costs one: aim, do not spray
+    // A ball into empty sea costs one (aim, do not spray), taken from the points held at that moment:
+    // a miss at 0 costs nothing later, so the score on screen is never a hidden debt.
+    if (shot === 'miss') { misses++; score = Math.max(0, score - 1); continue; }
     sunk.add(pass.k); hits++; score++;
     if (shot === 'bull') { bulls++; score++; }
   }
-  return { score: Math.max(0, score - misses), hits, bulls, shots, misses, max: passes.length * 2, ships: passes.length };
+  return { score, hits, bulls, shots, misses, max: passes.length * 2, ships: passes.length };
 }
 
 // ---- Treasure dash -----------------------------------------------------------------------------------
@@ -132,16 +134,19 @@ export function itemsOf(salt, difficulty = boatDifficulty('dash')) {
 export const fallOf = (difficulty = boatDifficulty('dash')) => Math.max(10, Math.round(BOAT.dash.fall / difficulty.speed));
 export function scoreDash(samples, { salt = 0, easy = false, difficulty = boatDifficulty('dash') } = {}) {
   const items = itemsOf(salt, difficulty), reach = easy ? difficulty.easyCatch : difficulty.catch, at = new Map(sortedOf(samples));
-  let coins = 0, hits = 0, shelterUntil = -Infinity;
+  let coins = 0, hits = 0, score = 0, shelterUntil = -Infinity;
   const total = items.filter(item => item.kind === 'coin').length;
   for (const item of items) {
     const x = at.get(item.at);
     if (!Number.isFinite(x) || x < 0 || x > 100) continue;
     const off = Math.abs(x - item.x);
-    if (item.kind === 'coin' && off <= reach) coins++;
-    else if (item.kind === 'ball' && off <= reach * BOAT.dash.ballReach && item.at >= shelterUntil) { hits++; shelterUntil = item.at + BOAT.dash.shelter; }
+    if (item.kind === 'coin' && off <= reach) { coins++; score++; }
+    else if (item.kind === 'ball' && off <= reach * BOAT.dash.ballReach && item.at >= shelterUntil) {
+      // In the order things arrive: a ball takes from the coins held right then, never from later ones.
+      hits++; score = Math.max(0, score - BOAT.dash.ballCost); shelterUntil = item.at + BOAT.dash.shelter;
+    }
   }
-  return { score: Math.max(0, coins - BOAT.dash.ballCost * hits), coins, hits, max: total, balls: items.length - total };
+  return { score, coins, hits, max: total, balls: items.length - total };
 }
 
 // ---- both games ----------------------------------------------------------------------------------------
