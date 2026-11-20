@@ -54,9 +54,12 @@ const HIGH_TURF = TURF.clone().lerp(ROOTS, .42);
 const WORN_LEDGE = 4;
 // These two shallow saddles join the backs of neighboring banks. The higher
 // shelf ends and the open watchtower landing remain in their original places.
-const REAR_SADDLES = [[122.15, 127.50, 1.31], [142.94, 150.82, 1.13]];
-const SADDLE_PROFILE = [
-  [0, 0], [.066, .146], [.136, .541], [.222, .876], [.305, .972], [.792, .976], [.93, .79], [1, .02],
+const REAR_SADDLES = [[120.25, 127.50], [142.94, 150.82]];
+const WEST_SADDLE_PROFILE = [
+  [0, 0, -.19, RECESS], [.029, .061, -.23, STONE], [.065, .303, -.05, STONE], [.104, .418, .06, ROOTS],
+  [.163, .454, .13, GRASS_CREST], [.409, .454, .07, TURF], [.481, .452, -.13, RECESS],
+  [.509, .552, -.20, STONE], [.544, .819, -.035, STONE], [.593, .932, .09, ROOTS],
+  [.681, .980, .13, GRASS_CREST], [.870, .977, .08, TURF], [.950, .771, .03, TURF], [1, .02, -.18, RECESS],
 ];
 // The east slope opens on either side of the wall socket. A rock shoulder carries
 // the thick sod into the pine shelf, with the lower bedding still reaching the beach.
@@ -237,7 +240,7 @@ function addTerraceFoliage(root, art, plantings) {
 export function createHomeTerraces(root, coastArt, art) {
   const coast = cliffProfile(COAST), positions = [], colors = [], materials = [], surfaceDetails = [];
   const plantings = new Map();
-  let eastShoulder, drawEastShoulder;
+  let eastShoulder, drawEastShoulder, drawWestShoulder;
   const normal = new THREE.Vector3(), edge = new THREE.Vector3();
   function sunlight(a, b, d) {
     normal.subVectors(b, a).cross(edge.subVectors(d, a)).normalize();
@@ -353,8 +356,9 @@ export function createHomeTerraces(root, coastArt, art) {
     }
   }
 
-  for (const [start, finish, crest] of REAR_SADDLES) {
+  for (const [start, finish] of REAR_SADDLES) {
     const east = start > 140;
+    const profile = east ? EAST_SADDLE_PROFILE : WEST_SADDLE_PROFILE;
     const stations = Math.ceil((finish - start) / (east ? .25 : .40));
     const rows = Array.from({length: stations + 1}, (_, station) => {
       const along = station / stations;
@@ -382,51 +386,49 @@ export function createHomeTerraces(root, coastArt, art) {
           return clipCrest(new THREE.Vector3(x * reach, rise * height * brokenBedding, z * reach), 1.38);
         });
       }
-      const width = .993 - .923;
-      const rise = crest * anchor * (.91 + .07 * Math.sin(sample * 1.40) + .035 * Math.cos(sample * 2.5));
-      return SADDLE_PROFILE.map(([radius, height]) => {
+      // These two courses come out of the seam between the west headland and
+      // the cove. They taper down before meeting the sand in the landing.
+      const joiningApron = THREE.MathUtils.smoothstep(sample, 120.50, 121.98)
+        * (1 - THREE.MathUtils.smoothstep(sample, 125.09, 126.85));
+      const width = .993 - (.907 - .080 * joiningApron);
+      const beachFold = 1 - .61 * THREE.MathUtils.smoothstep(sample, 125.19, finish);
+      const rise = 1.82 * anchor * beachFold * (.93 + .06 * Math.sin(sample * 1.40) + .025 * Math.cos(sample * 2.5));
+      return profile.map(([radius, height]) => {
         const taper = anchor + (1 - anchor) * .52;
         const reach = .993 - width * (1 - radius) * taper;
-        return clipCrest(new THREE.Vector3(x * reach, rise * height, z * reach), crest);
+        const room = beachFold * (.17 + .86 * radius);
+        return clipCrest(new THREE.Vector3(x * reach, rise * height, z * reach), room);
       });
     });
     if (east) eastShoulder = rows;
     const turn = Math.ceil((143.64 - start) / (finish - start) * stations);
     function drawShoulder(afterCove = false) {
-      const profile = east ? EAST_SADDLE_PROFILE : SADDLE_PROFILE;
       for (let ring = profile.length - 2; ring >= 0; ring--) {
         for (let i = 0; i < rows.length - 1; i++) {
           if (east && afterCove !== (i >= turn)) continue;
           const a = rows[i], b = rows[i + 1];
-          if (east) {
-            const [, level, tone, layer] = profile[ring];
-            const turf = layer === ROOTS || layer === GRASS_CREST || layer === TURF;
-            const material = turf ? layer : layer === RECESS ? SADDLE_BED : REAR_STONE[2];
-            const seam = .031 * Math.sin(i * .58 + ring * .94);
-            const right = (i + 1) / stations, left = i / stations;
-            const nextLevel = profile[ring + 1][1];
-            face(a[ring], b[ring], b[ring + 1], a[ring + 1], material, tone + seam, tone - .028,
-              turf ? layer === ROOTS ? 2.63 : 1.6 : 0, undefined,
-              [[left, level], [right, level], [right, nextLevel], [left, nextLevel]]);
-            continue;
-          }
-          const turf = ring >= 3;
-          const tint = turf ? HIGH_TURF : SADDLE_BED;
-          const seam = .05 * Math.sin(i * 1.14 + ring * .88);
-          face(a[ring], b[ring], b[ring + 1], a[ring + 1], tint, (turf ? -.085 : -.19) + seam, turf ? -.035 : -.08, Number(turf));
+          const [, level, tone, layer] = profile[ring];
+          const turf = layer === ROOTS || layer === GRASS_CREST || layer === TURF;
+          const material = turf ? layer : layer === RECESS ? SADDLE_BED : REAR_STONE[2];
+          const seam = .031 * Math.sin(i * .58 + ring * .94);
+          const right = (i + 1) / stations, left = i / stations;
+          const nextLevel = profile[ring + 1][1];
+          face(a[ring], b[ring], b[ring + 1], a[ring + 1], material, tone + seam, tone - .028,
+            turf ? layer === ROOTS ? 2.63 : 1.6 : 0, undefined,
+            [[left, level], [right, level], [right, nextLevel], [left, nextLevel]]);
         }
       }
       if (east && !afterCove) return;
-      const masses = east ? [[.06, .475, .97], [.66, .875, .87]]
-        : [[.035, .45, .86], [.32, .74, .98], [.65, .965, .78]];
-      // The east crest carries one fractured sandstone brow that folds into the
-      // lower bed by the wall socket. Both of its pieces use the same bank profile.
-      const faceRings = east ? 5 : 3;
-      for (const [index, [from, to, top]] of masses.entries()) {
+      // The irregular joints in the upper course sit over whole stones below.
+      const courses = east ? [[0, 5, [[.06, .475, .97], [.66, .875, .87]]]] : [
+        [6, 9, [[.035, .326, .89], [.314, .563, .98], [.549, .771, .87], [.763, .968, .79]]],
+        [0, 3, [[.016, .232, .84], [.219, .479, .97], [.461, .699, .88], [.685, .962, .82]]],
+      ];
+      for (const [floor, brow, masses] of courses) for (const [index, [from, to, top]] of masses.entries()) {
         const point = (u, v, bevel) => {
           const along = THREE.MathUtils.lerp(from, to, u) * stations;
           const station = Math.min(Math.floor(along), stations - 1);
-          const across = faceRings * THREE.MathUtils.clamp(v * top + .09 * u * (index % 2 ? 1 : -1), .015, .996);
+          const across = floor + (brow - floor) * THREE.MathUtils.clamp(v * top + .09 * u * (index % 2 ? 1 : -1), .015, .996);
           const ring = Math.floor(across);
           const a = rows[station], b = rows[station + 1];
           const foot = blendStone(a[ring], b[ring], along - station);
@@ -436,13 +438,15 @@ export function createHomeTerraces(root, coastArt, art) {
           p.z *= 1 - bevel * .037;
           return p;
         };
-        const shade = east ? (index === 0 ? REAR_STONE[3] : REAR_STONE[2]) : REAR_STONE[index + 1];
+        const shade = east ? (index === 0 ? REAR_STONE[3] : REAR_STONE[2]) : REAR_STONE[(index + floor + 1) % REAR_STONE.length];
         const color = shade.clone().lerp(SADDLE_BED, .27);
         stratum(point, color, index % 2 ? -.60 : .61, true);
       }
     }
-    if (east) drawEastShoulder = () => drawShoulder(true);
-    drawShoulder();
+    if (east) {
+      drawEastShoulder = () => drawShoulder(true);
+      drawShoulder();
+    } else drawWestShoulder = drawShoulder;
   }
 
   function shoulderHeight(point) {
@@ -787,6 +791,8 @@ export function createHomeTerraces(root, coastArt, art) {
       if (band === STONE) rockCourse(bottom, layer + 1, layer > 5);
       layer = bottom;
     }
+    // The saddle reaches into the cleft over the low end of the western ledge.
+    if (westTreeBank) drawWestShoulder();
     // The lifted shoulder covers the rock that turns under its high shelf.
     if (meetsEastShoulder) drawEastShoulder();
   }

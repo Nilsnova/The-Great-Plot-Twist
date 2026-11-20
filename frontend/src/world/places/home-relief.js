@@ -849,13 +849,16 @@ export function createHomeRelief(group, coastArt) {
             color = mix(color * vec3(.61, .76, .56), color * vec3(1.03, 1.00, .94), crown);
             color *= .87 + grain * .15 + clumps * .24 + blades * .09;
           } else {
-            color = weatheredSandstone(color, layers, vShoreCut.xy, .76);
+            // The rear shoulders use the same golden stone as the lower cliffs.
+            // Keep fractures in the recessed courses so each upper tread reads at a distance.
+            vec3 bedrock = weatheredSandstone(color, layers, vShoreCut.xy, .52);
+            color = mix(bedrock, roundedOchre(color, layers, vShoreCut.xy), .58);
             vec3 fracture = sandstoneGrain(layers * vec2(2.8, 4.1));
             float unevenLight = clamp(dot(fracture.yz, vec2(-.092, .13)), -.10, .16);
             float side = smoothstep(.30, .69, vShoreCut.x);
             color *= mix(vec3(1.13, 1.081, 1.03), vec3(.96, 1.0, 1.034), side) * (1.0 + unevenLight);
             // Bedding and cracked columns follow the fixed face through the bevel.
-            float bed = vShoreCut.y * 2.8 + (fracture.x - .5) * .16;
+            float bed = vShoreCut.y * 2.45 + (fracture.x - .5) * .16;
             float bedCourse = floor(bed);
             float seamHeight = abs(fract(bed) - .49);
             float along = (foot.x + foot.y * .23) * .81 + bedCourse * .59 + fracture.x * .12;
@@ -865,7 +868,7 @@ export function createHomeRelief(group, coastArt) {
             float cut = max(bedding * .72, split * smoothstep(.18, .65, fracture.x));
             float shelfLight = smoothstep(.020, .141, fract(bed) - .51)
               * (1.0 - smoothstep(.15, .39, fract(bed) - .51));
-            color *= mix(vec3(1.0), vec3(.44, .48, .53), cut * .68);
+            color *= mix(vec3(1.0), vec3(.49, .47, .43), cut * .63);
             color *= 1.0 + shelfLight * vec3(.28, .17, .075);
             float topLight = smoothstep(.54, .94, vShoreCut.y);
             float contact = 1.0 - smoothstep(.04, .35, height);
