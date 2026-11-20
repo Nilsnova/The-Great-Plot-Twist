@@ -252,11 +252,26 @@ void main(){
         // The return flow curls outside the first wave. The two edges break in different places.
         float curlBack=curl+.28+(.5-pockets)*.43;
         float returnFoam=(1.0-band(abs(d-curlBack),.036))*smoothstep(.44,.79,ripples);
-        float tongues=smoothstep(.51,.83,ripples*.62+pockets*.38);
-        float rockRun=.14+run*.30+refraction*.58;
-        float splash=(1.0-band(abs(d-rockRun),.063+segments*.06))*tongues;
-        float flecks=(1.0-band(abs(d-rockRun-.22-(pockets-.5)*.38),.024))*tongues*segments;
-        colour=mix(colour,uFoam,(returnFoam*beach*.30+max(splash,flecks)*rockShore*.78)*shoreLight);
+        colour=mix(colour,uFoam,returnFoam*beach*.30*shoreLight);
+        if(rockShore>.01&&d<1.85){
+          // Breaking water wraps the stone in uneven packets, with open gaps left between them.
+          // Lift only the spray from the dark contact water, leaving the wet cliff pigment untouched.
+          float grit=pxNoise(p*vec2(3.45,5.65)+vec2(foamTime*.082,-foamTime*.054));
+          float packet=smoothstep(.32,.71,pockets*.44+ripples*.43+grit*.13);
+          float rockRun=.20+run*.40+refraction*.71;
+          float toe=1.0-band(abs(d-rockRun),.054+packet*.095);
+          float backwashAt=rockRun+.27+(.5-grit)*.21;
+          float backwash=(1.0-band(abs(d-backwashAt),.034+packet*.014))*smoothstep(.43,.77,ripples);
+          float wispAt=rockRun-.13+(grit-.5)*.24;
+          float wisps=(1.0-band(abs(d-wispAt),.027))*smoothstep(.51,.82,grit);
+          float spray=packet*max(toe,max(backwash*.78,wisps*.75));
+          float push=packet*(1.0-band(abs(d-rockRun),.19))*.21;
+          float onWater=smoothstep(.13,.25,d);
+          float litRock=rockShore*onWater*(.64+.34*shoreLight);
+          vec3 cream=vec3(.997,.961,.858);
+          colour=mix(colour,mix(uShallow2,cream,.36),push*litRock);
+          colour=mix(colour,cream,spray*litRock);
+        }
       }
     }
   }else{
