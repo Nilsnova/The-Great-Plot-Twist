@@ -50,7 +50,6 @@ const ROCK_GARDENS = {
   55: [.63, .73],
 };
 const SHADOW = new THREE.Color('#344032');
-const PLANT_SHADOW = new THREE.Color('#263119');
 // Match the village cast when viewed from the normal camera, where positive Z runs down the screen.
 const GROUND_CAST = new THREE.Vector2(.66, .75).normalize();
 const SUN = new THREE.Vector3(-GROUND_CAST.x * .64, .77, -GROUND_CAST.y * .64).normalize();
@@ -304,14 +303,12 @@ export function createHomeTerraces(root, coastArt, art) {
       const [r0, h0] = profile[Math.max(0, next - 1)], [r1, h1] = profile[next];
       return THREE.MathUtils.lerp(h0, h1, r0 === r1 ? 0 : (radius - r0) / (r1 - r0));
     }
-    const planted = [];
     if (art) {
       const addPlant = (name, along, across, scale) => {
         const sample = THREE.MathUtils.lerp(start, finish, along);
         const plant = samplePoint(sample)(across, heightAt(across));
         if (!plantings.has(name)) plantings.set(name, []);
         plantings.get(name).push([plant, scale]);
-        if (art[name]) planted.push({name, sample, across, scale, plant});
       };
       FOLIAGE[first].forEach(entry => addPlant(...entry));
       const [along, across] = ROCK_GARDENS[first];
@@ -425,29 +422,6 @@ export function createHomeTerraces(root, coastArt, art) {
       if (band === STONE) rockCourse(bottom, layer + 1, layer > 5);
       layer = bottom;
     }
-
-    for (const {name, sample, across, scale, plant} of planted) {
-      const [width] = artSizes[name];
-      const radius = width * scale * .43;
-      // Follow the ledge under each plant. The artwork itself keeps its old ground pin.
-      const along = samplePoint(sample + .2)(across, 0).sub(plant);
-      const cross = samplePoint(sample)(across + .12, 0).sub(plant);
-      const det = along.x * cross.z - along.z * cross.x;
-      if (Math.abs(det) < .001) continue;
-      const widthRatio = radius * 1.16, lengthRatio = radius * 1.05;
-      const skew = radius * .36;
-      const weight = name === 'birch' ? .72 : name === 'rock' ? .59 : .55;
-      const coordinates = [[-1, -1], [1, -1], [1, 1], [-1, 1]];
-      const corners = coordinates.map(([u, v]) => {
-        const alongCast = v * lengthRatio + skew, perpendicular = u * widthRatio;
-        const dx = GROUND_CAST.x * alongCast - GROUND_CAST.y * perpendicular;
-        const dz = GROUND_CAST.y * alongCast + GROUND_CAST.x * perpendicular;
-        const row = THREE.MathUtils.clamp(sample + .2 * (dx * cross.z - dz * cross.x) / det, start, finish);
-        const column = THREE.MathUtils.clamp(across + .12 * (along.x * dz - along.z * dx) / det, Math.min(across, 0), 1);
-        return samplePoint(row)(column, heightAt(column));
-      });
-      for (const i of [0, 1, 2, 0, 2, 3]) vertex(corners[i], PLANT_SHADOW, 1, -2, weight, coordinates[i]);
-    }
   }
 
   const geometry = new THREE.BufferGeometry();
@@ -468,7 +442,7 @@ export function createHomeTerraces(root, coastArt, art) {
       varying vec3 vSurface;
       void main() {
         vec2 groundOffset = vec2(0.0);
-        if (terraceMaterial.z < -.5 && terraceMaterial.z > -1.5) {
+        if (terraceMaterial.z < -.5) {
           // Only the soft painted projection extends. The stone, grass and their feet stay fixed.
           groundOffset = surfaceDetail.yz * (1.0 - mod(surfaceDetail.x, 2.0));
         }
@@ -508,14 +482,6 @@ export function createHomeTerraces(root, coastArt, art) {
         float angle = atan(shore.y, shore.x);
         float rim = 1.0 + .055 * sin(angle * 5.0 + ${COAST.seed.toFixed(1)}) + .035 * cos(angle * 7.0);
         if (length(shore) >= rim * .994) discard;
-        if (vTerrace.z < -1.5) {
-          vec2 offset = vSurface.xy;
-          float canopy = 1.0 - smoothstep(.27, 1.0, length(offset));
-          float contact = 1.0 - smoothstep(.035, .47, length(offset + vec2(0.0, .33)));
-          gl_FragColor = vec4(vTone, vTerrace.w * (.61 * canopy + .39 * contact));
-          #include <colorspace_fragment>
-          return;
-        }
         vec2 samplePoint = vec2(vTerrace.x / 64.0, -vTerrace.y * ${LEGACY_DEPTH} / 48.0) * .64 + .5;
         vec3 source = texture2D(uCoastArt, samplePoint).rgb;
         float grain = smoothstep(.11, .43, dot(source, vec3(.27, .62, .11)));
