@@ -65,7 +65,7 @@ export async function createSettlement(ctx) {
       prepareHomeFoliage(art, selectedCanopy.preserveMask);
       const treeShadows = trees.map(([x, z], i) => ({
         x, z: z + .12, width: [.93, .85, .88][i % 3], depth: .68,
-        reach: [2.04, 2.32, 1.88][i % 3], canopy: true, opacity: .87,
+        reach: [2.76, 3.15, 2.58][i % 3], canopy: true, opacity: .87,
       }));
       createGroundShadows(group, [...treeShadows, ...bedShadows]);
       captainShadow = createGroundShadows(group, [{x: 0, z: 0, width: .38, depth: .32, reach: .38, opacity: .83}]);

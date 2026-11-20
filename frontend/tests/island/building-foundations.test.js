@@ -35,6 +35,15 @@ it.each([['heart', HEART], ['house', placedSpot('house_1')]])(
   },
 );
 
+it('projects the Heart roof towards the southeast without shading beyond the dry shore', () => {
+  const points = readFoundation('heart', HEART, 'heart');
+  const longest = Math.max(...points.map(({x, z}) => (x - HEART.x) * .66 + (z - HEART.z) * .75));
+  expect(longest).toBeGreaterThan(4);
+  const coastal = readFoundation('coastal-house', {x: 14, z: 13}, 'house');
+  expect(coastal.length).toBeGreaterThan(0);
+  expect(coastal.every(({x, z}) => surfaceClass('home_islet', x, z) > 0)).toBe(true);
+});
+
 it.each(['cannon_1', 'cannon_2', 'cannon_3', 'cannon_4'])('provides a solid perch at the original coastal slot %s', id => {
   const points = readFoundation(id), toes = points.filter(({height}) => height < -.9);
   const cap = points.filter(({height}) => height > .1).map(({x}) => x);
