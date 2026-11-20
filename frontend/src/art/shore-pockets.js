@@ -19,8 +19,8 @@ const STONE = [
 ];
 const BEACH_MOUTHS = [[0, 12.35], [45, 12.35], [90, 12.35], [135, 19.38]];
 const CUT = [[0, .27], [.12, .08], [.72, 0], [.93, .12], [1, .58], [.88, .87], [.66, 1], [.16, .95], [.035, .70]];
-// The seaward feet of the two southern terraces. The dock sits between the west shoulder and cove.
-const TERRACE_FEET = [[24.8, 31.5, .127, 5.38], [60.8, 68.1, .135, 11.7]];
+// Embedded chips settle into the two southern terrace feet above the dry beach.
+const TERRACE_FEET = [[25.7, 31.3, 5.38], [61.3, 67.35, 11.7]];
 const SAND = '#ddbb84';
 const smooth = value => {
   const t = Math.max(0, Math.min(1, value));
@@ -165,14 +165,30 @@ export function paintShorePockets(c, rim, materials) {
   c.restore();
 }
 
-/** Expose the same fractured rock through the turf at the seaward feet of the southern terraces. */
-export function paintTerraceFeet(c, beach, rim, materials) {
-  const rockSheet = materials && materialRect(materials, 'rock');
+/** Paint loose fragments at the foot. The actual terrace mesh supplies the large stone faces. */
+export function paintTerraceFeet(c, beach, rim) {
   c.save();
   c.clip(beach);
   c.globalCompositeOperation = 'source-atop';
-  for (const [index, [from, to, reach, seed]] of TERRACE_FEET.entries()) {
-    drawShelf(c, rim, from, to, reach, seed, rockSheet, materials, index === 1);
+  for (const [from, to, seed] of TERRACE_FEET) {
+    for (let i = 0; i < 9; i++) {
+      const drift = Math.sin(seed + i * 2.41), variety = Math.cos(seed + i * 3.28);
+      const sample = from + (to - from) * (.06 + i * .106 + drift * .035);
+      const [x, y] = coastalPoint(rim, sample, .925 + .024 * variety);
+      const [tx, ty] = coastalPoint(rim, sample + .2, 1);
+      const [px, py] = coastalPoint(rim, sample - .2, 1);
+      const width = .12 + .18 * (.5 + .5 * variety);
+      c.save();
+      c.translate(x, y);
+      c.rotate(Math.atan2(ty - py, tx - px) + .48 * drift);
+      c.scale(width, width * (.52 + .14 * drift));
+      c.fillStyle = '#78644845';
+      c.fill(ellipse(.14, .18, 1.16, .78));
+      c.fillStyle = linear(c, -.36, -.56, .43, .45,
+        [[0, '#d5ca9c83'], [.39, '#bca88091'], [1, '#8c785b6b']]);
+      c.fill(poly([[-1, .08], [-.58, -.53], [.14, -.63], [.81, -.34], [1, .18], [.43, .56], [-.43, .58]], .05));
+      c.restore();
+    }
   }
   c.restore();
 }

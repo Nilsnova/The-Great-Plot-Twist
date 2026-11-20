@@ -12,18 +12,36 @@ const COAST = surfaces.home_islet;
 const BANKS = [
   {first: 97, last: 106, foot: .935, back: .986, height: 3.05},
   {first: 116.5, last: 124.5, foot: .773, back: .963, height: 3.25},
-  {first: 125, last: 135, foot: .891, back: .958, height: 2.355, shore: true},
-  {first: 137, last: 146, foot: .921, back: .955, height: 1.875, shore: true},
+  {first: 125, last: 135, foot: .891, back: .958, height: 2.355, shore: true, reserve: .022, crowns: [.30, .82]},
+  {first: 137, last: 146, foot: .921, back: .955, height: 1.875, shore: true, crowns: [.73, .25], stepBack: .185},
   {first: 148, last: 156, foot: .826, back: .964, height: 3.495},
   {first: 166, last: 171, foot: .790, back: .946, height: 3.51},
   {first: 30, last: 37, foot: .985, back: .888, height: 1.92},
   {first: 55, last: 67, foot: .958, back: .835, height: 1.62},
 ];
+// Tall caps emerge at unequal positions on their existing treads. Values are
+// the centre and half-width along the bank, rise in world units and flat crown fraction.
+const CRAGS = {
+  30: [.52, .53, .79, .56],
+  55: [.82, .16, 1.02, .49],
+};
+// Parts of the lowest southern stone courses continue down into the cliff face.
+// Each span gives its centre and half-width in coast samples, then the depth below the old top.
+const CLIFF_FOOTINGS = {30: [33.3, 2.15, .43], 55: [61.2, 3.94, .49]};
+const REAR_CRESTS = {
+  97: [.40, .78, .50],
+  116.5: [.36, .87],
+  125: [.29, .79],
+  137: [.72, .21],
+  148: [.47, .86],
+  166: [.64, .20, .56],
+};
 const STONE = ['#c79c67', '#dbaf77', '#b88b60', '#d4ae7e', '#c59767'].map(hex => new THREE.Color(hex));
 const MORTAR = new THREE.Color('#96734f'), RECESS = new THREE.Color('#765840');
 const ENDS = [new THREE.Color('#aa8357'), new THREE.Color('#b99165')];
 const TURF = new THREE.Color('#8bb943'), LIP = new THREE.Color('#b0d557'), ROOTS = new THREE.Color('#739e3a');
 const GRASS_CREST = TURF.clone().lerp(LIP, .56);
+const HIGH_TURF = TURF.clone().lerp(ROOTS, .42);
 const WORN_LEDGE = 4;
 const FOLIAGE = {
   97: [['birch', .56, .70, .49], ['shrub', .19, .64, .64], ['shrub', .74, .31, .49], ['flowers', .41, .31, .52]],
@@ -76,21 +94,22 @@ const REAR_PROFILE = [
   [1, .42, -.12, TURF],
 ];
 const FRONT_PROFILE = [
-  [0, 0, -.15, RECESS], [.042, .058, -.22, STONE], [.074, .33, -.08, STONE],
-  [.106, .515, .11, STONE], [.15, .55, .22, LIP], [.205, .621, .12, TURF],
-  [.392, .625, .025, TURF], [.444, .636, -.08, RECESS], [.468, .688, -.10, STONE],
+  [0, 0, -.15, RECESS], [.030, .058, -.22, STONE], [.056, .30, -.08, STONE],
+  [.083, .452, .11, STONE], [.111, .502, .18, LIP], [.154, .557, .12, TURF],
+  [.393, .563, .025, TURF], [.444, .636, -.08, RECESS], [.468, .688, -.10, STONE],
   [.499, .832, -.01, STONE], [.530, .936, .14, STONE], [.572, .969, .215, LIP],
   [.636, 1.038, .107, TURF], [.777, 1.01, .065, TURF], [.918, .694, .025, TURF],
   [1, .02, -.08, TURF],
 ];
-// A shallow lower ledge steps back into the sunlit cove shelf. The rear turf follows
-// the original slope so the rock garden and its plant feet meet the same ground.
+// A wide cove platform supports two unequal rocky shoulders. The shoulders rise and
+// fall along the shelf instead of forming a second continuous course of masonry.
+const SHORE_TREAD_BACK = .544;
 const SHORE_PROFILE = [
-  [0, 0, -.16, RECESS], [.025, .040, -.22, STONE], [.052, .145, -.09, STONE],
-  [.081, .205, .047, STONE], [.123, .216, .103, LIP], [.172, .255, .063, TURF],
-  [.274, .239, -.023, RECESS], [.290, .260, -.17, STONE], [.314, .371, -.04, STONE],
-  [.349, .417, .12, STONE], [.390, .436, .19, LIP], [.449, .466, .097, TURF],
-  [.56, .472, .045, TURF], [.78, .30, .015, TURF], [.90, .145, -.04, TURF],
+  [0, 0, -.16, RECESS], [.020, .044, -.24, STONE], [.038, .154, -.15, STONE],
+  [.069, .264, .054, STONE], [.101, .303, .11, LIP], [.154, .337, .104, TURF],
+  [.459, .333, .053, TURF], [SHORE_TREAD_BACK, .315, -.12, RECESS], [.580, .338, -.18, STONE],
+  [.617, .434, -.045, STONE], [.649, .511, .12, STONE], [.681, .533, .17, LIP],
+  [.725, .564, .096, TURF], [.857, .552, .061, TURF], [.948, .327, -.01, TURF],
   [1, .026, -.10, TURF],
 ];
 
@@ -101,13 +120,39 @@ function onTop(x, y) {
   return Math.hypot(coastX, coastZ) < rim * .991;
 }
 
-function shelfPoint(row, foot, back, taper, rise, radius, elevation) {
+function shelfPoint(row, foot, back, taper, rise, radius, elevation, crestRoom) {
   const reach = Math.min(.987, THREE.MathUtils.lerp(foot, back, .49 + (radius - .49) * Math.sqrt(taper)));
   const p = new THREE.Vector3(row.x * reach, taper * rise * elevation, row.z * reach);
+  p.shoreReach = crestRoom;
   const ground = projectGround(p.x, p.z);
-  // Clip the height against the dry silhouette as the top of a rear bank projects uphill.
-  while (p.y > .012 && !onTop(ground.x, ground.y + p.y)) p.y *= .86;
+  if (crestRoom > 0 && !onTop(ground.x, ground.y + p.y)) {
+    // Find the old outline vertically above this dry foot. The high rear crests may
+    // rise above the screen-space shoreline while still standing on the same land.
+    let onLand = 0, beyondLand = p.y;
+    for (let i = 0; i < 9; i++) {
+      const trial = (onLand + beyondLand) * .5;
+      if (onTop(ground.x, ground.y + trial)) onLand = trial;
+      else beyondLand = trial;
+    }
+    p.y = Math.min(p.y, onLand + crestRoom);
+  } else {
+    while (p.y > .012 && !onTop(ground.x, ground.y + p.y)) p.y *= .86;
+  }
   return p;
+}
+
+function blendStone(a, b, amount) {
+  const point = a.clone().lerp(b, amount);
+  point.shoreReach = THREE.MathUtils.lerp(a.shoreReach ?? 0, b.shoreReach ?? 0, amount);
+  return point;
+}
+
+function turfHeight(p, a, b, c) {
+  const signedArea = (u, v, w) => (v.x - u.x) * (w.z - u.z) - (v.z - u.z) * (w.x - u.x);
+  const area = signedArea(a, b, c);
+  if (Math.abs(area) < 1e-7) return -Infinity;
+  const u = signedArea(b, c, p) / area, v = signedArea(c, a, p) / area, w = 1 - u - v;
+  return Math.min(u, v, w) < -1e-5 ? -Infinity : u * a.y + v * b.y + w * c.y;
 }
 
 function castOffset(near, far, fade) {
@@ -178,6 +223,7 @@ export function createHomeTerraces(root, coastArt, art) {
     // shadow strips use the distance from the foot plus a ground-plane offset.
     if (detail) surfaceDetails.push(detail[0], detail[1], detail[2] ?? (recessed ? 2 : 1));
     else surfaceDetails.push(0, 0, 0);
+    surfaceDetails.push(p.shoreReach ?? 0);
   }
   function face(a, b, c, d, tint, lightA, lightB, grass = 0, opacity = [1, 1, 1, 1], detail, recessed) {
     const sun = (sunlight(a, b, c) + sunlight(a, c, d)) * .5;
@@ -191,24 +237,24 @@ export function createHomeTerraces(root, coastArt, art) {
     const outer = BLOCK_BEVEL.map(([u, v]) => point(u, v, 0));
     const innerCut = BLOCK_BEVEL.map(([u, v]) => [.10 + u * .8, .13 + v * .73]);
     const inner = innerCut.map(([u, v]) => point(u, v, .036 + worn * .011));
-    const center = point(.5, .5, .069 + worn * .015);
+    let center = point(.5, .5, .069 + worn * .015);
     let crown = [.5, .5], fold;
     if (split) {
       const turn = worn < 0 ? -1 : 1;
       const ridge = turn < 0 ? 6 : 3;
       const lean = .11 + Math.abs(worn) * .08;
-      center.lerp(inner[ridge], lean);
+      center = blendStone(center, inner[ridge], lean);
       crown = innerCut[ridge].map(coord => THREE.MathUtils.lerp(.5, coord, lean));
       for (let i = 0; i < inner.length; i++) {
         const roll = RISER_BEVEL[(i + turn + 8) % 8] + .05 * Math.abs(worn);
-        inner[i].lerp(center, roll);
+        inner[i] = blendStone(inner[i], center, roll);
         innerCut[i] = innerCut[i].map((coord, axis) => THREE.MathUtils.lerp(coord, crown[axis], roll));
       }
       const favorLeft = .5 + worn * .19;
-      const upperShoulder = inner[4].clone().lerp(inner[5], favorLeft);
-      const lowerFace = outer[0].clone().lerp(outer[1], favorLeft);
-      const ledge = center.clone().lerp(upperShoulder, .52);
-      const pocket = center.clone().lerp(lowerFace, .35 + Math.abs(worn) * .12);
+      const upperShoulder = blendStone(inner[4], inner[5], favorLeft);
+      const lowerFace = blendStone(outer[0], outer[1], favorLeft);
+      const ledge = blendStone(center, upperShoulder, .52);
+      const pocket = blendStone(center, lowerFace, .35 + Math.abs(worn) * .12);
       const ledgeUV = crown.map((coord, axis) => THREE.MathUtils.lerp(coord,
         THREE.MathUtils.lerp(innerCut[4][axis], innerCut[5][axis], favorLeft), .52));
       const pocketUV = crown.map((coord, axis) => THREE.MathUtils.lerp(coord,
@@ -248,13 +294,25 @@ export function createHomeTerraces(root, coastArt, art) {
     }
   }
 
-  for (const {first, last, foot, back, height, shore} of BANKS) {
+  for (const {first, last, foot, back, height, shore, reserve = 0, crowns, stepBack = 0} of BANKS) {
     const front = foot > back;
-    const profile = shore ? SHORE_PROFILE : front ? FRONT_PROFILE : REAR_PROFILE;
+    const [footCenter, footWidth, footDepth] = CLIFF_FOOTINGS[first] ?? [0, 1, 0];
+    const [cragCenter, cragWidth, cragRise, crownWidth] = CRAGS[first] ?? [0, 1, 0, .27];
+    const profile = shore ? SHORE_PROFILE.map(([radius, elevation, tone, material]) => {
+      // The narrower cove keeps its existing plantings on the broad lower shelf.
+      const spread = radius < SHORE_TREAD_BACK ? radius / SHORE_TREAD_BACK : (1 - radius) / (1 - SHORE_TREAD_BACK);
+      return [radius + stepBack * spread, elevation, tone, material];
+    }) : front ? FRONT_PROFILE : REAR_PROFILE;
     const sandContact = shore ? 4 : 0;
+    const sodRings = profile.flatMap((entry, ring) => entry[3] === LIP ? [ring] : []);
+    const lowerSod = profile[sodRings[0] + 1][0];
+    const upperSod = profile[sodRings[1] + 1][0];
+    const upperToe = profile.find(([radius, , , material]) => radius > 0 && material === RECESS)[0];
+    const crests = REAR_CRESTS[first];
+    const strength = crests?.[2] ?? 1;
     // The terrace ends close in stone where an old ramp began. Keep them away from the adjoining lanes.
     const start = first + (front ? 1 : 1.5), finish = last - (front ? 1 : 1.5);
-    function samplePoint(sample) {
+    function samplePoint(sample, atPlant = false) {
       const edgeDistance = Math.min(sample - start, finish - sample);
       const shoulder = THREE.MathUtils.smoothstep(edgeDistance, 0, 1.8);
       const taper = .70 + shoulder * .3;
@@ -263,15 +321,55 @@ export function createHomeTerraces(root, coastArt, art) {
         z: THREE.MathUtils.lerp(coast[index].z, coast[index + 1].z, blend)};
       const breadth = .009 * Math.cos(sample * .87) + .006 * Math.sin(sample * 1.92);
       const rise = height + Math.sin(sample * .92) * .09 + Math.cos(sample * 1.84) * .045;
-      return (radius, elevation) => {
+      const originalFoot = foot + breadth, rim = back + breadth * .31;
+      const shelfFoot = originalFoot - reserve * shoulder;
+      const along = (sample - start) / (finish - start);
+      const cliffSupport = 1 - THREE.MathUtils.smoothstep(Math.abs(sample - footCenter), footWidth * .31, footWidth);
+      const cragLift = cragRise * (1 - THREE.MathUtils.smoothstep(Math.abs(along - cragCenter), cragWidth * crownWidth, cragWidth));
+      const crown = crowns && Math.max(
+        1 - THREE.MathUtils.smoothstep(Math.abs(along - crowns[0]), .09, .34),
+        .73 * (1 - THREE.MathUtils.smoothstep(Math.abs(along - crowns[1]), .045, .197)));
+      const mass = crests && (.23 + .77 * Math.max(
+        1 - THREE.MathUtils.smoothstep(Math.abs(along - crests[0]), .145, .325),
+        .65 * (1 - THREE.MathUtils.smoothstep(Math.abs(along - crests[1]), .11, .25))));
+      return (radius, elevation, stoneFoot = false) => {
+        if (atPlant && reserve) {
+          // Regrade the plant foot at its original world anchor as the shelf broadens towards the meadow.
+          const squeeze = Math.sqrt(taper);
+          const reach = THREE.MathUtils.lerp(originalFoot, rim, .49 + (radius - .49) * squeeze);
+          radius = .49 + ((reach - shelfFoot) / (rim - shelfFoot) - .49) / squeeze;
+          elevation = heightAt(radius);
+        }
         const wornEnd = shore ? (1 - shoulder) * (1 - THREE.MathUtils.smoothstep(radius, .23, .56)) : 0;
         const irregularity = 1 + taper * Math.sin(sample * 1.11 + radius * 3) * .027 - wornEnd * .21;
-        return shelfPoint(row, foot + breadth, back + breadth * .31, taper, rise, radius, elevation * irregularity);
+        const shoulderCut = shore ? Math.max(0, elevation - .33) * (.80 - .73 * crown) : 0;
+        let lift = 0, crestRoom = 0;
+        if (crests && elevation > 0) {
+          const falloff = (1 - THREE.MathUtils.smoothstep(radius, upperSod + (1 - upperSod) * .57, 1))
+            * (.79 + .21 * shoulder) * strength;
+          const lower = THREE.MathUtils.smoothstep(radius, .014, lowerSod) * falloff;
+          const upper = THREE.MathUtils.smoothstep(radius, upperToe, upperSod) * falloff;
+          const capDepth = THREE.MathUtils.smoothstep(radius, upperSod, upperSod + (1 - upperSod) * .48);
+          lift = (.31 + .235 * mass) * lower + (.17 + 1.50 * mass) * upper;
+          crestRoom = .13 * lower + (.10 + (.86 + .29 * capDepth) * mass) * upper;
+        }
+        // The southern cap rises from its existing stone foot and lower shelf.
+        const cap = cragLift * THREE.MathUtils.smoothstep(elevation, .640, .963);
+        const raised = (elevation - shoulderCut) * irregularity + lift / (taper * rise) + cap / rise;
+        const point = shelfPoint(row, shelfFoot, rim, taper, rise, radius, raised, crestRoom);
+        if (stoneFoot && footDepth && cliffSupport > 0) {
+          // Pull the existing bottom bevel into bedrock and let its upper edge stay put.
+          const join = cliffSupport * (1 - THREE.MathUtils.smoothstep(radius, -.014, .111));
+          point.x = THREE.MathUtils.lerp(point.x, row.x * .998, join);
+          point.z = THREE.MathUtils.lerp(point.z, row.z * .998, join);
+          point.y -= footDepth * join;
+          // Negative allowance denotes a foot below the visible shore, rather than a raised crest.
+          point.shoreReach = -footDepth * join;
+        }
+        return point;
       };
     }
-    const sodRings = profile.flatMap((entry, ring) => entry[3] === LIP ? [ring] : []);
-    // Map the existing treads from the sod rim to the base of the next rise. The surface
-    // shade can roll across the full shoulder while the authored shape and plant feet stay fixed.
+    // Shade each tread from its sod rim to the base of the next rise.
     const treads = new Map();
     for (const [tier, sodRing] of sodRings.entries()) {
       const from = sodRing + 1;
@@ -287,7 +385,8 @@ export function createHomeTerraces(root, coastArt, art) {
     for (let sample = start; sample <= finish; sample += STEP) {
       const point = samplePoint(sample);
       const overhang = .031 + .006 * Math.sin(sample * 2.3);
-      const shape = profile.map(([radius, elevation, , material]) => point(radius - (material === LIP ? overhang : 0), elevation));
+      const shape = profile.map(([radius, elevation, , material]) =>
+        point(radius - (material === LIP ? overhang : 0), elevation, material === STONE || material === RECESS));
       const sod = Object.fromEntries(sodRings.map(ring => {
         const [from, low] = profile[ring], [to, high] = profile[ring + 1];
         const curl = .025 * Math.sin(sample * 3.4 + ring) + .014 * Math.cos(sample * 6.7);
@@ -306,7 +405,19 @@ export function createHomeTerraces(root, coastArt, art) {
     if (art) {
       const addPlant = (name, along, across, scale) => {
         const sample = THREE.MathUtils.lerp(start, finish, along);
-        const plant = samplePoint(sample)(across, heightAt(across));
+        const plant = samplePoint(sample, true)(across, heightAt(across));
+        if (crests && across >= 0) {
+          // Settle the existing anchor on the same triangles that draw the grassy tread.
+          let floor = -Infinity;
+          for (let i = 0; i < rows.length - 1; i++) {
+            const a = rows[i].shape, b = rows[i + 1].shape;
+            for (const ring of treads.keys()) {
+              floor = Math.max(floor, turfHeight(plant, a[ring], b[ring], b[ring + 1]),
+                turfHeight(plant, a[ring], b[ring + 1], a[ring + 1]));
+            }
+          }
+          if (Number.isFinite(floor)) plant.y = floor;
+        }
         if (!plantings.has(name)) plantings.set(name, []);
         plantings.get(name).push([plant, scale]);
       };
@@ -366,22 +477,23 @@ export function createHomeTerraces(root, coastArt, art) {
         const h = THREE.MathUtils.lerp(low, high, v);
         const index = Math.max(1, span.findIndex(([, height]) => height >= h));
         const [r0, h0] = span[index - 1], [r1, h1] = span[index];
-        return samplePoint(sample)(THREE.MathUtils.lerp(r0, r1, (h - h0) / (h1 - h0)) - bulge, h);
+        return samplePoint(sample)(THREE.MathUtils.lerp(r0, r1, (h - h0) / (h1 - h0)) - bulge, h, front && !upper);
       }
       // A massive lower plinth carries the finer, staggered stone courses above it.
       const courses = upper && !shore ? [[.46, .965, .61, 1], [.035, .43, 0, 0]] : [[.036, .963, upper ? .76 : 0, 0]];
-      const grout = upper ? .044 : .049;
+      const grout = shore ? .065 : upper ? .044 : .049;
       for (const [bottom, top, shift, course] of courses) {
         let column = 0;
         for (let next = start - shift; next < finish; column++) {
-          const width = BLOCK_WIDTHS[(column + from + (upper ? 2 : 0)) % BLOCK_WIDTHS.length] * (upper ? 1 : .91);
+          const scale = shore ? (upper ? .82 : 1.12) : (upper ? 1 : .91);
+          const width = BLOCK_WIDTHS[(column + from + (upper ? 2 : 0)) % BLOCK_WIDTHS.length] * scale;
           const left = Math.max(start + .014, next + grout), right = Math.min(finish - .014, next + width - grout);
           if (right - left > .19) {
             const worn = Math.sin(column * 2.41 + start * .77 + course * 1.9 + from);
-            const groutRipple = .022 * worn;
+            const groutRipple = (shore ? .04 : .022) * worn;
             const point = (u, v, bulge) => across(THREE.MathUtils.lerp(left, right, u),
               THREE.MathUtils.lerp(bottom, top, v) + (1 - 2 * u) * groutRipple, bulge);
-            stone(point, STONE[(column + course * 3 + from) % STONE.length], worn, !upper || course === 1, !upper);
+            stone(point, STONE[(column + course * 3 + from) % STONE.length], worn, !upper || course === 1, !upper || shore);
           }
           next += width;
         }
@@ -396,9 +508,9 @@ export function createHomeTerraces(root, coastArt, art) {
         const lastSlope = profile.length - 2;
         const capInner = ring === lastSlope ? .74 : 1;
         const capOuter = ring === lastSlope ? 0 : ring === lastSlope - 1 ? .74 : 1;
-        const tint = band === STONE ? MORTAR : band;
+        const tint = band === STONE ? MORTAR : band === TURF && crests ? HIGH_TURF : band;
         const tread = treads.get(ring);
-        const wornLedge = shore && (ring === sodRings[0] || tread?.recessed);
+        const wornLedge = shore && ring === sodRings[0];
         const turf = wornLedge ? WORN_LEDGE : Number(band === TURF);
         for (let i = 0; i < rows.length - 1; i++) {
           const {shape: left, sample, sod: leftSod, endFade: fadeLeft} = rows[i];
@@ -410,7 +522,9 @@ export function createHomeTerraces(root, coastArt, art) {
               const [sodMaterial, sodTint] = SOD_MATERIAL[strip];
               const shade = SOD_PROFILE[strip][2] + variation;
               const light = SOD_PROFILE[strip + 1][2] + variation;
-              face(a[strip], b[strip], b[strip + 1], a[strip + 1], sodTint, shade, light, wornLedge ? WORN_LEDGE : sodMaterial);
+              // Only the sheltered underside of a worn cove edge shows exposed sediment.
+              const surface = wornLedge && strip < 2 ? WORN_LEDGE : sodMaterial;
+              face(a[strip], b[strip], b[strip + 1], a[strip + 1], sodTint, shade, light, surface);
             }
             continue;
           }
@@ -428,18 +542,18 @@ export function createHomeTerraces(root, coastArt, art) {
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
   geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
   geometry.setAttribute('terraceMaterial', new THREE.Float32BufferAttribute(materials, 4));
-  geometry.setAttribute('surfaceDetail', new THREE.Float32BufferAttribute(surfaceDetails, 3));
+  geometry.setAttribute('surfaceDetail', new THREE.Float32BufferAttribute(surfaceDetails, 4));
   const material = new THREE.ShaderMaterial({
     uniforms: {uCoastArt: {value: coastArt}}, vertexColors: true, side: THREE.DoubleSide,
     forceSinglePass: true, transparent: true, depthWrite: false, depthTest: false, toneMapped: false,
     vertexShader: /* glsl */`
       attribute vec4 terraceMaterial;
-      attribute vec3 surfaceDetail;
+      attribute vec4 surfaceDetail;
       ${groundProjectionGlsl}
       varying vec4 vTerrace;
       varying vec3 vTone;
       varying vec2 vTerrain;
-      varying vec3 vSurface;
+      varying vec4 vSurface;
       void main() {
         vec2 groundOffset = vec2(0.0);
         if (terraceMaterial.z < -.5) {
@@ -461,7 +575,7 @@ export function createHomeTerraces(root, coastArt, art) {
       varying vec4 vTerrace;
       varying vec3 vTone;
       varying vec2 vTerrain;
-      varying vec3 vSurface;
+      varying vec4 vSurface;
       float hash2(vec2 p) {
         return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
       }
@@ -481,7 +595,7 @@ export function createHomeTerraces(root, coastArt, art) {
         vec2 shore = floorPoint / vec2(${COAST.rx.toFixed(1)}, ${COAST.rz.toFixed(1)});
         float angle = atan(shore.y, shore.x);
         float rim = 1.0 + .055 * sin(angle * 5.0 + ${COAST.seed.toFixed(1)}) + .035 * cos(angle * 7.0);
-        if (length(shore) >= rim * .994) discard;
+        if (length(shore) >= rim * .994 && abs(vSurface.w) < .015) discard;
         vec2 samplePoint = vec2(vTerrace.x / 64.0, -vTerrace.y * ${LEGACY_DEPTH} / 48.0) * .64 + .5;
         vec3 source = texture2D(uCoastArt, samplePoint).rgb;
         float grain = smoothstep(.11, .43, dot(source, vec3(.27, .62, .11)));
@@ -518,8 +632,12 @@ export function createHomeTerraces(root, coastArt, art) {
           vec2 layers = vec2(vTerrace.x + vTerrace.y * .36, height + vTerrace.y * .13);
           float cut = min(vSurface.z, 1.0);
           stone = weatheredSandstone(stone, layers, vSurface.xy, cut);
-          // Tight earth contact grounds the lower stone bevel and the uncut mortar.
-          float rootShadow = (1.0 - smoothstep(.025, .29, height)) * .31;
+          // The joined foot crosses the old grass edge. Give it a narrow contact
+          // at the turf and the same warm stone colour below, with full coverage.
+          float cliffFoot = smoothstep(.025, .24, -vSurface.w);
+          float earthShadow = (1.0 - smoothstep(.025, .29, height)) * .31;
+          float rockContact = (1.0 - smoothstep(.018, .12, abs(height))) * .14;
+          float rootShadow = mix(earthShadow, rockContact, cliffFoot);
           float patina = smoothstep(.50, .83, grainBreak) * (1.0 - smoothstep(.08, .37, vSurface.y));
           float sodShade = step(1.5, vSurface.z) * smoothstep(.68, .98, vSurface.y);
           float corners = smoothstep(.19, .48, abs(vSurface.x - .5));
@@ -528,7 +646,24 @@ export function createHomeTerraces(root, coastArt, art) {
           float foot = (1.0 - smoothstep(.06, .49, vSurface.y)) * cut;
           stone = mix(stone, stone * vec3(.70, .78, .65), sodShade * (.48 + grainBreak * .22));
           stone = mix(stone, stone * vec3(.82, .94, .72), .48 * patina * cut);
-          stone *= 1.0 + shoulder * cut * .23 - rootShadow - foot * .175 - toe * (.12 + grainBreak * .06);
+          float bevelShadow = (foot * .175 + toe * (.12 + grainBreak * .06)) * (1.0 - .45 * cliffFoot);
+          stone *= 1.0 + shoulder * cut * .23 - rootShadow - bevelShadow;
+          if (cliffFoot > 0.0) {
+            vec4 cliff = texture2D(uCoastArt, floorUv);
+            float underRim = cliffFoot * smoothstep(.035, .26, -height) * smoothstep(.78, .98, cliff.a);
+            vec3 bedrock = weatheredSandstone(cliff.rgb, layers, vSurface.xy, cut * .55);
+            stone = mix(stone, bedrock, underRim * .55);
+          }
+          if (vTerrace.y < 0.0) {
+            // Break up the taller rear faces at close zoom, and keep the beveled edges warm.
+            vec2 frequency = vec2(4.2, 6.4);
+            float resolved = 1.0 - smoothstep(.43, .96, length(fwidth(layers) * frequency));
+            vec3 cutGrain = sandstoneGrain(layers * frequency);
+            float facets = clamp(dot(cutGrain.yz, vec2(-.16, .12)), -.19, .21);
+            float cleanEdge = (1.0 - smoothstep(.06, .25, vSurface.x)) * smoothstep(.26, .78, vSurface.y);
+            stone *= 1.0 + (facets + (cutGrain.x - .5) * .14) * resolved * cut;
+            stone += stone * vec3(.17, .11, .063) * cleanEdge * cut;
+          }
           gl_FragColor = vec4(stone, vTerrace.w);
           #include <colorspace_fragment>
           return;

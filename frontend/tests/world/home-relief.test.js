@@ -13,7 +13,7 @@ it('bounds the dry sandstone to the original facade and releases the relief with
   const {position, shoreRelief} = cliff.geometry.attributes;
   const {min, max} = new THREE.Box3();
   for (let i = 0; i < position.count; i++) {
-    if (shoreRelief.getZ(i) !== 0) continue;
+    if (shoreRelief.getZ(i) >= 1) continue;
     expect(shoreRelief.getX(i)).toBeLessThanOrEqual(CLIFF_DEPTH + .001);
     const point = new THREE.Vector3().fromBufferAttribute(position, i);
     min.min(point);
