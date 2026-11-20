@@ -1,0 +1,401 @@
+{
+  "scope": "offline normalized PNG source compilation; runtime activation/build exclusion and actual-game acceptance remain separate",
+  "sourceCommit": "04d9ade386184b7960826c91f5413e1314455bb2",
+  "compilerDirtyPaths": "M src/art/village/baked.js\n M src/art/village/core.js\n?? public/village/compiled/core-4x-1-082d8285efb4.png\n?? public/village/home-heart-v5.png",
+  "browser": "157.0.8103.79",
+  "families": [
+    "core"
+  ],
+  "proofDensities": [
+    4,
+    2.5,
+    2,
+    1.5
+  ],
+  "proofOrigins": {
+    "core": "04d9ade386184b7960826c91f5413e1314455bb2"
+  },
+  "reusedReportSha256": null,
+  "normalizerHashes": {
+    "src/art/village-raster.js": "4db5ffa86253a7ece821804586518e2fabea33b33d0c59c4f3223df80d969e3f",
+    "src/art/village-decode.js": "1d55341b2c947e3bcfc019c0e8bb8722591f0a2312cd7a8a0585a873cd8fa537"
+  },
+  "transportHistory": [],
+  "original": {
+    "files": [
+      {
+        "file": "village/home-heart-v5.png",
+        "bytes": 1132887,
+        "sha256": "94b8cc0bca2b8adbc4d6b53287af86c974f153ce1d942da4d85cff40a3d5c961",
+        "width": 1312,
+        "height": 1199
+      }
+    ],
+    "encodedBytes": 1132887,
+    "summedDecodedBytes": 6292352
+  },
+  "compiled": {
+    "files": [
+      {
+        "file": "village/compiled/core-4x-1-082d8285efb4.png",
+        "bytes": 685066,
+        "sha256": "082d8285efb4e30df0a41a92f4f1ed9e2a2a763a5030891ecab658eceacc1c70",
+        "width": 520,
+        "height": 1560
+      }
+    ],
+    "encodedBytes": 685066,
+    "summedDecodedBytes": 3244800,
+    "peakSingleDecodedBytes": 3244800
+  },
+  "initialTransfer": {
+    "unchangedTerrainBytes": 2683357,
+    "rawPlusTerrainBytes": 3816244,
+    "compiledPlusTerrainBytes": 3368423,
+    "targetBytes": 8388608,
+    "targetMet": true
+  },
+  "budgets": {
+    "decodedPoolBytes": 12582912,
+    "combatAtlasHighBytes": 41943040,
+    "combatAtlasLowBytes": 12582912,
+    "note": "unchanged final logical frame/density means no renderer-pass or final GPU-texture saving is claimed"
+  },
+  "inputs": [
+    {
+      "name": "core",
+      "module": "src/art/village/core.js",
+      "sha256": "8dc49312f533c305b0fe5d98613aad8d68fd730d7c0f3892ffd8e7686963e96a",
+      "frames": {
+        "island_core": {
+          "sheet": {
+            "file": "village/home-heart-v5.png",
+            "width": 1312,
+            "height": 1199
+          },
+          "rect": [
+            14,
+            0,
+            616,
+            698
+          ],
+          "sourceFoot": [
+            276,
+            684
+          ],
+          "logical": [
+            128,
+            128,
+            12
+          ],
+          "fitBounds": [
+            276,
+            684,
+            340,
+            14
+          ]
+        },
+        "island_core_damaged": {
+          "sheet": {
+            "file": "village/home-heart-v5.png",
+            "width": 1312,
+            "height": 1199
+          },
+          "rect": [
+            676,
+            0,
+            610,
+            698
+          ],
+          "sourceFoot": [
+            270,
+            684
+          ],
+          "logical": [
+            128,
+            128,
+            12
+          ],
+          "fitBounds": [
+            276,
+            684,
+            340,
+            14
+          ]
+        },
+        "island_core_broken": {
+          "sheet": {
+            "file": "village/home-heart-v5.png",
+            "width": 1312,
+            "height": 1199
+          },
+          "rect": [
+            18,
+            868,
+            611,
+            317
+          ],
+          "sourceFoot": [
+            272,
+            303
+          ],
+          "logical": [
+            128,
+            128,
+            12
+          ],
+          "fitBounds": [
+            276,
+            684,
+            340,
+            14
+          ]
+        }
+      }
+    }
+  ],
+  "plans": [
+    {
+      "name": "core",
+      "pages": [
+        {
+          "file": "village/compiled/core-4x-1-082d8285efb4.png",
+          "width": 520,
+          "height": 1560,
+          "items": [
+            {
+              "id": "island_core",
+              "rect": [
+                4,
+                4,
+                512,
+                512
+              ]
+            },
+            {
+              "id": "island_core_broken",
+              "rect": [
+                4,
+                524,
+                512,
+                512
+              ]
+            },
+            {
+              "id": "island_core_damaged",
+              "rect": [
+                4,
+                1044,
+                512,
+                512
+              ]
+            }
+          ]
+        }
+      ],
+      "sheets": {
+        "coreBaked1": {
+          "file": "village/compiled/core-4x-1-082d8285efb4.png",
+          "width": 520,
+          "height": 1560
+        }
+      },
+      "frames": {
+        "island_core": {
+          "sheet": "coreBaked1",
+          "rect": [
+            4,
+            4,
+            512,
+            512
+          ],
+          "logical": [
+            128,
+            128,
+            12
+          ],
+          "sourceFoot": [
+            256,
+            464
+          ]
+        },
+        "island_core_damaged": {
+          "sheet": "coreBaked1",
+          "rect": [
+            4,
+            1044,
+            512,
+            512
+          ],
+          "logical": [
+            128,
+            128,
+            12
+          ],
+          "sourceFoot": [
+            256,
+            464
+          ]
+        },
+        "island_core_broken": {
+          "sheet": "coreBaked1",
+          "rect": [
+            4,
+            524,
+            512,
+            512
+          ],
+          "logical": [
+            128,
+            128,
+            12
+          ],
+          "sourceFoot": [
+            256,
+            464
+          ]
+        }
+      }
+    }
+  ],
+  "compilerMemory": [
+    {
+      "family": "core",
+      "peakSourceBytes": 6292352,
+      "retainedDecodedAfterRelease": 0,
+      "canvasBytes": 3244800,
+      "largestTemporaryCanvasBytes": 1048576
+    }
+  ],
+  "verification": [
+    {
+      "family": "core",
+      "results": [
+        {
+          "id": "island_core",
+          "density": 4,
+          "pixels": 262144,
+          "visiblePixels": 91116,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island_core",
+          "density": 2.5,
+          "pixels": 102400,
+          "visiblePixels": 36019,
+          "differingPixels": 33897,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 40,
+          "alphaWeightedMeanRgbDelta": 2.8232041215314454
+        },
+        {
+          "id": "island_core",
+          "density": 2,
+          "pixels": 65536,
+          "visiblePixels": 23011,
+          "differingPixels": 21770,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 35,
+          "alphaWeightedMeanRgbDelta": 2.462666874423704
+        },
+        {
+          "id": "island_core",
+          "density": 1.5,
+          "pixels": 36864,
+          "visiblePixels": 12945,
+          "differingPixels": 12359,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 34,
+          "alphaWeightedMeanRgbDelta": 3.00086268703824
+        },
+        {
+          "id": "island_core_damaged",
+          "density": 4,
+          "pixels": 262144,
+          "visiblePixels": 92745,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island_core_damaged",
+          "density": 2.5,
+          "pixels": 102400,
+          "visiblePixels": 36649,
+          "differingPixels": 34470,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 43,
+          "alphaWeightedMeanRgbDelta": 2.995367062489468
+        },
+        {
+          "id": "island_core_damaged",
+          "density": 2,
+          "pixels": 65536,
+          "visiblePixels": 23419,
+          "differingPixels": 22189,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 35,
+          "alphaWeightedMeanRgbDelta": 2.6161947695966568
+        },
+        {
+          "id": "island_core_damaged",
+          "density": 1.5,
+          "pixels": 36864,
+          "visiblePixels": 13170,
+          "differingPixels": 12542,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 38,
+          "alphaWeightedMeanRgbDelta": 3.1659875149221963
+        },
+        {
+          "id": "island_core_broken",
+          "density": 4,
+          "pixels": 262144,
+          "visiblePixels": 50677,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island_core_broken",
+          "density": 2.5,
+          "pixels": 102400,
+          "visiblePixels": 19981,
+          "differingPixels": 18963,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 36,
+          "alphaWeightedMeanRgbDelta": 2.804817633864293
+        },
+        {
+          "id": "island_core_broken",
+          "density": 2,
+          "pixels": 65536,
+          "visiblePixels": 12784,
+          "differingPixels": 12073,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 23,
+          "alphaWeightedMeanRgbDelta": 2.507477504408013
+        },
+        {
+          "id": "island_core_broken",
+          "density": 1.5,
+          "pixels": 36864,
+          "visiblePixels": 7220,
+          "differingPixels": 6886,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 33,
+          "alphaWeightedMeanRgbDelta": 3.377084198301788
+        }
+      ],
+      "peakSourceBytes": 6292352,
+      "retainedDecodedAfterRelease": 0
+    }
+  ],
+  "errors": [],
+  "externalRequests": []
+}

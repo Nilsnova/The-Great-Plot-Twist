@@ -13,7 +13,7 @@ import { FRAMES, SHIP_VARIANTS, SHIP_SIZE, SHIP_DRAWN_SIZE, SHIP_DRAWN, WHITE, o
 
 // The arguments in this order (render.js passes them so; positional, so the minifier shortens them).
 export function createDraw(rect, layers, bands, posts, ships, crew, guards, splashes, wallFlash, K, still, low,
-  drawnX, drawnY, effects, spark, nativeCaptains = false) {
+  drawnX, drawnY, effects, spark, nativeCaptains = false, defenseView = () => null) {
   // The renderer's clock and latest state as update() last set them (render.js calls sync() right after, every frame).
   let clock = 0, simNow = 0, latest = null, captain = null, revive = null, figures = null;
   function sync(now, simTime, state, own, helping, drawnAt) { clock = now; simNow = simTime; latest = state; captain = own; revive = helping; figures = drawnAt; }
@@ -138,7 +138,8 @@ export function createDraw(rect, layers, bands, posts, ships, crew, guards, spla
   }
   // A fallen boarder (or militia): the sprite sinks and fades under a puff of smoke.
   function faceActor(meta, actor) {
-    const target = actor.wallId ? posts.find(post => post.id === actor.wallId) : actor.towerId ? posts.find(post => post.id === actor.towerId)
+    const target = actor.wallId ? posts.find(post => post.id === actor.wallId)
+      : actor.towerId ? (defenseView(actor.towerId) ?? posts.find(post => post.id === actor.towerId))
       : latest?.party?.find(unit => unit.id === actor.foe) ?? latest?.boarders?.find(unit => unit.id === actor.foe)
         ?? latest?.militia?.find(unit => unit.id === actor.foe);
     const dx = target ? projectGroundVector(target.x - actor.x, target.z - actor.z).x
@@ -364,8 +365,8 @@ export function createDraw(rect, layers, bands, posts, ships, crew, guards, spla
     layers.air.push(rect[WHITE], x - w / 2 - .0625, top - .0625, w + .125, .3125, 0, 0, tinted(DARK, .8));
     layers.air.push(rect[WHITE], x - w / 2, top, w * share, .1875, 0, 0, opt(1, share > .5 ? GREEN : share > .25 ? GOLD : RED));
   }
-  function drawRecoveryHealthBar(item) {
-    const { z, hp, maxHp } = item, x = drawnX(item.x, z);
+  function drawRecoveryHealthBar(item, view = item) {
+    const { hp, maxHp } = item, { z } = view, x = drawnX(view.x, z);
     if (!Number.isFinite(x) || !Number.isFinite(z) || !Number.isFinite(hp) || !(maxHp > 0) || hp >= maxHp) return;
     const w = 1.3, top = drawnY(z) + TOWER_BAR_LIFT * K();
     layers.air.push(rect[WHITE], x - w / 2 - .0625, top - .0625, w + .125, .3125, 0, 0, tinted(DARK, .8));

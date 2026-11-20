@@ -9,20 +9,31 @@ const bytes = name => readFileSync(new URL(name,folder));
 const read = name => JSON.parse(bytes(name));
 const hash = data => createHash('sha256').update(data).digest('hex');
 const receipt = read('rebake-integrity.json'), prior = read('bake-report-before.json'), wall = read('wall-bake-report.json');
-const active = JSON.parse(readFileSync(new URL('../../../docs/evidence/VIS-30-world-art/bake-report.json',import.meta.url)));
+const activeFolder = new URL('../../../docs/evidence/VIS-30-world-art/', import.meta.url);
+const active = JSON.parse(readFileSync(new URL('bake-report.json', activeFolder)));
+const replacementProofs = new Map(active.replacementHistory.map(row => {
+  const compilerBytes = readFileSync(new URL(row.compilerReport, activeFolder));
+  return [row.family, {row, compilerBytes, proof: JSON.parse(compilerBytes)}];
+}));
 
-describe('single-family wall compilation provenance', () => {
-  it('changes exactly the declared wall metadata while preserving all unrelated family bindings', () => {
+describe('scoped world-art compilation provenance', () => {
+  it('keeps the wall binding and applies only explicitly proved family replacements', () => {
     expect(receipt.changedMetadataKeys).toHaveLength(33);
     const owned = new Set(receipt.changedMetadataKeys);
+    expect(owned).toEqual(new Set([...Object.keys(wall.plans[0].sheets), ...Object.keys(wall.plans[0].frames)]));
+    expect(replacementProofs.get('walls').proof).toEqual(wall);
     for (const kind of ['sheets','frames']) {
-      expect(Object.keys(current[kind])).toEqual(Object.keys(before[kind]));
-      for (const [key,value] of Object.entries(before[kind])) {
-        if (!owned.has(key)) expect(current[kind][key],key).toEqual(value);
-        else expect(current[kind][key],key).toEqual(wall.plans[0][kind][key]);
+      const expected = {...before[kind]};
+      for (const [family, {row, proof, compilerBytes}] of replacementProofs) {
+        expect(hash(compilerBytes), family).toBe(row.compilerReportSha256);
+        expect(proof.errors, family).toEqual([]);
+        expect(proof.externalRequests, family).toEqual([]);
+        const plan = proof.plans.find(plan => plan.name === family);
+        expect(plan, family).toBeDefined();
+        Object.assign(expected, plan[kind]);
       }
+      expect(current[kind]).toEqual(expected);
     }
-    expect(owned).toEqual(new Set([...Object.keys(wall.plans[0].sheets),...Object.keys(wall.plans[0].frames)]));
   });
 
   it('retains historical bytes and every unrelated aggregate proof record', () => {
@@ -31,12 +42,23 @@ describe('single-family wall compilation provenance', () => {
     expect(hash(bytes('wall-bake-report.json'))).toBe(receipt.compilerReportSha256);
     expect(hash(bytes('bake-wrapper-used.mjs'))).toBe(receipt.wrapperSha256);
     for (const [key,tag] of [['inputs','name'],['plans','name'],['verification','family'],['compilerMemory','family']]) {
-      expect(active[key].filter(row=>row[tag]!=='walls')).toEqual(prior[key].filter(row=>row[tag]!=='walls'));
-      expect(active[key].filter(row=>row[tag]==='walls')).toEqual(wall[key]);
+      expect(active[key].map(row => row[tag])).toEqual(prior[key].map(row => row[tag]));
+      for (const family of active.families) {
+        const source = replacementProofs.get(family)?.proof ?? prior;
+        expect(active[key].filter(row => row[tag] === family), family).toEqual(source[key].filter(row => row[tag] === family));
+      }
     }
-    expect(active.original).toEqual(prior.original); expect(active.transportHistory).toEqual(prior.transportHistory);
-    expect(active.replacementHistory.at(-1).compilerReportSha256).toBe(receipt.compilerReportSha256);
-    expect(active.proofOrigins.walls).toBe(wall.sourceCommit);
+    const projectAssets = new URL('../../public/', import.meta.url);
+    for (const source of [prior, active]) {
+      for (const {file, bytes, sha256} of source.original.files) {
+        const image = readFileSync(new URL(file, projectAssets));
+        expect(image.byteLength, file).toBe(bytes);
+        expect(hash(image), file).toBe(sha256);
+      }
+    }
+    expect(active.transportHistory).toEqual(prior.transportHistory);
+    expect(replacementProofs.get('walls').row.compilerReportSha256).toBe(receipt.compilerReportSha256);
+    for (const [family, {proof}] of replacementProofs) expect(active.proofOrigins[family], family).toBe(proof.sourceCommit);
   });
 
   it('retains all native per-density results and derives the full-world transfer total', () => {
@@ -49,9 +71,11 @@ describe('single-family wall compilation provenance', () => {
       expect(proof[0].visiblePixels).toBeGreaterThan(0);
     }
     expect(wall.verification[0].retainedDecodedAfterRelease).toBe(0);
+    const retiredWallSheets = new Set(receipt.changedMetadataKeys.flatMap(key => before.sheets[key]?.file ?? []));
+    const wallOnly = prior.compiled.files.filter(row => !retiredWallSheets.has(row.file)).concat(wall.compiled.files);
+    expect(wallOnly.reduce((sum, row) => sum + row.bytes, prior.initialTransfer.unchangedTerrainBytes)).toBe(12950770);
     const compiled = active.compiled.files.reduce((sum,row)=>sum+row.bytes,0);
     expect(active.initialTransfer.compiledPlusTerrainBytes).toBe(compiled+active.initialTransfer.unchangedTerrainBytes);
-    expect(active.initialTransfer.compiledPlusTerrainBytes).toBe(12950770);
-    expect(active.initialTransfer.targetMet).toBe(false);
+    expect(active.initialTransfer.targetMet).toBe(active.initialTransfer.compiledPlusTerrainBytes <= active.initialTransfer.targetBytes);
   });
 });

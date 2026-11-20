@@ -21,6 +21,24 @@ function cornerGeometry(padding = 0) {
   return geometry;
 }
 
+function footingRim(padding) {
+  const rim = [[-.57, -1], [.57, -1], [1, -.57], [1, .57], [.57, 1], [-.57, 1], [-1, .57], [-1, -.57]];
+  const outer = 1 + padding, inner = .855 - padding;
+  const positions = [], indices = [];
+  for (const [index, [x, z]] of rim.entries()) {
+    for (const scale of [outer, inner]) {
+      const point = projectGround(x * scale, z * scale);
+      positions.push(point.x, point.y, 0);
+    }
+    const start = index * 2, next = (start + 2) % (rim.length * 2);
+    indices.push(start, start + 1, next, start + 1, next + 1, next);
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setIndex(indices);
+  return geometry;
+}
+
 export function makeSelectionBracket(root, {support = false} = {}) {
   const group = new THREE.Group(); group.name = support ? 'house-support-target' : 'island-selection-bracket'; group.visible = false; root.add(group);
   // Draw before the buildings, so the back corners can tuck behind their bases.
@@ -31,6 +49,8 @@ export function makeSelectionBracket(root, {support = false} = {}) {
     mesh.name = padding ? 'selection-corner-outline' : 'selection-corner-brass';
     mesh.renderOrder = order; mesh.frustumCulled = false; mesh.raycast = () => {}; group.add(mesh); return mesh;
   });
+  const corners = meshes.map(mesh => mesh.geometry);
+  const footing = support ? null : [footingRim(.042), footingRim(0)];
   let disposed = false, lastX = null, lastZ = null, lastSize = 2, structure = false, historical = false;
   return {show(anchor) {
     if (disposed) return;
@@ -42,21 +62,26 @@ export function makeSelectionBracket(root, {support = false} = {}) {
     const nextStructure = typeof anchor.kind === 'string' && anchor.kind !== 'wall';
     const size = nextStructure && Number.isFinite(anchor.size) && anchor.size > 0 ? anchor.size : 2;
     if (size !== lastSize) { group.scale.set(size / 2, size / 2, 1); lastSize = size; }
-    if (nextStructure !== structure) {
+    const nextHistorical = anchor.positionOnly === true;
+    if (nextStructure !== structure || nextHistorical !== historical) {
       structure = nextStructure;
+      historical = nextHistorical;
       // Deep foliage and the structure's own base still draw in front of its ground marker.
       meshes[0].renderOrder = structure && !support ? 69 : 94; meshes[0].material.opacity = structure ? .74 : .86;
-      meshes[1].renderOrder = structure && !support ? 70 : 95; meshes[1].material.opacity = structure ? .88 : .98;
-    }
-    if ((anchor.positionOnly === true) !== historical) {
-      historical = anchor.positionOnly === true;
-      meshes[0].material.color.setHex(historical ? 0x164449 : 0x51351d);
-      meshes[1].material.color.setHex(historical ? 0xa5e2dc : 0xf9de95);
+      meshes[1].renderOrder = structure && !support ? 70 : 95; meshes[1].material.opacity = structure ? .966 : .98;
+      if (!support) {
+        const shape = structure && !historical ? footing : corners;
+        meshes[0].geometry = shape[0]; meshes[1].geometry = shape[1];
+        meshes[0].material.color.setHex(historical ? 0x164449 : 0x51351d);
+        meshes[1].material.color.setHex(historical ? 0xa5e2dc : structure ? 0xfff9df : 0xf9de95);
+      }
     }
     group.userData.spotId = anchor.spotId;
     group.userData.level = Number.isSafeInteger(anchor.level) && anchor.level > 0 ? anchor.level : null;
   }, dispose() {
     if (disposed) return; disposed = true; group.visible = false; group.removeFromParent();
-    for (const mesh of meshes) { mesh.geometry.dispose(); mesh.material.dispose(); }
+    for (const geometry of corners) geometry.dispose();
+    for (const geometry of footing ?? []) geometry.dispose();
+    for (const mesh of meshes) mesh.material.dispose();
   }};
 }

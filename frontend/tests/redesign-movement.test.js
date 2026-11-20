@@ -20,11 +20,22 @@ describe('higher framebuffer density with stable logical framing',()=>{
   });
   it.each([[1280,720,2],[1920,1080,3],[3840,2160,2],[375,812,3],[320,640,1]])('bounds GPU pixels at %s×%s DPR%s',(width,height,pixelRatio)=>{
     const high=pixelViewport(width,height,{pixelRatio}),low=pixelViewport(width,height,{pixelRatio,quality:'low'});
-    expect(high.pixelRatio).toBeLessThanOrEqual(1.5);
-    expect(high.drawingWidth*high.drawingHeight).toBeLessThanOrEqual(1920*1080);
+    expect(high.pixelRatio).toBeLessThanOrEqual(Math.min(pixelRatio, 4));
+    expect(high.drawingWidth*high.drawingHeight).toBeLessThanOrEqual(3840*2160);
     expect(low.drawingWidth*low.drawingHeight).toBeLessThanOrEqual(1280*720);
     expect(low.drawingWidth*low.drawingHeight).toBeLessThanOrEqual(high.drawingWidth*high.drawingHeight);
     expect(high.width).toBe(low.width);expect(high.height).toBe(low.height);
+  });
+  it.each([[375,812],[390,844]])('uses every device pixel at %s×%s on a 3× phone in High', (width,height) => {
+    const full = pixelViewport(width,height,{pixelRatio:3});
+    expect(full).toMatchObject({pixelRatio:3,drawingWidth:width*3,drawingHeight:height*3});
+    const low = pixelViewport(width,height,{pixelRatio:3,quality:'low'});
+    expect(low).toMatchObject({pixelRatio:1,drawingWidth:width,drawingHeight:height});
+  });
+  it('keeps native desktop and denser phone displays within the UHD limit', () => {
+    expect(pixelViewport(1280,720,{pixelRatio:2})).toMatchObject({pixelRatio:2,drawingWidth:2560,drawingHeight:1440});
+    expect(pixelViewport(1920,1080,{pixelRatio:2})).toMatchObject({pixelRatio:2,drawingWidth:3840,drawingHeight:2160});
+    expect(pixelViewport(375,812,{pixelRatio:4})).toMatchObject({pixelRatio:4,drawingWidth:1500,drawingHeight:3248});
   });
   it('uses CSS aspect and keeps portrait world width useful',()=>{
     const desktop=worldViewport(1280,720),phone=worldViewport(375,812);

@@ -289,7 +289,7 @@ export function createActions(isl) {
     const at = isl.housePlayer?.();
     const captains = at && Number.isFinite(at.x) && Number.isFinite(at.z)
       ? [{id: 'you', x: at.x, z: at.z, present: true, down: false}] : null;
-    const recoveryVersion = recoveryPolicyOn() ? 1 : island.recoveryVersion ?? 0;
+    const recoveryVersion = isl.recoveryPolicyOn() ? 1 : island.recoveryVersion ?? 0;
     return {island, support: previewHouseSupport({houseId, spots: island.spots, recoveryVersion, captains, move})};
   }
   function activeHouseSupport() {

@@ -46,7 +46,9 @@ async function manage(page) {
     const g = window.__island, {villageFrame} = await window.g20Import('/src/player/camera.js');
     const canvas = g.renderer.domElement.getBoundingClientRect(), bar = document.querySelector('.island-village-mode:not([hidden])').getBoundingClientRect();
     const quest = document.querySelector('.quest-strip')?.getBoundingClientRect(), purse = document.querySelector('.hud-coins')?.getBoundingClientRect();
-    const top = Math.max(80, (canvas.width < 640 ? Math.max(quest?.bottom ?? 0, purse?.bottom ?? 0) : 80) + 12);
+    // The desktop fixture leaves the center open between the purse and the menu.
+    const top = canvas.width >= 1280 && canvas.height >= 720
+      ? 68 : Math.max(80, (canvas.width < 640 ? Math.max(quest?.bottom ?? 0, purse?.bottom ?? 0) : 80) + 12);
     return villageFrame(g.camera, 'home_islet', {height: canvas.height, top, bottom: canvas.height - bar.top + 12});
   });
   await page.waitForFunction(fit => {

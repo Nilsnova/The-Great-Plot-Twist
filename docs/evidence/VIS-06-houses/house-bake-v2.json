@@ -1,0 +1,971 @@
+{
+  "scope": "offline normalized PNG source compilation; runtime activation/build exclusion and actual-game acceptance remain separate",
+  "sourceCommit": "71d11560a56e813067003fda18f6e8ed99301c29",
+  "compilerDirtyPaths": "M src/art/village/baked.js\n?? public/village/compiled/houses-4x-1-749130c563bf.png",
+  "browser": "157.0.8103.79",
+  "families": [
+    "houses"
+  ],
+  "proofDensities": [
+    4,
+    2.5,
+    2,
+    1.5
+  ],
+  "proofOrigins": {
+    "houses": "71d11560a56e813067003fda18f6e8ed99301c29"
+  },
+  "reusedReportSha256": null,
+  "normalizerHashes": {
+    "src/art/village-raster.js": "4db5ffa86253a7ece821804586518e2fabea33b33d0c59c4f3223df80d969e3f",
+    "src/art/village-decode.js": "1d55341b2c947e3bcfc019c0e8bb8722591f0a2312cd7a8a0585a873cd8fa537"
+  },
+  "transportHistory": [],
+  "original": {
+    "files": [
+      {
+        "file": "village/houses-v2.png",
+        "bytes": 2043640,
+        "sha256": "940ab505b98c5a98678805e06ecb66624ba140e35ee52d42ec9509df91cc776b",
+        "width": 1261,
+        "height": 1247
+      }
+    ],
+    "encodedBytes": 2043640,
+    "summedDecodedBytes": 6289868
+  },
+  "compiled": {
+    "files": [
+      {
+        "file": "village/compiled/houses-4x-1-749130c563bf.png",
+        "bytes": 1461466,
+        "sha256": "749130c563bf5014034f931344a0ef515eddbfbc02cacc0bfea9bd0d42669c9f",
+        "width": 984,
+        "height": 1408
+      }
+    ],
+    "encodedBytes": 1461466,
+    "summedDecodedBytes": 5541888,
+    "peakSingleDecodedBytes": 5541888
+  },
+  "initialTransfer": {
+    "unchangedTerrainBytes": 2683357,
+    "rawPlusTerrainBytes": 4726997,
+    "compiledPlusTerrainBytes": 4144823,
+    "targetBytes": 8388608,
+    "targetMet": true
+  },
+  "budgets": {
+    "decodedPoolBytes": 12582912,
+    "combatAtlasHighBytes": 41943040,
+    "combatAtlasLowBytes": 12582912,
+    "note": "unchanged final logical frame/density means no renderer-pass or final GPU-texture saving is claimed"
+  },
+  "inputs": [
+    {
+      "name": "houses",
+      "module": "src/art/village/houses.js",
+      "sha256": "97110d90a749281bef30650fb560ddb45d2994394900673a14653adfc232f72c",
+      "frames": {
+        "island-house": {
+          "sheet": {
+            "file": "village/houses-v2.png",
+            "width": 1261,
+            "height": 1247
+          },
+          "rect": [
+            23,
+            106,
+            351,
+            303
+          ],
+          "sourceFoot": [
+            175,
+            289
+          ],
+          "logical": [
+            80,
+            80,
+            8
+          ],
+          "fitBounds": [
+            209,
+            391,
+            209,
+            14
+          ]
+        },
+        "island-house-l2": {
+          "sheet": {
+            "file": "village/houses-v2.png",
+            "width": 1261,
+            "height": 1247
+          },
+          "rect": [
+            418,
+            23,
+            418,
+            389
+          ],
+          "sourceFoot": [
+            209,
+            375
+          ],
+          "logical": [
+            80,
+            80,
+            8
+          ],
+          "fitBounds": [
+            209,
+            391,
+            209,
+            14
+          ]
+        },
+        "island-house-l3": {
+          "sheet": {
+            "file": "village/houses-v2.png",
+            "width": 1261,
+            "height": 1247
+          },
+          "rect": [
+            872,
+            2,
+            360,
+            405
+          ],
+          "sourceFoot": [
+            180,
+            391
+          ],
+          "logical": [
+            80,
+            80,
+            8
+          ],
+          "fitBounds": [
+            209,
+            391,
+            209,
+            14
+          ]
+        },
+        "island-house-barracks": {
+          "sheet": {
+            "file": "village/houses-v2.png",
+            "width": 1261,
+            "height": 1247
+          },
+          "rect": [
+            10,
+            452,
+            397,
+            334
+          ],
+          "sourceFoot": [
+            198,
+            320
+          ],
+          "logical": [
+            96,
+            88,
+            8
+          ],
+          "fitBounds": [
+            209,
+            416,
+            209,
+            14
+          ]
+        },
+        "island-house-tavern": {
+          "sheet": {
+            "file": "village/houses-v2.png",
+            "width": 1261,
+            "height": 1247
+          },
+          "rect": [
+            413,
+            445,
+            408,
+            340
+          ],
+          "sourceFoot": [
+            204,
+            326
+          ],
+          "logical": [
+            96,
+            88,
+            8
+          ],
+          "fitBounds": [
+            209,
+            416,
+            209,
+            14
+          ]
+        },
+        "island-house-workshop": {
+          "sheet": {
+            "file": "village/houses-v2.png",
+            "width": 1261,
+            "height": 1247
+          },
+          "rect": [
+            840,
+            433,
+            418,
+            360
+          ],
+          "sourceFoot": [
+            209,
+            346
+          ],
+          "logical": [
+            96,
+            88,
+            8
+          ],
+          "fitBounds": [
+            209,
+            416,
+            209,
+            14
+          ]
+        },
+        "island-house-barracks-l3": {
+          "sheet": {
+            "file": "village/houses-v2.png",
+            "width": 1261,
+            "height": 1247
+          },
+          "rect": [
+            23,
+            843,
+            374,
+            388
+          ],
+          "sourceFoot": [
+            187,
+            374
+          ],
+          "logical": [
+            96,
+            88,
+            8
+          ],
+          "fitBounds": [
+            209,
+            416,
+            209,
+            14
+          ]
+        },
+        "island-house-tavern-l3": {
+          "sheet": {
+            "file": "village/houses-v2.png",
+            "width": 1261,
+            "height": 1247
+          },
+          "rect": [
+            415,
+            819,
+            392,
+            416
+          ],
+          "sourceFoot": [
+            196,
+            402
+          ],
+          "logical": [
+            96,
+            88,
+            8
+          ],
+          "fitBounds": [
+            209,
+            416,
+            209,
+            14
+          ]
+        },
+        "island-house-workshop-l3": {
+          "sheet": {
+            "file": "village/houses-v2.png",
+            "width": 1261,
+            "height": 1247
+          },
+          "rect": [
+            828,
+            810,
+            418,
+            430
+          ],
+          "sourceFoot": [
+            209,
+            416
+          ],
+          "logical": [
+            96,
+            88,
+            8
+          ],
+          "fitBounds": [
+            209,
+            416,
+            209,
+            14
+          ]
+        }
+      }
+    }
+  ],
+  "plans": [
+    {
+      "name": "houses",
+      "pages": [
+        {
+          "file": "village/compiled/houses-4x-1-749130c563bf.png",
+          "width": 984,
+          "height": 1408,
+          "items": [
+            {
+              "id": "island-house-barracks",
+              "rect": [
+                4,
+                4,
+                384,
+                352
+              ]
+            },
+            {
+              "id": "island-house-barracks-l3",
+              "rect": [
+                396,
+                4,
+                384,
+                352
+              ]
+            },
+            {
+              "id": "island-house-tavern",
+              "rect": [
+                4,
+                364,
+                384,
+                352
+              ]
+            },
+            {
+              "id": "island-house-tavern-l3",
+              "rect": [
+                396,
+                364,
+                384,
+                352
+              ]
+            },
+            {
+              "id": "island-house-workshop",
+              "rect": [
+                4,
+                724,
+                384,
+                352
+              ]
+            },
+            {
+              "id": "island-house-workshop-l3",
+              "rect": [
+                396,
+                724,
+                384,
+                352
+              ]
+            },
+            {
+              "id": "island-house",
+              "rect": [
+                4,
+                1084,
+                320,
+                320
+              ]
+            },
+            {
+              "id": "island-house-l2",
+              "rect": [
+                332,
+                1084,
+                320,
+                320
+              ]
+            },
+            {
+              "id": "island-house-l3",
+              "rect": [
+                660,
+                1084,
+                320,
+                320
+              ]
+            }
+          ]
+        }
+      ],
+      "sheets": {
+        "housesBaked1": {
+          "file": "village/compiled/houses-4x-1-749130c563bf.png",
+          "width": 984,
+          "height": 1408
+        }
+      },
+      "frames": {
+        "island-house": {
+          "sheet": "housesBaked1",
+          "rect": [
+            4,
+            1084,
+            320,
+            320
+          ],
+          "logical": [
+            80,
+            80,
+            8
+          ],
+          "sourceFoot": [
+            160,
+            288
+          ]
+        },
+        "island-house-l2": {
+          "sheet": "housesBaked1",
+          "rect": [
+            332,
+            1084,
+            320,
+            320
+          ],
+          "logical": [
+            80,
+            80,
+            8
+          ],
+          "sourceFoot": [
+            160,
+            288
+          ]
+        },
+        "island-house-l3": {
+          "sheet": "housesBaked1",
+          "rect": [
+            660,
+            1084,
+            320,
+            320
+          ],
+          "logical": [
+            80,
+            80,
+            8
+          ],
+          "sourceFoot": [
+            160,
+            288
+          ]
+        },
+        "island-house-barracks": {
+          "sheet": "housesBaked1",
+          "rect": [
+            4,
+            4,
+            384,
+            352
+          ],
+          "logical": [
+            96,
+            88,
+            8
+          ],
+          "sourceFoot": [
+            192,
+            320
+          ]
+        },
+        "island-house-tavern": {
+          "sheet": "housesBaked1",
+          "rect": [
+            4,
+            364,
+            384,
+            352
+          ],
+          "logical": [
+            96,
+            88,
+            8
+          ],
+          "sourceFoot": [
+            192,
+            320
+          ]
+        },
+        "island-house-workshop": {
+          "sheet": "housesBaked1",
+          "rect": [
+            4,
+            724,
+            384,
+            352
+          ],
+          "logical": [
+            96,
+            88,
+            8
+          ],
+          "sourceFoot": [
+            192,
+            320
+          ]
+        },
+        "island-house-barracks-l3": {
+          "sheet": "housesBaked1",
+          "rect": [
+            396,
+            4,
+            384,
+            352
+          ],
+          "logical": [
+            96,
+            88,
+            8
+          ],
+          "sourceFoot": [
+            192,
+            320
+          ]
+        },
+        "island-house-tavern-l3": {
+          "sheet": "housesBaked1",
+          "rect": [
+            396,
+            364,
+            384,
+            352
+          ],
+          "logical": [
+            96,
+            88,
+            8
+          ],
+          "sourceFoot": [
+            192,
+            320
+          ]
+        },
+        "island-house-workshop-l3": {
+          "sheet": "housesBaked1",
+          "rect": [
+            396,
+            724,
+            384,
+            352
+          ],
+          "logical": [
+            96,
+            88,
+            8
+          ],
+          "sourceFoot": [
+            192,
+            320
+          ]
+        }
+      }
+    }
+  ],
+  "compilerMemory": [
+    {
+      "family": "houses",
+      "peakSourceBytes": 6289868,
+      "retainedDecodedAfterRelease": 0,
+      "canvasBytes": 5541888,
+      "largestTemporaryCanvasBytes": 540672
+    }
+  ],
+  "verification": [
+    {
+      "family": "houses",
+      "results": [
+        {
+          "id": "island-house",
+          "density": 4,
+          "pixels": 102400,
+          "visiblePixels": 42244,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-house",
+          "density": 2.5,
+          "pixels": 40000,
+          "visiblePixels": 16671,
+          "differingPixels": 15627,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 42,
+          "alphaWeightedMeanRgbDelta": 2.500488369695353
+        },
+        {
+          "id": "island-house",
+          "density": 2,
+          "pixels": 25600,
+          "visiblePixels": 10644,
+          "differingPixels": 9770,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 31,
+          "alphaWeightedMeanRgbDelta": 2.1374736108199723
+        },
+        {
+          "id": "island-house",
+          "density": 1.5,
+          "pixels": 14400,
+          "visiblePixels": 6032,
+          "differingPixels": 5604,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 45,
+          "alphaWeightedMeanRgbDelta": 2.4722085895471877
+        },
+        {
+          "id": "island-house-l2",
+          "density": 4,
+          "pixels": 102400,
+          "visiblePixels": 58095,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-house-l2",
+          "density": 2.5,
+          "pixels": 40000,
+          "visiblePixels": 22891,
+          "differingPixels": 21818,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 47,
+          "alphaWeightedMeanRgbDelta": 2.8500463822514615
+        },
+        {
+          "id": "island-house-l2",
+          "density": 2,
+          "pixels": 25600,
+          "visiblePixels": 14610,
+          "differingPixels": 13672,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 45,
+          "alphaWeightedMeanRgbDelta": 2.520314487163586
+        },
+        {
+          "id": "island-house-l2",
+          "density": 1.5,
+          "pixels": 14400,
+          "visiblePixels": 8300,
+          "differingPixels": 7858,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 53,
+          "alphaWeightedMeanRgbDelta": 2.59753361986636
+        },
+        {
+          "id": "island-house-l3",
+          "density": 4,
+          "pixels": 102400,
+          "visiblePixels": 55820,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-house-l3",
+          "density": 2.5,
+          "pixels": 40000,
+          "visiblePixels": 21970,
+          "differingPixels": 20808,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 41,
+          "alphaWeightedMeanRgbDelta": 2.8252866849669824
+        },
+        {
+          "id": "island-house-l3",
+          "density": 2,
+          "pixels": 25600,
+          "visiblePixels": 14035,
+          "differingPixels": 13047,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 29,
+          "alphaWeightedMeanRgbDelta": 2.4383781953100327
+        },
+        {
+          "id": "island-house-l3",
+          "density": 1.5,
+          "pixels": 14400,
+          "visiblePixels": 7968,
+          "differingPixels": 7543,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 41,
+          "alphaWeightedMeanRgbDelta": 2.714928862469753
+        },
+        {
+          "id": "island-house-barracks",
+          "density": 4,
+          "pixels": 135168,
+          "visiblePixels": 57063,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-house-barracks",
+          "density": 2.5,
+          "pixels": 52800,
+          "visiblePixels": 22500,
+          "differingPixels": 21637,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 56,
+          "alphaWeightedMeanRgbDelta": 3.021397313469368
+        },
+        {
+          "id": "island-house-barracks",
+          "density": 2,
+          "pixels": 33792,
+          "visiblePixels": 14314,
+          "differingPixels": 13531,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 41,
+          "alphaWeightedMeanRgbDelta": 2.7523633746125356
+        },
+        {
+          "id": "island-house-barracks",
+          "density": 1.5,
+          "pixels": 19008,
+          "visiblePixels": 8152,
+          "differingPixels": 7784,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 48,
+          "alphaWeightedMeanRgbDelta": 2.9948316849990806
+        },
+        {
+          "id": "island-house-tavern",
+          "density": 4,
+          "pixels": 135168,
+          "visiblePixels": 59342,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-house-tavern",
+          "density": 2.5,
+          "pixels": 52800,
+          "visiblePixels": 23346,
+          "differingPixels": 22264,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 66,
+          "alphaWeightedMeanRgbDelta": 3.1283131672089284
+        },
+        {
+          "id": "island-house-tavern",
+          "density": 2,
+          "pixels": 33792,
+          "visiblePixels": 14858,
+          "differingPixels": 14009,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 38,
+          "alphaWeightedMeanRgbDelta": 2.9785001568832965
+        },
+        {
+          "id": "island-house-tavern",
+          "density": 1.5,
+          "pixels": 19008,
+          "visiblePixels": 8433,
+          "differingPixels": 8028,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 62,
+          "alphaWeightedMeanRgbDelta": 3.1811974160557717
+        },
+        {
+          "id": "island-house-workshop",
+          "density": 4,
+          "pixels": 135168,
+          "visiblePixels": 63901,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-house-workshop",
+          "density": 2.5,
+          "pixels": 52800,
+          "visiblePixels": 25171,
+          "differingPixels": 23992,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 50,
+          "alphaWeightedMeanRgbDelta": 2.8762115624495275
+        },
+        {
+          "id": "island-house-workshop",
+          "density": 2,
+          "pixels": 33792,
+          "visiblePixels": 16067,
+          "differingPixels": 15127,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 40,
+          "alphaWeightedMeanRgbDelta": 2.638242623364466
+        },
+        {
+          "id": "island-house-workshop",
+          "density": 1.5,
+          "pixels": 19008,
+          "visiblePixels": 9118,
+          "differingPixels": 8674,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 48,
+          "alphaWeightedMeanRgbDelta": 2.819725848337611
+        },
+        {
+          "id": "island-house-barracks-l3",
+          "density": 4,
+          "pixels": 135168,
+          "visiblePixels": 62702,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-house-barracks-l3",
+          "density": 2.5,
+          "pixels": 52800,
+          "visiblePixels": 24727,
+          "differingPixels": 23550,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 58,
+          "alphaWeightedMeanRgbDelta": 3.011097751713731
+        },
+        {
+          "id": "island-house-barracks-l3",
+          "density": 2,
+          "pixels": 33792,
+          "visiblePixels": 15782,
+          "differingPixels": 14743,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 34,
+          "alphaWeightedMeanRgbDelta": 2.633800550648135
+        },
+        {
+          "id": "island-house-barracks-l3",
+          "density": 1.5,
+          "pixels": 19008,
+          "visiblePixels": 8936,
+          "differingPixels": 8493,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 43,
+          "alphaWeightedMeanRgbDelta": 2.957101099571821
+        },
+        {
+          "id": "island-house-tavern-l3",
+          "density": 4,
+          "pixels": 135168,
+          "visiblePixels": 68853,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-house-tavern-l3",
+          "density": 2.5,
+          "pixels": 52800,
+          "visiblePixels": 27075,
+          "differingPixels": 25836,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 41,
+          "alphaWeightedMeanRgbDelta": 3.3126405283775617
+        },
+        {
+          "id": "island-house-tavern-l3",
+          "density": 2,
+          "pixels": 33792,
+          "visiblePixels": 17269,
+          "differingPixels": 16309,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 35,
+          "alphaWeightedMeanRgbDelta": 3.051174276935172
+        },
+        {
+          "id": "island-house-tavern-l3",
+          "density": 1.5,
+          "pixels": 19008,
+          "visiblePixels": 9782,
+          "differingPixels": 9300,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 47,
+          "alphaWeightedMeanRgbDelta": 3.3334887264430715
+        },
+        {
+          "id": "island-house-workshop-l3",
+          "density": 4,
+          "pixels": 135168,
+          "visiblePixels": 74085,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-house-workshop-l3",
+          "density": 2.5,
+          "pixels": 52800,
+          "visiblePixels": 29229,
+          "differingPixels": 27796,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 43,
+          "alphaWeightedMeanRgbDelta": 2.7241923406327464
+        },
+        {
+          "id": "island-house-workshop-l3",
+          "density": 2,
+          "pixels": 33792,
+          "visiblePixels": 18636,
+          "differingPixels": 17384,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 31,
+          "alphaWeightedMeanRgbDelta": 2.402873142535279
+        },
+        {
+          "id": "island-house-workshop-l3",
+          "density": 1.5,
+          "pixels": 19008,
+          "visiblePixels": 10587,
+          "differingPixels": 10023,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 33,
+          "alphaWeightedMeanRgbDelta": 2.667204581764734
+        }
+      ],
+      "peakSourceBytes": 6289868,
+      "retainedDecodedAfterRelease": 0
+    }
+  ],
+  "errors": [],
+  "externalRequests": []
+}

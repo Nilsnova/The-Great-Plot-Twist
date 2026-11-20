@@ -4,6 +4,9 @@
 // Everything is added under place.group, so the place's own
 // lifetime (resources.js) releases every texture, material and geometry when the player leaves.
 import * as THREE from 'three';
+import {makeBuildingFoundations} from './building-foundations.js';
+import {defenseDisplayAnchors} from './defense-display.js';
+import {animateLandmarkMaterial, landmarkProfiles} from './landmark-motion.js';
 import {unprojectGround} from '../world/projection.js';
 import {groundGeometry} from '../world/ground-transform.js';
 import {artSizes, loadArt, placeArt, projectPoint} from '../world/art.js';
@@ -222,6 +225,10 @@ export function lockWave(kinds, unlocks) {
 export function decorateIsland(place, ctx = {}) {
   const layout = ctx.layout ?? {spots: ISLAND_SPOTS, zones: islandZones, bell: true, cabin: true};
   const SPOTS = layout.spots;
+  const homeWalls = layout.zones === islandZones;
+  let displayAnchors = new Map();
+  const displayAnchor = id => preview?.spotId === id ? null : displayAnchors.get(id);
+  const viewOf = (id, where) => displayAnchor(id) ?? where;
   const root = new THREE.Group(); root.name = layout.name ?? 'island'; place.group.add(root);
   let state = {spots: [], visitor: false, battle: false, unlocks: null, crew: null, campaign: null, arsenal: false, feedbackScope: null}, disposed = false;
   let notice;
@@ -275,6 +282,7 @@ export function decorateIsland(place, ctx = {}) {
   // The campaign's buildings (home island only): one mesh per frame they can show, the right one visible.
   const campaignMeshes = new Map(); // building id -> {frame name -> mesh}
   const campaignTextures = new Map();
+  const landmarks = [];
   if (layout.bell !== false) for (const building of CAMPAIGN_BUILDINGS) {
     const names = [...new Set([building.art, building.mended, 'island-site', ...[4, 5, 6, 8].map(n => `island-site-${n}`)].filter(Boolean))];
     const meshes = {};
@@ -283,6 +291,7 @@ export function decorateIsland(place, ctx = {}) {
       const mesh = sprite(root, texture, building.x, building.z, `island-campaign:${building.id}:${name}`);
       mesh.visible = false; mesh.userData.campaign = building.id; meshes[name] = mesh;
       staticArt.track(mesh, name);
+      if (landmarkProfiles[name]) landmarks.push([mesh, name]);
     }
     campaignMeshes.set(building.id, meshes);
   }
@@ -295,13 +304,14 @@ export function decorateIsland(place, ctx = {}) {
     }
     return arsenalMesh;
   };
-  if (layout.cabin !== false && ctx.art?.cabin) placeArt(root, ctx.art, 'cabin', CABIN.x, CABIN.z).name = 'island-cabin';
+  const cabin = layout.cabin !== false && ctx.art?.cabin ? placeArt(root, ctx.art, 'cabin', CABIN.x, CABIN.z) : null;
+  if (cabin) cabin.name = 'island-cabin';
   // The reach of a house's role while its card is open (GAME-V3.md "Houses"): a soft disc with a bright rim on
   // the ground, in the role's colour. ctx.range() says which ({x, z, radius, role} or null), read every frame.
   const houseSupport = typeof ctx.houseSupport === 'function' ? makeHouseSupportMarkers(root) : null;
   const rangeRing = houseSupport ? null : makeRangeRing(root);
   const defenseRange = typeof ctx.defenseRange === 'function' ? makeDefenseRange(root) : null;
-  const homeWalls = layout.zones === islandZones;
+  const foundations = homeWalls ? makeBuildingFoundations(root) : null;
   const purchaseLight = homeWalls ? makeWallPurchaseLight() : null;
   const wallConnections = makeWallConnections(root, {purchaseLight});
   let joinedWalls = new Set();
@@ -326,7 +336,7 @@ export function decorateIsland(place, ctx = {}) {
   }
   const recoveryIndicators = createStructureRecoveryIndicators({root, locate: id => {
     const spot = SPOTS.find(item => item.id === id);
-    return spot ? whereOf(spot) : null;
+    return spot ? viewOf(id, whereOf(spot)) : null;
   }});
   let recoveryState = null, recoveryStateKey = 'null';
   // The real art once it has loaded (null until then: the drawn sprites stand in), and what each spot shows.
@@ -354,7 +364,7 @@ export function decorateIsland(place, ctx = {}) {
     const marks = kind && appearance?.look !== 'broken' ? buildingMarks(kind, level, answer?.tree, answer?.spec) : [];
     // A recovery ruin frame stands alone; only the normal level art is drawn as posts of a joined wall.
     const joined = kind === 'wall' && id === normalId && joinedWalls.has(spot.id);
-    const where = whereOf(spot), key = !id || hidden ? '' : `${id}:${pips}:${joined}:${marks.map(mark => mark.art).join('+')}@${where.x},${where.z}`;
+    const where = viewOf(spot.id, whereOf(spot)), key = !id || hidden ? '' : `${id}:${pips}:${joined}:${marks.map(mark => mark.art).join('+')}@${where.x},${where.z}`;
     if (shown.get(spot.id)?.key === key) return;
     clear(spot.id);
     if (!key) return;
@@ -376,7 +386,7 @@ export function decorateIsland(place, ctx = {}) {
   }
   function showCrew(spots, crew, hidden) {
     const places = hidden || !crew ? [] : crewPlaces(spots.map(item => {
-      const spot = SPOTS.find(entry => entry.id === item.id), where = spot ? whereOf(spot) : null;
+      const spot = SPOTS.find(entry => entry.id === item.id), where = spot ? viewOf(spot.id, whereOf(spot)) : null;
       return where ? {...item, x: where.x, z: where.z} : null;
     }).filter(Boolean), crew, {bell: layout.bell === false ? null : BELL});
     const key = places.map(item => `${item.kind}@${item.x},${item.z}`).join('|');
@@ -391,6 +401,12 @@ export function decorateIsland(place, ctx = {}) {
     if (disposed) return;
     if (battle || feedbackScope !== state.feedbackScope) clearWallFeedback();
     state = {spots, visitor, battle, unlocks, crew, campaign, arsenal: arsenal === true, feedbackScope};
+    if (homeWalls) {
+      displayAnchors = defenseDisplayAnchors('home_islet', spots.filter(row => row.built).map(row => {
+        const spot = SPOTS.find(item => item.id === row.id);
+        return spot ? {...row, ...whereOf(spot)} : row;
+      }));
+    }
     place.setMooringBattle?.(battle);
     if (battle || visitor) {
       defenseRange?.show(null);
@@ -412,8 +428,14 @@ export function decorateIsland(place, ctx = {}) {
     const shownArsenal = showArsenal(known && state.arsenal);
     if (shownArsenal) shownArsenal.visible = known && state.arsenal;
     progress?.apply(campaign, spots, known);
+    const standing = [];
+    if (cabin) standing.push({slot: CABIN.id, x: CABIN.x, z: CABIN.z});
+    if (bell) standing.push({slot: BELL.id, x: BELL.x, z: BELL.z});
+    if (shownArsenal?.visible) standing.push({slot: ARSENAL.id, x: ARSENAL.x, z: ARSENAL.z});
     for (const [id, meshes] of campaignMeshes) {
-      const frame = known ? campaignArt(CAMPAIGN_BUILDINGS.find(item => item.id === id), campaign) : null;
+      const building = CAMPAIGN_BUILDINGS.find(item => item.id === id);
+      const frame = known ? campaignArt(building, campaign) : null;
+      if (frame === building.art) standing.push({slot: id, x: building.x, z: building.z});
       for (const [name, mesh] of Object.entries(meshes)) mesh.visible = name === frame;
     }
     for (const spot of SPOTS) {
@@ -425,7 +447,13 @@ export function decorateIsland(place, ctx = {}) {
         for (const mesh of [marker.ring, marker.badge, marker.lock, marker.lockRing]) moveSprite(mesh, where.x, where.z);
         marker.x = where.x; marker.z = where.z;
       }
-      for (const kind of kindsOf(spot)) moveSprite(buildings.get(`${spot.id}:${kind}`), where.x, where.z);
+      const view = viewOf(spot.id, where);
+      for (const kind of kindsOf(spot)) moveSprite(buildings.get(`${spot.id}:${kind}`), view.x, view.z);
+      if (built && slotOf(spot) !== 'wall') {
+        const saved = recoveryState?.structures?.find(row => row.spot === spot.id);
+        const look = structureRecoveryAppearance(answer, saved, recoveryState)?.look;
+        standing.push({slot: slotOf(spot), ...view, ruin: look === 'broken'});
+      }
       // Locked things stay on the map (GAME-V3.md §4): a spot the campaign opens later, or whose kind is not
       // open yet, shows a lock badge instead of the glowing ring.
       const open = (!unlocks || kindsOf(spot).some(kind => (unlocks.levels?.[kind] ?? 0) >= 1)) && !spotLocked(spot, campaign);
@@ -443,6 +471,7 @@ export function decorateIsland(place, ctx = {}) {
       const wave = open ? null : spotLocked(spot, campaign) ? spotWave(spot.id) : lockWave(kindsOf(spot), unlocks);
       if (marker.wave !== wave) { marker.wave = wave; marker.lock.material.map = lockTexture(wave).texture; marker.lock.material.needsUpdate = true; }
     }
+    foundations?.show(standing);
     // The wave's renderer draws the crew during a battle; outside one they stand by their posts.
     if (art) showCrew(spots, crew, battle);
     if (layout.zones === islandZones) {
@@ -497,7 +526,7 @@ export function decorateIsland(place, ctx = {}) {
   // The nearest pickable thing to a ground point (a tap), or null.
   // Built sprites can overlap legally. In village mode, give the opaque foreground art priority over
   // the old nearest-foot box. The box still serves markers, service buildings and loading stand-ins.
-  function frontBuildingAt(tap) {
+  function frontBuildingAt(tap, portraitDepth) {
     let front = null;
     for (const [id, item] of shown) {
       if (!ctx.canPickRemote?.(id)) continue;
@@ -506,7 +535,7 @@ export function decorateIsland(place, ctx = {}) {
         || (front && mesh.renderOrder < front.order)) continue;
       const [width, height, anchor] = artSizes[mesh.userData.art], image = mesh.material.map?.image;
       const u = .5 + (tap.x - mesh.position.x) / width;
-      const v = 1 - anchor - (tap.y - mesh.position.y) / height;
+      const v = 1 - anchor - (tap.y - mesh.position.y) * portraitDepth / height;
       if (u < 0 || u >= 1 || v < 0 || v >= 1 || !image?.getContext) continue;
       try {
         const alpha = image.getContext('2d')?.getImageData(Math.floor(u * image.width), Math.floor(v * image.height), 1, 1).data[3];
@@ -519,10 +548,11 @@ export function decorateIsland(place, ctx = {}) {
     return front?.id ?? null;
   }
   function pickAt(x, z) {
-    const tap = projectPoint(x, z), front = frontBuildingAt(tap);
+    const portraitDepth = ctx.camera?.userData.homePortraitDepth ?? 1;
+    const tap = projectPoint(x, z), front = frontBuildingAt(tap, portraitDepth);
     if (front) return front;
     const candidates = [...SPOTS.filter(spot => !isExtraSpot(spot.id) || state.spots.some(item => item.id === spot.id))
-        .map(spot => ({id: spot.id, ...whereOf(spot), w: 2.4, h: spot.kind === 'watchtower' ? 5 : 3})),
+        .map(spot => ({id: spot.id, ...viewOf(spot.id, whereOf(spot)), w: 2.4, h: spot.kind === 'watchtower' ? 5 : 3})),
       ...(bell ? [{id: BELL.id, x: BELL.x, z: BELL.z, w: 1.6, h: 3.4}] : []),
       ...(arsenalMesh?.visible ? [{id: ARSENAL.id, x: ARSENAL.x, z: ARSENAL.z, w: ARSENAL.w / 2, h: ARSENAL.h}] : []),
       ...(campaignMeshes.size ? CAMPAIGN_BUILDINGS.map(item => ({id: item.id, x: item.x, z: item.z, w: item.w, h: item.h})) : []),
@@ -530,7 +560,7 @@ export function decorateIsland(place, ctx = {}) {
     let best = null, bestScore = Infinity;
     for (const item of candidates) {
       const foot = projectPoint(item.x, item.z);
-      if (Math.abs(foot.x - tap.x) > item.w || tap.y > foot.y + item.h || tap.y < foot.y - .54) continue;
+      if (Math.abs(foot.x - tap.x) > item.w || tap.y > foot.y + item.h / portraitDepth || tap.y < foot.y - .54) continue;
       const score = Math.hypot(foot.x - tap.x, foot.y - tap.y);
       if (score < bestScore) { best = item.id; bestScore = score; }
     }
@@ -566,10 +596,18 @@ export function decorateIsland(place, ctx = {}) {
       for (const type of ['pointercancel', 'lostpointercapture']) ctx.canvas.removeEventListener(type, cancelPick);
     });
   }
-  let ringing = 0;
+  const landmarkMotion = new Map();
+  let ringing = 0, landmarkClock = 0;
+  function trackMotion(mesh, id) {
+    const material = mesh?.material, profile = landmarkProfiles[id];
+    if (homeWalls && profile && material?.map?.userData.villageArt?.source === 'png'
+      && !landmarkMotion.has(material)) {
+      landmarkMotion.set(material, animateLandmarkMaterial(material, profile));
+    }
+  }
   return {
     runArtTask: (key, operation) => tasks.run(key, operation),
-    apply, pickAt, retryArt: () => Promise.all([retryArt(), staticArt.retry(), retryWallArt(), retryProgressArt(), ctx.retryAdditionalArt?.()]),
+    apply, pickAt, displayAnchor, retryArt: () => Promise.all([retryArt(), staticArt.retry(), retryWallArt(), retryProgressArt(), ctx.retryAdditionalArt?.()]),
     setRecoveryState(value) {
       const accepted = value?.recoveryVersion === 1 && RECOVERY_PHASES.has(value.displayPhase)
         && typeof value.islandEpoch === 'string' && Array.isArray(value.structures) ? value : null;
@@ -606,11 +644,12 @@ export function decorateIsland(place, ctx = {}) {
     },
     clearWallFeedback,
     ring() { ringing = 1.2; },
-    update(dt, time = 0, paused = false) {
+    update(dt, time = 0, paused = false, frame) {
       if (disposed) return;
       notice.update();
       const selection = preview ? null : ctx.selection?.();
-      selectionBracket.show(selection);
+      const display = selection && displayAnchor(selection.spotId);
+      selectionBracket.show(display ? {...selection, ...display} : selection);
       wallConnections.select(state.battle || state.visitor ? null : selection?.spotId);
       let canopyTarget = null;
       if (selection?.kind && !state.battle && !state.visitor) {
@@ -618,7 +657,7 @@ export function decorateIsland(place, ctx = {}) {
           ? wallConnections.selectedCanopyTarget
           : shown.get(selection.spotId)?.meshes[0] ?? null;
       }
-      place.setSelectedCanopy?.(canopyTarget);
+      place.setSelectedCanopy?.(canopyTarget, ctx.camera?.userData.homePortraitDepth);
       recoveryIndicators.update();
       const still = reduced();
       const coverage = selection && !state.battle && !state.visitor ? ctx.defenseRange?.() : null;
@@ -645,9 +684,19 @@ export function decorateIsland(place, ctx = {}) {
         for (const mesh of [marker.badge, marker.lock]) mesh.material.opacity = marker.fade;
         marker.badge.position.y = marker.badge.userData.baseY + (near ? bob : 0);
       }
-      if (!bell) return;
-      if (ringing > 0 && !still) { ringing = Math.max(0, ringing - dt); bell.rotation.z = bell.userData.art ? 0 : Math.sin(ringing * 18) * .12 * ringing; }
-      else bell.rotation.z = 0;
+      trackMotion(cabin, 'cabin');
+      trackMotion(bell, 'island-bell');
+      trackMotion(arsenalMesh, ARSENAL.art);
+      for (const [mesh, id] of landmarks) if (mesh.visible) trackMotion(mesh, id);
+      if (!paused || still) {
+        const step = Number.isFinite(dt) ? Math.min(.1, Math.max(0, dt)) : 0;
+        if (!still) landmarkClock += step;
+        ringing = still ? 0 : Math.max(0, ringing - step);
+        const strength = ringing / 1.2;
+        const motion = {time: landmarkClock, wind: frame?.weather?.wind ?? frame?.wind, night: frame?.night,
+          ring: .23 * strength ** 1.45 * Math.sin((1.2 - ringing) * 16), still};
+        for (const detail of landmarkMotion.values()) detail.update(motion);
+      }
     },
     get root() { return root; },
     get wallJoins() { return wallConnections.links; },
@@ -655,7 +704,7 @@ export function decorateIsland(place, ctx = {}) {
     dispose() {
       if (disposed) return; disposed = true; cleanups.splice(0).forEach(stop => stop());
       tasks.dispose(); notice.dispose(); staticArt.dispose();
-      progress?.dispose(); recoveryIndicators.dispose();
+      progress?.dispose(); recoveryIndicators.dispose(); foundations?.dispose(); landmarkMotion.clear();
       wallConnections.dispose(); selectionBracket.dispose();
       defenseRange?.dispose();
       houseSupport?.dispose(); rangeRing?.dispose();

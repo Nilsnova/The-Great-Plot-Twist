@@ -3,6 +3,7 @@
 // baked.js names the proved 4x PNG masters; shipped.js (scripts/ship-village-art.mjs) names the same-size
 // WebP each master is downloaded as. Frame rects, feet and logical boxes are unchanged.
 import * as baked from './village/baked.js';
+import {compiledHomeFoliage} from './village/home-foliage.js';
 import {shippedSheets} from './village/shipped.js';
 export function shippedFamily(family, shipped = shippedSheets) {
   const sheets = Object.fromEntries(Object.entries(family.sheets).map(([key, sheet]) => {
@@ -12,4 +13,7 @@ export function shippedFamily(family, shipped = shippedSheets) {
   }));
   return Object.freeze({sheets, frames: family.frames});
 }
-export const villageFamilies = [shippedFamily(baked)];
+export const villageFamilies = [shippedFamily({
+  sheets: {...baked.sheets, ...compiledHomeFoliage.sheets},
+  frames: {...baked.frames, ...compiledHomeFoliage.frames},
+})];

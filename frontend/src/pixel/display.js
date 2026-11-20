@@ -1,14 +1,15 @@
 // Bounded real framebuffer density. CSS size and world framing never depend on quality.
-const MAX_PIXELS = {high: 1920 * 1080, low: 1280 * 720};
+import {QUALITY} from '../config.js';
+
 const WARMUP_MS=1500,WINDOW_MS=2000,MIN_FRAMES=16,TARGET_MS=31,SLOW_MS=38,FAST_MS=21,RECOVERY_MS=15000;
 const size = value => Number.isFinite(value) ? Math.max(1, Math.floor(value)) : 1;
 
 export function pixelViewport(width, height, {quality = 'high', pixelRatio = 1, densityScale = 1} = {}) {
   width = size(width); height = size(height);
-  const maximum = MAX_PIXELS[quality] ?? MAX_PIXELS.high;
+  const limits = QUALITY[quality] ?? QUALITY.high;
   const deviceRatio = Number.isFinite(pixelRatio) ? Math.max(0.25, pixelRatio) : 1;
   const density = Number.isFinite(densityScale) ? Math.max(.5,Math.min(1,densityScale)) : 1;
-  const ratio = Math.min(deviceRatio, quality === 'low' ? 1 : 1.5, Math.sqrt(maximum / (width * height))) * density;
+  const ratio = Math.min(deviceRatio, limits.pixelRatio, Math.sqrt(limits.renderPixels / (width * height))) * density;
   return {width, height, scale: 1, pixelRatio: ratio,
     drawingWidth: Math.floor(width * ratio), drawingHeight: Math.floor(height * ratio)};
 }

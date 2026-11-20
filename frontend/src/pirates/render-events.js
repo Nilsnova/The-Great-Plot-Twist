@@ -6,13 +6,19 @@ import { facingTo, FIRE_SECONDS, FLASH_SECONDS, SHIP_SIZE, SHIP_VARIANTS, SINK_S
 
 // The arguments in this order (render.js passes them so; positional, so the minifier shortens them).
 export function createEvents(parts, posts, ships, crew, guards, fire, wallFlash, balls, sinkers, wrecks, splashes,
-  shells, bursts, tracers, jamShots, warnings, fallen, strikes, K, still, low, effects, spark) {
+  shells, bursts, tracers, jamShots, warnings, fallen, strikes, K, still, low, effects, spark, defenseView = () => null) {
   const { shipMeta, shooterAt, muzzleOf, boarderMeta, militiaMeta } = parts;
   // The renderer's clock and latest state as update() last set them (render.js calls sync() right after, every frame).
   let clock = 0, simNow = 0, latest = null;
   function sync(now, simTime, state) { clock = now; simNow = simTime; latest = state; }
   function onEvent(event) {
-    const {x, y} = projectGround(event.x, event.z ?? 0);
+    const defenseId = event.cannonId ?? event.towerId;
+    const view = defenseView(defenseId);
+    const post = view && posts.find(item => item.id === defenseId);
+    // Move the visual origin by the display offset, retaining the spread of volleys and all event timing.
+    const fromX = post ? event.x + view.x - post.x : event.x;
+    const fromZ = post ? (event.z ?? post.z) + view.z - post.z : event.z;
+    const {x, y} = projectGround(fromX, fromZ ?? 0);
     // v3 waves: the siege barge's shells fly like a mortar's; a fire ship bursts like a fire bomb.
     if (event.type === 'barge_fired') { onEvent({ ...event, type: 'mortar_fired', towerId: event.shipId }); return; }
     if (event.type === 'barge_impact') { onEvent({ ...event, type: 'mortar_impact' }); return; }
@@ -20,7 +26,7 @@ export function createEvents(parts, posts, ships, crew, guards, fire, wallFlash,
     switch (event.type) {
       case 'ship_spawned': shipMeta(event.shipId, event.kind, event.x, event.z, event.toX, event.toZ); break;
       case 'cannon_fired': {
-        balls.add(item => Object.assign(item, { x: event.x, z: event.z, toX: event.toX, toZ: event.toZ, from: event.t, to: event.impactAt,
+        balls.add(item => Object.assign(item, { x: fromX, z: fromZ, toX: event.toX, toZ: event.toZ, from: event.t, to: event.impactAt,
           hit: event.hit, enemy: false, splashed: false, manual: event.manual, kind: 'cannon' }));
         const flip = facingTo(event) < 0;
         fire.set(event.cannonId, { until: clock + FIRE_SECONDS, flip });
@@ -64,7 +70,8 @@ export function createEvents(parts, posts, ships, crew, guards, fire, wallFlash,
       case 'ship_fired': {
         // T50 (the wave rule ship_fire): the ship's ball flies from its hull to the wall, tower or heart it aims at, on
         // the sim's own flight (its impactAt); the impact's dust, flash or red burst comes when it lands (land()).
-        balls.add(item => Object.assign(item, { x: event.x, z: event.z, toX: event.toX, toZ: event.toZ, from: event.t, to: event.impactAt,
+        const target = event.target === 'tower' ? defenseView(event.targetId) : null;
+        balls.add(item => Object.assign(item, { x: event.x, z: event.z, toX: target?.x ?? event.toX, toZ: target?.z ?? event.toZ, from: event.t, to: event.impactAt,
           hit: true, enemy: true, splashed: false, kind: 'cannon', dust: event.target === 'heart' ? 'heart' : 'wall', wallId: event.targetId ?? null }));
         const meta = ships.get(event.shipId), size = SHIP_SIZE[event.kind] ?? SHIP_SIZE.sloop;
         effects()?.bloom(x + (meta?.facing ?? 1) * size.w * .25, y + size.h * .4, { radius: .8, life: .3, colour: '#ffcf6a' });
@@ -91,7 +98,7 @@ export function createEvents(parts, posts, ships, crew, guards, fire, wallFlash,
       case 'wall_repaired': effects()?.bloom(x, y + 1, { radius: 1.4, life: .6, colour: '#bfe6a8' }); break;
       case 'harpoon_thrown': {
         // The harpoon tower (GAME-V3.md §5): a flat, quick flight of the harpoon with its rope behind it.
-        balls.add(item => Object.assign(item, { x: event.x, z: event.z, toX: event.toX, toZ: event.toZ, from: event.t, to: event.impactAt,
+        balls.add(item => Object.assign(item, { x: fromX, z: fromZ, toX: event.toX, toZ: event.toZ, from: event.t, to: event.impactAt,
           hit: true, enemy: false, splashed: false, manual: false, kind: 'harpoon' }));
         const flip = facingTo(event) < 0;
         fire.set(event.towerId, { until: clock + FIRE_SECONDS * 1.3, flip });
@@ -101,7 +108,7 @@ export function createEvents(parts, posts, ships, crew, guards, fire, wallFlash,
       }
       case 'culverin_fired': {
         // The culverin (T43): a fast, flat, heavy shot from the long barrel, a long muzzle flash and a ring of smoke.
-        balls.add(item => Object.assign(item, { x: event.x, z: event.z, toX: event.toX, toZ: event.toZ, from: event.t, to: event.impactAt,
+        balls.add(item => Object.assign(item, { x: fromX, z: fromZ, toX: event.toX, toZ: event.toZ, from: event.t, to: event.impactAt,
           hit: true, enemy: false, splashed: false, manual: false, kind: 'culverin' }));
         const flip = facingTo(event) < 0;
         fire.set(event.towerId, { until: clock + FIRE_SECONDS * 1.4, flip });
@@ -117,7 +124,7 @@ export function createEvents(parts, posts, ships, crew, guards, fire, wallFlash,
         const flip = facingTo(event) < 0, n = Math.max(1, Math.min(6, event.pellets ?? 3)), d = Math.hypot(event.toX - event.x, event.toZ - event.z);
         for (let k = 0; k < n; k++) {
           const side = (k - (n - 1) / 2) * .45;
-          balls.add(item => Object.assign(item, { x: event.x, z: event.z, toX: event.toX + side * .6, toZ: event.toZ + side, from: event.t, to: event.t + Math.max(.08, d / 40),
+          balls.add(item => Object.assign(item, { x: fromX, z: fromZ, toX: event.toX + side * .6, toZ: event.toZ + side, from: event.t, to: event.t + Math.max(.08, d / 40),
             hit: true, enemy: false, splashed: false, manual: false, kind: 'swivel' }));
         }
         fire.set(event.towerId, { until: clock + FIRE_SECONDS * .8, flip });
@@ -136,7 +143,7 @@ export function createEvents(parts, posts, ships, crew, guards, fire, wallFlash,
         break;
       }
       case 'mortar_fired': {
-        shells.add(item => Object.assign(item, { x: event.x, z: event.z, toX: event.toX, toZ: event.toZ, from: event.t, to: event.impactAt, bomb: false, radius: event.radius ?? 4 }));
+        shells.add(item => Object.assign(item, { x: fromX, z: fromZ, toX: event.toX, toZ: event.toZ, from: event.t, to: event.impactAt, bomb: false, radius: event.radius ?? 4 }));
         fire.set(event.towerId, { until: clock + FIRE_SECONDS * 1.6, flip: facingTo(event) < 0 });
         const post = posts.find(item => item.id === event.towerId); if (post) post.flip = facingTo(event) < 0;
         effects()?.bloom(x, y + 1.2, { radius: 1.4, life: .45, colour: '#ffcf6a' });
@@ -196,7 +203,8 @@ export function createEvents(parts, posts, ships, crew, guards, fire, wallFlash,
       // The gunboat (GAME-V3.md §4.1): a flash at its deck gun and a thin line to the tower it jams; the tower
       // gets sparks and a ring, and its "jammed" mark follows the sim's state (drawn with the posts).
       case 'gunboat_fired': {
-        const facing = facingTo(event), boat = ships.get(event.shipId), to = projectGround(event.toX, event.toZ);
+        const target = defenseView(event.targetId);
+        const facing = facingTo(event), boat = ships.get(event.shipId), to = projectGround(target?.x ?? event.toX, target?.z ?? event.toZ);
         if (boat) boat.facing = facing; // it swings its gun round to the tower it jams
         jamShots.add(item => Object.assign(item, { x: x + facing * 1.25, y: y + 1.3, toX: to.x, toY: to.y + 1, at: clock, facing }));
         if (!low() && !still()) spark(x + facing * 1.9, y + 1.4, { count: 7, speed: [.3, 1.2], angle: Math.PI / 2, spread: 1.6, gravity: -.8, life: [.5, 1], colour: '#d9d6c8', size: [1, 2] });

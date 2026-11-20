@@ -1,33 +1,211 @@
-import {Group, QuadraticBezierCurve, Vector2} from 'three';
+import {BufferAttribute, BufferGeometry, DoubleSide, DynamicDrawUsage, Group, Mesh, MeshBasicMaterial, ShaderMaterial, Vector3} from 'three';
 import {MOORING_EYES} from '../../art/home-shore.js';
 import {artSizes} from '../art.js';
-import {polygon} from '../primitives.js';
+import {seaGlsl, seaUniforms} from '../water.js';
+import {createHomeLanding} from './home-landing.js';
 
-function eye(mesh) {
+const SEGMENTS = 12;
+const INDICES = [];
+for (let i = 0; i < SEGMENTS * 2; i += 2) INDICES.push(i, i + 1, i + 2, i + 1, i + 3, i + 2);
+
+function localEye(mesh) {
   const asset = mesh.userData.asset;
   const [width, height, foot] = artSizes[asset], [x, y] = MOORING_EYES[asset];
-  return new Vector2(mesh.position.x + x / 16 - width / 2, mesh.position.y + (1 - foot) * height - y / 16);
+  return new Vector3(x / 16 - width / 2, (1 - foot) * height - y / 16, 0);
 }
 
-function ribbon(curve, halfWidth, lift = 0) {
-  const left = [], right = [];
-  for (let i = 0; i <= 16; i++) {
-    const t = i / 16, {x, y} = curve.getPoint(t), tangent = curve.getTangent(t);
-    const nx = -tangent.y * halfWidth, ny = tangent.x * halfWidth;
-    left.push([x + nx, y + ny + lift]);
-    right.push([x - nx, y - ny + lift]);
+function strand(rope, color, order, opacity) {
+  const geometry = new BufferGeometry();
+  const position = new BufferAttribute(new Float32Array((SEGMENTS + 1) * 6), 3).setUsage(DynamicDrawUsage);
+  geometry.setAttribute('position', position);
+  geometry.setIndex(INDICES);
+  const mesh = new Mesh(geometry, new MeshBasicMaterial({
+    color, transparent: true, opacity, depthTest: false, depthWrite: false, side: DoubleSide, toneMapped: false,
+  }));
+  mesh.renderOrder = order;
+  mesh.frustumCulled = false;
+  mesh.raycast = () => {};
+  rope.add(mesh);
+  return position;
+}
+
+function mooringContact(root, stage, x, waterline) {
+  const positions = [], uvs = [], kinds = [], indices = [];
+  const originY = waterline - .14;
+  function patch(atX, atY, width, depth, kind, shear = 0) {
+    const first = kinds.length;
+    for (const [u, v] of [[0, 0], [1, 0], [1, 1], [0, 1]]) {
+      const y = (v - .5) * depth;
+      positions.push(atX - x + (u - .5) * width + y * shear, atY - originY + y, 0);
+      uvs.push(u, v);
+      kinds.push(kind);
+    }
+    indices.push(first, first + 1, first + 2, first, first + 2, first + 3);
   }
-  return left.concat(right.reverse());
+
+  const [near, far] = stage.userData.waterAxis;
+  patch((near.x + far.x) / 2, (near.y + far.y) / 2 - .08, 3.9, Math.abs(near.y - far.y) + 1.1,
+    2, (near.x - far.x) / (near.y - far.y));
+  for (const foot of stage.userData.waterSupports) patch(foot.x, foot.y - .23, 1.11, 1.12, 1);
+  patch(x, originY - .055, 3.7, 1.16, 0);
+
+  const geometry = new BufferGeometry();
+  geometry.setAttribute('position', new BufferAttribute(new Float32Array(positions), 3));
+  geometry.setAttribute('uv', new BufferAttribute(new Float32Array(uvs), 2));
+  geometry.setAttribute('contactKind', new BufferAttribute(new Float32Array(kinds), 1));
+  geometry.setIndex(indices);
+  const uniforms = {...seaUniforms, uWakePhase: {value: 0}, uWakeNight: {value: 0}, uHullDrift: {value: 0}};
+  const material = new ShaderMaterial({uniforms, transparent: true, depthTest: false, depthWrite: false, toneMapped: false,
+    vertexShader: /* glsl */`
+      attribute float contactKind;
+      uniform float uHullDrift;
+      varying vec2 vWaterUv, vWorld;
+      varying float vContactKind;
+      void main() {
+        vWaterUv = uv;
+        vContactKind = contactKind;
+        vec3 point = position;
+        if (contactKind < .5) point.x += uHullDrift;
+        vec4 world = modelMatrix * vec4(point, 1.0);
+        vWorld = world.xy;
+        gl_Position = projectionMatrix * viewMatrix * world;
+      }`,
+    fragmentShader: /* glsl */`
+      ${seaGlsl}
+      varying vec2 vWaterUv, vWorld;
+      varying float vContactKind;
+      uniform float uWakePhase, uWakeNight;
+
+      float brokenFoam(float angle, float phase) {
+        float ripples = .68 * sin(angle * 19.0 + phase * 1.9) + .43 * sin(angle * 7.0 - phase * .8);
+        return .27 + .73 * smoothstep(-.63, .54, ripples);
+      }
+
+      float crest(float age) {
+        float across = abs(vWaterUv.x - .5);
+        float reach = .29 + .18 * age;
+        float y = .66 - .32 * age - .23 * (1.0 - across * across * 4.0);
+        float edge = 1.0 - smoothstep(reach - .12, reach, across);
+        float broken = brokenFoam(vWaterUv.x * 1.7, age);
+        float line = 1.0 - smoothstep(.009, .035, abs(vWaterUv.y - y + .022 * sin(vWaterUv.x * 28.0 + age)));
+        float fade = smoothstep(0.0, .17, age) * (1.0 - smoothstep(.36, 1.0, age));
+        return edge * line * fade * broken;
+      }
+
+      void main() {
+        float shore = smoothstep(.34, 1.40, coastDistance(vWorld));
+        float phase = uWakePhase;
+        float shade, lit = 0.0, reflection = 0.0;
+        vec2 p = vWaterUv - .5;
+        if (vContactKind < .5) {
+          vec2 off = p - vec2(.01, .21);
+          float silhouette = length(off * vec2(2.43, 2.32));
+          shade = .28 * (1.0 - smoothstep(.30, 1.0, silhouette));
+          shade += .14 * (1.0 - smoothstep(.10, .63, silhouette));
+          if (uDetail > .5) {
+            float lip = abs(off.y + .24 + off.x * off.x * 1.65);
+            float foamLip = (1.0 - smoothstep(.006, .027, lip)) *
+              (1.0 - smoothstep(.22, .45, abs(off.x))) * brokenFoam(off.x * 3.5, phase);
+            lit = .62 * max(crest(fract(phase)), .68 * crest(fract(phase + .5))) + .42 * foamLip;
+            float distortion = sin(18.0 * off.y + phase * 3.1) * .07;
+            float band = 1.0 - smoothstep(.013, .083, abs(off.y + .36 + off.x * off.x * 1.75 + distortion));
+            reflection = band * (1.0 - smoothstep(.11, .44, abs(off.x))) * .16;
+          }
+        } else if (vContactKind < 1.5) {
+          vec2 off = p - vec2(0.0, .19);
+          shade = .33 * (1.0 - smoothstep(.19, 1.0, length(off * vec2(2.65, 2.26))));
+          if (uDetail > .5) {
+            float flow = sin(20.0 * p.y + phase * 4.0 + vWorld.x * 1.6);
+            float stalk = 1.0 - smoothstep(.055, .24, abs(off.x + flow * .047));
+            reflection = stalk * smoothstep(-.60, -.12, off.y) * (1.0 - smoothstep(-.11, .03, off.y)) * .24;
+            float radius = length(off * vec2(2.52, 2.75));
+            float ring = abs(radius - (.62 + .075 * flow));
+            float angle = atan(off.y, off.x + .0001);
+            lit = (1.0 - smoothstep(.018, .074, ring))
+              * (1.0 - smoothstep(-.035, .13, off.y)) * brokenFoam(angle, phase + vWorld.x) * (.51 + .11 * flow);
+          }
+        } else {
+          float along = smoothstep(.0, .16, vWaterUv.y) * (1.0 - smoothstep(.86, 1.0, vWaterUv.y));
+          float deck = 1.0 - smoothstep(.13, .49, abs(p.x - .095));
+          shade = deck * along * .35;
+        }
+        vec3 dark = mix(vec3(.021, .126, .118), vec3(.008, .036, .05), uWakeNight);
+        vec3 foam = mix(vec3(.51, .86, .78), vec3(.08, .27, .32), uWakeNight);
+        vec3 gold = mix(vec3(.51, .37, .17), vec3(.11, .12, .09), uWakeNight);
+        float viewLight = mix(1.0, .46, uWakeNight);
+        float weight = shade + reflection * viewLight + lit * viewLight;
+        vec3 colour = (dark * shade + (foam * lit + gold * reflection) * viewLight) / max(.001, weight);
+        gl_FragColor = vec4(colour, min(.76, weight) * shore);
+        #include <colorspace_fragment>
+      }`,
+  });
+  const mesh = new Mesh(geometry, material);
+  mesh.name = 'home-mooring-water';
+  mesh.position.set(x, originY, 0);
+  mesh.renderOrder = 5;
+  mesh.raycast = () => {};
+  root.add(mesh);
+  return mesh;
 }
 
-export function makeMooringRope(root, bollard, skiff) {
-  const from = eye(bollard), to = eye(skiff);
-  const slack = new Vector2().lerpVectors(from, to, .54).add(new Vector2(-.28, -.22));
+export function makeMooring(root, bollard, skiff) {
+  const {x: restX, y: restY} = skiff.position;
+  const shoreEye = localEye(bollard), cleat = localEye(skiff);
+  const from = new Vector3(), to = new Vector3();
+  const lastFrom = new Vector3(Infinity), lastTo = new Vector3(Infinity);
+  const stage = createHomeLanding(root);
+  const contact = mooringContact(root, stage, restX, restY);
   const rope = new Group();
   rope.name = 'home-mooring-rope';
-  const curve = new QuadraticBezierCurve(from, slack, to);
-  polygon(rope, ribbon(curve, .042), '#6d5141', 15, .92).raycast = () => {};
-  polygon(rope, ribbon(curve, .017, .013), '#cbb084', 15.1, .86).raycast = () => {};
+  const shadow = strand(rope, '#6d5141', 15, .92), light = strand(rope, '#cbb084', 15.1, .86);
   root.add(rope);
-  return rope;
+
+  // The boat pivots on its waterline. Rebuild the two tiny strips in place so the rope follows the cleat.
+  function drawRope() {
+    bollard.updateMatrix();
+    skiff.updateMatrix();
+    from.copy(shoreEye).applyMatrix4(bollard.matrix);
+    to.copy(cleat).applyMatrix4(skiff.matrix);
+    if (from.equals(lastFrom) && to.equals(lastTo)) return;
+    lastFrom.copy(from);
+    lastTo.copy(to);
+    const {x: toX, y: toY} = to;
+    const bendX = from.x + (toX - from.x) * .54 - .28, bendY = from.y + (toY - from.y) * .54 - .22;
+    for (let i = 0; i <= SEGMENTS; i++) {
+      const t = i / SEGMENTS, u = 1 - t, vertex = i * 2;
+      const x = u * u * from.x + 2 * u * t * bendX + t * t * toX;
+      const y = u * u * from.y + 2 * u * t * bendY + t * t * toY;
+      const dx = u * (bendX - from.x) + t * (toX - bendX), dy = u * (bendY - from.y) + t * (toY - bendY);
+      const length = Math.hypot(dx, dy) || 1, nx = -dy / length, ny = dx / length;
+      shadow.setXYZ(vertex, x + nx * .042, y + ny * .042, 0);
+      shadow.setXYZ(vertex + 1, x - nx * .042, y - ny * .042, 0);
+      light.setXYZ(vertex, x + nx * .017, y + ny * .017 + .013, 0);
+      light.setXYZ(vertex + 1, x - nx * .017, y - ny * .017 + .013, 0);
+    }
+    shadow.needsUpdate = light.needsUpdate = true;
+  }
+  drawRope();
+  let resting = true;
+  return {
+    prepareRender() { if (rope.visible) drawRope(); },
+    setBattle(active) { skiff.visible = rope.visible = contact.visible = stage.visible = !active; },
+    update(time, wind, still, night = 0) {
+      contact.material.uniforms.uWakeNight.value = night;
+      contact.material.uniforms.uWakePhase.value = still ? 0 : time * .56;
+      if (still) {
+        if (resting) return;
+        skiff.position.x = restX;
+        skiff.position.y = restY;
+        skiff.rotation.z = 0;
+      } else {
+        if (!skiff.visible) return;
+        const swell = Math.sin(time * 1.7);
+        skiff.position.x = restX + Math.sin(time * 1.06) * .065;
+        skiff.position.y = restY + swell * (.068 + wind * .046);
+        skiff.rotation.z = Math.sin(time * 1.7 - .86) * (.027 + wind * .012);
+      }
+      contact.material.uniforms.uHullDrift.value = skiff.position.x - restX;
+      resting = still;
+    },
+  };
 }

@@ -1,0 +1,128 @@
+{
+  "sourceFile": "frontend/public/village/home-heart-v5.png",
+  "generatedBy": "OpenAI built-in image generation, 2026-11-19",
+  "reference": "frontend/public/village/home-heart-v4.png",
+  "priorSpriteSha256": "2068cdb6a878a5d5234b79ac04caeb8b12dfbe6ca390083194bd875732c9d116",
+  "sha256": "94b8cc0bca2b8adbc4d6b53287af86c974f153ce1d942da4d85cff40a3d5c961",
+  "bytes": 1132887,
+  "nativeSize": [
+    1312,
+    1199
+  ],
+  "mode": "RGBA",
+  "alpha": {
+    "meaningfulThreshold": 16,
+    "sha256": "205d0a68b0833dd391665dd5bc42820dcd10e47b8249d1a3c06f2accc790686e"
+  },
+  "cells": {
+    "island_core": {
+      "rect": [
+        14,
+        0,
+        616,
+        698
+      ],
+      "sourceFoot": [
+        276,
+        684
+      ],
+      "nativeGroundFoot": [
+        290,
+        684
+      ],
+      "meaningfulAlphaBounds": [
+        24,
+        5,
+        525,
+        684
+      ],
+      "logical": [
+        128,
+        128,
+        12
+      ],
+      "frontOpening": {
+        "sample": [
+          237,
+          428,
+          326,
+          544
+        ],
+        "alphaBelow16Fraction": 1.0
+      }
+    },
+    "island_core_damaged": {
+      "rect": [
+        676,
+        0,
+        610,
+        698
+      ],
+      "sourceFoot": [
+        270,
+        684
+      ],
+      "nativeGroundFoot": [
+        946,
+        684
+      ],
+      "meaningfulAlphaBounds": [
+        685,
+        5,
+        1188,
+        684
+      ],
+      "logical": [
+        128,
+        128,
+        12
+      ],
+      "frontOpening": {
+        "sample": [
+          893,
+          428,
+          982,
+          544
+        ],
+        "alphaBelow16Fraction": 1.0
+      }
+    },
+    "island_core_broken": {
+      "rect": [
+        18,
+        868,
+        611,
+        317
+      ],
+      "sourceFoot": [
+        272,
+        303
+      ],
+      "nativeGroundFoot": [
+        290,
+        1171
+      ],
+      "meaningfulAlphaBounds": [
+        39,
+        889,
+        535,
+        1170
+      ],
+      "logical": [
+        128,
+        128,
+        12
+      ]
+    }
+  },
+  "coreFitBounds": [
+    276,
+    684,
+    340,
+    14
+  ],
+  "generation": {
+    "generatedPaintSha256": "4f9b2f7cb1525adf75f9f6a02207caea53a9b3c8ccb975d084d7cfe2a7d2da3c",
+    "method": "Repaint the fixed view with a centered, horizontal tread and a leftward return. Register the foot and normalize intact, damaged, and rubble states at the existing sprite scale."
+  }
+}

@@ -1,5 +1,13 @@
 /* Design tokens and the one panel (clean cartoon, GAME-V3.md §7): rounded deep-teal panels with a thin brass rim and a soft shadow, a warm parchment title plate, gold only for the primary action, buttons with a slight bevel. Cold path. */
 :root{--u-sea:#123a42;--u-card:#1c4a52;--u-raise:#25595f;--u-deep:#081f25;--u-ink:#fbf2dc;--u-mute:#cfdcd6;--u-line:#6f9a96;--u-parch:#f6e7c1;--u-pink:#2c2414;--u-brass:#d9ad5c;--u-gold:#f6d27a;--u-brown:#8a6230;--u-rust:#e7a587;--u-font:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;--u-serif:ui-rounded,'SF Pro Rounded',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;--u-radius:16px;--u-radius-sm:14px;--u-radius-xs:10px;--u-lift:0 8px 22px #04161b5c,0 2px 5px #04161b47;--u-frame:0 0 0 2px var(--u-brass),0 0 0 4px #081f25cc,var(--u-lift);--u-bevel:inset 0 -3px #c08a3a,inset 0 2px #fff7d8,0 3px #7a5320,0 6px 12px #04161b40;--u-bevel-quiet:inset 0 -3px #0c2a30,inset 0 2px #ffffff1a,0 3px #061a1f,0 6px 12px #04161b3a;--u-1:4px;--u-2:8px;--u-3:12px;--u-4:16px;--u-5:24px;--u-6:32px;--u-sm:16px;--u-md:18px;--u-lg:22px;--u-xl:27px}
+
+:root {
+  --u-panel-surface:radial-gradient(125% 120% at 8% -22%,#5493965e,transparent 57%),linear-gradient(150deg,#153d47,#0a2833 75%,#09252f);
+  --u-chip-surface:linear-gradient(155deg,#20505b,#10333e 48%,#0a2631);
+  --u-quiet-surface:linear-gradient(155deg,#36717a,#225662 45%,#16414d 83%,#133743);
+  --u-paper-surface:radial-gradient(120% 150% at 7% -15%,#fff6d6,transparent 65%),linear-gradient(155deg,#faebc5,#efd7a6);
+  --u-action-surface:linear-gradient(#fff0b8,#ffd97c 48%,#ffc35c 62%,#efab42);
+}
 .kit-modal,.kit-toast{font:18px/1.55 var(--u-font);box-sizing:border-box;color:var(--u-ink)}
 .kit-modal{background:linear-gradient(#1b4a52,var(--u-sea) 42%) var(--u-sea);border:0;border-radius:var(--u-radius);padding:0 22px 22px;width:min(900px,calc(100vw - 40px));max-height:calc(100dvh - 40px);overflow:auto;box-shadow:0 0 0 3px var(--u-brass),0 0 0 6px #081f25d9,0 14px 40px #020c10a6,0 4px 10px #0206}
 .kit-modal::backdrop{background:#04161bc4}

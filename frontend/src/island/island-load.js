@@ -374,7 +374,7 @@ export function createLoading(isl) {
       invalidateWallFeedback, wallFeedbackScope} = isl);
   }
   return {currentFunds, sharedCard, readOwn, applyPersonal, firstTime, tellCoins, campaignSeen, campaignTold, setOwn, unlocks, islandUnlocks, campaign, reading, wrote,
-    setOwnRead, coinsAsked, target, where, applyWorld, syncCoreContext, setCoreCombatState, endVisit, placeName,
+    setOwnRead, coinsAsked, target, researchIsland, where, applyWorld, syncCoreContext, setCoreCombatState, endVisit, placeName,
     clearJoins, joinFirst, load, loadPoint, freshOwn, placeOf, tookCoins, arsenalCoins, reloadVisit, reloadOwn, refreshDefended,
     took, refused, link};
 }

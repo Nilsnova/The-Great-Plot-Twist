@@ -7,7 +7,7 @@ export function createVillageBar({container, onLeave, onPick, onCamera = () => {
   const bar = node('section', 'island-village-mode');
   bar.hidden = true; bar.setAttribute('aria-label', 'Village mode');
   const copy = node('div', 'island-village-copy');
-  copy.append(node('strong', '', 'Village mode'), node('p', '', 'Select a building or press E to find one. Zoom in, then drag the view.'));
+  copy.append(node('strong', '', 'Village'), node('p', '', 'Press E to find a building. Zoom in, then drag the view.'));
   const buildings = node('select', 'island-village-buildings');
   buildings.setAttribute('aria-label', 'Find building');
   buildings.hidden = true;

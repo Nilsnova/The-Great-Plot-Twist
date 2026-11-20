@@ -5,8 +5,9 @@ import {describe, expect, it} from 'vitest';
 import {frames, sheets} from '../../src/art/village/buildings.js';
 import {islandFrame} from '../../src/art/registry.js';
 
-const source = readFileSync(new URL('../../public/village/buildings-hero-v1.png', import.meta.url));
-const report = JSON.parse(readFileSync(new URL('../../../docs/evidence/VIS-05-hero/asset-report.json', import.meta.url)));
+const source = readFileSync(new URL(`../../public/${sheets.buildingsHero.file}`, import.meta.url));
+const report = JSON.parse(readFileSync(new URL('../../../docs/evidence/VIS-05-hero/fixed-buildings-v3.json', import.meta.url)));
+const cabin = report.cells.cabin;
 
 describe('approved cabin source', () => {
   it('is the inspected transparent PNG with its declared native dimensions', () => {
@@ -27,12 +28,12 @@ describe('approved cabin source', () => {
     expect(sourceFoot[0]).toBeLessThan(rect[2]);
     expect(sourceFoot[1]).toBeGreaterThan(0);
     expect(sourceFoot[1]).toBeLessThan(rect[3]);
-    expect([rect[0] + sourceFoot[0], rect[1] + sourceFoot[1]]).toEqual(report.nativeGroundFoot);
+    expect([rect[0] + sourceFoot[0], rect[1] + sourceFoot[1]]).toEqual(cabin.nativeGroundFoot);
     const [leftSpace, topSpace, rightSpace, bottomSpace] = fitBounds;
     const scale = Math.min(logical[0] / 2 / leftSpace, (logical[1] - logical[2]) / topSpace,
       logical[0] / 2 / rightSpace, logical[2] / bottomSpace);
     const shift = [logical[0] / 2 - sourceFoot[0] * scale, logical[1] - logical[2] - sourceFoot[1] * scale];
-    const [left, top, right, bottom] = report.alpha.solidBounds;
+    const [left, top, right, bottom] = cabin.solidBounds;
     expect((left - rect[0]) * scale + shift[0]).toBeGreaterThanOrEqual(0);
     expect((top - rect[1]) * scale + shift[1]).toBeGreaterThanOrEqual(0);
     expect((right - rect[0]) * scale + shift[0]).toBeLessThanOrEqual(logical[0]);

@@ -6,6 +6,7 @@ import {projectPoint} from '../world/art.js';
 import {surfaces} from '../world/places/surfaces.js';
 import {cliffProfile} from '../art/coast-cliffs.js';
 import {projectedCoastBounds} from '../world/projection.js';
+import {usesPortraitVillage} from './home-portrait.js';
 const COAST_BOUNDS = projectedCoastBounds(cliffProfile(surfaces.home_islet));
 
 // Real overlay insets describe usable room independently of the chosen working zoom.
@@ -53,7 +54,7 @@ export function createCamera(input) {
     zoom = value;
     if (Math.abs(value - camera.zoom) > 1e-6) { camera.zoom = value; camera.updateProjectionMatrix(); }
   }
-  return {camera, get yaw() { return 0; },
+  return {camera, get yaw() { return 0; }, get villageFit() { return village && villageFit; },
     setPlace(id, player) {
       placeId = id; village = false; fitVillage(); targetZoom = 1; const point = projectPoint(player.x, player.z);
       place(point.x, point.y + 3.1); zoom = 1;
@@ -65,7 +66,8 @@ export function createCamera(input) {
     setVillageView(active, viewport = null) {
       const entering = active === true && !village;
       village = active === true; villageViewport = viewport;
-      if (entering) workVillage();
+      if (entering && usesPortraitVillage(viewport)) fitVillage();
+      else if (entering) workVillage();
     },
     villageControl(action) {
       const frame = exploring && village && villageBase();
