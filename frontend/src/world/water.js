@@ -236,20 +236,24 @@ void main(){
     float grain=pxNoise(p*1.4+vec2(foamTime*.08,-foamTime*.03));
     float broken=smoothstep(.25,.7,grain);
     float width=mix(.06,.088,uHomeCoast);
-    colour=mix(colour,uFoam,(1.0-band(abs(d-surf),width))*.8*broken*smoothstep(.0,.25,run)*shoreLight);
+    colour=mix(colour,uFoam,(1.0-band(abs(d-surf),width))*.8*broken*smoothstep(.0,.25,run)
+      *shoreLight*mix(1.0,.31,rockShore));
     if(uHomeCoast>.5&&d<3.2){
       // Coves have a long wash. Broken foam collects in short patches around the stone feet.
       float washAdvance=mix(.49,.16,rockShore);
       float wash=(1.0-band(abs(d-surf-washAdvance-grain*.31),.061))*smoothstep(.41,.76,grain);
       colour=mix(colour,uShallow2,wash*mix(.35,.25,rockShore)*shoreLight);
       float eddy=pxNoise(p*vec2(2.65,3.94)+vec2(run*.45,foamTime*.047));
-      float rockFoam=smoothstep(.32,.73,grain*.64+eddy*.36+.11*run);
-      float brokenEdge=(grain-.5)*.29+(eddy-.5)*.16;
-      float backwash=1.0-band(abs(d-.31-brokenEdge),.067);
-      float bubbles=(1.0-band(abs(d-.74-brokenEdge*1.9-run*.12),.041))*smoothstep(.48,.76,eddy);
-      float breaking=max(backwash*rockFoam*.95,bubbles*.86);
+      float rockFoam=smoothstep(.36,.72,grain*.64+eddy*.36+.11*run);
+      float brokenEdge=(grain-.5)*.55+(eddy-.5)*.34;
+      float surge=.27+run*(.18+.54*grain)+brokenEdge;
+      float breaking=1.0-band(abs(d-surge),.068+.093*rockFoam);
+      breaking*=rockFoam;
+      float bubbles=(1.0-band(abs(d-surge-.21-(eddy-.5)*.40),.032))*smoothstep(.50,.78,eddy)*rockFoam;
+      float froth=smoothstep(.51,.79,eddy)*(1.0-smoothstep(.11+rockFoam*.27,.80,d))*rockFoam;
+      breaking=max(breaking,max(.82*bubbles,.49*froth));
       colour=mix(colour,uFoam,breaking*rockShore*shoreLight);
-      waterlineLight=mix(1.0,mix(.27,.97,rockFoam),rockShore);
+      waterlineLight=mix(1.0,mix(.35,.90,rockFoam),rockShore);
     }
   }
   colour=mix(colour,uFoam,(1.0-band(d,edge))*shoreLight*waterlineLight);
