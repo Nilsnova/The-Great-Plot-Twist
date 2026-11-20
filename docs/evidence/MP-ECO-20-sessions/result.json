@@ -1,0 +1,74 @@
+{
+  "result": "passed",
+  "source": "051d6b0544b7b48ea5b3efdd2bf39181b7e4864e",
+  "productionSource": "82abc298570ce5436c721a992f538c16d04c30e5",
+  "scenarioSha256": "8ee117bf1c04c058989684c41eb94fa0ba9999ea8ce003c2d12909e5318054e7",
+  "helperHashes": {
+    "clients.mjs": "641ae6018386213ac78efcab217167c44c80d91ac63d301922f66575892127f8",
+    "observer.mjs": "40cb288da9f9a80e337fba5a39a12b1b23501ad1ff48a2a4614975492997f140",
+    "runtime.mjs": "489a4d89302c6eda6618a20fe9beb4165942b108c01a42f265b18d0c9e558e37"
+  },
+  "startedAt": "2026-11-19T15:38:50.353Z",
+  "finishedAt": "2026-11-19T15:41:00.348Z",
+  "facts": [
+    {
+      "event": "real-authenticated-member-controller",
+      "at": "2026-11-19T15:39:41.144Z",
+      "generation": "1"
+    },
+    {
+      "event": "duplicate-session-and-proofless-read-refused",
+      "at": "2026-11-19T15:39:43.895Z",
+      "duplicateStatus": 409,
+      "prooflessController": false
+    },
+    {
+      "event": "cross-island-global-control-refused",
+      "at": "2026-11-19T15:39:46.627Z",
+      "status": 409
+    },
+    {
+      "event": "browser-cloned-tab-remained-read-only",
+      "at": "2026-11-19T15:40:14.037Z",
+      "phase": "spectator",
+      "controller": false
+    },
+    {
+      "event": "natural-gameplay-checkpoint-observed",
+      "at": "2026-11-19T15:40:39.487Z",
+      "hpUnits": 1000000,
+      "down": false,
+      "x": "0",
+      "z": "12",
+      "cooldownKeys": [],
+      "throughTick": 146
+    },
+    {
+      "event": "retained-grace-reconnect-preserved-captain",
+      "at": "2026-11-19T15:40:57.924Z",
+      "oldGeneration": "1",
+      "newGeneration": "2",
+      "hpUnits": 1000000,
+      "down": false,
+      "x": "0",
+      "z": "12",
+      "cooldownKeys": [],
+      "graceSecondsRemaining": "57.494462",
+      "staleProofStatus": 409
+    },
+    {
+      "event": "explicit-departure-withdrew-fighter-and-conserved-both-treasuries",
+      "at": "2026-11-19T15:41:00.347Z",
+      "accounts": 2,
+      "balanceEach": "200"
+    }
+  ],
+  "limitations": [
+    "Fresh shared admission is explicit service-only setup; all identities use actual local provider Auth.",
+    "One natural wave1 attempt was observed; no outcome, HP, fall, clock, cooldown or position was injected.",
+    "Reconnect comparison temporarily aborts new input/Captain-report transport while reading retained facts; no fake response is supplied.",
+    "No naturally fallen state was reached; fallen reconnect/revival is not proved by this journey.",
+    "Observed cooldown state was empty; nonempty cooldown persistence is not proved.",
+    "This bounded case does not establish the full authenticated acceptance matrix, grace expiry, all-browser-gone settlement or production readiness."
+  ]
+}

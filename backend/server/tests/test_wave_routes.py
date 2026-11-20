@@ -16,6 +16,7 @@ import httpx
 import pytest
 
 from server.flags import parse_flags
+from server.island.wave_rules import ALWAYS_ON
 from server.tests.helpers import assert_error
 from server.tests.island_helpers import (
     CALM,
@@ -73,6 +74,8 @@ def test_the_bell_on_your_own_island_answers_the_wave_of_the_contract():
         "boss": False,
         "recoveryVersion": 0,
         "waveProtocol": 1,
+        "rules": list(ALWAYS_ON),  # the rules every new wave plays (wave_rules.py)
+        "walls": {},  # D039: no wall built yet
     }
 
 

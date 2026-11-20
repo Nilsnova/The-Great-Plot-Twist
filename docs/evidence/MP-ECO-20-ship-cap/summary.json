@@ -1,0 +1,157 @@
+{
+  "assertionGroups": 7,
+  "assertions": [
+    {
+      "members": 10,
+      "name": "ten real authenticated members share the admitted ship origin",
+      "record": 30
+    },
+    {
+      "bucket": [
+        {
+          "game": "broadside",
+          "maximum": "36",
+          "paid": "36",
+          "record_wave": 30
+        }
+      ],
+      "duplicateLowerClaims": 10,
+      "duplicateLowerCoins": 0,
+      "name": "parallel improvements share one broadside cap",
+      "stages": [
+        {
+          "creditedCoins": 12,
+          "parallelMembers": 10,
+          "stars": 1
+        },
+        {
+          "creditedCoins": 12,
+          "parallelMembers": 10,
+          "stars": 2
+        },
+        {
+          "creditedCoins": 12,
+          "parallelMembers": 10,
+          "stars": 3
+        }
+      ]
+    },
+    {
+      "bucket": [
+        {
+          "game": "dash",
+          "maximum": "36",
+          "paid": "36",
+          "record_wave": 30
+        }
+      ],
+      "duplicateLowerClaims": 10,
+      "duplicateLowerCoins": 0,
+      "name": "parallel improvements share one dash cap",
+      "stages": [
+        {
+          "creditedCoins": 12,
+          "parallelMembers": 10,
+          "stars": 1
+        },
+        {
+          "creditedCoins": 12,
+          "parallelMembers": 10,
+          "stars": 2
+        },
+        {
+          "creditedCoins": 12,
+          "parallelMembers": 10,
+          "stars": 3
+        }
+      ]
+    },
+    {
+      "account": {
+        "balance": "272",
+        "committed": "0",
+        "entries": "7",
+        "revision": "7",
+        "summed_balance": "272",
+        "summed_committed": "0"
+      },
+      "changedStatus": 409,
+      "exactReplays": 60,
+      "name": "sixty exact historical claims and changed payload cannot mint money"
+    },
+    {
+      "foreignOwnReward": "39",
+      "foreignRecord": 35,
+      "name": "different island and frozen record cannot reuse a source round",
+      "wrongIslandStatus": 409
+    },
+    {
+      "currentStatusHealthy": true,
+      "historicalReceiptReplay": true,
+      "name": "actual owner reset preserves origin fences and immutable receipt replay",
+      "newBalance": "200",
+      "newEpochCannotRebindRound": true,
+      "oldBalance": "272",
+      "oldRefusals": [
+        {
+          "code": "economy_path_unavailable",
+          "noOperationRoot": true,
+          "status": 409
+        },
+        {
+          "code": "economy_epoch_mismatch",
+          "noOperationRoot": true,
+          "status": 409
+        }
+      ],
+      "oneReplacementGrant": true,
+      "retiredState": "retired",
+      "uncompletedOldRoundRefused": true
+    },
+    {
+      "foreign": {
+        "balance": "239",
+        "committed": "0",
+        "entries": "2",
+        "revision": "2",
+        "summed_balance": "239",
+        "summed_committed": "0"
+      },
+      "name": "all origin ledgers reconcile and eleven private wallet histories stay unchanged",
+      "primary": {
+        "balance": "272",
+        "committed": "0",
+        "entries": "7",
+        "revision": "7",
+        "summed_balance": "272",
+        "summed_committed": "0"
+      },
+      "privateWallets": 11,
+      "replacement": {
+        "balance": "200",
+        "committed": "0",
+        "entries": "1",
+        "revision": "1",
+        "summed_balance": "200",
+        "summed_committed": "0"
+      }
+    }
+  ],
+  "helperCommit": "68497043",
+  "limits": [
+    "API-only actual GoTrue/production verifier; no rendered controls, Realtime or natural ship-game play claim.",
+    "Initial saved wave30/wave35 and completed wreck are explicit pre-admission eligibility fixtures, not earned wins or repair payments.",
+    "Submitted 0\u20133 stars use the existing trusted-score product contract; no score-history, clock, outcome, receipt or authority edits.",
+    "Fresh local admission is installer setup, not legacy conversion or rollout."
+  ],
+  "measuredScenarioCommit": "e9d33f7f39876ef8bbd8f51a664c5a3fafd7a9b6",
+  "pinnedHelpersUnchanged": true,
+  "preparedApplicationMigrations": 108,
+  "productionCandidate": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+  "protectedSourcesUnchanged": true,
+  "publicReportSha256": "91cf692a70af627701d6baf15850b5e7f6771e533770ca287c60e63f88afb98a",
+  "rawReportSha256": "8c403e6bf6b9602d3fea81fe5ce9810a7e64eb1c2bd4f9ebece0ba3fbbf57c3d",
+  "scenario": "ship-reward-cap",
+  "scenarioAndLauncherHashesUnchanged": true,
+  "status": "passed"
+}

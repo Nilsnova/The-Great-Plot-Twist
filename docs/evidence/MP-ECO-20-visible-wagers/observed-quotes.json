@@ -1,0 +1,161 @@
+{
+  "observedAt": "2026-11-19T19:04:54.581Z",
+  "scope": "read-only original wager/quote and private-wallet observations after the staged rendered cases",
+  "productionBefore": {
+    "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+    "actualCheckoutHead": "45a89e5461e67a1aa99f87a8d311f78da42db22c",
+    "productionDiffFromBaseline": "empty",
+    "paths": [
+      "backend/server",
+      "backend/content",
+      "frontend/src",
+      "supabase/migrations",
+      "backend/uv.lock",
+      "backend/pyproject.toml",
+      "frontend/package-lock.json",
+      "frontend/package.json",
+      ":(exclude)backend/server/tests"
+    ]
+  },
+  "productionAfter": {
+    "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+    "actualCheckoutHead": "45a89e5461e67a1aa99f87a8d311f78da42db22c",
+    "productionDiffFromBaseline": "empty",
+    "paths": [
+      "backend/server",
+      "backend/content",
+      "frontend/src",
+      "supabase/migrations",
+      "backend/uv.lock",
+      "backend/pyproject.toml",
+      "frontend/package-lock.json",
+      "frontend/package.json",
+      ":(exclude)backend/server/tests"
+    ]
+  },
+  "quotes": [
+    {
+      "selection": "up",
+      "stake": "1",
+      "opened_at": "2026-11-19T18:44:55.673832+00:00",
+      "settle_at": "2026-11-19T18:49:55.673832+00:00",
+      "stored_duration_seconds": "300.000000",
+      "outcome": "won",
+      "payout": "2",
+      "settled_at": "2026-11-19T18:56:47.895956+00:00",
+      "settled_after_maturity": true,
+      "opening_price": "101.90397068",
+      "opening_source": "live",
+      "opening_fetched_at": "2026-11-19T18:44:55.657103+00:00",
+      "settlement_price": "102.60350593",
+      "settlement_source": "cache",
+      "settlement_fetched_at": "2026-11-19T18:56:35.192409+00:00"
+    },
+    {
+      "selection": "down",
+      "stake": "1",
+      "opened_at": "2026-11-19T18:45:00.351672+00:00",
+      "settle_at": "2026-11-19T18:50:00.351672+00:00",
+      "stored_duration_seconds": "300.000000",
+      "outcome": "lost",
+      "payout": "0",
+      "settled_at": "2026-11-19T18:56:47.996177+00:00",
+      "settled_after_maturity": true,
+      "opening_price": "101.90397068",
+      "opening_source": "cache",
+      "opening_fetched_at": "2026-11-19T18:44:55.657103+00:00",
+      "settlement_price": "102.60350593",
+      "settlement_source": "cache",
+      "settlement_fetched_at": "2026-11-19T18:56:35.192409+00:00"
+    },
+    {
+      "selection": "up",
+      "stake": "198",
+      "opened_at": "2026-11-19T18:45:09.849907+00:00",
+      "settle_at": "2026-11-19T18:50:09.849907+00:00",
+      "stored_duration_seconds": "300.000000",
+      "outcome": "won",
+      "payout": "396",
+      "settled_at": "2026-11-19T18:56:48.075033+00:00",
+      "settled_after_maturity": true,
+      "opening_price": "101.91813745",
+      "opening_source": "live",
+      "opening_fetched_at": "2026-11-19T18:45:09.823755+00:00",
+      "settlement_price": "102.60350593",
+      "settlement_source": "cache",
+      "settlement_fetched_at": "2026-11-19T18:56:35.192409+00:00"
+    },
+    {
+      "selection": "up",
+      "stake": "398",
+      "opened_at": "2026-11-19T18:57:21.459823+00:00",
+      "settle_at": "2026-11-19T19:02:21.459823+00:00",
+      "stored_duration_seconds": "300.000000",
+      "outcome": "won",
+      "payout": "796",
+      "settled_at": "2026-11-19T19:03:23.076503+00:00",
+      "settled_after_maturity": true,
+      "opening_price": "102.64974850",
+      "opening_source": "live",
+      "opening_fetched_at": "2026-11-19T18:57:21.434937+00:00",
+      "settlement_price": "103.01137132",
+      "settlement_source": "live",
+      "settlement_fetched_at": "2026-11-19T19:03:23.057583+00:00"
+    }
+  ],
+  "privateObservationStart": "2026-11-19T18:44:52.526Z",
+  "privateWallets": [
+    {
+      "label": "visible-wager-owner",
+      "balance": "200",
+      "entries": 1,
+      "entriesSinceFirstRenderedOpening": 0,
+      "preBrowserSetupBalance": "200"
+    },
+    {
+      "label": "visible-wager-member",
+      "balance": "200",
+      "entries": 1,
+      "entriesSinceFirstRenderedOpening": 0,
+      "preBrowserSetupBalance": "0"
+    }
+  ],
+  "privateBoundary": "Private histories have no entries from first rendered shared-bank observation through final payout. Initial pre-render setup balances are separate: normal rendered entry initialized existing legacy personal wallets before that observation.",
+  "finalDurableJobs": {
+    "observedAt": "2026-11-19T19:06:06.219Z",
+    "rows": [
+      {
+        "attempts": 1,
+        "next_attempt_at": "2026-11-19T18:55:32.743525+00:00",
+        "last_error": null,
+        "completed_at": "2026-11-19T18:56:47.923827+00:00",
+        "stake": "1",
+        "selection": "up"
+      },
+      {
+        "attempts": 1,
+        "next_attempt_at": "2026-11-19T18:55:32.850192+00:00",
+        "last_error": null,
+        "completed_at": "2026-11-19T18:56:48.000277+00:00",
+        "stake": "1",
+        "selection": "down"
+      },
+      {
+        "attempts": 1,
+        "next_attempt_at": "2026-11-19T18:55:32.960717+00:00",
+        "last_error": null,
+        "completed_at": "2026-11-19T18:56:48.085722+00:00",
+        "stake": "198",
+        "selection": "up"
+      },
+      {
+        "attempts": 0,
+        "next_attempt_at": "2026-11-19T19:02:21.459823+00:00",
+        "last_error": null,
+        "completed_at": "2026-11-19T19:03:23.085695+00:00",
+        "stake": "398",
+        "selection": "up"
+      }
+    ]
+  }
+}

@@ -12,21 +12,34 @@
 import {arsenalModel} from './arsenal-model.js';
 import {readWeapon, WEAPON_BY_ID} from '../pirates/captain-ids.js';
 import {ARSENAL} from './spots.js';
+import {arsenalOrigin, isArsenalEconomy, isArsenalLegacyContext, readSharedArsenal, sameArsenalOrigin} from './arsenal-shared-state.js';
 
-const REFRESH_ON = new Set(['taken', 'arsenal_full', 'no_such_copy', 'wave_running', 'insufficient_funds', 'locked', 'nothing_held', 'action_used']);
+const REFRESH_ON = new Set(['taken', 'arsenal_full', 'no_such_copy', 'wave_running', 'insufficient_funds', 'locked', 'nothing_held', 'action_used', 'stale_holder', 'economy_epoch_mismatch']);
 const nameOf = (data, id) => { const copy = data.copies.find(item => item.id === id); return copy ? `${WEAPON_BY_ID[copy.weapon].name} #${copy.no}` : 'The weapon'; };
 
-export function createArsenal({api, ui, emit = () => {}, enabled = () => false, code = () => null, place = () => 'own',
-  level = () => 1, skills = () => [], onCoins = () => {}, asking = () => () => true} = {}) {
+// Only an exact duplicate READ may avoid invalidating otherwise coherent construction quotes.
+const redundantSharedRead = (before, next, known) => readSharedArsenal(before) && isArsenalEconomy(known)
+  && sameArsenalOrigin(before.economy, next.economy) && sameArsenalOrigin(known, next.economy)
+  && before.arsenalRevision === next.arsenalRevision && known.revision === next.economy.revision
+  && ['balanceCoins', 'committedCoins', 'availableCoins'].every(key => known.treasury[key] === next.economy.treasury[key])
+  && JSON.stringify({...before, economy: null}) === JSON.stringify({...next, economy: null});
+
+export function createArsenal(options = {}) {
+  const {api, ui, emit = () => {}, enabled = () => false, readEnabled = enabled, code = () => null, place = () => 'own',
+    level = () => 1, skills = () => [], onCoins = () => {}, asking = () => () => true,
+    getEconomy, getActorId = () => null, onEconomy = () => {}} = options;
+  const legacyFactory = !('getEconomy' in options);
+  const selectedEconomy = () => typeof getEconomy === 'function' ? getEconomy() : null;
   let answer = null, answeredFor = null, busy = null, message = '', loading = false, ticket = 0, rackFilter = 'all';
   // loadFailed: the message is the arsenal's own read failing (a later good read clears it). A refused move's
   // reason stays until the card opens again or the next move, also through a crewmate's change (island_changed).
   let loadFailed = false;
-  const key = () => code() ?? 'own';
+  const key = () => JSON.stringify([getActorId(), code() ?? 'own', arsenalOrigin(selectedEconomy())]);
   const current = () => (answer && answeredFor === key() ? answer : null);
   const model = () => arsenalModel({answer: current(), level: level(), skills: skills(), filter: rackFilter, busy, message, loading: loading && !current()});
-  const handlers = {take: id => void move(id, () => api.take({copy: id, code: code()}), took(id)),
-    giveBack: () => void move('return', () => api.giveBack({code: code()}), data => `${nameOf(answer ?? data, current()?.mine)} is back on the rack. You carry the musket.`),
+  const copyIntent = id => ({copy: id, holderGeneration: current()?.copies.find(copy => copy.id === id)?.holderGeneration, code: code()});
+  const handlers = {take: id => void move(id, () => api.take(copyIntent(id)), took(id)),
+    giveBack: () => void move('return', () => api.giveBack(copyIntent(current()?.mine)), data => `${nameOf(answer ?? data, current()?.mine)} is back on the rack. You carry the musket.`),
     buy: id => void move(`buy:${id}`, () => api.buy({weapon: id, code: code()}), bought(id)),
     retry: () => { if (!loading) { message = ''; loadFailed = false; void refresh(); } },
     filter: id => { if (['all', 'available', 'carried'].includes(id)) { rackFilter = id; redraw(); } }};
@@ -40,22 +53,42 @@ export function createArsenal({api, ui, emit = () => {}, enabled = () => false, 
     };
   }
   function redraw() { if (ui.open === 'arsenal') ui.arsenalCard(model(), handlers); }
-  function take(data, fresh) { answer = data; answeredFor = key(); onCoins(data.coins, fresh); }
+  function take(data, fresh, expectedOrigin, readOnly = false) {
+    if (readSharedArsenal(data)) {
+      if (expectedOrigin && !sameArsenalOrigin(data.economy, expectedOrigin)) return false;
+      if (readSharedArsenal(current()) && sameArsenalOrigin(current().economy, data.economy)
+        && BigInt(data.arsenalRevision) < BigInt(current().arsenalRevision)) return false;
+      if (!readOnly || !redundantSharedRead(current(), data, selectedEconomy()))
+        onEconomy(data.economy, expectedOrigin ?? arsenalOrigin(data.economy));
+      const known = selectedEconomy();
+      answer = sameArsenalOrigin(known, data.economy) && BigInt(known.revision) >= BigInt(data.economy.revision)
+        ? {...data, economy: known} : data;
+    } else {
+      if (!legacyFactory && !isArsenalLegacyContext(selectedEconomy())) return false;
+      answer = data; onCoins(data.coins, fresh);
+    }
+    answeredFor = key();
+    return true;
+  }
   async function refresh() {
-    if (!enabled()) { answer = null; answeredFor = null; return null; }
+    if (!readEnabled()) { answer = null; answeredFor = null; return null; }
     const mine = ++ticket, asked = key(), fresh = asking();
     loading = true; redraw();
     const result = await api.state(code());
     if (mine !== ticket) return result;
     loading = false;
-    if (asked !== key() || !enabled()) return result;
-    if (result.ok) { take(result.data, fresh); if (loadFailed) { message = ''; loadFailed = false; } }
+    if (asked !== key() || !readEnabled()) return result;
+    if (result.ok) { if (enabled()) take(result.data, fresh, result.expectedOrigin, true); if (loadFailed) { message = ''; loadFailed = false; } }
     else if (!result.ok && !current()) { message = result.message; loadFailed = true; }
     redraw();
     return result;
   }
   async function move(kind, send, success) {
     if (busy || !enabled()) return;
+    const economy = selectedEconomy();
+    if (!legacyFactory && !isArsenalLegacyContext(economy) && !isArsenalEconomy(economy)) {
+      message = 'Wait for your island to load and try again.'; redraw(); return;
+    }
     const asked = key();
     busy = kind; message = ''; loadFailed = false; redraw();
     const before = answer, fresh = asking(), result = await send();
@@ -63,9 +96,13 @@ export function createArsenal({api, ui, emit = () => {}, enabled = () => false, 
     // A completed server move stays valid, but its answer must not become another island's inventory.
     if (asked !== key() || !enabled()) { redraw(); return; }
     if (result.ok) {
-      const text = success(result.data); take(result.data, fresh);
+      const shared = !!result.receipt;
+      const text = shared ? (result.repeat ? 'Your previous arsenal action is confirmed.' : 'Your arsenal action is confirmed.') : success(result.data);
+      if (result.data && !take(result.data, fresh, result.expectedOrigin)) { redraw(); return; }
+      if (!result.data) { answer = null; answeredFor = null; await refresh(); }
+      if (asked !== key() || !enabled()) { redraw(); return; }
       emit({type: 'island_spots_changed', place: place(), spot: ARSENAL.id});
-      emit({type: 'arsenal_changed', carried: readWeapon(result.data.carried)});
+      if (current()) emit({type: 'arsenal_changed', carried: readWeapon(current().carried)});
       ui.toast(text, 'success');
     } else {
       answer = before;

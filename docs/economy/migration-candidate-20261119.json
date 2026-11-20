@@ -1,0 +1,649 @@
+{
+  "schemaVersion": 1,
+  "migrationSourceCommit": "3bdd8eda16470795fdedd68c42fffab54e5f2ced",
+  "scope": "Repository source candidate only. Contains no installed database inventory and grants no release authorization.",
+  "migrations": [
+    {
+      "version": "20261106000000",
+      "path": "supabase/migrations/20261106000000_foundation.sql",
+      "md5": "1b5149e4655823eb824f1a201661d5ff",
+      "sha256": "f32c13d86340d43cbeb5a70ddd0c4829fa77ad42b1d0d7826542ecd5b38bb19b"
+    },
+    {
+      "version": "20261106010000",
+      "path": "supabase/migrations/20261106010000_island_exchange.sql",
+      "md5": "768b9315f3fc966ac29185fe3a38ca3e",
+      "sha256": "d533ef3a5e4a482c1a987965fb2f036b42749588338e72321e7b5139fd53bace"
+    },
+    {
+      "version": "20261106020000",
+      "path": "supabase/migrations/20261106020000_accounts.sql",
+      "md5": "6b1df9bc621449a48344405e3ed8f305",
+      "sha256": "c3df6d5980e92e5137468e875f255c6dfb3bd1f2ee7be158dc95a163f697e22e"
+    },
+    {
+      "version": "20261106030000",
+      "path": "supabase/migrations/20261106030000_entry_profiles.sql",
+      "md5": "be6a3d5c22ee5c1f7863949591bf88ac",
+      "sha256": "bff2aef035296ef7be8745b4ae5b4fe50928002f39a8e37cc35622b015cb2bee"
+    },
+    {
+      "version": "20261106040000",
+      "path": "supabase/migrations/20261106040000_crew_codes.sql",
+      "md5": "1da6345589564d75599b5ad85785b030",
+      "sha256": "eb397d88fe1f06ef0357a2ce644021fb71857f7c0bc7bf19a69a594295851640"
+    },
+    {
+      "version": "20261106050000",
+      "path": "supabase/migrations/20261106050000_live_presence.sql",
+      "md5": "53edec89fcbce7c961f1d08e92759d60",
+      "sha256": "eaf0abc08698a3c3b10fbcb6ed5a33295f3e55a557bb84dba5051d5012c99d07"
+    },
+    {
+      "version": "20261106060000",
+      "path": "supabase/migrations/20261106060000_case_rules.sql",
+      "md5": "278a16fcf87bbf2f46d81ec803f1e94b",
+      "sha256": "47ac0889f8b3e54e48e7eb6b46fdba60e404861933f1e178cc5af875ea063f4c"
+    },
+    {
+      "version": "20261106070000",
+      "path": "supabase/migrations/20261106070000_home_islet.sql",
+      "md5": "bee55d86080b52256c765993232659e9",
+      "sha256": "70abb3bcdff158ab86976dd721956c62d1023d4f5d7224a98cf98340b70e9822"
+    },
+    {
+      "version": "20261106080000",
+      "path": "supabase/migrations/20261106080000_case_board_and_night.sql",
+      "md5": "3d68856dbe9082e2c8e413f0db5dce0f",
+      "sha256": "cd40856ab91ba8a51b31c173244467227d27db5ac8c23aea49b50033dc5302a1"
+    },
+    {
+      "version": "20261106090000",
+      "path": "supabase/migrations/20261106090000_exchange_leverage.sql",
+      "md5": "2466eed8daf719b18806b56ca5309ac3",
+      "sha256": "a99a45ad0efa2fa5694838b7f2683b06d50dfb1520b30da243deafd53cc8082f"
+    },
+    {
+      "version": "20261106100000",
+      "path": "supabase/migrations/20261106100000_prediction_desk.sql",
+      "md5": "97c8a006598c8c1b7c7f1ff0f23d7613",
+      "sha256": "20cb4b9b744e97116bffa681cf4813c272a4379bd7dd70f3a5c66f355ea55385"
+    },
+    {
+      "version": "20261106110000",
+      "path": "supabase/migrations/20261106110000_lantern_duels.sql",
+      "md5": "af6f9038f00ccff1550aad2501b08ce4",
+      "sha256": "69cbb27b292efa81d62422fac109d85e755107b3a05d43f287b74e9aec27897e"
+    },
+    {
+      "version": "20261106120000",
+      "path": "supabase/migrations/20261106120000_relighting.sql",
+      "md5": "255250670ba94f84619bfb75fd1f6439",
+      "sha256": "e38275574ad12bf1dc9642a7425497c47a52a718b9c6044feacb7e585a79c193"
+    },
+    {
+      "version": "20261106130000",
+      "path": "supabase/migrations/20261106130000_npc_partners.sql",
+      "md5": "39f269d1fd2e8e43e2b3d0055c97ecb2",
+      "sha256": "a6a99e815091aa27c97d1be059aed158abaef688146858be1ea1c9b45e1b068e"
+    },
+    {
+      "version": "20261106140000",
+      "path": "supabase/migrations/20261106140000_followups.sql",
+      "md5": "a59dccb2d3447614454f94a37cc3bb40",
+      "sha256": "e2e294c0d8ea53a232faad507cfcdb74b7707e6782055a00172dfba8c28beb07"
+    },
+    {
+      "version": "20261106160000",
+      "path": "supabase/migrations/20261106160000_festival.sql",
+      "md5": "e5df5d833e6b2d733736a6a8e8585858",
+      "sha256": "5b23f67b5fc389f68cc80a6ce290593515e27f8b8ecbeaaa35359db4e5312def"
+    },
+    {
+      "version": "20261106170000",
+      "path": "supabase/migrations/20261106170000_host_console.sql",
+      "md5": "bea4b851018f4f97beccb15c88fe1e09",
+      "sha256": "0130b04348ea2a8722ef6a1754456b63de4c2c097a4cc0071763518a27d4174c"
+    },
+    {
+      "version": "20261106180000",
+      "path": "supabase/migrations/20261106180000_sports_desk.sql",
+      "md5": "bb6e0b40dea6ea6abdba7b62b89ed7dd",
+      "sha256": "09d334f0bb9bce6c50228e33a257e44717608539eb6c0bd81c8eb9fc76eec061"
+    },
+    {
+      "version": "20261109010000",
+      "path": "supabase/migrations/20261109010000_demo_window.sql",
+      "md5": "9f5944d452a7eafaa701ebb4a51abeb8",
+      "sha256": "caa65a26e20d0e7353c9f36a27283196dc8b0e2cf6fcd74a16d0e129424c9342"
+    },
+    {
+      "version": "20261109020000",
+      "path": "supabase/migrations/20261109020000_class_code.sql",
+      "md5": "13cb5ec6e0ed8f5457246506838c7100",
+      "sha256": "dd30a67584550e0ae8af6db14e60d1d97d7c4a1b9d63a19d5c00892f0fed62e2"
+    },
+    {
+      "version": "20261110010000",
+      "path": "supabase/migrations/20261110010000_islands_and_waves.sql",
+      "md5": "79278156e4925b2d39076722c11d2f00",
+      "sha256": "008832dd5eddba256a4a7896d8739b92166b5ab0532e1d0e8c7645e8a2232f70"
+    },
+    {
+      "version": "20261110020000",
+      "path": "supabase/migrations/20261110020000_wave_crews.sql",
+      "md5": "ffa577a552086c60c75fa6711791bda5",
+      "sha256": "43817bb29bb5f06b2539d4da0dc1ee57a84c76141a2baf3ebc22c34900fc57d7"
+    },
+    {
+      "version": "20261111010000",
+      "path": "supabase/migrations/20261111010000_market_calls.sql",
+      "md5": "f78ae3f19ba594d4560fe8182e8b268b",
+      "sha256": "20c303983c1e06807d8615ea8b508a3fb3ac6a75e82d50faf3dd111b5fa4c435"
+    },
+    {
+      "version": "20261111030000",
+      "path": "supabase/migrations/20261111030000_tower_defense.sql",
+      "md5": "8bd803111c0c54b751a0cea45530e812",
+      "sha256": "ab61d8ced3a3e7a438abadd006df762c0c8270be4a45823497a7a469b80bede4"
+    },
+    {
+      "version": "20261112010000",
+      "path": "supabase/migrations/20261112010000_market_calls_5_minutes.sql",
+      "md5": "e02cf458292bbbc17c64c676fa7f817a",
+      "sha256": "689870b2a5559f60790742d3e6980528d2a3ef773b58e780dd968345129c3789"
+    },
+    {
+      "version": "20261112020000",
+      "path": "supabase/migrations/20261112020000_inner_walls.sql",
+      "md5": "0a516d9285c1292f2dd9fe733233393c",
+      "sha256": "ddce36e7635e7a2c3e90019fbcf4cfcb3893016e97b77600234f601b30b41cd8"
+    },
+    {
+      "version": "20261112030000",
+      "path": "supabase/migrations/20261112030000_captain_skills.sql",
+      "md5": "1e343cbfaa9d382ec564ac9963565506",
+      "sha256": "97312a6f02409f1a4821935d4efd1f0a29d9bb9ac7fd1f1596a348093bbd290e"
+    },
+    {
+      "version": "20261112040000",
+      "path": "supabase/migrations/20261112040000_game_rooms.sql",
+      "md5": "e08a2debe59ce9ebfd548c332fa2d433",
+      "sha256": "dc38b7a266f1e222d582ea589aede5545da64e2aa0bbdbb728a9d739aa4da330"
+    },
+    {
+      "version": "20261112050000",
+      "path": "supabase/migrations/20261112050000_captain_revive.sql",
+      "md5": "76937a657beb7158f4b963d89616aa57",
+      "sha256": "b3f20b5bf1fa395e4ff474b4a2d6e4292684e28b0c760d421b15469652473e58"
+    },
+    {
+      "version": "20261112060000",
+      "path": "supabase/migrations/20261112060000_tech_hub.sql",
+      "md5": "769e5cedeb3e59ba134aab6b780e0933",
+      "sha256": "c452e3448a26b46f6f402b8bbc6667f1fbc2d09658d20e39b68cd2e2e7c6022c"
+    },
+    {
+      "version": "20261112070000",
+      "path": "supabase/migrations/20261112070000_tower_tiers.sql",
+      "md5": "e39d0016dcdf7df8811304f8233dfea5",
+      "sha256": "9d93dc3820002331086cbb695d63f8f68495c2b01c9395042f3ec53166730614"
+    },
+    {
+      "version": "20261112080000",
+      "path": "supabase/migrations/20261112080000_demolish.sql",
+      "md5": "f9e3665555e0be7af8bf81e6dfedf42d",
+      "sha256": "96f62435e958cd617fdc4019bc13275f540fea6857d94099e44a360cc21896a3"
+    },
+    {
+      "version": "20261112090000",
+      "path": "supabase/migrations/20261112090000_house_roles.sql",
+      "md5": "8e32814e940b5375e7560823607a828d",
+      "sha256": "662e1336a3dae2bd62c2b039540b391a36fa876c44e97f685ecfa57e8ce0efb2"
+    },
+    {
+      "version": "20261112100000",
+      "path": "supabase/migrations/20261112100000_research_tiers.sql",
+      "md5": "3ca0a1c51cf9b618fe4335b138bee837",
+      "sha256": "913ecc235a4a54df55ce77eb794f095dc3b3427ce8f6597e07e66ddf761a6a45"
+    },
+    {
+      "version": "20261112120000",
+      "path": "supabase/migrations/20261112120000_captain_tree.sql",
+      "md5": "d0a8ef6c6e621c95e8e13b5cdb6522a3",
+      "sha256": "a17600947747f862f9622b2b3f9e1ddec3fb7b64618713df428e2c47b9bff908"
+    },
+    {
+      "version": "20261113010000",
+      "path": "supabase/migrations/20261113010000_respec_and_wave_guards.sql",
+      "md5": "ec90fdcad406d22b62e7371178247080",
+      "sha256": "74bdab44a3302aef9096647c23168a6e17f979aa195e9e7f91f20cca677b0bed"
+    },
+    {
+      "version": "20261113020000",
+      "path": "supabase/migrations/20261113020000_harpoon_tower.sql",
+      "md5": "5a330fc25c9a5d083e2dd7c8f15e58e4",
+      "sha256": "fd69354d43a2363e3e07c00f562ff85726b2fd48865322ad360b6d4a1b7d4c00"
+    },
+    {
+      "version": "20261113030000",
+      "path": "supabase/migrations/20261113030000_host_console_v3.sql",
+      "md5": "37fbbff348fc7aa86534fd3b6bd0f656",
+      "sha256": "94fc0fc17a2ae643e81a3c524cc447f8360b2371f361268fe0c3333e21eea55b"
+    },
+    {
+      "version": "20261114100000",
+      "path": "supabase/migrations/20261114100000_wall_recovery.sql",
+      "md5": "faeddefb22670b900f3010c65c80ac11",
+      "sha256": "840ac564a4307ff007f9624431030f4ffba11c96e254c02fc9e63c9af440befb"
+    },
+    {
+      "version": "20261114110000",
+      "path": "supabase/migrations/20261114110000_island_layout.sql",
+      "md5": "c266f852be3ee73c7f9b3de229d52cdd",
+      "sha256": "6fe15c9974c1f06b338e65b0f15a7dcc1488e1c9350788cfbbc9df90b86969c1"
+    },
+    {
+      "version": "20261114120000",
+      "path": "supabase/migrations/20261114120000_arsenal.sql",
+      "md5": "fd0027f89b46c46c88d8f106f2e4addd",
+      "sha256": "b994a0a669d41e94dd752c8dff191380de123443ca01e11a509488e975bd8ed3"
+    },
+    {
+      "version": "20261114130500",
+      "path": "supabase/migrations/20261114130500_wave_rules.sql",
+      "md5": "56d1eba5aedc07121a35d99be7bdfe16",
+      "sha256": "426a5c1b3cd3e46d429e2cef6ecbe6c2496780e66074fb4a0aae1117657adcc1"
+    },
+    {
+      "version": "20261114140000",
+      "path": "supabase/migrations/20261114140000_culverin.sql",
+      "md5": "c20259bf7a252f675bb14f0206c8ee39",
+      "sha256": "c4d114e3a1c9ea0ad1f6ac61092fe3a7df8aa2daede5fb94c065a18a45cb70c7"
+    },
+    {
+      "version": "20261115120000",
+      "path": "supabase/migrations/20261115120000_bigger_stakes.sql",
+      "md5": "0bf35457b8b345a09a0b8faf270dda94",
+      "sha256": "34ac9b3a90ae8d79b6503656d3d1e386a69aa218cd2a0d0f099045b0d6745ade"
+    },
+    {
+      "version": "20261115130000",
+      "path": "supabase/migrations/20261115130000_tower_skill_price.sql",
+      "md5": "030ee779a0ba877b7c30aa64abd04296",
+      "sha256": "946c8403c7407bb315c86d863b05d0d93f55d2b68545547d81f3835bb87e5d30"
+    },
+    {
+      "version": "20261115140000",
+      "path": "supabase/migrations/20261115140000_guard_crew.sql",
+      "md5": "b20d197646b899621ed762b4955a5b07",
+      "sha256": "dc887dc4c665c7eae477834b763b348b0e4137aceca4798ece85123fc3a25f35"
+    },
+    {
+      "version": "20261115150000",
+      "path": "supabase/migrations/20261115150000_wall_restore_record_fence.sql",
+      "md5": "d0fb9e9e7c41f4842e49ba7e770fe975",
+      "sha256": "e4ebc955751853d4591d00227aae35ea3d011f7174b3ffcc56f5e501ba832230"
+    },
+    {
+      "version": "20261115160000",
+      "path": "supabase/migrations/20261115160000_tower_obstacles.sql",
+      "md5": "af6507396fa2c3b131e7c89c2a58a035",
+      "sha256": "b26187b661e4a9f7a5b87a4a678f29e071541368554c3f4e6e35270e1134bf99"
+    },
+    {
+      "version": "20261116020000",
+      "path": "supabase/migrations/20261116020000_tower_trees.sql",
+      "md5": "af7abf7a14c35914b47a3ac99c34115e",
+      "sha256": "89fd45467c40f9adefd1c04a1f1dd67780e4d77d406e2b0ba80bd3fbdb27c591"
+    },
+    {
+      "version": "20261116020100",
+      "path": "supabase/migrations/20261116020100_swivel_spot_rule.sql",
+      "md5": "8cce55ae4d5989e67786356a36af1c97",
+      "sha256": "272bb76e90cd6b9f53759bc365282698c76d0336d871c4b18fc961e956a1cc65"
+    },
+    {
+      "version": "20261116040000",
+      "path": "supabase/migrations/20261116040000_boat_games.sql",
+      "md5": "5bcca242863a5a67c5211d263581625e",
+      "sha256": "29d0c7d543c67aeaf886399a84132786f1330a216deccf194c63cf185ddbf800"
+    },
+    {
+      "version": "20261116070000",
+      "path": "supabase/migrations/20261116070000_island_fresh_start.sql",
+      "md5": "02bbd5dbb6ea6efea34618171a947fd8",
+      "sha256": "891b9d1c8356b5e63df5a2e71ece9d34c6e55aed2c9d38243b3c65d81d5ab1fc"
+    },
+    {
+      "version": "20261116100000",
+      "path": "supabase/migrations/20261116100000_leaderboard_query.sql",
+      "md5": "012aad54de0f36f2dcf2c4f556cb9cd2",
+      "sha256": "4f76936cddaddc657d1ef16bea1f28b68f0dbdd2a313aa33dcffe58ba4604145"
+    },
+    {
+      "version": "20261116160000",
+      "path": "supabase/migrations/20261116160000_ship_fire_rule.sql",
+      "md5": "45993c2951f1b055fcc68fa1ea985889",
+      "sha256": "2ee8841af3fa5315582749bd6496933759ef202b572890d1e204829afceba319"
+    },
+    {
+      "version": "20261117010000",
+      "path": "supabase/migrations/20261117010000_more_tower_spots.sql",
+      "md5": "7c2c78aa579169490a4f33ac8fd254c3",
+      "sha256": "c9d008ce30ce13fcf3bf116b766a37c8c1880b10874f3db453e079565130f909"
+    },
+    {
+      "version": "20261117020000",
+      "path": "supabase/migrations/20261117020000_structure_recovery.sql",
+      "md5": "041e6af541ddc997817c23e1a6902a84",
+      "sha256": "6256829daaee90409934ab98edbdf94baf211e95da5e03177e9e1eaef4c23af3"
+    },
+    {
+      "version": "20261117025000",
+      "path": "supabase/migrations/20261117025000_legacy_wave_locks.sql",
+      "md5": "f13386bcf7c60e9767852b68ac641c8b",
+      "sha256": "2572253fbb3b7cc09381719a897eb8b8970cabd984c184139611c7f62e105009"
+    },
+    {
+      "version": "20261117030000",
+      "path": "supabase/migrations/20261117030000_paid_structure_repair.sql",
+      "md5": "92aa190a0ca4f62f1031e467d8a189ab",
+      "sha256": "10275139c14f3ad9b0cb306616582bcc1c3982caf0a04b19801e5d463881cf15"
+    },
+    {
+      "version": "20261117040000",
+      "path": "supabase/migrations/20261117040000_structure_recovery_api.sql",
+      "md5": "a9fcfc4145eb9b9bd26b7104b690d7f9",
+      "sha256": "3d8db950133f6ca139ec7719378c5e12e345b730529215f9bf22690712e535bf"
+    },
+    {
+      "version": "20261117050000",
+      "path": "supabase/migrations/20261117050000_structure_recovery_mutations.sql",
+      "md5": "d31341f858e2a2d65cf48d4ee51188a6",
+      "sha256": "ec658edbc9fceca79713ac305019cb6bc32eca03c05c2a575d663f1853aa5750"
+    },
+    {
+      "version": "20261118010000",
+      "path": "supabase/migrations/20261118010000_recovery_current_for_joiners.sql",
+      "md5": "dda21414f870a1bc67a532b5a3bb49e7",
+      "sha256": "0fb3d07efdb4822e4c5964333d0a26618ec178c89b8a3bbb29a96d1f96e86768"
+    },
+    {
+      "version": "20261118020000",
+      "path": "supabase/migrations/20261118020000_recovery_wave_end.sql",
+      "md5": "bc2c6efb3d8da5b9cfdfffc0987fda5b",
+      "sha256": "d51b78a359501aefa35d2dad992cca9a180a6731f115c8a4781f867860c2bb35"
+    },
+    {
+      "version": "20261118030000",
+      "path": "supabase/migrations/20261118030000_recovery_away.sql",
+      "md5": "29a07855c3e74bdacd40d8d502e16cdd",
+      "sha256": "0db7fbef8ff711f91bec9d5e856ebb5383e3011c8cc46765ab1927b7a7b1144f"
+    },
+    {
+      "version": "20261118040000",
+      "path": "supabase/migrations/20261118040000_playtest.sql",
+      "md5": "3b3eec230505ed71d868c541bdb3d175",
+      "sha256": "fcd4e95c24e727340b7777391cf150cd0345a561379f87389cf68df126a3a266"
+    },
+    {
+      "version": "20261118050000",
+      "path": "supabase/migrations/20261118050000_retired_recovery_options.sql",
+      "md5": "f6f53dee9a9282fb7af597d8c4107c2b",
+      "sha256": "948f3c8aef2785c36d75d9914e76ce24daf63290586c120c57b5fd0d8215c943"
+    },
+    {
+      "version": "20261118050050",
+      "path": "supabase/migrations/20261118050050_island_treasury.sql",
+      "md5": "78c7dfa361988483f6c5a9124921d233",
+      "sha256": "a61466425549546550b0967768f5b843918a7b448eda3d8c0dd94bbc032e271e"
+    },
+    {
+      "version": "20261118050100",
+      "path": "supabase/migrations/20261118050100_island_treasury_functions.sql",
+      "md5": "26caf110365d262cd5cbbf008659042f",
+      "sha256": "c42777bdbd7c83b7495764a90d55417f05c347b1e8088241a0a730b1c13292c0"
+    },
+    {
+      "version": "20261118050150",
+      "path": "supabase/migrations/20261118050150_island_economy_operations.sql",
+      "md5": "2b46cb68c7776672a334d6c5b5cc047c",
+      "sha256": "51a07d0289f2cbc8ee991ab667671b9fa3624d9b80759816c73a67ee94a43a80"
+    },
+    {
+      "version": "20261118050200",
+      "path": "supabase/migrations/20261118050200_wave_treasury_settlement.sql",
+      "md5": "45946fac17ef78bc2597ea4b83f68750",
+      "sha256": "d7cf799b553a0a206d8549a12462e1c31a4d545b1e666ca093bd7383b4aef407"
+    },
+    {
+      "version": "20261118050300",
+      "path": "supabase/migrations/20261118050300_personal_captain_progress.sql",
+      "md5": "f34dd29a0575520df9028224c750e4b9",
+      "sha256": "8f0f76cfb302f80ac272595e7d8038bba41d6b51a72eaf84cc3e38aff190d6df"
+    },
+    {
+      "version": "20261118050310",
+      "path": "supabase/migrations/20261118050310_personal_captain_revisions.sql",
+      "md5": "aaf67b0e0db5de7c1f48c7be56bb567c",
+      "sha256": "797bd1c1198585b3960ca0725fd3dc18ee47c637c95ea0549182c63ff3b0148e"
+    },
+    {
+      "version": "20261118050320",
+      "path": "supabase/migrations/20261118050320_personal_captain_operations.sql",
+      "md5": "298e1b036898fa68c4f9f5559fe4887d",
+      "sha256": "b48bffb547071e9a2dd1d30f4017f5925fb068fa722d4c2131efd996d8829dc2"
+    },
+    {
+      "version": "20261118050400",
+      "path": "supabase/migrations/20261118050400_island_economy_construction.sql",
+      "md5": "bbd3cdd41630eb47bed926f04e937d01",
+      "sha256": "65b75d332ea91b0cf408bae238273ee27e89b0ca81d10f7c3fa55341fbc496d3"
+    },
+    {
+      "version": "20261118050401",
+      "path": "supabase/migrations/20261118050401_island_economy_construction_legacy_guards.sql",
+      "md5": "88b23708def586119abe807332fb886d",
+      "sha256": "ebfbfabca7b357e3c3fb9534f0c7def31cd822cdac7957cfbb45e3fc6ae4d10d"
+    },
+    {
+      "version": "20261118050500",
+      "path": "supabase/migrations/20261118050500_island_economy_progression.sql",
+      "md5": "14d2a8b8da659d0e48b7ce577b65a961",
+      "sha256": "97c46e7155338d86181e382e2bcc9b906e9a7061a313d2b4e76ab979f421cb43"
+    },
+    {
+      "version": "20261118050501",
+      "path": "supabase/migrations/20261118050501_island_progression_legacy_guards.sql",
+      "md5": "d12d75eb25872c32327f4b4146eef98c",
+      "sha256": "01397480f8e8f90bb86ea2ce1dc81b6130c98a8a9b509061f9cc4ea35e9eb4ec"
+    },
+    {
+      "version": "20261118050600",
+      "path": "supabase/migrations/20261118050600_island_economy_crew.sql",
+      "md5": "eb0e6afdee13926b1442052a800deefa",
+      "sha256": "2371d1552e49b5d58aa4c908c0ece7b6359fdf1a84a5362cf577244359209ee1"
+    },
+    {
+      "version": "20261118050601",
+      "path": "supabase/migrations/20261118050601_island_economy_crew_legacy_guard.sql",
+      "md5": "f181e8535a4a0aa30d189e29f6ffeafb",
+      "sha256": "b277c1934e0bd95afe6e70958fd6470a0a2e37b7ef5caec0fef907cd2e2cfa81"
+    },
+    {
+      "version": "20261118050700",
+      "path": "supabase/migrations/20261118050700_island_economy_snapshot.sql",
+      "md5": "1da6a17ed98246a19b47310e12f13de2",
+      "sha256": "34edacb7a1da523bcd66f95dc0d56ee8f58904bcbfc0661e09c5482f745cd7af"
+    },
+    {
+      "version": "20261118050701",
+      "path": "supabase/migrations/20261118050701_island_economy_legacy_guards.sql",
+      "md5": "5acca07e82f365f42ec56c93b5f1625a",
+      "sha256": "2ba0fca74c6e0187a472bc49c28f320b6f8997f2327b776c9428f1a20664819f"
+    },
+    {
+      "version": "20261118050900",
+      "path": "supabase/migrations/20261118050900_shared_arsenal.sql",
+      "md5": "2491f66463dc85ad2d5a27313fed5cd9",
+      "sha256": "f0c6c0dd8650b01587121ef380c3897f38f980573b78758ecda9505b05e86187"
+    },
+    {
+      "version": "20261118051000",
+      "path": "supabase/migrations/20261118051000_paid_revive_journal.sql",
+      "md5": "a08b8834fd0cef3171406b79c98853ee",
+      "sha256": "d891415473899b5b837df99bd7e0d9d0e7a5deffc9d418836e3282b31c3796a5"
+    },
+    {
+      "version": "20261118051200",
+      "path": "supabase/migrations/20261118051200_shared_combat_repairs.sql",
+      "md5": "3d5b051a19e6223f410991d370e3b3c7",
+      "sha256": "967727455b53c4769f2c3c5caa34a534aa2b5dfeaef5341cce6fd2b9a4a9b321"
+    },
+    {
+      "version": "20261118051400",
+      "path": "supabase/migrations/20261118051400_shared_island_wagers.sql",
+      "md5": "ac3fb3aa554c442e9fd4657db86a092c",
+      "sha256": "38cb1385a090d6bd5df0529f4c9a81d1cb2d528bcbd43ed22b8efe771c9fd8d6"
+    },
+    {
+      "version": "20261118051500",
+      "path": "supabase/migrations/20261118051500_shared_ship_rewards.sql",
+      "md5": "f2b4e65a032162c490fd2383414e424a",
+      "sha256": "2f920259174f171c535420d7bcfa5697ea441467df41c0897682238515d31a1e"
+    },
+    {
+      "version": "20261118051600",
+      "path": "supabase/migrations/20261118051600_island_economy_reset.sql",
+      "md5": "d826512d863298dac29da2386d7ab886",
+      "sha256": "61d3431f80fbcdaa566ab5120fbaedebfe67857a644a98162b448d5ee6e9fa61"
+    },
+    {
+      "version": "20261118060000",
+      "path": "supabase/migrations/20261118060000_reward_recovery.sql",
+      "md5": "b71aefff7df719f91733a5cbfc3a3f21",
+      "sha256": "85a1f05c94cbafd9b08571e1bfce68d47e7f3ac92091a85c11ef6b1666ef53d9"
+    },
+    {
+      "version": "20261118070000",
+      "path": "supabase/migrations/20261118070000_revive_reconciliation.sql",
+      "md5": "28010638330e0a1112267c39d641743a",
+      "sha256": "e58cee393a610810cbfd503016ee8b2d6939184f9b545d693e350a54bd0234a9"
+    },
+    {
+      "version": "20261118180900",
+      "path": "supabase/migrations/20261118180900_arsenal_runtime.sql",
+      "md5": "ba58e2a17b78a41852abe4d2965198ae",
+      "sha256": "e4a9e23a4b0a70b5e48674a4555bde63e260d2b1cdc5c3a28bf2babc5abaeef6"
+    },
+    {
+      "version": "20261118181200",
+      "path": "supabase/migrations/20261118181200_legacy_repair_mode_guard.sql",
+      "md5": "07124613b83d244bf8dba99990978ed8",
+      "sha256": "a1e9fe2000f0e15b34bd72a17ae4c497c4ce9c0fcb94056ee1a93f1f6094c28c"
+    },
+    {
+      "version": "20261118181400",
+      "path": "supabase/migrations/20261118181400_shared_wager_jobs.sql",
+      "md5": "426377c79fe9fc862e469d932171e183",
+      "sha256": "da4b398ed52635039a09e7a4092a3023ddc7c52c3bfc085f91a80079275e7d1f"
+    },
+    {
+      "version": "20261118181500",
+      "path": "supabase/migrations/20261118181500_shared_boat_runtime.sql",
+      "md5": "06e4ebb855c73ec5c3e001514292d325",
+      "sha256": "bda85f281f37095782b6cf28e72da9411891dc81f10df79a1c16828e4dc24bf5"
+    },
+    {
+      "version": "20261118192007",
+      "path": "supabase/migrations/20261118192007_legacy_revival_shared_mode_guard.sql",
+      "md5": "ee584ad5e860e04567d43067053982e9",
+      "sha256": "94cb4c0d01b66bda213f66c22692cf0bf8a6d0ffcede79b25fef47835c4b1469"
+    },
+    {
+      "version": "20261118192119",
+      "path": "supabase/migrations/20261118192119_shared_island_realtime_membership.sql",
+      "md5": "5801a0bc3153768d86f91b1fa699ca0a",
+      "sha256": "de2cad839cff652eea48ce714add8bf839dd41e04ae2d4028c0a298c9f8c8b36"
+    },
+    {
+      "version": "20261118223055",
+      "path": "supabase/migrations/20261118223055_canonical_wave_sessions.sql",
+      "md5": "f4dfcded635006f0e4e16becae621e58",
+      "sha256": "077ca7faf5d92b9fa5cfd0d2bcd9e187134696dc0df5ad8ce5a4d510ce8c94e7"
+    },
+    {
+      "version": "20261118223655",
+      "path": "supabase/migrations/20261118223655_shared_arsenal_holder_lifecycle.sql",
+      "md5": "36af0a6e2ae5d66691a9de44b94543c0",
+      "sha256": "15168aa39ed8580b1f50412aab7f685e6ba5facd1d1b4487a137a3e28ef247fc"
+    },
+    {
+      "version": "20261118223730",
+      "path": "supabase/migrations/20261118223730_shared_player_deletion_guard.sql",
+      "md5": "30d6a7995366a591066cb92539822b96",
+      "sha256": "205a208d90fe168630aab4cf6ee94456ea3abfbf3f9d28f63b54744ac842797b"
+    },
+    {
+      "version": "20261118224038",
+      "path": "supabase/migrations/20261118224038_shared_free_revival_runtime.sql",
+      "md5": "29e5a02b8b4286263d6f6f136219dce0",
+      "sha256": "ad097279f15654b054d2326e9483a4de374ff502856a5969b7eb69aa6519668f"
+    },
+    {
+      "version": "20261118225937",
+      "path": "supabase/migrations/20261118225937_shared_legacy_wave_fences.sql",
+      "md5": "9ec4c12444f9a83c7ead642f0f29e0fb",
+      "sha256": "ed3ddaf8a9fcb55d2bcf8427b41ab6ed108828e6420d5fc6a005f8f481893b77"
+    },
+    {
+      "version": "20261118230046",
+      "path": "supabase/migrations/20261118230046_shared_lifecycle_transactions.sql",
+      "md5": "ff1c66aa76d6da2d98a90833d9444628",
+      "sha256": "5b7b56ba4bf699634f64373cbe3c6de64758603903bb994d63ec2ff5ac8f624d"
+    },
+    {
+      "version": "20261118231226",
+      "path": "supabase/migrations/20261118231226_shared_wave_journal_lifecycle.sql",
+      "md5": "ae64bcfa68f52960d1b4b6ffd6112645",
+      "sha256": "8004b4cf603880bb77d04091de51e69ec48c1cbdd223c9216ee58510128b283b"
+    },
+    {
+      "version": "20261119000309",
+      "path": "supabase/migrations/20261119000309_canonical_membership_lifecycle.sql",
+      "md5": "7e29cd5b747fe22404ab62147cf7a705",
+      "sha256": "b599215b0a2f2cd389fabf2c50ee74b25f6f482653ead3955f24844d39f24e5d"
+    },
+    {
+      "version": "20261119001458",
+      "path": "supabase/migrations/20261119001458_shared_wave_closure_worker.sql",
+      "md5": "213504b42e3e08628849791e65b4bd0f",
+      "sha256": "acd1edba569704805155b3b00ec5042b9a82c55c301bd38eb40cc02447bb0ee8"
+    },
+    {
+      "version": "20261119002149",
+      "path": "supabase/migrations/20261119002149_shared_session_pacing.sql",
+      "md5": "9107c1573ca00d88d589f273e459aaad",
+      "sha256": "9732b1e061b7fe4aa67245d0e570153a26a8b958938771ba0feff5177ded0ddb"
+    },
+    {
+      "version": "20261119002317",
+      "path": "supabase/migrations/20261119002317_shared_repair_canonical_lock_order.sql",
+      "md5": "4b00cf0e6bd7a6321f8786bfd1a4ce3f",
+      "sha256": "cbd5526242e690bb1ae580b147f0dcb96c6a10d91b4069ff561a5cc09f47df66"
+    },
+    {
+      "version": "20261119005642",
+      "path": "supabase/migrations/20261119005642_shared_captain_fall_basis.sql",
+      "md5": "d44c64073fe7ca743010d28768fa3210",
+      "sha256": "a07d72cd505c00802ecac73964e138110cc0a443d01b7c71be82f5f9700c760f"
+    },
+    {
+      "version": "20261119014418",
+      "path": "supabase/migrations/20261119014418_shared_revival_checkpoint_freshness.sql",
+      "md5": "b8fe9618bde6427e051fac2e9dac508e",
+      "sha256": "5a716e430c01f4ddb81c5c6f981ed2502ddad83e6f51958032d0979cbab80d67"
+    }
+  ]
+}

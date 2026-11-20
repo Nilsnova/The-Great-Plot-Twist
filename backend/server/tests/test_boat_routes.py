@@ -1,7 +1,7 @@
 """The own boat's games (D057, docs/GAME-V3.md section 4.5): GET and POST /api/island/boat.
 
 Nothing here uses the network: the database is a FakeIslandDatabase (island_helpers.py) that also
-answers apply_wallet_transaction like the real one (each player + reason + ref once). The unlock
+answers the guarded legacy reward RPC (each player + reason + ref once). The unlock
 wave comes from the real campaign.json, the coins from the real boat.json.
 """
 
@@ -30,18 +30,63 @@ class LedgerDatabase(FakeIslandDatabase):
     """FakeIslandDatabase plus the money function: a ref is accepted once and remembered."""
 
     def __call__(self, request: httpx.Request) -> httpx.Response:
-        if request.url.path.endswith("/rpc/apply_wallet_transaction"):
-            self.requests.append(request)
-            body = json.loads(request.content)
-            key = (body["p_reason"], body["p_ref"])
-            if key in self.ledger_refs:
-                return httpx.Response(
-                    409, json={"code": "23505", "message": "duplicate key value violates unique"}
-                )
-            self.ledger_refs.add(key)
-            self.balance += body["p_delta"]
-            return httpx.Response(200, json=self.balance)
-        return super().__call__(request)
+        route = request.url.path.rsplit("/", 1)[-1]
+        if route not in {"island_boat_runtime_status", "island_legacy_boat_reward"}:
+            return super().__call__(request)
+        self.requests.append(request)
+        body = json.loads(request.content)
+        actor, owner = body["p_actor_id"], body["p_island_owner"]
+        member = self.games.rows.get(owner, {}).get(actor)
+        if actor != owner and (member is None or member["left"] is not None):
+            return httpx.Response(200, json={"status": "refused", "reason": "not_member"})
+        wave, wreck = self.progress["wave_best"], self.progress["wreck_paid"]
+        reason = "locked" if wave < 30 else "not_repaired" if wreck < 500 else None
+        if route == "island_boat_runtime_status":
+            return httpx.Response(
+                200,
+                json={
+                    "status": "legacy",
+                    "open": reason is None,
+                    "reason": reason,
+                    "message": None,
+                    "wave": wave,
+                    "unlockWave": 30,
+                    "wreck": {"paid": min(wreck, 500), "goal": 500},
+                    "games": [
+                        {
+                            "id": game,
+                            "paid": ("boat_game", boat.ref_of(owner, wave, game))
+                            in self.ledger_refs,
+                            "best": boat.coins_for(3, wave),
+                        }
+                        for game in boat.BOAT.games
+                    ],
+                },
+            )
+        if reason:
+            return httpx.Response(
+                200, json={"status": "refused", "reason": reason, "leftCoins": max(0, 500 - wreck)}
+            )
+        game, stars = body["p_game"], body["p_stars"]
+        reference = ("boat_game", boat.ref_of(owner, wave, game))
+        already = reference in self.ledger_refs
+        coins = 0 if already else boat.coins_for(stars, wave)
+        if coins:
+            self.ledger_refs.add(reference)
+            self.balance += coins
+        return httpx.Response(
+            200,
+            json={
+                "status": "legacy",
+                "game": game,
+                "stars": stars,
+                "coins": coins,
+                "paid": coins > 0,
+                "already": already,
+                "balance": self.balance if coins else None,
+                "wave": wave,
+            },
+        )
 
 
 def world_at(wave: int = 30, wreck_paid: int = 500) -> World:
@@ -80,7 +125,7 @@ def test_before_wave_thirty_the_boat_is_locked_and_pays_nothing():
     refused = claim(world)
     assert_error(refused, 409, "locked")
     assert refused.json()["error"]["message"] == "Opens after wave 30."
-    assert world.database.calls("apply_wallet_transaction") == []
+    assert world.database.ledger_refs == set()
 
 
 def test_at_wave_thirty_the_wreck_must_be_repaired_first():
@@ -110,16 +155,16 @@ def test_a_round_pays_the_servers_coins_once_per_game_and_wave():
         "game": "dash", "stars": 2, "coins": 24, "paid": True, "already": False,
         "balance": 124, "wave": 30,
     }  # fmt: skip
-    (call,) = world.database.calls("apply_wallet_transaction")
+    (call,) = world.database.calls("island_legacy_boat_reward")
     assert call == {
-        "p_player_id": PLAYER_ID,
-        "p_delta": 24,
-        "p_reason": "boat_game",
-        "p_ref": f"boat:{PLAYER_ID}:30:dash",
+        "p_actor_id": PLAYER_ID,
+        "p_island_owner": PLAYER_ID,
+        "p_game": "dash",
+        "p_stars": 2,
     }
     again = claim(world, "dash", 3).json()
     assert (again["paid"], again["already"], again["coins"]) == (False, True, 0)
-    assert len(world.database.calls("apply_wallet_transaction")) == 1
+    assert world.database.balance == 124
     assert [item["paid"] for item in status(world).json()["games"]] == [False, True]
     # The other game still pays at this wave; the next won wave pays the dash again.
     assert claim(world, "broadside", 1).json()["coins"] == 12
@@ -131,14 +176,13 @@ def test_no_stars_pay_nothing_and_keep_the_payment_open():
     world = world_at(40)
     nothing = claim(world, "broadside", 0).json()
     assert (nothing["paid"], nothing["already"], nothing["coins"]) == (False, False, 0)
-    assert world.database.calls("apply_wallet_transaction") == []
+    assert world.database.ledger_refs == set()
     assert claim(world, "broadside", 3).json()["coins"] == 42
 
 
 def test_a_second_tab_that_claimed_first_is_not_paid_twice():
     world = world_at(30)
-    # The ledger check says "not yet", but the money function finds the ref (claimed meanwhile).
-    world.database.read_ledger = lambda request: httpx.Response(200, json=[])
+    # The atomic reward RPC observes the earlier committed reference.
     world.database.ledger_refs.add(("boat_game", f"boat:{PLAYER_ID}:30:dash"))
     answer = claim(world, "dash", 3)
     assert answer.status_code == 200
@@ -152,7 +196,7 @@ def test_bad_claims_are_refused_before_any_coin_moves():
     assert_error(claim(world, "dash", -1), 422, "bad_stars")
     assert claim(world, "dash", "3").status_code == 422  # a string is not a whole number
     assert claim(world, "dash", 3, score=999).status_code == 422  # no extra fields
-    assert world.database.calls("apply_wallet_transaction") == []
+    assert world.database.ledger_refs == set()
 
 
 def test_the_coins_grow_slowly_with_the_wave_and_stop_at_the_cap():
@@ -177,9 +221,10 @@ def test_a_member_sails_the_hosts_boat_and_is_paid_into_their_own_wallet():
     game_of_owner(world)
     answer = claim(world, "broadside", 3, headers=GUEST, code="ISLE-K7Q2M")
     assert answer.status_code == 200
-    (call,) = world.database.calls("apply_wallet_transaction")
-    assert call["p_player_id"] == GUEST_ID
-    assert call["p_ref"] == f"boat:{PLAYER_ID}:30:broadside"
+    (call,) = world.database.calls("island_legacy_boat_reward")
+    assert call["p_actor_id"] == GUEST_ID
+    assert call["p_island_owner"] == PLAYER_ID
+    assert ("boat_game", f"boat:{PLAYER_ID}:30:broadside") in world.database.ledger_refs
 
 
 def test_a_stranger_cannot_sail_someone_elses_boat():
@@ -187,4 +232,4 @@ def test_a_stranger_cannot_sail_someone_elses_boat():
     game_of_owner(world, member=False)
     assert_error(claim(world, headers=GUEST, code="ISLE-K7Q2M"), 403, "not_member")
     assert_error(status(world, headers=GUEST, code="ISLE-K7Q2M"), 403, "not_member")
-    assert world.database.calls("apply_wallet_transaction") == []
+    assert world.database.ledger_refs == set()

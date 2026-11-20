@@ -1,0 +1,657 @@
+{
+  "result": "passed",
+  "source": "e875d4fe10c485754e6e1c5383e96f0e8ba2c632",
+  "expectedCommit": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+  "ownHashes": {
+    "check-economy-personal-provider.mjs": "9e3b51d94bf9f01bba9e290794de20dd277598d2f3de14a294f2d379c78bc5d4",
+    "economy-personal-playout.mjs": "f3f661f1dfc58c0671a871f601f595d9cb98f69932f68b177c4932fd4a05adcf",
+    "economy-personal-loader.mjs": "ff638a8ba34d9f3972733c500a2203d813b1403b59dad656113522110c5a8ee8"
+  },
+  "helperHashes": {
+    "api-clients.mjs": "a9369da75350b882ac6a312c20903965a362409978e86e108c256f9cc450a9f7",
+    "observer.mjs": "40cb288da9f9a80e337fba5a39a12b1b23501ad1ff48a2a4614975492997f140",
+    "source.mjs": "56d138914dc5b4e15159162bb21db68c985b2c9083c2e5bac4b34a90502ea8d9",
+    "runtime.mjs": "d1387a35fd7243df58e8d9589586034b3a098489bb20e43bece9b6b45040865f"
+  },
+  "sourceBefore": [
+    {
+      "service": "api",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "6849704385f2f49a00be2b96a91eebc14d1fbc75",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    },
+    {
+      "service": "frontend",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "6849704385f2f49a00be2b96a91eebc14d1fbc75",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    }
+  ],
+  "sourceAfter": [
+    {
+      "service": "api",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "6849704385f2f49a00be2b96a91eebc14d1fbc75",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    },
+    {
+      "service": "frontend",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "6849704385f2f49a00be2b96a91eebc14d1fbc75",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    }
+  ],
+  "startedAt": "2026-11-19T17:19:46.483Z",
+  "finishedAt": "2026-11-19T17:20:57.692Z",
+  "facts": [
+    {
+      "event": "multiple-discounts-one-generation-and-countdown-fences",
+      "at": "2026-11-19T17:19:58.636Z",
+      "prices": [
+        "9",
+        "9"
+      ],
+      "generation": "0482863b-bc3f-4b0b-99b4-2d9141c4926c",
+      "roster": 3,
+      "preStartParticipation": 0,
+      "roleBlocked": 409,
+      "legacyBlocked": 409,
+      "legacyRespecBlocked": 409,
+      "assignedRespecBlocked": 409
+    },
+    {
+      "event": "confirmed-participation-survived-real-disconnect",
+      "at": "2026-11-19T17:20:08.995Z",
+      "confirmedActors": 2,
+      "rotatedConnection": true,
+      "spectatorRewardReceipts": 0
+    },
+    {
+      "event": "confirmed-withdrawal-new-engineer-generation",
+      "at": "2026-11-19T17:20:09.605Z",
+      "participation": 2,
+      "oldGeneration": "0482863b-bc3f-4b0b-99b4-2d9141c4926c",
+      "newGeneration": "cb936ea4-96b1-4118-98ab-8f6ba4745ff5"
+    },
+    {
+      "event": "natural-headless-wave-terminal",
+      "at": "2026-11-19T17:20:26.432Z",
+      "waveId": "1d7053a2-4ca9-4870-a8f3-0f0e149b0def",
+      "playedWave": 2,
+      "outcome": "won",
+      "simulatedSeconds": 18.65,
+      "sealedThroughTick": 386,
+      "simulatedThroughTick": 372,
+      "shipsSunk": 5
+    },
+    {
+      "event": "personal-receipt-survives-departure-reset-and-retries",
+      "at": "2026-11-19T17:20:28.633Z",
+      "outcome": "won",
+      "playedWave": 2,
+      "ownerEarnedPoints": 1,
+      "engineerEarnedPoints": 1,
+      "unconfirmedActorsEarnedPoints": 0,
+      "completionEffects": 1,
+      "successorGenerationRetained": true
+    },
+    {
+      "event": "natural-headless-wave-terminal",
+      "at": "2026-11-19T17:20:56.287Z",
+      "waveId": "1ac7f71a-e131-49ab-9d12-ea634fcc94d1",
+      "playedWave": 1,
+      "outcome": "lost",
+      "simulatedSeconds": 26.35,
+      "sealedThroughTick": 543,
+      "simulatedThroughTick": 526,
+      "shipsSunk": 0
+    },
+    {
+      "event": "matching-natural-completion-only-clears-successor",
+      "at": "2026-11-19T17:20:57.609Z",
+      "outcome": "lost",
+      "clearedGeneration": "cb936ea4-96b1-4118-98ab-8f6ba4745ff5",
+      "earnedPoints": 1,
+      "allPrivateWalletsUnchanged": true
+    },
+    {
+      "event": "wave-income-once-across-acknowledgements",
+      "at": "2026-11-19T17:20:57.610Z",
+      "winning": {
+        "account_id": "8e8ced6c-69d6-49d8-8745-62a9eeed3bc7",
+        "run_epoch": "7f958af1-ebdb-4047-a377-00d12259f4de",
+        "played_wave": 2,
+        "reward_basis": {
+          "bonuses": {},
+          "baseCoins": "25",
+          "playedWave": 2,
+          "houseLevels": "0",
+          "perWaveCoins": "10",
+          "perHouseCoins": "10",
+          "bossMultiplier": "1"
+        },
+        "earned_bonuses": [],
+        "outcome": "won",
+        "loot": "45",
+        "credits": 1,
+        "credited": "45"
+      },
+      "secondAttempt": {
+        "account_id": "a156123c-2b5d-4321-842c-b0b52d304b32",
+        "run_epoch": "92534bc8-9b90-4be4-927f-dba83b175bf9",
+        "played_wave": 1,
+        "reward_basis": {
+          "bonuses": {},
+          "baseCoins": "25",
+          "playedWave": 1,
+          "houseLevels": "0",
+          "perWaveCoins": "10",
+          "perHouseCoins": "10",
+          "bossMultiplier": "1"
+        },
+        "earned_bonuses": [],
+        "outcome": "lost",
+        "loot": "0",
+        "credits": 0,
+        "credited": "0"
+      },
+      "lateWinClaimKeptOriginalOutcome": true,
+      "houseBossBonusCoverage": false
+    },
+    {
+      "event": "free-personal-actions-and-all-account-ledgers-reconciled",
+      "at": "2026-11-19T17:20:57.610Z",
+      "accounts": [
+        {
+          "id": "7924372a-fd89-4cc1-8346-800eb6e57099",
+          "state": "active",
+          "balance": "200",
+          "held": "0",
+          "ledger_balance": "200",
+          "ledger_held": "0"
+        },
+        {
+          "id": "8e8ced6c-69d6-49d8-8745-62a9eeed3bc7",
+          "state": "retired",
+          "balance": "227",
+          "held": "0",
+          "ledger_balance": "227",
+          "ledger_held": "0"
+        },
+        {
+          "id": "a156123c-2b5d-4321-842c-b0b52d304b32",
+          "state": "active",
+          "balance": "191",
+          "held": "0",
+          "ledger_balance": "191",
+          "ledger_held": "0"
+        }
+      ],
+      "allPrivateWalletsUnchanged": true
+    }
+  ],
+  "limitations": [
+    "API-only registered-provider execution; no rendered browser interaction is claimed.",
+    "Four saved level-five cannons, saved island wave/crew and acquired Engineer level eligibility are explicit fixtures, not naturally earned.",
+    "Actual outcomes and HP checkpoints came only from the unchanged production simulation over complete actual sealed journals; no clock, journal, HP, receipt or outcome tampering.",
+    "This bounded personal/Engineer case does not complete other acceptance rows or public rollout."
+  ],
+  "requestCount": 136,
+  "requestSummary": [
+    {
+      "actor": "personal-owner",
+      "path": "/api/games",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 1
+    },
+    {
+      "actor": "personal-engineer",
+      "path": "/api/games/join",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 1
+    },
+    {
+      "actor": "personal-offline",
+      "path": "/api/games/join",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 1
+    },
+    {
+      "actor": "personal-spectator",
+      "path": "/api/games/join",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 1
+    },
+    {
+      "actor": "personal-countdown",
+      "path": "/api/games/join",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 1
+    },
+    {
+      "actor": "personal-engineer",
+      "path": "/api/games",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 1
+    },
+    {
+      "actor": "personal-owner",
+      "path": "/api/island/session/attach",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 1
+    },
+    {
+      "actor": "personal-engineer",
+      "path": "/api/island/session/attach",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 3
+    },
+    {
+      "actor": "personal-offline",
+      "path": "/api/island/session/attach",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 1
+    },
+    {
+      "actor": "personal-spectator",
+      "path": "/api/island/session/attach",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 1
+    },
+    {
+      "actor": "personal-countdown",
+      "path": "/api/island/session/attach",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 1
+    },
+    {
+      "actor": "personal-engineer",
+      "path": "/api/captain",
+      "method": "GET",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 10
+    },
+    {
+      "actor": "personal-engineer",
+      "path": "/api/captain/role",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 1
+    },
+    {
+      "actor": "personal-engineer",
+      "path": "/api/island/visit/ISLE-FK234",
+      "method": "GET",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 2
+    },
+    {
+      "actor": "personal-engineer",
+      "path": "/api/island/build",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 3
+    },
+    {
+      "actor": "personal-engineer",
+      "path": "/api/captain/role",
+      "method": "POST",
+      "status": 409,
+      "errorCode": "engineer_bound",
+      "queryKeys": [],
+      "count": 1
+    },
+    {
+      "actor": "personal-engineer",
+      "path": "/api/captain/respec",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 1
+    },
+    {
+      "actor": "personal-engineer",
+      "path": "/api/island/role",
+      "method": "POST",
+      "status": 409,
+      "errorCode": "economy_context_required",
+      "queryKeys": [],
+      "count": 1
+    },
+    {
+      "actor": "personal-engineer",
+      "path": "/api/island/respec",
+      "method": "POST",
+      "status": 409,
+      "errorCode": "economy_context_required",
+      "queryKeys": [],
+      "count": 1
+    },
+    {
+      "actor": "personal-offline",
+      "path": "/api/island/session/leave",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 1
+    },
+    {
+      "actor": "personal-spectator",
+      "path": "/api/island/session/leave",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 1
+    },
+    {
+      "actor": "personal-owner",
+      "path": "/api/island/session/heartbeat",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 7
+    },
+    {
+      "actor": "personal-engineer",
+      "path": "/api/island/session/heartbeat",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 15
+    },
+    {
+      "actor": "personal-countdown",
+      "path": "/api/island/session/heartbeat",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 2
+    },
+    {
+      "actor": "personal-owner",
+      "path": "/api/island/session/settings",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 1
+    },
+    {
+      "actor": "personal-owner",
+      "path": "/api/waves/start",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 1
+    },
+    {
+      "actor": "personal-countdown",
+      "path": "/api/island/session/leave",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 1
+    },
+    {
+      "actor": "personal-spectator",
+      "path": "/api/waves/current",
+      "method": "GET",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [
+        "where",
+        "waveProtocol"
+      ],
+      "count": 2
+    },
+    {
+      "actor": "personal-offline",
+      "path": "/api/captain",
+      "method": "GET",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 2
+    },
+    {
+      "actor": "personal-spectator",
+      "path": "/api/captain",
+      "method": "GET",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 2
+    },
+    {
+      "actor": "personal-countdown",
+      "path": "/api/captain",
+      "method": "GET",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 2
+    },
+    {
+      "actor": "personal-engineer",
+      "path": "/api/captain/respec",
+      "method": "POST",
+      "status": 409,
+      "errorCode": "captain_assigned",
+      "queryKeys": [],
+      "count": 1
+    },
+    {
+      "actor": "personal-engineer",
+      "path": "/api/island/session/disconnect",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 1
+    },
+    {
+      "actor": "personal-engineer",
+      "path": "/api/island/session/leave",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 1
+    },
+    {
+      "actor": "personal-engineer",
+      "path": "/api/island",
+      "method": "GET",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 1
+    },
+    {
+      "actor": "personal-owner",
+      "path": "/api/waves/1d7053a2-4ca9-4870-a8f3-0f0e149b0def/events",
+      "method": "GET",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [
+        "islandOwner",
+        "runEpoch",
+        "sessionId",
+        "connectionGeneration",
+        "after"
+      ],
+      "count": 18
+    },
+    {
+      "actor": "personal-owner",
+      "path": "/api/waves/finish",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 3
+    },
+    {
+      "actor": "personal-owner",
+      "path": "/api/captain",
+      "method": "GET",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 1
+    },
+    {
+      "actor": "personal-owner",
+      "path": "/api/island/fresh-start",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 1
+    },
+    {
+      "actor": "personal-engineer",
+      "path": "/api/games/leave",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 1
+    },
+    {
+      "actor": "personal-engineer",
+      "path": "/api/waves/finish",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 5
+    },
+    {
+      "actor": "personal-engineer",
+      "path": "/api/island/session/settings",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 1
+    },
+    {
+      "actor": "personal-engineer",
+      "path": "/api/waves/start",
+      "method": "POST",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [],
+      "count": 1
+    },
+    {
+      "actor": "personal-engineer",
+      "path": "/api/waves/1ac7f71a-e131-49ab-9d12-ea634fcc94d1/events",
+      "method": "GET",
+      "status": 200,
+      "errorCode": null,
+      "queryKeys": [
+        "islandOwner",
+        "runEpoch",
+        "sessionId",
+        "connectionGeneration",
+        "after"
+      ],
+      "count": 31
+    }
+  ]
+}

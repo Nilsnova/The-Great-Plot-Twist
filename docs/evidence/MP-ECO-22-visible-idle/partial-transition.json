@@ -1,0 +1,381 @@
+{
+  "startedAt": "2026-11-19T18:55:20.200Z",
+  "baseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+  "scenarioSha256": "707b526450163808a9f5d102dc953db78b42925b1e12d00fb47d9280dbf50c85",
+  "sourceBefore": {
+    "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+    "actualCheckoutHead": "a4b5990f7944f8c1aa708bc2b9006115a5240a11",
+    "productionDiffFromBaseline": "empty",
+    "paths": [
+      "backend/server",
+      "backend/content",
+      "frontend/src",
+      "supabase/migrations",
+      "backend/uv.lock",
+      "backend/pyproject.toml",
+      "frontend/package-lock.json",
+      "frontend/package.json",
+      ":(exclude)backend/server/tests"
+    ]
+  },
+  "helpersBefore": {
+    "clients.mjs": "dfa176b33a56bc0f6c5a19a219d5c01ddb2c071fe66331d6d15cb181cf7ac6c0",
+    "observer.mjs": "40cb288da9f9a80e337fba5a39a12b1b23501ad1ff48a2a4614975492997f140",
+    "runtime.mjs": "d1387a35fd7243df58e8d9589586034b3a098489bb20e43bece9b6b45040865f",
+    "source.mjs": "56d138914dc5b4e15159162bb21db68c985b2c9083c2e5bac4b34a90502ea8d9",
+    "observe.py": "18707a8ed12d18c69a4c04de1a416089ccbe89619f5f6f6e9a270840df551839",
+    "config.py": "9c1ab2bc84f0e5da14748624064a8a68357a52a44d3d79473251302a46082b47"
+  },
+  "facts": [
+    {
+      "event": "ordinary-resume-adopts-admitted-shared-session-and-product-private-topic",
+      "at": "2026-11-19T18:58:40.830Z",
+      "layer": "real UI resume, actual accepted session metadata and passive WebSocket frames",
+      "legacyMode": "personal_legacy",
+      "sharedMode": "island_shared",
+      "canonicalPlace": "isle_redacted",
+      "acceptedCanonicalJoin": true,
+      "discovery": "Menu Return to title, then normal Continue/Join; no manual island.load or SDK topic"
+    },
+    {
+      "event": "visible-invited-member-crew-gunner",
+      "at": "2026-11-19T18:58:50.373Z",
+      "layer": "visible product and committed shared read",
+      "displayed": "Gunner\n0/2\n\nMans your strongest tower: it reloads 25% faster.\n\nHire \u00b7 \ud83e\ude99 40",
+      "charge": "40",
+      "available": "4960"
+    },
+    {
+      "event": "visible-invited-member-crew-guard",
+      "at": "2026-11-19T18:58:52.839Z",
+      "layer": "visible product and committed shared read",
+      "displayed": "\ud83d\udde1\ufe0f\nGuard\n0/3\n\nHire \u00b7 \ud83e\ude99 60",
+      "charge": "60",
+      "available": "4900"
+    },
+    {
+      "event": "crew-independent-ledger-conservation",
+      "at": "2026-11-19T18:58:56.894Z",
+      "layer": "read-only PostgreSQL",
+      "balance_coins": "4900",
+      "ledger": "4900"
+    }
+  ],
+  "setup": "One actual Chromium process with two isolated registered contexts; explicit fresh service admission5000 and saved unlock10. No simultaneous movement, natural earning, clock, HP or outcome claim.",
+  "boundaries": [
+    "Visible product mutations are distinguished from browser-authenticated fetch probes and read-only PostgreSQL observations.",
+    "Local actual-provider candidate only; no hosted application, full multiplayer matrix or combat acceptance claim."
+  ],
+  "servedBefore": [
+    {
+      "service": "api",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "2de87a1c7a95423f93e83f7f254bff624f8b9eba",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    },
+    {
+      "service": "frontend",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "2de87a1c7a95423f93e83f7f254bff624f8b9eba",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    }
+  ],
+  "visibleRequests": [
+    {
+      "path": "/api/island/hire",
+      "status": 200,
+      "body": {
+        "crew": "gunner",
+        "economy": {
+          "mode": "island_shared",
+          "version": 1,
+          "islandOwner": "fixture-identity-1",
+          "runEpoch": "fixture-identity-2"
+        },
+        "actionUid": "8kczicj9t1ripf6d",
+        "code": "ISLE-REDACTED"
+      },
+      "data": {
+        "status": "done",
+        "repeat": false,
+        "currentEconomy": {
+          "mode": "island_shared",
+          "version": 1,
+          "islandOwner": "fixture-identity-1",
+          "accountId": "fixture-identity-3",
+          "runEpoch": "fixture-identity-2",
+          "revision": "2",
+          "treasury": {
+            "balanceCoins": "4960",
+            "committedCoins": "0",
+            "availableCoins": "4960"
+          }
+        },
+        "currentCrew": {
+          "gunner": 1,
+          "carpenter": 0,
+          "lookout": 0,
+          "guard": 0
+        },
+        "currentWaveBest": 10,
+        "receipt": {
+          "receiptId": "fixture-identity-4",
+          "actionUid": "8kczicj9t1ripf6d",
+          "action": "hire",
+          "actorId": "fixture-identity-5",
+          "origin": {
+            "mode": "island_shared",
+            "version": 1,
+            "islandOwner": "fixture-identity-1",
+            "accountId": "fixture-identity-3",
+            "runEpoch": "fixture-identity-2"
+          },
+          "result": {
+            "crew": "gunner",
+            "previousCount": 0,
+            "count": 1,
+            "chargedCoins": "40",
+            "treasuryReceiptId": "fixture-identity-6"
+          }
+        }
+      }
+    },
+    {
+      "path": "/api/island/hire",
+      "status": 200,
+      "body": {
+        "crew": "guard",
+        "economy": {
+          "mode": "island_shared",
+          "version": 1,
+          "islandOwner": "fixture-identity-1",
+          "runEpoch": "fixture-identity-2"
+        },
+        "actionUid": "gbryk3ong9r2v4ma",
+        "code": "ISLE-REDACTED"
+      },
+      "data": {
+        "status": "done",
+        "repeat": false,
+        "currentEconomy": {
+          "mode": "island_shared",
+          "version": 1,
+          "islandOwner": "fixture-identity-1",
+          "accountId": "fixture-identity-3",
+          "runEpoch": "fixture-identity-2",
+          "revision": "3",
+          "treasury": {
+            "balanceCoins": "4900",
+            "committedCoins": "0",
+            "availableCoins": "4900"
+          }
+        },
+        "currentCrew": {
+          "gunner": 1,
+          "carpenter": 0,
+          "lookout": 0,
+          "guard": 1
+        },
+        "currentWaveBest": 10,
+        "receipt": {
+          "receiptId": "fixture-identity-7",
+          "actionUid": "gbryk3ong9r2v4ma",
+          "action": "hire",
+          "actorId": "fixture-identity-5",
+          "origin": {
+            "mode": "island_shared",
+            "version": 1,
+            "islandOwner": "fixture-identity-1",
+            "accountId": "fixture-identity-3",
+            "runEpoch": "fixture-identity-2"
+          },
+          "result": {
+            "crew": "guard",
+            "previousCount": 0,
+            "count": 1,
+            "chargedCoins": "60",
+            "treasuryReceiptId": "fixture-identity-8"
+          }
+        }
+      }
+    }
+  ],
+  "status": "partial",
+  "failure": {
+    "name": "TimeoutError",
+    "message": "locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: 'Arsenal', exact: true })\u001b[22m\n",
+    "stack": "locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: 'Arsenal', exact: true })\u001b[22m\n\n    at <scenario-checkout>/frontend/scripts/check-economy-transition-browser-provider.mjs:151:69"
+  },
+  "frames": [
+    {
+      "label": "member",
+      "direction": "sent",
+      "topic": "realtime:live:place:saltreach_harbor:1",
+      "kind": "phx_join",
+      "status": null,
+      "at": "2026-11-19T18:56:32.857Z"
+    },
+    {
+      "label": "member",
+      "direction": "received",
+      "topic": "realtime:live:place:saltreach_harbor:1",
+      "kind": "phx_reply",
+      "status": "ok",
+      "at": "2026-11-19T18:56:32.878Z"
+    },
+    {
+      "label": "member",
+      "direction": "sent",
+      "topic": "realtime:live:place:saltreach_harbor:1",
+      "kind": "phx_leave",
+      "status": null,
+      "at": "2026-11-19T18:56:54.946Z"
+    },
+    {
+      "label": "member",
+      "direction": "received",
+      "topic": "realtime:live:place:saltreach_harbor:1",
+      "kind": "phx_reply",
+      "status": "ok",
+      "at": "2026-11-19T18:56:55.299Z"
+    },
+    {
+      "label": "member",
+      "direction": "sent",
+      "topic": "realtime:live:place:isle_redacted:1",
+      "kind": "phx_join",
+      "status": null,
+      "at": "2026-11-19T18:56:56.064Z"
+    },
+    {
+      "label": "member",
+      "direction": "received",
+      "topic": "realtime:live:place:isle_redacted:1",
+      "kind": "phx_reply",
+      "status": "ok",
+      "at": "2026-11-19T18:56:56.086Z"
+    },
+    {
+      "label": "member",
+      "direction": "sent",
+      "topic": "realtime:live:place:isle_redacted:1",
+      "kind": "phx_leave",
+      "status": null,
+      "at": "2026-11-19T18:57:40.743Z"
+    },
+    {
+      "label": "member",
+      "direction": "received",
+      "topic": "realtime:live:place:isle_redacted:1",
+      "kind": "phx_reply",
+      "status": "ok",
+      "at": "2026-11-19T18:57:40.746Z"
+    },
+    {
+      "label": "member",
+      "direction": "sent",
+      "topic": "realtime:live:place:isle_redacted:1",
+      "kind": "phx_join",
+      "status": null,
+      "at": "2026-11-19T18:57:43.151Z"
+    },
+    {
+      "label": "member",
+      "direction": "received",
+      "topic": "realtime:live:place:isle_redacted:1",
+      "kind": "phx_reply",
+      "status": "ok",
+      "at": "2026-11-19T18:57:43.156Z"
+    }
+  ],
+  "servedAfter": [
+    {
+      "service": "api",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "2de87a1c7a95423f93e83f7f254bff624f8b9eba",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    },
+    {
+      "service": "frontend",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "2de87a1c7a95423f93e83f7f254bff624f8b9eba",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    }
+  ],
+  "helpersAfter": {
+    "clients.mjs": "dfa176b33a56bc0f6c5a19a219d5c01ddb2c071fe66331d6d15cb181cf7ac6c0",
+    "observer.mjs": "40cb288da9f9a80e337fba5a39a12b1b23501ad1ff48a2a4614975492997f140",
+    "runtime.mjs": "d1387a35fd7243df58e8d9589586034b3a098489bb20e43bece9b6b45040865f",
+    "source.mjs": "56d138914dc5b4e15159162bb21db68c985b2c9083c2e5bac4b34a90502ea8d9",
+    "observe.py": "18707a8ed12d18c69a4c04de1a416089ccbe89619f5f6f6e9a270840df551839",
+    "config.py": "9c1ab2bc84f0e5da14748624064a8a68357a52a44d3d79473251302a46082b47"
+  },
+  "sourceAfter": {
+    "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+    "actualCheckoutHead": "ae8a3bb5225ae62866eeed662171862b565749c9",
+    "productionDiffFromBaseline": "empty",
+    "paths": [
+      "backend/server",
+      "backend/content",
+      "frontend/src",
+      "supabase/migrations",
+      "backend/uv.lock",
+      "backend/pyproject.toml",
+      "frontend/package-lock.json",
+      "frontend/package.json",
+      ":(exclude)backend/server/tests"
+    ]
+  },
+  "finishedAt": "2026-11-19T18:59:35.645Z",
+  "invocationStatus": "failed",
+  "measuredDriverCommit": "a4b5990f7944f8c1aa708bc2b9006115a5240a11",
+  "limits": [
+    "Four completed observations only. No arsenal, departure or grace-restoration pass: execution stopped on nonexistent Menu Arsenal locator.",
+    "Automatic admission discovery uses ordinary Return to title and normal Continue/Join. Only the member-labeled product canonical join/reply is asserted.",
+    "Passive join/topic-success observation does not retain join/ref correlation; no manually selected SDK topic or island.load invocation occurs."
+  ]
+}

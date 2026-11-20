@@ -37,10 +37,10 @@ export function matchFigures({party = [], figures = [], mine = null, reach = FIG
   return matches;
 }
 
-export function hiddenFigures(matches, party = []) {
+export function hiddenFigures(matches, party = [], {canonical=false}={}) {
   const hidden = new Set();
   for (const hero of Array.isArray(party) ? party : []) {
-    if (hero?.present && hero.down && matches?.has(hero.id)) hidden.add(matches.get(hero.id).id);
+    if (hero?.present && (canonical || hero.down) && matches?.has(hero.id)) hidden.add(matches.get(hero.id).id);
   }
   return hidden;
 }

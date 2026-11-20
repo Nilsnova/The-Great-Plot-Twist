@@ -1,0 +1,376 @@
+{
+  "startedAt": "2026-11-19T18:43:18.149Z",
+  "candidateFrontend": "74be485507fbdbf1eb662f96f11a40c5e902e507",
+  "backendBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+  "scenarioSha256": "16a94710047a6fe67bf6233f9e9f126f1d1fe8278656993ffa47db9e43a38c47",
+  "sourceBefore": {
+    "expectedProductionBaseline": "74be485507fbdbf1eb662f96f11a40c5e902e507",
+    "actualCheckoutHead": "74be485507fbdbf1eb662f96f11a40c5e902e507",
+    "productionDiffFromBaseline": "empty",
+    "paths": [
+      "backend/server",
+      "backend/content",
+      "frontend/src",
+      "supabase/migrations",
+      "backend/uv.lock",
+      "backend/pyproject.toml",
+      "frontend/package-lock.json",
+      "frontend/package.json",
+      ":(exclude)backend/server/tests"
+    ]
+  },
+  "helpersBefore": {
+    "api-clients.mjs": "a9369da75350b882ac6a312c20903965a362409978e86e108c256f9cc450a9f7",
+    "clients.mjs": "dfa176b33a56bc0f6c5a19a219d5c01ddb2c071fe66331d6d15cb181cf7ac6c0",
+    "observer.mjs": "40cb288da9f9a80e337fba5a39a12b1b23501ad1ff48a2a4614975492997f140",
+    "runtime.mjs": "d1387a35fd7243df58e8d9589586034b3a098489bb20e43bece9b6b45040865f",
+    "source.mjs": "56d138914dc5b4e15159162bb21db68c985b2c9083c2e5bac4b34a90502ea8d9"
+  },
+  "cases": [
+    {
+      "visiting": false,
+      "actorId": "e4cbd951-fe08-4ce2-b648-f755e1e352cb",
+      "islandOwner": "e4cbd951-fe08-4ce2-b648-f755e1e352cb",
+      "code": "ISLE-WC8E6",
+      "verifierStatuses": [
+        401,
+        401,
+        200
+      ],
+      "renderedSelection": {
+        "code": "ISLE-WC8E6",
+        "visiting": false
+      },
+      "before": {
+        "balance": "5000",
+        "held": "0",
+        "transactions": 1,
+        "ledger_balance": "5000"
+      },
+      "role": {
+        "path": "/api/captain/role",
+        "status": 200,
+        "body": {
+          "progressionVersion": 1,
+          "expectedRevision": "0",
+          "actionUid": "5s1ufmtp8adj9mbr",
+          "role": "engineer"
+        },
+        "data": {
+          "captain": {
+            "role": "engineer",
+            "level": 5,
+            "revision": "1",
+            "canRespec": true,
+            "assignmentWaveId": null,
+            "personalBestWave": 20,
+            "roleLockedReason": null,
+            "engineerCommitment": null,
+            "progressionVersion": 1,
+            "respecBlockedReason": null
+          },
+          "skills": {
+            "role": "engineer",
+            "known": [],
+            "spent": 0,
+            "earned": 10,
+            "points": 10
+          }
+        }
+      },
+      "displayed": "Build \u00b7 \ud83e\ude99 9",
+      "build": {
+        "path": "/api/island/build",
+        "status": 200,
+        "body": {
+          "spot": "wall_1",
+          "kind": "wall",
+          "instanceId": null,
+          "expectedLevel": 0,
+          "quotedCoins": "9",
+          "economy": {
+            "mode": "island_shared",
+            "version": 1,
+            "islandOwner": "e4cbd951-fe08-4ce2-b648-f755e1e352cb",
+            "runEpoch": "70f2cb05-24b6-468d-b74c-f80cdb51c6d7"
+          },
+          "actionUid": "2t1kjlds1va9io5q"
+        },
+        "data": {
+          "status": "done",
+          "repeat": false,
+          "currentEconomy": {
+            "mode": "island_shared",
+            "version": 1,
+            "islandOwner": "e4cbd951-fe08-4ce2-b648-f755e1e352cb",
+            "accountId": "817253a5-a215-4021-95f3-f1dfc67ff20e",
+            "runEpoch": "70f2cb05-24b6-468d-b74c-f80cdb51c6d7",
+            "revision": "2",
+            "treasury": {
+              "balanceCoins": "4991",
+              "committedCoins": "0",
+              "availableCoins": "4991"
+            }
+          },
+          "receipt": {
+            "receiptId": "d2898e87-d7b9-4a9e-a28b-babe8d9794d5",
+            "actionUid": "2t1kjlds1va9io5q",
+            "action": "build",
+            "actorId": "e4cbd951-fe08-4ce2-b648-f755e1e352cb",
+            "origin": {
+              "mode": "island_shared",
+              "version": 1,
+              "islandOwner": "e4cbd951-fe08-4ce2-b648-f755e1e352cb",
+              "accountId": "817253a5-a215-4021-95f3-f1dfc67ff20e",
+              "runEpoch": "70f2cb05-24b6-468d-b74c-f80cdb51c6d7"
+            },
+            "result": {
+              "spot": "wall_1",
+              "kind": "wall",
+              "level": 1,
+              "instanceId": "e130a06c-786d-440f-b952-9d37c038ddfc",
+              "chargedCoins": "9",
+              "refundedCoins": "0",
+              "engineerCommitmentId": "1d03cfec-0dcd-43c0-a297-0f9e99a96b8a",
+              "treasuryReceiptId": "926aa275-c333-43b1-a1d2-4af248b3e266"
+            }
+          }
+        }
+      },
+      "after": {
+        "balance": "4991",
+        "held": "0",
+        "transactions": 2,
+        "ledger_balance": "4991"
+      },
+      "exactReceiptCount": 1,
+      "buildRequests": 1,
+      "result": "passed"
+    },
+    {
+      "visiting": true,
+      "actorId": "e4671fc6-20c2-4688-b1ff-9590de98f435",
+      "islandOwner": "e3e30ea6-d1dc-403d-8b31-12f9efb32b68",
+      "code": "ISLE-MWJ7T",
+      "verifierStatuses": [
+        401,
+        200
+      ],
+      "renderedSelection": {
+        "code": "MWJ7T",
+        "visiting": true
+      },
+      "before": {
+        "balance": "5000",
+        "held": "0",
+        "transactions": 1,
+        "ledger_balance": "5000"
+      },
+      "role": {
+        "path": "/api/captain/role",
+        "status": 200,
+        "body": {
+          "progressionVersion": 1,
+          "expectedRevision": "0",
+          "actionUid": "y6p6418bptyrasko",
+          "role": "engineer"
+        },
+        "data": {
+          "captain": {
+            "role": "engineer",
+            "level": 5,
+            "revision": "1",
+            "canRespec": true,
+            "assignmentWaveId": null,
+            "personalBestWave": 20,
+            "roleLockedReason": null,
+            "engineerCommitment": null,
+            "progressionVersion": 1,
+            "respecBlockedReason": null
+          },
+          "skills": {
+            "role": "engineer",
+            "known": [],
+            "spent": 0,
+            "earned": 10,
+            "points": 10
+          }
+        }
+      },
+      "displayed": "Build \u00b7 \ud83e\ude99 9",
+      "build": {
+        "path": "/api/island/build",
+        "status": 200,
+        "body": {
+          "spot": "wall_1",
+          "kind": "wall",
+          "instanceId": null,
+          "expectedLevel": 0,
+          "quotedCoins": "9",
+          "economy": {
+            "mode": "island_shared",
+            "version": 1,
+            "islandOwner": "e3e30ea6-d1dc-403d-8b31-12f9efb32b68",
+            "runEpoch": "d5da6983-c976-4803-bf2e-954f4d7a38f5"
+          },
+          "actionUid": "8e39bgshwksou3fk",
+          "code": "ISLE-MWJ7T"
+        },
+        "data": {
+          "status": "done",
+          "repeat": false,
+          "currentEconomy": {
+            "mode": "island_shared",
+            "version": 1,
+            "islandOwner": "e3e30ea6-d1dc-403d-8b31-12f9efb32b68",
+            "accountId": "3f2a1463-2bf1-41a5-bc6d-10da72f60d72",
+            "runEpoch": "d5da6983-c976-4803-bf2e-954f4d7a38f5",
+            "revision": "2",
+            "treasury": {
+              "balanceCoins": "4991",
+              "committedCoins": "0",
+              "availableCoins": "4991"
+            }
+          },
+          "receipt": {
+            "receiptId": "45d15dcd-90ac-49b4-b3bd-e94e6eca7a03",
+            "actionUid": "8e39bgshwksou3fk",
+            "action": "build",
+            "actorId": "e4671fc6-20c2-4688-b1ff-9590de98f435",
+            "origin": {
+              "mode": "island_shared",
+              "version": 1,
+              "islandOwner": "e3e30ea6-d1dc-403d-8b31-12f9efb32b68",
+              "accountId": "3f2a1463-2bf1-41a5-bc6d-10da72f60d72",
+              "runEpoch": "d5da6983-c976-4803-bf2e-954f4d7a38f5"
+            },
+            "result": {
+              "spot": "wall_1",
+              "kind": "wall",
+              "level": 1,
+              "instanceId": "31fc09b6-1932-4453-a83d-3a06ecc3f9fe",
+              "chargedCoins": "9",
+              "refundedCoins": "0",
+              "engineerCommitmentId": "eb609c86-96a6-4bbc-8f0f-c659e5f44862",
+              "treasuryReceiptId": "622e9be2-992a-490f-85fd-120c42309ee0"
+            }
+          }
+        }
+      },
+      "after": {
+        "balance": "4991",
+        "held": "0",
+        "transactions": 2,
+        "ledger_balance": "4991"
+      },
+      "exactReceiptCount": 1,
+      "buildRequests": 1,
+      "result": "passed"
+    }
+  ],
+  "setup": "Real local GoTrue registrations and production JWT verification. Fresh5000coin service admission and saved personal level5/earned10 eligibility are explicit fixtures, not naturally earned progress. Other island owner uses API only. One Chromium process, sequential isolated contexts.",
+  "boundaries": [
+    "Actual SDK session restore through a same-origin proxy to the same TLS-authenticated provider; no fake bearer or response.",
+    "Visible Engineer role and Build mutations are physical pointer clicks; opening Captain/build cards uses the existing product selection methods.",
+    "No explicit island refresh, reload, travel or setup mutation occurs between visible role selection and the first Build click.",
+    "Candidate frontend74 is source-pinned separately from unchanged dependency-equivalent backend64; this is a bounded first-buy acceptance case."
+  ],
+  "primarySourcesBefore": [
+    {
+      "service": "api",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "2de87a1c7a95423f93e83f7f254bff624f8b9eba",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    },
+    {
+      "service": "frontend",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "2de87a1c7a95423f93e83f7f254bff624f8b9eba",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    }
+  ],
+  "backendProductionDiff": "empty",
+  "result": "passed",
+  "sourceAfter": {
+    "expectedProductionBaseline": "74be485507fbdbf1eb662f96f11a40c5e902e507",
+    "actualCheckoutHead": "74be485507fbdbf1eb662f96f11a40c5e902e507",
+    "productionDiffFromBaseline": "empty",
+    "paths": [
+      "backend/server",
+      "backend/content",
+      "frontend/src",
+      "supabase/migrations",
+      "backend/uv.lock",
+      "backend/pyproject.toml",
+      "frontend/package-lock.json",
+      "frontend/package.json",
+      ":(exclude)backend/server/tests"
+    ]
+  },
+  "primarySourcesAfter": [
+    {
+      "service": "api",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "2de87a1c7a95423f93e83f7f254bff624f8b9eba",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    },
+    {
+      "service": "frontend",
+      "expectedProductionBaseline": "64ee02b360d68836b2de9247121ab47dc6a3ecbf",
+      "actualCheckoutHead": "2de87a1c7a95423f93e83f7f254bff624f8b9eba",
+      "productionDiffFromBaseline": "empty",
+      "paths": [
+        "backend/server",
+        "backend/content",
+        "frontend/src",
+        "supabase/migrations",
+        "backend/uv.lock",
+        "backend/pyproject.toml",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        ":(exclude)backend/server/tests"
+      ]
+    }
+  ],
+  "helpersAfter": {
+    "api-clients.mjs": "a9369da75350b882ac6a312c20903965a362409978e86e108c256f9cc450a9f7",
+    "clients.mjs": "dfa176b33a56bc0f6c5a19a219d5c01ddb2c071fe66331d6d15cb181cf7ac6c0",
+    "observer.mjs": "40cb288da9f9a80e337fba5a39a12b1b23501ad1ff48a2a4614975492997f140",
+    "runtime.mjs": "d1387a35fd7243df58e8d9589586034b3a098489bb20e43bece9b6b45040865f",
+    "source.mjs": "56d138914dc5b4e15159162bb21db68c985b2c9083c2e5bac4b34a90502ea8d9"
+  },
+  "finishedAt": "2026-11-19T18:44:16.371Z"
+}

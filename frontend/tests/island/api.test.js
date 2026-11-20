@@ -21,7 +21,26 @@ const expectRefusal = (answer, status, code) => {
 };
 
 describe('island api: accepted answers', () => {
-  it('reads the island with its 22 spots in the server order and 100 starting coins', async () => {
+  it('advertises shared capability on island discovery before an epoch is known', async () => {
+    const base = createFakeIslandTransport(), calls = [];
+    const api = createIslandApi({negotiateEconomy:true,transport: {
+      async get(path, options) {
+        calls.push({path, options});
+        if (options?.headers?.['X-Island-Economy-Version'] !== '1') {
+          return {ok: false, status: 409, code: 'economy_context_required', message: 'Reload this island.'};
+        }
+        const answer=await base.get(path);
+        return answer.ok?{...answer,data:{...answer.data,economy:{mode:'personal_legacy',version:0,
+          islandOwner:'11111111-1111-4111-8111-111111111111',accountId:null,runEpoch:null,revision:null,treasury:null}}}:answer;
+      },
+      post: (path, body) => base.post(path, body),
+    }});
+    expect((await api.getIsland()).ok).toBe(true);
+    expect((await api.visit(FAKE_FRIEND_CODE)).ok).toBe(true);
+    expect(calls.map(call => call.path)).toEqual(['/api/island', `/api/island/visit/ISLE-${FAKE_FRIEND_CODE}`]);
+    expect(calls.every(call => Object.keys(call.options).length === 1)).toBe(true);
+  });
+  it('reads the island with its 26 spots in the server order and 100 starting coins', async () => {
     const {api} = setup();
     const answer = await api.getIsland();
     expect(answer.ok).toBe(true);
@@ -29,8 +48,8 @@ describe('island api: accepted answers', () => {
     expect(answer.data.coins).toBe(100);
     expect(answer.data.spots.map(spot => spot.id)).toEqual(['wall_1', 'wall_2', 'wall_3', 'wall_4', 'wall_5', 'wall_6',
       'cannon_1', 'cannon_2', 'cannon_3', 'cannon_4', 'cannon_5', 'cannon_6', 'cannon_7', 'tower_1', 'house_1', 'house_2',
-      'wall_7', 'wall_8', 'wall_9', 'wall_10', 'wall_11', 'wall_12']);
-    expect(answer.data.spots.find(spot => spot.id === 'cannon_1')).toEqual({id: 'cannon_1', kind: 'cannon', kinds: ['cannon', 'mortar', 'harpoon', 'swivel'], built: false, level: 0, cost: 30,
+      'wall_7', 'wall_8', 'wall_9', 'wall_10', 'wall_11', 'wall_12', 'cannon_8', 'cannon_9', 'cannon_10', 'cannon_11']);
+    expect(answer.data.spots.find(spot => spot.id === 'cannon_1')).toEqual({id: 'cannon_1', kind: 'cannon', kinds: ['cannon', 'mortar', 'harpoon', 'swivel', 'culverin'], built: false, level: 0, cost: 30,
       upgradeCost: null, spec: null, tree: null});
     expect(answer.data.prices).toMatchObject({kinds: {wall: [10, 20, 40, 80, 160], mortar: [60, 120, 240, 480, 960]}, crew: {gunner: {price: 40, max: 2}}, captain: [0, 20, 40, 80, 160]});
     expect(answer.data.crew).toEqual({gunner: 0, carpenter: 0, lookout: 0, guard: 0});
@@ -199,7 +218,8 @@ describe('island api: one click id per build and per bell', () => {
   });
   it('the function-level fake has the same names', () => {
     const api = createFakeIslandApi();
-    expect(Object.keys(api).sort()).toEqual(['boatReward', 'boatStatus', 'build', 'createGame', 'currentWave', 'demolish', 'demolishQuote', 'dev', 'finishWave', 'freshStart', 'games', 'getIsland',
+    expect(Object.keys(api).sort()).toEqual(['boatReward', 'boatStatus', 'build', 'createGame', 'currentWave', 'demolish', 'demolishQuote', 'dev', 'finishWave', 'freshStart', 'games', 'getCaptain', 'getIsland',
+
       'heldActionUid', 'hire', 'joinGame', 'joinInvite', 'joinWave', 'leaderboard', 'learnSkill', 'leaveGame', 'lobby', 'move', 'pickRole', 'piratePoint', 'pointBuild', 'pointUpgrade',
       'repairStructure', 'repairWall', 'repairWreck', 'research', 'respec', 'reviveCaptain', 'specialise', 'startWave', 'structureRecovery', 'towerTree', 'upgrade', 'upgradeCaptain', 'visit', 'walls']);
   });

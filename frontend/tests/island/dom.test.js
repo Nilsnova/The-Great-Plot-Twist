@@ -14,7 +14,7 @@ it('builds from the card: cannon or mortar, upgrade, max level, short of coins, 
     const transport = createFakeIslandTransport();
     const coins = [], captain = [], menu = [];
     const island = createIsland({container: document.body, emit, on, mode: 'fake', transport, storage: null,
-      onCoins: value => coins.push(value), onCaptain: level => captain.push(level), menu: provider => { menu.push(provider); return () => {}; }});
+      onCoins: (amount, context) => coins.push({amount, context}), onCaptain: level => captain.push(level), menu: provider => { menu.push(provider); return () => {}; }});
     await island.load();
     const card = () => document.querySelector('.island-card[open]');
     const body = () => card()?.querySelector('.island-card-body');
@@ -84,18 +84,26 @@ it('builds from the card: cannon or mortar, upgrade, max level, short of coins, 
     return {fresh, built, lockedUpgrade, upgrade, upgraded, choice, mortar, max, short, shortUpgrade, bell, banner, closedAfterRing, invite, label, room, seen, captain, entries};
   });
   // GAME-V3.md §4: the locked mortar stays on the card, off, "Opens after wave 2."
-  expect(result.fresh).toMatchObject({title: 'Tower spot', choices: ['cannon:false', 'mortar:true', 'harpoon:true', 'swivel:true'], soon: '', button: ''});
-  // The HUD hears the island's balance: 100 from GET /api/island, then 70 after the cannon.
-  expect(result.built).toEqual({closed: true, toast: 'Cannon built · 🪙 70', coins: 70, reported: [100, 70]});
+  expect(result.fresh).toMatchObject({title: 'Tower spot', choices: ['cannon:false', 'mortar:true', 'harpoon:true', 'swivel:true', 'culverin:true'], soon: '', button: ''});
+  // World/source refreshes may reassert funding. Every emission must retain the explicit legacy
+  // context; only adjacent identical amount/context pairs can collapse, preserving rollback detection.
+  const {reported, ...built} = result.built;
+  expect(built).toEqual({closed: true, toast: 'Cannon built · 🪙 70', coins: 70});
+  for (const row of reported) {
+    expect(Number.isSafeInteger(row.amount) && row.amount >= 0).toBe(true);
+    expect(row.context).toEqual({legacyIsland: true});
+  }
+  expect(reported.filter((row, index) => index === 0 || row.amount !== reported[index - 1].amount
+    || JSON.stringify(row.context) !== JSON.stringify(reported[index - 1].context)).map(row => row.amount)).toEqual([100, 70]);
   // D055: a tower's card is its upgrade tree; the trunk (its level) upgrades in the one detail panel.
   expect(result.lockedUpgrade).toMatchObject({title: 'Cannon', pips: 'Level 1 of 5', treeButton: 'Upgrade · 🪙 60', treeDisabled: true, treeReason: 'Opens after wave 2.', hire: true});
   expect(result.upgrade).toMatchObject({title: 'Cannon', treeName: 'Level 2', treeLine: 'Damage 10 → 16 · Range 28 → 31', treeButton: 'Upgrade · 🪙 60', treeDisabled: false, treeReason: ''});
   expect(result.upgraded).toMatchObject({pips: 'Level 2 of 5', toast: 'Cannon level 2 · 🪙 140', treeReason: 'Opens after wave 5.'});
-  expect(result.choice).toMatchObject({title: 'Tower spot', choices: ['cannon:false', 'mortar:false', 'harpoon:true', 'swivel:true'], soon: ''});
+  expect(result.choice).toMatchObject({title: 'Tower spot', choices: ['cannon:false', 'mortar:false', 'harpoon:true', 'swivel:true', 'culverin:true'], soon: ''});
   expect(result.mortar).toMatchObject({kind: 'mortar', level: 1, built: true});
   // Level 3 after wave 5; level 4 opens after wave 12 (the tower tiers, GAME-V3.md §4.1).
   expect(result.max).toMatchObject({pips: 'Level 3 of 5', treeDisabled: true, treeReason: 'Opens after wave 12.'});
-  expect(result.short).toMatchObject({choices: ['cannon:true', 'mortar:true', 'harpoon:true', 'swivel:true']});
+  expect(result.short).toMatchObject({choices: ['cannon:true', 'mortar:true', 'harpoon:true', 'swivel:true', 'culverin:true']});
   expect(result.shortUpgrade).toMatchObject({title: 'Mortar', treeName: 'Level 2', treeButton: 'Upgrade · 🪙 120', treeDisabled: true, treeReason: 'Need 🪙 110 more.'});
   expect(result.bell).toMatchObject({title: 'Harbor bell', button: 'Ring the bell', disabled: false});
   // The countdown runs on the wall clock: right after the ring it shows 10 s, or less on a busy machine.
@@ -193,26 +201,38 @@ it('Pirate Point: the same build and upgrade card, paid by you, belongs to Pirat
   expect(result.spot).toMatchObject({kind: 'mortar', level: 1, built: true});
 });
 
-it('a server refusal shows its plain message on the card', async () => {
-  const message = await evaluate(async () => {
+it.each([true, false])('a declared legacy refusal stays readable, while an unmarked live read refuses mutation (declared=%s)', async declared => {
+  const result = await evaluate(async declared => {
     const {createIsland} = await window.g20Import('/src/island/index.js');
     const {on, emit} = await window.g20Import('/src/core/events.js');
-    const island = {current: null};
+    const actor = '11111111-1111-4111-8111-111111111111', posts = [], funding = [], reads = [];
     const transport = {
-      get: async () => ({ok: true, status: 200, data: {code: 'ISLE-K7Q2M', coins: 100, waveBest: 0, flags: 0,
-        spots: [{id: 'wall_1', kind: 'wall', built: false, cost: 10}]}}),
-      post: async () => ({ok: false, status: 409, data: {error: {code: 'spot_taken', message: 'Wall already stands on this spot.'}}}),
+      get: async (path, options) => {
+        reads.push({path, options});
+        if (path !== '/api/island') return {ok: false, status: path === '/api/captain' ? 404 : 409};
+        return {ok: true, status: 200, data: {code: 'ISLE-K7Q2M', coins: 100, waveBest: 0, flags: 0,
+          spots: [{id: 'wall_1', kind: 'wall', built: false, cost: 10}],
+          ...(declared ? {economy: {mode: 'personal_legacy', version: 0, islandOwner: actor,
+            accountId: null, runEpoch: null, revision: null, treasury: null}} : {})}};
+      },
+      post: async (path, body) => {posts.push({path, body});return {ok: false, status: 409,
+        data: {error: {code: 'spot_taken', message: 'Wall already stands on this spot.'}}};},
     };
-    island.current = createIsland({container: document.body, emit, on, mode: 'live', transport, storage: null});
-    await island.current.load();
-    island.current.pick('wall_1');
-    document.querySelector('.island-card[open] .island-card-body .kit-button').click();
+    const island = createIsland({container: document.body, emit, on, mode: 'live', transport, storage: null,
+      getActorId: () => actor, onCoins: value => funding.push(value)});
+    await island.load();island.pick('wall_1');
+    document.querySelector('.island-card[open] .island-card-body .kit-button')?.click();
     await new Promise(resolve => setTimeout(resolve, 30));
-    const text = document.querySelector('.island-card[open] .island-message').textContent;
-    island.current.dispose();
-    return text;
-  });
-  expect(message).toBe('Wall already stands on this spot.');
+    const message = document.querySelector('.island-card[open] .island-message')?.textContent ?? null;
+    const result = {message, posts, funding, reads, own: island.island};island.dispose();return result;
+  }, declared);
+  expect(result.reads.find(row => row.path === '/api/island').options.headers['X-Island-Economy-Version']).toBe('1');
+  if (declared) {
+    expect(result.message).toBe('Wall already stands on this spot.');
+    expect(result.posts).toEqual([{path: '/api/island/build', body: expect.objectContaining({spot: 'wall_1', kind: 'wall'})}]);
+  } else {
+    expect(result.posts).toEqual([]);expect(result.own).toBeNull();expect(result.funding.at(-1)).toBeNull();
+  }
 });
 
 it("visits a friend's island by code: their buildings, building there with your own coins, the friend's room", async () => {

@@ -178,6 +178,12 @@ export function createOnlinePresence(ctx, {loadRealtime = () => import('../realt
   }
   function reportPosition(sample) {
     if (stopping || !current(generation)) { pendingPosition = null; return ctx.refuse('feature_off'); }
+    if(sample && typeof sample==='object' && !Array.isArray(sample) && sample.place===null && Object.keys(sample).length===1){
+      positionSequence++;pendingPosition=null;place=null;shown=[];positions.clear();hiddenCount=0;localEmote=null;
+      const active=record;
+      if(active && active.localPlace!==null){active.localPlace=null;active.live.setPlace(null);}
+      publish();return ctx.accept('Position cleared.');
+    }
     if (!sample || !isPlaceId(sample.place) || !Number.isFinite(sample.x) || !Number.isFinite(sample.y)
       || Math.abs(sample.x) > MAX_COORD || Math.abs(sample.y) > MAX_COORD
       || !['front', 'back', 'left', 'right'].includes(sample.facing) || typeof sample.moving !== 'boolean') {

@@ -1,0 +1,140 @@
+# MP-ECO-20: shared capability transport integration
+
+> **What this is:** the HTTP negotiation and browser transport seam for the shared economy runtime.
+>
+> **Who uses it:** versioned island feature routes, browser adapters and integration tests.
+
+- **Responsible teammate:** Ianno Hollensteiner (`Iannomh123456`). Coding assistance: Codex.
+- **Issue:** [#505](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/505).
+- **Branch:** `feat/shared-economy-runtime-wiring`.
+
+## Bounded change
+
+Add the exact `X-Island-Economy-Version: 1` compatibility check as a small HTTP
+helper. It grants no membership, chooses no account and performs no mutation;
+callers still use the existing persisted context/permission APIs. Legacy handlers
+invoke it only after identifying a shared target, preserving legacy compatibility.
+
+Extend the existing browser transport with optional request headers for this
+capability. Only this named header is allowed; callers cannot override bearer
+authorization, content type, URL or credentials. Existing call signatures retain
+their behavior. Token renewal keeps the capability header and identical body.
+
+The existing deferred panel service forwards these optional request options to
+the authenticated transport. Its readiness and session checks still run before
+every call, and its existing public reads keep the anonymous client.
+The island's live and recovery wrappers forward the same optional arguments
+without choosing an economy mode or retaining a transport from an old session.
+Initial own-island and code-based visit reads advertise capability before an
+epoch is known. The header does not choose the persisted accounting mode; these
+discovery reads still use the canonical server projection and existing parsers.
+
+Private feature adapters also receive the authenticated actor ID from the
+accepted `/api/me` response through the panel service. The existing scope-based
+identity and lifetime checks remain unchanged. A missing profile, signed-out
+session, disposed provider or invalid ID returns no actor; identifiers remain
+outside the public game view and tokens are never decoded for identity.
+
+The runtime feature adapters consume this transport while canonical context
+comes from the established island projection. No competing treasury or global
+client context store is introduced. Common island/game wiring follows the actual
+integration contracts as their implementations become available.
+
+## Tests and completion
+
+Write focused header negotiation and transport tests before implementation.
+Verify missing/unsupported capability errors, unchanged authorized bearer token,
+all supported methods, immutable header options, renewal and header injection
+rejection. Run affected pytest, Ruff and Vitest checks. These checks do not prove
+authenticated game acceptance; the latter requires the real local provider,
+database and completed domain integration.
+
+No deployment, live migration, admission or production feature activation occurs.
+
+## Runtime route registration
+
+Register the shared Harbor and durable settlement routers in the production app
+factory. Their routes, authorization and queue contracts remain owned by
+[the Harbor runtime spec](MP-ECO-14-harbor-runtime.md). The protected route tests
+must use ordinary `create_app()` registration rather than installing routers
+only inside a test fixture. Missing login/capability and unauthorized scheduler
+calls must still refuse before any domain mutation.
+
+## Boat screen wiring
+
+The existing island owner connects the boat runtime's guarded status, durable
+round session and scene wrapper. Live sailing chooses only the explicit server
+`rewardScope`; missing status or shared context does not select personal rewards.
+Fake mode retains its existing fixture protocol. Shared round context is read
+from the viewed island's canonical `economy` projection, and actor identity comes
+from the private panel service. There is no second economy store. Verified
+shared completions request a fresh canonical island read instead of copying a
+receipt balance into the personal coin display. Late status/scene work is fenced
+by the viewed island and launch generation. The existing wave-start interruption
+still closes the scene while retaining an already submitted claim.
+
+The ship card presents the server's island-wide cumulative cap and remaining
+improvement, while explicit legacy status retains its original payment wording.
+Component tests cover this connection separately from actual-provider game
+acceptance, which still requires the canonical context producer.
+
+Capture the verified reward scope with the launching intent before loading the
+scene module; later status refreshes may clear their display snapshot but cannot
+select a different payment path. A live screen without verified status displays
+neutral unavailable rewards and disables sailing until status arrives.
+
+Pending server-bound round creation remains an owned overlay after the ship card
+closes. It blocks captain input, and Escape invalidates the pending launch so a
+late start reply cannot mount a scene after cancellation.
+
+## Arsenal and repair delegation
+
+Pass the same viewed-island context and authenticated actor callbacks to arsenal
+API/controller and the shared repair adapter. A supplied unknown context cannot
+select personal mutation routes; an explicit `personal_legacy`, version 0 context
+retains legacy behavior. Older callers that omit context callbacks keep their
+existing explicitly legacy factory protocol. Fake mode uses that fixture path.
+
+The island API delegates shared repair intents after translating the learned
+server spot alias. Normalize only fresh structure projections on return; the
+common receipt and its original server spot remain immutable. Initial structure
+reads advertise capability. Shared repair success does not project a receipt
+balance into private coins; stale refusals trigger a fresh validated read.
+
+Verified newer shared envelopes request a canonical own/visited-island reread
+using the existing ordered read guards. They do not create a second economy
+store or recursively reread the arsenal from its own read callback.
+Initial loads and these rereads capture the authenticated actor. Visited-island
+rereads also capture their requested code. An answer after an actor or visit
+change is ignored.
+
+The island Harbor opens the shared wager host for a verified shared context and
+the existing personal stalls for explicit legacy context or fake mode. Unknown
+live context cannot choose a personal stall. Other existing explicitly personal
+world stalls keep their established entry. The shared host participates in game
+input/overlay gates, Escape, screen changes and disposal; pending imports are
+owned overlays too. Its context callbacks expose the viewed projection and a
+guarded canonical reread, never a second account store.
+
+Review correctly spelled new shared-economy vocabulary through the existing
+player-copy linter; keep its spelling and other editable-copy gates enabled.
+
+## Integrated core compatibility
+
+Combine the quoted core HTTP adapters with the existing domain capability helper;
+neither import may remove the other's public functions. Every shared HTTP mutation
+requires the same version-one capability header before operation lookup or mutation.
+Missing and unsupported versions retain the common distinct refusal codes.
+
+Negotiated version-one discovery of a genuinely legacy island adds an explicit
+read-only context marker: `mode: personal_legacy`, `version: 0`, server-selected
+`islandOwner`, and null `accountId`, `runEpoch`, `revision` and `treasury`. Older
+discovery requests retain their original serializer. The marker conveys no new
+permission and cannot be selected by a browser body. Missing, malformed or stale
+live context never authorizes a personal-wallet fallback.
+
+Validated core island and wave handlers check the durable lifecycle status
+after login, feature checks, body validation and their request budget, before domain access. A cached login
+cannot recreate access after deletion. The database must independently refuse
+deleted or missing actors in canonical mutation transactions. Generic login
+caching and repeatable account deletion keep their existing contracts.

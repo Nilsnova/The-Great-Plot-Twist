@@ -20,6 +20,8 @@ MIGRATIONS = ROOT / "supabase" / "migrations"
 ROLES = MIGRATIONS / "20261112090000_house_roles.sql"
 TECH_HUB = MIGRATIONS / "20261112060000_tech_hub.sql"
 REVIVE = MIGRATIONS / "20261112050000_captain_revive.sql"
+RECOVERY_MUTATIONS = MIGRATIONS / "20261117050000_structure_recovery_mutations.sql"
+PROGRESSION_GUARDS = MIGRATIONS / "20261118050501_island_progression_legacy_guards.sql"
 
 ROLE_PAIRS = "       ('house', 'barracks'), ('house', 'tavern'), ('house', 'workshop')\n"
 TAVERN = """  -- A Tavern on the island (a house of level 2 or more with the role tavern,
@@ -106,22 +108,42 @@ def test_the_latest_wave_revive_keeps_the_tavern_rule():
         for path in sorted(MIGRATIONS.glob("*.sql"))
         if re.search(r"create or replace function public\.wave_revive\(", path.read_text())
     ]
-    latest = definitions[-1]
-    assert latest.name == "20261118051000_paid_revive_journal.sql"
-    text = latest.read_text()
+    journal = MIGRATIONS / "20261118051000_paid_revive_journal.sql"
+    mode_guard = MIGRATIONS / "20261118192007_legacy_revival_shared_mode_guard.sql"
+    fences = MIGRATIONS / "20261118225937_shared_legacy_wave_fences.sql"
+    assert definitions == [REVIVE, ROLES, journal, fences]
+    text = journal.read_text()
     # The atomic-journal update retains the existing payment implementation by renaming it.
     assert "rename to wave_revive_charge;" in text
     assert "return public.wave_revive_charge(" in function(text, "wave_revive")
-    original = definitions[-2]
-    assert original.name == ROLES.name
-    assert function(original.read_text(), "wave_revive") == function(
-        ROLES.read_text(), "wave_revive"
-    )
-    assert TAVERN in function(original.read_text(), "wave_revive")
-    # A later replacement of the delegated payment helper must retain the discount too.
-    for path in sorted(MIGRATIONS.glob("*.sql")):
-        if re.search(r"create or replace function public\.wave_revive_charge\(", path.read_text()):
-            assert TAVERN in function(path.read_text(), "wave_revive_charge"), path.name
+    assert TAVERN in function(ROLES.read_text(), "wave_revive")
+    # The shared-mode replacement is the actual payment body captured by the
+    # latest fence, so its Tavern rule must survive, rather than occur elsewhere.
+    charge_definitions = [
+        path for path in sorted(MIGRATIONS.glob("*.sql"))
+        if re.search(r"create or replace function public\.wave_revive_charge\(", path.read_text())
+    ]
+    assert charge_definitions == [mode_guard, fences]
+    assert TAVERN in function(mode_guard.read_text(), "wave_revive_charge")
+    # Pin both exact once-only captures and their guarded delegation. The private
+    # aliases must never acquire browser/service execution rights.
+    text = fences.read_text()
+    signature = "uuid,uuid,text,integer,text,integer,integer"
+    for name in ("wave_revive", "wave_revive_charge"):
+        alias = "legacy_wave_fence_" + name
+        assert (
+            f"if to_regprocedure('public.{alias}({signature})') is null then\n"
+            f"    alter function public.{name}({signature}) rename to {alias};\n"
+            "  end if;"
+        ) in text
+        body = function(text, name)
+        assert body.index("public.legacy_wave_fence_gate_locked(") < body.index(
+            f"return public.{alias}("
+        )
+        assert grants(text, alias) == [
+            f"revoke all on function public.{alias}({signature}) "
+            "from public,anon,authenticated,service_role;"
+        ]
 
 
 # The tests above pin 20261112090000 itself: it is applied to production and never edited, so what
@@ -149,6 +171,23 @@ def test_the_latest_definitions_keep_every_house_role():
 
     name, text = latest_with(r"create or replace function public\.island_specialise\(")
     body = function(text, "island_specialise")
+    assert name == PROGRESSION_GUARDS.name
+    assert (
+        body.index("island_treasury_lock_scope(p_island_owner)")
+        < body.index("from public.island_economy_state")
+        < body.index("'economy_context_required'")
+        < body.index("return public.island_specialise_legacy_personal(")
+    )
+    # The private alias captures the original body once; retain every old role/level check.
+    assert "('island_specialise','uuid,uuid,text,text,text,text,integer')" in text
+    assert "to_regprocedure('public.'||v_item.name||'_legacy_personal('" in text
+    assert "pg_get_functiondef(to_regprocedure('public.'||v_item.name||'('" in text
+    assert "position(v_item.name||'_legacy_personal' in v_definition) > 0" in text
+    assert (
+        "revoke all on function public.%I(%s) from public, anon, authenticated, service_role"
+        in text
+    )
+    body = function(RECOVERY_MUTATIONS.read_text(), "island_specialise")
     for role in HOUSE_ROLES:
         assert f"('house', '{role}')" in body, name
     assert HOUSE_LEVEL in body, name

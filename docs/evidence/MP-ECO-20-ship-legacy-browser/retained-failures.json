@@ -1,0 +1,79 @@
+[
+  {
+    "attempt": "main1",
+    "status": "failed",
+    "startedAt": "2026-11-19T18:28:34.589Z",
+    "finishedAt": "2026-11-19T18:28:39.990Z",
+    "error": {
+      "name": "AssertionError",
+      "message": "{\"error\":{\"code\":\"unauthorized\",\"message\":\"Sign in first: the Authorization header is missing.\"}}\n\n401 !== 200\n"
+    },
+    "completedFacts": []
+  },
+  {
+    "attempt": "main3",
+    "status": "failed",
+    "startedAt": "2026-11-19T18:49:16.989Z",
+    "finishedAt": "2026-11-19T18:49:44.636Z",
+    "error": {
+      "name": "Error",
+      "message": "locator.scrollIntoViewIfNeeded: Element is not attached to the DOM\nCall log:\n\u001b[2m  - attempting scroll into view action\u001b[22m\n\u001b[2m    - waiting for element to be stable\u001b[22m\n"
+    },
+    "completedFacts": []
+  },
+  {
+    "attempt": "main4",
+    "status": "failed",
+    "startedAt": "2026-11-19T18:50:23.072Z",
+    "finishedAt": "2026-11-19T18:51:46.166Z",
+    "error": {
+      "name": "TimeoutError",
+      "message": "locator.check: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.sea-chart[open] .fast-travel')\u001b[22m\n"
+    },
+    "completedFacts": [
+      "positive personal island construction through real card",
+      "legacy Harbor reachable with personal funding"
+    ]
+  },
+  {
+    "attempt": "main5",
+    "status": "failed",
+    "startedAt": "2026-11-19T18:53:33.057Z",
+    "finishedAt": "2026-11-19T18:54:20.683Z",
+    "error": {
+      "name": "TimeoutError",
+      "message": "locator.waitFor: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.sea-chart[open]') to be visible\u001b[22m\n"
+    },
+    "completedFacts": [
+      "positive personal island construction through real card",
+      "legacy Harbor reachable with personal funding"
+    ]
+  },
+  {
+    "attempt": "class1",
+    "status": "failed",
+    "startedAt": "2026-11-19T19:03:54.278Z",
+    "finishedAt": "2026-11-19T19:04:23.049Z",
+    "error": {
+      "name": "AssertionError",
+      "message": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 'lighthouse_isle'\n- 'saltreach_harbor'\n"
+    },
+    "completedFacts": []
+  },
+  {
+    "attempt": "class2",
+    "status": "failed",
+    "startedAt": "2026-11-19T19:06:07.252Z",
+    "finishedAt": "2026-11-19T19:06:17.633Z",
+    "error": {
+      "name": "Error",
+      "message": "page.waitForFunction: TypeError: Cannot read properties of null (reading 'id')\n    at eval (eval at predicate (eval at evaluate (:370:30)), <anonymous>:1:35)\n    at predicate (eval at evaluate (:370:30), <anonymous>:7:27)\n    at next (eval at evaluate (:370:30), <anonymous>:29:33)\n    at eval (eval at evaluate (:370:30), <anonymous>:42:13)\n    at UtilityScript.evaluate (<anonymous>:372:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)"
+    },
+    "completedFacts": []
+  },
+  {
+    "attempt": "main2",
+    "status": "failed",
+    "scope": "Pending response promise rejected while closing after a control-readiness error; CLI log retained privately. No completed purchase is attributed to it."
+  }
+]

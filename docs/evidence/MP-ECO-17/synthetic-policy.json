@@ -1,0 +1,27 @@
+{
+  "copyOverflow": "grandfather",
+  "obligations": "retain_origin",
+  "openingGrantCoins": "200",
+  "personalCash": "preserve",
+  "policyId": "00000000-0000-0000-0000-00000000000b",
+  "refundBasis": "verified_actual_payments",
+  "retiredSkillIds": [
+    "quick_fix"
+  ],
+  "retiredSkills": "preserve_ids_no_compensation",
+  "reviewReference": "synthetic-review",
+  "reviewedBy": [
+    "synthetic-owner",
+    "synthetic-peer"
+  ],
+  "schemaVersion": 1,
+  "selectedIslands": [
+    "00000000-0000-0000-0000-000000000001"
+  ],
+  "skillCosts": {
+    "cutlass": 1,
+    "quick_fix": 1,
+    "steady_aim": 1
+  },
+  "wavesPerPoint": 2
+}

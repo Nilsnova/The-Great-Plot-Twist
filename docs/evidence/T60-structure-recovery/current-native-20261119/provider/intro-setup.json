@@ -1,0 +1,14 @@
+[
+  {
+    "actor": "owner",
+    "action": "Resume"
+  },
+  {
+    "actor": "member",
+    "action": "Got it"
+  },
+  {
+    "actor": "member",
+    "action": "Look around first"
+  }
+]
