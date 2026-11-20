@@ -64,11 +64,34 @@ it('lifts the grassy front shoulders wholly inside the original walkable top', (
   const tallCaps = [];
   for (let i = 0; i < position.count; i++) {
     const region = shoreRelief.getZ(i);
-    if (region < 2) continue;
+    if (region < 2 || region > 3) continue;
     const ground = unprojectGround(position.getX(i), position.getY(i));
     expect(surfaceClass('home_islet', ground.x, ground.z)).toBeGreaterThan(0);
     if (region === 3 && -shoreRelief.getX(i) > 1) tallCaps.push(ground.x);
   }
   expect(tallCaps.some(x => x < 0)).toBe(true);
   expect(tallCaps.some(x => x > 0)).toBe(true);
+});
+
+it('roots the raised rear headlands on existing dry shoulders beside the landing', () => {
+  const cliff = createHomeRelief(new THREE.Group(), new THREE.Texture());
+  const {position, shoreRelief} = cliff.geometry.attributes;
+  const sides = [-1, 1];
+  const footings = new Set(), crowns = new Set();
+  for (let i = 0; i < position.count; i++) {
+    const region = shoreRelief.getZ(i);
+    if (region < 4) continue;
+    const height = -shoreRelief.getX(i);
+    const ground = unprojectGround(position.getX(i), position.getY(i) - height);
+    const sample = 180 + Math.atan2(ground.z / surfaces.home_islet.rz, ground.x / surfaces.home_islet.rx) * 90 / Math.PI;
+    expect(ground.z).toBeLessThan(0);
+    expect(sample).toBeGreaterThan(117);
+    expect(sample).toBeLessThan(155);
+    expect(sample < 133.5 || sample > 138.5).toBe(true);
+    expect(surfaceClass('home_islet', ground.x, ground.z)).toBeGreaterThan(0);
+    if (height === 0) footings.add(Math.sign(ground.x));
+    if (height > 1.4 && region === 5) crowns.add(Math.sign(ground.x));
+  }
+  expect([...footings].sort()).toEqual(sides);
+  expect([...crowns].sort()).toEqual(sides);
 });
