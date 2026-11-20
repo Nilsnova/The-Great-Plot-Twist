@@ -46,6 +46,13 @@ const TURF = new THREE.Color('#8bb943'), LIP = new THREE.Color('#b0d557'), ROOTS
 const GRASS_CREST = TURF.clone().lerp(LIP, .56);
 const HIGH_TURF = TURF.clone().lerp(ROOTS, .42);
 const WORN_LEDGE = 4;
+// These two shallow saddles join the backs of neighboring banks. The higher
+// shelf ends and the open watchtower landing remain in their original places.
+const REAR_SADDLES = [[122.15, 127.50, .97], [143.65, 150.70, .82]];
+const SADDLE_PROFILE = [
+  [0, 0], [.14, .09], [.27, .32], [.39, .61], [.52, .88], [.68, 1], [.88, .71], [1, .02],
+];
+const SADDLE_BED = new THREE.Color('#88715b');
 const FOLIAGE = {
   97: [['birch', .56, .70, .49], ['shrub', .19, .64, .64], ['shrub', .74, .31, .49], ['flowers', .41, .31, .52]],
   116.5: [['shrub', .21, .73, .65], ['shrub', .27, .68, .51], ['grass-tuft', .56, .74, .56], ['shrub', .81, .71, .62],
@@ -130,6 +137,10 @@ function onTop(x, y) {
 function shelfPoint(row, foot, back, taper, rise, radius, elevation, crestRoom) {
   const reach = Math.min(.987, THREE.MathUtils.lerp(foot, back, .49 + (radius - .49) * Math.sqrt(taper)));
   const p = new THREE.Vector3(row.x * reach, taper * rise * elevation, row.z * reach);
+  return clipCrest(p, crestRoom);
+}
+
+function clipCrest(p, crestRoom) {
   p.shoreReach = crestRoom;
   const ground = projectGround(p.x, p.z);
   if (crestRoom > 0 && !onTop(ground.x, ground.y + p.y)) {
@@ -327,6 +338,58 @@ export function createHomeTerraces(root, coastArt, art) {
         const faceLight = .30 * light.get(corner) + .70 * local + shade + .1 * (uv[i][1] - .5);
         vertex(corner, color, faceLight, STRATUM, 1, uv[i], underTurf);
       }
+    }
+  }
+
+  for (const [start, finish, crest] of REAR_SADDLES) {
+    const east = start > 140;
+    const stations = Math.ceil((finish - start) / .40);
+    const rows = Array.from({length: stations + 1}, (_, station) => {
+      const along = station / stations;
+      const sample = THREE.MathUtils.lerp(start, finish, along);
+      const index = Math.floor(sample), fraction = sample - index;
+      const x = THREE.MathUtils.lerp(coast[index].x, coast[index + 1].x, fraction);
+      const z = THREE.MathUtils.lerp(coast[index].z, coast[index + 1].z, fraction);
+      // The eastern saddle narrows behind the north wall sockets, then fans into the pine bank.
+      const neck = east ? 1 - THREE.MathUtils.smoothstep(Math.abs(sample - 146.72), 1.10, 2.24) : 0;
+      const foot = east ? .943 + .046 * neck : .923;
+      const width = .993 - foot;
+      const anchor = .36 + .64 * THREE.MathUtils.smoothstep(Math.min(along, 1 - along), 0, .23);
+      // The narrow rear passage stays a low saddle. Its outer shoulders carry the larger rock masses.
+      const rise = crest * anchor * (1 - .60 * neck) * (.83 + .14 * Math.sin(sample * 1.40) + .09 * Math.cos(sample * 2.5));
+      return SADDLE_PROFILE.map(([radius, height]) => {
+        const taper = anchor + (1 - anchor) * .52;
+        const reach = .993 - width * (1 - radius) * taper;
+        return clipCrest(new THREE.Vector3(x * reach, rise * height, z * reach), crest);
+      });
+    });
+    for (let ring = SADDLE_PROFILE.length - 2; ring >= 0; ring--) {
+      for (let i = 0; i < rows.length - 1; i++) {
+        const a = rows[i], b = rows[i + 1];
+        const turf = ring >= 3;
+        const tint = turf ? HIGH_TURF : SADDLE_BED;
+        const seam = .05 * Math.sin(i * 1.14 + ring * .88);
+        face(a[ring], b[ring], b[ring + 1], a[ring + 1], tint, (turf ? -.085 : -.19) + seam, turf ? -.035 : -.08, Number(turf));
+      }
+    }
+    const masses = east ? [[.035, .32, .98], [.27, .64, .69], [.58, .965, .93]]
+      : [[.035, .45, .86], [.32, .74, .98], [.65, .965, .78]];
+    for (const [index, [from, to, top]] of masses.entries()) {
+      const point = (u, v, bevel) => {
+        const along = THREE.MathUtils.lerp(from, to, u) * stations;
+        const station = Math.min(Math.floor(along), stations - 1);
+        const across = 3 * THREE.MathUtils.clamp(v * top + .09 * u * (index % 2 ? 1 : -1), .015, .996);
+        const ring = Math.floor(across);
+        const a = rows[station], b = rows[station + 1];
+        const foot = blendStone(a[ring], b[ring], along - station);
+        const head = blendStone(a[ring + 1], b[ring + 1], along - station);
+        const p = blendStone(foot, head, across - ring);
+        p.x *= 1 - bevel * .037;
+        p.z *= 1 - bevel * .037;
+        return p;
+      };
+      const color = STONE[index + 1].clone().lerp(SADDLE_BED, .32);
+      stone(point, color, index % 2 ? -.60 : .61, true, true);
     }
   }
 
