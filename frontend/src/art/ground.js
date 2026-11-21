@@ -212,6 +212,7 @@ function paintTurfBevel(c, coast, meadow, grassRadius, rim, materials) {
     const random = seeded(98641);
     const sandShadow = linear(c, -16, -14, 13, 12, [[0, '#68723583'], [.47, '#675132a2'], [1, '#403a27b9']]);
     const grassLight = linear(c, -16, -14, 13, 12, [[0, '#deef82bc'], [.45, '#cbd975a3'], [1, '#a5c45167']]);
+    const turfTurn = linear(c, -16, -14, 13, 12, [[0, '#a5c75570'], [.45, '#7399409e'], [1, '#4e7034a2']]);
     const point = (index, inset) => {
       const {x, y} = rim[index], angle = index / (rim.length - 1) * Math.PI * 2;
       const contour = 1 + .012 * (Math.sin(angle * 13 + 3) * .6 + Math.sin(angle * 23 + 6) * .4);
@@ -227,6 +228,8 @@ function paintTurfBevel(c, coast, meadow, grassRadius, rim, materials) {
       stroke(c, path, sandShadow, .07 + .17 * wear + (ledge ? .065 : 0), .63 + .27 * wear);
       if (wear > .28) {
         const grass = Array.from({length: span + 1}, (_, segment) => point(i + segment, .27 + .145 * random()));
+        // The lit lip rolls into the green ledge above the dark line of exposed roots.
+        if (ledge) stroke(c, grass, turfTurn, .27 + .18 * wear, .66);
         stroke(c, grass, grassLight, .035 + .065 * wear + (ledge ? .045 : 0), .73 + .18 * wear);
       }
       if (ledge && wear > .50) {

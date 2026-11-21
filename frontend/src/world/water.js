@@ -145,27 +145,28 @@ vec3 rockWash(vec3 colour,vec2 p,float shoreDistance,float coastRock,float light
   vec2 normal=normalize(coastSlope+.2*normalize(p+vec2(.01)));
   vec2 tangent=vec2(-normal.y,normal.x);
   vec2 foot=p-normal*shoreDistance;
-  float edge=pxNoise(foot*vec2(1.29,1.95)+vec2(8.2,4.6));
+  float edge=pxNoise(foot*vec2(1.20,1.76)+vec2(8.2,4.6));
   float surge=.5+.5*sin(time*(1.05+uWind*.54)+dot(foot,vec2(.72,.94))+edge*3.4);
-  float spread=smoothstep(.24,.76,edge);
-  float chop=pxNoise((p+tangent*time*.09)*vec2(3.7,5.9));
-  float arc=shoreDistance-.18-surge*.35-(edge-.5)*.30;
+  float spread=smoothstep(.21,.74,edge);
+  float chop=pxNoise((p+tangent*time*.14)*vec2(3.7,5.9));
+  float arc=shoreDistance-.24-surge*.33-(edge-.5)*.36;
   float nearWater=smoothstep(.09,.21,shoreDistance);
-  float shell=1.0-smoothstep(.49,1.56,shoreDistance+(.5-edge)*.24);
-  float stain=(1.0-smoothstep(.04,.39,shoreDistance))*(.39+.39*edge);
+  float stain=(1.0-smoothstep(.04,.43,shoreDistance))*(.45+.35*edge);
   colour=mix(colour,uDeep,stain*coastRock);
 
-  // Ridges have a translucent shoulder, an opaque crest and broken bubble trails.
-  float shoulder=(1.0-band(abs(arc-.10),.23+.13*spread))*(.39+.61*spread);
-  float front=(1.0-band(abs(arc+(chop-.5)*.16),.048+.10*spread))
-    *smoothstep(.22,.53,chop*.39+edge*.61);
-  float retreat=1.0-band(abs(arc-.24-(chop-.5)*.46),.032+.074*spread);
-  retreat*=smoothstep(.37,.72,chop*.67+edge*.33);
-  float trail=1.0-band(abs(arc-.54-(edge-.5)*.46),.030+.048*spread);
-  trail*=smoothstep(.50,.81,chop)*spread;
-  float wash=nearWater*coastRock*(.87+.13*light);
-  colour=mix(colour,mix(uShallow,uFoam,.37),max(shoulder*.55,shell*spread*.24)*wash);
-  return mix(colour,uFoam,max(front,max(retreat*.86,trail*.76))*wash);
+  // Thick turquoise water catches the lit rock before the wave folds over it.
+  // The crest pinches into a thin seam between broader patches of broken foam.
+  float shoulder=(1.0-band(abs(arc-.16),.28+.16*spread))*(.44+.56*spread);
+  float front=(1.0-band(abs(arc+(chop-.5)*.25),.063+.15*spread))
+    *smoothstep(.20,.53,chop*.46+edge*.54);
+  float retreat=1.0-band(abs(arc-.29-(chop-.5)*.58),.046+.092*spread);
+  retreat*=smoothstep(.33,.69,chop*.65+edge*.35);
+  float streak=pxNoise((p+normal*(chop-.5)*.12)*vec2(6.4,9.0)-tangent*time*.42);
+  float spray=(1.0-band(abs(arc-.58-(edge-.5)*.62),.16+.11*spread))
+    *smoothstep(.52,.79,streak)*smoothstep(.31,.69,chop);
+  float wash=nearWater*coastRock*(.86+.14*light);
+  colour=mix(colour,mix(uShallow,uFoam,.43),shoulder*.60*wash);
+  return mix(colour,uFoam,clamp(front+retreat*.80+spray*.62,0.0,1.0)*wash);
 }
 void main(){
   vec2 p=vWorld;float t=uSeaTime;

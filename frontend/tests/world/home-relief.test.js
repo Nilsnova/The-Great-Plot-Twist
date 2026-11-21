@@ -124,6 +124,7 @@ it('keeps tidal rock groups and their wash clear of land and the four shore open
   const shoreQuadrants = new Set();
   const sillSides = new Set();
   const {rx, rz} = surfaces.home_islet;
+  const facadeDepth = -projectGround(0, CLIFF_DEPTH / LEGACY_DEPTH).y;
   for (let i = 0; i < position.count; i++) {
     const region = shoreRelief.getZ(i);
     if (region < 6) continue;
@@ -140,6 +141,9 @@ it('keeps tidal rock groups and their wash clear of land and the four shore open
     if (region === 6 || region === 7) {
       // A sculpted foot stays rounded above the Fit boundary, without a flat cut across it.
       expect(y).toBeGreaterThan(bounds.minY + .12);
+    }
+    if (region === 7 && shoreRelief.getY(i) === 0) {
+      expect(shoreRelief.getX(i)).toBeLessThan(facadeDepth + .06);
     }
     if (shoreRelief.getY(i) > .8) {
       if (region === 6) shoreQuadrants.add((x > 0 ? 1 : 0) + (y > 0 ? 2 : 0));

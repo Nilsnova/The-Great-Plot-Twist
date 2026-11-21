@@ -110,7 +110,7 @@ it('grounds the terrace footings in the original island and keeps defenses and w
   expect(released).toHaveLength(3);
 });
 
-it('keeps grass visible behind the high sandstone lip above the west cove', () => {
+it('keeps a broad, gently sloping grass tread visible above the west cove', () => {
   const root = new THREE.Group(), shore = new THREE.Texture();
   backdrop(root, shore);
   const {position, terraceMaterial, surfaceDetail} = createHomeTerraces(root, shore).geometry.attributes;
@@ -123,12 +123,18 @@ it('keeps grass visible behind the high sandstone lip above the west cove', () =
     const angle = Math.round(Math.atan2(z / rz, x / rx) * 180 / Math.PI);
     const crossSlope = surfaceDetail.getX(i);
     const section = sections.get(angle) ?? {};
-    if (crossSlope < .01) section.lip = position.getY(i);
-    if (crossSlope > .5 && crossSlope < .8) section.tread = position.getY(i);
+    const y = position.getY(i), point = {x, z, y, height: y - projectGround(x, z).y};
+    if (crossSlope < .01) section.lip = point;
+    if (crossSlope > .5 && crossSlope < .8) section.tread = point;
     sections.set(angle, section);
   }
-  const visible = [...sections.values()].filter(({lip, tread}) => tread - lip > .28);
+  const visible = [...sections.values()].filter(({lip, tread}) => lip && tread && tread.y - lip.y > .28);
+  const broad = visible.filter(({lip, tread}) => {
+    const width = Math.hypot(tread.x - lip.x, tread.z - lip.z);
+    return width > .43 && Math.abs(tread.height - lip.height) < width * .51;
+  });
   expect(visible.length).toBeGreaterThan(6);
+  expect(broad.length).toBeGreaterThan(6);
   createLifetime(root)();
 });
 
