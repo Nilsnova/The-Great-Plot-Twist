@@ -55,6 +55,7 @@ it('follows the title motion preference and resumes after a device change',async
       const {startAnimatedTitle}=await window.g20Import('/src/title/animated-title.js');
       const {setPreferences}=await window.g20Import('/src/settings/preferences.js');
       const backdrop=document.createElement('div');document.body.append(backdrop);
+      window.titleBackdrop=backdrop;
       window.titleScene=await startAnimatedTitle({backdrop});
       window.titleMotion=setPreferences;
     });
@@ -68,6 +69,17 @@ it('follows the title motion preference and resumes after a device change',async
     expect(await capture()).toBe(deviceStill);
     await page.evaluate(()=>window.titleMotion({reducedMotion:false}));
     await page.waitForFunction(image=>window.titleScene.canvas.toDataURL()!==image,deviceStill);
+
+    await page.evaluate(()=>{
+      window.titleMotion({reducedMotion:true});
+      window.titleBackdrop.hidden=true;
+    });
+    await page.locator('.title-scene').waitFor({state:'hidden'});
+    await page.waitForFunction(()=>window.titleScene.canvas.width===0 && window.titleScene.canvas.height===0);
+    await page.evaluate(()=>{window.titleBackdrop.hidden=false;});
+    await page.locator('.title-scene').waitFor({state:'visible'});
+    await page.waitForFunction(()=>window.titleScene.canvas.width>0 && window.titleScene.canvas.height>0);
+    expect(await capture()).toBe(deviceStill);
     await page.evaluate(()=>window.titleScene.dispose());
   });
 });
