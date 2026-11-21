@@ -31,10 +31,21 @@ CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' --with pglast 
 
 The `--tb=no` bound prevents an unexpected story assertion from copying protected prose into output. This command uses disposable SQL and no production credentials. Check actual skips/results and the current package fixtures; a source-only parse is not a transactional/concurrency proof. This documentation task does not rerun the full application suite.
 
-The [19 November source manifest](economy/migration-candidate-20261119.json) pins every
-repository migration at `3bdd8eda` with MD5 and SHA-256; it contains no installed
-database inventory. Its ordinary regression rejects omitted, retroactively added
-or changed SQL within the pinned version range; later migrations remain allowed.
+The [21 November source candidate](economy/migration-candidate-20261121.json) pins
+all 110 repository migrations at `fcdc336c` with MD5 and SHA-256. The
+[19 November source manifest](economy/migration-candidate-20261119.json) records
+the 107 files reviewed at `3bdd8eda`. Main subsequently picked up two files within
+that older timestamp range, `20261118080000_recovery_finish_checkpoint_guard.sql`
+and `20261118090000_normal_wall_build_clearance.sql`. The new manifest includes
+both and the later `20261119144620_island_economy_operator_recovery.sql`.
+The regression checks both inventories and all pinned source hashes.
+
+Both manifests describe repository source. Before proposing a hosted update,
+the release owner must reconcile any missing older versions against the target's
+installed migration history and verify application order. If later versions are
+already installed, the chronological scratch rehearsal alone cannot settle the
+hosted ordering decision.
+
 The opt-in catch-up regression builds an intentionally incomplete synthetic schema,
 replays the complete chronological suffix (including interleaved legacy files),
 and compares saved data, function definitions, ownership, grants, RLS, policies and
