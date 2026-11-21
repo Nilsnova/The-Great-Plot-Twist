@@ -86,7 +86,7 @@ it('roots the raised rear headlands and both flank shelves on existing dry groun
   const raisedArcs = [[100.5, 109.6], [119.4, 127.4], [146.0, 152.8], [162.5, 170.3]];
   for (let i = 0; i < position.count; i++) {
     const region = shoreRelief.getZ(i);
-    if (region < 4 || region > 5) continue;
+    if (region !== 4 && region !== 5) continue;
     const x = position.getX(i), y = position.getY(i);
     expect(x).toBeGreaterThanOrEqual(fit.minX);
     expect(x).toBeLessThanOrEqual(fit.maxX);
@@ -121,6 +121,34 @@ it('roots the raised rear headlands and both flank shelves on existing dry groun
   expect([...footings].sort()).toEqual(sides);
   expect([...crowns].sort()).toEqual(sides);
   expect([...flankCrowns].sort()).toEqual(sides);
+});
+
+it('supports both rear terrace joins with low stone on dry ground outside the north passage', () => {
+  const cliff = createHomeRelief(new THREE.Group(), new THREE.Texture());
+  const {position, shoreRelief} = cliff.geometry.attributes;
+  const {rx, rz} = surfaces.home_islet;
+  const fit = projectedCoastBounds(cliffProfile(surfaces.home_islet));
+  const supported = new Set();
+  const outerBlocks = new Set();
+  const joins = [[110, 116], [126, 129], [145, 148], [156, 162]];
+  for (let i = 0; i < position.count; i++) {
+    if (shoreRelief.getZ(i) !== 4.25) continue;
+    const height = -shoreRelief.getX(i), x = position.getX(i), y = position.getY(i);
+    const ground = unprojectGround(x, y - height);
+    const sample = 180 + Math.atan2(ground.z / rz, ground.x / rx) * 90 / Math.PI;
+    expect(surfaceClass('home_islet', ground.x, ground.z)).toBeGreaterThan(0);
+    expect(x).toBeGreaterThanOrEqual(fit.minX);
+    expect(x).toBeLessThanOrEqual(fit.maxX);
+    expect(y).toBeLessThanOrEqual(fit.maxY);
+    const outer = sample < 118 || sample > 154;
+    expect(height).toBeLessThan(outer ? .80 : .62);
+    expect(sample <= 130.3 || sample >= 143.8).toBe(true);
+    const join = joins.findIndex(([from, to]) => sample > from && sample < to);
+    if (height > .24 && join !== -1) supported.add(join);
+    if (outer && height > .55) outerBlocks.add(Math.sign(ground.x));
+  }
+  expect(supported).toEqual(new Set([0, 1, 2, 3]));
+  expect(outerBlocks).toEqual(new Set([-1, 1]));
 });
 
 it('keeps tidal rock groups and their wash clear of land and the four shore openings', () => {

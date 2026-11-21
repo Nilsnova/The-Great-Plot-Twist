@@ -103,6 +103,13 @@ it('grounds the terrace footings in the original island and keeps defenses and w
       }
     }
   }
+  // The raised returns join around the rear of the island. The visible sand
+  // between their mouths should remain open from the coast to the old meadow.
+  for (let x = -.5; x <= .5; x += .25) for (let z = -21.5; z <= -17.5; z += .25) {
+    expect(surfaceClass('home_islet', x, z)).toBeGreaterThan(0);
+    const point = projectGround(x, z);
+    expect(triangles.some(triangle => covers(point, triangle)), `north sand ${x}, ${z}`).toBe(false);
+  }
   expect(terrace.material.uniforms.uCoastArt.value).toBe(shore);
   expect(new THREE.Raycaster().intersectObject(terrace)).toEqual([]);
   const released = [];
