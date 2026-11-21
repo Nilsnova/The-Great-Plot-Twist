@@ -14,7 +14,7 @@ const BANKS = [
   {first: 97, last: 106, foot: .935, back: .986, height: 2.05, shore: true, reserve: .012, crowns: [.37, .77]},
   {first: 116.5, last: 124.5, foot: .773, back: .963, height: 2.75},
   {first: 125, last: 135, foot: .891, back: .958, height: 2.08, shore: true, reserve: .022, crowns: [.30, .82]},
-  {first: 137, last: 146, foot: .921, back: .955, height: 1.72, shore: true, crowns: [.73, .25], stepBack: .185},
+  {first: 137, last: 146, foot: .921, back: .955, height: 1.72, shore: true, reserve: .016, crowns: [.73, .25], stepBack: .119},
   {first: 148, last: 156, foot: .826, back: .964, height: 2.87},
   {first: 166, last: 171, foot: .790, back: .946, height: 3.02},
   {first: 30, last: 37, foot: .985, back: .888, height: 2.18},
@@ -112,36 +112,36 @@ const RISER_BEVEL = [.10, .19, .25, .14, .26, .32, .23, .12];
 // A narrow turn under the turf gives the grass a soil edge. The last point rejoins
 // the original tread exactly, including the elevation used by the existing plantings.
 const SOD_PROFILE = [
-  [0, 0, -.22], [-.15, .23, -.20], [.05, .59, .12], [.39, .89, .23], [1, 1, .09],
+  [0, 0, -.22], [-.105, .23, -.20], [.083, .61, .12], [.43, .91, .23], [1, 1, .09],
 ];
 const SOD_MATERIAL = [[2.9, ROOTS], [2.6, ROOTS], [2.0, GRASS_CREST], [1.48, TURF]];
 // Each stop starts a band. The two faces have deep bases, lit shoulders and grass lips.
 // A short incline at the back of the upper tread hides where it joins the old meadow.
 const REAR_PROFILE = [
   [0, 0, -.19, RECESS], [.015, .066, -.30, STONE], [.028, .352, -.085, STONE],
-  [.044, .479, .15, STONE], [.065, .517, .25, LIP], [.102, .552, .15, TURF],
-  [.375, .553, .055, TURF], [.438, .552, -.17, RECESS], [.451, .630, -.29, STONE],
-  [.464, .836, -.07, STONE], [.478, .947, .16, STONE], [.500, .992, .28, LIP],
-  [.541, 1.019, .14, TURF], [.920, 1.019, .065, TURF], [.962, .779, -.01, TURF],
-  [1, .36, -.12, TURF],
+  [.044, .479, .15, STONE], [.063, .520, .25, LIP], [.095, .550, .15, TURF],
+  [.332, .550, .055, TURF], [.392, .550, -.17, RECESS], [.405, .626, -.29, STONE],
+  [.420, .815, -.07, STONE], [.438, .931, .16, STONE], [.458, .985, .28, LIP],
+  [.499, 1.016, .14, TURF], [.908, 1.011, .065, TURF], [.963, .688, -.01, TURF],
+  [1, .24, -.12, TURF],
 ];
 const FRONT_PROFILE = [
   [0, 0, -.19, RECESS], [.019, .063, -.26, STONE], [.038, .333, -.08, STONE],
-  [.054, .475, .15, STONE], [.078, .521, .24, LIP], [.123, .548, .14, TURF],
-  [.399, .548, .051, TURF], [.451, .547, -.17, RECESS], [.466, .629, -.29, STONE],
-  [.482, .825, -.05, STONE], [.511, .929, .16, STONE], [.545, .976, .28, LIP],
-  [.592, 1.01, .14, TURF], [.815, .969, .065, TURF], [.924, .610, .025, TURF],
+  [.054, .475, .15, STONE], [.075, .523, .24, LIP], [.112, .548, .14, TURF],
+  [.347, .548, .051, TURF], [.404, .547, -.17, RECESS], [.418, .628, -.29, STONE],
+  [.434, .817, -.05, STONE], [.457, .925, .16, STONE], [.489, .973, .28, LIP],
+  [.530, 1.005, .14, TURF], [.815, .969, .065, TURF], [.924, .610, .025, TURF],
   [1, .02, -.08, TURF],
 ];
 // A wide cove platform supports two unequal rocky shoulders. The shoulders rise and
 // fall along the shelf instead of forming a second continuous course of masonry.
-const SHORE_TREAD_BACK = .576;
+const SHORE_TREAD_BACK = .463;
 const SHORE_PROFILE = [
   [0, 0, -.20, RECESS], [.013, .061, -.28, STONE], [.023, .211, -.15, STONE],
-  [.037, .315, .09, STONE], [.059, .360, .20, LIP], [.095, .395, .123, TURF],
-  [.490, .395, .065, TURF], [SHORE_TREAD_BACK, .395, -.16, RECESS], [.585, .454, -.26, STONE],
-  [.596, .593, -.048, STONE], [.609, .694, .13, STONE], [.631, .743, .24, LIP],
-  [.669, .785, .13, TURF], [.929, .785, .061, TURF], [.976, .422, -.01, TURF],
+  [.037, .315, .09, STONE], [.057, .363, .20, LIP], [.091, .395, .123, TURF],
+  [.387, .395, .065, TURF], [SHORE_TREAD_BACK, .395, -.16, RECESS], [.475, .452, -.26, STONE],
+  [.490, .591, -.048, STONE], [.507, .690, .13, STONE], [.530, .744, .24, LIP],
+  [.567, .785, .13, TURF], [.924, .784, .061, TURF], [.973, .404, -.01, TURF],
   [1, .026, -.10, TURF],
 ];
 
@@ -329,30 +329,36 @@ export function createHomeTerraces(root, coastArt, art) {
     }
   }
   function stratum(point, color, lean, underTurf) {
-    // The roof and heel meet at an oblique fracture. Both are cut into the
-    // original riser, leaving its rim and the planted shelf above it intact.
+    // Roll out of the original bedding in two shallow steps before the face.
+    // The roof and heel still meet at an uneven fracture under the grass.
     const outline = STRATUM_OUTLINE.map(([u, v]) => [u, v + (u - .5) * lean * .10]);
     const near = outline.map(([u, v]) => point(u, v, 0));
-    const bevel = outline.map(([u, v]) => [.05 + u * .90, .105 + v * .79]);
-    const rim = bevel.map(([u, v]) => point(u, v, v > .52 ? .035 : .007));
+    const bevel = outline.map(([u, v]) => [.025 + u * .950, .048 + v * .904]);
+    const shoulders = outline.map(([u, v]) => [.073 + u * .854, .131 + v * .738]);
+    const rim = bevel.map(([u, v]) => point(u, v, .013 + .007 * v));
+    const face = shoulders.map(([u, v]) => point(u, v, .027 + .019 * v));
     const roofUV = [.52 + lean * .14, .605 - lean * .07], heelUV = [.44 - lean * .12, .36 + lean * .06];
-    const roof = point(...roofUV, .072), heel = point(...heelUV, -.030);
+    const roof = point(...roofUV, .057), heel = point(...heelUV, .010);
     const facets = [];
-    const add = (a, b, c, auv, buv, cuv, shade) => facets.push({points: [a, b, c], uv: [auv, buv, cuv], shade});
+    const add = (a, b, c, auv, buv, cuv) => facets.push({points: [a, b, c], uv: [auv, buv, cuv]});
     for (let i = 0; i < near.length; i++) {
       const next = (i + 1) % near.length;
-      add(near[i], near[next], rim[next], outline[i], outline[next], bevel[next], -.07);
-      add(near[i], rim[next], rim[i], outline[i], bevel[next], bevel[i], -.07);
+      add(near[i], near[next], rim[next], outline[i], outline[next], bevel[next]);
+      add(near[i], rim[next], rim[i], outline[i], bevel[next], bevel[i]);
+      add(rim[i], rim[next], face[next], bevel[i], bevel[next], shoulders[next]);
+      add(rim[i], face[next], face[i], bevel[i], shoulders[next], shoulders[i]);
       const upper = i >= 3 && i < 8;
-      add(upper ? roof : heel, rim[i], rim[next], upper ? roofUV : heelUV, bevel[i], bevel[next], upper ? .106 : -.13);
+      add(upper ? roof : heel, face[i], face[next], upper ? roofUV : heelUV, shoulders[i], shoulders[next]);
     }
-    add(roof, rim[8], heel, roofUV, bevel[8], heelUV, -.025);
-    add(roof, heel, rim[3], roofUV, heelUV, bevel[3], -.025);
+    add(roof, face[8], heel, roofUV, shoulders[8], heelUV);
+    add(roof, heel, face[3], roofUV, heelUV, shoulders[3]);
     const light = averageStoneLight(facets.map(({points}) => points), corner => corner, sunlight);
-    for (const {points, uv, shade} of facets) {
+    const seam = new Set(near);
+    for (const {points, uv} of facets) {
       const local = sunlight(...points);
       for (const [i, corner] of points.entries()) {
-        const faceLight = .30 * light.get(corner) + .70 * local + shade + .1 * (uv[i][1] - .5);
+        const faceLight = .79 * light.get(corner) + .21 * local + .16 * (uv[i][1] - .5)
+          - (seam.has(corner) ? .063 : 0);
         vertex(corner, color, faceLight, STRATUM, 1, uv[i], underTurf);
       }
     }
@@ -475,7 +481,7 @@ export function createHomeTerraces(root, coastArt, art) {
     const [footCenter, footWidth, footDepth] = CLIFF_FOOTINGS[first] ?? [0, 1, 0];
     const [cragCenter, cragWidth, cragRise, crownWidth] = CRAGS[first] ?? [0, 1, 0, .27];
     const profile = shore ? SHORE_PROFILE.map(([radius, elevation, tone, material]) => {
-      // The narrower cove keeps its existing plantings on the broad lower shelf.
+      // The narrower eastern cove retains space for the lower turf beside the beach.
       const spread = radius < SHORE_TREAD_BACK ? radius / SHORE_TREAD_BACK : (1 - radius) / (1 - SHORE_TREAD_BACK);
       return [radius + stepBack * spread, elevation, tone, material];
     }) : front ? FRONT_PROFILE : REAR_PROFILE;
@@ -552,7 +558,8 @@ export function createHomeTerraces(root, coastArt, art) {
           // The distant edge of a grass seat can break the painted silhouette
           // higher than its lip so the top still has depth after clipping.
           const lowerRoom = (.05 + .22 * lowerDepth + room * lowerRise * .12) * lower;
-          const upperRoom = .40 + .24 * mass + .15 * room * upperRise + .54 * capDepth;
+          const crestSpan = meetsEastShoulder ? .43 : .64;
+          const upperRoom = .40 + .24 * mass + .15 * room * upperRise + crestSpan * capDepth;
           crestRoom = Math.min(1.38, THREE.MathUtils.lerp(lowerRoom, upperRoom, upper));
         }
         // The southern cap rises from its existing stone foot and lower shelf.
@@ -870,6 +877,17 @@ export function createHomeTerraces(root, coastArt, art) {
         float unresolved = smoothstep(.48, 1.26, max(footprint.x, footprint.y));
         return mix(noise2(p), .5, unresolved);
       }
+      float shortRockSeam(vec2 layers, float grain) {
+        float seamHeight = layers.y * 1.86 + .14 * sin(layers.x * .87) + .09 * grain;
+        float bed = floor(seamHeight);
+        float alongBed = layers.x * .99 + mod(bed, 2.0) * .51;
+        float seamSeed = hash2(vec2(floor(alongBed), bed));
+        float across = fract(alongBed);
+        float section = smoothstep(.04, .13, across) * (1.0 - smoothstep(.59 + seamSeed * .17, .91, across));
+        float brokenBed = fract(seamHeight) - (.47 + .19 * seamSeed + .14 * (across - .5));
+        float lineWidth = min(.13, fwidth(seamHeight));
+        return section * (1.0 - smoothstep(.022, .066 + lineWidth, abs(brokenBed)));
+      }
       void main() {
         vec2 floorPoint = unprojectGround(vTerrain);
         vec2 shore = floorPoint / vec2(${COAST.rx.toFixed(1)}, ${COAST.rz.toFixed(1)});
@@ -897,11 +915,11 @@ export function createHomeTerraces(root, coastArt, art) {
           if (vSurface.x >= 4.0) {
             // Sand pressed against the shelves picks up warm stone dust and a few sunlit grains.
             float grit = noise2(floorPoint * vec2(9.6, 14.2));
-            float skirt = smoothstep(.10, .83, towardStone + (grit - .5) * .22);
+            float skirt = smoothstep(.045, .78, towardStone + (grit - .5) * .17);
             float sand = (1.0 - grass) * skirt;
-            vec3 loam = meadow * mix(vec3(.63, .51, .38), vec3(.81, .70, .59), grit);
+            vec3 loam = meadow * mix(vec3(.65, .56, .44), vec3(.82, .73, .61), grit);
             soil = mix(soil, loam, sand);
-            shade += sand * (.19 + direction * .19) * (1.0 - contact * .29);
+            shade = mix(shade, .44 * contact + (.17 + direction * .13) * skirt, 1.0 - grass);
           }
           gl_FragColor = vec4(soil, min(.87, shade * edgeFade));
           #include <colorspace_fragment>
@@ -936,7 +954,8 @@ export function createHomeTerraces(root, coastArt, art) {
           // the narrow returns. Large face values remain legible when zoomed out.
           float returnPlane = smoothstep(.35, .88, faceNormal.x) * (1.0 - faceNormal.y);
           float bevelLight = smoothstep(.30, .77, faceNormal.y) * shoulder * cut;
-          stone *= mix(vec3(1.0), vec3(.71, .83, 1.055), returnPlane * (.73 + cut * .19));
+          vec3 returnTint = vTerrace.z > .15 ? vec3(.84, .91, 1.027) : vec3(.71, .83, 1.055);
+          stone *= mix(vec3(1.0), returnTint, returnPlane * (.73 + cut * .19));
           stone *= 1.0 + bevelLight * .19;
           if (cliffFoot > 0.0) {
             vec4 cliff = texture2D(uCoastArt, floorUv);
@@ -953,6 +972,12 @@ export function createHomeTerraces(root, coastArt, art) {
             float cleanEdge = (1.0 - smoothstep(.06, .25, vSurface.x)) * smoothstep(.26, .78, vSurface.y);
             stone *= 1.0 + (facets + (cutGrain.x - .5) * .14) * resolved * cut;
             stone += stone * vec3(.17, .11, .063) * cleanEdge * cut;
+
+            // The large sandstone planes catch warm light between short, broken beds.
+            float seam = shortRockSeam(layers, grainBreak);
+            float wetRoot = sodShade * smoothstep(.38, .90, vSurface.y + .17 * (grainBreak - .5));
+            stone *= mix(vec3(1.0), vec3(1.19, 1.07, .89), .69 + .21 * grainBreak);
+            stone *= 1.0 - seam * (.29 + .13 * grainBreak) - wetRoot * .27;
           }
           if (uDetail > .5) {
             vec2 strata = vec2(layers.x / 5.70 + .36, .11 + height * .209 + (vTerrace.y * .013 + .15) * .15);
@@ -995,22 +1020,25 @@ export function createHomeTerraces(root, coastArt, art) {
           vec3 sediment = vec3(.47, .338, .169) * (.74 + .24 * grain + (patches - .5) * .13);
           turf = mix(sediment, turf * .89, cover);
         }
-        // The high banks carry turf on their flat shelves. Soil shows through
-        // the steep shoulders in irregular pockets rather than a green sheet.
+        // Grass stays on the seats, with a narrow rooted lip above exposed sandstone.
         float flatness = faceNormal.y;
         float highBank = smoothstep(7.0, 12.5, -vTerrace.y);
         float westSpur = smoothstep(15.5, 18.2, -vTerrace.x) * (1.0 - smoothstep(2.0, 5.0, abs(vTerrace.y + 8.5)));
         highBank = max(highBank, westSpur);
-        float rooted = (1.0 - smoothstep(.12 + .14 * wallPocket, .57 + .08 * patches, flatness)) * highBank;
-        float soilCover = rooted * (.66 + .32 * smoothstep(.31, .65, patches * .72 + tufts * .28));
-        vec3 dryRoots = mix(vec3(.106, .077, .036), vec3(.303, .208, .108), .29 + .53 * grain);
-        float beddingLine = height * 1.37 + vTerrace.x * .087 + patches * .29;
-        float beddingEdge = min(.24, fwidth(beddingLine));
-        float beddingSeam = 1.0 - smoothstep(.024, .103 + beddingEdge, abs(fract(beddingLine) - .43));
-        vec3 bedding = dryRoots * (.86 + .28 * moss - .18 * beddingSeam * grainBreak);
-        turf = mix(turf, bedding, soilCover);
-        // Green in the sheltered fold stays cool compared with the sunlit sod over it.
-        turf *= mix(vec3(1.0), vec3(.89, .95, 1.03), rooted * (1.0 - soilCover) * .59);
+        float scarp = highBank * (1.0 - smoothstep(.58 + (patches - .5) * .08, .84, flatness));
+        float rootLip = highBank * smoothstep(1.81, 2.67, turfKind);
+        turf *= mix(vec3(1.0), vec3(.76, .82, .65), rootLip * (.52 + .22 * tufts));
+        if (scarp > .001) {
+          vec3 normal = slopeNormal * (slopeNormal.y < 0.0 ? -1.0 : 1.0)
+            * inversesqrt(max(dot(slopeNormal, slopeNormal), 1e-12));
+          float facingSun = dot(normal, vec3(-.423, .771, -.478));
+          vec2 rockLayers = vec2(vTerrace.x + vTerrace.y * .36, height + vTerrace.y * .13);
+          float seam = shortRockSeam(rockLayers, grainBreak);
+          vec3 sandstone = mix(vec3(.237, .149, .074), vec3(.489, .366, .228), .20 + .51 * grain + .28 * patches);
+          sandstone *= .95 + .23 * facingSun + .13 * (grainBreak - .5) - .36 * seam;
+          float featheredMoss = lip * (1.0 - underside) * smoothstep(.42, .81, patches * .66 + tufts * .34);
+          turf = mix(turf, sandstone, scarp * (.98 - .22 * featheredMoss));
+        }
         vec3 meadow = texture2D(uCoastArt, floorUv).rgb;
         float seamBlend = (1.0 - smoothstep(.12, .83, vTerrace.w)) * smoothstep(-.02, .12, meadow.g - meadow.r);
         turf = mix(turf, meadow, seamBlend * .88);

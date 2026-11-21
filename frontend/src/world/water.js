@@ -162,11 +162,17 @@ vec3 rockWash(vec3 colour,vec2 p,float shoreDistance,float coastRock,float light
   float retreat=1.0-band(abs(arc-.29-(chop-.5)*.58),.046+.092*spread);
   retreat*=smoothstep(.33,.69,chop*.65+edge*.35);
   float streak=pxNoise((p+normal*(chop-.5)*.12)*vec2(6.4,9.0)-tangent*time*.42);
+  // Small broken loops extend into the clear water between projecting rocks.
+  // The same noise opens gaps in the wave so they never become a second coast outline.
+  float split=abs(streak-.5)*.77;
+  float seam=(1.0-band(abs(arc-.54-split+(chop-.5)*.56),.024+.038*spread))
+    *smoothstep(.28,.68,chop)*smoothstep(.17,.52,edge);
   float spray=(1.0-band(abs(arc-.58-(edge-.5)*.62),.16+.11*spread))
     *smoothstep(.52,.79,streak)*smoothstep(.31,.69,chop);
   float wash=nearWater*coastRock*(.86+.14*light);
-  colour=mix(colour,mix(uShallow,uFoam,.43),shoulder*.60*wash);
-  return mix(colour,uFoam,clamp(front+retreat*.80+spray*.62,0.0,1.0)*wash);
+  colour=mix(colour,mix(uShallow,uFoam,.34),shoulder*.55*wash);
+  float whiteWater=clamp(front+retreat*.84+seam*.82+spray*.57,0.0,1.0);
+  return mix(colour,uFoam,whiteWater*wash);
 }
 void main(){
   vec2 p=vWorld;float t=uSeaTime;
@@ -183,7 +189,7 @@ void main(){
   vec3 offshoreColour=mix(uMid,uDeep,clamp(deepWater,0.0,1.0));
   offshoreColour=mix(offshoreColour,uLight,smoothstep(.3,.9,swell)*(.09+(1.0-depth)*.11));
   vec3 colour=offshoreColour;
-  float shallow=1.0-smoothstep(.0,mix(4.2,3.65,uHomeCoast),d+sin(p.x*.8+p.y*.5+t*.6)*.25);
+  float shallow=1.0-smoothstep(.0,mix(4.2,3.05,uHomeCoast),d+sin(p.x*.8+p.y*.5+t*.6)*.25);
   // Sunlit foam traces the facing beach. Softer backlight keeps the northern limestone readable.
   float shoreLight=mix(1.0,mix(.73,.93,1.0-smoothstep(-13.0,-6.0,p.y)),uHomeCoast);
   colour=mix(colour,uShallow,shallow*.85*shoreLight);
@@ -205,9 +211,9 @@ void main(){
     float pools=smoothstep(.39,.73,bedding);
     vec3 overRock=mix(offshoreColour,uShallow,drop*(.14+.52*pools)*shoreLight);
     colour=mix(colour,overRock,rockShore*.92);
-    float submergedSand=(1.0-smoothstep(.16,3.4,d+bedding*.63))*beach;
-    vec3 sandWater=mix(uShallow2,vec3(.60,.55,.32),.24);
-    colour=mix(colour,sandWater,submergedSand*(.32+bedding*.25));
+    float submergedSand=(1.0-smoothstep(.16,2.4,d+bedding*.49))*beach;
+    vec3 sandWater=mix(uShallow2,vec3(.60,.55,.32),.31);
+    colour=mix(colour,sandWater,submergedSand*(.37+bedding*.25));
     float lee=smoothstep(-.54,.57,dot(normalize(shore),vec2(.71,.71)));
     float stoneShelf=1.0-smoothstep(.24,mix(1.06,2.20,lee)+bedding*.52,d);
     float shadow=rockShore*stoneShelf*(.48+bedding*.20+lee*.23);
@@ -256,10 +262,10 @@ void main(){
       float facets=pxNoise(current*vec2(1.14,2.80)+drift+vec2(curl,-coarse));
       float ridge=(1.0-band(abs(height-.69+(facets-.5)*.22),.036))*smoothstep(.05,.73,slope);
       float spray=smoothstep(.44,.78,facets*.61+ripple*.39+curl*.11)*smoothstep(.20,.68,field);
-      float nearLight=mix(.89,.32,smoothstep(1.0,8.0,d));
+      float nearLight=mix(.94,.39,smoothstep(1.0,8.0,d));
       colour=mix(colour,mix(uStroke,uFoam,.52),ridge*spray*nearLight*offshore);
       float returnLight=(1.0-band(abs(height-.46+(facets-.5)*.21),.036))*smoothstep(.19,.76,slope);
-      colour=mix(colour,uStroke,returnLight*spray*.17*offshore);
+      colour=mix(colour,uStroke,returnLight*spray*.24*offshore);
       float chop=shortWave*1.22+longWave*.73+(facets-.5)*.81;
       float reflected=(1.0-band(abs(sin(chop)-.72),.046))*smoothstep(.18,.68,height);
       float detailFade=1.0-smoothstep(.36,.9,fwidth(chop));

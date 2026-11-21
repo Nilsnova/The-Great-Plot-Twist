@@ -79,6 +79,7 @@ it('roots the raised rear headlands and both flank shelves on existing dry groun
   const cliff = createHomeRelief(root, art);
   const {position, shoreRelief} = cliff.geometry.attributes;
   const {rx, rz} = surfaces.home_islet;
+  const fit = projectedCoastBounds(cliffProfile(surfaces.home_islet));
   const sampleAt = (x, z) => 180 + Math.atan2(z / rz, x / rx) * 90 / Math.PI;
   const sides = [-1, 1];
   const footings = new Set(), crowns = new Set(), flankCrowns = new Set();
@@ -86,8 +87,13 @@ it('roots the raised rear headlands and both flank shelves on existing dry groun
   for (let i = 0; i < position.count; i++) {
     const region = shoreRelief.getZ(i);
     if (region < 4 || region > 5) continue;
+    const x = position.getX(i), y = position.getY(i);
+    expect(x).toBeGreaterThanOrEqual(fit.minX);
+    expect(x).toBeLessThanOrEqual(fit.maxX);
+    expect(y).toBeGreaterThanOrEqual(fit.minY);
+    expect(y).toBeLessThanOrEqual(fit.maxY);
     const height = -shoreRelief.getX(i);
-    const ground = unprojectGround(position.getX(i), position.getY(i) - height);
+    const ground = unprojectGround(x, y - height);
     const sample = sampleAt(ground.x, ground.z);
     expect(ground.z).toBeLessThan(0);
     expect(raisedArcs.some(([from, to]) => sample > from && sample < to)).toBe(true);

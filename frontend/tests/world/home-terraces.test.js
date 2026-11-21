@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import {expect, it} from 'vitest';
 import {defenseDisplayAnchors} from '../../src/island/defense-display.js';
-import {footprintOf} from '../../src/island/placement.js';
+import {footprintOf, KEEP_OUT} from '../../src/island/placement.js';
 import {ALL_SPOTS} from '../../src/island/spots.js';
 import {WALL_LANE_ROWS} from '../../src/island/wall-lanes.js';
 import {cliffProfile} from '../../src/art/coast-cliffs.js';
@@ -79,10 +79,13 @@ it('grounds the terrace footings in the original island and keeps defenses and w
   const inshore = defenseDisplayAnchors('home_islet', coastalGuns);
   expect(inshore.size).toBe(4);
   const paintedGuns = Array.from(inshore, ([id, point]) => ({id, ...point}));
-  for (const {id, x, z} of [...ALL_SPOTS, ...paintedGuns]) {
-    const quarter = footprintOf(id) / 8;
+  const buildFootprints = [...ALL_SPOTS, ...paintedGuns].map(({id, x, z}) => {
+    const size = footprintOf(id);
+    return {id, x, z, w: size, d: size};
+  });
+  for (const {id, x, z, w, d} of [...buildFootprints, ...KEEP_OUT]) {
     for (let column = -4; column <= 4; column++) for (let row = -4; row <= 4; row++) {
-      const point = projectGround(x + column * quarter, z + row * quarter);
+      const point = projectGround(x + column * w / 8, z + row * d / 8);
       expect(triangles.some(triangle => covers(point, triangle)), id).toBe(false);
     }
   }
@@ -110,7 +113,10 @@ it('grounds the terrace footings in the original island and keeps defenses and w
   expect(released).toHaveLength(3);
 });
 
-it('keeps a broad, gently sloping grass tread visible above the west cove', () => {
+it.each([
+  {cove: 'west', from: -107, to: -96, minWidth: .56, maxGrade: .51},
+  {cove: 'east', from: -81, to: -73, minWidth: .26, maxGrade: .87},
+])('keeps a broad grass tread visible above the $cove cove', ({from, to, minWidth, maxGrade}) => {
   const root = new THREE.Group(), shore = new THREE.Texture();
   backdrop(root, shore);
   const {position, terraceMaterial, surfaceDetail} = createHomeTerraces(root, shore).geometry.attributes;
@@ -118,20 +124,21 @@ it('keeps a broad, gently sloping grass tread visible above the west cove', () =
   const sections = new Map();
   for (let i = 0; i < position.count; i++) {
     const x = terraceMaterial.getX(i), z = terraceMaterial.getY(i);
-    if (x < -8 || x > -2 || z > -19 || terraceMaterial.getZ(i) !== 1) continue;
+    if (z > -18 || terraceMaterial.getZ(i) !== 1) continue;
     if (surfaceDetail.getZ(i) !== 1 || surfaceDetail.getW(i) <= .05 || terraceMaterial.getW(i) < .7) continue;
     const angle = Math.round(Math.atan2(z / rz, x / rx) * 180 / Math.PI);
+    if (angle < from || angle > to) continue;
     const crossSlope = surfaceDetail.getX(i);
     const section = sections.get(angle) ?? {};
     const y = position.getY(i), point = {x, z, y, height: y - projectGround(x, z).y};
     if (crossSlope < .01) section.lip = point;
-    if (crossSlope > .5 && crossSlope < .8) section.tread = point;
+    if (crossSlope > .5 && crossSlope < .89) section.tread = point;
     sections.set(angle, section);
   }
   const visible = [...sections.values()].filter(({lip, tread}) => lip && tread && tread.y - lip.y > .28);
   const broad = visible.filter(({lip, tread}) => {
     const width = Math.hypot(tread.x - lip.x, tread.z - lip.z);
-    return width > .43 && Math.abs(tread.height - lip.height) < width * .51;
+    return width > minWidth && Math.abs(tread.height - lip.height) < width * maxGrade;
   });
   expect(visible.length).toBeGreaterThan(6);
   expect(broad.length).toBeGreaterThan(6);
