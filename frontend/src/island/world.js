@@ -85,6 +85,20 @@ export function buildingArt(kind, level = 1, spec = null) {
 // them then), with the culverin (T43): the server sends one only while the flag defenses_v2 is on.
 const TOWERS = Object.freeze([...SLOT_KINDS.tower, 'culverin']);
 const BATTLE_KINDS = Object.freeze(['wall', ...TOWERS]);
+// The solid body sits behind the sprite's ground pin. Keep the steps, open arches,
+// and decorative foundations outside these player collision boxes.
+const HOME_BUILDING_BODIES = {
+  house: [2.3, 1.6, .5],
+  watchtower: [1.9, 1.5, .5],
+  island_harbor: [2.6, 1.6, .5],
+  island_techhub: [2.9, 1.9, .6],
+  island_arsenal: [2.7, 1.6, .5],
+};
+const CABIN_COLLIDER = {x: CABIN.x, z: CABIN.z - 1.8, width: 4.8, depth: 3.6, island: true};
+function homeBuildingBody(slot, {x, z}) {
+  const [width, depth, rear] = HOME_BUILDING_BODIES[slot];
+  return {x, z: z - rear, width, depth, walkOut: true};
+}
 // How many level pips stand above a building: towers always show theirs, the rest from level 2.
 export const pipCount = (kind, level = 1) => {
   const n = Number.isSafeInteger(level) && level > 0 ? Math.min(5, level) : 1;
@@ -315,7 +329,7 @@ export function decorateIsland(place, ctx = {}) {
   const purchaseLight = homeWalls ? makeWallPurchaseLight() : null;
   const wallConnections = makeWallConnections(root, {purchaseLight});
   let joinedWalls = new Set();
-  const baseColliders = [...place.colliders];
+  const baseColliders = place.colliders.filter(collider => collider !== CABIN_COLLIDER);
   let preview = null;
   const footprint = makeFootprint(root), selectionBracket = makeSelectionBracket(root);
   const wallFeedback = homeWalls ? makeWallFeedback(root) : null;
@@ -429,13 +443,20 @@ export function decorateIsland(place, ctx = {}) {
     if (shownArsenal) shownArsenal.visible = known && state.arsenal;
     progress?.apply(campaign, spots, known);
     const standing = [];
+    const solidBuildings = [];
     if (cabin) standing.push({slot: CABIN.id, x: CABIN.x, z: CABIN.z});
     if (bell) standing.push({slot: BELL.id, x: BELL.x, z: BELL.z});
-    if (shownArsenal?.visible) standing.push({slot: ARSENAL.id, x: ARSENAL.x, z: ARSENAL.z});
+    if (shownArsenal?.visible) {
+      standing.push({slot: ARSENAL.id, x: ARSENAL.x, z: ARSENAL.z});
+      solidBuildings.push(homeBuildingBody(ARSENAL.id, ARSENAL));
+    }
     for (const [id, meshes] of campaignMeshes) {
       const building = CAMPAIGN_BUILDINGS.find(item => item.id === id);
       const frame = known ? campaignArt(building, campaign) : null;
-      if (frame === building.art) standing.push({slot: id, x: building.x, z: building.z});
+      if (frame === building.art) {
+        standing.push({slot: id, x: building.x, z: building.z});
+        if (HOME_BUILDING_BODIES[id]) solidBuildings.push(homeBuildingBody(id, building));
+      }
       for (const [name, mesh] of Object.entries(meshes)) mesh.visible = name === frame;
     }
     for (const spot of SPOTS) {
@@ -449,10 +470,15 @@ export function decorateIsland(place, ctx = {}) {
       }
       const view = viewOf(spot.id, where);
       for (const kind of kindsOf(spot)) moveSprite(buildings.get(`${spot.id}:${kind}`), view.x, view.z);
-      if (built && slotOf(spot) !== 'wall') {
+      const slot = slotOf(spot);
+      if (built && slot !== 'wall') {
         const saved = recoveryState?.structures?.find(row => row.spot === spot.id);
         const look = structureRecoveryAppearance(answer, saved, recoveryState)?.look;
-        standing.push({slot: slotOf(spot), ...view, ruin: look === 'broken'});
+        standing.push({slot, ...view, ruin: look === 'broken'});
+        // A move preview is only a ghost. The body stays at the last saved position.
+        if (homeWalls && HOME_BUILDING_BODIES[slot]) {
+          solidBuildings.push(homeBuildingBody(slot, placedSpot(spot.id, spots) ?? spot));
+        }
       }
       // Locked things stay on the map (GAME-V3.md §4): a spot the campaign opens later, or whose kind is not
       // open yet, shows a lock badge instead of the glowing ring.
@@ -476,8 +502,7 @@ export function decorateIsland(place, ctx = {}) {
     if (art) showCrew(spots, crew, battle);
     if (layout.zones === islandZones) {
       place.zones = islandZones({visitor, spots, arsenal: state.arsenal});
-      place.colliders.splice(0, place.colliders.length, ...baseColliders,
-        {x: CABIN.x, z: CABIN.z - 1.8, width: 4.8, depth: 3.6, island: true});
+      place.colliders.splice(0, place.colliders.length, ...baseColliders, CABIN_COLLIDER, ...solidBuildings);
     } else place.zones = [...baseZones, ...(known ? layout.zones() : [])];
   }
   apply(state);
@@ -711,6 +736,7 @@ export function decorateIsland(place, ctx = {}) {
       place.setSelectedCanopy?.(null);
       wallFeedback?.dispose();
       place.setMooringBattle?.(false);
+      if (homeWalls) place.colliders.splice(0, place.colliders.length, ...baseColliders, CABIN_COLLIDER);
       for (const id of [...shown.keys()]) clear(id);
       for (const item of lockTextures.values()) item.texture.dispose(); // the padlocks a spot no longer shows
       if (art) Object.values(art).forEach(material => { material.map?.dispose(); material.dispose(); });
