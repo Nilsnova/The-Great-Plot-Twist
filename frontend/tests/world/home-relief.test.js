@@ -59,25 +59,25 @@ it('shows a lower decorative shelf on both cliff shoulders while leaving landing
   expect(right).toBeGreaterThan(6);
 });
 
-it('puts both western stone courses inside the existing facade and away from the approaches', () => {
+it('fits two staggered stone courses along both front banks between the original beaches', () => {
   const cliff = createHomeRelief(new THREE.Group(), new THREE.Texture());
   const {position, shoreRelief} = cliff.geometry.attributes;
   const {rx, rz} = surfaces.home_islet;
+  const sections = [[9, 19], [19, 27], [27, 36], [54, 63], [63, 71], [71, 81]];
   const upper = new Set(), lower = new Set();
   for (let i = 0; i < position.count; i++) {
     if (shoreRelief.getZ(i) !== .375) continue;
     const depth = shoreRelief.getX(i);
     const ground = unprojectGround(position.getX(i), position.getY(i));
     const sample = Math.atan2((ground.z - depth / LEGACY_DEPTH) / rz, ground.x / rx) * 90 / Math.PI;
-    expect(sample).toBeGreaterThan(55);
-    expect(sample).toBeLessThan(80);
+    const section = sections.findIndex(([from, to]) => sample > from && sample <= to);
+    expect(section).toBeGreaterThanOrEqual(0);
     expect(depth).toBeGreaterThan(0);
     expect(depth).toBeLessThanOrEqual(CLIFF_DEPTH + .001);
-    const section = sample < 63 ? 0 : sample < 71 ? 1 : 2;
     if (shoreRelief.getY(i) < .13) upper.add(section);
     if (shoreRelief.getY(i) > .82) lower.add(section);
   }
-  expect(upper).toEqual(new Set([0, 1, 2]));
+  expect(upper).toEqual(new Set(sections.keys()));
   expect(lower).toEqual(upper);
 });
 
