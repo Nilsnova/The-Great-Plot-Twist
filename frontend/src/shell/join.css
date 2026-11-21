@@ -1,6 +1,6 @@
 /* Join page: one large code field. Loaded with the page, never on the cold title. */
 .join-form{display:grid;gap:12px}.join-form .preference{display:grid;gap:6px;font-size:18px}
-.join-form input{min-height:48px;width:100%;box-sizing:border-box;padding:8px 12px;font:20px/1.2 var(--u-font);letter-spacing:2px;text-transform:uppercase;color:#15382f;background:#fff7dc;border:2px solid #a7b58c;border-radius:6px}
+.join-form input{min-height:48px;width:100%;box-sizing:border-box;padding:8px 12px;font:20px/1.2 var(--u-font);letter-spacing:2px;text-transform:uppercase;color:#15382f;background:#fff7dc;border:2px solid var(--u-brown,#8a6230);border-radius:var(--u-radius-xs,10px);box-shadow:inset 0 3px 4px #8a623033;caret-color:#8a6230}
 .join-form .kit-button{min-height:48px}
 /* The friend's invite landing (shell/invite.js). */
 .invite-landing{display:grid;gap:12px;text-align:center;justify-items:center}
