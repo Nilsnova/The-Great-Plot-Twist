@@ -16,6 +16,8 @@ export function createInput(canvas) {
     // itself (the canvas or the page), so Tab still moves between buttons and inside open cards, and
     // Shift+Tab still leaves the game view for the HUD buttons.
     if (event.code === 'Tab' && !event.shiftKey && (event.target === canvas || event.target === globalThis.document?.body)) event.preventDefault();
+    // A held key already drives movement. Its repeats cannot re-arm world input after a reset.
+    if (event.repeat) return;
     if (!held.has(event.code)) pressed.add(event.code);
     held.add(event.code);
   });

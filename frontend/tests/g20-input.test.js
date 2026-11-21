@@ -1,4 +1,4 @@
-// Real DOM input unit tests: keyboard, touch and standard-gamepad translation only.
+// Real DOM input tests: keyboard ownership, touch and standard-gamepad translation.
 import { expect, it } from 'vitest';
 import { browserHarness } from './g20-browser.js';
 const evaluate = browserHarness();
@@ -14,6 +14,44 @@ it('ignores editable keys, permits Escape and prevents page scrolling for game a
     input.dispose(); send(window, 'KeyW'); return { editableHeld, escape, arrowDefault, arrow, disposedHeld: input.held.size };
   });
   expect(result).toEqual({ editableHeld: 0, escape: true, arrowDefault: false, arrow: true, disposedHeld: 0 });
+});
+
+it('lets a held key aim the finisher and requires a fresh press to walk afterwards', async () => {
+  const result = await evaluate(async () => {
+    const { createInput } = await window.g20Import('/src/core/input.js');
+    const { createFinisherWatch, finisherOwnsKeys } = await window.g20Import('/src/pirates/finisher/captain-lock.js');
+    const { createFinisherScene } = await window.g20Import('/src/pirates/finisher/scene.js');
+    const canvas = document.createElement('canvas'); document.body.append(canvas);
+    const input = createInput(canvas), changed = createFinisherWatch();
+    const waves = { island: { state: { finisher: null } } };
+    const frame = () => {
+      const locked = finisherOwnsKeys(waves);
+      if (changed(locked)) input.reset();
+      return locked ? 0 : input.axis(['KeyD'], ['KeyA']);
+    };
+    const key = (type, repeat = false) => canvas.dispatchEvent(new KeyboardEvent(type,
+      { code: 'KeyD', repeat, bubbles: true, cancelable: true }));
+    key('keydown'); const walking = frame();
+
+    const scene = createFinisherScene({ container: document.body, me: 'self' });
+    const finisher = { active: true, kind: 'cannon', phase: 'task', task: 0, sample: 5, salt: 1, players: ['self'],
+      tasks: [{ task: 'cannon', from: 0, to: 100, score: 0, goal: 3 }] };
+    waves.island.state.finisher = finisher;
+    const locked = frame();
+    scene.update({ finisher });
+    key('keydown', true);
+    scene.update({ finisher, dt: .10 });
+    const aim = scene.aim;
+
+    waves.island.state.finisher = null;
+    scene.dispose(); frame();
+    key('keydown', true); const stale = { walking: frame(), pressed: input.consume('KeyD') };
+    key('keyup'); key('keydown'); const fresh = { walking: frame(), pressed: input.consume('KeyD') };
+    input.dispose();
+    return { walking, locked, aim, stale, fresh };
+  });
+  expect(result).toMatchObject({ walking: 1, locked: 0, stale: { walking: 0, pressed: false }, fresh: { walking: 1, pressed: true } });
+  expect(result.aim).toBeGreaterThan(50);
 });
 
 it('combines virtual sources and resets pointer deltas per frame, then releases on blur', async () => {
