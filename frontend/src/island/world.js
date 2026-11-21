@@ -315,12 +315,12 @@ export function decorateIsland(place, ctx = {}) {
   const foundations = homeWalls ? makeBuildingFoundations(root) : null;
   const purchaseLight = homeWalls ? makeWallPurchaseLight() : null;
   const wallConnections = makeWallConnections(root, {purchaseLight});
+  const buildingFeedback = homeWalls ? makeBuildingFeedback(root) : null;
   let joinedWalls = new Set();
   const baseColliders = [...place.colliders];
   let preview = null;
   const footprint = makeFootprint(root), selectionBracket = makeSelectionBracket(root);
   const wallFeedback = homeWalls ? makeWallFeedback(root) : null;
-  const buildingFeedback = homeWalls ? makeBuildingFeedback(root) : null;
   // D056: while a wall is moved, the cells where a wall stops pirates glow (home island only).
   const wallLanes = homeWalls ? makeWallLanes(root) : null;
   // Where a spot stands now: the cell of a move under way, the answer's x/z, else its fixed spot (Pirate Point's stay).
