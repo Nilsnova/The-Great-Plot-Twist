@@ -46,7 +46,7 @@ function finishFlow(bus) {
   return flow;
 }
 
-function setup({ readEvents, sendInputs, finishWave, timers = [], hud = null, sound, startNextWave, playCutscene } = {}) {
+function setup({ readEvents, sendInputs, finishWave, timers = [], hud = null, sound, startNextWave, playCutscene, holdBreak } = {}) {
   const bus = makeBus();
   let now = START;
   const transport = {
@@ -57,7 +57,7 @@ function setup({ readEvents, sendInputs, finishWave, timers = [], hud = null, so
     finishWave: finishWave ?? vi.fn(async body => closeAnswer(body)),
   };
   const controller = createWaveController({ recoveryPlayoutMs: 0, bus, now: () => now, recoveryTransport: transport,
-    playerId: 'account-id', world: hud ? { container: {} } : {}, sound, startNextWave, playCutscene,
+    playerId: 'account-id', world: hud ? { container: {} } : {}, sound, startNextWave, playCutscene, holdBreak,
     getDefenses: () => [], createRenderer: () => null, createHud: () => hud,
     setTimer: (fn, ms) => { const timer = { fn, ms, at: now + ms }; timers.push(timer); return timer; },
     clearTimer: timer => { const index = timers.indexOf(timer); if (index >= 0) timers.splice(index, 1); }, accept: () => true });
@@ -212,6 +212,30 @@ describe('the end of a recovery wave (controller.js)', () => {
     expect(h.controller.wave.info.waveId).toBe('wave-new');
     expect(h.controller.wave.roundLoot).toBeUndefined();
     h.controller.dispose();
+  });
+
+  it('replaces the confirmation banner with the paused break after a confirmed win', async () => {
+    let resolveFinish;
+    const finishWave = vi.fn(() => new Promise(resolve => { resolveFinish = resolve; }));
+    const hud = { banner: vi.fn(), countdown() {}, bar() {}, prompt() {}, dispose() {}, setVisible() {}, pause: vi.fn() };
+    const h = setup({ finishWave, hud, startNextWave: async () => ({ ok: true }),
+      holdBreak: () => ({ paused: true, label: 'Resume', line: 'The next wave is paused.' }) });
+    try {
+      h.begin();
+      for (let i = 0; i < 40 && !h.controller.wave.done; i++) await h.step(60_000);
+      expect(hud.banner).toHaveBeenLastCalledWith('Wave over', 'Confirming the result…');
+      expect(h.controller.inBreak).toBe(false);
+
+      resolveFinish(closeAnswer(finishWave.mock.calls[0][0]));
+      await h.step(1);
+      await h.step(1);
+
+      expect(h.controller.inBreak).toBe(true);
+      expect(hud.pause).toHaveBeenLastCalledWith(expect.objectContaining({ title: 'Wave 1 won!', paused: true }));
+      expect(hud.banner).toHaveBeenLastCalledWith('');
+    } finally {
+      h.controller.dispose();
+    }
   });
 
   it('waits for the saved loss before announcing a local win or completing the wave quest', async () => {
