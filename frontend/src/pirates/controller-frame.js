@@ -208,7 +208,11 @@ export function createFrame(ctl) {
     }
     // After the wave ends the sim stops, but its shells, bombs and balls in flight still land on screen: the
     // drawing clock goes on in real time instead of freezing them in the air through the break.
-    const stepped = Math.max(0, Math.min(elapsed, current.ticks * TICK_SECONDS + TICK_SECONDS));
+    // A boss finisher or a last-chance rescue freezes the sim's clock while this controller's ticks run on. Every
+    // shot is stamped in the sim's time, so the drawing clock stays behind by the same pause: without it each
+    // ball after such a minigame counted as already landed and was never drawn (playtest 21 Nov).
+    const frozen = Math.max(0, current.ticks * TICK_SECONDS - (current.state?.time ?? current.ticks * TICK_SECONDS));
+    const stepped = Math.max(0, Math.min(elapsed, current.ticks * TICK_SECONDS + TICK_SECONDS) - frozen);
     const simTime = current.done ? (current.doneSimTime = (current.doneSimTime ?? stepped) + Math.max(0, dt)) : stepped;
     for (let i = current.splashesAt.length - 1; i >= 0; i--) if (current.splashesAt[i] <= simTime) { current.splashesAt.splice(i, 1); cue('pirate-splash'); }
     const seconds = elapsed < 0 ? Math.ceil(-elapsed) : 0;
