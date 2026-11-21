@@ -9,8 +9,30 @@ function fixture(spectator=false,extra={}){
  const transport={readEvents:vi.fn(async()=>({headSeq:0,sealedThroughTick:2,events:[]})),sendInputs:vi.fn(async()=>({accepted:[]})),checkpoint:vi.fn(),finishWave:vi.fn()};
  const controller=createWaveController({getSessionProof:()=>live,now:()=>now,recoveryPlayoutMs:0,recoveryTransport:transport,world:{player:{position:{x:0,z:0}},place:()=> 'home_islet'},place:'home_islet',
   captainLevel:()=>5,captainSkills:()=>['medic'],captainWeapon:()=> 'blunderbuss',createRenderer:()=>null,createHud:()=>null,setTimer:()=>({}),clearTimer:()=>{},...extra});
- return {info,controller,transport,setProof:value=>{live=value;},setNow:value=>{now=value;}};
+ return {info,controller,transport,setProof:value=>{live=value;},setNow:value=>{now=value;},getNow:()=>now};
 }
+it('reports native Captain health without jumping over the regular wave playout',async()=>{
+ const f=fixture(false,{recoveryPlayoutMs:1000,world:{place:()=> 'home_islet'}}), start=Date.parse(f.info.startsAt);
+ f.transport.readEvents.mockImplementation(async()=>({headSeq:0,sealedThroughTick:Math.max(-1,Math.floor((f.getNow()-start-100)/50)-1),events:[]}));
+ f.transport.captains=vi.fn(async({report})=>({accepted:true,repeated:false,throughTick:report.throughTick,
+  inputHeadSeq:report.inputHeadSeq,captains:Object.fromEntries(Object.entries(report.captains).map(([id,row])=>[id,{...row,fallId:null}]))}));
+ f.setNow(start-1200);
+ expect(f.controller.start({...f.info,clockOffsetMs:0})).toBeTruthy();
+ try{
+  let maxStep=0,previous=0;
+  for(let elapsed=-1200;elapsed<=11000;elapsed+=16){
+   f.setNow(start+elapsed);
+   f.controller.update(.016);
+   for(let settle=0;settle<12;settle++)await Promise.resolve();
+   const {ticks}=f.controller.wave;
+   if(elapsed>=1800)maxStep=Math.max(maxStep,ticks-previous);
+   previous=ticks;
+  }
+  expect(f.transport.captains.mock.calls.length).toBeGreaterThanOrEqual(3);
+  expect(f.controller.wave.ticks).toBeGreaterThan(190);
+  expect(maxStep).toBe(1);
+ }finally{f.controller.dispose();}
+});
 it('replays the full frozen native roster as spectator without any inputs, health or finish mutation',async()=>{
  const f=fixture(true);expect(f.controller.start(f.info)).toBeTruthy();f.controller.update(.05);await vi.waitFor(()=>expect(f.controller.wave.recoveryPolling).toBe(false));f.controller.update(.05);
  expect(f.controller.state.phase).toBe('running');

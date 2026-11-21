@@ -6,8 +6,8 @@ import {TICK_SECONDS} from './sync.js';
 const failed=code=>({ok:false,code});
 const count=value=>Number.isSafeInteger(value) && value>=0;
 function reportFor(current,makeUid){
- const replay=current.recoveryReplay,throughTick=replay.sealedThroughTick,party=current.state.party,tokens=current.info.initialSnapshot.participants.map(row=>row.participantToken);
- if(!replay.complete() || throughTick<0 || current.recoveryDriver.nextTick!==throughTick+1 || !Array.isArray(party)
+ const replay=current.recoveryReplay,throughTick=current.recoveryDriver.nextTick-1,party=current.state.party,tokens=current.info.initialSnapshot.participants.map(row=>row.participantToken);
+ if(!replay.canAdvanceThrough(throughTick) || !Array.isArray(party)
   || party.length!==tokens.length || new Set(party.map(row=>row.id)).size!==tokens.length || tokens.some(token=>!party.some(row=>row.id===token)))return null;
  const captains={};
  for(const row of party){
@@ -33,14 +33,23 @@ function accepted(answer,report){
  });
 }
 export function createCaptainSynchronizer({getCurrent,controls,flush,fetch,advance,send,makeUid=makeActionUid}={}){
- return function sync(){
+ return function sync({refresh=true}={}){
   const current=getCurrent();
   if(!current?.info.initialSnapshot?.economy || !controls(current))return Promise.resolve(failed('session_context_required'));
-  if(current.captainSyncPromise)return current.captainSyncPromise;
   const valid=()=>getCurrent()===current && controls(current);
+  if(current.captainSyncPromise){
+   if(!refresh || current.captainSyncRefreshing)return current.captainSyncPromise;
+   // Explicit revival needs the latest seal even if a periodic report is already in flight.
+   return current.captainSyncPromise.then(()=>valid()?sync():failed('session_context_changed'));
+  }
+  current.captainSyncRefreshing=refresh;
   const running=(async()=>{
-   if(!await flush(current) || !valid())return failed('input_sync_required');
-   if(!await fetch(current) || !valid() || !advance(current,current.recoveryReplay.sealedThroughTick))return failed('health_sync_required');
+   if(refresh){
+    if(!await flush(current) || !valid())return failed('input_sync_required');
+    if(!await fetch(current) || !valid())return failed('health_sync_required');
+    const seal=current.recoveryReplay.sealedThroughTick;
+    if(!advance(current,seal) || current.recoveryDriver.nextTick!==seal+1)return failed('health_sync_required');
+   }
    const report=reportFor(current,makeUid);if(!report)return failed('health_sync_required');
    current.captainReportRequest=report;
    let answer;try{answer=await send({waveId:current.info.waveId,report});}catch{return failed('network_error');}
@@ -49,7 +58,9 @@ export function createCaptainSynchronizer({getCurrent,controls,flush,fetch,advan
    current.captainFacts={throughTick:report.throughTick,inputHeadSeq:report.inputHeadSeq,captains:JSON.parse(JSON.stringify(answer.captains))};
    current.sim?.bindCaptainFalls?.(answer.captains,report.throughTick);
    return {ok:true,...JSON.parse(JSON.stringify(current.captainFacts))};
-  })().finally(()=>{if(current.captainSyncPromise===running)current.captainSyncPromise=null;});
+  })().finally(()=>{
+   if(current.captainSyncPromise===running){current.captainSyncPromise=null;current.captainSyncRefreshing=false;}
+  });
   current.captainSyncPromise=running;return running;
  };
 }

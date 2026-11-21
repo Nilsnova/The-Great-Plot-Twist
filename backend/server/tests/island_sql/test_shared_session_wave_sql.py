@@ -241,20 +241,23 @@ def prefix(database, room, started, *, minimum_tick=0):
         sleep(0.01)
 
 
-def captain_report(database, room, started, *, fallen=None, minimum_tick=0, bases=None):
+def captain_report(
+    database, room, started, *, fallen=None, minimum_tick=0, bases=None, playout_delay_ticks=0
+):
     owner, _, _, treasury, sessions = room
-    page = prefix(database, room, started, minimum_tick=minimum_tick)
+    page = prefix(database, room, started, minimum_tick=minimum_tick + playout_delay_ticks)
+    through_tick = page["sealedThroughTick"] - playout_delay_ticks
     facts = {
         row["participantToken"]: {
             "hpUnits": 0 if row["participantToken"] == fallen else 1_000_000,
-            "downAtTick": page["sealedThroughTick"] if row["participantToken"] == fallen else None,
+            "downAtTick": through_tick if row["participantToken"] == fallen else None,
             "reviveBasisSeq": (bases or {}).get(row["participantToken"], 0),
         }
         for row in started["initialSnapshot"]["participants"]
     }
     report = {
         "checkpointUid": uuid4().hex,
-        "throughTick": page["sealedThroughTick"],
+        "throughTick": through_tick,
         "inputHeadSeq": page["through"],
         "captains": facts,
     }
@@ -328,6 +331,20 @@ def test_raw_revive_or_away_cannot_hide_or_heal_a_shared_captain(database):
         ).fetchone()[0]
         == 0
     )
+
+
+def test_native_captain_report_accepts_played_ticks_behind_the_latest_seal(database):
+    room = live_room(database)
+    started = bell(database, room)
+    reported, request = captain_report(database, room, started, playout_delay_ticks=4)
+    assert reported["accepted"] is True
+    assert reported["throughTick"] == request["throughTick"]
+    as_owner(database)
+    seal = database.execute(
+        "select sealed_through_tick from public.recovery_wave_states where wave_id=%s",
+        (started["waveId"],),
+    ).fetchone()[0]
+    assert seal - reported["throughTick"] >= 4
 
 
 def test_real_captain_report_creates_fall_once_and_retained_reconnect_never_heals(database):
