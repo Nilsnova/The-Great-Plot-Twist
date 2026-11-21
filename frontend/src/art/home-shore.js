@@ -223,10 +223,11 @@ function barrel(c) {
   part(c, svg('M14.78 8.78 Q16.38 17.13 14.7 27.6 L17.19 26.54 Q19.58 16.5 16.89 8.83 Z'),
     linear(c, 15.3, 12, 18.7, 24.9, [[0, '#ab6d3e'], [1, '#75482c']]), stave);
   stroke(c, svg('M8.3 8.8 Q5.6 17.7 8.15 27 M11.75 8.9 Q10.5 17.7 11.4 28 M15.5 8.8 Q17 17.3 15.3 27 M6.4 12.5 Q4.7 16.4 5.9 20.5'), '#754727', .49, .86);
+  stroke(c, svg('M9.3 16.1 Q8.8 19.7 9.5 21.8 M14.28 15.7 Q14.92 18.23 14.42 21.85 M17.7 16.4 Q18.12 17.97 17.63 20.1'), '#efbb75', .32, .65);
   for (const y of [10.8, 22.25]) {
     const hoop = svg(`M4.2 ${y} Q12 ${y + 3.65} 19.8 ${y} L20.15 ${y + 2.45} Q12 ${y + 6.4} 3.85 ${y + 2.45} Z`);
     part(c, hoop, linear(c, 4, y, 20.3, y + 2, [[0, '#697f93'], [.22, '#8299a8'], [.54, '#486172'], [1, '#243c54']]), {line: '#413f3b', width: .46, shade: false});
-    stroke(c, svg(`M4.92 ${y + .7} Q8.15 ${y + 2.08} 12.3 ${y + 2.47}`), '#afc2bd', .48, .95);
+    stroke(c, svg(`M4.92 ${y + .7} Q8.15 ${y + 2.08} 12.3 ${y + 2.47}`), '#bdced0', .48, .95);
     part(c, ellipse(7.45, y + 2.6, .5, .48), '#d0a367', {line: '#836344', width: .3, shade: false});
   }
   part(c, ellipse(12, 6.8, 7.45, 3.55), '#cd9356', {line: '#614638', width: .55, depth: .9});
@@ -264,7 +265,7 @@ export function homeShoreFrames() {
     sailboat: [96, 112, 10, coastalSailboat(false), {outline: .5}],
     'dark-schooner': [128, 112, 10, coastalSailboat(true), {outline: .5}],
     'home-bench': [48, 32, 3, bench, {outline: .29}],
-    'home-barrel': [24, 32, 3, barrel, {outline: .34}],
-    'home-lantern': [16, 24, 2, lantern, {outline: .23}],
+    'home-barrel': [24, 32, 3, barrel, {outline: .34, worldDetail: 7}],
+    'home-lantern': [16, 24, 2, lantern, {outline: .23, worldDetail: 7}],
   };
 }

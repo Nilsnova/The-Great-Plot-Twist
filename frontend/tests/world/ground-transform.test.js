@@ -6,7 +6,7 @@ import {projectGround,unprojectGround,LEGACY_DEPTH} from '../../src/world/projec
 import {backdrop} from '../../src/world/places/resources.js';
 import {createPixelTerrain} from '../../src/pixel/terrain.js';
 import {makeFootprint,makeWallLanes} from '../../src/island/move-preview.js';
-import {createLightPools} from '../../src/world/light-pools.js';
+import {createLightPools, homeVillageLights} from '../../src/world/light-pools.js';
 import {makeSelectionBracket} from '../../src/island/selection-bracket.js';
 
 describe('projected ground buffers and coast sampling',()=>{
@@ -61,6 +61,30 @@ describe('projected ground buffers and coast sampling',()=>{
     expect(ground.x).toBeCloseTo(4.6,6);expect(ground.y).toBeCloseTo(8.2,6);
     lights.mesh.getMatrixAt(1,matrix);const halo=new THREE.Vector3(0,1,0).applyMatrix4(matrix);
     expect(halo.x).toBe(5);expect(halo.y).toBe(12);lights.dispose();
+  });
+  it('updates Home light pools when a house moves and clears them on travel', () => {
+    const lights = createLightPools(new THREE.Scene()), home = new THREE.Group();
+    const house = {slot: 'house', x: 7, z: -6};
+    const fixed = [{slot: 'island_bell', x: 8.5, z: 12}, {slot: 'watchtower', x: 0, z: -14, ruin: true}];
+    home.userData.homeVillageLights = homeVillageLights([house, ...fixed]);
+    lights.setPlace(home);
+    expect(lights.pools).toBe(3);
+    lights.update(0, 0);
+    expect(lights.mesh.visible).toBe(false);
+    lights.update(0, 1);
+    expect(lights.mesh.visible).toBe(true);
+    const matrix = new THREE.Matrix4();
+    lights.mesh.getMatrixAt(0, matrix);
+    const x = unprojectGround(matrix.elements[12], matrix.elements[13]).x;
+    home.userData.homeVillageLights = homeVillageLights([{...house, x: 9}, ...fixed]);
+    lights.update(1, 1);
+    lights.mesh.getMatrixAt(0, matrix);
+    expect(unprojectGround(matrix.elements[12], matrix.elements[13]).x).toBeCloseTo(x + 2);
+    lights.setPlace(new THREE.Group());
+    lights.update(2, 1);
+    expect(lights.pools).toBe(0);
+    expect(lights.mesh.visible).toBe(false);
+    lights.dispose();
   });
   it('places and releases an independent selected bracket without creating Move state',()=>{
     const root=new THREE.Group(),bracket=makeSelectionBracket(root),mesh=root.children[0],dispose=vi.spyOn(mesh.children[0].geometry,'dispose');

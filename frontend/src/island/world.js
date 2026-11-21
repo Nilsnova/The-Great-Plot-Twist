@@ -9,6 +9,7 @@ import {defenseDisplayAnchors} from './defense-display.js';
 import {animateLandmarkMaterial, landmarkProfiles} from './landmark-motion.js';
 import {unprojectGround} from '../world/projection.js';
 import {groundGeometry} from '../world/ground-transform.js';
+import {homeVillageLights} from '../world/light-pools.js';
 import {artSizes, loadArt, placeArt, projectPoint} from '../world/art.js';
 import {ALL_SPOTS as ISLAND_SPOTS, CABIN, BELL, CAMPAIGN_BUILDINGS, ARSENAL, islandZones, placedSpot} from './spots.js';
 import {isExtraSpot} from './extra-spots.js';
@@ -369,6 +370,7 @@ export function decorateIsland(place, ctx = {}) {
     clear(spot.id);
     if (!key) return;
     const mesh = put(id, where.x, where.z); mesh.name = `island-${kind}:${spot.id}`; mesh.userData.level = level;
+    if (kind === 'house' || kind === 'watchtower') trackMotion(mesh, id);
     if (joined) mesh.scale.x = .62; // Keep the original level art as posts; the join draws the span.
     mesh.userData.role = activeRole({kind, level, spec: answer?.spec}); mesh.userData.art = id;
     mesh.userData.recoveryLook = appearance?.look ?? 'intact';
@@ -472,6 +474,7 @@ export function decorateIsland(place, ctx = {}) {
       if (marker.wave !== wave) { marker.wave = wave; marker.lock.material.map = lockTexture(wave).texture; marker.lock.material.needsUpdate = true; }
     }
     foundations?.show(standing);
+    if (homeWalls) place.group.userData.homeVillageLights = homeVillageLights(standing);
     // The wave's renderer draws the crew during a battle; outside one they stand by their posts.
     if (art) showCrew(spots, crew, battle);
     if (layout.zones === islandZones) {
@@ -602,7 +605,8 @@ export function decorateIsland(place, ctx = {}) {
     const material = mesh?.material, profile = landmarkProfiles[id];
     if (homeWalls && profile && material?.map?.userData.villageArt?.source === 'png'
       && !landmarkMotion.has(material)) {
-      landmarkMotion.set(material, animateLandmarkMaterial(material, profile));
+      landmarkMotion.set(material, animateLandmarkMaterial(material,
+        profile.lights ? {...profile, nightStrength: .46} : profile));
     }
   }
   return {
@@ -703,6 +707,7 @@ export function decorateIsland(place, ctx = {}) {
     retryWallArt,
     dispose() {
       if (disposed) return; disposed = true; cleanups.splice(0).forEach(stop => stop());
+      if (homeWalls) delete place.group.userData.homeVillageLights;
       tasks.dispose(); notice.dispose(); staticArt.dispose();
       progress?.dispose(); recoveryIndicators.dispose(); foundations?.dispose(); landmarkMotion.clear();
       wallConnections.dispose(); selectionBracket.dispose();

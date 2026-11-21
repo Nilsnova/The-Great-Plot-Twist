@@ -21,25 +21,42 @@ const SOURCES = {
 };
 // The cabin's illuminated windows spill onto the path directly in front of its step.
 const CABIN_LIGHT = [[-.87, .41, 1.45, 0, 0], [.69, .5, 1.29, 0, 0]];
+// Each pool begins under the lit window or doorway. Fittings such as the bell
+// lamp cast a shorter spill than a pair of facing house windows.
+const VILLAGE_WINDOWS = {
+  house: [[-.53, .47, 1.45, .73], [.54, .32, 1.32, .63]],
+  watchtower: [[.27, .47, 1.63, .67]],
+  island_harbor: [[-.64, .54, 1.62, .83], [.55, .42, 1.48, .75]],
+  island_techhub: [[-.52, .48, 1.38, .79], [.51, .40, 1.35, .72]],
+  island_arsenal: [[.37, .52, 1.58, .79]],
+  island_bell: [[-.52, .31, 1.24, .68]],
+};
+
+export function homeVillageLights(standing) {
+  return standing.flatMap(({slot, x, z, ruin}) => {
+    if (ruin || !Object.hasOwn(VILLAGE_WINDOWS, slot)) return [];
+    return VILLAGE_WINDOWS[slot].map(([dx, dz, r, gain]) => ({...projectPoint(x + dx, z + dz), r, gain}));
+  });
+}
 
 const vertex = /* glsl */`
-attribute vec4 aPool;varying vec2 vWorld;varying vec4 vPool;varying float vMin;
+attribute vec4 aPool;varying vec2 vWorld;varying vec4 vPool;varying vec2 vIntensity;
 void main(){vec4 world=modelMatrix*instanceMatrix*vec4(position,1.0);vWorld=world.xy;
-  vec4 centre=modelMatrix*instanceMatrix*vec4(0.0,0.0,0.0,1.0);vPool=vec4(centre.xy,aPool.xy);vMin=aPool.z;
+  vec4 centre=modelMatrix*instanceMatrix*vec4(0.0,0.0,0.0,1.0);vPool=vec4(centre.xy,aPool.xy);vIntensity=aPool.zw;
   gl_Position=projectionMatrix*viewMatrix*world;}`;
 const fragment = /* glsl */`
 ${pixelGlsl}${groundProjectionGlsl}
 uniform vec3 uColour;uniform float uStrength,uTime;
-varying vec2 vWorld;varying vec4 vPool;varying float vMin;
+varying vec2 vWorld;varying vec4 vPool;varying vec2 vIntensity;
 void main(){
   vec2 px=(vWorld*16.0),p=(px+.5)/16.0,q=(p-vPool.xy)/vPool.z;
   if(vPool.w<.5)q=unprojectGround(q);
   float r=length(q);if(r>1.0)discard;
   float flicker=1.0+.035*sin(uTime*6.3+vPool.x*3.1)+.02*sin(uTime*11.7+vPool.y*5.3);
-  float glow=pow(1.0-r,1.1)*max(uStrength,vMin)*flicker;
+  float glow=pow(1.0-r,1.1)*max(uStrength,vIntensity.x)*flicker;
   float level=pxSteps(glow,3.0,px);
   if(level<=0.0)discard;
-  gl_FragColor=vec4(uColour*level*level*.26,1.0);
+  gl_FragColor=vec4(uColour*level*level*.26*vIntensity.y,1.0);
   ${toScreen}
 }`;
 
@@ -52,15 +69,15 @@ export function createLightPools(scene) {
   geometry.setAttribute('aPool', attribute);
   const mesh = new THREE.InstancedMesh(geometry, material, MAX);
   mesh.name = 'light-pools'; mesh.count = 0; mesh.renderOrder = 912; mesh.frustumCulled = false; scene.add(mesh);
-  let base = [];
+  let base = [], place = null, village = null;
   const extras = new Map(), matrix = new THREE.Matrix4();
   function rebuild() {
-    const pools = [...base, ...[...extras.values()].flat()].slice(0, MAX);
+    const pools = [...base, ...[...extras.values()].flat(), ...(village ?? [])].slice(0, MAX);
     pools.forEach((pool, i) => {
       if ((pool.kind ?? 0) === 0) matrix.copy(groundShapeMatrix()).scale(new THREE.Vector3(pool.r, pool.r, 1));
       else matrix.makeScale(pool.r, pool.r, 1);
       matrix.setPosition(pool.x, pool.y, 0); mesh.setMatrixAt(i, matrix);
-      attribute.setXYZW(i, pool.r, pool.kind ?? 0, pool.min ?? 0, 0);
+      attribute.setXYZW(i, pool.r, pool.kind ?? 0, pool.min ?? 0, pool.gain ?? 1);
     });
     mesh.count = pools.length; mesh.instanceMatrix.needsUpdate = true; attribute.needsUpdate = true;
   }
@@ -68,6 +85,8 @@ export function createLightPools(scene) {
     mesh,
     // Read the light sources of a newly attached place from its placed sprites.
     setPlace(group) {
+      place = group;
+      village = place?.userData.homeVillageLights ?? null;
       base = [];
       group?.traverse?.(object => {
         const {asset, ground} = object.userData ?? {};
@@ -85,6 +104,8 @@ export function createLightPools(scene) {
     extra(key, pools = []) { if (pools.length) extras.set(key, pools); else extras.delete(key); rebuild(); },
     get pools() { return mesh.count; },
     update(time, night) {
+      const latest = place?.userData.homeVillageLights ?? null;
+      if (village !== latest) { village = latest; rebuild(); }
       const strength = Math.min(1, Math.max(0, (night - .12) / .5));
       material.uniforms.uStrength.value = strength; material.uniforms.uTime.value = time;
       mesh.visible = (strength > .01 || extras.size > 0) && mesh.count > 0;
