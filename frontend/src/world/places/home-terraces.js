@@ -126,6 +126,13 @@ const SOD_PROFILE = [
   [0, 0, -.22], [-.105, .23, -.20], [.083, .61, .12], [.43, .91, .23], [1, 1, .09],
 ];
 const SOD_MATERIAL = [[2.9, ROOTS], [2.6, ROOTS], [2.0, GRASS_CREST], [1.48, TURF]];
+// Height, radial offset, and light across a weathered shelf. A turned toe
+// sits below the projecting brow, with a short landing recessed behind it.
+const SCARP_PROFILE = [
+  [0, 0, -.12], [.30, .021, -.13], [.46, -.045, -.27], [.54, -.142, -.08],
+  [.586, -.156, .032], [.608, -.093, .055], [.628, .076, .057], [.669, .132, .028],
+  [.81, .109, -.117], [1, 0, .012],
+];
 // Each stop starts a band. The two faces have deep bases, lit shoulders and grass lips.
 // A short incline at the back of the upper tread hides where it joins the old meadow.
 const REAR_PROFILE = [
@@ -276,6 +283,28 @@ export function createHomeTerraces(root, coastArt, art) {
     for (const [p, corner] of [[a, 0], [b, 1], [c, 2], [a, 0], [c, 2], [d, 3]]) {
       vertex(p, tint, sun + (corner < 2 ? lightA : lightB), grass, opacity[corner], detail?.[corner], recessed);
     }
+  }
+
+  function scarpSection(low, high, sample, ring, eastern) {
+    const rise = high.y - low.y;
+    const run = Math.hypot(high.x - low.x, high.z - low.z);
+    // The east cove's bed is narrower, so smaller exposed heights still take
+    // a shallow bevel without changing any grass or shoreline anchor.
+    const exposed = THREE.MathUtils.smoothstep(rise - run * 1.15, eastern ? .034 : .12, eastern ? .177 : .45);
+    const worn = .60 + .32 * Math.sin(sample * 2.87 + ring) + .08 * Math.cos(sample * 7.1);
+    const riseOffset = .083 * Math.sin(sample * 2.23 + ring * .7) * exposed;
+    const points = SCARP_PROFILE.map(([height, extension]) => {
+      if (height === 0) return low;
+      if (height === 1) return high;
+      const point = blendStone(low, high, height + Math.sin(Math.PI * height) * riseOffset);
+      const length = Math.hypot(point.x, point.z);
+      const reach = 1 + extension * exposed * worn / length;
+      point.x *= reach;
+      point.z *= reach;
+      point.joinOpacity = THREE.MathUtils.lerp(low.joinOpacity ?? 1, high.joinOpacity ?? 1, height);
+      return clipCrest(point, point.shoreReach);
+    });
+    return {points, exposed};
   }
   function stone(point, color, worn, underTurf, split = false) {
     // The original block outline stays put. Rolling the inner rim towards its
@@ -861,7 +890,7 @@ export function createHomeTerraces(root, coastArt, art) {
         const turf = wornLedge ? WORN_LEDGE : Number(band === TURF);
         for (let i = 0; i < rows.length - 1; i++) {
           const {shape: left, sample, sod: leftSod, endFade: fadeLeft} = rows[i];
-          const {shape: right, sod: rightSod, endFade: fadeRight} = rows[i + 1];
+          const {shape: right, sample: nextSample, sod: rightSod, endFade: fadeRight} = rows[i + 1];
           const variation = .026 * Math.sin(sample * .89);
           // The old turf seats stop before the bed folds into the next ledge.
           // Expose the eroded sandstone wherever the bedding bends down sharply.
@@ -878,6 +907,23 @@ export function createHomeTerraces(root, coastArt, art) {
               const [sodMaterial, sodTint] = SOD_MATERIAL[strip];
               const shade = SOD_PROFILE[strip][2] + variation;
               const light = SOD_PROFILE[strip + 1][2] + variation;
+              if ((westCove || meetsEastShoulder) && strip === SOD_MATERIAL.length - 1) {
+                const near = scarpSection(a[strip], a[strip + 1], sample, ring, meetsEastShoulder);
+                const far = scarpSection(b[strip], b[strip + 1], nextSample, ring, meetsEastShoulder);
+                if (Math.max(near.exposed, far.exposed) > .20) {
+                  // Continue the main scarp through staggered, solid stone
+                  // shelves, leaving the actual upper sod at its old anchors.
+                  const color = REAR_STONE[3].clone().lerp(REAR_STONE[1], .27 + .24 * Math.sin(sample * 1.91)).lerp(REAR_BED, .34);
+                  for (let ledge = SCARP_PROFILE.length - 2; ledge >= 0; ledge--) {
+                    const [lower, , tone] = SCARP_PROFILE[ledge], [upper, , upperTone] = SCARP_PROFILE[ledge + 1];
+                    const u = .16 + .06 * Math.sin(sample * 3.31), v = .85 + .05 * Math.cos(sample * 2.19);
+                    const joints = [[u, lower], [v, lower], [v, upper], [u, upper]];
+                    face(near.points[ledge], far.points[ledge], far.points[ledge + 1], near.points[ledge + 1],
+                      color, tone + variation, upperTone + variation, STRATUM, undefined, joints, ledge >= 7);
+                  }
+                  continue;
+                }
+              }
               // Only the sheltered underside of a worn cove edge shows exposed sediment.
               const surface = wornLedge && strip < 2 ? WORN_LEDGE : sodMaterial;
               face(a[strip], b[strip], b[strip + 1], a[strip + 1], sodTint, shade, light, surface);

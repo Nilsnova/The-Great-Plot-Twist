@@ -59,6 +59,28 @@ it('shows a lower decorative shelf on both cliff shoulders while leaving landing
   expect(right).toBeGreaterThan(6);
 });
 
+it('puts both western stone courses inside the existing facade and away from the approaches', () => {
+  const cliff = createHomeRelief(new THREE.Group(), new THREE.Texture());
+  const {position, shoreRelief} = cliff.geometry.attributes;
+  const {rx, rz} = surfaces.home_islet;
+  const upper = new Set(), lower = new Set();
+  for (let i = 0; i < position.count; i++) {
+    if (shoreRelief.getZ(i) !== .375) continue;
+    const depth = shoreRelief.getX(i);
+    const ground = unprojectGround(position.getX(i), position.getY(i));
+    const sample = Math.atan2((ground.z - depth / LEGACY_DEPTH) / rz, ground.x / rx) * 90 / Math.PI;
+    expect(sample).toBeGreaterThan(55);
+    expect(sample).toBeLessThan(80);
+    expect(depth).toBeGreaterThan(0);
+    expect(depth).toBeLessThanOrEqual(CLIFF_DEPTH + .001);
+    const section = sample < 63 ? 0 : sample < 71 ? 1 : 2;
+    if (shoreRelief.getY(i) < .13) upper.add(section);
+    if (shoreRelief.getY(i) > .82) lower.add(section);
+  }
+  expect(upper).toEqual(new Set([0, 1, 2]));
+  expect(lower).toEqual(upper);
+});
+
 it('lifts the grassy front shoulders wholly inside the original walkable top', () => {
   const cliff = createHomeRelief(new THREE.Group(), new THREE.Texture());
   const {position, shoreRelief} = cliff.geometry.attributes;

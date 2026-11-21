@@ -176,6 +176,29 @@ it('keeps two grass treads visible across the northeast sandstone shoulder', () 
   createLifetime(root)();
 });
 
+it('models a recessed stone seat behind the projecting brow in each rear cove', () => {
+  const root = new THREE.Group(), shore = new THREE.Texture();
+  backdrop(root, shore);
+  const {position, terraceMaterial, surfaceDetail} = createHomeTerraces(root, shore).geometry.attributes;
+  const {rx, rz} = surfaces.home_islet;
+  const sections = new Map();
+  for (let i = 0; i < position.count; i++) {
+    if (Math.abs(terraceMaterial.getZ(i) - .27) > 1e-6) continue;
+    const height = surfaceDetail.getY(i), x = terraceMaterial.getX(i), z = terraceMaterial.getY(i);
+    const bearing = Math.round(Math.atan2(z / rz, x / rx) * 1800 / Math.PI) / 10;
+    if (bearing < -108 || bearing > -68) continue;
+    const section = sections.get(bearing) ?? {};
+    if (Math.abs(height - .586) < 1e-6) section.brow = {x, z};
+    if (Math.abs(height - .669) < 1e-6) section.seat = {x, z};
+    sections.set(bearing, section);
+  }
+  const seats = [...sections].filter(([, {brow, seat}]) => brow && seat
+    && Math.hypot(seat.x, seat.z) - Math.hypot(brow.x, brow.z) > .10);
+  expect(seats.filter(([bearing]) => bearing < -92).length).toBeGreaterThan(1);
+  expect(seats.filter(([bearing]) => bearing > -86).length).toBeGreaterThan(1);
+  createLifetime(root)();
+});
+
 it('keeps edge walls on the live lanes clear of above-ground shoreline rock', () => {
   const root = new THREE.Group(), shore = new THREE.Texture();
   backdrop(root, shore);

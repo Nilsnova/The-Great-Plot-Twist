@@ -14,8 +14,7 @@ const SUBMERGED_STONE = new THREE.Color('#66887c');
 const TURF = new THREE.Color('#91b949');
 const BLOCK_WIDTHS = [3.30, 4.60, 3.85, 2.95, 4.95, 3.57, 4.17];
 const ROCKY_ARCS = [[9, 36], [54, 81]];
-// The two front headlands are groups of unequal slabs. Each spans part of the old
-// coast profile with a crown, foot, sideways lean, and sandstone palette index.
+// The eastern front headland keeps its old slabs and recessed backing.
 const HEADLANDS = [
   [11.5, 14.41, .12, .92, -.33, 1],
   [14.66, 16.88, .16, .82, .25, 0],
@@ -26,23 +25,15 @@ const HEADLANDS = [
   [27.15, 29.4, .025, .77, -.52, 0],
   [29.1, 32.3, .16, .98, .45, 4],
   [32.3, 34.4, .31, .90, -.31, 5],
-  [55.7, 57.35, .19, .86, .28, 1],
-  [57.43, 59.4, .26, .97, -.28, 3],
-  [59.65, 61.64, .04, .86, -.36, 5],
-  [61.88, 64.2, .082, .86, .29, 2],
-  [60.9, 63.4, .73, 1, .24, 3],
-  [63.62, 67.2, .75, .98, -.30, 3],
-  [64.60, 66.33, .09, .87, .32, 2],
-  [66.41, 68.1, .07, .76, -.17, 3],
-  [68.6, 70.16, .095, .99, -.11, 1],
-  [70.21, 71.25, .14, .87, .26, 2],
-  [72, 73.43, .085, .86, -.36, 4],
-  [73.51, 74.73, .12, .75, .16, 0],
-  [75.02, 76.82, .19, .89, -.20, 5],
-  [76.88, 78.6, .15, .83, .28, 2],
 ];
 const HEADLAND_BEDS = [[11.1, 34.7], [55.2, 79.1]];
 const RECESSED_BED = .25;
+const UPRIGHT_STONE = .375;
+// The lower pillars and shallow upper shelf have offset joints and different widths.
+const WEST_COURSES = [
+  {top: .24, bottom: .983, inset: .026, widths: [2.48, 2.15, 2.75, 1.68, 2.28, 1.96, 2.60]},
+  {top: .030, bottom: .40, inset: .23, widths: [1.56, 2.38, 1.82, 2.57, 2.24, 1.75, 2.73]},
+];
 const TERRACE_ARCS = [[25, 34], [55, 67]];
 const REAR_STONE = 4, REAR_TURF = 5, INTERTIDAL_STONE = 6, SILL_STONE = 7, TIDAL_CONTACT = 8;
 const REAR_BED = 4.25;
@@ -378,12 +369,11 @@ function homeCliffGeometry(rows = cliffProfile(surface)) {
 
   function carveHeadland([from, to, top, foot, lean, pigment]) {
     const twist = Math.sin(from * 1.26);
-    const westernBluff = from >= 55;
     const outline = [[.06, .10], [.47, .025], [.85, .05], [.975, .17], [.99, .77],
       [.88, .94], [.49, 1], [.12, .94], [.02, .76], [.012, .22]];
     const upperBedding = .36 + twist * .09;
     // Broaden the supporting slabs only on the high banks, well clear of the approaches.
-    const braced = foot - top > .80 && (from >= 20 && to <= 33 || from >= 58 && to <= 72);
+    const braced = foot - top > .80 && from >= 20 && to <= 33;
     const bedding = .68 - .069 * Math.cos(from * 2.41);
     const lowerBedding = braced ? Math.max(upperBedding + .207, bedding - .115) : bedding;
     const layers = foot - top > .63
@@ -395,7 +385,6 @@ function homeCliffGeometry(rows = cliffProfile(surface)) {
       const jog = .07 * Math.sin(from * 2.14 + 1.52 * course);
       const tint = STONES[(pigment + course * 2) % STONES.length].clone()
         .lerp(OUTCROP, foundation ? .14 : .06).lerp(BEDROCK, foundation ? .29 : .065);
-      if (westernBluff) tint.lerp(BEDROCK, .10 + .05 * twist);
       const point = (u, v, inset, retreat, tone) => {
         const base = THREE.MathUtils.lerp(ceiling, floor, v);
         const taper = (.024 + .022 * Math.abs(lean)) * v * v;
@@ -422,8 +411,7 @@ function homeCliffGeometry(rows = cliffProfile(surface)) {
       const facets = [];
       for (let side = 0; side < rim.length; side++) {
         const next = (side + 1) % rim.length;
-        const shoulderLight = westernBluff ? .165 + twist * .035 : .30;
-        const shade = side < 3 || side === 9 ? shoulderLight : side >= 4 && side <= 7 ? -.25 : -.20;
+        const shade = side < 3 || side === 9 ? .30 : side >= 4 && side <= 7 ? -.25 : -.20;
         facets.push({corners: [rim[side], rim[next], face[next]], shade},
           {corners: [rim[side], face[next], face[side]], shade},
           {corners: [crown, face[side], face[next]], shade: side >= 3 && side <= 6 ? -.07 : .03});
@@ -434,6 +422,57 @@ function homeCliffGeometry(rows = cliffProfile(surface)) {
         const tones = corners.map(corner => corner.tone + daylight.get(corner) * .43 + shade);
         triangle(a, b, c, tint, tones, .21, corners.map(corner => corner.depth), 0,
           sunlight(a, b, c) * .50, corners.map(corner => corner.cut));
+      }
+    }
+  }
+
+  function carveWestCourses() {
+    const [start, finish] = HEADLAND_BEDS[1];
+    for (const [course, {top, bottom, inset, widths}] of WEST_COURSES.entries()) {
+      for (let from = start, index = 0; from < finish; index++) {
+        const end = from + widths[index % widths.length];
+        const to = end + .65 < finish ? end : finish;
+        const seed = index * 2.81 + course * 17.3;
+        const lean = Math.sin(seed * 1.43), pitch = Math.cos(seed * .79);
+        const dockSide = from < 68.5;
+        const tint = STONES[(index * 5 + course * 2) % STONES.length].clone()
+          .lerp(BEDROCK, course === 0 ? .29 : .13);
+        const ceiling = top + (course === 0 ? (dockSide ? .139 : .102) : .027) * lean;
+        const floor = bottom + (course === 0 ? .014 : (dockSide ? .131 : .083)) * pitch;
+        const gap = Math.min(.10, (to - from) * .065);
+        const point = (u, v, recess, lamp) => {
+          const sample = THREE.MathUtils.clamp(THREE.MathUtils.lerp(from + gap, to - gap, u)
+            + .19 * (v - .5) * pitch, from, to);
+          const drop = THREE.MathUtils.clamp(THREE.MathUtils.lerp(ceiling, floor, v)
+            + (.045 * lean + .026 * Math.sin(seed + v * 3.1)) * (u - .5), .009, .994);
+          const stone = stoneVertex(rows, sample, drop, inset + .11 * u * v + .036 * pitch);
+          const retreat = Math.min(recess, Math.max(0, CLIFF_DEPTH + stone.y) / LEGACY_DEPTH);
+          stone.y -= retreat * LEGACY_DEPTH;
+          stone.z -= retreat;
+          return {stone, drop, lamp, cut: [u, 1 - v]};
+        };
+        const rim = CUT_CORNERS.map(([u, v]) => point(u, v, .46 + .07 * Math.sin(u * 4.4 + seed), -.14));
+        const bevel = CUT_CORNERS.map(([u, v]) => point(.16 + u * .69, .13 + v * .71,
+          .044 + .07 * u * v, .018 + .052 * (1 - v)));
+        const center = point(.49 + .073 * lean, .46 - .095 * pitch, .004, .045);
+        const faces = [];
+        for (let i = 0; i < rim.length; i++) {
+          const next = (i + 1) % rim.length;
+          const underside = course === 1 && dockSide && i >= 4 && i <= 7;
+          const shade = (i < 3 || i === 9 ? .15 : i < 6 ? -.13 : -.20) - (underside ? .093 : 0);
+          faces.push({corners: [rim[i], rim[next], bevel[next]], shade},
+            {corners: [rim[i], bevel[next], bevel[i]], shade},
+            {corners: [center, bevel[i], bevel[next]], shade: i >= 4 && i < 7 ? -.045 : 0});
+        }
+        const daylight = averageStoneLight(faces.map(face => face.corners), corner => corner.stone, sunlight);
+        for (const {corners, shade} of faces) {
+          const [a, b, c] = corners.map(corner => corner.stone);
+          const tones = corners.map(corner => corner.lamp + daylight.get(corner) * .54 + shade);
+          triangle(a, b, c, tint, tones, course === 0 ? .26 : .39,
+            corners.map(corner => corner.drop), UPRIGHT_STONE,
+            sunlight(a, b, c) * .42, corners.map(corner => corner.cut));
+        }
+        from = to;
       }
     }
   }
@@ -761,6 +800,7 @@ function homeCliffGeometry(rows = cliffProfile(surface)) {
   }
 
   HEADLANDS.forEach(carveHeadland);
+  carveWestCourses();
   REAR_BEDS.forEach(layRearBed);
   for (const rock of REAR_HEADLANDS) carveRearHeadland(rock, false);
   for (const buttress of REAR_BUTTRESSES) carveRearHeadland(buttress, true);
@@ -1106,7 +1146,8 @@ export function createHomeRelief(group, coastArt) {
         vec2 baseShore = foot / vec2(${surface.rx.toFixed(1)}, ${surface.rz.toFixed(1)});
         float bend = abs(atan(baseShore.y, baseShore.x) - 1.570796);
         float escarpment = smoothstep(.33, .56, bend) * (1.0 - smoothstep(1.20, 1.37, bend));
-        float planes = escarpment * vShoreCut.z;
+        float upright = step(.34, vShoreRelief.z);
+        float planes = max(escarpment, upright) * vShoreCut.z;
         float westBluff = (1.0 - smoothstep(-.58, -.33, baseShore.x)) * smoothstep(.21, .39, baseShore.y);
         vec3 pigment = vStone * (mix(.91, 1.12, rockGrain) + grainBreak * .102);
         vec3 stone = planes < .999 ? weatheredSandstone(pigment, layers, vShoreCut.xy, vShoreCut.z) : pigment;
@@ -1114,7 +1155,7 @@ export function createHomeRelief(group, coastArt) {
         // Wide top shoulders receive warm light. The narrow side and lower return are cooler.
         vec2 cut = vShoreCut.xy + vec2(-grainBreak * .24, grainBreak * .19);
         float sunlitLedge = smoothstep(.61, .87, cut.y) * (1.0 - smoothstep(.94, 1.04, cut.y))
-          * (1.0 - .57 * planes) * (1.0 - .51 * westBluff);
+          * (1.0 - .57 * planes) * (1.0 - .51 * westBluff) * (1.0 - .67 * upright);
         float warmShoulder = smoothstep(.047, .25, cut.x) * (1.0 - smoothstep(.32, .65, cut.x));
         float coldSide = smoothstep(.64, .91, cut.x);
         float bedShade = 1.0 - smoothstep(.025, .32, cut.y);
@@ -1162,11 +1203,14 @@ export function createHomeRelief(group, coastArt) {
         float flank = smoothstep(.71, .89, abs(shore.x)) * smoothstep(.23, .44, shore.y);
         stone = approachCliffFaces(stone, foot, 1.40 - 1.29 * depth, damp, flank);
         stone = mix(stone, stone * vec3(.49, .63, .71) + vec3(.014, .029, .034), damp * .78);
+        // The water casts cooler light over the low ends of the upright faces.
+        float footShadow = (1.0 - smoothstep(.14, .49, cut.y)) * smoothstep(.47, .94, depth);
+        stone *= mix(vec3(1.0), vec3(.72, .80, .87), footShadow * upright * .62);
         float tidemark = depth + grainBreak + (flakes.x - .5) * .065;
         float tide = smoothstep(.68, .82, tidemark) * (1.0 - smoothstep(.86, .99, tidemark)) * damp;
         stone += tide * vec3(.009, .029, .035) * (1.0 + .65 * chip * detail);
         float settledSand = sandPigment * (1.0 - smoothstep(.15, .78, vShoreRelief.x + grainBreak));
-        if (vShoreRelief.z > .0) {
+        if (vShoreRelief.z > .0 && upright < .5) {
           stone *= mix(vec3(.76, .82, .86) * (1.0 - .19 * escarpment), vec3(1.0), settledSand * .47);
           float dockSide = smoothstep(0.0, 4.0, -logical.x);
           stone += vec3(.026, .015, .006) * dockSide * reflected * (.28 + .72 * rockGrain);
