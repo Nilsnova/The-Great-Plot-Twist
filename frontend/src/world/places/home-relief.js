@@ -28,6 +28,7 @@ const WEST_COURSES = [
 ];
 const TERRACE_ARCS = [[25, 34], [55, 67]];
 const REAR_STONE = 4, REAR_TURF = 5, INTERTIDAL_STONE = 6, SILL_STONE = 7, TIDAL_CONTACT = 8;
+export {REAR_TURF};
 const REAR_BED = 4.25;
 // Uneven groups flank the four sandy approaches. Values give the coast sample,
 // half-span, outward reach, exposed height and sandstone colour of each rock,

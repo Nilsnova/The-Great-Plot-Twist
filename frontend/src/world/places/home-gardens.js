@@ -1,7 +1,9 @@
 import * as THREE from 'three';
 import {smoothTexture, spriteMaterial} from '../../art/textures.js';
+import {meadowScale} from '../../art/village/terrain-materials.js';
 import {artSizes} from '../art.js';
 import {projectGround} from '../projection.js';
+import {naturalSurfaceClass, surfaces} from './surfaces.js';
 
 // Low planting beds on the grass beside the existing walks. Keep their entrances and
 // the center of the village open. Each row gives the shrub foot, the side of its
@@ -34,6 +36,16 @@ const BED_EDGES = [
   [10, -.71, -.57, .59, 'flowers'], [11, .64, -.53, .58, 'grass-tuft'],
   [12, .58, -.49, .52, 'grass-tuft'], [13, .63, -.55, .59, 'flowers'],
   [16, -.67, .38, .60, 'flowers'],
+];
+// Meadow-side roots spaced around the ends of the side beaches. Leave the
+// open sand between them and use the same low foliage as the inland gardens.
+const SHORE_BEDS = [
+  [-16.70, -7.44, .77, 'flowers'], [-16.31, -8.67, .51, 'rock'], [-14.84, -9.95, .52, 'grass-tuft'],
+  [16.27, -6.09, .76, 'grass-tuft'], [15.14, -7.73, .61, 'flowers'], [14.07, -9.35, .57, 'rock'],
+  [-15.17, 7.32, .77, 'grass-tuft'], [-14.90, 8.83, .52, 'rock'], [-14.22, 10.51, .57, 'flowers'],
+  [14.54, 5.31, .55, 'rock'], [14.10, 7.02, .59, 'flowers'], [13.34, 9.88, .63, 'grass-tuft'],
+  // A lower bench beyond the southeast gun retains painted turf farther out.
+  [14.13, 16.11, .71, 'flowers', true],
 ];
 // These are light multipliers in the same corner order as the sprite quads.
 const GARDEN_LIGHT = [
@@ -180,6 +192,38 @@ function gardenPlants() {
   });
 }
 
+export function sideBeachPlanting() {
+  const plants = [], shadows = [];
+  for (const [index, [x, z, scale, accent, paintedBench]] of SHORE_BEDS.entries()) {
+    const inland = -Math.sign(x);
+    const run = accent === 'rock' ? -1 : 1;
+    const full = scale >= .58;
+    const bed = [
+      {id: full ? 'home-broadleaf' : 'shrub', x, z, scale, light: SHADED_LEAVES},
+      {id: accent, x: x + .39 * inland, z: z + (paintedBench ? .46 : -.32 * run),
+        scale: scale * (accent === 'rock' ? .67 : .84)},
+    ];
+    if (full) {
+      bed.push({id: 'shrub', x: x + .43 * inland, z: z + (paintedBench ? -.16 : .22),
+        scale: scale * .74, light: SUNLIT_LEAVES});
+      const offset = index % 2 === 0 ? .30 : -.15;
+      bed.push({id: 'grass-tuft', x: x + offset * inland, z: z + .49 * run, scale: scale * .64});
+    }
+    const meadow = bed.filter(({x: rootX, z: rootZ}) => {
+      if (!paintedBench) return naturalSurfaceClass('home_islet', rootX, rootZ) === 2;
+      // The southeast bench has a painted strip of turf past the usual meadow.
+      // Pull the check inward from its edge so the roots stop before the sand.
+      const {rx, rz} = surfaces.home_islet;
+      const limit = meadowScale(Math.atan2(rootZ / rz, rootX / rx)) - .018;
+      return naturalSurfaceClass('home_islet', rootX / limit, rootZ / limit) > 0;
+    });
+    plants.push(...meadow);
+    if (full && meadow.includes(bed[0])) shadows.push({x, z, width: scale * .96, depth: scale * .47,
+      reach: scale * .42, opacity: .48});
+  }
+  return {plants, shadows};
+}
+
 function addGardenLayer(root, plants, rectangles, material, name, renderOrder) {
   const vertices = [], indices = [], uv = [], feet = [], colors = [];
   for (const {id, x, z, scale, light = GARDEN_LIGHT} of plants) {
@@ -236,7 +280,8 @@ export function createHomeGardens(root, art) {
     {id: 'shrub', x: x - .28 * side, z: z + .24, scale: scale * .74, light: SUNLIT_LEAVES},
     {id: understory, x: x + .40 * side, z: z + .26, scale: scale * .72},
   ]);
-  const plants = [...gardenPlants(), ...underplanting].sort((a, b) => a.z - b.z);
+  const shore = sideBeachPlanting();
+  const plants = [...gardenPlants(), ...underplanting, ...shore.plants].sort((a, b) => a.z - b.z);
   // The raised bank occludes the flower at its original meadow position.
   addGardenLayer(root, plants.filter(plant => plant.behindTerrace), packed.rectangles, material, 'home-under-terrace-garden', 4.65);
   addGardenLayer(root, plants.filter(plant => !plant.behindTerrace), packed.rectangles, material, 'home-village-gardens', 22);
@@ -245,5 +290,6 @@ export function createHomeGardens(root, art) {
       reach: scale * .48, opacity: .56})),
     ...edges.map(({x, z, scale}) => ({x, z, width: scale * 1.04, depth: scale * .49,
       reach: scale * .36, opacity: .43})),
+    ...shore.shadows,
   ];
 }
