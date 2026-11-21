@@ -8,21 +8,21 @@ import {padCorners as corners, TOWER_PAD} from './defense-display.js';
 import {foundationMaterial, FOOTING} from './foundation-finish.js';
 
 const FORMS = {
-  house: {width: 1.36, depth: .86, rear: .46, reach: 1.95, roof: 'gable'},
-  watchtower: {width: 1.17, depth: .90, rear: .52, reach: 2.85, roof: 'tower'},
-  tower: {...TOWER_PAD, reach: .92, plinth: .145},
-  heart: {width: 2.03, depth: 1.20, rear: .59, reach: 2.24, roof: 'gable'},
-  island_cabin: {width: 1.55, depth: .98, rear: .52, reach: 2.30, roof: 'gable'},
-  island_bell: {width: .96, depth: .66, rear: .31, reach: 1.52, roof: 'gable'},
-  island_arsenal: {width: 1.56, depth: .94, rear: .50, reach: 2.50, roof: 'gable', plinth: .054, cornerInset: .17},
-  island_harbor: {width: 1.52, depth: .95, rear: .48, reach: 2.18, roof: 'gable', plinth: .048, cornerInset: .15},
-  island_techhub: {width: 1.72, depth: 1.16, rear: .58, reach: 2.68, roof: 'hip', plinth: .051, cornerInset: .38},
+  house: {width: 1.36, depth: .86, rear: .46, reach: 1.61, roof: 'gable', plinth: .068},
+  watchtower: {width: 1.17, depth: .90, rear: .52, reach: 2.53, roof: 'tower', plinth: .098, cornerInset: .10},
+  tower: {...TOWER_PAD, reach: .81, plinth: .145},
+  heart: {width: 2.03, depth: 1.20, rear: .59, reach: 1.89, roof: 'gable', plinth: .044, cornerInset: .15},
+  island_cabin: {width: 1.55, depth: .98, rear: .52, reach: 1.92, roof: 'gable', plinth: .062},
+  island_bell: {width: .96, depth: .66, rear: .31, reach: 1.31, roof: 'gable', plinth: .070},
+  island_arsenal: {width: 1.56, depth: .94, rear: .50, reach: 2.16, roof: 'gable', plinth: .054, cornerInset: .17},
+  island_harbor: {width: 1.52, depth: .95, rear: .48, reach: 1.85, roof: 'gable', plinth: .048, cornerInset: .15},
+  island_techhub: {width: 1.72, depth: 1.16, rear: .58, reach: 2.28, roof: 'hip', plinth: .051, cornerInset: .38},
 };
 const RETAINING_STONE = [0xc3a47b, 0xb0916b, 0x9a7f61, 0x80694f, 0x726049].map(hex => new THREE.Color(hex));
 const [SHOULDER, RETAINING_FRONT, RETAINING_SIDE, RETAINING_JOINT, EMBEDDED_STONE] = RETAINING_STONE;
-const LIMESTONE = [0xdaccaa, 0xe4d4b0, 0xc6b89e, 0xd6c3a4, 0xdcc9ab].map(hex => new THREE.Color(hex));
-const GROUT = new THREE.Color(0x766953), LIP = new THREE.Color(0xd3bd97);
-const SIDE_STONE = [[0x8b7d68, 0xb19e82], [0xa48d6c, 0xc8ac80]].map(pair => pair.map(hex => new THREE.Color(hex)));
+const LIMESTONE = [0xded0ad, 0xe8d6b1, 0xc7b89d, 0xd7c09c, 0xe1cca8].map(hex => new THREE.Color(hex));
+const GROUT = new THREE.Color(0x74654e), LIP = new THREE.Color(0xdbc39c);
+const SIDE_STONE = [[0x867661, 0xa99a7e], [0xb0906f, 0xcbb18a]].map(pair => pair.map(hex => new THREE.Color(hex)));
 const ROW_OFFSETS = [.19, .38, .10], BLOCK_WIDTHS = [.58, .52, .43, .60, .48];
 const PAD_FACES = [2, 3, 4, 5, 6];
 const onLand = (x, z) => surfaceClass(ISLAND_PLACE, x, z) !== 0;
@@ -122,7 +122,7 @@ function geometryOf(foundations) {
   for (const {x, z, slot, ruin} of foundations) {
     const {width, depth, rear, plinth: height, cornerInset = 0} = FORMS[slot], footZ = z - rear;
     const apron = slot !== 'tower';
-    // Only freestanding service aprons are added where the painting leaves bare ground.
+    // A low dry apron gives the painted architecture a visible edge at the existing foot.
     if (!height || !onLand(x, z) || (ruin && apron)) continue;
     const outside = clippedCorners(x, footZ, width, depth, cornerInset);
     if (apron && outside.some(([gx, gz]) => !onLand(gx, gz))) continue;
@@ -157,7 +157,7 @@ function geometryOf(foundations) {
     }
     const capWidth = width - .065, capDepth = depth - .065;
     const inset = clippedCorners(x, footZ, capWidth, capDepth, cornerInset);
-    const lipAlpha = apron ? .60 : 1, footAlpha = apron ? .26 : 1;
+    const lipAlpha = apron ? .78 : 1, footAlpha = apron ? .43 : 1;
     const top = inset.map(([gx, gz]) => vertex(gx, gz, height, LIP, lipAlpha, 1, [.5, 1, FOOTING.riser]));
     // From this fixed ground projection the front and right cut faces carry the height.
     for (const edge of PAD_FACES) {
@@ -180,7 +180,7 @@ function geometryOf(foundations) {
       }
     }
     // The grout bed and all dressed stone stay inside the existing octagonal pad.
-    const bed = inset.map(([gx, gz]) => vertex(gx, gz, height, apron ? APRON_BED : GROUT, apron ? .65 : 1));
+    const bed = inset.map(([gx, gz]) => vertex(gx, gz, height, apron ? APRON_BED : GROUT, apron ? .77 : 1));
     for (let i = 1; i < bed.length - 1; i++) indices.push(bed[0], bed[i], bed[i + 1]);
     pavedCap(inset, x, footZ, capWidth, capDepth, (polygon, tint) => {
       const [cx, cz] = polygon.reduce(([sx, sz], [gx, gz]) => [sx + gx / polygon.length, sz + gz / polygon.length], [0, 0]);
@@ -192,7 +192,7 @@ function geometryOf(foundations) {
         const contact = 1 - Math.min(1, Math.hypot((gx - x) / .86, (gz - footZ - .05) / .50));
         const edge = Math.max(Math.abs(gx - x) / capWidth, Math.abs(gz - footZ) / capDepth);
         // Irregular stones at the outer edge blend into the foot-worn grass of the same landing.
-        const alpha = apron ? .98 - .46 * THREE.MathUtils.smoothstep(edge, .62, 1) : 1;
+        const alpha = apron ? .96 - .22 * THREE.MathUtils.smoothstep(edge, .68, 1) : 1;
         return vertex(gx, gz, rise, tint, alpha, light * (1 - .31 * contact), [(gx - minX) / width, (gz - minZ) / depth, FOOTING.tread]);
       };
       const rim = bevel.map(point => lit(point, height + .012, 1));

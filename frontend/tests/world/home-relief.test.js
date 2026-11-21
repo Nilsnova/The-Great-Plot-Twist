@@ -59,6 +59,28 @@ it('shows a lower decorative shelf on both cliff shoulders while leaving landing
   expect(right).toBeGreaterThan(6);
 });
 
+it('fits two staggered stone courses along both front banks between the original beaches', () => {
+  const cliff = createHomeRelief(new THREE.Group(), new THREE.Texture());
+  const {position, shoreRelief} = cliff.geometry.attributes;
+  const {rx, rz} = surfaces.home_islet;
+  const sections = [[9, 19], [19, 27], [27, 36], [54, 63], [63, 71], [71, 81]];
+  const upper = new Set(), lower = new Set();
+  for (let i = 0; i < position.count; i++) {
+    if (shoreRelief.getZ(i) !== .375) continue;
+    const depth = shoreRelief.getX(i);
+    const ground = unprojectGround(position.getX(i), position.getY(i));
+    const sample = Math.atan2((ground.z - depth / LEGACY_DEPTH) / rz, ground.x / rx) * 90 / Math.PI;
+    const section = sections.findIndex(([from, to]) => sample > from && sample <= to);
+    expect(section).toBeGreaterThanOrEqual(0);
+    expect(depth).toBeGreaterThan(0);
+    expect(depth).toBeLessThanOrEqual(CLIFF_DEPTH + .001);
+    if (shoreRelief.getY(i) < .13) upper.add(section);
+    if (shoreRelief.getY(i) > .82) lower.add(section);
+  }
+  expect(upper).toEqual(new Set(sections.keys()));
+  expect(lower).toEqual(upper);
+});
+
 it('lifts the grassy front shoulders wholly inside the original walkable top', () => {
   const cliff = createHomeRelief(new THREE.Group(), new THREE.Texture());
   const {position, shoreRelief} = cliff.geometry.attributes;
@@ -74,27 +96,35 @@ it('lifts the grassy front shoulders wholly inside the original walkable top', (
   expect(tallCaps.some(x => x > 0)).toBe(true);
 });
 
-it('roots the raised rear headlands on existing dry shoulders beside the landing', () => {
+it('roots the raised rear headlands and both flank shelves on existing dry ground', () => {
   const root = new THREE.Group(), art = new THREE.Texture();
   const cliff = createHomeRelief(root, art);
   const {position, shoreRelief} = cliff.geometry.attributes;
   const {rx, rz} = surfaces.home_islet;
+  const fit = projectedCoastBounds(cliffProfile(surfaces.home_islet));
   const sampleAt = (x, z) => 180 + Math.atan2(z / rz, x / rx) * 90 / Math.PI;
   const sides = [-1, 1];
-  const footings = new Set(), crowns = new Set();
+  const footings = new Set(), crowns = new Set(), flankCrowns = new Set();
+  const raisedArcs = [[100.5, 109.6], [119.4, 127.4], [146.0, 152.8], [162.5, 170.3]];
   for (let i = 0; i < position.count; i++) {
     const region = shoreRelief.getZ(i);
-    if (region < 4 || region > 5) continue;
+    if (region !== 4 && region !== 5) continue;
+    const x = position.getX(i), y = position.getY(i);
+    expect(x).toBeGreaterThanOrEqual(fit.minX);
+    expect(x).toBeLessThanOrEqual(fit.maxX);
+    expect(y).toBeGreaterThanOrEqual(fit.minY);
+    expect(y).toBeLessThanOrEqual(fit.maxY);
     const height = -shoreRelief.getX(i);
-    const ground = unprojectGround(position.getX(i), position.getY(i) - height);
+    const ground = unprojectGround(x, y - height);
     const sample = sampleAt(ground.x, ground.z);
     expect(ground.z).toBeLessThan(0);
-    expect(sample).toBeGreaterThan(117);
-    expect(sample).toBeLessThan(155);
-    expect(sample < 133.5 || sample > 138.5).toBe(true);
+    expect(raisedArcs.some(([from, to]) => sample > from && sample < to)).toBe(true);
     expect(surfaceClass('home_islet', ground.x, ground.z)).toBeGreaterThan(0);
     if (height === 0) footings.add(Math.sign(ground.x));
-    if (height > 1.4 && region === 5) crowns.add(Math.sign(ground.x));
+    if (height > 1.4 && region === 5) {
+      if (sample < 112 || sample > 158) flankCrowns.add(Math.sign(ground.x));
+      else crowns.add(Math.sign(ground.x));
+    }
   }
 
   // The continuous eastern ledge carries the headland's turf above the rock heel.
@@ -112,13 +142,45 @@ it('roots the raised rear headlands on existing dry shoulders beside the landing
   }
   expect([...footings].sort()).toEqual(sides);
   expect([...crowns].sort()).toEqual(sides);
+  expect([...flankCrowns].sort()).toEqual(sides);
 });
 
-it('keeps the tidal rock groups and their wash in the existing Fit envelope', () => {
+it('supports both rear terrace joins with low stone on dry ground outside the north passage', () => {
+  const cliff = createHomeRelief(new THREE.Group(), new THREE.Texture());
+  const {position, shoreRelief} = cliff.geometry.attributes;
+  const {rx, rz} = surfaces.home_islet;
+  const fit = projectedCoastBounds(cliffProfile(surfaces.home_islet));
+  const supported = new Set();
+  const outerBlocks = new Set();
+  const joins = [[110, 116], [126, 129], [145, 148], [156, 162]];
+  for (let i = 0; i < position.count; i++) {
+    if (shoreRelief.getZ(i) !== 4.25) continue;
+    const height = -shoreRelief.getX(i), x = position.getX(i), y = position.getY(i);
+    const ground = unprojectGround(x, y - height);
+    const sample = 180 + Math.atan2(ground.z / rz, ground.x / rx) * 90 / Math.PI;
+    expect(surfaceClass('home_islet', ground.x, ground.z)).toBeGreaterThan(0);
+    expect(x).toBeGreaterThanOrEqual(fit.minX);
+    expect(x).toBeLessThanOrEqual(fit.maxX);
+    expect(y).toBeLessThanOrEqual(fit.maxY);
+    const outer = sample < 118 || sample > 154;
+    expect(height).toBeLessThan(outer ? .80 : .62);
+    expect(sample <= 130.3 || sample >= 143.8).toBe(true);
+    const join = joins.findIndex(([from, to]) => sample > from && sample < to);
+    if (height > .24 && join !== -1) supported.add(join);
+    if (outer && height > .55) outerBlocks.add(Math.sign(ground.x));
+  }
+  expect(supported).toEqual(new Set([0, 1, 2, 3]));
+  expect(outerBlocks).toEqual(new Set([-1, 1]));
+});
+
+it('keeps tidal rock groups and their wash clear of land and the four shore openings', () => {
   const cliff = createHomeRelief(new THREE.Group(), new THREE.Texture());
   const {position, shoreRelief} = cliff.geometry.attributes;
   const bounds = projectedCoastBounds(cliffProfile(surfaces.home_islet));
   const shoreQuadrants = new Set();
+  const sillSides = new Set();
+  const {rx, rz} = surfaces.home_islet;
+  const facadeDepth = -projectGround(0, CLIFF_DEPTH / LEGACY_DEPTH).y;
   for (let i = 0; i < position.count; i++) {
     const region = shoreRelief.getZ(i);
     if (region < 6) continue;
@@ -127,9 +189,23 @@ it('keeps the tidal rock groups and their wash in the existing Fit envelope', ()
     expect(x).toBeLessThanOrEqual(bounds.maxX + .001);
     expect(y).toBeGreaterThanOrEqual(bounds.minY - .001);
     expect(y).toBeLessThanOrEqual(bounds.maxY + .001);
-    if (region === 6 && shoreRelief.getY(i) > .8) {
-      shoreQuadrants.add((x > 0 ? 1 : 0) + (y > 0 ? 2 : 0));
+    const ground = unprojectGround(x, y);
+    const bearing = Math.atan2(ground.z / rz, ground.x / rx) * (180 / Math.PI);
+    const fromOpening = Math.abs(bearing - Math.round(bearing / 90) * 90);
+    expect(surfaceClass('home_islet', ground.x, ground.z)).toBe(0);
+    expect(fromOpening).toBeGreaterThan(18);
+    if (region === 6 || region === 7) {
+      // A sculpted foot stays rounded above the Fit boundary, without a flat cut across it.
+      expect(y).toBeGreaterThan(bounds.minY + .12);
+    }
+    if (region === 7 && shoreRelief.getY(i) === 0) {
+      expect(shoreRelief.getX(i)).toBeLessThan(facadeDepth + .06);
+    }
+    if (shoreRelief.getY(i) > .8) {
+      if (region === 6) shoreQuadrants.add((x > 0 ? 1 : 0) + (y > 0 ? 2 : 0));
+      if (region === 7) sillSides.add(Math.sign(x));
     }
   }
   expect(shoreQuadrants).toEqual(new Set([0, 1, 2, 3]));
+  expect(sillSides).toEqual(new Set([-1, 1]));
 });
