@@ -47,7 +47,7 @@ function drawSeaAndDeck(ctx) {
   ctx.fillStyle = gradient(ctx, 0, 130, '#214459', '#72a09a');
   ctx.fillRect(0, 0, WIDTH, 130);
   ellipse(ctx, '#f6d58d', 477, 47, 18, 18);
-  const islands = new Path2D('M0 98L30 79 59 80 78 68 105 76 120 90 158 98H0ZM386 98L432 91 452 79 479 84 505 91 531 98Z');
+  const islands = new Path2D('M0 98L30 79 59 80 78 68 105 76 120 90 158 98H0Z M386 98L432 91 452 79 479 84 505 91 531 98Z');
   paint(ctx, islands, '#385e65', null);
   ctx.fillStyle = gradient(ctx, 91, 149, '#377d83', '#175563');
   ctx.fillRect(0, 94, WIDTH, 56);
@@ -83,11 +83,11 @@ function drawSeaAndDeck(ctx) {
     ctx.fillRect(x - 3, 112, 3, 37);
   }
 
-  const sides = new Path2D('M0 0L61 0 37 123 0 151ZM640 0H594L611 120 640 144Z');
+  const sides = new Path2D('M0 0L61 0 37 123 0 151Z M640 0H594L611 120 640 144Z');
   paint(ctx, sides, '#173442', '#16303a', 4);
   stroke(ctx, '#a98d62', 3, [57, 0], [34, 123]);
   stroke(ctx, '#967c58', 2, [595, 0], [612, 118]);
-  const lamp = new Path2D('M6 65H27L24 87H9ZM7 62L17 57 27 62Z M614 65H635L632 87H617ZM614 62L624 57 635 62Z');
+  const lamp = new Path2D('M6 65H27L24 87H9Z M7 62L17 57 27 62Z M614 65H635L632 87H617Z M614 62L624 57 635 62Z');
   paint(ctx, lamp, '#e8aa5f', '#483725', 2.5);
   stroke(ctx, '#ffdf8e', 2, [11, 70], [12, 80]);
   stroke(ctx, '#ffdf8e', 2, [619, 70], [620, 80]);
