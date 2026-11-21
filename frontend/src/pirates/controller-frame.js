@@ -310,6 +310,7 @@ export function createFrame(ctl) {
       pause.ready=ready;
       current.hud?.pause?.({title:`Wave ${current.info.wave} won!`,line:pause.note??(settings?.breakPaused?'The next wave is paused.':settings?.autoNext?'Waiting for the next wave.':'Ring the bell when you are ready.'),
         seconds:0,auto:settings?.autoNext===true,autoEnabled:manages,ready:ready && !pause.requested && !settings.breakPaused,paused:settings?.breakPaused===true,
+        waiting:current.answer===undefined?'loot':pause.requested?'starting':manages?null:'host',
         hold:{label:settings?.breakPaused?'Resume':'Pause',enabled:manages}});
       return;
     }
@@ -326,6 +327,7 @@ export function createFrame(ctl) {
     const loot = Number.isFinite(current.answer?.loot) ? ` · 🪙 +${current.answer.loot}` : '';
     current.hud?.pause?.({ title: `Wave ${current.info.wave} won!`, line: hold?.paused ? hold.line : pause.note ?? `${current.result.shipsSunk} ${current.result.shipsSunk === 1 ? 'ship' : 'ships'} sunk${loot}`,
       seconds: hold?.paused ? 0 : left, auto: ctl.auto, ready: pause.ready && !pause.requested && !hold?.paused, paused: !!hold?.paused,
+      waiting: !pause.ready ? 'loot' : pause.requested ? 'starting' : null,
       hold: hold && toggleHold ? { label: hold.label, enabled: hold.canToggle === true } : null });
   }
 

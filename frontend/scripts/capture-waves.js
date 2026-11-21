@@ -4,9 +4,10 @@
 // real key and pointer events (the needle to the zone, the sight to the weak spot, the arrow shown).
 //   node scripts/capture-waves.js [folder] [all|events|finishers] [id,id: only these events]
 import {mkdir,writeFile} from 'node:fs/promises';
+import {defaultShotsDir} from './shots-dir.js';
 import {openWorldBrowser} from './world-browser-tools.js';
 
-const out=process.argv[2]??`/Users/nilslenke/Developer/fri6-integration/td-shots/v3-t17-waves-${new Date().toISOString().replace(/[:.]/g,'-').slice(0,19)}`;
+const out=process.argv[2]??defaultShotsDir(`v3-t17-waves-${new Date().toISOString().replace(/[:.]/g,'-').slice(0,19)}`);
 await mkdir(out,{recursive:true});
 const mode=process.argv[3]??'all', only=process.argv[4]?.split(',') ?? null;
 const env=await openWorldBrowser(),report={shots:[],notes:[]};

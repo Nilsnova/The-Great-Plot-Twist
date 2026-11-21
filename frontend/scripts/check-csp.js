@@ -43,11 +43,62 @@ async function verifyPage(path) {
   if(path.startsWith('/help')||path.startsWith('/privacy')){
     assert.match(style.fontFamily,/Courier|system-ui|sans-serif/i,`${path} applies a local readable font`);
     assert.ok(style.fontSize>=16,`${path} keeps supporting-page text readable`);
-  }else assert.match(style.fontFamily, /Courier/i, `${path} applies the local interface font`);
+  // The interface font since the cartoon redesign (12 Nov, src/ui/base.css) is the system UI stack; the
+  // auth-check page keeps its own monospace. Both are local: no web font is fetched.
+  }else assert.match(style.fontFamily, /system-ui|sans-serif|Courier|monospace/i, `${path} applies a local interface font`);
   assert.ok(style.sheetCount > 0, `${path} loads same-origin stylesheets`);
   const violations = await page.evaluate(() => window.__cspViolations ?? []);
   assert.deepEqual(violations, [], `${path} produces no CSP violations`);
   report.pages.push({ path, status: response.status(), policy: headers[policyName.toLowerCase()], styles: style, violations });
+}
+
+async function verifyModalSelect() {
+  const previousSize = page.viewportSize();
+  await page.setViewportSize({width:390,height:844});
+  try {
+    await page.goto(`${env.url}/`, {waitUntil:'domcontentloaded'});
+    await page.getByRole('button',{name:'Settings',exact:true}).click();
+    const settings = page.locator('.shell-screen[data-mode=settings][open] .preferences');
+    // Settings loads the shared field stylesheet even when the island server is down.
+    await settings.evaluate(root => {
+      const select = document.createElement('select');
+      select.setAttribute('aria-label','Dropdown fixture');
+      select.append(new Option('All levels','all'), new Option('Within budget','ready'));
+      root.prepend(select);
+    });
+    const select = page.getByRole('combobox',{name:'Dropdown fixture'});
+    const arrow = await select.evaluate(async control => {
+      const style = getComputedStyle(control);
+      const url = /^url\("(.*)"\)$/.exec(style.backgroundImage)?.[1];
+      const height = control.getBoundingClientRect().height;
+      if (!url) return {appearance:style.appearance,height,url};
+      const image = new Image();
+      image.src = url;
+      const loaded = await image.decode().then(() => image.naturalWidth > 0, () => false);
+      return {appearance:style.appearance,height,url,loaded};
+    });
+    assert.equal(arrow.appearance,'none','The themed dropdown uses its custom arrow');
+    assert.ok(arrow.loaded && new URL(arrow.url).origin === new URL(env.url).origin,'The dropdown arrow loads from the same origin');
+    assert.ok(arrow.height >= 44,'The dropdown has a phone-size touch target');
+    await page.keyboard.press('Tab');
+    await select.focus();
+    assert.ok(await select.evaluate(control => control.matches(':focus-visible') && getComputedStyle(control).outlineStyle !== 'none'),
+      'The dropdown retains its keyboard focus outline');
+    // Native typeahead works even when the platform opens a popup for ArrowDown.
+    await select.press('w');
+    assert.equal(await select.inputValue(),'ready','The themed dropdown remains a native select');
+    await page.emulateMedia({forcedColors:'active'});
+    const highContrast = await select.evaluate(control => {
+      const style = getComputedStyle(control);
+      return {appearance:style.appearance,image:style.backgroundImage};
+    });
+    assert.deepEqual(highContrast,{appearance:'auto',image:'none'},'Forced colors use the browser dropdown indicator');
+    assert.deepEqual(await page.evaluate(() => window.__cspViolations),[],'Opening the dropdown produces no CSP violations');
+    check(true,'The phone dropdown shows an allowed arrow and a native indicator in forced colors');
+  } finally {
+    await page.emulateMedia({forcedColors:'none'});
+    await page.setViewportSize(previousSize);
+  }
 }
 
 try {
@@ -71,6 +122,7 @@ try {
   });
   await page.emulateMedia({ reducedMotion: 'reduce' });
 
+  await verifyModalSelect();
   await verifyPage('/');
   await verifyPage('/?demo=1');
   await verifyPage('/asset-library.html');

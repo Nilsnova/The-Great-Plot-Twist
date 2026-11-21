@@ -13,20 +13,30 @@
 .kit-modal:not(.shell-screen[data-mode=title]) .kit-modal-body h3{font-size:var(--u-lg)}
 
 /* Cards: one quiet surface inside any panel. */
-.kit-modal :is(.account-save,.market-card,.market-position,.market-closed,.duel-card,.duel-lantern,.sports-card,.islet-spot,.preference,.build-info,.controls-overview p){min-width:0;padding:var(--u-4);border:2px solid #3d6a6b;border-radius:0;background:var(--u-card);box-shadow:inset 0 2px #ffffff0d,0 3px var(--u-deep)}
+.kit-modal :is(.account-save,.market-card,.market-position,.market-closed,.duel-card,.duel-lantern,.sports-card,.islet-spot,.preference,.build-info,.controls-overview p){min-width:0;padding:var(--u-4);border:2px solid #3d6a6b;border-radius:var(--u-radius-xs);background:var(--u-card);box-shadow:inset 0 2px #ffffff0d,0 3px var(--u-deep)}
 .kit-modal :is(.islet-spot[data-state=built]){border-color:var(--u-gold)}
 
 /* Notices: a gold stripe on the left, never a second frame. */
-.kit-modal :is(.account-status,.account-banner,.account-feedback,.market-status,.market-blocked,.duel-message,.duel-notice,.duel-done,.islet-status:not(:empty),.shortcuts-note){border:0;border-left:4px solid var(--u-gold);border-radius:0;background:#20494f;color:var(--u-ink);padding:12px 16px}
+.kit-modal :is(.account-status,.account-banner,.account-feedback,.market-status,.market-blocked,.duel-message,.duel-notice,.duel-done,.islet-status:not(:empty),.shortcuts-note){border:0;border-radius:var(--u-radius-xs);background:#20494f;box-shadow:inset 0 0 0 2px #f6d27a59;color:var(--u-ink);padding:12px 16px}
 .kit-modal :is(.market-note,.market-follows,.market-tagline,.duel-intro,.duel-hint,.duel-when,.islet-note,.islet-detail,.islet-plot,.account-muted,.preferences-status,.problem-report-description){color:var(--u-mute)}
 
 /* Tabs and chips inside panels follow the kit (components.css); old per-panel radii go. */
 .kit-modal :is(.kit-badge,.islet-badge,.sports-badge,.duel-chip){font-family:var(--u-font);border-radius:0}
 .kit-modal :is(.kit-tabs,.kit-tablist,.kit-tabpanel){min-width:0}
 
-/* Forms: one field style. Radio and checkbox hit areas stay native unless a toggle class is used. */
-.kit-modal :is(input:not([type=radio],[type=checkbox],[type=range]),select,textarea){box-sizing:border-box;min-height:44px;min-width:0;max-width:100%;padding:10px 12px;background:var(--u-deep);color:var(--u-ink);border:2px solid var(--u-line);border-radius:0;font:16px/1.4 var(--u-font)}
-.kit-modal :is(input:not([type=radio],[type=checkbox],[type=range]),select,textarea):focus-visible{outline:3px solid var(--u-gold);outline-offset:2px}
+/* Forms: one field style. Radio and checkbox hit areas stay native unless a toggle class is used.
+   A field is the carved counterpart of a button: the same corner, but pressed into the panel (a shadow under
+   its top edge) where a button stands out of it. The caret, the selection and the list arrow use the palette. */
+.kit-modal :is(input:not([type=radio],[type=checkbox],[type=range]),select,textarea){box-sizing:border-box;min-height:44px;min-width:0;max-width:100%;padding:10px 12px;background:var(--u-deep);color:var(--u-ink);border:2px solid var(--u-line);border-radius:var(--u-radius-xs);box-shadow:inset 0 3px 5px #020c1099,0 1px #ffffff14;caret-color:var(--u-gold);font:16px/1.4 var(--u-font);transition:border-color .12s cubic-bezier(.16,1,.3,1)}
+.kit-modal :is(input:not([type=radio],[type=checkbox],[type=range]),select,textarea):hover:not(:disabled,:focus-visible){border-color:#9cc4bf}
+.kit-modal :is(input:not([type=radio],[type=checkbox],[type=range]),select,textarea):focus-visible{border-color:var(--u-brass);outline:3px solid var(--u-gold);outline-offset:2px}
+.kit-modal :is(input:not([type=radio],[type=checkbox],[type=range]),select,textarea):disabled{opacity:.6;cursor:not-allowed}
+.kit-modal :is(input,textarea)::placeholder{color:var(--u-mute);opacity:.8}
+.kit-modal :is(input,textarea)::selection{background:var(--u-gold);color:#2b1d06}
+/* Keep the arrow same-origin for img-src 'self'. The repeated class preserves it against card backgrounds. */
+.kit-modal.kit-modal select{appearance:none;-webkit-appearance:none;padding-right:38px;cursor:pointer;background-image:url('./kit/select-chevron.svg?no-inline');background-repeat:no-repeat;background-position:right 13px center;background-size:14px 9px}
+@media(forced-colors:active){.kit-modal.kit-modal select{appearance:auto;-webkit-appearance:auto;padding-right:12px;background-image:none}}
+@media(prefers-reduced-motion:reduce){.kit-modal :is(input,select,textarea){transition:none}}
 .kit-modal :is(button,a,summary):focus-visible{outline:3px solid var(--u-gold);outline-offset:3px}
 :is(.market-modal,.duel-modal) :is(.market-choices,.duel-group,.duel-round){border:2px solid #3d6a6b;border-radius:0}
 :is(.market-modal,.duel-modal) :is(.market-choice,.duel-choice,.duel-option){border-radius:0}

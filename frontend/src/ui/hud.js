@@ -21,11 +21,13 @@ import './hud.css';
 
 export const ARRIVAL_MS = 2000;
 export const COIN_TICK_MS = 900;
+// Once every goal is done the strip says so for this long, then leaves the screen for good.
+export const GOALS_FAREWELL_MS = 12000;
 const names = Object.fromEntries(Object.values(places).flatMap(p => p.zones.map(z => [z.id, z.name])));
 const local = () => { try { return globalThis.localStorage ?? null; } catch { return null; } };
 export const weatherLabel = weather => weather.rain > 0.5 ? 'Rain at sea' : weather.fog > 0.7 ? 'Sea mist' : weather.cloudCover > 0.6 ? 'Overcast' : 'Fair skies';
 
-export function createHud(container, actions, {on = defaultOn, emit = defaultEmit, storage = local(), toast = showToast, hintsEnabled = () => getPreferences().hintsEnabled !== false} = {}) {
+export function createHud(container, actions, {on = defaultOn, emit = defaultEmit, storage = local(), toast = showToast, hintsEnabled = () => getPreferences().hintsEnabled !== false, now = () => performance.now()} = {}) {
   let disposed = false, place = 'saltreach_harbor', override = null, coins = null, account = 'none', lastFrame = 0;
   // Where the balance comes from: the wallet (view.captain.coins) or, with the islands on, the island API
   // through setCoins(). The island's own count wins once chosen, so the wallet never overwrites it.
@@ -145,9 +147,13 @@ export function createHud(container, actions, {on = defaultOn, emit = defaultEmi
   // actions.travel() says whether the sea chart is there (docs/GAME-V3.md §2 "one island": no, by default).
   const travel = () => { try { return actions.travel ? actions.travel() !== false : false; } catch { return false; } };
   const quests = () => questsFor(travel());
+  // All goals done: the strip stays for a short goodbye after the last one, then hides; a player who comes
+  // back with every goal done never sees it again. Another strip (the class demo, the guided start) is not ours to hide.
+  let farewellUntil = -Infinity;
+  const goalsOver = () => !override && !guide && first.done >= quests().length && now() >= farewellUntil;
   const draw = () => {
     const view = override ?? guide ?? (islandShown() ? firstQuestView(first, quests()) : null);
-    strip.hidden = managing || !view;
+    strip.hidden = managing || !view || goalsOver();
     if (view) strip.render(view);
     measureHeader();
   };
@@ -161,6 +167,7 @@ export function createHud(container, actions, {on = defaultOn, emit = defaultEmi
   function completeGoal(result) {
     if (!result.changed || disposed) return;
     first = reconcileFirstQuests(result.state, questIsland, quests());writeFirstQuests(storage, first);idle.progress();
+    if (first.done >= quests().length) farewellUntil = now() + GOALS_FAREWELL_MS;
     if (override) return;
     draw();
     if (guide) return; // the guided start says it itself
@@ -303,7 +310,7 @@ export function createHud(container, actions, {on = defaultOn, emit = defaultEmi
         nudge.style.left = hint.at ? `${Math.max(8, Math.min(92, hint.at.x * 100))}%` : '50%';nudge.style.top = hint.at ? `${Math.max(10, Math.min(92, hint.at.y * 100))}%` : '40%';
       }
       // The island answered (or left): the goals follow (T52, islandShown).
-      if (!override && !guide && strip.element.hidden !== (managing || !islandShown())) draw();
+      if (!override && !guide && strip.element.hidden !== (managing || !islandShown() || goalsOver())) draw();
       if (idle.step(delta, {moving: (stats.speed ?? 0) > 0.05, blocked: stats.blocked === true || !overlay.classList.contains('exploring') || strip.element.hidden})) {
         const item = strip.current;
         if (item && !item.done && hintsEnabled()) toast({text: `Need a hand? ${item.hint}`, ms: 7000});

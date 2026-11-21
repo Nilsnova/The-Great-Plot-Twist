@@ -22,6 +22,7 @@ import {createShortcutsHost} from './shell/shortcuts-host.js';
 import {createTutorialHost} from './tutorial/host.js';
 import {createWorldExperience} from './world/experience.js';
 import {characterScale as characterScaleFor} from './pirates/character-scale.js';
+import {createFinisherWatch, finisherOwnsKeys} from './pirates/finisher/captain-lock.js';
 import {createIsletState} from './world/islet/state.js';
 import {sendIntent} from './adapter/intent.js';
 import {attachIsletPanel} from './screens/islet/host.js';
@@ -103,7 +104,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   // until then the events they listen to are kept and replayed to them (core/lazy-part.js).
   let narrator=null,tutorials=null;
   const guide=createLazyPart({on,load:()=>import('./tutorial/guide.js'),build:(module,on)=>{
-    narrator=module.createNarrator({container,on,audio,getGame:()=>{const visit=island?.visiting,own=island?.island;return visit?{code:visit.code,waveBest:0,recoveryVersion:visit.recoveryVersion??0}:own?{code:own.code,waveBest:own.waveBest??0,recoveryVersion:own.recoveryVersion??0}:null;}});
+    narrator=module.createNarrator({container,on,audio,quiet:()=>shell.mode==='title',getGame:()=>{const visit=island?.visiting,own=island?.island;return visit?{code:visit.code,waveBest:0,recoveryVersion:visit.recoveryVersion??0}:own?{code:own.code,waveBest:own.waveBest??0,recoveryVersion:own.recoveryVersion??0}:null;}});
     tutorials=module.createTutorials({container,on,reducedMotion,probe:tutorialHooks.probe,locate:tutorialHooks.locate,spotTarget:tutorialHooks.spotTarget,anchor:tutorialHooks.anchor,tour:tutorialHooks.tour,
       say:trigger=>narrator.say(trigger),setGuide:view=>hud.setGuide(view),hudParent:()=>container.querySelector('.hud-play .hud-right'),
       focusGame:()=>graphics.renderer.domElement.focus({preventScroll:true}),
@@ -118,7 +119,10 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   const worldBlocked=()=>!!(harbor?.active||sharedHarbor?.active||island?.active||waves?.reportActive||classDemo?.active||shortcuts.active||tutorial.active||!!tutorials?.active||shell?.blocked||isAppBlocked?.()||marketUi?.active||sportsUi.active);
   function resetControls(){mapTouch?.cancel();input.reset();}
   const outsideBlocked=()=>externalOverlay()||world.busy;
-  const captainBlocked=()=>outsideBlocked()||island?.managing===true;
+  // A boss finisher or last-chance rescue owns the keys while it runs (arrows, A/D, Space aim and fire in it):
+  // the captain stands still, so one key press never both aims the minigame and walks the island.
+  const isFinishing=()=>finisherOwnsKeys(waves),finisherChanged=createFinisherWatch();
+  const captainBlocked=()=>outsideBlocked()||island?.managing===true||isFinishing();
   const sportsUi=createSportsEntry({container,getToken:session.getToken,onSessionChange:session.onChange,resetInput:resetControls,focusGame:()=>graphics.renderer.domElement.focus(),onSignIn:()=>{sportsUi.close();openAccount?.();}},{load:loadMatchCard});
   // No prediction market in the game (D035, 11 Nov): the fortune teller and its desk are gone.
   function panelLabel(zone){return island?.label(zone);}
@@ -315,7 +319,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
       if(disposed)return null;
       waves=module.wireWaves({scene,camera:view.camera,canvas:graphics.renderer.domElement,container,player:controller.player,world,input,audio,reducedMotion,loop:false,
         getPracticeToken:session.getToken,quality:()=>settings.quality,isBlocked:()=>!active||outsideBlocked(),on,emit,island,fakeApi:fake?fake.createFakeIslandApi():null,
-        rehearsal:!island,host:!island,openRoom:local?topic=>local.createLocalRoom(topic):topic=>rooms.openRoom(topic),notify:text=>hud.message(text)});
+        rehearsal:!island,host:!island,isShown:()=>shell.mode!=='title',openRoom:local?topic=>local.createLocalRoom(topic):topic=>rooms.openRoom(topic),notify:text=>hud.message(text)});
       return waves;
     }).catch(error=>{console.error(error);wavesLoad=null;return null;});
     return wavesLoad;
@@ -395,6 +399,8 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     mapTouch.update(delta);
     // Captain health (GAME-V3.md §3): a fallen captain cannot walk, and lies as the wave draws them.
     const captainDown=isCaptainDown();
+    // Keys held when a finisher starts or ends are let go, so the captain does not walk off on his own afterwards.
+    if(finisherChanged(isFinishing()))resetControls();
     // A shot or a cutlass blow poses your own body (and a teammate's figure), never a second captain (pirates/poses.js).
     const speed=controller.update(delta,!captainDown&&active&&!captainBlocked(),combatAfterMove);
     const poses=framePoses;
@@ -437,6 +443,9 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
       graphics.renderer.render(scene,view.camera);
     });
     graphics.sampleFrame(performance.now(),{active:draw&&active&&!outsideBlocked()});
+  },{
+    // A frame that throws is skipped, not fatal (core/loop.js). If frames keep failing, say so in plain words.
+    onTrouble(){if(!disposed)hud.message('Something went wrong. If the game looks stuck, reload the page.',{tone:'error',ms:10000});},
   });
   // The narrator and the tutorials: right after the first frame (and again on each arrival if that load failed).
   if(globalThis.requestAnimationFrame)requestAnimationFrame(()=>void guide.start());else void guide.start();
@@ -457,7 +466,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     captions.show('Graphics paused. Reload the page to restore the island.');
   }, { once: true });
   return {dispose,resetInput:resetControls,hasOverlay:()=>!!harbor?.active||!!sharedHarbor?.active||!!island?.active||!!waves?.reportActive||!!tutorials?.active||!!classDemo?.active||shortcuts.active||tutorial.active||chart.open||sailing.active||(marketUi?.active||sportsUi.active)||stopPlots.active,
-    setMode(mode){mapTouch?.cancel();if(mode!=='playing'){harbor?.close();sharedHarbor?.close();marketUi?.close();sportsUi.close();beginRequest++;}audio.setScreen(mode);input.reset();if(mode==='playing')view.start(reducedMotion());else view.pause();},
+    setMode(mode){mapTouch?.cancel();if(mode==='title')narrator?.hush();if(mode!=='playing'){harbor?.close();sharedHarbor?.close();marketUi?.close();sportsUi.close();beginRequest++;}audio.setScreen(mode);input.reset();if(mode==='playing')view.start(reducedMotion());else view.pause();},
     handleEscape(){
       if(shortcuts.active){shortcuts.close();return true;}
       if(tutorial.active){tutorial.close();return true;}

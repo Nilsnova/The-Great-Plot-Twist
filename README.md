@@ -47,6 +47,7 @@ We are four equal teammates building with coding agents. Everyone can propose fe
 
 | Need | Go to |
 |---|---|
+| **Every document, sorted into current and history** | [Docs index](docs/README.md) |
 | **What the game is now (product direction, 10 Nov)** | [Pitch](docs/PITCH.md) |
 | **Who builds what this week (lanes, contracts, tasks)** | [Build plan](docs/BUILD-PLAN.md) |
 | **The plan to the deadline (Mon 23 Nov, 23:59) and the task board** | [Final roadmap](docs/FINAL-ROADMAP.md) |
