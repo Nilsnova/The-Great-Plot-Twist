@@ -372,6 +372,7 @@ None of the failing checks showed a wrong picture or a broken action in the game
 - Real audio output on a device.
 - The real Supabase Realtime room with four devices: `test:mp` uses a BroadcastChannel stand-in with the same message rules.
 - Pirate Point with four players and the three lamps in one automated run.
+- **Late-game balance by real play.** Waves 30 to 100 are tuned on a headless model ([late-game.test.js](../frontend/tests/pirates/late-game.test.js)): it says the towers alone lose from wave 50 and four captains lose wave 70. In a real solo game on the live site a single player reached wave 69 (Nicolas, 20 Nov). The model does not play the tower trees after level 5, the arsenal weapons or the guards as a player does, so its "needs a full crew" claim is not confirmed by play. Not a problem for the 5-minute demo; it matters for anyone who wants the late game to be a team game.
 - Whether the browser's `survived` in a wave is true: by design the server only bounds the loot ([D032](DECISIONS.md)).
 
 ## 8. Lane rows (to be filled by the lane's members)
