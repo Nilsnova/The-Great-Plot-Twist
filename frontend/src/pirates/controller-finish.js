@@ -36,8 +36,10 @@ export function createFinish(ctl) {
   function presentEnd(current) {
     const result = current.result;
     const run = typeof startNextWave === 'function', fallenAll = current.sim.endReason === 'captains_fallen';
-    if (run && result.survived) current.pause = { until: now() + breakSeconds * 1000, ready: false, requested: false, note: null };
-    else if (run) current.hud?.banner(LOST_TITLE, `${fallenAll ? `${LOST_FALLEN} ` : ''}${LOST_LINE}`);
+    if (run && result.survived) {
+      current.hud?.banner('');
+      current.pause = { until: now() + breakSeconds * 1000, ready: false, requested: false, note: null };
+    } else if (run) current.hud?.banner(LOST_TITLE, `${fallenAll ? `${LOST_FALLEN} ` : ''}${LOST_LINE}`);
     else current.hud?.banner(result.survived ? 'Wave won!' : 'The island fell', fallenAll ? LOST_FALLEN : `${result.shipsSunk} ${result.shipsSunk === 1 ? 'ship' : 'ships'} sunk`);
     cue(result.survived ? 'pirate-victory' : 'pirate-defeat');
     // Recovery quest/narrator events come once from wave-flow.ended, after wave_finish_answered.

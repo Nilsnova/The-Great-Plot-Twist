@@ -15,6 +15,7 @@ import { node as el } from '../../ui/kit/dom.js';
 import lines from '../../narrator/lines.json';
 import { ARROWS, FINISHER, holdsNeedle, promptAt, promptLength, spotAt, zoneAt } from './rules.js';
 import { difficultyFor } from './difficulty.js';
+import { createDuelArt } from './duel-art.js';
 
 export const FINISHER_TITLE = 'Bring her down!';
 export const TASK_TEXT = Object.freeze({
@@ -64,11 +65,12 @@ export function createFinisherScene({ container, me = null, easy = () => false, 
   const controls = el('div', 'finisher-controls');
   const hold = button('finisher-hold', TASK_TEXT.haul.touch), left = button('finisher-left', '◀', 'Aim left'), right = button('finisher-right', '▶', 'Aim right');
   const fire = button('finisher-fire', TASK_TEXT.cannon.touch, 'Fire the great cannon');
-  const arrows = ARROWS.map((name, i) => { const b = button(`finisher-arrow finisher-arrow-${name}`, ARROW_GLYPH[name], `Arrow ${name}`); b.dataset.arrow = String(i); return b; });
+  const arrows = ARROWS.map((name, i) => { const b = button(`kit-quiet finisher-arrow finisher-arrow-${name}`, ARROW_GLYPH[name], `Arrow ${name}`); b.dataset.arrow = String(i); return b; });
   const arrowPad = el('div', 'finisher-pad'); arrowPad.append(...arrows);
+  const duelCue = el('span', 'kit-sr-only'); duelCue.setAttribute('role', 'status'); duelCue.hidden = true;
   controls.append(hold, left, fire, right, arrowPad);
   const watch = el('p', 'finisher-watch'); watch.hidden = true;
-  panel.append(head, how, stage, meter, crew, controls, watch);
+  panel.append(head, how, stage, duelCue, meter, crew, controls, watch);
   const result = el('div', 'finisher-result'), resultTitle = el('strong', 'finisher-result-title'), resultLine = el('span', 'finisher-result-line');
   result.append(resultTitle, resultLine); result.hidden = true;
   root.append(dim, top, card, panel, result, bottom);
@@ -77,7 +79,7 @@ export function createFinisherScene({ container, me = null, easy = () => false, 
 
   // This player's input state.
   let holding = false, needle = 0, velocity = 0, aim = 50, aimKeys = 0, lastShot = -Infinity, pressedPrompt = new Map();
-  let current = null, clock = 0, disposed = false, lastCaption = '', flashAt = -1, flashGood = false;
+  let current = null, clock = 0, disposed = false, lastCaption = '', flashAt = -1, flashGood = false, duelArt;
   const playing = () => !!current && current.players.includes(me) && current.phase === 'task' && !current.outcome;
   const task = () => current?.tasks?.[current.task] ?? null;
   const localSample = () => (task() ? current.sample - task().from : -1);
@@ -212,26 +214,18 @@ export function createFinisherScene({ container, me = null, easy = () => false, 
     if (clock - flashAt < .35) { ctx.fillStyle = flashGood ? 'rgba(255,214,90,.8)' : 'rgba(230,246,244,.7)'; ctx.beginPath(); ctx.arc(hx(aim), 115, 20 + (clock - flashAt) * 120, 0, Math.PI * 2); ctx.fill(); }
   }
   function drawDuel(s, f) {
-    // The deck: planks, two cartoon duellists, the arrow to press with its timer ring.
-    ctx.fillStyle = '#6b4226'; ctx.fillRect(0, 0, 640, 300);
-    ctx.strokeStyle = '#4e2f1a'; ctx.lineWidth = 3; for (let k = 0; k < 9; k++) { ctx.beginPath(); ctx.moveTo(0, k * 36); ctx.lineTo(640, k * 36); ctx.stroke(); }
-    const L = promptLength(easy(), numbers('duel')), k = Math.floor(s / L), dir = promptAt(me ?? '', k, f.salt), share = (s % L) / L;
-    const figure = (x, colour, flip) => {
-      ctx.save(); ctx.translate(x, 210); ctx.scale(flip ? -1 : 1, 1);
-      ctx.fillStyle = OUTLINE; ctx.beginPath(); ctx.ellipse(0, 0, 34, 52, 0, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.arc(0, -70, 28, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = colour; ctx.beginPath(); ctx.ellipse(0, 0, 28, 46, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#f2c79a'; ctx.beginPath(); ctx.arc(0, -70, 22, 0, Math.PI * 2); ctx.fill();
-      ctx.strokeStyle = OUTLINE; ctx.lineWidth = 8; ctx.beginPath(); ctx.moveTo(20, -10); ctx.lineTo(95, -60 - (reducedMotion() ? 0 : Math.sin(clock * 9) * 8)); ctx.stroke();
-      ctx.strokeStyle = '#e8eee8'; ctx.lineWidth = 4; ctx.stroke();
-      ctx.restore();
-    };
-    figure(150, '#2f6fa8', false); figure(490, '#b23a2e', true);
-    const done = pressedPrompt.has(k), mark = pressedPrompt.get(k);
-    ctx.fillStyle = OUTLINE; ctx.beginPath(); ctx.arc(320, 120, 70, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = done ? (mark === dir ? '#7fc35a' : '#e8473a') : '#efe2bd'; ctx.beginPath(); ctx.arc(320, 120, 62, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = '#ffd24a'; ctx.lineWidth = 8; ctx.beginPath(); ctx.arc(320, 120, 66, -Math.PI / 2, -Math.PI / 2 + (1 - share) * Math.PI * 2); ctx.stroke();
-    ctx.fillStyle = OUTLINE; ctx.font = '900 84px system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(ARROW_GLYPH[ARROWS[dir]], 320, 124);
+    const length = promptLength(easy(), numbers('duel')), prompt = Math.floor(s / length);
+    const direction = promptAt(me ?? '', prompt, f.salt), mark = pressedPrompt.get(prompt);
+    const response = mark === undefined ? 'ready' : mark === direction ? 'hit' : 'miss';
+    const cue = !playing() ? '' : response === 'ready' ? `Arrow ${ARROWS[direction]}` : response === 'hit' ? 'Hit' : 'Parried';
+    if (duelCue.textContent !== cue) duelCue.textContent = cue;
+    for (const [index, arrowButton] of arrows.entries()) {
+      const next = index === mark ? response : '';
+      if (arrowButton.dataset.response !== next) arrowButton.dataset.response = next;
+    }
+    duelArt ??= createDuelArt(ctx);
+    duelArt({direction, remaining: 1 - (s % length) / length, response, age: clock - flashAt,
+      clock, animate: !reducedMotion()});
   }
 
   function setPhase(f) {
@@ -251,6 +245,7 @@ export function createFinisherScene({ container, me = null, easy = () => false, 
     for (const node of [hold]) node.hidden = !holdsNeedle(t);
     for (const node of [left, right, fire]) node.hidden = t !== 'cannon';
     arrowPad.hidden = t !== 'duel';
+    duelCue.hidden = t !== 'duel';
     const watcher = !f.players.includes(me);
     watch.hidden = !watcher; controls.hidden = watcher;
     if (watcher) watch.textContent = f.kind === 'rescue' ? 'You are watching: the captains on the island haul together.' : 'You are watching: the captains in the fight do this together.';
