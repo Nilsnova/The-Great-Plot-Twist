@@ -79,7 +79,7 @@ def test_a_new_player_sees_the_code_the_coins_and_sixteen_empty_spots():
     assert body["spots"][0] == {
         "id": "wall_1", "kind": "wall", "kinds": ["wall"], "built": False,
         "level": 0, "cost": 10, "upgradeCost": None, "spec": None,
-        "x": -18.5, "z": -1.0, "tree": None,
+        "x": -17.5, "z": -3.0, "tree": None,
     }  # fmt: skip
     assert body["nextWave"] == 1
     assert body["recoveryVersion"] == 0

@@ -9,13 +9,8 @@ import {projectGround, projectedCoastBounds, unprojectGround} from '../../src/wo
 import {createHomeRelief} from '../../src/world/places/home-relief.js';
 import {createHomeTerraces} from '../../src/world/places/home-terraces.js';
 import {backdrop, createLifetime} from '../../src/world/places/resources.js';
+import {WALL_PERIMETER_CELLS} from '../../src/island/wall-perimeter.js';
 import {surfaceClass, surfaces} from '../../src/world/places/surfaces.js';
-
-const EDGE_WALLS = [
-  [18, -2], [18, 0], [18, 2],
-  [-3, 18], [-1, 18], [1, 18],
-  [-17.5, -3], [-17.5, -1], [-17.5, 1],
-].map(([x, z]) => ({x, z}));
 
 const turn = (a, b, c) => (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
 
@@ -86,7 +81,7 @@ it('grounds the terrace footings in the original island and keeps defenses and w
       expect(triangles.some(triangle => covers(point, triangle)), id).toBe(false);
     }
   }
-  for (const {x, z} of EDGE_WALLS) {
+  for (const {x, z} of WALL_PERIMETER_CELLS) {
     for (let dx = -1; dx <= 1; dx += .25) for (let dz = -1; dz <= 1; dz += .25) {
       const point = projectGround(x + dx, z + dz);
       expect(triangles.some(triangle => covers(point, triangle)), `${x}, ${z}`).toBe(false);
@@ -119,7 +114,7 @@ it('keeps edge walls on the live lanes clear of above-ground shoreline rock', ()
     if (shoreRelief.getZ(i) <= 1.5) continue;
     rocks.push([i, i + 1, i + 2].map(index => ({x: position.getX(index), y: position.getY(index)})));
   }
-  for (const {x, z} of EDGE_WALLS) {
+  for (const {x, z} of WALL_PERIMETER_CELLS) {
     for (let dx = -1; dx <= 1; dx += .25) for (let dz = -1; dz <= 1; dz += .25) {
       expect(surfaceClass('home_islet', x + dx, z + dz), `${x}, ${z}`).toBeGreaterThan(0);
       const point = projectGround(x + dx, z + dz);

@@ -6,8 +6,8 @@
 // Place here): the friend's island answer and map show each new square within 2 s (check-multiplayer's bound for
 // upgrades); the friend moves the cannon again on the host's island and the host's map follows within 2 s. Refused
 // squares (the bar turns red, Place here is off, and the server answers the same code): the sea, another
-// building's square, and a cannon that would close the heart's last way to the beach (a wall on the same square
-// is fine: walls never block). The host rings the bell: both pages' sims fight the wall and the cannon on the
+// building's square, a wall inside the grass perimeter, and a cannon that would close the heart's last way
+// to the beach. The host rings the bell: both pages' sims fight the wall and the cannon on the
 // squares the server holds (the defenses each sim was made with and the towers it reports, page by page); in the
 // wave the card's Move is off with its reason, and a move sent anyway is refused with the server's wave_running
 // message, on the bar and from the API. After the wave both pages reload and still show the moved squares.
@@ -165,7 +165,8 @@ const simOf = captain => captain.page.evaluate(() => { const w = window.__island
     towers: w.state.towers.map(item => ({id: item.id, x: item.x, z: item.z}))}; });
 
 const WALL = 'wall_1', CANNON = 'cannon_1';
-const WALL_AT = {x: -13, z: 1}, CANNON_AT = {x: -11, z: -8}, FRIEND_AT = {x: -10, z: -10.5};
+const WALL_AT = {x: 1, z: -18}, WAVE_WALL_AT = {x: 11, z: 15}, REPAIR_WALL_AT = {x: 11, z: 15};
+const CANNON_AT = {x: -11, z: -8}, FRIEND_AT = {x: -10, z: -10.5};
 try {
   // 1 The host creates a game, the friend joins it with the code, the host presses Start.
   const host = await openCaptain('Nils', 'me', {create: true});
@@ -180,18 +181,26 @@ try {
   for (const captain of pages) {
     assert.equal(await island(captain, i => (i.visiting?.spots ? i.visiting : i.island).layout?.movable), true, `${captain.name}'s answer says layout.movable`);
   }
-  // 2 The host builds a wall and a cannon on their fixed spots; the friend sees both.
-  await island(host, async i => { i.dev.setCoins(400); await i.load(); await i.build('wall_1', 'wall'); await i.build('cannon_1', 'cannon'); });
+  // 2 The host builds on the visible wall socket and the fixed cannon spot; the friend sees both.
+  await island(host, async i => { i.dev.setCoins(400); await i.load(); });
+  const initialWall = (await placeOf(host, WALL)).answer;
+  assert.ok(initialWall, 'the empty wall card has an assigned grass-edge socket');
+  await island(host, async i => { await i.build('wall_1', 'wall'); await i.build('cannon_1', 'cannon'); });
   await ben.page.waitForFunction(() => ['wall_1', 'cannon_1'].every(id => window.__island.island.visiting?.spots?.find(spot => spot.id === id)?.built), null, {timeout: 5000, polling: 100});
   for (const captain of pages) await captain.page.waitForFunction(
     ([wall, cannon]) => window.__placementMap?.(wall) && window.__placementMap(cannon),
     [WALL, CANNON], {timeout: 30000, polling: 200});
   const fixedWall = await placeOf(ben, WALL);
-  assert.deepEqual(fixedWall, {answer: null, map: {x: -18.5, z: -1}}, 'an unmoved wall stands on its fixed spot (no x/z in the answer)');
+  assert.deepEqual(fixedWall, {answer: initialWall, map: initialWall}, 'a newly built wall stands on its displayed grass-edge spot');
   await shot('01-built');
   // 3 The host moves the wall and the cannon from their cards; the friend's answer and map follow within 2 s.
   const wallBar = await pickSquare(host, WALL, WALL_AT);
   assert.deepEqual(wallBar, {refused: false, status: 'This square is free.', place: true, title: 'Move Wall'});
+  const perimeterShown = await host.page.evaluate(() => {
+    const markers = window.__island.scene.getObjectByName('island-wall-perimeter');
+    return !!markers?.visible && markers.count > 0;
+  });
+  assert.ok(perimeterShown, 'wall Move highlights free perimeter spots on the map');
   const wallTook = await seesAt(ben, WALL, WALL_AT, "the host's moved wall", await place(host, WALL, WALL_AT));
   results.push(`host moved ${WALL} to ${WALL_AT.x},${WALL_AT.z}: the friend's answer and map after ${wallTook} ms`);
   await pickSquare(host, CANNON, CANNON_AT);
@@ -216,7 +225,9 @@ try {
     refusals.push(`${spot}→${at.x},${at.z} ${answer.status} ${answer.code} "${answer.message}"`);
   }
   await refused(host, WALL, {x: 28, z: 0}, 'not_on_land', 'Buildings stand on land, not in the sea.');
-  await refused(ben, WALL, {x: -9.5, z: -1}, 'place_taken', 'Another building stands there.'); // wall_10's spot, on the west lane
+  const occupied = (await placeOf(ben, 'wall_6')).answer;
+  assert.ok(occupied, 'the island has another reserved wall socket');
+  await refused(ben, WALL, occupied, 'place_taken', 'Another building stands there.');
   // A ring of empty tower and house spots round the heart with one gap (each step is legal), then the cannon in the gap.
   const RING = [['cannon_2', -1, -1], ['cannon_3', 1, -1], ['cannon_4', 3, -1], ['cannon_5', -3, 5], ['cannon_6', -1, 5], ['cannon_7', 1, 5], ['house_1', 4.5, 2], ['house_2', -4, 2]];
   for (const [spot, x, z] of RING) { const answer = await apiMove(host, spot, {x, z}); assert.equal(answer.ok, true, `ring step ${spot}: ${answer.message}`); }
@@ -225,8 +236,7 @@ try {
   await reread();
   await refused(host, CANNON, {x: 3, z: 5}, 'blocks_route', 'That would wall the heart in. Leave the pirates a way through.');
   await refused(ben, CANNON, {x: 3, z: 5}, 'blocks_route', 'That would wall the heart in. Leave the pirates a way through.');
-  // D056: a wall stands only on a pirate path; that gap is off every wall lane, so the bar and the server refuse it.
-  await refused(host, WALL, {x: 3, z: 5}, 'off_path', 'Walls go on a pirate path.');
+  await refused(host, WALL, {x: 3, z: 5}, 'off_path', 'Walls go in one row along the grass edge.');
   // Back to the fixed spots (the spots that are not built do not fight, but the wave should see a normal island).
   const FIXED = {cannon_2: [13, -15], cannon_3: [15.5, 14], cannon_4: [-15.5, 14.5], cannon_5: [-15, -6], cannon_6: [14.5, -3], cannon_7: [4.5, 16.5], house_1: [7, -6], house_2: [-8, -6]};
   for (const [spot] of [...RING].reverse()) { const [x, z] = FIXED[spot]; const answer = await apiMove(host, spot, {x, z}); assert.equal(answer.ok, true, `back ${spot}: ${answer.message}`); }
@@ -252,7 +262,7 @@ try {
     assert.deepEqual(card, {disabled: true, why: 'You can move it between waves.', start: false}, `${captain.name}'s card waits for the break`);
   }
   // The bar sends it anyway (Move mode started by hand): the server's refusal stands on the bar, nothing moves.
-  await ben.page.evaluate(() => { const mode = window.__island.island.moveMode; mode.start('wall_1'); mode.tap(-13, -1); });
+  await ben.page.evaluate(({x, z}) => { const mode = window.__island.island.moveMode; mode.start('wall_1'); mode.tap(x, z); }, WAVE_WALL_AT);
   const sent = await ben.page.evaluate(() => window.__island.island.moveMode.confirm());
   const waveBar = await ben.page.evaluate(() => ({status: document.querySelector('.island-move-status').textContent, refused: document.querySelector('.island-move-bar').classList.contains('is-refused')}));
   assert.deepEqual({ok: sent.ok, status: sent.status, code: sent.code}, {ok: false, status: 409, code: 'wave_running'}, 'a move in the wave is refused');
@@ -285,7 +295,7 @@ try {
   await card.goto(`${env.url}/placement-harness`);
   await card.addScriptTag({type: 'module', content: 'window.harnessImport = path => import(path);'});
   await card.waitForFunction(() => typeof window.harnessImport === 'function');
-  const recovery = await card.evaluate(async () => {
+  const recovery = await card.evaluate(async ({x, z}) => {
     const {createIsland} = await window.harnessImport('/src/island/index.js');
     const {createFakeIslandTransport} = await window.harnessImport('/src/pirates/fake-api.js');
     const {on, emit} = await window.harnessImport('/src/core/events.js');
@@ -314,7 +324,7 @@ try {
     island.setBattle(false); await wait(30);
     // Move the damaged wall: the card's Move, a free square, Place here; the card still offers Repair afterwards.
     card().querySelector('.island-move').click(); await wait(30);
-    island.moveMode.tap(-14, -1); await island.moveMode.confirm();
+    island.moveMode.tap(x, z); await island.moveMode.confirm();
     const moved = island.island.spots.find(spot => spot.id === 'wall_1');
     island.pick('wall_1'); await wait(60);
     const afterMove = read();
@@ -325,15 +335,15 @@ try {
     const repaired = read();
     island.ui.close(); island.dispose();
     return {damaged, inWave, moved: {x: moved.x, z: moved.z}, afterMove, destroyed, repaired};
-  });
+  }, REPAIR_WALL_AT);
   assert.deepEqual(recovery.damaged, {main: 'Repair · 🪙 4', mainOff: false, label: 'Damaged · health 40%', reason: '', move: 'Move', moveOff: false, moveWhy: ''}, 'a damaged wall shows Repair and Move');
   assert.deepEqual(recovery.inWave, {main: 'Repair · 🪙 4', mainOff: true, label: 'Damaged · health 40%',
     reason: 'You can repair it between waves. During a wave, press E at the wall.', move: 'Move', moveOff: true, moveWhy: 'You can move it between waves.'}, 'in a wave Repair and Move wait for the break');
-  assert.deepEqual(recovery.moved, {x: -14, z: -1}, 'the damaged wall moved');
+  assert.deepEqual(recovery.moved, REPAIR_WALL_AT, 'the damaged wall moved along the perimeter');
   assert.deepEqual(recovery.afterMove, recovery.damaged, 'the moved wall keeps its Repair and Move');
   assert.deepEqual({main: recovery.destroyed.main, label: recovery.destroyed.label, move: recovery.destroyed.move, moveOff: recovery.destroyed.moveOff}, {main: 'Rebuild · 🪙 4', label: 'Destroyed', move: 'Move', moveOff: false}, 'a destroyed wall shows Rebuild and Move');
   assert.deepEqual({main: recovery.repaired.main, mainOff: recovery.repaired.mainOff, move: recovery.repaired.move, moveOff: recovery.repaired.moveOff}, {main: 'Upgrade', mainOff: false, move: 'Move', moveOff: false}, 'after Repair the card offers Upgrade and Move again');
-  results.push(`wall recovery + placement: damaged "${recovery.damaged.main}" + Move; in a wave both off ("${recovery.inWave.moveWhy}"); moved to -14,-1 and kept Repair; destroyed "${recovery.destroyed.main}" + Move; repaired: "${recovery.repaired.main}" + Move`);
+  results.push(`wall recovery + placement: damaged "${recovery.damaged.main}" + Move; in a wave both off ("${recovery.inWave.moveWhy}"); moved to ${REPAIR_WALL_AT.x},${REPAIR_WALL_AT.z} and kept Repair; destroyed "${recovery.destroyed.main}" + Move; repaired: "${recovery.repaired.main}" + Move`);
   await card.close();
   const errors = env.errors.filter(text => !/Failed to load resource/.test(text));
   assert.deepEqual(errors, [], 'No browser errors');

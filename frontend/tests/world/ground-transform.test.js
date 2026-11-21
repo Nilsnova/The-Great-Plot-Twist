@@ -47,11 +47,16 @@ describe('projected ground buffers and coast sampling',()=>{
     preview.show({x:7.5,z:-.5,size:2,ok:false});
     expect(rim.material.color.getHex()).not.toBe(validColour);
     expect(preview.shown).toEqual({x:7.5,z:-.5,size:2,ok:false});
-    makeWallLanes(root,[[2,-1,1]]);const lane=root.getObjectByName('island-wall-lanes'),p=lane.geometry.attributes.position;
-    expect([...lane.geometry.index.array]).toEqual([0,1,2,0,2,3]);
-    for(const [i,expected]of[[-1.25,2.25],[1.25,2.25],[1.25,1.75],[-1.25,1.75]].entries()){
-      const actual=unprojectGround(p.getX(i),p.getY(i));expect(actual.x).toBeCloseTo(expected[0],6);expect(actual.z).toBeCloseTo(expected[1],6);
+    const perimeter=makeWallLanes(root), lane=root.getObjectByName('island-wall-perimeter'),p=lane.geometry.attributes.position;
+    const target={x:-1,z:2},m=new THREE.Matrix4();
+    perimeter.show([target]);
+    expect(lane.count).toBe(1);expect(perimeter.shown).toBe(true);
+    lane.getMatrixAt(0,m);
+    for(let i=0;i<p.count;i++){
+      const displayed=new THREE.Vector3().fromBufferAttribute(p,i).applyMatrix4(m),logical=unprojectGround(displayed.x,displayed.y);
+      expect(Math.abs(logical.x-target.x)).toBeCloseTo(.6,6);expect(Math.abs(logical.z-target.z)).toBeCloseTo(.6,6);
     }
+    perimeter.show([]);expect(lane.count).toBe(0);expect(perimeter.shown).toBe(false);
     const geometry=groundGeometry(new THREE.PlaneGeometry(1,1));geometry.computeVertexNormals();expect(geometry.attributes.normal.getZ(0)).toBeGreaterThan(0);
   });
   it('projects a real ground light instance while keeping its upright halo proportions',()=>{

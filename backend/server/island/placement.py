@@ -17,7 +17,7 @@ Used by: routes/island_layout.py.
 """
 
 from server.errors import ApiError
-from server.island import layout, layout_store, permissions, service
+from server.island import layout, layout_store, permissions, service, store
 from server.island.catalogue import IslandCatalogue, catalogue_for_existing_structures
 from server.island.service import IslandView
 from server.island.store import Island, Refusal
@@ -53,8 +53,13 @@ async def try_move(
     if rows is None:
         raise unavailable()
     rules = layout.island_layout(more)  # D060: with the extra tower spots while they are offered
-    positions = layout.positions_of(rules, layout_store.positions_from(rows))
+    built = await store.read_built_spots(admin, island.owner) if rules.wall_perimeter else None
+    positions = layout.positions_of(rules, layout_store.positions_from(rows), built)
     if positions.get(spot_id) == where:
+        if built is not None and spot_id not in built:
+            spot = layout.spot_named(rules, spot_id)
+            if spot is not None and spot.slot == layout.WALL_SLOT:
+                layout.check_move(rules, positions, spot_id, *where)
         return None  # it stands there already: nothing to do
     layout.check_move(rules, positions, spot_id, where[0], where[1])
     return await layout_store.save_move(admin, island.owner, mover, spot_id, where, rows)

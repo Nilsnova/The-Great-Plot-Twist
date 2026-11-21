@@ -158,10 +158,6 @@
       "file": "narrator-unlock_market.mp3",
       "seconds": 7.73
     },
-    "narrator-unlock_inner_walls": {
-      "file": "narrator-unlock_inner_walls.mp3",
-      "seconds": 8.41
-    },
     "narrator-unlock_carpenter": {
       "file": "narrator-unlock_carpenter.mp3",
       "seconds": 7.37

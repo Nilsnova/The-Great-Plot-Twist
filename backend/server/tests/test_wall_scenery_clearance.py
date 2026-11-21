@@ -11,7 +11,7 @@ TRUNKS = [(-16, 0), (-13, -12), (-9, -17), (9, -17), (15, -8), (16, 2), (14, 11)
 
 
 def test_explicit_legacy_wall_move_still_requires_its_lane_and_clear_ground():
-    rules = layout.island_layout()
+    rules = replace(layout.island_layout(), wall_perimeter=frozenset(), wall_defaults={})
     placed = layout.positions_of(rules, {"wall_1": (-16, 0)})
     assert placed["wall_1"] == (-16, 0)  # Read/settlement keeps the old paid cell.
     with pytest.raises(layout.MoveRefused) as error:

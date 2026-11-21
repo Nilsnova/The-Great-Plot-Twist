@@ -6,7 +6,7 @@ import {displayIslandCode, visitUrl} from './codes.js';
 import {formatCoinDelta, formatCoins} from '../lib/coins.js';
 import {BRANCHES, ROLES, ROLE_BY_ID, ROLE_LEVEL, SKILLS, SKILL_BY_ID, isRole, pointsEarned, pointsSpent, readSkills, respecPrice} from '../pirates/captain-ids.js';
 import {isExtraSpot} from './extra-spots.js';
-import {defenses, spotById} from './spots.js';
+import {defenses, spotById, wallSpaceUnavailable} from './spots.js';
 import {TOWER_TREES} from '../pirates/tower-trees.js';
 import {opensText, spotWave, waveOf, isOpen, tierItem, tierWave} from '../campaign/index.js';
 import {BRANCH_BY_ID, SPECS, TOP_TIER, isCapstone, optionLine, optionName, optionsOf, readSpec, readTier, skillPrice} from '../campaign/tech.js';
@@ -91,15 +91,19 @@ export function buildCardModel({spotId, kind, slot = null, spot = null, coins = 
       coins,
     });
   }
-  // A spot of a later campaign step (the inner wall ring after wave 5): shown, marked, not buildable yet.
+  // Later campaign spots are marked on the island until they open.
   const spotNeeds = point ? 0 : spotWave(spotId), campaignWave = campaign?.wave ?? unlocks?.wonWave ?? 0;
   if (!built && spotNeeds > campaignWave) {
     model.locked = true; model.soon = `${opensText(spotNeeds)}.`;
-    model.purpose = spotNeeds === waveOf('ring_walls') ? 'The inner ring of walls around the heart.'
+    model.purpose = spotNeeds === waveOf('ring_walls') ? 'More wall pieces for the grass edge.'
       : isExtraSpot(spotId) ? 'A new tower spot: any tower can stand here once it opens.' : model.purpose;
     return model;
   }
-  // T36: any spot of your island (built or empty) may move to another cell of the build grid, between waves.
+  if (!point && wallSpaceUnavailable(spot)) {
+    model.reason = 'No free wall spot on the grass edge.';
+    return model;
+  }
+  // Built and empty plots can move between waves.
   if (!point && movable) model.move = {label: 'Move', disabled: battle || !!busy, reason: battle ? 'You can move it between waves.' : ''};
   if (!built && place === 'tower') {
     model.mode = 'choose'; model.title = 'Tower spot'; model.purpose = 'Choose what to build. You cannot change it later.';

@@ -17,6 +17,7 @@ POST /api/island/move  {"spot": "cannon_1", "x": -10, "z": -10.5, "code"?: "ISLE
                          Point's spots do not move)
       422 off_grid       not a multiple of 0.5, or further out than 30 units
       409 not_on_land    the cell is in the sea
+      409 off_path       a wall is outside the grass-edge row
       409 place_taken    the footprint (2 x 2 units for walls and towers, 3 x 3 for the
                          watchtower and houses) overlaps the heart, the cabin, the bell, the
                          Harbor, the Tech hub, the wreck or another spot; touching edges are fine

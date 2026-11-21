@@ -1,5 +1,6 @@
 // The in-memory island and wave API (BUILD-PLAN 3.4): prices, refusals, loot and timing.
 import { describe, expect, it } from 'vitest';
+import { checkMove, onWallPerimeter, positionsOf } from '../../src/island/placement.js';
 import { createFakeIslandApi, createFakeIslandTransport, createFakeWorld, fakeFlagsFor, islandRoom, lootFor, readIslandCode, wantsFakeIslands } from '../../src/pirates/fake-api.js';
 
 const clock = (start = Date.UTC(2026, 10, 11, 12, 0, 0, 400)) => {
@@ -12,7 +13,7 @@ async function refusal(promise) {
 }
 
 describe('fake island API', () => {
-  it.each([false, true])('rejects fresh walls through scenery and reconciles a paid retry (member=%s)', async member => {
+  it.each([false, true])('buys at the assigned perimeter, preserving saved walls and charging once (member=%s)', async member => {
     const world = createFakeWorld();
     const host = createFakeIslandApi({world});
     const visitor = createFakeIslandApi({world, playerId: 'visitor'});
@@ -21,26 +22,45 @@ describe('fake island API', () => {
     const api = member ? visitor : host;
     const island = world.islands.get(code.slice(5));
     const old = {x: -16, z: 0};
-    island.positions = new Map([['wall_1', old]]);
-    const request = {spot: 'wall_1', kind: 'wall', actionUid: 'buy-old-wall', ...(member ? {code} : {})};
-    const before = (await api.island()).coins;
+    island.built.add('wall_2');
+    island.positions = new Map([['wall_1', old], ['wall_2', old]]);
+    island.walls = new Map([['wall_2', {health: 40, damagedAt: null}]]);
+    const request = {spot: 'wall_1', kind: 'wall', actionUid: 'buy-edge-wall', ...(member ? {code} : {})};
 
-    await expect(api.build(request)).rejects.toMatchObject({status: 409, code: 'place_taken'});
-    expect((await api.island()).coins).toBe(before);
-    expect(island.built.has('wall_1')).toBe(false);
-    expect(island.positions.get('wall_1')).toEqual(old);
+    const hostBefore = await host.island(), before = (await api.island()).coins;
+    const displayed = hostBefore.spots.find(row => row.id === 'wall_1');
+    expect(onWallPerimeter(displayed.x, displayed.z)).toBe(true);
+    expect(checkMove('wall_1', displayed.x, displayed.z, positionsOf(hostBefore.spots))).toEqual({ok: true});
+    if (member) expect((await visitor.visit(code)).spots).toEqual(hostBefore.spots);
 
-    island.positions.set('wall_1', {x: -18.5, z: -1});
     await api.build(request);
     expect(island.built.has('wall_1')).toBe(true);
+    expect(island.positions.get('wall_1')).toEqual({x: displayed.x, z: displayed.z});
+    expect(island.positions.get('wall_2')).toEqual(old);
+    expect((await host.walls()).walls.find(row => row.spot === 'wall_2')).toMatchObject({health: 40});
     expect((await api.island()).coins).toBe(before - 10);
-    island.positions.set('wall_1', old);
+    expect((await host.island()).coins).toBe(hostBefore.coins - (member ? 0 : 10));
+
+    await host.startWave({where: 'own', actionUid: 'start-wall-fixture'});
     await api.build(request);
     expect((await api.island()).coins).toBe(before - 10);
-    expect(island.positions.get('wall_1')).toEqual(old);
-    await expect(api.build({...request, actionUid: 'buy-standing-wall'})).rejects.toMatchObject({
-      status: 409, code: 'spot_taken',
+    await expect(api.build({...request, actionUid: 'build-wall-during-wave', spot: 'wall_3'})).rejects.toMatchObject({
+      status: 409, code: 'wave_running',
     });
+    expect((await api.island()).coins).toBe(before - 10);
+    expect(island.positions.has('wall_3')).toBe(false);
+    expect(island.built.has('wall_3')).toBe(false);
+  });
+
+  it('does not reserve a socket or record an action when a wall purchase cannot be paid', async () => {
+    const api = createFakeIslandApi();
+    await api.build({spot: 'house_1', kind: 'house', actionUid: 'buy-house-1'});
+    await api.build({spot: 'house_2', kind: 'house', actionUid: 'buy-house-2'});
+    const before = await api.island();
+    await expect(api.build({spot: 'wall_1', kind: 'wall', actionUid: 'buy-wall-1'})).rejects.toMatchObject({
+      status: 409, code: 'insufficient_funds',
+    });
+    expect(await api.island()).toEqual(before);
   });
 
   it('accepts protocol-two capability and keeps the legacy policy for a legacy island', async () => {

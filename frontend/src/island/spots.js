@@ -8,6 +8,7 @@ import {surfaceClass} from '../world/places/surfaces.js';
 import {isCapstone, readBonus, readSpec} from '../campaign/tech.js';
 import {readTree} from '../pirates/tower-trees.js';
 import {EXTRA_SPOT_TABLE, offeredExtra} from './extra-spots.js';
+import {WALL_PERIMETER_DEFAULTS} from './wall-perimeter.js';
 
 export const ISLAND_PLACE = 'home_islet';
 export const KINDS = Object.freeze({
@@ -106,18 +107,29 @@ function landward({x, z}, step = 1) {
 }
 // Where a spot stands now (T36, flexible placement): the answer's x/z once it was moved on the build
 // grid, else its fixed spot of the table above. spots: the island answer's spots (or none).
+export const wallSpaceUnavailable = row => row?.built === false && row.x === null && row.z === null
+  && Object.hasOwn(WALL_PERIMETER_DEFAULTS, row.id);
+
 export function placedSpot(id, spots = []) {
   const where = spotById(id);
   if (!where) return null;
   const sent = Array.isArray(spots) ? spots.find(item => item?.id === where.id) : null;
-  return Number.isFinite(sent?.x) && Number.isFinite(sent?.z) ? {...where, x: sent.x, z: sent.z} : where;
+  if (wallSpaceUnavailable(sent)) return null;
+  if (Number.isFinite(sent?.x) && Number.isFinite(sent?.z)) return {...where, x: sent.x, z: sent.z};
+  const emptyWall = sent?.built === false ? WALL_PERIMETER_DEFAULTS[where.id] : null;
+  return emptyWall ? {...where, ...emptyWall} : where;
 }
 // The interaction zones of the island, in the shape of registry.js: walk up and press E (or tap Inspect).
 // spots: the answer's spots, so a moved building is reached where it stands now.
 export function islandZones({visitor = false, spots = [], arsenal = false} = {}) {
   const zone = (id, name, x, z, radius) => ({id, name, x, z, y: ZONE_Y, radius});
   return [
-    ...offeredSpots(spots).map(item => { const [x, z] = landward(placedSpot(item.id, spots)); return zone(item.id, slotName(item.slot), x, z, SPOT_RADIUS); }),
+    ...offeredSpots(spots).flatMap(item => {
+      const where = placedSpot(item.id, spots);
+      if (!where) return [];
+      const [x, z] = landward(where);
+      return [zone(item.id, slotName(item.slot), x, z, SPOT_RADIUS)];
+    }),
     zone(BELL.id, 'Harbor bell', BELL.x, BELL.z + .8, ROUND_RADIUS),
     ...CAMPAIGN_BUILDINGS.map(item => { const [x, z] = landward(item, 1.6); return zone(item.id, item.name, x, z + .6, BIG_REACH); }),
     ...(visitor ? [] : [zone(CABIN.id, 'Your cabin', CABIN.x + 2.5, CABIN.z + 1.2, ROUND_RADIUS)]),

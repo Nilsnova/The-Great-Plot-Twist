@@ -6,7 +6,6 @@ import {edgeTrees} from '../../src/world/places/layouts.js';
 import {places} from '../../src/world/places/registry.js';
 import {FAKE_SPOTS} from './fake.js';
 import {CONFIG} from '../../src/pirates/sim.js';
-import {onWallLane} from '../../src/island/placement.js';
 
 describe('island spots', () => {
   it('has 22 unique ids from one mapping table, in the order and kinds of the server', () => {
@@ -44,8 +43,7 @@ describe('island spots', () => {
       expect(Math.abs(item.z)).toBeLessThan(rz);
     }
   });
-  it('walls stand on the pirate paths (D056), towers on the four corners and the sides, houses and the watchtower inland', () => {
-    for (const wall of SPOTS.filter(spot => spot.slot === 'wall')) expect(onWallLane(wall.x, wall.z), wall.id).toBe(true);
+  it('keeps the towers on the four corners and sides, and houses and the watchtower inland', () => {
     const corners = SPOTS.filter(spot => spot.edge === 'corner').map(spot => [Math.sign(spot.x), Math.sign(spot.z)].join());
     expect(new Set(corners).size).toBe(4);
     for (const spot of SPOTS.filter(spot => ['house', 'watchtower'].includes(spot.kind))) expect(surfaceClass('home_islet', spot.x, spot.z)).toBe(2);
