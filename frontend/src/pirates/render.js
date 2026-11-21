@@ -167,7 +167,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   const spark = (x, y, options) => { const f = effects(); if (!f || still()) return; f.burst(x, y, low() ? { ...options, count: Math.ceil(options.count / 3) } : options); };
 
   const parts = createDraw(rect, layers, bands, posts, ships, crew, guards, splashes, wallFlash, K, still, low,
-    drawnX, drawnY, effects, spark, nativeCaptains, defenseView);
+    drawnX, drawnY, effects, spark, nativeCaptains, defenseView, place === 'home_islet');
   const events = createEvents(parts, posts, ships, crew, guards, fire, wallFlash, balls, sinkers, wrecks, splashes,
     shells, bursts, tracers, jamShots, warnings, fallen, strikes, K, still, low, effects, spark, defenseView), onEvent = events.onEvent;
   const { drawShip, shipMeta, drawBoarder, drawMilitia, drawFallen, drawBall, drawShell, drawBurst, drawBurning,

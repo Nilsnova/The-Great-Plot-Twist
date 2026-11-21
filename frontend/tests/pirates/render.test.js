@@ -5,6 +5,7 @@ import { CONFIG, coastPoint, createWave } from '../../src/pirates/sim.js';
 import { ATLAS_IDS, BOARDER_BANDS, CARTOON_EXTRA_IDS, MUSKET, STANDING_IDS, createWaveRenderer, packAtlas } from '../../src/pirates/render.js';
 import { pirateDimensions } from '../../src/pixel/pirate-catalog.js';
 import {projectGround} from '../../src/world/projection.js';
+import {bandOf} from '../../src/pirates/render-sprites.js';
 
 const at = (id, kind, bearing, radius) => {
   const p = coastPoint(bearing * Math.PI / 180, radius);
@@ -53,6 +54,32 @@ describe('pirate wave renderer', () => {
     expect(size[1]).toBeCloseTo(32 / 16 * 1.4);
     renderer.update({state: {...state, party: [{...hero, present: false}]}, simTime: 1.1, dt: .1});
     expect(band.geometry.instanceCount).toBe(0);
+    renderer.dispose();
+  });
+
+  it.each([
+    {place: 'home_islet', reduced: false, settling: true},
+    {place: 'home_islet', reduced: true, settling: false},
+    {place: 'pirate_point', reduced: false, settling: false},
+  ])('keeps the landed boarder at its world pin on $place (reduced motion: $reduced)', ({place, reduced, settling}) => {
+    const scene = new THREE.Scene();
+    const renderer = createWaveRenderer({scene, atlas: atlas(), place, reducedMotion: () => reduced});
+    const boarder = Object.freeze({id: 'boarder-1', x: 16, z: 7, state: 'walking', facing: 1, hp: 9, maxHp: 9});
+    const state = {ships: [], walls: [], towers: [], boarders: [boarder]};
+    renderer.events([{type: 'boarder_landed', boarderId: boarder.id, x: boarder.x, z: boarder.z}]);
+    renderer.update({state});
+    const figures = renderer.root.getObjectByName(`pirates:boarders:${bandOf(boarder.z)}`).geometry;
+    const pos = figures.getAttribute('iPos'), size = figures.getAttribute('iSize'), pin = projectGround(boarder.x, boarder.z);
+    expect(pos.getX(0)).toBeCloseTo(pin.x);
+    expect(pos.getY(0)).toBeCloseTo(pin.y);
+    expect(pos.getZ(0)).toBeCloseTo(settling ? .093 : 0);
+    const firstHeight = size.getY(0), firstAnchor = size.getW(0);
+    for (let frame = 0; frame < 15; frame++) renderer.update({state, dt: 1 / 60});
+    expect(pos.getX(0)).toBeCloseTo(pin.x);
+    expect(pos.getY(0)).toBeCloseTo(pin.y);
+    expect(pos.getZ(0)).toBeCloseTo(settling ? -.042 : 0);
+    expect(size.getY(0) * (settling ? .9 : 1)).toBeCloseTo(firstHeight);
+    expect(size.getW(0) * (settling ? .9 : 1)).toBeCloseTo(firstAnchor);
     renderer.dispose();
   });
 
