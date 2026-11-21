@@ -36,7 +36,12 @@ export function createFinish(ctl) {
   function presentEnd(current) {
     const result = current.result;
     const run = typeof startNextWave === 'function', fallenAll = current.sim.endReason === 'captains_fallen';
-    if (run && result.survived) current.pause = { until: now() + breakSeconds * 1000, ready: false, requested: false, note: null };
+    if (run && result.survived) {
+      current.pause = { until: now() + breakSeconds * 1000, ready: false, requested: false, note: null };
+      // A recovery wave showed "Wave over · Confirming the result…" until the server answered (end()). The break
+      // card says the rest; without this the banner stayed over the island for the whole break, a paused one too.
+      current.hud?.banner('');
+    }
     else if (run) current.hud?.banner(LOST_TITLE, `${fallenAll ? `${LOST_FALLEN} ` : ''}${LOST_LINE}`);
     else current.hud?.banner(result.survived ? 'Wave won!' : 'The island fell', fallenAll ? LOST_FALLEN : `${result.shipsSunk} ${result.shipsSunk === 1 ? 'ship' : 'ships'} sunk`);
     cue(result.survived ? 'pirate-victory' : 'pirate-defeat');
