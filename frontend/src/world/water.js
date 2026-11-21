@@ -128,7 +128,8 @@ ${pixelGlsl}${seaGlsl}${groundProjectionGlsl}
 uniform vec3 uDeep,uMid,uLight,uShallow,uShallow2,uFoam,uGlint,uStroke;
 uniform float uHomeCoast;
 varying vec2 vWorld;
-float band(float v,float edge){float w=fwidth(v)*.75+1e-4;return smoothstep(edge-w,edge+w,v);}
+float band(float v,float edge,float pixelWidth){return smoothstep(edge-pixelWidth,edge+pixelWidth,v);}
+float band(float v,float edge){return band(v,edge,fwidth(v)*.75+1e-4);}
 float waterDistance(vec2 p){
   if(uHomeCoast<.5||uCoastOn<.5)return coastDistance(p);
   vec2 uv=(uCoastUv*vec3(p,1.0)).xy;
@@ -137,7 +138,7 @@ float waterDistance(vec2 p){
   float beyond=length((uv-edge)*vec2(${BACKDROP.width * 16}.0,${BACKDROP.height * 16}.0));
   return min(255.0,texture2D(uCoast,edge).r*255.0+beyond);
 }
-vec3 rockWash(vec3 colour,vec2 p,float shoreDistance,float coastRock,float light,float time){
+vec3 rockWash(vec3 colour,vec2 p,float shoreDistance,float coastRock,float light,float time,float pixelWidth){
   // Follow the painted shoreline, including concave pockets between the stone toes.
   // A short reach smooths the distance field between adjacent coast texels.
   vec2 coastSlope=vec2(waterDistance(p+vec2(.23,0))-waterDistance(p-vec2(.23,0)),
@@ -156,20 +157,20 @@ vec3 rockWash(vec3 colour,vec2 p,float shoreDistance,float coastRock,float light
 
   // Thick turquoise water catches the lit rock before the wave folds over it.
   // The crest pinches into a thin seam between broader patches of broken foam.
-  float shoulder=(1.0-band(abs(arc-.16),.28+.16*spread))*(.44+.56*spread);
-  float front=(1.0-band(abs(arc+(chop-.5)*.25),.063+.15*spread))
+  float shoulder=(1.0-band(abs(arc-.16),.28+.16*spread,pixelWidth))*(.44+.56*spread);
+  float front=(1.0-band(abs(arc+(chop-.5)*.25),.063+.15*spread,pixelWidth))
     *smoothstep(.20,.53,chop*.46+edge*.54);
-  float retreat=1.0-band(abs(arc-.29-(chop-.5)*.58),.046+.092*spread);
+  float retreat=1.0-band(abs(arc-.29-(chop-.5)*.58),.046+.092*spread,pixelWidth);
   retreat*=smoothstep(.33,.69,chop*.65+edge*.35);
   float streak=pxNoise((p+normal*(chop-.5)*.12)*vec2(6.4,9.0)-tangent*time*.42);
   // Small broken loops extend into the clear water between projecting rocks.
   // The same noise opens gaps in the wave so they never become a second coast outline.
   float split=abs(streak-.5)*.77;
-  float seam=(1.0-band(abs(arc-.54-split+(chop-.5)*.56),.024+.038*spread))
+  float seam=(1.0-band(abs(arc-.54-split+(chop-.5)*.56),.024+.038*spread,pixelWidth))
     *smoothstep(.28,.68,chop)*smoothstep(.17,.52,edge);
-  float spray=(1.0-band(abs(arc-.58-(edge-.5)*.62),.16+.11*spread))
+  float spray=(1.0-band(abs(arc-.58-(edge-.5)*.62),.16+.11*spread,pixelWidth))
     *smoothstep(.52,.79,streak)*smoothstep(.31,.69,chop);
-  float wash=nearWater*coastRock*(.86+.14*light);
+  float wash=nearWater*coastRock*(.86+.14*light)*(1.0-smoothstep(1.52,1.8,shoreDistance));
   colour=mix(colour,mix(uShallow,uFoam,.34),shoulder*.55*wash);
   float whiteWater=clamp(front+retreat*.84+seam*.82+spray*.57,0.0,1.0);
   return mix(colour,uFoam,whiteWater*wash);
@@ -285,6 +286,9 @@ void main(){
   float foamTime=uDetail>.5?t:0.0;
   float run=.5+.5*sin(foamTime*(.8+uWind*.5)+p.x*.21+p.y*.37);
   if(uHomeCoast>.5){
+    // Measure the pixel footprint before the per-fragment coast tests so
+    // derivatives are defined even where neighboring pixels skip the surf.
+    float pixelWidth=clamp(length(fwidth(p))*.58,1e-4,.16);
     if(d<3.2){
       float beach=1.0-rockShore;
       float pockets=pxNoise(p*vec2(.80,2.65)+vec2(.36,-1.67));
@@ -295,14 +299,14 @@ void main(){
       float ripples=pxNoise(p*vec2(1.18,3.08)+vec2(foamTime*.10,-foamTime*.047));
       float segments=smoothstep(.36,.74,pockets*.57+ripples*.43);
       float curl=.37+run*.69+refraction;
-      float crest=1.0-band(abs(d-curl),.038+segments*.025);
+      float crest=1.0-band(abs(d-curl),.038+segments*.025,pixelWidth);
       colour=mix(colour,uFoam,crest*segments*(.21+.77*beach)*shoreLight);
       if(uDetail>.5){
         // The return flow curls outside the first wave. The two edges break in different places.
         float curlBack=curl+.28+(.5-pockets)*.43;
-        float returnFoam=(1.0-band(abs(d-curlBack),.036))*smoothstep(.44,.79,ripples);
+        float returnFoam=(1.0-band(abs(d-curlBack),.036,pixelWidth))*smoothstep(.44,.79,ripples);
         colour=mix(colour,uFoam,returnFoam*beach*.30*shoreLight);
-        if(rockShore>.01&&d<1.8)colour=rockWash(colour,p,d,rockShore,shoreLight,foamTime);
+        if(rockShore>.01&&d<1.8)colour=rockWash(colour,p,d,rockShore,shoreLight,foamTime,pixelWidth);
       }
     }
   }else{

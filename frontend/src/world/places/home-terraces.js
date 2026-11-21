@@ -83,11 +83,13 @@ const SADDLE_BED = new THREE.Color('#88715b');
 const FOLIAGE = {
   97: [['birch', .56, .70, .49], ['shrub', .19, .64, .64], ['shrub', .74, .31, .49], ['flowers', .41, .31, .52]],
   116.5: [['shrub', .21, .73, .65], ['shrub', .27, .68, .51], ['grass-tuft', .56, .74, .56], ['shrub', .81, .71, .62],
-    ['shrub', .37, .28, .41], ['flowers', .72, .34, .56]],
-  125: [['grass-tuft', .16, .66, .43], ['shrub', .42, .74, .47], ['flowers', .72, .74, .37]],
-  137: [['shrub', .68, .71, .42], ['flowers', .23, .58, .37], ['grass-tuft', .41, .63, .40]],
+    ['shrub', .37, .28, .41], ['flowers', .72, .34, .56], ['grass-tuft', .64, .27, .20]],
+  125: [['grass-tuft', .16, .66, .43], ['shrub', .42, .74, .47], ['flowers', .72, .74, .37],
+    ['grass-tuft', .36, .62, .22], ['grass-tuft', .59, .82, .24], ['grass-tuft', .51, .29, .21]],
+  137: [['shrub', .68, .71, .42], ['flowers', .23, .58, .37], ['grass-tuft', .41, .63, .40],
+    ['grass-tuft', .36, .77, .24], ['grass-tuft', .58, .33, .23]],
   148: [['shrub', .31, .68, .60], ['shrub', .38, .72, .51], ['grass-tuft', .66, .73, .62], ['shrub', .83, .70, .52],
-    ['flowers', .15, .34, .60], ['shrub', .57, .32, .44]],
+    ['flowers', .15, .34, .60], ['shrub', .57, .32, .44], ['grass-tuft', .72, .31, .20], ['grass-tuft', .53, .81, .22]],
   166: [['birch', .65, .72, .51], ['shrub', .42, .67, .66], ['shrub', .54, .69, .47], ['flowers', .21, .29, .60],
     ['grass-tuft', .81, .29, .56]],
   30: [['shrub', .23, .72, .58], ['shrub', .35, .75, .42], ['grass-tuft', .71, .72, .62], ['flowers', .78, .33, .52]],
@@ -686,15 +688,17 @@ export function createHomeTerraces(root, coastArt, art) {
     for (let section = 0; section <= sections; section++) {
       const sample = Math.min(start + STEP * section, visibleEnd);
       const point = samplePoint(sample);
-      const overhang = .031 + .006 * Math.sin(sample * 2.3) + (shore ? .014 * Math.cos(sample * 1.36) : 0);
+      const fringe = crests ? .010 * Math.sin(sample * 4.63 + first) + .007 * Math.cos(sample * 8.93) : 0;
+      const lipRise = crests ? .012 * Math.sin(sample * 5.09 + first) + .005 * Math.cos(sample * 9.43) : 0;
+      const overhang = Math.max(.009, .031 + .006 * Math.sin(sample * 2.3) + (shore ? .014 * Math.cos(sample * 1.36) : 0) + fringe);
       const shape = profile.map(([radius, elevation, , material]) =>
-        point(radius - (material === LIP ? overhang : 0), elevation, material === STONE || material === RECESS));
+        point(radius - (material === LIP ? overhang : 0), elevation + (material === LIP ? lipRise : 0), material === STONE || material === RECESS));
       const sod = Object.fromEntries(sodRings.map(ring => {
         const [from, low] = profile[ring], [to, high] = profile[ring + 1];
         const curl = .025 * Math.sin(sample * 3.4 + ring) + .014 * Math.cos(sample * 6.7)
           + (shore ? .035 * Math.sin(sample * 1.07 + ring) : 0);
         return [ring, [shape[ring], ...SOD_PROFILE.slice(1, -1).map(([across, rise]) =>
-          point(THREE.MathUtils.lerp(from - overhang, to, across + curl), THREE.MathUtils.lerp(low, high, rise))),
+          point(THREE.MathUtils.lerp(from - overhang, to, across + curl), THREE.MathUtils.lerp(low + lipRise, high, rise))),
         shape[ring + 1]]];
       }));
       const endFade = THREE.MathUtils.smoothstep(Math.min(sample - start, finish - sample), 0, 1.8);
@@ -951,6 +955,17 @@ export function createHomeTerraces(root, coastArt, art) {
         float unresolved = smoothstep(.48, 1.26, max(footprint.x, footprint.y));
         return mix(noise2(p), .5, unresolved);
       }
+      float grassStrokes(vec2 p) {
+        vec2 cell = floor(p), local = fract(p);
+        float variation = hash2(cell + vec2(1.37, 2.61));
+        float tip = .55 + .34 * variation;
+        float rise = smoothstep(.11, .23, local.y) * (1.0 - smoothstep(tip - .15, tip, local.y));
+        float lean = (variation - .5) * .53 * local.y;
+        float blade = abs(local.x - .48 + lean);
+        float softness = min(.16, fwidth(p.x) * .55);
+        float stroke = 1.0 - smoothstep(.04, .12 + softness, blade + local.y * .055);
+        return stroke * rise * smoothstep(.18, .59, variation) * (1.0 - smoothstep(.30, .78, max(fwidth(p.x), fwidth(p.y))));
+      }
       float shortRockSeam(vec2 layers, float grain) {
         float seamHeight = layers.y * 1.86 + .14 * sin(layers.x * .87) + .09 * grain;
         float bed = floor(seamHeight);
@@ -958,9 +973,13 @@ export function createHomeTerraces(root, coastArt, art) {
         float seamSeed = hash2(vec2(floor(alongBed), bed));
         float across = fract(alongBed);
         float section = smoothstep(.04, .13, across) * (1.0 - smoothstep(.59 + seamSeed * .17, .91, across));
-        float brokenBed = fract(seamHeight) - (.47 + .19 * seamSeed + .14 * (across - .5));
+        float level = fract(seamHeight);
+        float brokenBed = level - (.47 + .19 * seamSeed + .14 * (across - .5));
         float lineWidth = min(.13, fwidth(seamHeight));
-        return section * (1.0 - smoothstep(.022, .066 + lineWidth, abs(brokenBed)));
+        float alongCut = across - (.16 + .20 * seamSeed + (level - .5) * .21);
+        float cutReach = smoothstep(.18, .31, level) * (1.0 - smoothstep(.44, .71, level));
+        float crossCut = cutReach * (1.0 - smoothstep(.015, .043 + lineWidth * .18, abs(alongCut)));
+        return max(section * (1.0 - smoothstep(.022, .066 + lineWidth, abs(brokenBed))), crossCut * .59);
       }
       void main() {
         vec2 floorPoint = unprojectGround(vTerrain);
@@ -1049,9 +1068,11 @@ export function createHomeTerraces(root, coastArt, art) {
 
             // The large sandstone planes catch warm light between short, broken beds.
             float seam = shortRockSeam(layers, grainBreak);
-            float wetRoot = sodShade * smoothstep(.38, .90, vSurface.y + .17 * (grainBreak - .5));
+            float wetRoot = sodShade * smoothstep(.37, .92, vSurface.y + .22 * (grainBreak - .5));
+            float warmBed = seam * smoothstep(.35, .75, grainBreak);
             stone *= mix(vec3(1.0), vec3(1.19, 1.07, .89), .69 + .21 * grainBreak);
-            stone *= 1.0 - seam * (.29 + .13 * grainBreak) - wetRoot * .27;
+            stone *= 1.0 - seam * (.30 + .14 * grainBreak) - wetRoot * .34;
+            stone += stone * vec3(.16, .076, .023) * warmBed;
           }
           if (uDetail > .5) {
             vec2 strata = vec2(layers.x / 5.70 + .36, .11 + height * .209 + (vTerrace.y * .013 + .15) * .15);
@@ -1066,6 +1087,9 @@ export function createHomeTerraces(root, coastArt, art) {
         float turfKind = wornLedge ? 1.0 : vTerrace.z;
         float lip = smoothstep(1.0, 2.0, turfKind);
         float underside = smoothstep(2.28, 2.88, turfKind);
+        float highBank = smoothstep(7.0, 12.5, -vTerrace.y);
+        float westSpur = smoothstep(15.5, 18.2, -vTerrace.x) * (1.0 - smoothstep(2.0, 5.0, abs(vTerrace.y + 8.5)));
+        highBank = max(highBank, westSpur);
         vec2 sward = vTerrace.xy * vec2(4.2, 5.3);
         float patches = noise2(sward * .43);
         float tufts = turfGrain(sward * 3.8 + vec2(patches));
@@ -1074,6 +1098,9 @@ export function createHomeTerraces(root, coastArt, art) {
         vec3 turfColor = mix(vTone, source, .27 - underside * .12);
         turfColor = mix(turfColor, vec3(.37, .46, .081), lip * (.12 + moss * .13) * (1.0 - underside));
         turfColor = mix(turfColor, vec3(.115, .136, .041), underside * (.39 + tufts * .18));
+        float grassClumps = smoothstep(.28, .77, .68 * patches + .32 * tufts);
+        vec3 rearTurf = mix(vec3(.106, .201, .037), vec3(.343, .465, .107), grassClumps);
+        turfColor = mix(turfColor, rearTurf, highBank * (.27 + .36 * lip) * (1.0 - underside));
         // Broad smooth shoulders catch light up front. At the base of the next rise a
         // broken band of moss and short grass makes the lower shelf read as a separate step.
         float wobble = noise2(vTerrace.xy * .92) - .5;
@@ -1081,9 +1108,11 @@ export function createHomeTerraces(root, coastArt, art) {
         float shoulder = smoothstep(-.14, .12, across) * (1.0 - smoothstep(.57, .92, across)) * vSurface.y;
         float wallPocket = noise2(sward * vec2(.48, .22));
         float recess = step(1.5, vSurface.z) * smoothstep(.62 - wallPocket * .08, 1.0, across);
-        turfColor = mix(turfColor, vec3(.433, .558, .104), shoulder * .53);
+        turfColor = mix(turfColor, vec3(.433, .558, .104), shoulder * (.53 - .13 * highBank));
         turfColor = mix(turfColor, vec3(.111, .177, .052), recess * (.37 + .14 * wallPocket + .08 * moss));
-        float meadowGrain = (tips - .5) * .12 + (tufts - .5) * .18 + (patches - .5) * .19;
+        vec2 bladeField = vec2(vTerrain.x * 8.8 + .61 * vTerrace.y, vTerrain.y * 12.3 - .42 * vTerrace.x);
+        float strokes = grassStrokes(bladeField) * highBank * (1.0 - underside);
+        float meadowGrain = (tips - .5) * .12 + (tufts - .5) * .18 + (patches - .5) * .19 + strokes * .25;
         float leafLight = lip * (1.0 - underside) * smoothstep(.56, .87, tufts * .59 + tips * .41) * .16;
         float shoulderLight = shoulder * (.25 + (tufts - .5) * .13) - recess * (.22 + wallPocket * .09);
         vec3 turf = turfColor * (mix(.89, 1.12, grain) + meadowGrain + leafLight + shoulderLight);
@@ -1097,12 +1126,13 @@ export function createHomeTerraces(root, coastArt, art) {
         }
         // Grass stays on the seats, with a narrow rooted lip above exposed sandstone.
         float flatness = faceNormal.y;
-        float highBank = smoothstep(7.0, 12.5, -vTerrace.y);
-        float westSpur = smoothstep(15.5, 18.2, -vTerrace.x) * (1.0 - smoothstep(2.0, 5.0, abs(vTerrace.y + 8.5)));
-        highBank = max(highBank, westSpur);
         float scarp = highBank * (1.0 - smoothstep(.58 + (patches - .5) * .08, .84, flatness));
         float rootLip = highBank * smoothstep(1.81, 2.67, turfKind);
         turf *= mix(vec3(1.0), vec3(.76, .82, .65), rootLip * (.52 + .22 * tufts));
+        float rootedMoss = rootLip * smoothstep(.48, .78, patches * .54 + tufts * .46);
+        turf = mix(turf, vec3(.127, .199, .052), rootedMoss * .40);
+        float exposedRoots = highBank * lip * (1.0 - underside) * smoothstep(.56, .88, wallPocket);
+        turf = mix(turf, vec3(.219, .192, .094), exposedRoots * .32);
         if (scarp > .001) {
           vec3 normal = slopeNormal * (slopeNormal.y < 0.0 ? -1.0 : 1.0)
             * inversesqrt(max(dot(slopeNormal, slopeNormal), 1e-12));
