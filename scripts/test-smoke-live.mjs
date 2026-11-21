@@ -78,8 +78,18 @@ test('private failures must never be cacheable', async () => {
   });
 });
 
-test('unknown flag names are rejected rather than silently missed', async () => {
-  await fixture({'/api/config': {body: JSON.stringify({flags: {...FLAGS, misspelled: false}})}}, async ({run}) => {
+test('unknown and server-only flag names are rejected', async () => {
+  for (const name of ['misspelled', 'relight_open']) {
+    await fixture({'/api/config': {body: JSON.stringify({flags: {...FLAGS, [name]: false}})}}, async ({run}) => {
+      assert.equal(await run(), 1);
+    });
+  }
+});
+
+test('every public flag must be present in the response', async () => {
+  const flags = {...FLAGS};
+  delete flags.structure_recovery;
+  await fixture({'/api/config': {body: JSON.stringify({flags})}}, async ({run}) => {
     assert.equal(await run(), 1);
   });
 });
@@ -168,10 +178,12 @@ test('shell wrapper preserves failure count as process exit status', async () =>
 
 test('deployment flag schema follows every current backend flag', async () => {
   const source = await readFile(new URL('../backend/server/flags.py', import.meta.url), 'utf8');
-  const names = [...source.match(/FLAG_NAMES = \(([\s\S]*?)\)/)[1].matchAll(/"([a-z_]+)"/g)].map(match => match[1]);
+  const registry = source.match(/^FLAG_NAMES = \(\n([\s\S]*?)^\)$/m);
+  assert.ok(registry, 'backend flag registry is present');
+  const names = [...registry[1].matchAll(/^[ \t]+"([a-z][a-z0-9_]*)",/gm)].map(match => match[1]);
   assert.deepEqual(FLAG_NAMES, names);
   await fixture({}, async ({run}) => {
-    assert.equal(await run({flags: {case: false, sign_in: false, bulletin: false, festival: false}}), 0);
+    assert.equal(await run({flags: {arsenal: false, structure_recovery: false}}), 0);
   });
 });
 
