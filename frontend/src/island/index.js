@@ -205,7 +205,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     isl.villageBar.setCoverage(value);
     if (!value) { approachCache = null; return; }
     if (recoveryControlsOn()) void readStructureRecovery();
-    else if (wallRecovery()) void readWalls();
+    else void readWalls(); // the flag wall_recovery is always on (retired in 7f007b88)
   }
   function approachCoverage() {
     const {own, recoveryState, recoveryStatus, recoveryIslandCode, walls, wallsFor, ui, village} = isl;
@@ -214,7 +214,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     const recovery = needsRecovery && recoveryStatus === 'ready' && recoveryIslandCode === own.code
       && recoveryState?.recoveryVersion === 1 && recoveryState.displayPhase === 'between_waves'
       && (!own.islandEpoch || recoveryState.islandEpoch === own.islandEpoch) ? recoveryState : null;
-    const needsLegacyWalls = !needsRecovery && wallRecovery();
+    const needsLegacyWalls = !needsRecovery;
     const legacyWalls = needsLegacyWalls && wallsFor === own.code ? walls : null;
     // Accepted data and the local Move draft change independently. Stable frames reuse their snapshot.
     const cached = approachCache;

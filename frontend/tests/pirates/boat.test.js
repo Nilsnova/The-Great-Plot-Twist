@@ -157,6 +157,16 @@ describe('Broadside duel: timing windows and scoring', () => {
     const twice = broadsideShots([first]); const [s] = twice.keys(); twice.set(s + BOAT.broadside.cooldown, 1);
     expect(scoreBroadside(twice, { salt, difficulty }).hits).toBe(1);
   });
+  it('a miss at 0 points leaves no hidden debt: miss, then bullseye, is 2 points like the bullseye alone', () => {
+    const { salt, difficulty } = at('broadside', 30), [first, second] = passesOf(salt, difficulty);
+    const bull = [...broadsideShots([first]).keys()][0], early = bull - BOAT.broadside.cooldown;
+    expect(shotAt(passAt(passesOf(salt, difficulty), early), early, difficulty.width)).toBe('miss'); // the early ball finds only sea
+    expect(scoreBroadside(new Map([[bull, 1]]), { salt, difficulty })).toMatchObject({ score: 2, misses: 0 });
+    expect(scoreBroadside(new Map([[early, 1], [bull, 1]]), { salt, difficulty })).toMatchObject({ score: 2, misses: 1, bulls: 1 });
+    // A miss after points still costs one, and never more than the points held.
+    const late = Math.min(first.to - 1, bull + BOAT.broadside.cooldown), after = second.from - 1 > late ? late : null;
+    if (after !== null) expect(scoreBroadside(new Map([[bull, 1], [after, 1]]), { salt, difficulty })).toMatchObject({ score: 1, misses: 1 });
+  });
   it('ignores input outside the round and values other than a shot; easy widens the band', () => {
     const { salt, difficulty } = at('broadside', 60);
     expect(scoreBroadside(new Map([[-1, 1], [BOAT.samples, 1], [5, 7], [6, -1]]), { salt, difficulty }).shots).toBe(0);
@@ -193,6 +203,24 @@ describe('Treasure dash: coins, cannonballs and scoring', () => {
     const hits = new Map(); for (const item of items) if (item.kind === 'ball') hits.set(item.at, item.x);
     expect(scoreDash(hits, { salt, difficulty }).score).toBe(0);
     expect(scoreDash(new Map([[ball.at, 150]]), { salt, difficulty }).hits).toBe(0); // a place off the sea is ignored
+  });
+  it('an early cannonball at 0 coins leaves no debt for the coins caught after it', () => {
+    for (const wave of WAVES) {
+      const { salt, difficulty } = at('dash', wave), items = itemsOf(salt, difficulty);
+      const ball = items.find(item => item.kind === 'ball');
+      const later = items.filter(item => item.kind === 'coin' && item.at > ball.at + BOAT.dash.shelter).slice(0, 3);
+      const before = items.filter(item => item.kind === 'coin' && item.at <= ball.at).length;
+      if (later.length < 3) continue;
+      const samples = new Map([[ball.at, ball.x], ...later.map(coin => [coin.at, coin.x])]);
+      const result = scoreDash(samples, { salt, difficulty });
+      // Coins that happen to lie under the boat before the ball may be lost to it; the three after it always count.
+      expect(result.hits, `wave ${wave}`).toBeGreaterThanOrEqual(1);
+      if (before === 0 || result.coins === 3) expect(result.score, `wave ${wave}`).toBeGreaterThanOrEqual(3 - (result.hits - 1) * BOAT.dash.ballCost);
+    }
+    // The plain case, hand-made: ball at 0 coins, then one coin: 1 point, not 0.
+    const { salt, difficulty } = at('dash', 30), items = itemsOf(salt, difficulty);
+    const ball = items.find(item => item.kind === 'ball'), coin = items.find(item => item.kind === 'coin' && item.at > ball.at + BOAT.dash.shelter);
+    expect(scoreDash(new Map([[ball.at, ball.x], [coin.at, coin.x]]), { salt, difficulty })).toMatchObject({ hits: 1, coins: 1, score: 1 });
   });
   it('a helmsman who follows the coins wins 3 stars; one who sits still wins none', () => {
     for (const wave of WAVES) {

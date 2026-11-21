@@ -126,6 +126,20 @@ export function wireWaves(ctx) {
       if(island?.economy?.mode==='island_shared')return settings?.canManage?island.session.settings({breakPaused:!settings.breakPaused}):null;
       return game.togglePause();
     } : null});
+  if (island) {
+    const reportWave = event => pirates.island.wave?.info.waveId === event.waveId ? pirates.island.wave : null;
+    const available = intent => world.current?.id === ISLAND_PLACE && !pirates.island.wave && island.canFocusDefenseReport?.(intent);
+    defenseReport = mountDefenseReport({on, container: ctx.container, context: () => defended()?.code ?? null,
+      defenses: event => reportWave(event)?.defenses ?? [], focus: () => ctx.canvas?.focus?.({preventScroll: true}),
+      resetInput: () => ctx.input?.reset?.(), navigation: {
+        capture(event) {
+          const current = reportWave(event), identity = island.defenseReportIdentity;
+          return current && identity ? {identity, epoch: current.info.initialSnapshot?.islandEpoch ?? null} : null;
+        },
+        available, resolve: intent => island.resolveDefenseReport?.(intent),
+        go: (intent, destination) => available(intent) && island.focusDefenseReport?.(intent, destination),
+      }});
+  }
   island?.setRecoveryCheckpointHandler?.(() => pirates.island.checkpointBeforeRepair());
   publishCore = createCorePublisher({controller: () => pirates.island, context: () => island?.coreContext,
     publish: snapshot => island?.setCoreCombatState?.(snapshot)});

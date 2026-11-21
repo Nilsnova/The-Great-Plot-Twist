@@ -1,5 +1,7 @@
 # Simpler, more visual game · 6 Nov 2026
 
+> **History, not today's game.** A plan for the first version (the mystery), finished or overtaken by the new direction of 10 Nov 2026 ([D031](DECISIONS.md), [PITCH.md](PITCH.md)). See the [docs index](README.md).
+
 Owner: Nils with Codex. This is the execution plan for Nils's screenshot feedback.
 G9 is still being built in its separate cloud session. Its checkpoint remains the integration
 gate for normal browser multiplayer and cloud saves; the redesign must keep that seam intact.

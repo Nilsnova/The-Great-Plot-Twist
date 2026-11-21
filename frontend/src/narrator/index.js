@@ -63,7 +63,8 @@ export function createNarrator({container = globalThis.document?.body, on, audio
   lines = data.lines, storage = safeLocal(), preferences = getPreferences, onPreferences = watchPreferences,
   fetchImpl = globalThis.fetch?.bind(globalThis), now = () => Date.now(),
   setTimer = (run, ms) => setTimeout(run, ms), clearTimer = id => clearTimeout(id),
-  held = () => !!globalThis.document?.querySelector('dialog.cutscene[open]'), createCard = createNarratorCard} = {}) {
+  held = () => !!globalThis.document?.querySelector('dialog.cutscene[open]'), createCard = createNarratorCard,
+  quiet = () => false} = {}) {
   const index = indexLines(lines), memory = createMemory(storage, {now}), queue = createQueue({now});
   const card = createCard(container, {onSkip: () => skip(), large: () => preferences()?.subtitleSize === 'large'});
   const stops = [], started = new Map(), finished = new Set(), lastSpoken = new Map();
@@ -91,7 +92,8 @@ export function createNarrator({container = globalThis.document?.body, on, audio
 
   // Queue the lines a trigger brings, mark them told (so a reload never repeats them), and play.
   function say(trigger, {seed = 0, game = current()} = {}) {
-    if (disposed || !enabled()) return [];
+    // quiet(): the title screen is up. Nothing is said or marked as told, so the line can still come later.
+    if (disposed || !enabled() || quiet()) return [];
     const rule = ruleFor(trigger);
     if (!rule) return [];
     if (rule.cooldown && now() - (lastSpoken.get(trigger) ?? -Infinity) < rule.cooldown) return [];
@@ -247,7 +249,7 @@ export function createNarrator({container = globalThis.document?.body, on, audio
   }) ?? (() => {}));
 
   return {
-    begin, say, skip,
+    begin, say, skip, hush,
     get speaking() { return speaking?.line.id ?? null; },
     get queued() { return queue.ids; },
     get game() { return current(); },

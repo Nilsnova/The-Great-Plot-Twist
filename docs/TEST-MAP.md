@@ -299,7 +299,7 @@ they do not exercise a hosted room or prove deployment. See [the CW1 spec](../sp
 
 ## 4. Browser checks (`frontend/scripts/check-*.js`)
 
-38 scripts. They drive an **installed Chrome** through `playwright-core`, mostly against a built copy with fake or recorded API answers; none signs in for real. Several build first (`npm run build && ...`). Run one at a time from `frontend/`.
+39 scripts. They drive an **installed Chrome** through `playwright-core`, mostly against a built copy with fake or recorded API answers; none signs in for real. Several build first (`npm run build && ...`). Run one at a time from `frontend/`.
 
 | npm script (`cd frontend && npm run ...`) | Script | Checks |
 |---|---|---|
@@ -308,6 +308,7 @@ they do not exercise a hosted room or prove deployment. See [the CW1 spec](../sp
 | `test:csp`, `test:csp:inventory` | `check-csp.js`, `check-csp-inventory.js` | The built site under the production CSP; no forbidden inline code |
 | `test:production` | `check-production.js` | The production build end to end with an offline API stub |
 | `test:demo` | `check-demo-journey.js` | The class-demo journey with recorded API answers |
+| `test:outage` | `check-outage-feedback.js` | What the player sees when the server fails: for eight island actions (build a cannon, build a wall, upgrade, hire, captain, research, wreck, bell) the fake server fails the next request in three ways (no connection, timeout, database away). Each of the 24 cases must show the plain reason in the card, raise no browser error and work again on the next press; a cannon whose first answer was lost is paid once. Does not cover the real server, the Harbor stalls or sign-in. See [OUTAGES.md](OUTAGES.md) |
 | `test:mp` | `check-multiplayer.js` | Two, then four pages on one island against the shared fake server (`?islands=fake`) and a BroadcastChannel room with the live room's rules: a co-op build shows on the owner's page, identical ships every second, musket shots cross pages, loot for each, one shared Next wave, a mid-wave join. **Not** the real Supabase Realtime, real accounts or the network; Pirate Point with four players and the lamps is not in it yet |
 | `test:placement` | `check-placement-mp.js` | T36 flexible placement on two pages of one island (shared fake server, BroadcastChannel room): host and member move a wall and a cannon from the card and the other page's answer and map follow within 2 s; sea, overlap and a closed heart route are refused on the bar and by the fake server with the server's codes; in a wave Move is off and a move is refused `wave_running`; both pages' sims fight the moved squares; a reload keeps them; with `wall_recovery` on too, a damaged or destroyed wall's card keeps Repair/Rebuild and Move. **Not** the real `POST /api/island/move` or Postgres (`island_sql/test_island_layout_sql.py` covers `island_move()`), real Realtime, phones |
 | `test:arsenal` | `check-arsenal-mp.js` | Release check of the flag `arsenal` (T40/T41, D042) on two pages of one island (shared fake server with `?fakeflags=arsenal`, BroadcastChannel room): the building drawn and opened by walking up and pressing E; a buy paid once on a double click and a same-click-id retry, into empty hands, else onto the rack; a member's take and swap, both cards showing who carries what (the other card within 2 s); two captains taking one copy at once (one gets it, the other `taken`); a full rack (20 of 20) refusing the return with the copy kept in hand; no Weapons tab and the old weapon buy `409 use_arsenal`; every move `wave_running` in a wave; both sims fire each captain's carried weapon; a reload keeps it; with the flag off no building and the old shop as before. **Not** the real `/api/island/arsenal` routes or Postgres (`test_arsenal_routes.py`, `island_sql/test_arsenal_sql.py`), real Realtime, phones |
@@ -334,6 +335,19 @@ assertions or gameplay. See the
 
 **Do not cover:** physical phones and their browsers, real audio output (headless Chrome has no real audio device), real sign-in, the live API and Realtime, and slow class Wi-Fi.
 
+### Which browser checks ran green on 20 Nov 2026
+
+Every registered `test:*` browser check was run once on a MacBook with an installed Chrome (Nicolas, 20 Nov), on `main` b65210eb; the three marked with a PR number were run on a branch that includes that PR. One run each, so a pass is one green run and not a stability claim.
+
+| Result | Checks |
+|---|---|
+| **Pass (30)** | `test:world`, `readability`, `overlaps`, `outage`, `a11y`, `help`, `intro`, `build-stamp`, `title-start`, `market`, `input`, `mobile`, `panels`, `settings:visuals`, `signin`, `credits`, `lifecycle`, `spoilers`, `islet:world`, `festival`, `loading`, `production`, `art`, `recovery:component`, `rules`, `walls`, `placement`; `csp` (with #622: a stale font assertion had stopped it since 12 Nov); `demo` and `mp` (with #623: both defaulted to one teammate's home folder; `mp` also read the map one frame too early after a tear-down) |
+| **Fail, last changed 10–11 Nov, before v3: they test the old world (9)** | `test:browser` (`TypeError` reading `entries` at `check-browser.js:83`), `host` (the console now also asks `/api/host/demo`, which the check's fixture refuses), `ui` and `ui:production` ("Gallery shows nine component groups and six request states"), `weather:wiring` (`null` height at `check-weather-wiring.js:21`), `problem-report` (no "Report a problem" link found), `living` (timeout), `harbor:life` ("Ambient motion becomes still under reduced motion"), `online:islet` (waits for `.hud.exploring`) |
+| **Fail, newer checks (4)** | `test:csp:inventory` (the built `fake-api` chunk holds a literal origin `http://fake.local` that the inventory does not list), `test:arsenal` and `test:culverin` (their start sequence stops in the gap before the goal card; past that they still expect the retired flags `arsenal` and `defenses_v2` and older cards), `test:rescue` (timeout "back on the home island") |
+| **Not run** | `test:art:production`, `test:online:islet:chaos` |
+
+None of the failing checks showed a wrong picture or a broken action in the game: each stops on an expectation about an older screen or flag. They are listed here so that nobody reads the table above as "all 39 pass".
+
 ## 5. Live smoke test
 
 | Command | What it checks | Does not cover |
@@ -358,6 +372,7 @@ assertions or gameplay. See the
 - Real audio output on a device.
 - The real Supabase Realtime room with four devices: `test:mp` uses a BroadcastChannel stand-in with the same message rules.
 - Pirate Point with four players and the three lamps in one automated run.
+- **Late-game balance by real play.** Waves 30 to 100 are tuned on a headless model ([late-game.test.js](../frontend/tests/pirates/late-game.test.js)): it says the towers alone lose from wave 50 and four captains lose wave 70. In a real solo game on the live site a single player reached wave 69 (Nicolas, 20 Nov). The model does not play the tower trees after level 5, the arsenal weapons or the guards as a player does, so its "needs a full crew" claim is not confirmed by play. Not a problem for the 5-minute demo; it matters for anyone who wants the late game to be a team game.
 - Whether the browser's `survived` in a wave is true: by design the server only bounds the loot ([D032](DECISIONS.md)).
 
 ## 8. Lane rows (to be filled by the lane's members)

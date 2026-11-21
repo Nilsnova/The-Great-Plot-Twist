@@ -6,9 +6,10 @@
 // npm run test:demo [-- --perf]. Offline fixtures only; nothing reaches a live service.
 import assert from 'node:assert/strict';
 import {mkdir,writeFile} from 'node:fs/promises';
+import {defaultShotsDir} from './shots-dir.js';
 import {openWorldBrowser,measure} from './world-browser-tools.js';
 
-const shotsDir=process.env.SHOTS_DIR??'/Users/nilslenke/Developer/fri6-integration/g29-wave2-shots';
+const shotsDir=process.env.SHOTS_DIR??defaultShotsDir('demo-journey');
 const perf=process.argv.includes('--perf');
 const report={checked:new Date().toISOString(),checks:[],lockRequests:[],perf:null};
 const check=(ok,label)=>{assert.ok(ok,label);report.checks.push(label);};

@@ -61,7 +61,9 @@ export function mountPirates(ctx) {
   const bus = ctx.bus ?? { on, emit };
   const world = {
     scene, camera, canvas, container, player,
-    place: () => places?.current?.id ?? null,
+    // ctx.isShown() false (the title screen is up): the wave goes on, since the crew's screens must agree,
+    // but it counts as "not here", so its bar, drawings, buttons and minigames stay off the title.
+    place: () => (ctx.isShown?.() === false ? null : places?.current?.id ?? null),
     isBlocked: () => !!ctx.isBlocked?.(),
     ...createCombatProjection({camera, canvas, container}),
   };
