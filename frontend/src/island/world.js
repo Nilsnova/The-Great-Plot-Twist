@@ -15,7 +15,8 @@ import {isExtraSpot} from './extra-spots.js';
 import {makeFootprint, makeWallLanes} from './move-preview.js';
 import {makeSelectionBracket} from './selection-bracket.js';
 import {makeDefenseRange} from './defense-range.js';
-import {makeWallFeedback} from './wall-feedback.js';
+import {makeBuildingFeedback, makeWallFeedback} from './wall-feedback.js';
+import {footprintOf} from './placement.js';
 import {isOpen, spotWave, waveOf} from '../campaign/index.js';
 import {LOCK_WAVES} from '../art/campaign.js';
 import {SLOT_KINDS} from './td-rules.js';
@@ -319,6 +320,7 @@ export function decorateIsland(place, ctx = {}) {
   let preview = null;
   const footprint = makeFootprint(root), selectionBracket = makeSelectionBracket(root);
   const wallFeedback = homeWalls ? makeWallFeedback(root) : null;
+  const buildingFeedback = homeWalls ? makeBuildingFeedback(root) : null;
   // D056: while a wall is moved, the cells where a wall stops pirates glow (home island only).
   const wallLanes = homeWalls ? makeWallLanes(root) : null;
   // Where a spot stands now: the cell of a move under way, the answer's x/z, else its fixed spot (Pirate Point's stay).
@@ -330,9 +332,19 @@ export function decorateIsland(place, ctx = {}) {
     const row = state.spots.find(item => item.id === id);
     return row?.built === true && row.kind === 'wall' && row.level === level ? placedSpot(id, state.spots) : null;
   }
+  function confirmedBuildingAt({spotId, level, kind, x, z}) {
+    const row = state.spots.find(item => item.id === spotId);
+    if (row?.built !== true || row.kind !== kind || row.level !== level || kind === 'wall') return false;
+    const spot = placedSpot(spotId, state.spots);
+    return spot?.x === x && spot?.z === z && kindsOf(spot).includes(kind);
+  }
   function clearWallFeedback() {
     wallFeedback?.clear();
     purchaseLight?.show(null, 0);
+  }
+  function clearPurchaseFeedback() {
+    clearWallFeedback();
+    buildingFeedback?.clear();
   }
   const recoveryIndicators = createStructureRecoveryIndicators({root, locate: id => {
     const spot = SPOTS.find(item => item.id === id);
@@ -399,7 +411,7 @@ export function decorateIsland(place, ctx = {}) {
   // their damage, so the island's own wall and cannon sprites step aside until it ends.
   function apply({spots = [], visitor = false, battle = false, unlocks = null, crew = null, campaign = null, arsenal = false, feedbackScope = null} = {}) {
     if (disposed) return;
-    if (battle || feedbackScope !== state.feedbackScope) clearWallFeedback();
+    if (battle || feedbackScope !== state.feedbackScope) clearPurchaseFeedback();
     state = {spots, visitor, battle, unlocks, crew, campaign, arsenal: arsenal === true, feedbackScope};
     if (homeWalls) {
       displayAnchors = defenseDisplayAnchors('home_islet', spots.filter(row => row.built).map(row => {
@@ -417,6 +429,8 @@ export function decorateIsland(place, ctx = {}) {
       const anchor = builtWallAnchor(pulse.spotId, pulse.level);
       if (anchor?.x !== pulse.x || anchor?.z !== pulse.z) clearWallFeedback();
     }
+    const buildingPulse = buildingFeedback?.current;
+    if (buildingPulse && (visitor || !confirmedBuildingAt(buildingPulse))) buildingFeedback.clear();
     if (visitor || battle) wallConnections.select(null);
     joinedWalls = wallConnections.show(battle ? [] : spots.map(item => {
       const spot = SPOTS.find(entry => entry.id === item.id);
@@ -626,7 +640,7 @@ export function decorateIsland(place, ctx = {}) {
         wallConnections.select(null);
         defenseRange?.show(null);
         place.setSelectedCanopy?.(null);
-        clearWallFeedback();
+        clearPurchaseFeedback();
       }
       footprint.show(preview);
       wallLanes?.show(preview && SPOTS.find(spot => spot.id === preview.spotId)?.slot === 'wall');
@@ -642,7 +656,14 @@ export function decorateIsland(place, ctx = {}) {
         purchaseLight.show(anchor, wallFeedback.light);
       }
     },
-    clearWallFeedback,
+    showBuildingFeedback(purchase) {
+      if (disposed || !buildingFeedback || !state.feedbackScope || state.visitor || state.battle || preview
+          || !confirmedBuildingAt(purchase)) return false;
+      const {spotId, level} = purchase;
+      buildingFeedback.show(spotId, level, purchase, reduced(), .7 * footprintOf(spotId), viewOf(spotId, purchase));
+      return true;
+    },
+    clearPurchaseFeedback,
     ring() { ringing = 1.2; },
     update(dt, time = 0, paused = false, frame) {
       if (disposed) return;
@@ -670,6 +691,7 @@ export function decorateIsland(place, ctx = {}) {
         wallFeedback.update(dt, paused, still);
         purchaseLight.show(wallFeedback.current, wallFeedback.light);
       }
+      buildingFeedback?.update(dt, paused, still);
       const glow = still ? 1 : .7 + .3 * Math.sin(time * 3.2), bob = still ? 0 : Math.sin(time * 2.4) * 2.4 / UNIT;
       // Calm markers (owner, 15 Nov: "limit the visual overload"): only the spots near the captain glow and bob;
       // the others stay on the map as faint, still rings and badges, so a dozen gold "+" never shout at once.
@@ -710,6 +732,7 @@ export function decorateIsland(place, ctx = {}) {
       houseSupport?.dispose(); rangeRing?.dispose();
       place.setSelectedCanopy?.(null);
       wallFeedback?.dispose();
+      buildingFeedback?.dispose();
       place.setMooringBattle?.(false);
       for (const id of [...shown.keys()]) clear(id);
       for (const item of lockTextures.values()) item.texture.dispose(); // the padlocks a spot no longer shows
