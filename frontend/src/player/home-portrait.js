@@ -9,8 +9,9 @@ const MAX_PORTRAIT_DEPTH = 2.55;
 const SHORE_MARGIN = 5;
 
 export function usesPortraitVillage(viewport) {
+  // Include short phone viewports that still use the compact village controls.
   return Number.isFinite(viewport?.width) && Number.isFinite(viewport?.height)
-    && viewport.width > SHORE_MARGIN * 2 && viewport.height > 0 && viewport.width / viewport.height < .72;
+    && viewport.width > SHORE_MARGIN * 2 && viewport.height > 0 && viewport.width / viewport.height < .8;
 }
 
 export function portraitIslandFrame(camera, viewport) {

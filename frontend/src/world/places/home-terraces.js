@@ -54,19 +54,21 @@ const HIGH_TURF = TURF.clone().lerp(ROOTS, .42);
 const WORN_LEDGE = 4;
 // These two shallow saddles join the backs of neighboring banks. The higher
 // shelf ends and the open watchtower landing remain in their original places.
-const REAR_SADDLES = [[120.25, 127.50], [142.94, 150.82]];
+const REAR_SADDLES = [[120.25, 127.50], [142.94, 152.38]];
 const WEST_SADDLE_PROFILE = [
   [0, 0, -.19, RECESS], [.029, .061, -.23, STONE], [.065, .303, -.05, STONE], [.104, .418, .06, ROOTS],
   [.163, .454, .13, GRASS_CREST], [.409, .454, .07, TURF], [.481, .452, -.13, RECESS],
   [.509, .552, -.20, STONE], [.544, .819, -.035, STONE], [.593, .932, .09, ROOTS],
   [.681, .980, .13, GRASS_CREST], [.870, .977, .08, TURF], [.950, .771, .03, TURF], [1, .02, -.18, RECESS],
 ];
-// The east slope opens on either side of the wall socket. A rock shoulder carries
-// the thick sod into the pine shelf, with the lower bedding still reaching the beach.
+// Two sandstone courses wrap around the socket. The grass seats widen towards
+// the pine shelf and the seaward end falls away into the existing sand.
 const EAST_SADDLE_PROFILE = [
-  [0, 0, -.12, RECESS], [.09, .11, -.13, STONE], [.218, .41, -.04, STONE],
-  [.23, .55, .035, STONE], [.24, .81, .10, STONE], [.278, .92, .10, ROOTS], [.35, .958, .11, GRASS_CREST],
-  [.61, .983, .155, TURF], [.83, .992, .095, TURF], [.938, 1.012, .045, TURF], [.974, .90, -.06, STONE], [1, 0, -.20, RECESS],
+  [0, 0, -.19, RECESS], [.032, .069, -.23, STONE], [.063, .312, -.08, STONE], [.096, .403, .04, STONE],
+  [.141, .454, .09, ROOTS], [.191, .478, .15, GRASS_CREST], [.350, .482, .07, TURF], [.423, .480, .03, TURF],
+  [.467, .461, -.14, RECESS], [.491, .552, -.21, STONE], [.534, .797, -.04, STONE], [.574, .917, .06, STONE],
+  [.613, .955, .09, ROOTS], [.683, .981, .136, GRASS_CREST], [.874, .977, .076, TURF],
+  [.953, .774, .008, TURF], [1, .0, -.19, RECESS],
 ];
 const SADDLE_BED = new THREE.Color('#88715b');
 const FOLIAGE = {
@@ -371,19 +373,23 @@ export function createHomeTerraces(root, coastArt, art) {
         // The sandstone turns around the last northern wall footing. Both steep
         // ends spread into dry decorative ground away from that corner.
         const landwardLimit = Math.min(-19.11 / z, 8.17 / x);
-        const width = .995 - Math.max(.91, landwardLimit);
-        const westernShelf = THREE.MathUtils.smoothstep(sample, 143.00, 144.38)
-          * (1 - THREE.MathUtils.smoothstep(sample, 145.70, 147.16));
-        const easternShelf = THREE.MathUtils.smoothstep(sample, 147.25, 148.62)
-          * (1 - THREE.MathUtils.smoothstep(sample, 149.86, 150.88));
-        const lowCourse = .31 + .04 * Math.cos(sample * 1.82);
-        const rise = anchor * (lowCourse + .94 * westernShelf + 1.25 * easternShelf);
-        const lean = .049 * Math.sin(sample * 2.91) + .024 * Math.cos(sample * 4.32);
-        return EAST_SADDLE_PROFILE.map(([radius, height]) => {
+        const shoulder = THREE.MathUtils.smoothstep(sample, 144.49, 145.74)
+          * (1 - THREE.MathUtils.smoothstep(sample, 150.46, finish));
+        const width = .995 - Math.max(.917 - .042 * shoulder, landwardLimit);
+        const westernShelf = THREE.MathUtils.smoothstep(sample, 143.15, 144.54)
+          * (1 - THREE.MathUtils.smoothstep(sample, 145.92, 147.58));
+        const easternShelf = THREE.MathUtils.smoothstep(sample, 146.65, 148.42)
+          * (1 - THREE.MathUtils.smoothstep(sample, 150.29, finish));
+        const beachFold = .62 + .38 * THREE.MathUtils.smoothstep(sample, start, 144.64);
+        const foundation = .77 + .05 * Math.cos(sample * 1.63);
+        const rise = anchor * beachFold * (foundation + .96 * westernShelf + .91 * easternShelf);
+        const lean = .037 * Math.sin(sample * 2.61) + .019 * Math.cos(sample * 4.13);
+        return profile.map(([radius, height]) => {
           const cut = radius + Math.sin(Math.PI * radius) * lean * (1 - .5 * height);
           const reach = .995 - width * (1 - cut);
-          const brokenBedding = 1 + height * (.035 * Math.sin(sample * 2.65 + radius * 4.1));
-          return clipCrest(new THREE.Vector3(x * reach, rise * height * brokenBedding, z * reach), 1.38);
+          const brokenBedding = 1 + height * (.021 * Math.sin(sample * 2.06 + radius * 4.1));
+          const room = beachFold * (.16 + .96 * radius);
+          return clipCrest(new THREE.Vector3(x * reach, rise * height * brokenBedding, z * reach), room);
         });
       }
       // These two courses come out of the seam between the west headland and
@@ -420,7 +426,10 @@ export function createHomeTerraces(root, coastArt, art) {
       }
       if (east && !afterCove) return;
       // The irregular joints in the upper course sit over whole stones below.
-      const courses = east ? [[0, 5, [[.06, .475, .97], [.66, .875, .87]]]] : [
+      const courses = east ? [
+        [8, 12, [[.086, .318, .94], [.304, .550, .89], [.536, .764, .97], [.749, .961, .83]]],
+        [0, 4, [[.062, .247, .86], [.235, .449, .94], [.432, .668, .90], [.654, .841, .98], [.829, .972, .83]]],
+      ] : [
         [6, 9, [[.035, .326, .89], [.314, .563, .98], [.549, .771, .87], [.763, .968, .79]]],
         [0, 3, [[.016, .232, .84], [.219, .479, .97], [.461, .699, .88], [.685, .962, .82]]],
       ];
@@ -438,7 +447,7 @@ export function createHomeTerraces(root, coastArt, art) {
           p.z *= 1 - bevel * .037;
           return p;
         };
-        const shade = east ? (index === 0 ? REAR_STONE[3] : REAR_STONE[2]) : REAR_STONE[(index + floor + 1) % REAR_STONE.length];
+        const shade = REAR_STONE[(index + floor + (east ? 3 : 1)) % REAR_STONE.length];
         const color = shade.clone().lerp(SADDLE_BED, .27);
         stratum(point, color, index % 2 ? -.60 : .61, true);
       }
@@ -555,7 +564,9 @@ export function createHomeTerraces(root, coastArt, art) {
           const toe = Math.max(originalToe, -19.13 / row.z);
           const back = Math.max(rim, toe + .028);
           const across = Math.max(0, (point.z / row.z - originalToe) / (rim - originalToe));
-          const reach = THREE.MathUtils.lerp(toe, back, across);
+          const bend = THREE.MathUtils.smoothstep(sample, 143.54, 144.24);
+          const turned = THREE.MathUtils.lerp(toe, back, across);
+          const reach = THREE.MathUtils.lerp(point.z / row.z, turned, bend);
           point.x = row.x * reach;
           point.z = row.z * reach;
           if (point.y > 0) point.y = THREE.MathUtils.lerp(point.y, Math.max(0, shoulderHeight(point) - .032), fold);
@@ -764,7 +775,7 @@ export function createHomeTerraces(root, coastArt, art) {
           const variation = .026 * Math.sin(sample * .89);
           // The old turf seats stop before the bed folds into the next ledge.
           // Expose the eroded sandstone wherever the bedding bends down sharply.
-          const erodedReturn = meetsEastShoulder && sample >= 143.94 + .16 * Math.sin(ring * 2.1);
+          const erodedReturn = meetsEastShoulder && sample >= 144.12 + .19 * Math.sin(ring * 2.1);
           if (erodedReturn && (band === LIP || band === TURF)) {
             const cut = [[0, .50], [1, .47], [1, .78], [0, .81]];
             face(left[ring], right[ring], right[ring + 1], left[ring + 1], REAR_STONE[2],

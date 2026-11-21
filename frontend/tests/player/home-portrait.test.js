@@ -38,6 +38,18 @@ it('uses tall portrait room for more depth and still yields to the selection doc
   expect(selected.width).toBe(fit.width);
 });
 
+it('fits a short portrait viewport with the same coverage and depth safeguards', () => {
+  const camera = makeCamera();
+  const compact = {width: 390, height: 530, top: 80, bottom: 164};
+  camera.top = 8 * compact.height / compact.width;
+  camera.bottom = -camera.top;
+  const fit = portraitIslandFrame(camera, compact);
+  expect(fit.width).toBeGreaterThan(1);
+  expect(fit.height).toBeLessThan(1);
+  expect(portraitIslandFrame(camera, {...compact, bottom: 270})).toBeNull();
+  expect(portraitIslandFrame(camera, {...compact, width: 844, height: 390})).toBeNull();
+});
+
 it('keeps upright proportions and restores the world transforms after drawing', () => {
   const camera = makeCamera(), portrait = createHomePortrait(camera);
   const scene = new THREE.Scene(), tree = new THREE.Mesh(), floor = new THREE.Mesh();

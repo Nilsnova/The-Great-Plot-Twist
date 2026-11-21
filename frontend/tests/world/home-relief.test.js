@@ -117,7 +117,7 @@ it('roots the raised rear headlands and both flank shelves on existing dry groun
   expect([...flankCrowns].sort()).toEqual(sides);
 });
 
-it('keeps the tidal rock groups and their wash in the existing Fit envelope', () => {
+it('keeps tidal rock groups and their wash clear of land and the four shore openings', () => {
   const cliff = createHomeRelief(new THREE.Group(), new THREE.Texture());
   const {position, shoreRelief} = cliff.geometry.attributes;
   const bounds = projectedCoastBounds(cliffProfile(surfaces.home_islet));
@@ -132,15 +132,18 @@ it('keeps the tidal rock groups and their wash in the existing Fit envelope', ()
     expect(x).toBeLessThanOrEqual(bounds.maxX + .001);
     expect(y).toBeGreaterThanOrEqual(bounds.minY - .001);
     expect(y).toBeLessThanOrEqual(bounds.maxY + .001);
-    if (region === 6 && shoreRelief.getY(i) > .8) {
-      shoreQuadrants.add((x > 0 ? 1 : 0) + (y > 0 ? 2 : 0));
+    const ground = unprojectGround(x, y);
+    const bearing = Math.atan2(ground.z / rz, ground.x / rx) * (180 / Math.PI);
+    const fromOpening = Math.abs(bearing - Math.round(bearing / 90) * 90);
+    expect(surfaceClass('home_islet', ground.x, ground.z)).toBe(0);
+    expect(fromOpening).toBeGreaterThan(18);
+    if (region === 6 || region === 7) {
+      // A sculpted foot stays rounded above the Fit boundary, without a flat cut across it.
+      expect(y).toBeGreaterThan(bounds.minY + .12);
     }
-    if (region === 7) {
-      const ground = unprojectGround(x, y);
-      const bearing = Math.atan2(ground.z / rz, ground.x / rx) * (180 / Math.PI);
-      expect(surfaceClass('home_islet', ground.x, ground.z)).toBe(0);
-      expect(Math.min(...NAVAL_APPROACH_BEARINGS.map(lane => Math.abs(bearing - lane)))).toBeGreaterThan(18);
-      if (shoreRelief.getY(i) > .8) sillSides.add(Math.sign(x));
+    if (shoreRelief.getY(i) > .8) {
+      if (region === 6) shoreQuadrants.add((x > 0 ? 1 : 0) + (y > 0 ? 2 : 0));
+      if (region === 7) sillSides.add(Math.sign(x));
     }
   }
   expect(shoreQuadrants).toEqual(new Set([0, 1, 2, 3]));

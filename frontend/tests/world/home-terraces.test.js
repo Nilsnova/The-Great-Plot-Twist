@@ -132,6 +132,30 @@ it('keeps grass visible behind the high sandstone lip above the west cove', () =
   createLifetime(root)();
 });
 
+it('keeps two grass treads visible across the northeast sandstone shoulder', () => {
+  const root = new THREE.Group(), shore = new THREE.Texture();
+  backdrop(root, shore);
+  const {position, terraceMaterial, surfaceDetail} = createHomeTerraces(root, shore).geometry.attributes;
+  const {rx, rz} = surfaces.home_islet;
+  const sections = new Map();
+  for (let i = 0; i < position.count; i++) {
+    const x = terraceMaterial.getX(i), z = terraceMaterial.getY(i);
+    const bearing = Math.atan2(z / rz, x / rx) * 180 / Math.PI;
+    // Shoulder turf has its own material value and records band height before shading.
+    if (bearing < -71 || bearing > -59 || Math.abs(terraceMaterial.getZ(i) - 1.6) > .01) continue;
+    const level = surfaceDetail.getY(i);
+    const station = Math.round(bearing * 10);
+    const section = sections.get(station) ?? {lower: [], upper: []};
+    if (level > .46 && level < .50) section.lower.push(position.getY(i));
+    if (level > .96 && level < .99) section.upper.push(position.getY(i));
+    sections.set(station, section);
+  }
+  const depth = values => Math.max(...values) - Math.min(...values);
+  const visible = [...sections.values()].filter(({lower, upper}) => depth(lower) > .10 && depth(upper) > .12);
+  expect(visible.length).toBeGreaterThan(18);
+  createLifetime(root)();
+});
+
 it('keeps edge walls on the live lanes clear of above-ground shoreline rock', () => {
   const root = new THREE.Group(), shore = new THREE.Texture();
   backdrop(root, shore);
