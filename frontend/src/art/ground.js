@@ -7,7 +7,7 @@ import {surfaceClass, surfaces} from '../world/places/surfaces.js';
 import {LEGACY_DEPTH} from '../world/projection.js';
 import {canvas, ellipse, linear, poly, radial, stroke} from './paint.js';
 import {APPROACH_DEPTH, cliffProfile, paintCliffFaces, paintGrassRim} from './coast-cliffs.js';
-import {paintShorePockets, paintTerraceFeet} from './shore-pockets.js';
+import {beachExposure, paintShorePockets, paintTerraceFeet} from './shore-pockets.js';
 import {materialRect, meadowScale, mirroredGrassPattern, paintMaterial, pathMaterialMask} from './village/terrain-materials.js';
 
 const SIZE = {width: 64, height: 48};
@@ -106,7 +106,8 @@ function paintSandWaterline(c, rim, home) {
     // The north cove opens onto the water behind the island. Elsewhere the cliff drop
     // determines how much of the top the tide can appear to reach.
     const north = Math.abs(i - segments * .75);
-    const exposure = Math.max(0, 1 - (depth - APPROACH_DEPTH) / 1.25, 1 - Math.max(0, north - 7) / 8);
+    const cove = home ? beachExposure(i, segments) : 1;
+    const exposure = cove * Math.max(0, 1 - (depth - APPROACH_DEPTH) / 1.25, 1 - Math.max(0, north - 7) / 8);
     if (exposure < .035) continue;
     const tangent = Math.atan2(next.y - previous.y, next.x - previous.x);
     const swell = .5 + .28 * Math.sin(i * .31 + 1.2) + .22 * Math.cos(i * .71);
@@ -150,6 +151,22 @@ function paintBeachDetails(c, beach, rim, materials, home) {
   c.globalAlpha = .88;
   c.fillStyle = linear(c, -16, -13, 15, 13, [[0, '#fff0bf83'], [.40, '#fbda9f38'], [.73, '#d2a97508'], [1, '#926d583d']]);
   c.fill(beach);
+  // Break the former ring of dry sand into sunlit coves and thin, earthy seams.
+  // Colour stays inside the original beach mask, including at the four landings.
+  const count = rim.length - 1;
+  for (let i = 0; i < count; i += 2) {
+    const {x, y, depth} = rim[i];
+    const cove = beachExposure(i, count);
+    const before = rim[(i + count - 1) % count], after = rim[(i + 1) % count];
+    c.save();
+    c.translate(x * .981, y * .981);
+    c.rotate(Math.atan2(after.y - before.y, after.x - before.x));
+    c.scale(1.03 + .21 * Math.sin(i * .67), .43 + Math.min(3.4, depth) * .19);
+    c.globalAlpha = (1 - cove) * .59;
+    c.fillStyle = radial(c, 0, 0, 1, [[0, '#81785b92'], [.50, '#99805961'], [1, '#91795a00']]);
+    c.fill(ellipse(0, 0, 1));
+    c.restore();
+  }
   paintSandWaterline(c, rim, home);
   // Rocky shoulders shade the sand at their feet. The four open approaches keep a warm centre.
   for (let i = 2; i < rim.length - 1; i += 5) {
@@ -184,8 +201,8 @@ function paintTurfBevel(c, coast, meadow, grassRadius, rim, materials) {
   c.clip(meadow);
   c.globalCompositeOperation = 'source-atop';
   const curve = angle => .023 + .021 * (.5 + .5 * Math.sin(angle * 6 + .5)) + .009 * Math.cos(angle * 13);
-  c.fillStyle = linear(c, -17, -13, 14, 11, [[0, '#5676390d'], [.52, '#44693811'], [1, '#3d53321a']]);
-  for (const width of [1.58, 1.39, 1.13, .92, .70, .47]) {
+  c.fillStyle = linear(c, -17, -13, 14, 11, [[0, '#5676390d'], [.52, '#4b693113'], [1, '#354b291c']]);
+  for (const width of [1.58, 1.28, 1.04, .82, .59, .39]) {
     const band = new Path2D(meadow);
     band.addPath(coast(angle => grassRadius(angle) - width * curve(angle), .012, 3));
     c.fill(band, 'evenodd');
@@ -193,8 +210,9 @@ function paintTurfBevel(c, coast, meadow, grassRadius, rim, materials) {
   // Warm soil shows below the sunlit grass on the same rounded cut.
   if (materials) {
     const random = seeded(98641);
-    const sandShadow = linear(c, -16, -14, 13, 12, [[0, '#5e713778'], [.47, '#55563285'], [1, '#3e442ea2']]);
-    const grassLight = linear(c, -16, -14, 13, 12, [[0, '#e5ec9aa5'], [.45, '#c7d77685'], [1, '#aabc563d']]);
+    const sandShadow = linear(c, -16, -14, 13, 12, [[0, '#68723583'], [.47, '#675132a2'], [1, '#403a27b9']]);
+    const grassLight = linear(c, -16, -14, 13, 12, [[0, '#deef82bc'], [.45, '#cbd975a3'], [1, '#a5c45167']]);
+    const turfTurn = linear(c, -16, -14, 13, 12, [[0, '#a5c75570'], [.45, '#7399409e'], [1, '#4e7034a2']]);
     const point = (index, inset) => {
       const {x, y} = rim[index], angle = index / (rim.length - 1) * Math.PI * 2;
       const contour = 1 + .012 * (Math.sin(angle * 13 + 3) * .6 + Math.sin(angle * 23 + 6) * .4);
@@ -205,13 +223,16 @@ function paintTurfBevel(c, coast, meadow, grassRadius, rim, materials) {
     for (let i = 1; i < rim.length - 4;) {
       const span = 1 + Math.floor(random() * (rim[i].depth > 1.1 ? 4 : 3));
       const wear = random(), root = .09 + .11 * wear;
+      const ledge = rim[i].depth > 1.34 && beachExposure(i, rim.length - 1) < .5;
       const path = Array.from({length: span + 1}, (_, segment) => point(i + segment, root + .055 * random()));
-      stroke(c, path, sandShadow, .07 + .17 * wear, .63 + .27 * wear);
+      stroke(c, path, sandShadow, .07 + .17 * wear + (ledge ? .065 : 0), .63 + .27 * wear);
       if (wear > .28) {
         const grass = Array.from({length: span + 1}, (_, segment) => point(i + segment, .27 + .145 * random()));
-        stroke(c, grass, grassLight, .035 + .065 * wear, .73 + .18 * wear);
+        // The lit lip rolls into the green ledge above the dark line of exposed roots.
+        if (ledge) stroke(c, grass, turfTurn, .27 + .18 * wear, .66);
+        stroke(c, grass, grassLight, .035 + .065 * wear + (ledge ? .045 : 0), .73 + .18 * wear);
       }
-      if (rim[i].depth > 1.34 && wear > .50) {
+      if (ledge && wear > .50) {
         const [x, y] = point(i, .34 + .26 * wear);
         paintGrassTuft(c, x, y, .38 + .32 * wear, '#b9cb62');
       }
@@ -232,9 +253,9 @@ const PAVERS = [
   ['#d5c6a5', '#ac9b7e', '#efdfbf'], ['#ccbda0', '#9b8e76', '#e7d7b9'],
 ];
 const WEATHERED_PAVERS = [
-  ['#e4c999', '#9a7c5d', '#fff0cc'], ['#efdab1', '#b29b78', '#fff5db'],
-  ['#c9b795', '#89765b', '#ebdaba'], ['#e2c399', '#a28466', '#ffebc9'],
-  ['#dacaab', '#9a8769', '#f6ead1'], ['#d6bd92', '#987d5c', '#f5dfb7'],
+  ['#ddbc87', '#a28664', '#f5dfb4'], ['#e3c796', '#ad906b', '#f9e5bc'],
+  ['#ceaf82', '#9c8261', '#e9ceaa'], ['#d9b982', '#a78b65', '#f4dbaf'],
+  ['#d8bc92', '#a48969', '#f2dfb7'], ['#d4b384', '#a08462', '#efd3a8'],
 ];
 // Individual stone faces cut from the sandstone sheet. Its grouted seams never cross a drawn slab.
 const PAVER_FACES = [[.026, .024, .107, .047], [.193, .025, .112, .046], [.364, .029, .106, .047],
@@ -279,7 +300,7 @@ function paintPavers(c, paths, materials) {
   c.save();
   c.clip(pathMaterialMask(paths, PAVING_WIDTH));
   c.fillStyle = sheet
-    ? linear(c, -13, -9, 10, 12, [[0, '#b49a73c4'], [.52, '#9d8667b6'], [1, '#8b7157b5']])
+    ? linear(c, -13, -9, 10, 12, [[0, '#ac9168b1'], [.52, '#907c58a4'], [1, '#766c4eaf']])
     : '#9e936f';
   c.fillRect(bounds.left, bounds.top, SIZE.width, SIZE.height);
   for (let row = bounds.top; row < bounds.bottom;) {
@@ -288,7 +309,7 @@ function paintPavers(c, paths, materials) {
     let left = bounds.left - random();
     while (left < bounds.right) {
       const width = (sheet ? .56 : .66) + random() * (sheet ? .19 : .17), joint = .016 + random() * .014;
-      const chip = .036 + random() * .066, drift = (random() - .5) * (sheet ? .07 : .037);
+      const chip = .030 + random() * .053, drift = (random() - .5) * (sheet ? .026 : .037);
       const pigment = Math.floor(random() * colours.length);
       const [face, edge, sun] = colours[pigment];
       const x = left + joint, y = row + joint + drift;
@@ -301,7 +322,7 @@ function paintPavers(c, paths, materials) {
         if (inside < -.58) continue;
         // Alternating chipped and worn stones let the earth show through along the edges and ends.
         const wear = .13 * Math.sin(centreX * 4.6 + centreY * 2.1) + .075 * Math.cos(centreY * 6 - centreX * 4);
-        const intact = Math.max(0, Math.min(1, (inside + wear + .10) / .54));
+        const intact = Math.max(0, Math.min(1, (inside + wear + .06) / .42));
         c.globalAlpha = .045 + .945 * intact * intact * (3 - 2 * intact);
       } else if (!nearPath(paths, centreX, centreY / LEGACY_DEPTH, 2.55)) continue;
       const opacity = c.globalAlpha;
@@ -319,21 +340,21 @@ function paintPavers(c, paths, materials) {
       c.fill(top);
       if (sheet) {
         const [sx, sy, sw, sh] = sheet, [u, v, w, h] = PAVER_FACES[pigment];
-        c.save(); c.clip(top); c.globalAlpha *= .32; c.globalCompositeOperation = 'luminosity';
+        c.save(); c.clip(top); c.globalAlpha *= .22; c.globalCompositeOperation = 'luminosity';
         c.drawImage(materials, sx + u * sw, sy + v * sh, w * sw, h * sh, x, y, right - x, bottom - y);
         c.restore();
       }
       c.save(); c.clip(top);
       stroke(c, [[x + chip + .021, y + .019], [x + width * (sheet ? .43 : .53), y + .018],
         [sheet ? x + width * (.53 + chip) : right - .097, y + .027]],
-        sheet ? '#fff0d1bd' : '#fff0c996', sheet ? .032 : .035, opacity);
+        sheet ? '#fff0d188' : '#fff0c996', sheet ? .022 : .035, opacity);
       c.fillStyle = '#78634a21';
       c.fill(poly([[x + width * .77, y + depth * .28], [right, y + depth * .37], [right, bottom - bevel],
         [x + width * .59, bottom - bevel]], .022));
       c.restore();
       c.fillStyle = sun + '53';
       c.fill(ellipse(x + width * .23, y + depth * .28, .024 + chip * .22, .012));
-      if (chip > .104) {
+      if (chip > .079) {
         stroke(c, [[x + chip * .67, y + .046], [x + chip, y + .052], [x + chip * 1.26, y + .036]],
           '#a58a653e', .012, opacity);
       }
@@ -461,7 +482,7 @@ export function paintGround(id, density = 28, materials = null) {
       clearings: paths.clearings.map(([x, z, radius]) => [x, z, radius * .76]),
     };
     // The dust sits just around the laid stone. A broad outer band washes out the grass.
-    c.fillStyle = linear(c, -16, -12, 14, 13, [[0, '#e6c58e20'], [.52, '#c7aa7929'], [1, '#aa895b32']]);
+    c.fillStyle = linear(c, -16, -12, 14, 13, [[0, '#d7b47916'], [.52, '#b7a06b21'], [1, '#aa895b2c']]);
     for (const padding of [.19, .08]) c.fill(pathMaterialMask(paving, PAVING_WIDTH, padding));
     // The low paver edge casts a short contact shadow onto the lawn.
     c.save();
@@ -575,8 +596,7 @@ function paintTerrain(c, s, coast, random, materials, relief) {
   c.fillStyle = '#f2d595'; c.fill(beach);
   if (materials) { c.save(); c.clip(beach); paintMaterial(c, materials, 'sand', {alpha: .9}); c.restore(); }
   c.save(); c.clip(beach);
-  c.lineWidth = .84; c.strokeStyle = '#e6c78e'; c.stroke(beach);
-  c.lineWidth = .25; c.strokeStyle = '#c9a878'; c.stroke(beach);
+  c.lineWidth = .34; c.strokeStyle = '#d9bd8b86'; c.stroke(beach);
   c.fillStyle = '#e2bf7e'; for (let i = 0; i < 260; i++) { const a = random() * Math.PI * 2, k = .86 + random() * .13; c.fill(ellipse(Math.cos(a) * s.rx * k, Math.sin(a) * s.rz * k * .72, .07 + random() * .08, .05)); }
   c.restore();
   paintBeachDetails(c, beach, rim, materials, home);
@@ -586,20 +606,20 @@ function paintTerrain(c, s, coast, random, materials, relief) {
   const meadow = coast(grassRadius, .012, 3);
   c.save(); c.clip(beach); c.globalCompositeOperation = 'source-atop';
   c.save(); c.clip(beach); c.translate(.08, .33); c.fillStyle = '#9b7f56'; c.fill(meadow); c.restore();
-  c.fillStyle = '#77b743'; c.fill(meadow);
+  c.fillStyle = '#80b63d'; c.fill(meadow);
   c.save(); c.clip(meadow);
   // The warm light on the terraces also passes over the paved lanes and the open meadow.
   const glow = c.createRadialGradient(-9, -9, 2, 3, 1, s.rx + 2);
-  glow.addColorStop(0, '#b8dc68');
-  glow.addColorStop(.52, '#89be40');
-  glow.addColorStop(1, '#458835');
+  glow.addColorStop(0, '#bade59');
+  glow.addColorStop(.52, '#92c642');
+  glow.addColorStop(1, '#488b34');
   c.fillStyle = glow; c.fill(meadow);
   if (materials) {
     c.save(); c.fillStyle = mirroredGrassPattern(c, materials);
-    c.globalAlpha = .47;
+    c.globalAlpha = .41;
     c.fillRect(-32, -24, 64, 48);
     c.rotate(.22); c.translate(-2.6, 1.4); c.scale(.92, 1.03);
-    c.globalAlpha = .15;
+    c.globalAlpha = .19;
     c.fillRect(-32, -24, 64, 48);
     c.restore();
   }

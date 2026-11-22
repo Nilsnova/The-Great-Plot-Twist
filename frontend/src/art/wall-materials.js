@@ -42,6 +42,15 @@ export function applyWallMaterials(id, canvas) {
       pixels[i + 2] += brass * (21 + 12 * light);
     }
 
+    if (tier === 2 || tier === 3) {
+      // Bring pink highlights into the same pale limestone as the gun and house plinths.
+      // The luma of the source still carries mortar, damage, and the individual joints.
+      const stone = (surface ? .44 : .31) * smooth((luma - 38) / 84) * (1 - warm * .5);
+      pixels[i] += stone * (luma + 7 - red);
+      pixels[i + 1] += stone * (luma + 4 - green);
+      pixels[i + 2] += stone * (luma - 4 - blue);
+    }
+
     if (surface && (tier < 4 || !horizontal)) {
       // Cobalt in the highest course belongs to the pennants. Ash-blue stone bonds to the corner posts.
       const dye = tier === 5 ? .64 * smooth((blue - red - 5) / 50) : 0;

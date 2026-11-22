@@ -29,6 +29,16 @@ const smooth = value => {
   return t * t * (3 - 2 * t);
 };
 
+// Landing mouths retain bright sand. Away from them, the little strips of
+// sand at the foot of a terrace read as deposits between rocks.
+export function beachExposure(sample, count) {
+  return Math.max(...BEACH_MOUTHS.map(([centre, span]) => {
+    const distance = Math.abs(sample - centre);
+    const arc = Math.min(distance, count - distance);
+    return smooth((span * .5 + 4.5 - arc) / 5.5);
+  }));
+}
+
 function coastalPoint(rim, sample, scale) {
   const count = rim.length - 1;
   const wrapped = (sample + count) % count;
@@ -59,7 +69,7 @@ function drawShelf(c, rim, from, to, reach, seed, rockSheet, materials, openingA
     const mouth = openingAtStart ? u : 1 - u;
     return smooth(mouth / .27) * smooth((1 - mouth) / .18);
   };
-  const close = u => .994 - .004 * (.5 + .5 * Math.sin(u * 18 + seed));
+  const close = u => .997 - .004 * (.5 + .5 * Math.sin(u * 18 + seed));
   const inward = (u, v) => {
     const mouth = openingAtStart ? u : 1 - u;
     const taper = exposure(u) * (1 - .41 * mouth * mouth);
@@ -70,16 +80,16 @@ function drawShelf(c, rim, from, to, reach, seed, rockSheet, materials, openingA
   const bank = Math.ceil(length * 2);
   const line = Array.from({length: bank + 1}, (_, i) => point(i / bank, 1));
   const shelf = poly([...line, ...Array.from({length:bank + 1}, (_, i) => point(1 - i / bank, .03))], .068);
-  // Sand accumulates around the exposed joints. A few overlapping pools colour the contact
-  // strip with no sharp dark line on the inland side of the faceted part.
+  // Short shadows at exposed joints tuck the pale sand beneath the stone faces.
+  // They soften towards the open beach and never extend the painted shore.
   for (let i = 1; i < bank; i++) {
     const u = i / bank, amount = exposure(u);
     if (amount < .04) continue;
     const [x, y] = point(u, .13);
     const angle = Math.atan2(y, x) + Math.PI / 2;
-    c.save(); c.translate(x, y); c.rotate(angle); c.scale(.50 + amount * .40, .28 + amount * .37);
+    c.save(); c.translate(x, y); c.rotate(angle); c.scale(.54 + amount * .54, .23 + amount * .36);
     c.globalAlpha *= amount;
-    c.fillStyle = radial(c, 0, 0, 1, [[0, '#816c4b75'], [.45, '#a0805452'], [1, '#ad895c00']]);
+    c.fillStyle = radial(c, 0, 0, 1, [[0, '#4c4631b6'], [.35, '#7158378a'], [.67, '#a0815544'], [1, '#ae8c6200']]);
     c.fill(ellipse(0, 0, 1));
     c.restore();
   }
@@ -89,7 +99,7 @@ function drawShelf(c, rim, from, to, reach, seed, rockSheet, materials, openingA
   let u = 0;
   for (let index = 0; u < .999; index++) {
     const drift = Math.sin(seed + index * 2.47);
-    const width = (1.52 + 1.68 * (.5 + .5 * drift) + .43 * Math.cos(seed + index * 4.19)) / length;
+    const width = (1.15 + 1.41 * (.5 + .5 * drift) + .34 * Math.cos(seed + index * 4.19)) / length;
     const end = Math.min(1, u + width);
     const at = (x, y) => point(u + (end - u) * x, y);
     const pigment = STONE[(index + Math.floor(seed)) % STONE.length];
@@ -101,15 +111,15 @@ function drawShelf(c, rim, from, to, reach, seed, rockSheet, materials, openingA
     const boundary = poly(corners.map(([x, y]) => at(.027 + .94 * x, y)), .09);
     const facePoints = corners.map(([x, y]) => at(.078 + .85 * x, .086 + .81 * y));
     const face = poly(facePoints, .076);
-    const [top, middle, shade] = pigment.map(colour => mix(colour, SAND, .15 + .49 * (1 - exposed)));
+    const [top, middle, shade] = pigment.map(colour => mix(colour, SAND, .10 + .50 * (1 - exposed)));
     const [footX, footY] = at(.5, .03), [edgeX, edgeY] = at(.5, 1);
     const damp = mix(shade, WET_BED, .43 + exposed * .19);
     c.save();
     c.globalAlpha *= .34 + .66 * exposed;
     c.fillStyle = linear(c, footX, footY, edgeX, edgeY,
-      [[0, `${SAND}00`], [.29, `${middle}96`], [.54, mix(shade, ROOT_SOIL, .33)], [.81, damp], [1, damp]]);
+      [[0, `${SAND}00`], [.29, `${middle}a4`], [.53, mix(shade, ROOT_SOIL, .37)], [.84, damp], [1, damp]]);
     c.fill(boundary);
-    const faceCenter = mix(top, middle, .32 + .14 * drift);
+    const faceCenter = mix(top, middle, .28 + .17 * drift);
     c.fillStyle = linear(c, footX, footY, edgeX, edgeY,
       [[0, `${SAND}00`], [.27, `${top}bf`], [.51, top], [.69, faceCenter], [.89, middle], [1, mix(middle, damp, .36)]]);
     c.fill(face);
@@ -127,7 +137,7 @@ function drawShelf(c, rim, from, to, reach, seed, rockSheet, materials, openingA
       c.restore();
     }
     const split = .45 + drift * .21;
-    c.fillStyle = '#514e3c69';
+    c.fillStyle = '#514b3a80';
     c.fill(poly([at(split, .19), at(.97, .34), at(.93, .91), at(split + .05, .78)], .051));
     c.fillStyle = '#f7e2b972';
     c.fill(poly([at(.12, .42), at(.23, .21), at(.65, .16), at(.88, .29), at(split + .08, .39)], .049));
@@ -136,7 +146,7 @@ function drawShelf(c, rim, from, to, reach, seed, rockSheet, materials, openingA
     c.fillStyle = '#565e4d58';
     c.fill(poly([at(.13, wetLine), at(.48, wetLine - .12), at(.89, wetLine + .02),
       at(.83, .96), at(.23, .91)], .057));
-    stroke(c, [at(.08, .41), at(.29, .28), at(split, .23), at(.73, .27)], '#f5e4be69', .057, exposed);
+    stroke(c, [at(.08, .41), at(.29, .28), at(split, .23), at(.73, .27)], '#f9e5bc84', .067, exposed);
     if (drift < .35) stroke(c, [at(.34, .65), at(.48, .55), at(.81, .67)], '#75675055', .054, exposed);
     c.restore();
     c.restore();
@@ -144,17 +154,20 @@ function drawShelf(c, rim, from, to, reach, seed, rockSheet, materials, openingA
   }
   c.restore();
 
-  // A few low broken chips soften the inner transition from stone into the bright sand.
+  // The larger pieces lie against the rock. Finer chips lead into the dry sand,
+  // with space between clusters so the approach still reads as a beach.
   for (let chip = 0; chip < 11; chip++) {
-    const atMouth = .055 + chip * .071;
+    const drift = Math.sin(seed + chip * 1.69);
+    const atMouth = .085 + chip * .069 + drift * .036;
     const u = openingAtStart ? atMouth : 1 - atMouth;
-    const swirl = Math.sin(seed + chip * 2.4);
-    const [x, y] = point(u, -.04 - .34 * (.5 + .5 * swirl));
-    const size = .057 + (.16 + atMouth * .18) * (.5 + .5 * Math.cos(seed + chip * 3.19));
+    const scatter = .5 + .5 * Math.sin(seed + chip * 2.4);
+    const [x, y] = point(u, -.05 - .38 * scatter);
+    const size = .06 + (.17 + atMouth * .22) * (.5 + .5 * Math.cos(seed + chip * 3.19)) * (1 - .44 * scatter);
     const tilt = Math.atan2(y, x) + Math.PI / 2;
-    c.fillStyle = '#9e825975';
-    c.fill(ellipse(x + .04, y + .052, size, size * .51, tilt));
-    c.fillStyle = linear(c, x - .11, y - .13, x + .08, y + .12, [[0, '#dac6a0'], [1, '#a78e69']]);
+    c.fillStyle = '#755d4679';
+    c.fill(ellipse(x + .06, y + .07, size * 1.16, size * .62, tilt));
+    c.fillStyle = linear(c, x - size * .55, y - size * .48, x + size * .38, y + size * .57,
+      [[0, '#e2cea4'], [.44, '#c7ac85'], [1, '#927455']]);
     c.fill(poly([[x - size, y], [x - size * .28, y - size * .51], [x + size * .76, y - size * .23],
       [x + size * .94, y + size * .29], [x, y + size * .51]], .052));
   }

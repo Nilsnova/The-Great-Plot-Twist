@@ -503,9 +503,10 @@ function plusBadge(c, {w}) {
   c.save(); c.fillStyle = PLUS_CREAM; for (const bar of bars) c.fill(bar); c.restore();
 }
 function levelPip(c, {w, h}) {
-  const cx = w / 2, cy = h / 2, star = [];
-  for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? 2.6 : 5.6; star.push([cx + Math.cos(a) * r, cy + Math.sin(a) * r]); }
-  part(c, poly(star, .7), BRASS, {depth: 1, width: 1, gloss: ellipse(cx - 1.2, cy - 1.6, 1.4, .8), light: '#fff1b8'});
+  const cx = w / 2, cy = h / 2, star = starPath(cx, cy, 5.7, 2.6);
+  const gold = linear(c, cx - 2, cy - 5, cx + 2, cy + 5, [[0, '#fff0af'], [.46, '#f5c85d'], [1, '#bd7427']]);
+  part(c, star, gold, {line: '#51311e', width: .94, shade: '#9d5c23', depth: .9});
+  part(c, poly([[cx, cy - 4.5], [cx + .5, cy + .1], [cx - 3.7, cy - 1.3]], .2), '#ffe9a1', {line: false, shade: false});
 }
 // The star of levels 4 and 5: brighter gold on a teal disc with a gold ring, so a tier tower reads at a glance.
 function tierPip(c, {w, h}) {

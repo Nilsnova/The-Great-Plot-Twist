@@ -47,7 +47,7 @@ const mask = /* glsl */`
 
 // A material is owned by the place and can still be shared by every instance of that artwork.
 // The model origin seeds each sprite independently without per-building textures or draw calls.
-export function animateLandmarkMaterial(material, {pennant, bell, smoke, sweep, metal, lights = [], lightStrength = 1} = {}) {
+export function animateLandmarkMaterial(material, {pennant, bell, smoke, sweep, metal, lights = [], lightStrength = 1, nightStrength = .12} = {}) {
   const uniforms = {uLandmarkClock: {value: 0}, uLandmarkWind: {value: 0}, uLandmarkRing: {value: 0},
     uLandmarkLight: {value: 0}, uLandmarkFlicker: {value: 0}};
   if (pennant) uniforms.uLandmarkPennant = {value: pennant};
@@ -159,7 +159,7 @@ export function animateLandmarkMaterial(material, {pennant, bell, smoke, sweep, 
       uniforms.uLandmarkClock.value = still ? 0 : time;
       uniforms.uLandmarkWind.value = still ? 0 : .005 + .012 * wind;
       uniforms.uLandmarkRing.value = still ? 0 : ring;
-      uniforms.uLandmarkLight.value = .12 * night;
+      uniforms.uLandmarkLight.value = nightStrength * night;
       uniforms.uLandmarkFlicker.value = still ? 0 : (.08 + .09 * night) * lightStrength;
     },
   };

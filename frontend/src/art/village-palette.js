@@ -21,16 +21,18 @@ function paintPalette(pixels, weapon) {
     const chroma = Math.max(red, green, blue) - Math.min(red, green, blue);
     const metal = 1 - unit((chroma - 2) / 35);
     const reflected = metal * unit((149 - luma) / 112) * unit((luma - 7) / 30);
+    const brass = bend((red - green - 18) / 38) * bend((green - blue - 34) / 67)
+      * bend((luma - 98) / 96);
     // Keep the cast barrels distinct from the warm carriage and the limestone below.
     const position = weapon ? i / pixels.length : 0;
     const barrel = weapon ? 1 - bend((position - .50) / .24) : 0;
     const steel = barrel * (1 - bend((chroma - 5) / 49)) * bend((luma - 18) / 41) * bend((210 - luma) / 72);
     const edge = steel * bend((luma - 89) / 83);
     const barrelShade = steel * (1 - bend((luma - 49) / 94));
-    // The bright curl is the turning edge of the cylinder. Leave its belly matte and cool.
-    pixels[i] = red - 2 * glaze + 13 * timber * timberLight - 3 * reflected - 13 * steel + 18 * edge - 9 * barrelShade;
-    pixels[i + 1] = green + 12 * glaze + 7 * timber * timberLight + 3 * reflected + 6 * steel + 15 * edge - 12 * barrelShade;
-    pixels[i + 2] = blue + 17 * glaze - 4 * timber * timberLight + 7 * reflected + 27 * steel + 10 * edge - 14 * barrelShade;
+    // The light edge follows the painted iron bands. Brass catches a warmer light than the timber.
+    pixels[i] = red - 2 * glaze + 9 * timber * timberLight - 3 * reflected - 13 * steel + 20 * edge - 9 * barrelShade + 2 * brass;
+    pixels[i + 1] = green + 12 * glaze + 7 * timber * timberLight + 3 * reflected + 6 * steel + 17 * edge - 12 * barrelShade + 17 * brass;
+    pixels[i + 2] = blue + 17 * glaze - 2 * timber * timberLight + 7 * reflected + 27 * steel + 11 * edge - 14 * barrelShade + 4 * brass;
   }
 }
 
@@ -89,17 +91,21 @@ function lightLandmark(pixels, width, height, heart) {
       const grain = samplesInside ? (2 * luma - tones[fromSun] - tones[awayFromSun]) / 510 : 0;
       const edge = relief * (.93 * roof + .70 * stone + .47 * varnish);
       const texture = grain * (.54 * roof + .74 * stone + .53 * varnish);
-      const tileLight = .23 * sunwardRoof - .30 * leeRoof - .10 * shade;
+      const tileLight = .29 * sunwardRoof - .24 * leeRoof - .08 * shade;
       const recess = varnish * eave * (1 - bend((luma - 57) / 104));
       const faceLight = (.18 - .12 * roof) * key - (.13 + .089 * stone) * shade - .32 * recess - .42 * reveal * varnish;
       const exposure = 1 + coverage * (roof * tileLight + faceLight + edge + texture);
       const plaster = key * stone;
-      const slate = roof * sunwardRoof * (.65 + .35 * bend((luma - 39) / 117));
+      const slate = roof * sunwardRoof * (.55 + .45 * bend((luma - 39) / 117));
       const amber = varnish * bend((red - green - 26) / 51);
       const timberRim = varnish * key * bend((luma - 92) / 92);
-      pixels[i] = red * exposure + coverage * (7 * key + 19 * plaster + 19 * slate + 12 * timberRim - 4 * shade - 7 * amber);
-      pixels[i + 1] = green * exposure + coverage * (4 * key + 14 * plaster + 17 * slate + 6 * timberRim + 3 * shade + 6 * amber);
-      pixels[i + 2] = blue * exposure + coverage * (8 * plaster + 9 * slate + 8 * roof * leeRoof + 9 * shade + 16 * amber);
+      // The lighter stone at the foot is distinguished from weathered timber above it.
+      const chroma = Math.max(red, green, blue) - Math.min(red, green, blue);
+      const plinth = stone * bend((down - .58) / .24) * (1 - bend((chroma - 15) / 59));
+      const footLight = plinth * bend((luma - 38) / 117);
+      pixels[i] = red * exposure + coverage * (7 * key + 19 * plaster + 17 * slate + 10 * timberRim - 4 * shade - 7 * amber + 22 * footLight);
+      pixels[i + 1] = green * exposure + coverage * (4 * key + 14 * plaster + 20 * slate + 7 * timberRim + 3 * shade + 6 * amber + 16 * footLight);
+      pixels[i + 2] = blue * exposure + coverage * (8 * plaster + 15 * slate + 8 * roof * leeRoof + 9 * shade + 12 * amber + 8 * footLight);
     }
   }
 }

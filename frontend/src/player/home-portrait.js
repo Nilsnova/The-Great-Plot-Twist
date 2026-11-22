@@ -5,12 +5,13 @@ import {projectedCoastBounds} from '../world/projection.js';
 const shore = projectedCoastBounds(cliffProfile(surfaces.home_islet));
 // Allow room for the raised shoreline, landmarks and pier beyond the playable surface.
 const ISLAND_HEIGHT = shore.maxY - shore.minY + 5;
-const MAX_PORTRAIT_DEPTH = 2.35;
+const MAX_PORTRAIT_DEPTH = 2.55;
 const SHORE_MARGIN = 5;
 
 export function usesPortraitVillage(viewport) {
+  // Include short phone viewports that still use the compact village controls.
   return Number.isFinite(viewport?.width) && Number.isFinite(viewport?.height)
-    && viewport.width > SHORE_MARGIN * 2 && viewport.height > 0 && viewport.width / viewport.height < .72;
+    && viewport.width > SHORE_MARGIN * 2 && viewport.height > 0 && viewport.width / viewport.height < .8;
 }
 
 export function portraitIslandFrame(camera, viewport) {

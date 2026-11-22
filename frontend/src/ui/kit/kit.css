@@ -7,6 +7,12 @@
   --u-quiet-surface:linear-gradient(155deg,#36717a,#225662 45%,#16414d 83%,#133743);
   --u-paper-surface:radial-gradient(120% 150% at 7% -15%,#fff6d6,transparent 65%),linear-gradient(155deg,#faebc5,#efd7a6);
   --u-action-surface:linear-gradient(#fff0b8,#ffd97c 48%,#ffc35c 62%,#efab42);
+  --u-enamel-surface:radial-gradient(120% 95% at 15% -35%,#5ba6ac7a,transparent 80%),linear-gradient(164deg,#174d58,#10313c 48%,#082733);
+  --u-enamel-hover:linear-gradient(150deg,#2d6f77,#184c58 56%,#123846);
+  --u-brass-surface:linear-gradient(154deg,#ffeab0,#d39a4f 36%,#8d572d 68%,#e0b670);
+  --u-brass-bevel:inset 0 1px 0 #fff1b69c,inset 0 -2px 0 #6d3f2499,0 0 0 1px #4c301c,0 3px 0 #352819,0 7px 17px #0b263662;
+  --u-enamel-bevel:inset 0 1px 0 #b7f0e866,inset 0 -2px 0 #031923b3,0 0 0 1px #071c24,0 2px 0 #071c24;
+  --u-hud-brass-bevel:inset 0 1px 0 #b3ddd772,inset 0 -2px 0 #041821a6,0 0 0 2px #e9bc6c,0 0 0 3px #6b4129,0 3px 0 4px #061c23a6,0 7px 13px #031d2e66;
 }
 .kit-modal,.kit-toast{font:18px/1.55 var(--u-font);box-sizing:border-box;color:var(--u-ink)}
 .kit-modal{background:linear-gradient(#1b4a52,var(--u-sea) 42%) var(--u-sea);border:0;border-radius:var(--u-radius);padding:0 22px 22px;width:min(900px,calc(100vw - 40px));max-height:calc(100dvh - 40px);overflow:auto;box-shadow:0 0 0 3px var(--u-brass),0 0 0 6px #081f25d9,0 14px 40px #020c10a6,0 4px 10px #0206}
