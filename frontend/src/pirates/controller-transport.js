@@ -77,9 +77,11 @@ export function createTransport(ctl) {
       const signature = vector ? canonicalJson(vector) : null;
       if (signature && signature !== current.recoveryHealthPersistedSignature) void checkpointBeforeRepair({ force: false }).catch(error => console.error(error));
     }
-    if(current.info.nativeShared && ctl.controls(current) && !current.done && !current.recoveryPolling && current.recoveryReplay.complete()
+    if(current.info.nativeShared && ctl.controls(current) && !current.done && !current.recoveryInvalid && !current.captainSyncPromise
+      && current.recoveryReplay.canAdvanceThrough(current.recoveryDriver.nextTick-1)
       && typeof recoveryTransport.captains==='function' && at-(current.captainLastSyncAt??-Infinity)>=HEALTH_CHECKPOINT_COALESCE_MS){
-      current.captainLastSyncAt=at;void syncCaptains();
+      // Report the Captain state already played. Advancing to the newest seal here skips the playout buffer.
+      current.captainLastSyncAt=at;void syncCaptains({refresh:false});
     }
     reconcileTerminalRecovery(current);
     tryRecoveryFinish(current);
