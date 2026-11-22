@@ -140,6 +140,8 @@ function drawn(name) {
 }
 // How near (world units) the captain stands for a build marker to glow at full strength; farther ones fade to MARKER_FAR.
 export const MARKER_NEAR = 9, MARKER_FAR = .4;
+// How long a built spot waits for its real art before the drawn stand-in shows (a slow or failed load).
+export const STANDIN_DELAY_MS = 2500;
 function sprite(group, {texture, size: [width, height], anchor = 0}, x, z, name) {
   const material = spriteMaterial(texture);
   const geometry = new THREE.PlaneGeometry(width / UNIT, height / UNIT); geometry.translate(0, (height / 2 - anchor) / UNIT, 0);
@@ -368,6 +370,12 @@ export function decorateIsland(place, ctx = {}) {
   let recoveryState = null, recoveryStateKey = 'null';
   // The real art once it has loaded (null until then: the drawn sprites stand in), and what each spot shows.
   let art = null;
+  // The drawn stand-ins are the old flat cartoon. On a normal load the real art arrives within a moment, so a
+  // built spot stays empty that long instead of flashing the old cannon first (playtest 22 Nov). Only a slow
+  // or failed load shows the stand-ins, so the island never looks unbuilt for long.
+  const standinDelay = Number.isFinite(ctx.standinDelayMs) ? Math.max(0, ctx.standinDelayMs) : STANDIN_DELAY_MS;
+  let standinsDue = standinDelay === 0, standinTimer = null;
+  function allowStandins() { if (standinsDue) return; standinsDue = true; clearTimeout(standinTimer); if (!disposed && !art) apply(state); }
   const shown = new Map(); // spot id (or 'crew') -> {key, meshes}
   const clear = id => { const item = shown.get(id); if (!item) return; for (const mesh of item.meshes) { root.remove(mesh); mesh.geometry.dispose(); } shown.delete(id); };
   const releaseStandin = mesh => {
@@ -501,7 +509,7 @@ export function decorateIsland(place, ctx = {}) {
       const open = (!unlocks || kindsOf(spot).some(kind => (unlocks.levels?.[kind] ?? 0) >= 1)) && !spotLocked(spot, campaign);
       const hidden = battle && BATTLE_KINDS.includes(answer?.kind ?? spot.kind);
       for (const kind of kindsOf(spot)) {
-        buildings.get(`${spot.id}:${kind}`).visible = !art && built && (answer.kind === kind || (kindsOf(spot).length === 1))
+        buildings.get(`${spot.id}:${kind}`).visible = !art && standinsDue && built && (answer.kind === kind || (kindsOf(spot).length === 1))
           && !(battle && BATTLE_KINDS.includes(kind)) && !(kind === 'wall' && wallConnections.hasPost(spot.id));
         if (kind === 'wall') buildings.get(`${spot.id}:${kind}`).scale.x = joinedWalls.has(spot.id) ? .62 : 1;
       }
@@ -531,7 +539,8 @@ export function decorateIsland(place, ctx = {}) {
   function retryArt() {
     if (disposed || art) return Promise.resolve();
     return tasks.run('buildings', async () => {
-      const loaded = await (ctx.loadArt ?? loadArt)(wanted);
+      let loaded;
+      try { loaded = await (ctx.loadArt ?? loadArt)(wanted); } catch (error) { allowStandins(); throw error; }
       if (disposed) { Object.values(loaded).forEach(material => { material.map?.dispose(); material.dispose(); }); return; }
       art = loaded;
       // A frame can be shared by many slots. Retire its map after the last stand-in leaves the scene.
@@ -544,6 +553,7 @@ export function decorateIsland(place, ctx = {}) {
       apply(state);
     });
   }
+  if (!standinsDue) standinTimer = setTimeout(allowStandins, standinDelay);
   retryArt();
 
   let wallArtReady = false;
@@ -753,7 +763,7 @@ export function decorateIsland(place, ctx = {}) {
     get wallJoins() { return wallConnections.links; },
     retryWallArt,
     dispose() {
-      if (disposed) return; disposed = true; cleanups.splice(0).forEach(stop => stop());
+      if (disposed) return; disposed = true; clearTimeout(standinTimer); cleanups.splice(0).forEach(stop => stop());
       if (homeWalls) delete place.group.userData.homeVillageLights;
       tasks.dispose(); notice.dispose(); staticArt.dispose();
       progress?.dispose(); recoveryIndicators.dispose(); foundations?.dispose(); landmarkMotion.clear();
