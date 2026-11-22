@@ -78,6 +78,18 @@ describe('movement safety', () => {
     expect(overlapsCollider(1, 0, { x: 0, z: 0, radius: 0.8 })).toBe(true);
     expect(overlapsCollider(2, 0, { x: 0, z: 0, radius: 0.8 })).toBe(false);
   });
+  it('lets the captain leave a newly occupied footprint without walking farther inside', () => {
+    const house = { x: 0, z: 0, width: 2.3, depth: 1.6, walkOut: true };
+    const dry = () => 1.5;
+    const start = { x: 0, z: .5 };
+    expect(canStand(start.x, start.z, [house], dry)).toBe(false);
+    expect(moveWithCollisions(start, 0, -.4, [house], dry).z).toBe(start.z);
+    const outside = moveWithCollisions(start, 0, 1, [house], dry);
+    expect(canStand(outside.x, outside.z, [house], dry)).toBe(true);
+    const returning = moveWithCollisions(outside, 0, -3, [house], dry);
+    expect(returning.z).toBeGreaterThan(1.1);
+    expect(canStand(returning.x, returning.z, [house], dry)).toBe(true);
+  });
   it('never lets a long run reach the open sea', () => {
     const result = moveWithCollisions({ x: 0, z: 0 }, 35, 35, []);
     expect(canStand(result.x, result.z)).toBe(true);
