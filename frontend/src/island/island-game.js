@@ -15,7 +15,7 @@ export function createGames(isl) {
   const {container, emit, reducedMotion, preferences, storage, visitStorage, loadCutscenes} = isl;
   // From the other parts (island-*.js), linked once every part exists.
   let campaignSeen, campaignTold, where, applyWorld, endVisit, load, interruptBoat, refreshCard,
-    invalidateWallFeedback;
+    invalidatePurchaseFeedback;
   // --- the game: its lobby and room state ----------------------------------------------------------
   const currentCode = () => islandCode(isl.visiting?.code ?? isl.visitCode ?? isl.own?.code ?? '');
   const canonical=()=>isl.mode!=='fake' && !readLegacyEconomy(isl.getEconomy?.());
@@ -135,7 +135,7 @@ export function createGames(isl) {
     isl.wrote('own');
     isl.funding.forget(isl.own?.code);
     if(shared){isl.own={...isl.own,economy:null,quotesStale:true};isl.tellCoins();}
-    invalidateWallFeedback();
+    invalidatePurchaseFeedback();
     const code = islandCode(isl.own?.code ?? '') || islandCode(typed);
     // This page's memory of the old island goes too: its campaign, walls and tree picks.
     campaignSeen.delete(code);
@@ -182,7 +182,7 @@ export function createGames(isl) {
     interruptBoat();
     isl.village.leave();
     isl.reportVisitGeneration++;
-    invalidateWallFeedback();
+    invalidatePurchaseFeedback();
     isl.selectionGeneration++; isl.loadTicket++;
     isl.moving.cancel(); isl.demolishSpot = null; isl.demolishQuote = null;
     isl.visitCode = symbols; isl.visiting = null; isl.flow.reset(); isl.ui.close();
@@ -217,7 +217,7 @@ export function createGames(isl) {
   }
   function link() { // the names of the other parts, once every part exists (index.js)
     ({campaignSeen, campaignTold, where, applyWorld, endVisit, load, interruptBoat, refreshCard,
-      invalidateWallFeedback} = isl);
+      invalidatePurchaseFeedback} = isl);
   }
   return {currentCode, syncGame, wantSync, lobby, colours, colourOf, captainColour, startGame, openLobby, setPresence,
     resetState, resetIsland, bellAction, playArrival, visit, leaveGame, enterGame, sailHome, link};

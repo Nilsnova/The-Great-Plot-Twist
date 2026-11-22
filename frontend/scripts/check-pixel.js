@@ -10,6 +10,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import assert from 'node:assert/strict';
 import { pixelArt, pixelArtIds } from '../src/pixel/catalog.js';
 import { layouts } from '../src/world/places/layouts.js';
+import { unshipped } from './unshipped-art.js';
 // The game opens in Saltreach Harbor (D031), not the Lighthouse: the harbor layout and its window-glow layer are
 // staged 'library' art that is active at start. Anything outside the Lighthouse kit plus that layout still fails.
 const startArtIds = [...pixelArtIds, ...layouts.saltreach_harbor.map(item => item.asset), 'harbour-office-glow'];
@@ -19,7 +20,14 @@ const production = process.env.ART_PRODUCTION === '1', url = 'http://127.0.0.1:5
 const server = spawn(process.execPath, ['node_modules/vite/bin/vite.js', ...(production ? ['preview'] : []), '--host', '127.0.0.1', '--port', '5176', '--strictPort'], { stdio: 'pipe' });
 const stamp = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' }).replaceAll('-', '');
 const backgroundIds = ['saltreach_harbor','home_islet','smugglers_cove','wreck_point','the_teeth','gulls_rest','chart','chart-relit','title'];
-const report = { checked: new Date().toISOString(), checks: [], files: pixelArt.length + 10 }, errors = [], external = [];
+const pixelFiles = [
+  ...pixelArt,
+  { id: 'ground', file: 'ground.png', width: 1024, height: 768 },
+  ...backgroundIds.map(id => ({ id, file: `${id}.png`, folder: 'places',
+    width: id === 'title' ? 480 : id.startsWith('chart') ? 448 : 1024,
+    height: id === 'title' ? 300 : id.startsWith('chart') ? 256 : 768 })),
+].filter(({ file, folder = 'pixel' }) => !production || !unshipped(`${folder}/${file}`));
+const report = { checked: new Date().toISOString(), checks: [], files: pixelFiles.length }, errors = [], external = [];
 const check = (value, label) => { assert.ok(value, label); report.checks.push(label); };
 let browser;
 try {
@@ -41,7 +49,11 @@ try {
   await page.goto(`${url}/asset-library.html`);
   await page.evaluate(async items => {
     for (const item of items) {
-      const image = new Image(); image.src = `./${item.folder || 'pixel'}/${item.file}`; await image.decode();
+      const image = new Image();
+      const path = `./${item.folder || 'pixel'}/${item.file}`;
+      image.src = path;
+      try { await image.decode(); }
+      catch (error) { throw new Error(`Cannot decode ${path}: ${error.message}`); }
       if (image.naturalWidth !== item.width || image.naturalHeight !== item.height) throw new Error(`Wrong native dimensions: ${item.id}`);
       const canvas = document.createElement('canvas'); canvas.width = item.width; canvas.height = item.height;
       const context = canvas.getContext('2d'); context.drawImage(image, 0, 0);
@@ -52,8 +64,8 @@ try {
         if (centre !== 255 || pixels[3] !== 0) throw new Error('Ground land/sea alpha mask is wrong');
       }
     }
-  }, [...pixelArt, { id:'ground', file:'ground.png', width:1024, height:768 }, ...backgroundIds.map(id => ({ id, file:`${id}.png`, folder:'places', width:id==='title'?480:id.startsWith('chart')?448:1024,height:id==='title'?300:id.startsWith('chart')?256:768 }))]);
-  check(true, `${pixelArt.length + 10} PNGs decode at their exact native sizes with visible pixels`);
+  }, pixelFiles);
+  check(true, `${pixelFiles.length} PNGs decode at their exact native sizes with visible pixels`);
   await page.locator('#search').fill('explorer side');
   check(await page.locator('.sprite-card').count() === 3, 'Search finds the side-facing animation family');
   await page.locator('.sprite-card').first().click();

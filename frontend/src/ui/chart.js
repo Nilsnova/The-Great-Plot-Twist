@@ -6,27 +6,36 @@ export function createChart(container, world, travel, focusGame, {visible = () =
   dialog.setAttribute('aria-labelledby', 'chart-title');
   dialog.innerHTML = `<header><div><small>COASTAL SURVEY</small><h2 id="chart-title">The Saltreach Isles</h2></div>
     <button class="chart-close" aria-label="Close sea chart">×</button></header>
-    <div class="chart-scroll"><div class="chart-map"><img alt="Pixel sea chart with marked routes and a northern fog bank" src="${import.meta.env.BASE_URL}places/chart.png">
-    ${placeIds.map(id => `<button data-place="${id}"><i aria-hidden="true"></i><span></span></button>`).join('')}</div></div>
-    <footer><p class="chart-status" role="status">Choose a landing.</p><label><input type="checkbox" class="fast-travel"> Fast travel</label></footer>
+    <div class="chart-scroll"><div class="chart-map">
+      <div class="chart-illustration"><img alt="Pixel sea chart with marked routes and a northern fog bank" src="${import.meta.env.BASE_URL}places/chart.png">
+        <span class="chart-current-marker" aria-hidden="true" hidden></span></div>
+      <div class="chart-destinations">${placeIds.map(id => `<button data-place="${id}"><i aria-hidden="true"></i><span></span></button>`).join('')}</div>
+    </div></div>
+    <footer class="chart-options"><p class="chart-status" role="status">Choose a landing.</p><label><input type="checkbox" class="fast-travel"> Fast travel</label></footer>
     <p class="chart-help">Tab or arrow keys to choose, Enter to sail, Esc to close</p>`;
   container.append(dialog);
   let stationBuilt=false;
-  const station=document.createElement('span');station.className='chart-station-marker';station.textContent='◆';station.setAttribute('role','img');station.setAttribute('aria-label','Built signal station');station.hidden=true;dialog.querySelector('.chart-map').append(station);
+  const station=document.createElement('span');station.className='chart-station-marker';station.textContent='◆';station.setAttribute('role','img');station.setAttribute('aria-label','Built signal station');station.hidden=true;dialog.querySelector('.chart-illustration').append(station);
+  const marker = dialog.querySelector('.chart-current-marker');
   const buttons = [...dialog.querySelectorAll('[data-place]')];
-  buttons.forEach(button => {
-    const place = places[button.dataset.place];
-    button.style.left = `${place.chart[0] / 448 * 100}%`;
-    button.style.top = `${place.chart[1] / 256 * 100}%`;
-  });
+  const currentDestination = () => buttons.find(button => !button.hidden && button.getAttribute('aria-current') === 'true');
+  function positionOnChart(element, id) {
+    const [x, y] = places[id].chart;
+    element.style.left = `${x / 448 * 100}%`;
+    element.style.top = `${y / 256 * 100}%`;
+  }
+  buttons.forEach(button => positionOnChart(button, button.dataset.place));
   function close() { if (dialog.open) dialog.close(); focusGame(); }
   function refresh() {
     dialog.querySelector('img').src = `${import.meta.env.BASE_URL}places/chart.png`;
+    const current = world.current?.id;
+    marker.hidden = !places[current] || !visible(current);
+    if (!marker.hidden) positionOnChart(marker, current);
     buttons.forEach(button => {
       const id = button.dataset.place, open = world.canTravel(id), name = label(id) ?? places[id].name;
       button.hidden = !visible(id);
       button.setAttribute('aria-disabled', String(!open)); button.classList.toggle('locked', !open);
-      button.setAttribute('aria-current', String(world.current?.id === id));
+      button.setAttribute('aria-current', String(current === id));
       button.querySelector('span').textContent = open ? name : 'Uncharted islet';
       button.setAttribute('aria-label', `${open ? name : 'Uncharted islet'}${open ? '' : ', locked'}${id==='home_islet'&&stationBuilt?', signal station built':''}`);
     });
@@ -45,14 +54,19 @@ export function createChart(container, world, travel, focusGame, {visible = () =
     if (!['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp'].includes(event.code)) return;
     event.preventDefault(); event.stopPropagation();
     const direction = ['ArrowRight', 'ArrowDown'].includes(event.code) ? 1 : -1, shown = buttons.filter(button => !button.hidden);
-    shown[(shown.indexOf(document.activeElement) + direction + shown.length) % shown.length]?.focus();
+    const anchor = shown.includes(document.activeElement) ? document.activeElement : currentDestination();
+    const index = shown.indexOf(anchor);
+    const next = index < 0 ? (direction > 0 ? 0 : shown.length - 1) : (index + direction + shown.length) % shown.length;
+    shown[next]?.focus();
   });
   return {setIsletBuilt(built){stationBuilt=(built??[]).includes('islet_signal_station');station.hidden=!stationBuilt;if(dialog.open)refresh();}, get open() { return dialog.open; }, close,
     show() {
       if (world.busy || dialog.open) return;
       refresh(); const scale = Math.max(1, Math.floor(Math.min((innerWidth - 70) / 448, (innerHeight - 190) / 256)));
-      dialog.dataset.scale = String(scale); dialog.style.setProperty('--chart-scale', scale); dialog.showModal();
-      buttons.find(b => b.dataset.place === world.current?.id)?.focus();
+      dialog.dataset.scale = String(scale); dialog.style.setProperty('--chart-scale', scale);
+      const current = currentDestination();
+      for (const button of buttons) button.autofocus = button === current;
+      dialog.showModal();
     },
     dispose() { dialog.close(); dialog.remove(); },
   };

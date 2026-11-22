@@ -339,6 +339,47 @@ it('the sea chart shows only Your island, The Harbor and Pirate Point', async ()
   expect(result.all).toBe(6);
 });
 
+it('starts chart keyboard navigation at the visible current landing on every open', async () => {
+  const result = await evaluate(async () => {
+    const {createChart} = await window.g20Import('/src/ui/chart.js');
+    const world = {current: {id: 'home_islet'}, busy: false, canTravel: () => true};
+    const worldFocus = document.createElement('canvas');
+    worldFocus.tabIndex = 0;
+    document.body.append(worldFocus);
+    const visible = id => ['lighthouse_isle', 'saltreach_harbor', 'home_islet'].includes(id);
+    const chart = createChart(document.body, world, async () => {}, () => worldFocus.focus(), {visible});
+    const dialog = document.querySelector('.sea-chart');
+    const close = dialog.querySelector('.chart-close');
+    const focus = () => document.activeElement?.dataset.place;
+    const autofocus = () => [...dialog.querySelectorAll('[autofocus]')].map(button => button.dataset.place);
+    const arrow = code => document.activeElement.dispatchEvent(new KeyboardEvent('keydown', {code, bubbles: true, cancelable: true}));
+    chart.show();
+    const home = {focus: focus(), autofocus: autofocus()};
+    close.click();
+    const gameFocused = document.activeElement === worldFocus;
+    world.current = {id: 'saltreach_harbor'};
+    chart.show();
+    const harbor = {focus: focus(), autofocus: autofocus()};
+    close.focus();
+    arrow('ArrowRight');
+    const afterClose = focus();
+    chart.close();
+    world.current = {id: 'wreck_point'};
+    chart.show();
+    const hidden = autofocus();
+    close.focus();
+    arrow('ArrowLeft');
+    const afterHidden = focus();
+    chart.dispose();
+    return {home, harbor, gameFocused, afterClose, hidden, afterHidden};
+  });
+  expect(result).toEqual({
+    home: {focus: 'home_islet', autofocus: ['home_islet']},
+    harbor: {focus: 'saltreach_harbor', autofocus: ['saltreach_harbor']},
+    gameFocused: true, afterClose: 'home_islet', hidden: [], afterHidden: 'home_islet',
+  });
+});
+
 it('the Tech hub is a big tree card: tap a tile, one detail with one button, research a fork; building cards still dock (GAME-V3.md §5.1)', async () => {
   const result = await evaluate(async () => {
     const {createIsland} = await window.g20Import('/src/island/index.js');

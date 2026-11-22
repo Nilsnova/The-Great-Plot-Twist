@@ -3,6 +3,8 @@ import * as THREE from 'three';
 import { createFrameState } from './frame-state.js';
 import {createHarborLife} from '../ambient/harbor-life.js';
 import {HOME_LANTERN_LIGHT} from '../../art/home-shore.js';
+import {outpostArtwork} from '../../art/outpost-scenery.js';
+import {harborArtId} from '../../art/harbor-buildings.js';
 import {animateLandmarkMaterial} from '../../island/landmark-motion.js';
 import { loadArt, placeArt } from '../art.js';
 import { paintedBlob } from '../primitives.js';
@@ -29,13 +31,13 @@ export async function createSettlement(ctx) {
   const placements = [...(layouts[id] ?? []), ...(ctx.placements ?? [])];
   const home = id === 'home_islet', harbor = id === 'saltreach_harbor';
   function appearance(asset) {
-    if (home && Object.hasOwn(HOME_PROP_ART, asset)) return HOME_PROP_ART[asset];
-    return asset;
+    if (home) return Object.hasOwn(HOME_PROP_ART, asset) ? HOME_PROP_ART[asset] : asset;
+    return harbor ? harborArtId(asset) : outpostArtwork(asset);
   }
   const mooring = home ? homeMooring : [];
   const trees = edgeTrees[id] ?? [];
   const extraArtIds = [
-    ...(harbor ? ['harbour-office-glow'] : []),
+    ...(harbor ? [appearance('harbour-office-glow')] : []),
     ...(id === 'home_islet'
       ? ['shrub', 'home-broadleaf', 'build-plot', 'islet-empty-plot', 'islet-locked-sign', 'islet-signal-station', 'islet-signal-station-lit', 'cabin', 'workshop', 'windmill', 'greenhouse']
       : []),
@@ -73,6 +75,7 @@ export async function createSettlement(ctx) {
     placements.forEach(item => {
       const asset = appearance(item.asset);
       const mesh = placeArt(group, art, asset, item.x, item.z);
+      if (!home && asset !== item.asset) mesh.userData.asset = item.asset;
       if (asset === 'home-lantern') lanternLight ??= animateLandmarkMaterial(mesh.material, {lights: [HOME_LANTERN_LIGHT], lightStrength: 2});
       if (item.asset === 'ferry-pier') mesh.renderOrder = 6;
       if (item.asset === 'fog-bank') mesh.renderOrder = 920;
@@ -124,7 +127,8 @@ export async function createSettlement(ctx) {
     });
     let windowGlow, stormFlag;
     if (harbor) {
-      windowGlow = placeArt(group, art, 'harbour-office-glow', -8, 8.5);
+      windowGlow = placeArt(group, art, appearance('harbour-office-glow'), -8, 8.5);
+      windowGlow.userData.asset = 'harbour-office-glow';
       windowGlow.material = windowGlow.material.clone(); windowGlow.renderOrder = 922;
       stormFlag = createStormFlag(group);
     }

@@ -13,7 +13,7 @@ import { FRAMES, SHIP_VARIANTS, SHIP_SIZE, SHIP_DRAWN_SIZE, SHIP_DRAWN, WHITE, o
 
 // The arguments in this order (render.js passes them so; positional, so the minifier shortens them).
 export function createDraw(rect, layers, bands, posts, ships, crew, guards, splashes, wallFlash, K, still, low,
-  drawnX, drawnY, effects, spark, nativeCaptains = false, defenseView = () => null) {
+  drawnX, drawnY, effects, spark, nativeCaptains = false, defenseView = () => null, homeLanding = false) {
   // The renderer's clock and latest state as update() last set them (render.js calls sync() right after, every frame).
   let clock = 0, simNow = 0, latest = null, captain = null, revive = null, figures = null;
   function sync(now, simTime, state, own, helping, drawnAt) { clock = now; simNow = simTime; latest = state; captain = own; revive = helping; figures = drawnAt; }
@@ -89,10 +89,13 @@ export function createDraw(rect, layers, bands, posts, ships, crew, guards, spla
     let meta = crew.get(id);
     if (!meta) {
       let hash = 0; for (const char of id) hash = (hash * 31 + char.charCodeAt(0)) | 0;
-      meta = { phase: (hash >>> 0) % 991 / 991 * 2, flashUntil: -1, facing: 1 };
+      meta = { phase: (hash >>> 0) % 991 / 991 * 2, flashUntil: -1, landedAt: -1, facing: 1 };
       crew.set(id, meta);
     }
     return meta;
+  }
+  function recordBoarderLanding(id) {
+    if (homeLanding && typeof id === 'string') boarderMeta(id).landedAt = clock;
   }
   // A boarder: walking (frames 1-2), hacking (frames 1-3, the cutlass coming down), a hit flash, hp pips.
   function drawBoarder(boarder) {
@@ -105,7 +108,14 @@ export function createDraw(rect, layers, bands, posts, ships, crew, guards, spla
     if (!r) return;
     // A brute (wave 20+) is bigger and redder than the rest of the crowd.
     const big = boarder.brute ? BRUTE_LOOK.scale : 1, look = boarder.brute ? BRUTE_LOOK.tint : {};
-    layer.push(r, x, y, r.w * K() * big, r.h * K() * big, .5, r.anchor * K() * big, opt(1, look, meta.facing < 0, hit ? (rect[cartoon] ? .35 : .7) : 0));
+    const scale = K() * big;
+    const walking = homeLanding && !still() && !hit && boarder.state === 'walking';
+    // Draw the first step compressed around the shore pin, then settle into the usual stride.
+    const land = walking ? Math.max(0, 1 - (clock - meta.landedAt) / .23) : 0;
+    const lean = walking ? (-.042 + .135 * land) * meta.facing : 0;
+    const height = scale * (1 - .10 * land);
+    layer.push(r, x, y, r.w * scale, r.h * height, .5, r.anchor * height,
+      opt(1, look, meta.facing < 0, hit ? (rect[cartoon] ? .35 : .7) : 0, lean));
     if (boarder.hp < boarder.maxHp) {
       const top = y + (r.h - r.anchor) * K() - .35, w = .9, share = Math.max(0, boarder.hp / boarder.maxHp);
       layer.push(rect[WHITE], x - w / 2 - .0625, top - .0625, w + .125, .25, 0, 0, tinted(DARK, .8));
@@ -435,7 +445,7 @@ export function createDraw(rect, layers, bands, posts, ships, crew, guards, spla
     }
     if (!ball.hit) splashes.add(item => Object.assign(item, { x: ball.toX, z: ball.toZ, at: clock, big: false }));
   }
-  return { shipMeta, boarderMeta, militiaMeta, shooterAt, muzzleOf, drawShip, drawBoarder, drawMilitia, drawFallen,
+  return { shipMeta, boarderMeta, militiaMeta, recordBoarderLanding, shooterAt, muzzleOf, drawShip, drawBoarder, drawMilitia, drawFallen,
     drawBall, drawShell, drawBurst, drawBurning, drawTracer, drawJamShot, drawSweep, drawCaptain, drawParty,
     drawRecoveryHealthBar, drawHealthBar, land, sync };
 }

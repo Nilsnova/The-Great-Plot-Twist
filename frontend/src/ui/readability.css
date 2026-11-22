@@ -5,7 +5,7 @@
 @media(max-width:700px){.masthead{align-items:flex-start;gap:10px}.chapter{font-size:16px;max-width:160px;line-height:1.4}.arrival{width:calc(100vw - 28px);max-width:340px;top:110px}.location{top:110px}.controls,.conditions{font-size:16px;padding:8px;gap:8px}.sea-chart h2{font-size:22px}.chart-map button{font-size:16px}.chart-map button span{max-width:150px}.sea-chart footer{align-items:flex-start;gap:10px;flex-direction:column}.sea-chart small,.chart-help{font-size:16px}.debug{max-width:calc(100vw - 28px)}.interact{bottom:100px}.sailing canvas{width:320px;height:180px}.sailing{padding:14px}}
 
 /* At native chart size, stagger long labels without shrinking their text. */
-.sea-chart[data-scale="1"] [data-place=lighthouse_isle] span,.sea-chart[data-scale="1"] [data-place=wreck_point] span{transform:translateY(20px)}
+@media(min-width:601px){.sea-chart[data-scale="1"] [data-place=lighthouse_isle] span,.sea-chart[data-scale="1"] [data-place=wreck_point] span{transform:translateY(20px)}}
 
 /* Keep live conditions compact; data attribution lives in Settings → Credits. */
 .conditions{flex-wrap:wrap;max-width:500px}.interact{bottom:160px}.debug{bottom:160px}
