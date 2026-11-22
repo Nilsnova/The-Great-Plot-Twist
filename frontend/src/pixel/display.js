@@ -5,8 +5,9 @@ const WARMUP_MS=1500,WINDOW_MS=2000,MIN_FRAMES=16,TARGET_MS=31,SLOW_MS=38,FAST_M
 // A screen that can show 60 frames (some gaps near 16.7 ms) but keeps missing it hitches between 60 and 30,
 // which reads as lag although the average looks fine (playtest 22 Nov: the deeper Home Island terraces put an
 // M1 MacBook Air just over 16.7 ms at full Retina). Such a screen gives up a little density, in small steps
-// and never below HITCH_FLOOR (on a 2x Retina screen still more than one drawn pixel per screen point); deeper cuts stay with the slow rule above. A 30 Hz cap (low power) never counts.
-const SMOOTH_GAP_MS=20,HITCH_MS=19.5,HITCH_FAST_MS=17.4,HITCH_FLOOR=.65,HITCH_TARGET_MS=16.7,HITCH_HOLD_MS=60000;
+// and never below HITCH_FLOOR. Require one in five intervals to show this cadence so jitter on a
+// steady 30 or 50 Hz display does not count. Deeper cuts stay with the slow rule above.
+const SMOOTH_GAP_MS=18.5,MIN_SMOOTH_SHARE=.2,HITCH_MS=19.5,HITCH_FAST_MS=17.4,HITCH_FLOOR=.65,HITCH_TARGET_MS=16.7,HITCH_HOLD_MS=60000;
 const size = value => Number.isFinite(value) ? Math.max(1, Math.floor(value)) : 1;
 
 export function pixelViewport(width, height, {quality = 'high', pixelRatio = 1, densityScale = 1} = {}) {
@@ -28,9 +29,9 @@ export function worldViewport(width, height, viewHeight = 20, minWidth = 16) {
 
 // Only sustained active drawing frames count. A pause keeps density but discards stale timing.
 export function createFrameBudget() {
-  let scale=1,last=null,warmup=0,total=0,count=0,fast=0,shortest=Infinity,hitched=null;
-  function clearWindow(){total=0;count=0;shortest=Infinity;}
-  function reset({restoreDensity=false}={}){if(restoreDensity){scale=1;hitched=null;}last=null;warmup=0;fast=0;clearWindow();}
+  let scale=1,last=null,warmup=0,total=0,count=0,fast=0,smoothFrames=0,lastHitch=null;
+  function clearWindow(){total=0;count=0;smoothFrames=0;}
+  function reset({restoreDensity=false}={}){if(restoreDensity){scale=1;lastHitch=null;}last=null;warmup=0;fast=0;clearWindow();}
   return {
     get scale(){return scale;},reset,
     sample(now,active=true){
@@ -39,19 +40,23 @@ export function createFrameBudget() {
       if(gap<=0||gap>1000){warmup=0;fast=0;clearWindow();return false;}
       const delta=Math.min(gap,250);
       if(warmup<WARMUP_MS){warmup+=delta;return false;}
-      total+=delta;count++;shortest=Math.min(shortest,delta);
+      total+=delta;count++;if(delta<SMOOTH_GAP_MS)smoothFrames++;
       if(total<WINDOW_MS||count<MIN_FRAMES)return false;
-      const average=total/count,elapsed=total,smooth=shortest<SMOOTH_GAP_MS;clearWindow();
+      const average=total/count,elapsed=total,smooth=smoothFrames>=count*MIN_SMOOTH_SHARE;clearWindow();
       let next=scale;
       if(average>SLOW_MS){next=Math.max(.5,Math.round(scale*Math.sqrt(TARGET_MS/average)*.96*20)/20);fast=0;}
-      else if(smooth&&average>HITCH_MS&&scale>HITCH_FLOOR){
-        // GPU cost follows the pixel count: aim for one refresh, at least .05 and at most .1 per step.
-        const aim=Math.max(scale-.1,Math.min(scale-.05,scale*Math.sqrt(HITCH_TARGET_MS/average)));
-        hitched={at:now};next=Math.max(HITCH_FLOOR,Math.round(aim*20)/20);fast=0;}
+      else if(smooth&&average>HITCH_MS){
+        lastHitch=now;fast=0;
+        if(scale>HITCH_FLOOR){
+          // GPU cost follows the pixel count: aim for one refresh, at least .05 and at most .1 per step.
+          const aim=Math.max(scale-.1,Math.min(scale-.05,scale*Math.sqrt(HITCH_TARGET_MS/average)));
+          next=Math.max(HITCH_FLOOR,Math.round(aim*20)/20);
+        }
+      }
       else if(average<(smooth?HITCH_FAST_MS:FAST_MS)&&scale<1){
         fast+=elapsed;
         // Within a minute of a hitch, climbing back waits longer, so the density does not swing every 15 s.
-        const up=Math.min(1,Math.round((scale+.05)*20)/20),wait=hitched&&now-hitched.at<HITCH_HOLD_MS?HITCH_HOLD_MS:RECOVERY_MS;
+        const up=Math.min(1,Math.round((scale+.05)*20)/20),wait=lastHitch!==null&&now-lastHitch<HITCH_HOLD_MS?HITCH_HOLD_MS:RECOVERY_MS;
         if(fast>=wait){next=up;fast=0;}}
       else fast=0;
       if(next===scale)return false;

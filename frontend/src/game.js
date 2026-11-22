@@ -436,13 +436,13 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     const waveStatus=readHudWaveStatus({place:world.current?.id,ownBest:island?.ownWaveBest,visiting:island?.visiting,wave:displayedWave?.wave});
     hud.update(worldPrompt, { fps, calls: info.calls, triangles: info.triangles, night,interactionLabel,promptAt:worldPrompt?screenAt(worldPrompt):null,combatPrompt:inBattle&&!!interactionLabel,
       hint:farHint?{text:WALK_CLOSER,at:screenAt(farHint.id)}:null,managing:island?.managing===true&&!inBattle,waveStatus,speed,blocked:!active||outsideBlocked()||!!waves?.island.wave||!!waves?.point?.controller.wave }); tutorials?.update(delta); input.endFrame();
-  }, () => {
+  }, frameTime => {
     const draw=shell.mode!=='title';
     if(draw)homePortrait.draw(scene,()=>{
       world.current?.prepareMooringRender?.();
       graphics.renderer.render(scene,view.camera);
     });
-    graphics.sampleFrame(performance.now(),{active:draw&&active&&!outsideBlocked()});
+    graphics.sampleFrame(frameTime,{active:draw&&active&&!outsideBlocked()});
   },{
     // A frame that throws is skipped, not fatal (core/loop.js). If frames keep failing, say so in plain words.
     onTrouble(){if(!disposed)hud.message('Something went wrong. If the game looks stuck, reload the page.',{tone:'error',ms:10000});},

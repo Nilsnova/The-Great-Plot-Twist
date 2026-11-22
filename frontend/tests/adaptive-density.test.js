@@ -4,7 +4,7 @@ import {createFrameBudget,pixelViewport,worldViewport} from '../src/pixel/displa
 function cadence(budget,now,interval,seconds){for(let elapsed=0;elapsed<seconds*1000;elapsed+=interval){now+=interval;budget.sample(now);}return now;}
 describe('adaptive drawing density',()=>{
   it('keeps full detail at healthy 30/60/144Hz',()=>{
-    for(const hz of [30,60,144]){const budget=createFrameBudget();cadence(budget,0,1000/hz,25);expect(budget.scale).toBe(1);}
+    for(const hz of [30,60,120,144]){const budget=createFrameBudget();cadence(budget,0,1000/hz,25);expect(budget.scale).toBe(1);}
   });
   it('reduces only after sustained slow drawing and keeps a bounded floor',()=>{
     const budget=createFrameBudget();let now=cadence(budget,0,66.7,1.5);expect(budget.scale).toBe(1);
@@ -34,6 +34,21 @@ describe('adaptive drawing density',()=>{
     const rare=createFrameBudget();let now=0;
     for(let i=0;i<3000;i++){now+=i%20===19?33.3:16.7;rare.sample(now);}
     expect(rare.scale).toBe(1);
+  });
+  it('holds full density on 50 Hz with jitter and 30 Hz with occasional early callbacks',()=>{
+    const jitteredGaps=[[19.9,20.1],[16.7,50,...Array(18).fill(1000/30)]];
+    for(const gaps of jitteredGaps){
+      const budget=createFrameBudget();let now=0;
+      for(let i=0;i<1800;i++){now+=gaps[i%gaps.length];budget.sample(now);}
+      expect(budget.scale).toBe(1);
+    }
+  });
+  it('holds the reduced density for a minute after the last hitch even at the floor',()=>{
+    const budget=createFrameBudget();let now=0;
+    for(let i=0;i<2400;i++){now+=16.7;budget.sample(now);now+=33.3;budget.sample(now);}
+    expect(budget.scale).toBe(.65);
+    now=cadence(budget,now,16.7,40);expect(budget.scale).toBe(.65);
+    cadence(budget,now,16.7,30);expect(budget.scale).toBeGreaterThan(.65);
   });
   it('climbs back slowly after hitching once the screen holds 60 again',()=>{
     const budget=createFrameBudget();let now=0;
