@@ -40,11 +40,14 @@ describe('compiled world art production activation', () => {
     expect(unshipped(shippedTerrain.file)).toBe(false);
   });
 
-  it('includes the packed Home garden texture, with its authoring original excluded', () => {
-    const frame = getRasterFrame('home-broadleaf');
-    expect(frame).toMatchObject({logical: [40, 28, 4], rect: [4, 4, 160, 112], sourceFoot: [80, 96]});
+  it.each([
+    ['home-broadleaf', [40, 28, 4], [4, 4, 160, 112], [80, 96]],
+    ['home-bench', [48, 32, 3], [4, 4, 192, 128], [96, 116]],
+  ])('ships the packed %s with its original logical footprint and ground anchor', (id, logical, rect, sourceFoot) => {
+    const frame = getRasterFrame(id);
+    expect(frame).toMatchObject({logical, rect, sourceFoot});
     expect(existsSync(new URL(`../../public/${frame.sheet.file}`, import.meta.url))).toBe(true);
     expect(unshipped(frame.sheet.file)).toBe(false);
-    expect(unshipped('village/source/home-broadleaf-v1.png')).toBe(true);
+    expect(unshipped(`village/source/${id}-v1.png`)).toBe(true);
   });
 });

@@ -183,35 +183,6 @@ function coastalSailboat(dark) {
   };
 }
 
-function bench(c) {
-  shadow(c, 26, 29, 19, 2.5, .16);
-  shadow(c, 14, 28.5, 6.8, 1.45, .24);
-  shadow(c, 36, 28.5, 6.4, 1.45, .22);
-  const rim = {line: '#563b2d', width: .49, shade: false};
-  for (const x of [10, 34]) {
-    part(c, poly([[x, 12], [x + 2.7, 11.4], [x + 3.9, 22], [x + .7, 24]], .48), '#95653f', rim);
-    part(c, poly([[x - 1.2, 20], [x + 4.7, 20], [x + 7, 18.25], [x + 7.2, 26.9],
-      [x + 4.25, 29.1], [x - 1.2, 29.1]], .86), '#b7834e', rim);
-    part(c, poly([[x + 4.7, 20], [x + 7, 18.25], [x + 7.2, 26.9], [x + 4.25, 29.1]], .4), '#68442f', {line: false, shade: false});
-    stroke(c, [[x - .1, 24.5], [x - .08, 27.6]], '#ebad68', .65, .85);
-  }
-  part(c, poly([[6, 10], [9, 8], [41, 8], [43, 9.8], [40.5, 11.25]], .63), '#e5ad69', rim);
-  part(c, poly([[6, 10.2], [43, 9.8], [42.4, 14], [6.5, 14.3]], .72),
-    linear(c, 0, 9.6, 0, 14.5, [[0, '#d89956'], [.53, '#a86d3c'], [1, '#6a422c']]), rim);
-  part(c, poly([[38.82, 10.60], [41.64, 10.55], [41.35, 13.42], [38.52, 13.49]], .28),
-    '#785038', {line: false, shade: false});
-  stroke(c, svg('M8.8 11.0 Q16.6 10.8 22.2 11.03 M25.0 11.05 Q29.4 10.88 35.2 10.97'), '#efb978', .49, .89);
-  part(c, poly([[4.6, 20.2], [9.3, 16.4], [41.15, 16.4], [45, 19.7], [43.2, 21.25]], .8),
-    linear(c, 0, 16.25, 0, 21, [[0, '#93623b'], [.43, '#d29754'], [1, '#f0c080']]), rim);
-  part(c, poly([[4.6, 20.2], [45, 19.7], [43.8, 23.3], [5.45, 23.7]], .75),
-    linear(c, 0, 19.5, 0, 24, [[0, '#c4884e'], [.37, '#a96d3d'], [1, '#66402c']]), rim);
-  part(c, poly([[41.28, 20.2], [44.19, 20.15], [43.37, 22.91], [40.56, 22.94]], .31),
-    '#714731', {line: false, shade: false});
-  stroke(c, svg('M8.45 18.32 Q18.6 17.98 23.9 18.27 T41.35 18.19'), '#815336', .47, .87);
-  stroke(c, [[6.8, 20.61], [42.31, 20.2]], '#efbc79', .59, .92);
-  for (const x of [11.5, 38]) part(c, ellipse(x, 12.52, .69, .62), '#cd9e59', {line: '#69472f', width: .34, shade: false});
-}
-
 function barrel(c) {
   shadow(c, 12.7, 29.1, 9.9, 2.3, .19);
   shadow(c, 12.6, 28.7, 6.7, 1.3, .21);
@@ -264,7 +235,6 @@ export function homeShoreFrames() {
     boat: [64, 40, 8, harborRowboat, {outline: .45}],
     sailboat: [96, 112, 10, coastalSailboat(false), {outline: .5}],
     'dark-schooner': [128, 112, 10, coastalSailboat(true), {outline: .5}],
-    'home-bench': [48, 32, 3, bench, {outline: .29}],
     'home-barrel': [24, 32, 3, barrel, {outline: .34, worldDetail: 7}],
     'home-lantern': [16, 24, 2, lantern, {outline: .23, worldDetail: 7}],
   };

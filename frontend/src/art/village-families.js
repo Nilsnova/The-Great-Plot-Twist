@@ -4,6 +4,7 @@
 // WebP each master is downloaded as. Frame rects, feet and logical boxes are unchanged.
 import * as baked from './village/baked.js';
 import {compiledHomeFoliage} from './village/home-foliage.js';
+import {compiledHomeProps} from './village/home-props.js';
 import {shippedSheets} from './village/shipped.js';
 export function shippedFamily(family, shipped = shippedSheets) {
   const sheets = Object.fromEntries(Object.entries(family.sheets).map(([key, sheet]) => {
@@ -14,6 +15,6 @@ export function shippedFamily(family, shipped = shippedSheets) {
   return Object.freeze({sheets, frames: family.frames});
 }
 export const villageFamilies = [shippedFamily({
-  sheets: {...baked.sheets, ...compiledHomeFoliage.sheets},
-  frames: {...baked.frames, ...compiledHomeFoliage.frames},
+  sheets: {...baked.sheets, ...compiledHomeFoliage.sheets, ...compiledHomeProps.sheets},
+  frames: {...baked.frames, ...compiledHomeFoliage.frames, ...compiledHomeProps.frames},
 })];
