@@ -26,6 +26,12 @@ async function ready(page, base, phone) {
   });
 }
 async function pickCannon(page) {
+  // A built spot stays empty for a moment while its art loads (no stand-in flash), so wait until the cannon is drawn.
+  await page.waitForFunction(() => {
+    let drawn = false;
+    window.__island.scene.traverseVisible(o => { if (o.isMesh && o.name === 'island-cannon:cannon_1') drawn = true; });
+    return drawn;
+  });
   const at = await page.evaluate(async () => {
     const g = window.__island, rect = g.renderer.domElement.getBoundingClientRect();
     const {projectGround} = await window.g20Import('/src/world/projection.js');
