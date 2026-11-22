@@ -46,7 +46,7 @@ it('retires each shared building stand-in once when prepared art replaces it', a
   const drawing = decorateIsland(place, {
     loadArt: ids => ids.length === 1 ? new Promise(() => {}) : buildings.then(() =>
       Object.fromEntries(ids.map(id => [id, new THREE.MeshBasicMaterial({map: id === 'island-cannon' ? prepared : null})]))),
-    loadWallAtlas: () => walls,
+    loadWallAtlas: () => walls, standinDelayMs: 0, // this test is about retiring the stand-ins, so they show at once
   });
   drawing.apply({spots: [{id: 'cannon_1', kind: 'cannon', built: true, level: 1}, wall('wall_1', 0)]});
   const cannon = drawing.root.getObjectByName('island-cannon:cannon_1');
@@ -202,7 +202,7 @@ describe('selected walls retain ordinary painter depth', () => {
 
 it('the actual world reuses its one tile bracket through selection, Move, Close, visitor and battle lifecycle', async () => {
   const place = {group:new THREE.Group(),colliders:[],zones:[]}; let anchor = {spotId:'wall_13',x:-4,z:-17.5};
-  const drawing = decorateIsland(place,{reducedMotion:true,loadArt:()=>new Promise(()=>{}),loadWallAtlas:async()=>atlas(),selection:()=>anchor});
+  const drawing = decorateIsland(place,{reducedMotion:true,loadArt:()=>new Promise(()=>{}),loadWallAtlas:async()=>atlas(),selection:()=>anchor,standinDelayMs:0});
   const rows = [wall('wall_13',-4,-17.5)];
   drawing.apply({spots:rows});
   const standin = drawing.root.getObjectByName('island-wall:wall_1').material.map;
