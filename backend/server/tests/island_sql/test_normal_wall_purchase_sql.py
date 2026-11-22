@@ -110,9 +110,25 @@ def built(database, owner=OWNER):
 
 @pytest.mark.parametrize("actor", [OWNER, MEMBER], ids=["owner", "member"])
 @pytest.mark.parametrize("version", [0, 1])
-def test_http_rejects_old_effective_overlap_without_writes(database, actor, version):
+def test_http_refuses_when_all_perimeter_sockets_intersect_scenery(
+    database, actor, version, monkeypatch
+):
+    rules = layout.island_layout()
+    blocked = replace(
+        rules,
+        wall_obstacles=rules.wall_obstacles
+        + tuple(
+            layout.WallObstacle(f"new-prop-{i}", "a tree", x, z, radius=0.5)
+            for i, (x, z) in enumerate(rules.wall_perimeter)
+        ),
+    )
+    monkeypatch.setattr(
+        layout,
+        "island_layout",
+        lambda more=False: layout.with_extra_spots(blocked) if more else blocked,
+    )
     ready(database, version)
-    # Raw (-3.5, 4) is clear of the board. The generated lane view rolls it to (-3, 3).
+    # Old empty coordinates cannot create a purchase when the new row is full.
     set_cell(database, (-7, 8))
     before = cells(database)
     client, admin = client_for(database, actor)
@@ -120,7 +136,8 @@ def test_http_rejects_old_effective_overlap_without_writes(database, actor, vers
         response = purchase(client, actor)
     assert response.status_code == 409, (response.json(), admin.last_database_error)
     assert response.json()["error"] == {
-        "code": "place_taken", "message": "That is too close to the record board.",
+        "code": "place_taken",
+        "message": layout.WALL_FULL_MESSAGE,
     }
     assert cells(database) == before
     assert built(database) == []
@@ -131,7 +148,7 @@ def test_http_rejects_old_effective_overlap_without_writes(database, actor, vers
 @pytest.mark.parametrize("actor", [OWNER, MEMBER], ids=["owner", "member"])
 @pytest.mark.parametrize("version", [0, 1])
 @pytest.mark.parametrize(
-    "raw", [None, (-37, -2), (-26, -24)], ids=["default", "matching", "settled"]
+    "raw", [None, (-35, -6), (-26, -24)], ids=["default", "matching", "settled"]
 )
 def test_production_http_charges_once_and_only_writes_a_changed_cell(database, actor, version, raw):
     ready(database, version)
@@ -139,7 +156,7 @@ def test_production_http_charges_once_and_only_writes_a_changed_cell(database, a
         set_cell(database, raw)
     before = cells(database)
     stored = {"wall_1": tuple(value / 2 for value in raw)} if raw else {}
-    expected = layout.positions_of(layout.island_layout(), stored)["wall_1"]
+    expected = layout.positions_of(layout.island_layout(), stored, set())["wall_1"]
     client, admin = client_for(database, actor)
     with client:
         response = purchase(client, actor)
@@ -154,13 +171,16 @@ def test_production_http_charges_once_and_only_writes_a_changed_cell(database, a
     if actor == MEMBER:
         assert balance(database, OWNER) == 100
         if version == 1:
-            assert call(
-                database,
-                "select hp_units from public.island_structure_health "
-                "where island_owner=%s and spot='wall_1'",
-                OWNER,
-            ) == 1_000_000
-    if raw == (-26, -24):
+            assert (
+                call(
+                    database,
+                    "select hp_units from public.island_structure_health "
+                    "where island_owner=%s and spot='wall_1'",
+                    OWNER,
+                )
+                == 1_000_000
+            )
+    if raw != (-35, -6):
         x_half, z_half = (round(value * 2) for value in expected)
         assert cells(database)[0][:4] == ("wall_1", x_half, z_half, actor)
     else:
@@ -199,7 +219,9 @@ def test_paid_repeat_keeps_old_receipt_after_layout_moves(database, actor):
     set_cell(database, (-32, 0))
     before = cells(database)
     assert checked_sql(database, actor, materialize=True) == {
-        "status": "done", "balance": 90, "repeat": True,
+        "status": "done",
+        "balance": 90,
+        "repeat": True,
     }
     assert cells(database) == before
     assert ledger(database, actor, "building_purchase") == [(-10, f"island:{UID}")]
@@ -260,22 +282,28 @@ def test_member_purchase_waits_for_owner_move_then_refuses_its_stale_snapshot(sc
         ThreadPoolExecutor(max_workers=1) as worker,
     ):
         as_server(mover)
-        assert call(
-            mover, "select public.island_move(%s,%s,'wall_6',-24,-2,'[]')", host, host
-        )["status"] == "done"
+        assert (
+            call(mover, "select public.island_move(%s,%s,'wall_6',-24,-2,'[]')", host, host)[
+                "status"
+            ]
+            == "done"
+        )
         buyer.execute("set statement_timeout = '5s'")
         pending = worker.submit(checked_sql, buyer, member, host)
         try:
             deadline = time.monotonic() + 3
             while time.monotonic() < deadline:
-                if call(
-                    observer,
-                    "select wait_event_type from pg_stat_activity where pid=%s",
-                    buyer.info.backend_pid,
-                ) == "Lock":
+                if (
+                    call(
+                        observer,
+                        "select wait_event_type from pg_stat_activity where pid=%s",
+                        buyer.info.backend_pid,
+                    )
+                    == "Lock"
+                ):
                     break
                 assert not pending.done()
-                time.sleep(.02)
+                time.sleep(0.02)
             else:
                 pytest.fail("the purchase did not wait on the in-progress owner Move")
         finally:
@@ -318,18 +346,24 @@ def test_member_purchase_waits_before_locking_the_payer_wallet(scratch_server, s
                 if scoped_writer.info.backend_pid in blockers:
                     break
                 assert not pending.done()
-                time.sleep(.02)
+                time.sleep(0.02)
             else:
                 pytest.fail("the checked wall purchase did not wait for the economy scope")
-            assert call(
-                scoped_writer,
-                "select balance from public.wallets where player_id=%s for update nowait",
-                member,
-            ) == 100
+            assert (
+                call(
+                    scoped_writer,
+                    "select balance from public.wallets where player_id=%s for update nowait",
+                    member,
+                )
+                == 100
+            )
         finally:
             scoped_writer.commit()
 
         assert pending.result(timeout=5) == {
-            "status": "done", "balance": 90, "repeat": False, "level": 1,
+            "status": "done",
+            "balance": 90,
+            "repeat": False,
+            "level": 1,
         }
         assert ledger(buyer, member, "building_purchase") == [(-10, f"island:{UID}")]

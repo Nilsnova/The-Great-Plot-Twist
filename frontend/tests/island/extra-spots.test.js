@@ -5,7 +5,7 @@ import {readFileSync} from 'node:fs';
 import {describe, expect, it} from 'vitest';
 import {EXTRA_SPOT_TABLE, extraOpenedBetween, extraSpotWave, offeredExtra} from '../../src/island/extra-spots.js';
 import {ALL_SPOTS, SPOTS, defenses, islandZones, offeredSpots, spotById} from '../../src/island/spots.js';
-import {checkMove, onWallLane, positionsOf, routeOpen} from '../../src/island/placement.js';
+import {checkMove, onWallPerimeter, positionsOf, routeOpen} from '../../src/island/placement.js';
 import {spotWave} from '../../src/campaign/index.js';
 import {buildCardModel} from '../../src/island/card-model.js';
 import {cardById, cardsBetween} from '../../src/tutorial/unlock-cards.js';
@@ -58,14 +58,14 @@ describe('an extra spot shows only while the answer lists it', () => {
   });
 });
 
-describe('placement (D041, D056)', () => {
-  it('every extra spot stands on a legal cell off every wall lane, and the route stays open', () => {
+describe('placement', () => {
+  it('every extra tower is clear of the wall perimeter and keeps a route open', () => {
     const positions = positionsOf(answerWith(IDS));
     expect(routeOpen(positions)).toBe(true);
     for (const id of IDS) {
       const {x, z} = positions[id];
       expect(checkMove(id, x, z, positions), id).toEqual({ok: true});
-      for (let dx = -1; dx <= 1; dx += .5) for (let dz = -1; dz <= 1; dz += .5) expect(onWallLane(x + dx, z + dz), `${id} lane`).toBe(false);
+      for (let dx = -1; dx <= 1; dx += .5) for (let dz = -1; dz <= 1; dz += .5) expect(onWallPerimeter(x + dx, z + dz), `${id} perimeter`).toBe(false);
     }
     // Without the extra spots the fixed layout is exactly as before.
     const plain = positionsOf(answerWith([]));

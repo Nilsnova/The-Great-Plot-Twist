@@ -137,7 +137,7 @@ describe('build card (TOWER-DEFENSE.md §2, §9)', () => {
   it('a spot of a later campaign step shows locked: the inner wall ring opens after wave 5', () => {
     const ring = {id: 'wall_9', kind: 'wall', built: false, level: 0, cost: 10};
     expect(buildCardModel({spotId: 'wall_9', slot: 'wall', spot: ring, coins: 100, unlocks: unlocksFor(4), campaign: atWave(4)}))
-      .toMatchObject({mode: 'info', locked: true, button: '', soon: 'Opens after wave 5.', purpose: 'The inner ring of walls around the heart.'});
+      .toMatchObject({mode: 'info', locked: true, button: '', soon: 'Opens after wave 5.', purpose: 'More wall pieces for the grass edge.'});
     expect(buildCardModel({spotId: 'wall_9', slot: 'wall', spot: ring, coins: 100, unlocks: unlocksFor(5), campaign: atWave(5)}))
       .toMatchObject({mode: 'build', locked: false, disabled: false});
   });

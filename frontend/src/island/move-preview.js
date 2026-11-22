@@ -1,12 +1,11 @@
 // The footprint under a building while it is moved (T36, flexible placement): a soft square with a
 // bright rim on the ground, green where the cell is free, red where the server would refuse it, squashed
-// by the shared ground projection and under everything that stands. While a wall is moved, its lanes
-// (D056, wall-lanes.js: the cells where a wall stops pirates on their way to the heart) glow on the ground, so the
-// player sees where a wall may go. Used by world.js only.
+// by the shared ground projection. While a wall is moved, free spots on the grass edge glow on the
+// ground so the player can place it along the single row. Used by world.js only.
 import * as THREE from 'three';
 import {projectPoint} from '../world/art.js';
 import {groundGeometry} from '../world/ground-transform.js';
-import {WALL_LANE_ROWS} from './wall-lanes.js';
+import {WALL_PERIMETER_CELLS} from './wall-perimeter.js';
 
 export const PREVIEW_COLOURS = Object.freeze({
   ok: {fill: 0x226050, rim: 0x9af2ca},
@@ -41,27 +40,26 @@ export function makeFootprint(root) {
   };
 }
 
-export const LANE_COLOUR = 0xffe08a;
-const HALF_CELL = .25; // a lane cell is one grid cell (0.5 units) round its centre
-
-// The wall lanes as one flat mesh on the ground (one quad per run of a row), built once; show(on) toggles it.
-export function makeWallLanes(root, rows = WALL_LANE_ROWS) {
-  const positions = [], index = [];
-  for (const [z, ...runs] of rows) for (let i = 0; i < runs.length; i += 2) {
-    const n = positions.length / 3, left = runs[i] - HALF_CELL, right = runs[i + 1] + HALF_CELL;
-    for (const [x, depth] of [[left,z+HALF_CELL],[right,z+HALF_CELL],[right,z-HALF_CELL],[left,z-HALF_CELL]]) {
-      const point = projectPoint(x, depth); positions.push(point.x, point.y, 0);
-    }
-    index.push(n, n + 1, n + 2, n, n + 2, n + 3);
-  }
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3)); geometry.setIndex(index);
-  const mesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({color: LANE_COLOUR, transparent: true, opacity: .3, depthTest: false, depthWrite: false}));
-  mesh.name = 'island-wall-lanes'; mesh.renderOrder = 96; mesh.frustumCulled = false; mesh.visible = false;
+// One batch of ground markers for the free spots. It shares the wall footprint projection.
+export function makeWallLanes(root) {
+  const geometry = groundGeometry(new THREE.PlaneGeometry(1.2, 1.2));
+  const material = new THREE.MeshBasicMaterial({color: 0xffe08a, transparent: true, opacity: .36, depthTest: false, depthWrite: false});
+  const mesh = new THREE.InstancedMesh(geometry, material, WALL_PERIMETER_CELLS.length);
+  const matrix = new THREE.Matrix4();
+  mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  mesh.name = 'island-wall-perimeter'; mesh.renderOrder = 96; mesh.frustumCulled = false; mesh.visible = false;
+  mesh.raycast = () => {};
   root.add(mesh);
   return {
-    show(on) { mesh.visible = !!on; },
+    show(cells = []) {
+      mesh.count = cells.length;
+      mesh.visible = cells.length > 0;
+      for (const [index, {x, z}] of cells.entries()) {
+        const point = projectPoint(x, z);
+        mesh.setMatrixAt(index, matrix.makeTranslation(point.x, point.y, 0));
+      }
+      mesh.instanceMatrix.needsUpdate = true;
+    },
     get shown() { return mesh.visible; },
-    get runs() { return index.length / 6; },
   };
 }

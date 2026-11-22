@@ -11,9 +11,10 @@ import {unprojectGround} from '../world/projection.js';
 import {groundGeometry} from '../world/ground-transform.js';
 import {homeVillageLights} from '../world/light-pools.js';
 import {artSizes, loadArt, placeArt, projectPoint} from '../world/art.js';
-import {ALL_SPOTS as ISLAND_SPOTS, CABIN, BELL, CAMPAIGN_BUILDINGS, ARSENAL, islandZones, placedSpot} from './spots.js';
+import {ALL_SPOTS as ISLAND_SPOTS, CABIN, BELL, CAMPAIGN_BUILDINGS, ARSENAL, islandZones, placedSpot, wallSpaceUnavailable} from './spots.js';
 import {isExtraSpot} from './extra-spots.js';
 import {makeFootprint, makeWallLanes} from './move-preview.js';
+import {freeWallCells, positionsOf} from './placement.js';
 import {makeSelectionBracket} from './selection-bracket.js';
 import {makeDefenseRange} from './defense-range.js';
 import {makeBuildingFeedback, makeWallFeedback} from './wall-feedback.js';
@@ -338,8 +339,7 @@ export function decorateIsland(place, ctx = {}) {
   let preview = null;
   const footprint = makeFootprint(root), selectionBracket = makeSelectionBracket(root);
   const wallFeedback = homeWalls ? makeWallFeedback(root) : null;
-  // D056: while a wall is moved, the cells where a wall stops pirates glow (home island only).
-  const wallLanes = homeWalls ? makeWallLanes(root) : null;
+  const wallPerimeter = homeWalls ? makeWallLanes(root) : null;
   // Where a spot stands now: the cell of a move under way, the answer's x/z, else its fixed spot (Pirate Point's stay).
   const whereOf = spot => {
     if (preview?.spotId === spot.id) return {x: preview.x, z: preview.z};
@@ -437,6 +437,10 @@ export function decorateIsland(place, ctx = {}) {
     if (disposed) return;
     if (battle || feedbackScope !== state.feedbackScope) clearPurchaseFeedback();
     state = {spots, visitor, battle, unlocks, crew, campaign, arsenal: arsenal === true, feedbackScope};
+    if (wallPerimeter) {
+      const movingWall = !battle && preview && SPOTS.find(spot => spot.id === preview.spotId)?.slot === 'wall';
+      wallPerimeter.show(movingWall ? freeWallCells(preview.spotId, positionsOf(spots)) : []);
+    }
     if (homeWalls) {
       displayAnchors = defenseDisplayAnchors('home_islet', spots.filter(row => row.built).map(row => {
         const spot = SPOTS.find(item => item.id === row.id);
@@ -486,8 +490,14 @@ export function decorateIsland(place, ctx = {}) {
     for (const spot of SPOTS) {
       const answer = spots.find(item => item.id === spot.id), built = answer?.built === true, where = whereOf(spot);
       const marker = markers.get(spot.id);
-      // D060: an extra tower spot stands only while the answer lists it (the server's flag more_tower_spots).
-      if (isExtraSpot(spot.id) && !answer) { marker.visible = false; marker.locked = false; clear(spot.id); for (const kind of kindsOf(spot)) buildings.get(`${spot.id}:${kind}`).visible = false; continue; }
+      // Extra towers require an offered row. Empty wall plots require a free grass-edge socket.
+      if ((isExtraSpot(spot.id) && !answer) || wallSpaceUnavailable(answer)) {
+        marker.visible = false;
+        marker.locked = false;
+        clear(spot.id);
+        for (const kind of kindsOf(spot)) buildings.get(`${spot.id}:${kind}`).visible = false;
+        continue;
+      }
       if (marker) {
         for (const mesh of [marker.ring, marker.badge, marker.lock, marker.lockRing]) moveSprite(mesh, where.x, where.z);
         marker.x = where.x; marker.z = where.z;
@@ -603,7 +613,11 @@ export function decorateIsland(place, ctx = {}) {
     const portraitDepth = ctx.camera?.userData.homePortraitDepth ?? 1;
     const tap = projectPoint(x, z), front = frontBuildingAt(tap, portraitDepth);
     if (front) return front;
-    const candidates = [...SPOTS.filter(spot => !isExtraSpot(spot.id) || state.spots.some(item => item.id === spot.id))
+    const available = SPOTS.filter(spot => {
+      const row = state.spots.find(item => item.id === spot.id);
+      return (!isExtraSpot(spot.id) || row) && !wallSpaceUnavailable(row);
+    });
+    const candidates = [...available
         .map(spot => ({id: spot.id, ...viewOf(spot.id, whereOf(spot)), w: 2.4, h: spot.kind === 'watchtower' ? 5 : 3})),
       ...(bell ? [{id: BELL.id, x: BELL.x, z: BELL.z, w: 1.6, h: 3.4}] : []),
       ...(arsenalMesh?.visible ? [{id: ARSENAL.id, x: ARSENAL.x, z: ARSENAL.z, w: ARSENAL.w / 2, h: ARSENAL.h}] : []),
@@ -682,11 +696,10 @@ export function decorateIsland(place, ctx = {}) {
         clearPurchaseFeedback();
       }
       footprint.show(preview);
-      wallLanes?.show(preview && SPOTS.find(spot => spot.id === preview.spotId)?.slot === 'wall');
       apply(state);
     },
     get previewing() { return preview ? {...preview} : null; },
-    get wallLanesShown() { return !!wallLanes?.shown; },
+    get wallLanesShown() { return !!wallPerimeter?.shown; },
     showWallFeedback(spotId, level) {
       if (disposed || !wallFeedback || !state.feedbackScope || state.battle || preview) return;
       const anchor = builtWallAnchor(spotId, level);

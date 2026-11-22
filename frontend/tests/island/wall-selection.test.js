@@ -37,6 +37,22 @@ function postAt(drawing, art, id, x, z = 0) {
     .map(points => ({order: mesh.renderOrder, points})));
 }
 
+it('removes an empty wall marker and interaction when no perimeter footing is available', () => {
+  const place = {group: new THREE.Group(), colliders: [], zones: []};
+  const drawing = decorateIsland(place, {loadArt: () => new Promise(() => {})});
+  const ready = {id: 'wall_1', kind: 'wall', built: false, x: -17.5, z: -3};
+  drawing.apply({spots: [ready]});
+  const marker = drawing.root.getObjectByName('island-marker:wall_1');
+  expect(marker.visible).toBe(true);
+  expect(drawing.pickAt(ready.x, ready.z)).toBe(ready.id);
+  drawing.apply({spots: [{...ready, x: null, z: null}]});
+  expect(marker.visible).toBe(false);
+  expect(place.zones.some(zone => zone.id === ready.id)).toBe(false);
+  expect(drawing.pickAt(ready.x, ready.z)).not.toBe(ready.id);
+  expect(drawing.pickAt(-18.5, -1)).not.toBe(ready.id);
+  drawing.dispose();
+});
+
 it('retires each shared building stand-in once when prepared art replaces it', async () => {
   let finishBuildings, finishWalls;
   const buildings = new Promise(resolve => { finishBuildings = resolve; });

@@ -120,7 +120,7 @@ it('reveals the real Cannon #1 beneath its coastal tree and restores the tree on
   });
 });
 
-it('reveals only the foreground oak covering a confirmed wall on a legal Move cell', async () => {
+it('reveals only the foreground oak covering a saved legacy wall', async () => {
   const result = await browser(async () => {
     const THREE = await window.g20Import('/node_modules/three/build/three.module.js');
     const {createSettlement} = await window.g20Import('/src/world/places/settlement.js');
@@ -145,7 +145,7 @@ it('reveals only the foreground oak covering a confirmed wall on a legal Move ce
     const faded = () => trees.filter(mesh => mesh.material.opacity === .24).map(mesh => mesh.userData.ground);
     try {
       await island.retryArt();
-      const legal = checkMove(wall.id, x, z, positionsOf([wall])).ok;
+      const moveRefusal = checkMove(wall.id, x, z, positionsOf([wall])).code;
       island.apply({spots: [moved]});
       draw();
       const walls = island.root.getObjectByName('island-wall-connections');
@@ -176,12 +176,12 @@ it('reveals only the foreground oak covering a confirmed wall on a legal Move ce
       island.apply({spots: [{...moved, built: false}]});
       draw();
       const removed = faded();
-      return {legal, unselected, selected, moving, closed, visitor, battle, removed, restoredOpacity, resourcesReused,
+      return {moveRefusal, unselected, selected, moving, closed, visitor, battle, removed, restoredOpacity, resourcesReused,
         collidersUnchanged: JSON.stringify(place.colliders) === colliders, orders, selectedOrders, treeOrder: blockingOak.renderOrder};
     } finally { place.dispose(); }
   });
   expect(result).toEqual({
-    legal: true, unselected: [], selected: [{x: 16, z: 2}], moving: [], closed: [], visitor: [], battle: [],
+    moveRefusal: 'off_path', unselected: [], selected: [{x: 16, z: 2}], moving: [], closed: [], visitor: [], battle: [],
     removed: [], restoredOpacity: 1, resourcesReused: true, collidersUnchanged: true,
     orders: [99.5], selectedOrders: [99.5], treeOrder: 102,
   });
