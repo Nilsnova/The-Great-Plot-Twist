@@ -39,9 +39,9 @@ export function createSettingsView(view) {
   toggle('Narrator','narrator');
   toggle('Narrator captions','captions');
   // T52: the guided start of a new island and the cards for every new thing; the guide again on the island on screen.
-  toggle('Tutorials','tutorials');
+  const tutorialsSwitch=toggle('Tutorials','tutorials');
   const replay=node('button','kit-button kit-quiet preference-action','Replay the guided start');replay.type='button';replay.dataset.preference='tutorialReplay';
-  replay.addEventListener('click',()=>{emit({type:'tutorial_replay'});status.textContent='The guided start begins on your island when you close the menu.';});
+  replay.addEventListener('click',()=>{if(!tutorialsSwitch.checked){tutorialsSwitch.checked=true;setPreferences({tutorials:true});}emit({type:'tutorial_replay'});status.textContent='The guided start begins on your island when you close the menu.';});
   form.append(replay);
   toggle('Easier finishers','easyFinishers');
   choice('Quality','quality',[['high','High'],['low','Low']]);

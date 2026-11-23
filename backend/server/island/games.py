@@ -36,7 +36,7 @@ from server.island import personal_captain_store, store
 from server.island.codes import read_code, shown
 from server.island.store import Island
 from server.island.treasury import resolve_economy_context
-from server.supabase_admin import SupabaseAdmin, SupabaseRejected
+from server.supabase_admin import CaptainNotInitialized, SupabaseAdmin, SupabaseRejected
 
 logger = logging.getLogger(__name__)
 
@@ -258,13 +258,25 @@ async def mine(admin: SupabaseAdmin, player_id: str) -> tuple[Game, ...]:
     return tuple(games)
 
 
+_MISSING = object()
+
+
+async def _profile_or_missing(admin: SupabaseAdmin, actor: str):
+    """A member whose profile row is gone or not made yet (a guest joining or leaving in the
+    same moment) shows no role instead of failing the whole lobby."""
+    try:
+        return await personal_captain_store.read_optional(admin, actor)
+    except CaptainNotInitialized:
+        return _MISSING
+
+
 async def captain_roles(admin: SupabaseAdmin, ids: list[str]) -> dict[str, str]:
     """{player: role} of the members who picked a captain role (docs/GAME-V3.md, Captain tree
     and roles). Managed profiles remain authoritative on every viewed island; an
     explicit unadopted result alone permits the old role projection."""
-    profiles = await gather(*(personal_captain_store.read_optional(admin, actor) for actor in ids))
+    profiles = await gather(*(_profile_or_missing(admin, actor) for actor in ids))
     roles = {actor: profile["captain"]["role"] for actor, profile in zip(ids, profiles, strict=True)
-             if profile is not None and profile["captain"]["role"] is not None}
+             if isinstance(profile, dict) and profile["captain"]["role"] is not None}
     legacy = [actor for actor, profile in zip(ids, profiles, strict=True) if profile is None]
     if legacy:
         query = {"select": "player_id,captain_role", "player_id": f"in.({','.join(legacy)})"}
