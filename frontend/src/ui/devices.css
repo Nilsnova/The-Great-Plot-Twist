@@ -19,3 +19,34 @@
 @media(max-width:600px) and (pointer:coarse){.hud.hud-play .interact{bottom:230px}}
 /* The guide leaves the action label on the usable button during portrait preparation. */
 html:has(.touch-controls:not([hidden]) .touch-preparation-action:not([hidden])) .hud.hud-play .interact.floating{display:none}
+
+/* Phones held sideways are only about 360-430 px tall. The stick sits in the bottom-left corner instead of
+   floating up over the coins and Best wave, and the top bar shrinks: coins and Best wave share one row,
+   and Goals is a narrow card under Menu on the right, not a band across the whole screen. */
+@media(pointer:coarse) and (orientation:landscape) and (max-height:500px){
+  html .touch-controls{left:max(12px,env(safe-area-inset-left));right:max(12px,env(safe-area-inset-right));bottom:max(10px,env(safe-area-inset-bottom))}
+  html .touch-stick{width:88px;height:88px}
+  html .touch-stick-group{gap:4px}
+  html .touch-move-help{font-size:13px;padding:3px 7px}
+  html .hud-play .hud-coins{display:flex;align-items:center;gap:8px;min-height:38px;padding:5px 10px;font-size:16px}
+  html .hud-play .hud-wave{padding:0 0 0 8px;border-top:0;border-left:1px solid #ba963c80;font-size:14px}
+  html .hud-play .hud-right{left:auto;width:min(280px,40vw);gap:8px}
+  html:has(.island-visit:not([hidden])) body .hud-play .quest-strip{margin-top:0}
+  html .island-visit{max-width:calc(60vw - 36px);padding-block:4px}
+  html .hud-play .quest-strip{padding:6px 10px 8px}
+  html .quest-strip h2{font-size:15px;margin-bottom:4px}
+  html .quest-strip .quest-progress{font-size:14px}
+  html .quest-item{padding:4px 8px 4px 4px;font-size:15px;gap:8px}
+  html .quest-check{flex-basis:24px;height:24px;font-size:14px}
+  /* The narrator's short line starts right of the stick, so it never covers the stick. */
+  html .narrator-card:not(.is-large,.is-combat-docked,.is-combat-fallback){left:max(116px,calc(env(safe-area-inset-left) + 104px))!important}
+}
+/* Portrait phones: the Goals card and the game-name strip are a little slimmer, so more of the island shows. */
+@media(pointer:coarse) and (max-width:600px) and (orientation:portrait){
+  html .hud-play .quest-strip{padding:6px 8px 8px}
+  html .quest-strip h2{font-size:15px;margin-bottom:4px}
+  html .quest-strip .quest-progress{font-size:14px}
+  html .quest-item{padding:4px 8px 4px 4px;font-size:15px;gap:8px}
+  html .quest-check{flex-basis:24px;height:24px;font-size:14px}
+  html .island-visit{padding-block:4px}
+}
