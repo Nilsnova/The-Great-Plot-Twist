@@ -6,7 +6,7 @@ from copy import deepcopy
 import pytest
 
 from server.island import games
-from server.supabase_admin import SupabaseRejected
+from server.supabase_admin import CaptainNotInitialized, SupabaseRejected
 from server.tests.helpers import assert_error
 from server.tests.island_helpers import PLAYER, PLAYER_ID, World
 from server.tests.test_personal_captain import reply as captain_reply
@@ -42,6 +42,20 @@ def test_managed_role_none_clears_stale_legacy_role_without_a_legacy_read():
     profile["captain"]["role"] = profile["skills"]["role"] = None
     admin = RoleDatabase({PLAYER_ID: profile})
     assert asyncio.run(games.captain_roles(admin, [PLAYER_ID])) == {}
+    assert admin.legacy_reads == []
+
+
+class MissingProfileDatabase(RoleDatabase):
+    async def call_function(self, name, arguments):
+        if arguments["p_player_id"] == OTHER:
+            self.calls.append((name, arguments))
+            raise CaptainNotInitialized()
+        return await super().call_function(name, arguments)
+
+
+def test_member_without_a_profile_shows_no_role_instead_of_failing_the_lobby():
+    admin = MissingProfileDatabase({PLAYER_ID: captain_reply()})
+    assert asyncio.run(games.captain_roles(admin, [PLAYER_ID, OTHER])) == {PLAYER_ID: "medic"}
     assert admin.legacy_reads == []
 
 

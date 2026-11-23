@@ -87,6 +87,11 @@ class SupabaseRejected(SupabaseAdminError):
         super().__init__(502, "database_error", message)
 
 
+class CaptainNotInitialized(SupabaseRejected):
+    """personal_captain_context raised captain_not_initialized: the player has no profile row
+    (a guest joined or left in the same moment). Still a database error to every other caller."""
+
+
 class InsufficientFunds(SupabaseAdminError):
     """The database raised insufficient_funds: the player cannot afford this."""
 
@@ -183,6 +188,11 @@ def read_reply(response: httpx.Response) -> Any:
     )
     if retired_option:
         raise RecoveryOptionRetired()
+    no_profile = body.get("code") == RAISED_BY_SQL_FUNCTION and (
+        body.get("message") == "captain_not_initialized"
+    )
+    if no_profile:
+        raise CaptainNotInitialized()
 
     # Log the status and the database's short error code. Never the key, never the body.
     logger.warning(
