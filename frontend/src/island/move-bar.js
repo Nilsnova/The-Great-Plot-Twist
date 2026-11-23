@@ -1,5 +1,5 @@
 // The bar of Move mode (T36, flexible placement): a parchment strip at the bottom of the screen with what is
-// moved, whether the square is free, four arrow buttons (one square each, big enough for a thumb) and
+// moved, whether the square is free, four arrow buttons big enough for a thumb, and
 // Place here / Cancel. It shows models from move-mode.js (moveModel) and calls back; it decides nothing.
 // The island stays in view above it, so a tap on the ground picks the square. Used by index.js.
 import {node} from '../ui/kit/dom.js';
@@ -7,7 +7,7 @@ import {createBuildingPortrait} from './building-portrait.js';
 import {createCoverageLegend} from './coverage-legend.js';
 import './move-bar.css';
 
-const ARROWS = Object.freeze([['←', 'One square west', -1, 0], ['↑', 'One square north', 0, -1], ['↓', 'One square south', 0, 1], ['→', 'One square east', 1, 0]]);
+const ARROWS = Object.freeze([['←', 'west', -1, 0], ['↑', 'north', 0, -1], ['↓', 'south', 0, 1], ['→', 'east', 1, 0]]);
 
 function button(label, onClick, className) {
   const element = node('button', `kit-button ${className}`, label); element.type = 'button';
@@ -24,9 +24,9 @@ export function createMoveBar({container, handlers = {}, loadPortrait}) {
   const support = node('p', 'island-move-support'); support.setAttribute('aria-live', 'polite');
   const pad = node('div', 'island-move-pad'); pad.setAttribute('role', 'group'); pad.setAttribute('aria-label', 'Move one square');
   const arrows = [];
-  for (const [label, name, dx, dz] of ARROWS) {
-    const arrow = button(label, () => handlers.nudge?.(dx, dz), 'kit-quiet island-move-arrow'); arrow.setAttribute('aria-label', name);
-    arrow.dataset.direction = name.split(' ').at(-1); pad.append(arrow); arrows.push(arrow);
+  for (const [label, direction, dx, dz] of ARROWS) {
+    const arrow = button(label, () => handlers.nudge?.(dx, dz), 'kit-quiet island-move-arrow');
+    arrow.dataset.direction = direction; pad.append(arrow); arrows.push(arrow);
   }
   const place = button('Place here', () => handlers.place?.(), 'island-move-place');
   const cancel = button('Cancel', () => handlers.cancel?.(), 'kit-quiet island-move-cancel');
@@ -45,7 +45,12 @@ export function createMoveBar({container, handlers = {}, loadPortrait}) {
       support.textContent = model.support ?? ''; support.hidden = !support.textContent;
       bar.classList.toggle('is-refused', model.refused); place.textContent = model.placeLabel; place.disabled = !model.ok;
       legend.show(model.coverage, model.coverageDraft);
-      for (const arrow of arrows) arrow.disabled = !!model.busy;
+      pad.setAttribute('aria-label', model.wall ? 'Choose a wall spot on the grass edge' : 'Move one square');
+      for (const arrow of arrows) {
+        arrow.disabled = !!model.busy;
+        const direction = arrow.dataset.direction;
+        arrow.setAttribute('aria-label', model.wall ? `Select a free wall spot to the ${direction}` : `One square ${direction}`);
+      }
     },
     get element() { return bar; },
     dispose() { portrait.dispose(); bar.remove(); },

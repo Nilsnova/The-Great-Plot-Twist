@@ -3,6 +3,7 @@
 import httpx
 import pytest
 
+from server.island import layout
 from server.tests.island_helpers import FRIEND_ID, ISLAND_SETTINGS, PLAYER_ID, World
 from server.tests.test_island_routes import friend_island
 
@@ -22,36 +23,19 @@ def game_at(member, recovery_version, x, z, *, settings=ISLAND_SETTINGS):
 
 @pytest.mark.parametrize("member", [False, True])
 @pytest.mark.parametrize("recovery_version", [0, 1])
-@pytest.mark.parametrize(
-    ("x", "z", "obstacle"),
-    [(-32, 0, "a tree"), (-4, 24, "the lantern"), (-7, 8, "the record board")],
-)
-def test_old_empty_wall_cannot_buy_through_scenery(member, recovery_version, x, z, obstacle):
+@pytest.mark.parametrize(("x", "z"), [(-32, 0), (-4, 24), (-7, 8)])
+def test_old_empty_wall_over_scenery_uses_the_clear_socket(member, recovery_version, x, z):
     world, _, where = game_at(member, recovery_version, x, z)
 
-    answer = world.build(spot="wall_1", kind="wall", actionUid=UID, **where)
+    result = world.build(spot="wall_1", kind="wall", actionUid=UID, **where)
 
-    assert answer.status_code == 409
-    assert answer.json()["error"] == {
-        "code": "place_taken",
-        "message": f"That is too close to {obstacle}.",
-    }
-    for name in (RPC, "islet_build", "island_build"):
-        assert world.database.calls(name) == []
-    assert world.database.balance == 100
-    assert world.database.layout_rows == [{"plot": "wall_1", "x_half": x, "z_half": z}]
-
-
-def test_saved_overlap_is_refused_with_the_plain_island_settings():
-    # The flag "placement" is retired and always on (8210bc59): the plain settings check the layout too.
-    world, _, where = game_at(False, 0, -32, 0, settings=ISLAND_SETTINGS)
-
-    response = world.build(spot="wall_1", kind="wall", actionUid=UID, **where)
-
-    assert response.status_code == 409
-    assert response.json()["error"]["code"] == "place_taken"
-    assert world.database.calls(RPC) == []
-    assert world.database.balance == 100
+    assert result.status_code == 200, result.json()
+    (sent,) = world.database.calls(RPC)
+    assert sent["p_seen"] == [{"plot": "wall_1", "x_half": x, "z_half": z}]
+    assert (sent["p_x_half"], sent["p_z_half"], sent["p_materialize"]) == (-35, -6, True)
+    layout.check_wall_scenery(layout.island_layout(), "wall_1", (-17.5, -3))
+    assert world.database.calls("islet_build") == []
+    assert world.database.calls("island_build") == []
 
 
 def test_unreadable_layout_refuses_before_payment():
@@ -69,7 +53,7 @@ def test_unreadable_layout_refuses_before_payment():
 @pytest.mark.parametrize("member", [False, True])
 @pytest.mark.parametrize("recovery_version", [0, 1])
 def test_clear_normal_purchase_passes_the_complete_checked_snapshot(member, recovery_version):
-    world, owner, where = game_at(member, recovery_version, -37, -2)
+    world, owner, where = game_at(member, recovery_version, -35, -6)
     world.database.layout_rows.append({"plot": "wall_10", "x_half": -19, "z_half": -2})
 
     result = world.build(spot="wall_1", kind="wall", actionUid=UID, **where)
@@ -83,8 +67,8 @@ def test_clear_normal_purchase_passes_the_complete_checked_snapshot(member, reco
         "p_action_uid": UID,
         "p_price": 10,
         "p_seen": world.database.layout_rows,
-        "p_x_half": -37,
-        "p_z_half": -2,
+        "p_x_half": -35,
+        "p_z_half": -6,
         "p_materialize": False,
         "p_recovery_version": recovery_version,
         # The extra tower spots are always on (their flag is retired, d42c1a53): none is hidden.

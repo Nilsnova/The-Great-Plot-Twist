@@ -23,8 +23,14 @@ async def checked_layout(
     runtime = catalogue_for_existing_structures(catalogue, built) if recovery_v1 else catalogue
     rules = layout.island_layout(runtime.more_tower_spots)
     saved = layout_store.positions_from(rows)
-    effective = layout.positions_of(rules, saved)[spot_id]
-    layout.check_wall_scenery(rules, spot_id, effective)
+    positions = layout.positions_of(rules, saved, built)
+    effective = positions.get(spot_id)
+    if effective is None:
+        raise ApiError(409, "place_taken", layout.WALL_FULL_MESSAGE)
+    if rules.wall_perimeter:
+        layout.check_move(rules, positions, spot_id, *effective)
+    else:
+        layout.check_wall_scenery(rules, spot_id, effective)
 
     current = layout.spot_named(rules, spot_id)
     assert current is not None  # checked by the ordinary purchase catalogue
@@ -41,7 +47,8 @@ async def checked_layout(
         "p_recovery_version": recovery_version,
         "p_hidden_extra_plots": (
             [plot for plot, _wave in catalogue.extra_tower_spots]
-            if recovery_v1 and not catalogue.more_tower_spots else []
+            if recovery_v1 and not catalogue.more_tower_spots
+            else []
         ),
         "p_existing_extra_spots": runtime.more_tower_spots,
     }

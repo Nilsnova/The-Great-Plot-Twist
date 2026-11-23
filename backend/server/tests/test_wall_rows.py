@@ -32,18 +32,18 @@ def test_original_twelve_reserved_sites_have_two_rows_per_approach() -> None:
     assert wall_row_counts(walls, rules.heart) == {"east": 2, "south": 2, "west": 2}
 
 
-def test_move_http_rejects_fourth_row_before_storage_without_payment() -> None:
+def test_move_http_keeps_new_walls_in_one_perimeter_row_without_payment() -> None:
     world = World()
-    assert move(world, spot="wall_6", x=-12, z=-1).status_code == 200
+    assert move(world, spot="wall_6", x=1, z=-18).status_code == 200
     before = world.island().json()
     calls = len(move_calls(world))
     refused = move(world, spot="wall_11", x=-7.5, z=-1)
     assert refused.status_code == 409
-    assert refused.json()["error"]["code"] == "wall_rows"
+    assert refused.json()["error"]["code"] == "off_path"
     assert len(move_calls(world)) == calls
     assert world.island().json() == before
-    shared_row = move(world, spot="wall_11", x=-12, z=1)
+    shared_row = move(world, spot="wall_11", x=11, z=15)
     assert shared_row.status_code == 200
     assert shared_row.json()["coins"] == before["coins"]
     moved = spot(shared_row.json(), "wall_11")
-    assert (moved["x"], moved["z"]) == (-12, 1)
+    assert (moved["x"], moved["z"]) == (11, 15)

@@ -37,6 +37,22 @@ function postAt(drawing, art, id, x, z = 0) {
     .map(points => ({order: mesh.renderOrder, points})));
 }
 
+it('removes an empty wall marker and interaction when no perimeter footing is available', () => {
+  const place = {group: new THREE.Group(), colliders: [], zones: []};
+  const drawing = decorateIsland(place, {loadArt: () => new Promise(() => {})});
+  const ready = {id: 'wall_1', kind: 'wall', built: false, x: -17.5, z: -3};
+  drawing.apply({spots: [ready]});
+  const marker = drawing.root.getObjectByName('island-marker:wall_1');
+  expect(marker.visible).toBe(true);
+  expect(drawing.pickAt(ready.x, ready.z)).toBe(ready.id);
+  drawing.apply({spots: [{...ready, x: null, z: null}]});
+  expect(marker.visible).toBe(false);
+  expect(place.zones.some(zone => zone.id === ready.id)).toBe(false);
+  expect(drawing.pickAt(ready.x, ready.z)).not.toBe(ready.id);
+  expect(drawing.pickAt(-18.5, -1)).not.toBe(ready.id);
+  drawing.dispose();
+});
+
 it('retires each shared building stand-in once when prepared art replaces it', async () => {
   let finishBuildings, finishWalls;
   const buildings = new Promise(resolve => { finishBuildings = resolve; });
@@ -46,7 +62,7 @@ it('retires each shared building stand-in once when prepared art replaces it', a
   const drawing = decorateIsland(place, {
     loadArt: ids => ids.length === 1 ? new Promise(() => {}) : buildings.then(() =>
       Object.fromEntries(ids.map(id => [id, new THREE.MeshBasicMaterial({map: id === 'island-cannon' ? prepared : null})]))),
-    loadWallAtlas: () => walls,
+    loadWallAtlas: () => walls, standinDelayMs: 0, // this test is about retiring the stand-ins, so they show at once
   });
   drawing.apply({spots: [{id: 'cannon_1', kind: 'cannon', built: true, level: 1}, wall('wall_1', 0)]});
   const cannon = drawing.root.getObjectByName('island-cannon:cannon_1');
@@ -202,7 +218,7 @@ describe('selected walls retain ordinary painter depth', () => {
 
 it('the actual world reuses its one tile bracket through selection, Move, Close, visitor and battle lifecycle', async () => {
   const place = {group:new THREE.Group(),colliders:[],zones:[]}; let anchor = {spotId:'wall_13',x:-4,z:-17.5};
-  const drawing = decorateIsland(place,{reducedMotion:true,loadArt:()=>new Promise(()=>{}),loadWallAtlas:async()=>atlas(),selection:()=>anchor});
+  const drawing = decorateIsland(place,{reducedMotion:true,loadArt:()=>new Promise(()=>{}),loadWallAtlas:async()=>atlas(),selection:()=>anchor,standinDelayMs:0});
   const rows = [wall('wall_13',-4,-17.5)];
   drawing.apply({spots:rows});
   const standin = drawing.root.getObjectByName('island-wall:wall_1').material.map;

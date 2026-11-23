@@ -17,7 +17,7 @@ export function startLoop(update, render, {onTrouble = null, onRecover = null, r
     // Update and draw are guarded apart: a failed update still lets the picture be drawn.
     let trouble = null;
     try { update(delta, elapsed); } catch (error) { trouble = error; }
-    try { render(); } catch (error) { trouble ??= error; }
+    try { render(now); } catch (error) { trouble ??= error; }
     if (!trouble) {
       if (told) { told = false; if (onRecover) safely(onRecover); }
       failed = 0;

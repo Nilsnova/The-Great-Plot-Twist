@@ -8,6 +8,7 @@ Used by: pytest (cd backend && uv run pytest).
 """
 
 import json
+from dataclasses import replace
 
 import pytest
 
@@ -15,6 +16,7 @@ from server.island import layout
 from server.island.catalogue import load_island
 
 RULES = layout.load_layout()
+LEGACY_RULES = replace(RULES, wall_perimeter=frozenset(), wall_defaults={})
 
 
 def refused_code(spot_id: str, x: float, z: float, positions=None) -> str:
@@ -53,10 +55,10 @@ def test_every_fixed_spot_is_already_a_cell_of_the_grid():
 
 
 def test_the_fixed_layout_passes_every_rule_so_old_saves_stay_legal():
-    placed = layout.positions_of(RULES, {})
-    for spot in RULES.spots:
-        layout.check_move(RULES, placed, spot.spot, spot.x, spot.z)
-    assert layout.route_open(RULES, placed)
+    placed = layout.positions_of(LEGACY_RULES, {})
+    for spot in LEGACY_RULES.spots:
+        layout.check_move(LEGACY_RULES, placed, spot.spot, spot.x, spot.z)
+    assert layout.route_open(LEGACY_RULES, placed)
 
 
 def test_a_stored_position_replaces_the_fixed_spot_and_unknown_plots_are_ignored():
@@ -102,10 +104,9 @@ def test_a_place_in_the_sea_is_refused():
 
 
 def test_a_place_on_the_heart_or_a_fixed_building_is_refused():
-    assert refused_code("wall_1", 0, 2) == "place_taken"
+    assert refused_code("cannon_1", 0, 2) == "place_taken"
     assert refused_code("cannon_1", -8, 4.5) == "place_taken"  # the cabin
     assert refused_code("cannon_1", 8.5, 12) == "place_taken"  # the bell
-    assert refused_code("wall_1", -2.5, 3) == "place_taken"  # the heart, on a lane
 
 
 def test_a_place_that_overlaps_another_spot_is_refused():
@@ -114,9 +115,10 @@ def test_a_place_that_overlaps_another_spot_is_refused():
 
 
 def test_two_walls_may_touch_side_by_side_to_make_a_line():
-    # wall_10 stands at (-9.5, -1) and is 2 wide: a wall 2 units to its east only touches it.
-    placed = layout.positions_of(RULES, {})
-    layout.check_move(RULES, placed, "wall_11", -7.5, -1)
+    # The two north perimeter cells are two units apart, the width of a wall.
+    saved = {"wall_11": RULES.wall_defaults["wall_11"]}
+    placed = layout.positions_of(RULES, saved, saved.keys())
+    layout.check_move(RULES, placed, "wall_12", *RULES.wall_defaults["wall_12"])
 
 
 def test_a_building_may_stay_where_it_stands():
@@ -164,9 +166,9 @@ def test_the_rules_check_the_footprint_of_the_slot():
 
 
 def test_every_fixed_wall_stands_on_a_wall_lane():
-    for spot in RULES.spots:
+    for spot in LEGACY_RULES.spots:
         if spot.slot == "wall":
-            assert layout.on_wall_lane(RULES, spot.x, spot.z), spot.spot
+            assert layout.on_wall_lane(LEGACY_RULES, spot.x, spot.z), spot.spot
 
 
 def test_a_wall_off_every_pirate_path_is_refused_but_a_tower_may_stand_there():
@@ -177,36 +179,36 @@ def test_a_wall_off_every_pirate_path_is_refused_but_a_tower_may_stand_there():
 
 
 def test_a_wall_on_a_lane_cell_is_allowed_and_the_lane_rows_hold_half_units():
-    placed = layout.positions_of(RULES, {})
-    layout.check_move(RULES, placed, "wall_1", -12, 0.5)  # across the west route
-    assert layout.on_wall_lane(RULES, 0, 14) and not layout.on_wall_lane(RULES, 6, 14)
-    assert all(z * 2 == int(z * 2) for z in RULES.wall_lanes)
+    placed = layout.positions_of(LEGACY_RULES, {})
+    layout.check_move(LEGACY_RULES, placed, "wall_1", -12, 0.5)  # across the west route
+    assert layout.on_wall_lane(LEGACY_RULES, 0, 14) and not layout.on_wall_lane(LEGACY_RULES, 6, 14)
+    assert all(z * 2 == int(z * 2) for z in LEGACY_RULES.wall_lanes)
 
 
 def test_a_moved_wall_off_every_path_stands_on_the_nearest_free_lane_cell():
-    placed = layout.positions_of(RULES, {"wall_11": (-4, -5.5)})
+    placed = layout.positions_of(LEGACY_RULES, {"wall_11": (-4, -5.5)})
     where = placed["wall_11"]
     assert where != (-4, -5.5)
-    assert layout.on_wall_lane(RULES, *where)
+    assert layout.on_wall_lane(LEGACY_RULES, *where)
     # The same stored rows give the same island every time.
-    assert layout.positions_of(RULES, {"wall_11": (-4, -5.5)}) == placed
-    for spot in RULES.spots:
-        layout.check_move(RULES, placed, spot.spot, *placed[spot.spot])
+    assert layout.positions_of(LEGACY_RULES, {"wall_11": (-4, -5.5)}) == placed
+    for spot in LEGACY_RULES.spots:
+        layout.check_move(LEGACY_RULES, placed, spot.spot, *placed[spot.spot])
 
 
 def test_a_wall_whose_fixed_spot_a_moved_tower_now_covers_steps_aside():
-    placed = layout.positions_of(RULES, {"cannon_1": (19, 1)})
+    placed = layout.positions_of(LEGACY_RULES, {"cannon_1": (19, 1)})
     assert placed["cannon_1"] == (19, 1)
     assert placed["wall_2"] != (19, 1)
-    for spot in RULES.spots:
-        layout.check_move(RULES, placed, spot.spot, *placed[spot.spot])
+    for spot in LEGACY_RULES.spots:
+        layout.check_move(LEGACY_RULES, placed, spot.spot, *placed[spot.spot])
 
 
 def test_a_moved_wall_keeps_its_cell_and_the_unmoved_wall_there_steps_aside():
-    placed = layout.positions_of(RULES, {"wall_1": (19, 1)})
+    placed = layout.positions_of(LEGACY_RULES, {"wall_1": (19, 1)})
     assert placed["wall_1"] == (19, 1)
-    assert placed["wall_2"] != (19, 1) and layout.on_wall_lane(RULES, *placed["wall_2"])
+    assert placed["wall_2"] != (19, 1) and layout.on_wall_lane(LEGACY_RULES, *placed["wall_2"])
 
 
 def test_a_wall_on_a_lane_where_it_was_stored_stays_there():
-    assert layout.positions_of(RULES, {"wall_1": (-12, 0.5)})["wall_1"] == (-12, 0.5)
+    assert layout.positions_of(LEGACY_RULES, {"wall_1": (-12, 0.5)})["wall_1"] == (-12, 0.5)

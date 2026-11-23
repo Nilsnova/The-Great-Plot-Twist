@@ -17,9 +17,9 @@ afterEach(() => vi.unstubAllGlobals());
 describe('the frame loop', () => {
   it('updates, then draws, with the time since the last frame (capped at 0.1 s)', () => {
     const h = harness(), calls = [];
-    startLoop((delta, time) => calls.push(['update', Math.round(delta * 1000), Math.round(time * 1000)]), () => calls.push(['render']));
+    startLoop((delta, time) => calls.push(['update', Math.round(delta * 1000), Math.round(time * 1000)]), frameTime => calls.push(['render', frameTime]));
     h.frame(16); h.frame(500);
-    expect(calls).toEqual([['update', 16, 16], ['render'], ['update', 100, 116], ['render']]);
+    expect(calls).toEqual([['update', 16, 16], ['render', 16], ['update', 100, 116], ['render', 516]]);
   });
 
   it('keeps running after a frame that throws, and reports the error once per run of bad frames', () => {
