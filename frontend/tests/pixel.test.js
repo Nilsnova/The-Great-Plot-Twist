@@ -7,6 +7,7 @@ import { artSizes, loadArt, placeArt } from '../src/world/art.js';
 import { islandSizes } from '../src/art/registry.js';
 import { frames as registeredFrames } from '../src/art/village/baked.js';
 import { compiledHomeFoliage } from '../src/art/village/home-foliage.js';
+import { compiledHomeProps } from '../src/art/village/home-props.js';
 import { getRasterFrame } from '../src/art/village-raster.js';
 import { pixelViewport } from '../src/pixel/display.js';
 
@@ -18,7 +19,7 @@ describe('active pixel artwork', () => {
     expect(pixelArt.every(item => Object.hasOwn(artSizes, item.id))).toBe(true);
     const declared = new Set([
       ...pixelArt.map(item => item.id), ...Object.keys(islandSizes()),
-      ...Object.keys(registeredFrames), ...Object.keys(compiledHomeFoliage.frames),
+      ...Object.keys(registeredFrames), ...Object.keys(compiledHomeFoliage.frames), ...Object.keys(compiledHomeProps.frames),
     ]);
     expect(Object.keys(artSizes).sort()).toEqual([...declared].sort());
     for (const item of pixelArt) {
