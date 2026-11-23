@@ -40,13 +40,6 @@ html:has(.touch-controls:not([hidden]) .touch-preparation-action:not([hidden])) 
   html .quest-check{flex-basis:24px;height:24px;font-size:14px}
   /* The narrator's short line starts right of the stick, so it never covers the stick. */
   html .narrator-card:not(.is-large,.is-combat-docked,.is-combat-fallback){left:max(116px,calc(env(safe-area-inset-left) + 104px))!important}
-}
-/* Portrait phones: the Goals card and the game-name strip are a little slimmer, so more of the island shows. */
-@media(pointer:coarse) and (max-width:600px) and (orientation:portrait){
-  html .hud-play .quest-strip{padding:6px 8px 8px}
-  html .quest-strip h2{font-size:15px;margin-bottom:4px}
-  html .quest-strip .quest-progress{font-size:14px}
-  html .quest-item{padding:4px 8px 4px 4px;font-size:15px;gap:8px}
-  html .quest-check{flex-basis:24px;height:24px;font-size:14px}
-  html .island-visit{padding-block:4px}
+  /* Tips use the middle lane, clear of the stick on the left and the Use button on the right. */
+  html :is(.u-toasts,.u-toasts[popover]){left:max(116px,calc(env(safe-area-inset-left) + 104px));right:max(170px,calc(env(safe-area-inset-right) + 158px))}
 }
