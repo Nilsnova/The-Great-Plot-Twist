@@ -43,29 +43,49 @@ html:has(.touch-controls:not([hidden]) .touch-preparation-action:not([hidden])) 
   /* Tips use the middle lane, clear of the stick on the left and the Use button on the right. */
   html :is(.u-toasts,.u-toasts[popover]){left:max(116px,calc(env(safe-area-inset-left) + 104px));right:max(170px,calc(env(safe-area-inset-right) + 158px))}
 
-  /* Waves on a phone held sideways. The health bar is a compact card on the left under the coins, not a band
-     across the screen. The weapon button sits in the bottom-right corner under the right thumb; the old rule put it
-     300 px above the bottom, which is off the top of a 330 px screen. The won/break card sits on the right under
-     Menu, so it no longer runs off the bottom. */
+  /* Waves on a phone held sideways. The health card is a small strip at the top centre, between the coins and
+     Menu, instead of a band across the screen: heart, bar and numbers in one row, the captain's bar thin under it,
+     the wave's event (Storm, Fog bank, …) as one small title line. The tutorial strip (Land → Block → Protect)
+     and the event's long description stay hidden here; the narrator and the start banner announce both.
+     The weapon button sits in the bottom-right corner under the right thumb; the old rule put it 300 px above the
+     bottom, which is off the top of a 330 px screen. The won/break card sits on the right under Menu. */
   html{--phone-side-card:min(380px,52vw)}
-  html .pirate-hud .pirate-bar{left:max(12px,env(safe-area-inset-left));transform:none;
-    width:calc(100vw - 36px - var(--phone-side-card));min-width:0;padding:4px 10px 6px;gap:3px 8px}
-  html .pirate-hud .pirate-goal-hint{min-height:36px;margin-top:2px;padding:3px 10px;gap:6px}
-  html .pirate-hud .pirate-goal-hint-icon{font-size:18px}
-  html .pirate-hud .pirate-goal-hint-arrow{font-size:15px}
-  html .pirate-hud .pirate-goal-hint-word{font-size:15px}
-  html .pirate-hud .pirate-event{font-size:15px}
+  html .hud-play .hud-coins:not([data-economy=shared]){font-size:14px;padding:4px 9px;gap:6px;min-height:34px}
+  html .hud-play .hud-coins:not([data-economy=shared]) .hud-wave{font-size:13px;padding-left:6px}
+  html .pirate-hud .pirate-bar{top:8px!important;left:50%;transform:translateX(-50%);width:min(300px,calc(100vw - 400px));min-width:200px;
+    grid-template-columns:minmax(0,1fr) auto;gap:1px 6px;padding:3px 8px 4px}
+  html .pirate-hud .pirate-goal{gap:5px}
+  html .pirate-hud .pirate-goal-heart{font-size:14px}
+  html .pirate-hud .pirate-goal .pirate-bar-meter{height:8px}
+  html .pirate-hud .pirate-goal-value{font-size:13px;min-width:1.8em}
+  html .pirate-hud .pirate-chips{gap:2px 6px;font-size:12px}
+  html .pirate-hud .pirate-chip-icon{font-size:12px}
+  html .pirate-hud .pirate-bar-extra{gap:2px 6px;font-size:12px}
+  html .pirate-hud .pirate-bar-text{font-size:12px}
+  html .pirate-hud .pirate-goal-hint{display:none}
+  html .pirate-hud .pirate-event{grid-column:1/-1;margin:1px -4px 0;padding:0 8px;font-size:12px;line-height:1.2}
+  html .pirate-hud .pirate-event-summary{min-height:24px;padding:3px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  html .pirate-hud .pirate-event-title,html .pirate-hud .pirate-event-icon{font-size:12px}
+  html .pirate-hud .pirate-event-icon{margin-right:4px}
+  html .pirate-hud .pirate-event-line{display:none}
+  html .pirate-hud .pirate-danger{padding:2px 6px;font-size:12px}
+  html .pirate-hud .pirate-danger strong{font-size:12px}
+  /* In a wave and its break the strip already shows the wave number (🌊), so the coin card keeps only the coins
+     and stays clear of the strip. */
+  html:has(.pirate-hud:not([hidden]) .pirate-bar:not([hidden])) .hud-play .hud-coins:not([data-economy=shared]) .hud-wave{display:none}
+  /* During a wave the stick drops its "Drag to walk" label, so it sits lower. */
+  html:has(.pirate-hud:not([hidden]) .pirate-bar:not([hidden])) .touch-move-help{display:none}
   html .pirate-hud>.pirate-musket{top:auto;right:max(12px,env(safe-area-inset-right));bottom:max(70px,calc(env(safe-area-inset-bottom) + 60px));
     min-width:112px;min-height:52px;max-width:none;padding:6px 12px}
   html .pirate-hud>.pirate-prompt{bottom:max(72px,calc(env(safe-area-inset-bottom) + 62px))}
-  html .pirate-hud .pirate-break{top:64px;bottom:auto;left:auto;right:max(12px,env(safe-area-inset-right));width:var(--phone-side-card);
+  html .pirate-hud .pirate-break{top:max(64px,var(--pirate-bar-bottom,64px));bottom:auto;left:auto;right:max(12px,env(safe-area-inset-right));width:var(--phone-side-card);
     gap:4px;padding:4px 4px 4px 12px}
   html .pirate-hud .pirate-break-title{font-size:17px}
   html .pirate-hud .pirate-break-line{font-size:14px}
   html .pirate-hud .pirate-break-text{padding-top:4px}
   html .pirate-hud .pirate-next{font-size:16px}
   html .pirate-hud .pirate-auto{font-size:14px}
-  html .pirate-hud>.pirate-next-mini{top:64px;left:auto;right:max(12px,env(safe-area-inset-right));transform:none}
+  html .pirate-hud>.pirate-next-mini{top:max(64px,var(--pirate-bar-bottom,64px));left:auto;right:max(12px,env(safe-area-inset-right));transform:none}
   /* "Victory" and other wave banners: under the health card, right of the stick, left of the won card. */
   html .pirate-hud .pirate-banner{top:var(--pirate-bar-bottom,150px);left:max(116px,calc(env(safe-area-inset-left) + 104px));transform:none;
     max-width:calc(100vw - 140px - var(--phone-side-card));box-sizing:border-box;padding:6px 14px;gap:2px}
@@ -78,4 +98,14 @@ html:has(.touch-controls:not([hidden]) .touch-preparation-action:not([hidden])) 
     left:calc(100vw - max(12px,env(safe-area-inset-right)) - var(--phone-side-card));right:max(12px,env(safe-area-inset-right))}
   html .sound-caption:not(.in-dialog){left:max(116px,calc(env(safe-area-inset-left) + 104px));transform:none;
     max-width:calc(100vw - 140px - var(--phone-side-card));padding:6px 10px;font-size:14px;line-height:1.3}
+  /* In a wave, spoken-line captions ("A warship horn sounds") are a small line just under the health strip,
+     so they stay out of the stick, the weapon button and the ships. */
+  html:has(.pirate-hud:not([hidden]) .pirate-bar:not([hidden])) body .sound-caption:not(.in-dialog){top:var(--pirate-bar-bottom,90px);bottom:auto!important;
+    left:50%;transform:translateX(-50%);translate:none;width:max-content;max-width:min(300px,calc(100vw - 400px));
+    padding:3px 10px;font-size:12px;line-height:1.25;opacity:.92}
+  html:has(.pirate-hud:not([hidden]) .pirate-break:not([hidden])) body .narrator-card:not(.is-large,.is-combat-docked,.is-combat-fallback){
+    width:min(300px,calc(100vw - 140px - var(--phone-side-card)))!important}
+  /* With the won card open on the right, the caption moves left of it. */
+  html:has(.pirate-hud:not([hidden]) .pirate-break:not([hidden])) body .sound-caption:not(.in-dialog){
+    left:max(116px,calc(env(safe-area-inset-left) + 104px));transform:none;max-width:calc(100vw - 140px - var(--phone-side-card))}
 }
